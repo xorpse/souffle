@@ -8,56 +8,56 @@
 
 /************************************************************************
  *
- * @file InterpreterViewContext.h
+ * @file ViewContext.h
  *
- * Declares the InterpreterViewContext class.
- * Each Query operation has an InterpreterViewContext assoicated with it.
+ * Declares the ViewContext class.
+ * Each Query operation has an ViewContext assoicated with it.
  * The view context contains information about views creation during execution.
  ***********************************************************************/
 
 #pragma once
 
-#include "interpreter/InterpreterNode.h"
+#include "interpreter/Node.h"
 #include <array>
 #include <memory>
 #include <vector>
 
-namespace souffle {
+namespace souffle::interpreter {
 
 /**
- * @class InterpreterViewContext
+ * @class ViewContext
  * @brief This class contains information for views (Hints) creation for ram::Query and ram::Parallel
  * operation.
  */
-class InterpreterViewContext {
+class ViewContext {
 public:
     /** @brief Add outer-most filter operation which requires a view.  */
-    void addViewOperationForFilter(Own<InterpreterNode> node) {
+    void addViewOperationForFilter(Own<Node> node) {
         outerFilterViewOps.push_back(std::move(node));
     }
 
     /** @brief Add outer-most filter operation which does not require a view.  */
-    void addViewFreeOperationForFilter(Own<InterpreterNode> node) {
+    void addViewFreeOperationForFilter(Own<Node> node) {
         outerFilterViewFreeOps.push_back(std::move(node));
     }
 
     /** @brief Add nested operation which require a View (Hints).  */
-    void addViewOperationForNested(Own<InterpreterNode> op) {
+    void addViewOperationForNested(Own<Node> op) {
         nestedViewOps.push_back(std::move(op));
     }
 
     /** @brief Return outer-most filter operations.  */
-    const VecOwn<InterpreterNode>& getOuterFilterViewOps() {
+    const VecOwn<Node>& getOuterFilterViewOps() {
         return outerFilterViewOps;
     }
 
     /** @brief Return views for outer-most filter operations.  */
-    const VecOwn<InterpreterNode>& getOuterFilterViewFreeOps() {
+    const VecOwn<Node>& getOuterFilterViewFreeOps() {
         return outerFilterViewFreeOps;
     }
 
     /** @brief Return nested operations */
-    VecOwn<InterpreterNode>& getViewsInNestedOperation() {
+    VecOwn<Node>& getViewsInNestedOperation() {
         return nestedViewOps;
     }
 
@@ -86,15 +86,15 @@ public:
 
 private:
     /** Vector of filter operation, views required */
-    VecOwn<InterpreterNode> outerFilterViewOps;
+    VecOwn<Node> outerFilterViewOps;
     /** Vector of filter operations, no views required. */
-    VecOwn<InterpreterNode> outerFilterViewFreeOps;
+    VecOwn<Node> outerFilterViewFreeOps;
     /** Vector of nested operations */
-    VecOwn<InterpreterNode> nestedViewOps;
+    VecOwn<Node> nestedViewOps;
     /** Vector of View information in filter operations */
     std::vector<std::array<size_t, 3>> viewInfoForFilter;
     /** Vector of View information in nested operations */
     std::vector<std::array<size_t, 3>> viewInfoForNested;
 };
 
-}  // namespace souffle
+}  // namespace souffle::interpreter

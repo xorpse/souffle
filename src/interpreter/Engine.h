@@ -8,20 +8,20 @@
 
 /************************************************************************
  *
- * @file InterpreterEngine.h
+ * @file Engine.h
  *
- * Declares the Interpreter Engine class. The engine takes in an InterpreterNode
+ * Declares the Interpreter Engine class. The engine takes in an Node
  * representation and execute them.
  ***********************************************************************/
 
 #pragma once
 
 #include "Global.h"
-#include "interpreter/InterpreterContext.h"
-#include "interpreter/InterpreterGenerator.h"
-#include "interpreter/InterpreterIndex.h"
-#include "interpreter/InterpreterNode.h"
-#include "interpreter/InterpreterRelation.h"
+#include "interpreter/Context.h"
+#include "interpreter/Generator.h"
+#include "interpreter/Index.h"
+#include "interpreter/Node.h"
+#include "interpreter/Relation.h"
 #include "ram/TranslationUnit.h"
 #include "ram/analysis/Index.h"
 #include "souffle/RamTypes.h"
@@ -39,20 +39,20 @@
 #include <omp.h>
 #endif
 
-namespace souffle {
+namespace souffle::interpreter {
 
-class InterpreterProgInterface;
+class ProgInterface;
 
 /**
- * @class InterpreterEngine
+ * @class Engine
  * @brief This class translate the RAM Program into executable format and interpreter it.
  */
-class InterpreterEngine {
-    using RelationHandle = Own<InterpreterRelationWrapper>;
-    friend InterpreterProgInterface;
+class Engine {
+    using RelationHandle = Own<RelationWrapper>;
+    friend ProgInterface;
 
 public:
-    InterpreterEngine(ram::TranslationUnit& tUnit)
+    Engine(ram::TranslationUnit& tUnit)
             : profileEnabled(Global::config().has("profile")),
               numOfThreads(std::stoi(Global::config().get("jobs"))), tUnit(tUnit),
               isa(tUnit.getAnalysis<ram::analysis::IndexAnalysis>()), generator(isa) {
@@ -84,7 +84,7 @@ private:
     /** @brief Return the ram::TranslationUnit */
     ram::TranslationUnit& getTranslationUnit();
     /** @brief Execute the program */
-    RamDomain execute(const InterpreterNode*, InterpreterContext&);
+    RamDomain execute(const Node*, Context&);
     /** @brief Return method handler */
     void* getMethodHandle(const std::string& method);
     /** @brief Load DLL */
@@ -103,9 +103,9 @@ private:
     /** If profile is enable in this program */
     const bool profileEnabled;
     /** subroutines */
-    VecOwn<InterpreterNode> subroutine;
+    VecOwn<Node> subroutine;
     /** main program */
-    Own<InterpreterNode> main;
+    Own<Node> main;
     /** Number of threads enabled for this program */
     size_t numOfThreads;
     /** Profile counter */
@@ -130,64 +130,56 @@ private:
     // -- Defines template for specialized interpreter operation -- */
 private:
     template <typename Rel>
-    RamDomain evalExistenceCheck(const ram::ExistenceCheck& cur, const InterpreterExistenceCheck& shadow,
-            InterpreterContext& ctxt);
+    RamDomain evalExistenceCheck(const ram::ExistenceCheck& cur, const ExistenceCheck& shadow, Context& ctxt);
 
     template <typename Rel>
-    RamDomain evalProvenanceExistenceCheck(
-            const InterpreterProvenanceExistenceCheck& shadow, InterpreterContext& ctxt);
+    RamDomain evalProvenanceExistenceCheck(const ProvenanceExistenceCheck& shadow, Context& ctxt);
 
     template <typename Rel>
-    RamDomain evalScan(
-            const Rel& rel, const ram::Scan& cur, const InterpreterScan& shadow, InterpreterContext& ctxt);
+    RamDomain evalScan(const Rel& rel, const ram::Scan& cur, const Scan& shadow, Context& ctxt);
 
     template <typename Rel>
-    RamDomain evalParallelScan(const Rel& rel, const ram::ParallelScan& cur,
-            const InterpreterParallelScan& shadow, InterpreterContext& ctxt);
+    RamDomain evalParallelScan(
+            const Rel& rel, const ram::ParallelScan& cur, const ParallelScan& shadow, Context& ctxt);
 
     template <typename Rel>
-    RamDomain evalIndexScan(
-            const ram::IndexScan& cur, const InterpreterIndexScan& shadow, InterpreterContext& ctxt);
+    RamDomain evalIndexScan(const ram::IndexScan& cur, const IndexScan& shadow, Context& ctxt);
 
     template <typename Rel>
     RamDomain evalParallelIndexScan(const Rel& rel, const ram::ParallelIndexScan& cur,
-            const InterpreterParallelIndexScan& shadow, InterpreterContext& ctxt);
+            const ParallelIndexScan& shadow, Context& ctxt);
 
     template <typename Rel>
-    RamDomain evalChoice(const Rel& rel, const ram::Choice& cur, const InterpreterChoice& shadow,
-            InterpreterContext& ctxt);
+    RamDomain evalChoice(const Rel& rel, const ram::Choice& cur, const Choice& shadow, Context& ctxt);
 
     template <typename Rel>
-    RamDomain evalParallelChoice(const Rel& rel, const ram::ParallelChoice& cur,
-            const InterpreterParallelChoice& shadow, InterpreterContext& ctxt);
+    RamDomain evalParallelChoice(
+            const Rel& rel, const ram::ParallelChoice& cur, const ParallelChoice& shadow, Context& ctxt);
 
     template <typename Rel>
-    RamDomain evalIndexChoice(
-            const ram::IndexChoice& cur, const InterpreterIndexChoice& shadow, InterpreterContext& ctxt);
+    RamDomain evalIndexChoice(const ram::IndexChoice& cur, const IndexChoice& shadow, Context& ctxt);
 
     template <typename Rel>
     RamDomain evalParallelIndexChoice(const Rel& rel, const ram::ParallelIndexChoice& cur,
-            const InterpreterParallelIndexChoice& shadow, InterpreterContext& ctxt);
+            const ParallelIndexChoice& shadow, Context& ctxt);
 
     template <typename Aggregate, typename Iter>
-    RamDomain evalAggregate(const Aggregate& aggregate, const InterpreterNode& filter,
-            const InterpreterNode* expression, const InterpreterNode& nestedOperation, const Iter& ranges,
-            InterpreterContext& ctxt);
+    RamDomain evalAggregate(const Aggregate& aggregate, const Node& filter, const Node* expression,
+            const Node& nestedOperation, const Iter& ranges, Context& ctxt);
 
     template <typename Rel>
     RamDomain evalParallelAggregate(const Rel& rel, const ram::ParallelAggregate& cur,
-            const InterpreterParallelAggregate& shadow, InterpreterContext& ctxt);
+            const ParallelAggregate& shadow, Context& ctxt);
 
     template <typename Rel>
-    RamDomain evalParallelIndexAggregate(const ram::ParallelIndexAggregate& cur,
-            const InterpreterParallelIndexAggregate& shadow, InterpreterContext& ctxt);
+    RamDomain evalParallelIndexAggregate(
+            const ram::ParallelIndexAggregate& cur, const ParallelIndexAggregate& shadow, Context& ctxt);
 
     template <typename Rel>
-    RamDomain evalIndexAggregate(const ram::IndexAggregate& cur, const InterpreterIndexAggregate& shadow,
-            InterpreterContext& ctxt);
+    RamDomain evalIndexAggregate(const ram::IndexAggregate& cur, const IndexAggregate& shadow, Context& ctxt);
 
     template <typename Rel>
-    RamDomain evalProject(Rel& rel, const InterpreterProject& shadow, InterpreterContext& ctxt);
+    RamDomain evalProject(Rel& rel, const Project& shadow, Context& ctxt);
 };
 
-}  // namespace souffle
+}  // namespace souffle::interpreter

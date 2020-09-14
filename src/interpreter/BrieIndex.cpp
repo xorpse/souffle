@@ -8,26 +8,25 @@
 
 /************************************************************************
  *
- * @file InterpreterBrieIndex.cpp
+ * @file BrieIndex.cpp
  *
  * Interpreter index with generic interface.
  *
  ***********************************************************************/
 
-#include "interpreter/InterpreterRelation.h"
+#include "interpreter/Relation.h"
 #include "ram/Relation.h"
 #include "ram/analysis/Index.h"
 #include "souffle/utility/MiscUtil.h"
 
-namespace souffle {
+namespace souffle::interpreter {
 
-#define CREATE_BRIE_REL(Structure, Arity, ...)                   \
-    case (Arity): {                                              \
-        return mk<InterpreterRelation<Arity, InterpreterBrie>>(  \
-                id.getAuxiliaryArity(), id.getName(), orderSet); \
+#define CREATE_BRIE_REL(Structure, Arity, ...)                                                         \
+    case (Arity): {                                                                                    \
+        return mk<Relation<Arity, interpreter::Brie>>(id.getAuxiliaryArity(), id.getName(), orderSet); \
     }
 
-Own<InterpreterRelationWrapper> createBrieRelation(
+Own<RelationWrapper> createBrieRelation(
         const ram::Relation& id, const ram::analysis::MinIndexSelection& /* orderSet */) {
     switch (id.getArity()) {
         FOR_EACH_BRIE(CREATE_BRIE_REL);
@@ -36,4 +35,4 @@ Own<InterpreterRelationWrapper> createBrieRelation(
     }
 }
 
-}  // namespace souffle
+}  // namespace souffle::interpreter

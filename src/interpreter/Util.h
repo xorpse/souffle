@@ -8,7 +8,7 @@
 
 /************************************************************************
  *
- * @file InterpreterGenerator.h
+ * @file Util.h
  *
  * @brief Interpreter Utilities.
  ***********************************************************************/
@@ -24,7 +24,7 @@
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/MiscUtil.h"
 
-namespace souffle {
+namespace souffle::interpreter {
 // clang-format off
 
 #define FOR_EACH_PROVENANCE(func, ...) \
@@ -213,15 +213,15 @@ using comparator = typename index_utils::get_full_index<Arity>::type::comparator
 
 // Alias for btree_set
 template <std::size_t Arity>
-using InterpreterBtree = btree_set<t_tuple<Arity>, comparator<Arity>>;
+using Btree = btree_set<t_tuple<Arity>, comparator<Arity>>;
 
 // Alias for Trie
 template <std::size_t Arity>
-using InterpreterBrie = Trie<Arity>;
+using Brie = Trie<Arity>;
 
 // Updater for Provenance
 template <std::size_t Arity>
-struct InterpreterProvenanceUpdater {
+struct ProvenanceUpdater {
     void update(t_tuple<Arity>& old_t, const t_tuple<Arity>& new_t) {
         old_t[Arity - 2] = new_t[Arity - 2];
         old_t[Arity - 1] = new_t[Arity - 1];
@@ -230,13 +230,13 @@ struct InterpreterProvenanceUpdater {
 
 // Alias for Provenance
 template <std::size_t Arity>
-using InterpreterProvenance = btree_set<t_tuple<Arity>, comparator<Arity>, std::allocator<t_tuple<Arity>>,
-        256, typename detail::default_strategy<t_tuple<Arity>>::type, comparator<Arity - 2>,
-        InterpreterProvenanceUpdater<Arity>>;
+using Provenance = btree_set<t_tuple<Arity>, comparator<Arity>, std::allocator<t_tuple<Arity>>, 256,
+        typename detail::default_strategy<t_tuple<Arity>>::type, comparator<Arity - 2>,
+        ProvenanceUpdater<Arity>>;
 
 // Alias for Eqrel
 // Note: require Arity = 2.
 template <std::size_t Arity>
-using InterpreterEqrel = EquivalenceRelation<t_tuple<Arity>>;
+using Eqrel = EquivalenceRelation<t_tuple<Arity>>;
 
-};  // namespace souffle
+};  // namespace souffle::interpreter

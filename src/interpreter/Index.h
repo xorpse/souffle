@@ -8,20 +8,21 @@
 
 /************************************************************************
  *
- * @file InterpreterIndex.h
+ * @file Index.h
  *
  * Interpreter index with generic interface.
  *
  ***********************************************************************/
 #pragma once
 
-#include "interpreter/InterpreterUtil.h"
+#include "interpreter/Util.h"
 #include "souffle/CompiledTuple.h"
 #include "souffle/RamTypes.h"
 #include "souffle/datastructure/EquivalenceRelation.h"
 #include "souffle/datastructure/UnionFind.h"
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/MiscUtil.h"
+#include "souffle/utility/StreamUtil.h"
 #include <array>
 #include <atomic>
 #include <cassert>
@@ -33,7 +34,7 @@
 #include <utility>
 #include <vector>
 
-namespace souffle {
+namespace souffle::interpreter {
 /**
  * An order to be enforced for storing tuples within
  * indexes. The order is defined by the sequence of
@@ -135,15 +136,15 @@ inline std::ostream& operator<<(std::ostream& out, const Order& order) {
 /**
  * A dummy wrapper for indexViews.
  */
-struct InterpreterViewWrapper {
-    virtual ~InterpreterViewWrapper() = default;
+struct ViewWrapper {
+    virtual ~ViewWrapper() = default;
 };
 
 /**
  * An index is an abstraction of a data structure
  */
 template <size_t _Arity, template <size_t> typename Structure>
-class InterpreterIndex {
+class Index {
 public:
     static constexpr size_t Arity = _Arity;
     using Data = Structure<Arity>;
@@ -151,7 +152,7 @@ public:
     using iterator = typename Data::iterator;
     using Hints = typename Data::operation_hints;
 
-    InterpreterIndex(Order order) : order(std::move(order)) {}
+    Index(Order order) : order(std::move(order)) {}
 
 protected:
     Order order;
@@ -163,12 +164,12 @@ public:
      * Each thread should create and use its own view for accessing relations
      * to exploit access patterns via operation hints.
      */
-    class InterpreterView : public InterpreterViewWrapper {
+    class View : public ViewWrapper {
         mutable Hints hints;
         const Data& data;
 
     public:
-        InterpreterView(const Data& data) : data(data) {}
+        View(const Data& data) : data(data) {}
 
         /** Tests whether the given entry is contained in this index. */
         bool contains(const Tuple& entry) {
@@ -190,8 +191,8 @@ public:
     /**
      * Requests the creation of a view on this index.
      */
-    InterpreterView createView() {
-        return InterpreterView(this->data);
+    View createView() {
+        return View(this->data);
     }
 
     iterator begin() const {
@@ -233,7 +234,7 @@ public:
     /**
      * Inserts all elements of the given index.
      */
-    void insert(const InterpreterIndex<Arity, Structure>& src) {
+    void insert(const Index<Arity, Structure>& src) {
         for (const auto& tuple : src) {
             this->insert(tuple);
         }
@@ -308,7 +309,7 @@ public:
  * No complex data structure is required.
  */
 template <template <size_t> typename Structure>
-class InterpreterIndex<0, Structure> {
+class Index<0, Structure> {
 public:
     static constexpr size_t Arity = 0;
     using Tuple = typename souffle::Tuple<RamDomain, 0>;
@@ -318,7 +319,7 @@ protected:
     std::atomic<bool> data{false};
 
 public:
-    InterpreterIndex(Order /* order */) {}
+    Index(Order /* order */) {}
 
     // Specialized iterator class for nullary.
     class iterator : public std::iterator<std::forward_iterator_tag, Tuple> {
@@ -356,11 +357,11 @@ public:
     }
 
     // The nullary index view -- does not require any hints.
-    struct InterpreterView : public InterpreterViewWrapper {
+    struct View : public ViewWrapper {
         const std::atomic<bool>& data;
 
     public:
-        InterpreterView(const std::atomic<bool>& data) : data(data) {}
+        View(const std::atomic<bool>& data) : data(data) {}
 
         bool contains(const Tuple& /* t */) const {
             return data;
@@ -376,8 +377,8 @@ public:
     };
 
 public:
-    InterpreterView createView() {
-        return InterpreterView(this->data);
+    View createView() {
+        return View(this->data);
     }
 
     Order getOrder() const {
@@ -396,7 +397,7 @@ public:
         return data = true;
     }
 
-    void insert(const InterpreterIndex& src) {
+    void insert(const Index& src) {
         data = src.data;
     }
 
@@ -432,12 +433,15 @@ public:
     }
 };
 
+template <std::size_t Arity>
+using Eqrel = EquivalenceRelation<t_tuple<Arity>>;
+
 /**
  * For EqrelIndex we do inheritence since EqrelIndex only diff with one extra function.
  */
-class InterpreterEqrelIndex : public InterpreterIndex<2, InterpreterEqrel> {
+class EqrelIndex : public interpreter::Index<2, Eqrel> {
 public:
-    using InterpreterIndex<2, InterpreterEqrel>::InterpreterIndex;
+    using Index<2, Eqrel>::Index;
 
     /**
      * Extend another index.
@@ -447,9 +451,9 @@ public:
      * explicitly new knowledge. After this operation the "implicitly new tuples" are now
      * explicitly inserted this relation.
      */
-    void extend(InterpreterEqrelIndex* otherIndex) {
+    void extend(EqrelIndex* otherIndex) {
         this->data.extend(otherIndex->data);
     }
 };
 
-}  // end of namespace souffle
+}  // namespace souffle::interpreter

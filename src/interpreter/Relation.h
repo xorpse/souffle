@@ -8,7 +8,7 @@
 
 /************************************************************************
  *
- * @file InterpreterRelation.h
+ * @file Relation.h
  *
  * Defines Interpreter Relations
  *
@@ -16,8 +16,9 @@
 
 #pragma once
 
-#include "interpreter/InterpreterIndex.h"
+#include "interpreter/Index.h"
 #include "ram/analysis/Index.h"
+#include "souffle/RamTypes.h"
 #include <cstddef>
 #include <cstdint>
 #include <deque>
@@ -28,7 +29,7 @@
 #include <utility>
 #include <vector>
 
-namespace souffle {
+namespace souffle::interpreter {
 
 /**
  * Wrapper for InterpreterRelation.
@@ -37,12 +38,12 @@ namespace souffle {
  * It also defines virtual interfaces for ProgInterface and some virtual helper functions for interpreter
  * execution.
  */
-struct InterpreterRelationWrapper {
+struct RelationWrapper {
 public:
-    InterpreterRelationWrapper(size_t arity, size_t auxiliaryArity, std::string relName)
+    RelationWrapper(size_t arity, size_t auxiliaryArity, std::string relName)
             : arity(arity), auxiliaryArity(auxiliaryArity), relName(std::move(relName)) {}
 
-    virtual ~InterpreterRelationWrapper() = default;
+    virtual ~RelationWrapper() = default;
 
     // -- Define methods and interfaces for ProgInterface. --
 public:
@@ -122,7 +123,7 @@ public:
 
     // -- Defines methods and interfaces for Interpreter execution. --
 public:
-    using IndexViewPtr = Own<InterpreterViewWrapper>;
+    using IndexViewPtr = Own<ViewWrapper>;
 
     /**
      * Return the order of an index.
@@ -151,14 +152,14 @@ protected:
  * A relation, composed of a collection of indexes.
  */
 template <std::size_t _Arity, template <size_t> typename Structure>
-class InterpreterRelation : public InterpreterRelationWrapper {
+class Relation : public RelationWrapper {
 public:
     static constexpr std::size_t Arity = _Arity;
     using Attribute = uint32_t;
     using AttributeSet = std::set<Attribute>;
-    using Index = InterpreterIndex<Arity, Structure>;
+    using Index = interpreter::Index<Arity, Structure>;
     using Tuple = souffle::Tuple<RamDomain, Arity>;
-    using View = typename Index::InterpreterView;
+    using View = typename Index::View;
     using iterator = typename Index::iterator;
 
     /**
@@ -171,18 +172,17 @@ public:
     }
 
     /**
-     * Cast an abstract view into a view of Index::InterpreterView type.
+     * Cast an abstract view into a view of Index::View type.
      */
-    static View* castView(InterpreterViewWrapper* view) {
+    static View* castView(ViewWrapper* view) {
         return static_cast<View*>(view);
     }
 
     /**
      * Creates a relation, build all necessary indexes.
      */
-    InterpreterRelation(
-            std::size_t auxiliaryArity, std::string name, const ram::analysis::MinIndexSelection& orderSet)
-            : InterpreterRelationWrapper(Arity, auxiliaryArity, std::move(name)) {
+    Relation(std::size_t auxiliaryArity, std::string name, const ram::analysis::MinIndexSelection& orderSet)
+            : RelationWrapper(Arity, auxiliaryArity, std::move(name)) {
         for (auto order : orderSet.getAllOrders()) {
             // Expand the order to a total order
             ram::analysis::MinIndexSelection::AttributeSet set{order.begin(), order.end()};
@@ -202,7 +202,7 @@ public:
         main = indexes[0].get();
     }
 
-    InterpreterRelation(InterpreterRelation& other) = delete;
+    Relation(Relation& other) = delete;
 
     // -- Implement all virtual interface from Wrapper. --
     // -- Operations defined in this section are not performance-oriented.
@@ -231,7 +231,7 @@ public:
         return indexes[idx]->getOrder();
     }
 
-    class iterator_base : public InterpreterRelationWrapper::iterator_base {
+    class iterator_base : public RelationWrapper::iterator_base {
         iterator iter;
         Order order;
         RamDomain data[Arity];
@@ -258,7 +258,7 @@ public:
             return new iterator_base(iter, order);
         }
 
-        bool equal(const InterpreterRelationWrapper::iterator_base& other) const override {
+        bool equal(const RelationWrapper::iterator_base& other) const override {
             if (auto* o = dynamic_cast<const iterator_base*>(&other)) {
                 return iter == o->iter;
             }
@@ -297,7 +297,7 @@ public:
     /**
      * Add all entries of the given relation to this relation.
      */
-    void insert(const InterpreterRelation<Arity, Structure>& other) {
+    void insert(const Relation<Arity, Structure>& other) {
         for (const auto& tuple : other.scan()) {
             this->insert(tuple);
         }
@@ -352,7 +352,7 @@ public:
      * Swaps the content of this and the given relation, including the
      * installed indexes.
      */
-    void swap(InterpreterRelation<Arity, Structure>& other) {
+    void swap(Relation<Arity, Structure>& other) {
         indexes.swap(other.indexes);
     }
 
@@ -401,35 +401,35 @@ protected:
     Index* main;
 };
 
-class InterpreterEqrelRelation : public InterpreterRelation<2, InterpreterEqrel> {
+class EqrelRelation : public Relation<2, Eqrel> {
 public:
-    using InterpreterRelation<2, InterpreterEqrel>::InterpreterRelation;
+    using Relation<2, Eqrel>::Relation;
 
-    void extend(const InterpreterEqrelRelation& rel) {
-        auto src = static_cast<InterpreterEqrelIndex*>(this->main);
-        auto trg = static_cast<InterpreterEqrelIndex*>(rel.main);
+    void extend(const EqrelRelation& rel) {
+        auto src = static_cast<EqrelIndex*>(this->main);
+        auto trg = static_cast<EqrelIndex*>(rel.main);
         src->extend(trg);
     }
 };
 
 // The type of relation factory functions.
-using RelationFactory = Own<InterpreterRelationWrapper> (*)(
+using RelationFactory = Own<RelationWrapper> (*)(
         const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet);
 
 // A factory for BTree based relation.
-Own<InterpreterRelationWrapper> createBTreeRelation(
+Own<RelationWrapper> createBTreeRelation(
         const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet);
 
 // A factory for BTree provenance index.
-Own<InterpreterRelationWrapper> createProvenanceRelation(
+Own<RelationWrapper> createProvenanceRelation(
         const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet);
 
 // A factory for Brie based index.
-Own<InterpreterRelationWrapper> createBrieRelation(
+Own<RelationWrapper> createBrieRelation(
         const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet);
 
 // A factory for Eqrel index.
-Own<InterpreterRelationWrapper> createEqrelRelation(
+Own<RelationWrapper> createEqrelRelation(
         const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet);
 
-}  // end of namespace souffle
+}  // namespace souffle::interpreter
