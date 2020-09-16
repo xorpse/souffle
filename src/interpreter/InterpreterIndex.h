@@ -177,6 +177,8 @@ public:
     bool operator!=(const Order& other) const;
     bool operator<(const Order& other) const;
 
+    Attribute operator[](const size_t idx) const;
+
     friend std::ostream& operator<<(std::ostream& out, const Order& order);
 };
 
@@ -405,6 +407,11 @@ public:
      * Obtains the arity of the given index.
      */
     virtual size_t getArity() const = 0;
+    
+    /**
+     * Obtains the lex order of this index.
+     */
+    virtual Order getOrder() const = 0;
 
     /**
      * Tests whether this index is empty or not.
@@ -625,6 +632,10 @@ public:
         return 0;
     }
 
+    Order getOrder() const override {
+        return Order({0});
+    }
+
     bool empty() const override {
         return !present;
     }
@@ -788,6 +799,10 @@ public:
 
     size_t getArity() const override {
         return Arity;
+    }
+
+    Order getOrder() const override {
+        return order;
     }
 
     bool empty() const override {

@@ -63,6 +63,10 @@ bool Order::operator<(const Order& other) const {
     return order < other.order;
 }
 
+uint32_t Order::operator[](const size_t idx) const {
+    return order[idx];
+}
+
 std::ostream& operator<<(std::ostream& out, const Order& order) {
     return out << "[" << join(order.order) << "]";
 }

@@ -139,7 +139,7 @@ public:
     };
 
     IndirectIndex(AttributeOrder order)
-            : theOrder(std::move(order)), set(comparator(theOrder), comparator(theOrder)),
+            : order(std::move(order)), set(comparator(order), comparator(order)),
               arity(order.size()) {}
 
     IndexViewPtr createView() const override {
@@ -148,6 +148,10 @@ public:
 
     size_t getArity() const override {
         return arity;
+    };
+
+    Order getOrder() const override {
+        return order;
     };
 
     bool empty() const override {
@@ -204,7 +208,7 @@ public:
 
 private:
     /** retain the index order used to construct an object of this class */
-    const AttributeOrder theOrder;
+    const AttributeOrder order;
 
     /** set storing tuple pointers of table */
     index_set set;
