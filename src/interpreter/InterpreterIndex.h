@@ -734,7 +734,7 @@ protected:
         int load(TupleRef* out, int max) override {
             int c = 0;
             while (cur != end && c < max) {
-                buffer[c] = order.decode(*cur);
+                buffer[c] = *cur;
                 out[c] = buffer[c];
                 ++cur;
                 ++c;
@@ -760,8 +760,8 @@ protected:
     };
 
     virtual souffle::range<iter> bounds(const TupleRef& low, const TupleRef& high, Hints& hints) const {
-        Entry a = order.encode(low.asTuple<Arity>());
-        Entry b = order.encode(high.asTuple<Arity>());
+        Entry a = low.asTuple<Arity>();
+        Entry b = high.asTuple<Arity>();
         return {data.lower_bound(a, hints), data.upper_bound(b, hints)};
     }
 
@@ -773,7 +773,7 @@ protected:
         GenericIndexView(const GenericIndex& index) : index(index) {}
 
         bool contains(const TupleRef& tuple) const override {
-            return index.data.contains(index.order.encode(tuple.asTuple<Arity>()), hints);
+            return index.data.contains(tuple.asTuple<Arity>(), hints);
         }
 
         bool contains(const TupleRef& low, const TupleRef& high) const override {

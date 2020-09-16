@@ -348,7 +348,22 @@ class InterpreterConstant : public InterpreterNode {
  * @class InterpreterTupleElement
  */
 class InterpreterTupleElement : public InterpreterNode {
-    using InterpreterNode::InterpreterNode;
+public:
+    InterpreterTupleElement(
+            enum InterpreterNodeType ty, const ram::Node* sdw, size_t tupleId, size_t elementId)
+            : InterpreterNode(ty, sdw), tupleId(tupleId), element(elementId) {}
+
+    size_t getTupleId() const {
+        return tupleId;
+    }
+
+    size_t getElement() const {
+        return element;
+    }
+
+private:
+    size_t tupleId;
+    size_t element;
 };
 
 /**

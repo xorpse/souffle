@@ -151,7 +151,10 @@ public:
     }
 
     NodePtr visitTupleElement(const ram::TupleElement& access) override {
-        return mk<InterpreterTupleElement>(I_TupleElement, &access);
+        auto tupleId = access.getTupleId();
+        auto elementId = access.getElement();
+        auto newElementId = orderingContext.mapOrder(tupleId, elementId);
+        return mk<InterpreterTupleElement>(I_TupleElement, &access, tupleId, newElementId);
     }
 
     NodePtr visitAutoIncrement(const ram::AutoIncrement& inc) override {
@@ -175,6 +178,8 @@ public:
     }
 
     NodePtr visitNestedIntrinsicOperator(const ram::NestedIntrinsicOperator& op) override {
+        auto arity = op.getArguments().size();
+        orderingContext.addNewTuple(op.getTupleId(), arity);
         NodePtrVec children;
         for (auto&& arg : op.getArguments()) {
             children.push_back(visit(arg));
@@ -260,12 +265,14 @@ public:
     }
 
     NodePtr visitScan(const ram::Scan& scan) override {
+        orderingContext.addTupleWithDefaultOrder(scan.getTupleId(), scan);
         size_t relId = encodeRelation(scan.getRelation());
         auto rel = relations[relId].get();
         return mk<InterpreterScan>(I_Scan, &scan, rel, visitTupleOperation(scan));
     }
 
     NodePtr visitParallelScan(const ram::ParallelScan& pScan) override {
+        orderingContext.addTupleWithDefaultOrder(pScan.getTupleId(), pScan);
         size_t relId = encodeRelation(pScan.getRelation());
         auto rel = relations[relId].get();
         auto res = mk<InterpreterParallelScan>(I_ParallelScan, &pScan, rel, visitTupleOperation(pScan));
@@ -274,15 +281,17 @@ public:
     }
 
     NodePtr visitIndexScan(const ram::IndexScan& scan) override {
+        orderingContext.addTupleWithIndexOrder(scan.getTupleId(), scan);
         InterpreterSuperInstruction indexOperation = getIndexSuperInstInfo(scan);
         return mk<InterpreterIndexScan>(I_IndexScan, &scan, nullptr, visitTupleOperation(scan),
                 encodeView(&scan), std::move(indexOperation));
     }
 
     NodePtr visitParallelIndexScan(const ram::ParallelIndexScan& piscan) override {
+        orderingContext.addTupleWithIndexOrder(piscan.getTupleId(), piscan);
+        InterpreterSuperInstruction indexOperation = getIndexSuperInstInfo(piscan);
         size_t relId = encodeRelation(piscan.getRelation());
         auto rel = relations[relId].get();
-        InterpreterSuperInstruction indexOperation = getIndexSuperInstInfo(piscan);
         auto res = mk<InterpreterParallelIndexScan>(I_ParallelIndexScan, &piscan, rel,
                 visitTupleOperation(piscan), encodeIndexPos(piscan), std::move(indexOperation));
         res->setViewContext(parentQueryViewContext);
@@ -290,6 +299,7 @@ public:
     }
 
     NodePtr visitChoice(const ram::Choice& choice) override {
+        orderingContext.addTupleWithDefaultOrder(choice.getTupleId(), choice);
         size_t relId = encodeRelation(choice.getRelation());
         auto rel = relations[relId].get();
         return mk<InterpreterChoice>(
@@ -297,6 +307,7 @@ public:
     }
 
     NodePtr visitParallelChoice(const ram::ParallelChoice& pchoice) override {
+        orderingContext.addTupleWithDefaultOrder(pchoice.getTupleId(), pchoice);
         size_t relId = encodeRelation(pchoice.getRelation());
         auto rel = relations[relId].get();
         auto res = mk<InterpreterParallelChoice>(
@@ -306,12 +317,14 @@ public:
     }
 
     NodePtr visitIndexChoice(const ram::IndexChoice& choice) override {
+        orderingContext.addTupleWithIndexOrder(choice.getTupleId(), choice);
         InterpreterSuperInstruction indexOperation = getIndexSuperInstInfo(choice);
         return mk<InterpreterIndexChoice>(I_IndexChoice, &choice, nullptr, visit(choice.getCondition()),
                 visitTupleOperation(choice), encodeView(&choice), std::move(indexOperation));
     }
 
     NodePtr visitParallelIndexChoice(const ram::ParallelIndexChoice& ichoice) override {
+        orderingContext.addTupleWithIndexOrder(ichoice.getTupleId(), ichoice);
         InterpreterSuperInstruction indexOperation = getIndexSuperInstInfo(ichoice);
         size_t relId = encodeRelation(ichoice.getRelation());
         auto rel = relations[relId].get();
@@ -323,43 +336,66 @@ public:
     }
 
     NodePtr visitUnpackRecord(const ram::UnpackRecord& lookup) override {  // get reference
+        orderingContext.addNewTuple(lookup.getTupleId(), lookup.getArity());
         return mk<InterpreterUnpackRecord>(
                 I_UnpackRecord, &lookup, visit(lookup.getExpression()), visitTupleOperation(lookup));
     }
 
     NodePtr visitAggregate(const ram::Aggregate& aggregate) override {
+        // Notice: Aggregates are very sensitive to the visiting order of the subexpr in order to make
+        // orderCtxt consistent. The order of visiting should be the same as the order of execution during
+        // runtime.
+        orderingContext.addTupleWithDefaultOrder(aggregate.getTupleId(), aggregate);
+        NodePtr expr = visit(aggregate.getExpression());
+        NodePtr cond = visit(aggregate.getCondition());
+        orderingContext.addNewTuple(aggregate.getTupleId(), 1);
+        NodePtr nested = visitTupleOperation(aggregate);
         size_t relId = encodeRelation(aggregate.getRelation());
         auto rel = relations[relId].get();
-        return mk<InterpreterAggregate>(I_Aggregate, &aggregate, rel, visit(aggregate.getExpression()),
-                visit(aggregate.getCondition()), visitTupleOperation(aggregate));
+        return mk<InterpreterAggregate>(
+                I_Aggregate, &aggregate, rel, std::move(expr), std::move(cond), std::move(nested));
     }
 
     NodePtr visitParallelAggregate(const ram::ParallelAggregate& aggregate) override {
+        orderingContext.addTupleWithDefaultOrder(aggregate.getTupleId(), aggregate);
+        NodePtr expr = visit(aggregate.getExpression());
+        NodePtr cond = visit(aggregate.getCondition());
+        orderingContext.addNewTuple(aggregate.getTupleId(), 1);
+        NodePtr nested = visitTupleOperation(aggregate);
         size_t relId = encodeRelation(aggregate.getRelation());
         auto rel = relations[relId].get();
-        auto res = mk<InterpreterParallelAggregate>(I_ParallelAggregate, &aggregate, rel,
-                visit(aggregate.getExpression()), visit(aggregate.getCondition()),
-                visitTupleOperation(aggregate));
+        auto res = mk<InterpreterParallelAggregate>(
+                I_ParallelAggregate, &aggregate, rel, std::move(expr), std::move(cond), std::move(nested));
         res->setViewContext(parentQueryViewContext);
+
         return res;
     }
 
     NodePtr visitIndexAggregate(const ram::IndexAggregate& aggregate) override {
+        orderingContext.addTupleWithIndexOrder(aggregate.getTupleId(), aggregate);
         InterpreterSuperInstruction indexOperation = getIndexSuperInstInfo(aggregate);
+        NodePtr expr = visit(aggregate.getExpression());
+        NodePtr cond = visit(aggregate.getCondition());
+        orderingContext.addNewTuple(aggregate.getTupleId(), 1);
+        NodePtr nested = visitTupleOperation(aggregate);
         size_t relId = encodeRelation(aggregate.getRelation());
         auto rel = relations[relId].get();
-        return mk<InterpreterIndexAggregate>(I_IndexAggregate, &aggregate, rel,
-                visit(aggregate.getExpression()), visit(aggregate.getCondition()),
-                visitTupleOperation(aggregate), encodeView(&aggregate), std::move(indexOperation));
+        return mk<InterpreterIndexAggregate>(I_IndexAggregate, &aggregate, rel, std::move(expr),
+                std::move(cond), std::move(nested), encodeView(&aggregate), std::move(indexOperation));
     }
 
     NodePtr visitParallelIndexAggregate(const ram::ParallelIndexAggregate& aggregate) override {
+        orderingContext.addTupleWithIndexOrder(aggregate.getTupleId(), aggregate);
         InterpreterSuperInstruction indexOperation = getIndexSuperInstInfo(aggregate);
+        NodePtr expr = visit(aggregate.getExpression());
+        NodePtr cond = visit(aggregate.getCondition());
+        orderingContext.addNewTuple(aggregate.getTupleId(), 1);
+        NodePtr nested = visitTupleOperation(aggregate);
         size_t relId = encodeRelation(aggregate.getRelation());
         auto rel = relations[relId].get();
         auto res = mk<InterpreterParallelIndexAggregate>(I_ParallelIndexAggregate, &aggregate, rel,
-                visit(aggregate.getExpression()), visit(aggregate.getCondition()),
-                visitTupleOperation(aggregate), encodeView(&aggregate), std::move(indexOperation));
+                std::move(expr), std::move(cond), std::move(nested), encodeView(&aggregate),
+                std::move(indexOperation));
         res->setViewContext(parentQueryViewContext);
         return res;
     }
@@ -542,6 +578,73 @@ public:
     }
 
 private:
+    /**
+     * @class OrderingContext
+     * @brief This class help generator reordering tuple access based on the index oder.
+     */
+    class OrderingContext {
+    public:
+        OrderingContext(NodeGenerator& generator) : generator(generator) {}
+
+        /** @brief Bind tuple with a natural full order.
+         *
+         * This is usually used when an operation implicitly introduce a runtime tuple, such as UnpackRecord
+         * NestedIntrinsicOperator, and nested operation in Aggregate.
+         * */
+        void addNewTuple(size_t tupleId, size_t arity) {
+            std::vector<uint32_t> order;
+            for (size_t i = 0; i < arity; ++i) {
+                order.push_back((uint32_t)i);
+            }
+            insertOrder(tupleId, std::move(order));
+        }
+
+        /** @brief Bind tuple with the default order.
+         *
+         * This is usually used for tuples created by non-indexed operations. Such as Scan, Aggregate, Choice.
+         * */
+        template <class RamNode>
+        void addTupleWithDefaultOrder(size_t tupleId, const RamNode& node) {
+            auto interpreterRel = generator.encodeRelation(node.getRelation());
+            insertOrder(tupleId, (**generator.relations[interpreterRel]).getIndexOrder(0));
+        }
+
+        /** @brief Bind tuple with the corresponding index order.
+         *
+         * This is usually used for tuples created by indexed operations. Such as IndexScan, IndexAggregate,
+         * IndexChoice.
+         * */
+        template <class RamNode>
+        void addTupleWithIndexOrder(size_t tupleId, const RamNode& node) {
+            auto interpreterRel = generator.encodeRelation(node.getRelation());
+            auto indexId = generator.encodeIndexPos(node);
+            auto order = (**generator.relations[interpreterRel]).getIndexOrder(indexId);
+            insertOrder(tupleId, order);
+        }
+
+        /** @brief Map the decoded order of elementId based on current context */
+        size_t mapOrder(size_t tupleId, size_t elementId) const {
+            return tupleOrders[tupleId][elementId];
+        }
+
+    private:
+        void insertOrder(size_t tupleId, const Order& order) {
+            if (tupleId >= tupleOrders.size()) {
+                tupleOrders.resize(tupleId + 1);
+            }
+
+            std::vector<uint32_t> decodeOrder(order.size());
+            for (size_t i = 0; i < order.size(); ++i) {
+                decodeOrder[order[i]] = i;
+            }
+
+            tupleOrders[tupleId] = std::move(decodeOrder);
+        }
+        std::vector<Order> tupleOrders;
+        NodeGenerator& generator;
+    };
+
+private:
     /** Environment encoding, store a mapping from ram::Node to its operation index id. */
     std::unordered_map<const ram::Node*, size_t> indexTable;
     /** Used by index encoding */
@@ -566,6 +669,8 @@ private:
     const bool profileEnabled;
     /** ram::Program */
     ram::Program* program;
+    /** ordering context */
+    OrderingContext orderingContext = OrderingContext(*this);
 
     /** @brief Reset view allocation system, since view's life time is within each query. */
     void newQueryBlock() {
@@ -714,10 +819,16 @@ private:
      */
     InterpreterSuperInstruction getIndexSuperInstInfo(const ram::IndexOperation& ramIndex) {
         size_t arity = ramIndex.getRelation().getArity();
+        auto interpreterRel = encodeRelation(ramIndex.getRelation());
+        auto indexId = encodeIndexPos(ramIndex);
+        auto order = (**relations[interpreterRel]).getIndexOrder(indexId);
         InterpreterSuperInstruction indexOperation(arity);
         const auto& first = ramIndex.getRangePattern().first;
         for (size_t i = 0; i < arity; ++i) {
-            auto& low = first[i];
+            // Note: unlike orderingContext::mapOrder where we try to decode the order,
+            // Here we have to encode the order.
+            auto& low = first[order[i]];
+
             // Unbounded
             if (isUndefValue(low)) {
                 indexOperation.first[i] = MIN_RAM_SIGNED;
@@ -733,8 +844,10 @@ private:
             // TupleElement
             if (isA<ram::TupleElement>(low)) {
                 auto lowTuple = dynamic_cast<ram::TupleElement*>(low);
-                indexOperation.tupleFirst.push_back(
-                        {i, (size_t)lowTuple->getTupleId(), lowTuple->getElement()});
+                size_t tupleId = lowTuple->getTupleId();
+                size_t elementId = lowTuple->getElement();
+                size_t newElementId = orderingContext.mapOrder(tupleId, elementId);
+                indexOperation.tupleFirst.push_back({i, tupleId, newElementId});
                 continue;
             }
 
@@ -743,7 +856,8 @@ private:
         }
         const auto& second = ramIndex.getRangePattern().second;
         for (size_t i = 0; i < arity; ++i) {
-            auto& hig = second[i];
+            auto& hig = second[order[i]];
+
             // Unbounded
             if (isUndefValue(hig)) {
                 indexOperation.second[i] = MAX_RAM_SIGNED;
@@ -759,8 +873,10 @@ private:
             // TupleElement
             if (isA<ram::TupleElement>(hig)) {
                 auto highTuple = dynamic_cast<ram::TupleElement*>(hig);
-                indexOperation.tupleSecond.push_back(
-                        {i, (size_t)highTuple->getTupleId(), highTuple->getElement()});
+                size_t tupleId = highTuple->getTupleId();
+                size_t elementId = highTuple->getElement();
+                size_t newElementId = orderingContext.mapOrder(tupleId, elementId);
+                indexOperation.tupleSecond.push_back({i, tupleId, newElementId});
                 continue;
             }
 
@@ -773,12 +889,23 @@ private:
     /**
      * @brief Encode and return the super-instruction information about an existence check operation
      */
-    InterpreterSuperInstruction getExistenceSuperInstInfo(const ram::AbstractExistenceCheck& exist) {
-        size_t arity = exist.getRelation().getArity();
+    InterpreterSuperInstruction getExistenceSuperInstInfo(const ram::AbstractExistenceCheck& abstractExist) {
+        auto interpreterRel = encodeRelation(abstractExist.getRelation());
+        size_t indexId = 0;
+        if (isA<ram::ExistenceCheck>(&abstractExist)) {
+            indexId = encodeIndexPos(*dynamic_cast<const ram::ExistenceCheck*>(&abstractExist));
+        } else if (isA<ram::ProvenanceExistenceCheck>(&abstractExist)) {
+            indexId = encodeIndexPos(*dynamic_cast<const ram::ProvenanceExistenceCheck*>(&abstractExist));
+        } else {
+            fatal("Unrecognized ram::AbstractExistenceCheck.");
+        }
+        auto order = (**relations[interpreterRel]).getIndexOrder(indexId);
+        size_t arity = abstractExist.getRelation().getArity();
         InterpreterSuperInstruction superOp(arity);
-        const auto& children = exist.getValues();
+        const auto& children = abstractExist.getValues();
         for (size_t i = 0; i < arity; ++i) {
-            auto& child = children[i];
+            auto& child = children[order[i]];
+
             // Unbounded
             if (isUndefValue(child)) {
                 superOp.first[i] = MIN_RAM_SIGNED;
@@ -796,7 +923,10 @@ private:
             // TupleElement
             if (isA<ram::TupleElement>(child)) {
                 auto tuple = dynamic_cast<ram::TupleElement*>(child);
-                superOp.tupleFirst.push_back({i, (size_t)tuple->getTupleId(), tuple->getElement()});
+                size_t tupleId = tuple->getTupleId();
+                size_t elementId = tuple->getElement();
+                size_t newElementId = orderingContext.mapOrder(tupleId, elementId);
+                superOp.tupleFirst.push_back({i, tupleId, newElementId});
                 continue;
             }
 
@@ -808,6 +938,9 @@ private:
 
     /**
      * @brief Encode and return the super-instruction information about a project operation
+     *
+     * No compilation reordering needed for projection as project has many target indexes and reordering
+     * can only be done during runtime.
      */
     InterpreterSuperInstruction getProjectSuperInstInfo(const ram::Project& exist) {
         size_t arity = exist.getRelation().getArity();
@@ -824,7 +957,10 @@ private:
             // TupleElement
             if (isA<ram::TupleElement>(child)) {
                 auto tuple = dynamic_cast<ram::TupleElement*>(child);
-                superOp.tupleFirst.push_back({i, (size_t)tuple->getTupleId(), tuple->getElement()});
+                size_t tupleId = tuple->getTupleId();
+                size_t elementId = tuple->getElement();
+                size_t newElementId = orderingContext.mapOrder(tupleId, elementId);
+                superOp.tupleFirst.push_back({i, tupleId, newElementId});
                 continue;
             }
 

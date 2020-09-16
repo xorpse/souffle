@@ -56,6 +56,30 @@ public:
         }
     }
 
+    // TODO: Will be deleted.
+    template <typename T>
+    void writeAllWithOrder(const T& relation) {
+        const auto& order = relation.getIndexOrder(0);
+        if (summary) {
+            return writeSize(relation.size());
+        }
+        auto lease = symbolTable.acquireLock();
+        (void)lease;  // silence "unused variable" warning
+        if (arity == 0) {
+            if (relation.begin() != relation.end()) {
+                writeNullary();
+            }
+            return;
+        }
+        for (const auto& current : relation) {
+            RamDomain tuple[order.size()];
+            for (size_t i = 0; i < order.size(); ++i) {
+                tuple[order[i]] = current[i];
+            }
+            writeNextTuple(tuple);
+        }
+    }
+
     template <typename T>
     void writeSize(const T& relation) {
         writeSize(relation.size());

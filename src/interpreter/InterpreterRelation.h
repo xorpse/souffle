@@ -50,6 +50,7 @@ public:
 
     /**
      * Support for-each iteration for InterpreterRelation.
+     * This implicitly returns tuple in the decoded order.
      */
     class Iterator : public std::iterator<std::forward_iterator_tag, RamDomain*> {
         Own<Stream> stream;
@@ -192,6 +193,11 @@ public:
      * Return number of tuples in relation (full-order)
      */
     size_t size() const;
+
+    /**
+     * Return the order of an index.
+     */
+    Order getIndexOrder(size_t idx) const;
 
     /**
      * Check if the relation is empty

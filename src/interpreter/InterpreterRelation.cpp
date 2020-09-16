@@ -123,6 +123,10 @@ size_t InterpreterRelation::getAuxiliaryArity() const {
     return auxiliaryArity;
 }
 
+Order InterpreterRelation::getIndexOrder(size_t idx) const {
+    return indexes[idx]->getOrder();
+}
+
 size_t InterpreterRelation::size() const {
     return main->size();
 }

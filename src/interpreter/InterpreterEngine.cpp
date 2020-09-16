@@ -364,7 +364,7 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
         ESAC(Constant)
 
         CASE(TupleElement)
-            return ctxt[cur.getTupleId()][cur.getElement()];
+            return ctxt[shadow.getTupleId()][shadow.getElement()];
         ESAC(TupleElement)
 
         CASE(AutoIncrement)
@@ -1325,7 +1325,7 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
                 try {
                     IOSystem::getInstance()
                             .getWriter(directive, getSymbolTable(), getRecordTable())
-                            ->writeAll(*node->getRelation());
+                            ->writeAllWithOrder(*node->getRelation());
                 } catch (std::exception& e) {
                     std::cerr << e.what();
                     exit(EXIT_FAILURE);
