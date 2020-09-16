@@ -275,8 +275,6 @@ public:
 
     NodePtr visitIndexScan(const ram::IndexScan& scan) override {
         InterpreterSuperInstruction indexOperation = getIndexSuperInstInfo(scan);
-        NodePtrVec children;
-        children.push_back(visitTupleOperation(scan));
         return mk<InterpreterIndexScan>(I_IndexScan, &scan, nullptr, visitTupleOperation(scan),
                 encodeView(&scan), std::move(indexOperation));
     }
@@ -506,9 +504,6 @@ public:
         });
 
         visitDepthFirst(*next, [&](const ram::AbstractParallel&) { viewContext->isParallel = true; });
-
-        NodePtrVec children;
-        children.push_back(visit(*next));
 
         auto res = mk<InterpreterQuery>(I_Query, &query, visit(*next));
         res->setViewContext(parentQueryViewContext);
