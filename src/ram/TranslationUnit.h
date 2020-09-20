@@ -20,6 +20,7 @@
 #include "ram/Program.h"
 #include "ram/analysis/Analysis.h"
 #include "reports/DebugReport.h"
+#include "reports/ErrorReport.h"
 #include "souffle/SymbolTable.h"
 #include <cassert>
 #include <iosfwd>
@@ -30,7 +31,6 @@
 #include <utility>
 
 namespace souffle {
-class ErrorReport;
 
 namespace ram {
 
@@ -49,7 +49,7 @@ public:
 
     virtual ~TranslationUnit() = default;
 
-    /** @brief get an analysis */
+    /** @brief Get an analysis */
     template <class Analysis>
     Analysis* getAnalysis() const {
         static const bool debug = Global::config().has("debug-report");
@@ -77,7 +77,7 @@ public:
         return dynamic_cast<Analysis*>(analyses[name].get());
     }
 
-    /** @brief get all alive analyses */
+    /** @brief Get all alive analyses */
     std::set<const analysis::Analysis*> getAliveAnalyses() const {
         std::set<const analysis::Analysis*> result;
         for (auto const& a : analyses) {
@@ -86,12 +86,12 @@ public:
         return result;
     }
 
-    /** @brief invalidate all alive analyses of the translation unit */
+    /** @brief Invalidate all alive analyses of the translation unit */
     void invalidateAnalyses() {
         analyses.clear();
     }
 
-    /** @brief get the RAM Program of the translation unit  */
+    /** @brief Get the RAM Program of the translation unit  */
     Program& getProgram() const {
         return *program;
     }
@@ -115,10 +115,10 @@ protected:
     /* Cached analyses */
     mutable std::map<std::string, Own<analysis::Analysis>> analyses;
 
-    /* Program RAM */
+    /* RAM program */
     Own<Program> program;
 
-    /* Symbol table for RAM program */
+    /* Symbol table for the RAM program */
     souffle::SymbolTable symbolTable;
 
     /* Error report for raising errors and warnings */
