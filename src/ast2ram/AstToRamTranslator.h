@@ -104,6 +104,9 @@ private:
     /** SIPS metric for reordering */
     Own<ast::SipsMetric> sips;
 
+    /** translate AST to RAM Program */
+    void translateProgram(const ast::TranslationUnit& translationUnit);
+
     /** create a RAM element access node */
     static Own<ram::TupleElement> makeRamTupleElement(const Location& loc);
 
@@ -120,10 +123,6 @@ private:
     std::string getRelationName(const ast::QualifiedName& id) {
         return toString(join(id.getQualifiers(), "."));
     }
-
-    /** translate AST directives to RAM directives */
-    // TODO (b-scholz): revisit / refactor
-    void translateDirectives(std::map<std::string, std::string>& directives, const ast::Relation* rel);
 
     // TODO (b-scholz): revisit / refactor so that only one directive is translated
     std::vector<std::map<std::string, std::string>> getInputDirectives(const ast::Relation* rel);
@@ -198,14 +197,8 @@ private:
     /** translate RAM code for subroutine to get subproofs */
     Own<ram::Statement> makeSubproofSubroutine(const ast::Clause& clause);
 
-    /** translate RAM code for subroutine to get subproofs */
-    Own<ram::Statement> makeSubproofSubroutineOpt(const ast::Clause& clause);
-
     /** translate RAM code for subroutine to get subproofs for non-existence of a tuple */
     Own<ram::Statement> makeNegationSubproofSubroutine(const ast::Clause& clause);
-
-    /** translate AST to RAM Program */
-    void translateProgram(const ast::TranslationUnit& translationUnit);
 };
 
 /**
