@@ -33,7 +33,6 @@
 #include "ast/Variable.h"
 #include "ast/analysis/AuxArity.h"
 #include "ast/analysis/IOType.h"
-#include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/RecursiveClauses.h"
 #include "ast/analysis/TypeSystem.h"
 #include "ast/utility/SipsMetric.h"
@@ -82,9 +81,6 @@ private:
     /** IO Type */
     const ast::analysis::IOTypeAnalysis* ioType = nullptr;
 
-    /** Relation Detail */
-    const ast::analysis::RelationDetailCacheAnalysis* relDetail = nullptr;
-
     /** RAM program */
     Own<ram::Statement> ramMain;
 
@@ -99,6 +95,9 @@ private:
 
     /** Auxiliary Arity Analysis */
     const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
+
+    /** SIPS metric for reordering */
+    Own<ast::SipsMetric> sips;
 
     /**
      * Concrete attribute
@@ -345,9 +344,6 @@ private:
         std::vector<const ast::Node*> op_nesting;
 
         Own<ast::Clause> getReorderedClause(const ast::Clause& clause, const int version) const;
-
-        // get the appropraite sips function
-        std::unique_ptr<ast::SipsMetric> getSipsFunction() const;
 
         arg_list* getArgList(
                 const ast::Node* curNode, std::map<const ast::Node*, Own<arg_list>>& nodeArgs) const;

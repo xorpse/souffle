@@ -412,9 +412,8 @@ Own<ast::Clause> AstToRamTranslator::ClauseTranslator::getReorderedClause(
     // check whether there is an imposed order constraint
     if (plan == nullptr) {
         // no plan, so reorder it according to the internal heuristic
-        auto sips = getSipsFunction();
-        if (auto* reorderedClause =
-                        ast::transform::ReorderLiteralsTransformer::reorderClauseWithSips(*sips, &clause)) {
+        if (auto* reorderedClause = ast::transform::ReorderLiteralsTransformer::reorderClauseWithSips(
+                    *translator.sips, &clause)) {
             return Own<ast::Clause>(reorderedClause);
         }
         return nullptr;
@@ -442,10 +441,6 @@ Own<ast::Clause> AstToRamTranslator::ClauseTranslator::getReorderedClause(
     reorderedClause->clearExecutionPlan();
 
     return reorderedClause;
-}
-
-std::unique_ptr<ast::SipsMetric> AstToRamTranslator::ClauseTranslator::getSipsFunction() const {
-    return std::make_unique<ast::DeltaInputSips>(*translator.relDetail, *translator.ioType);
 }
 
 AstToRamTranslator::ClauseTranslator::arg_list* AstToRamTranslator::ClauseTranslator::getArgList(
@@ -1496,9 +1491,6 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     // obtain IO Type of relations
     ioType = translationUnit.getAnalysis<ast::analysis::IOTypeAnalysis>();
 
-    // obtain relation details from analysis
-    relDetail = translationUnit.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
-
     // obtain type environment from analysis
     typeEnv = &translationUnit.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
 
@@ -1517,6 +1509,13 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
 
     // get auxiliary arity analysis
     auxArityAnalysis = translationUnit.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
+
+    // determine the sips to use
+    std::string sipsChosen = "all-bound";
+    if (Global::config().has("RamSIPS")) {
+        sipsChosen = Global::config().get("RamSIPS");
+    }
+    sips = ast::SipsMetric::create(sipsChosen, translationUnit);
 
     // handle the case of an empty SCC graph
     if (sccGraph.getNumberOfSCCs() == 0) return;
