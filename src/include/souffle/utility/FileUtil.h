@@ -273,7 +273,7 @@ inline std::stringstream execStdOut(char const* cmd) {
         if (feof(in) != 0) {
             break;
         }
-        data << c;
+        data << static_cast<char>(c);
     }
     pclose(in);
     return data;
