@@ -17,7 +17,9 @@
 #include "ast/utility/SipsMetric.h"
 #include "ast/Clause.h"
 #include "ast/Variable.h"
+#include "ast/analysis/IOType.h"
 #include "ast/analysis/ProfileUse.h"
+#include "ast/analysis/RelationDetailCache.h"
 #include "ast/utility/BindingStore.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
@@ -226,4 +228,59 @@ std::vector<double> ProfileUseSips::evaluateCosts(
     }
     return cost;
 }
+
+std::vector<double> DeltaSips::evaluateCosts(
+        const std::vector<Atom*> atoms, const BindingStore& bindingStore) const {
+    // Goal: prioritise (1) all-bound, then (2) deltas, and then (3) left-most
+    std::vector<double> cost;
+    for (const auto* atom : atoms) {
+        if (atom == nullptr) {
+            cost.push_back(std::numeric_limits<double>::max());
+            continue;
+        }
+
+        int arity = atom->getArity();
+        int numBound = bindingStore.numBoundArguments(atom);
+        if (arity == numBound) {
+            // prioritise all-bound
+            cost.push_back(0);
+        } else if (isDeltaRelation(atom->getQualifiedName())) {
+            // then deltas
+            cost.push_back(1);
+        } else {
+            cost.push_back(2);
+        }
+    }
+    return cost;
+}
+
+std::vector<double> DeltaInputSips::evaluateCosts(
+        const std::vector<Atom*> atoms, const BindingStore& bindingStore) const {
+    // Goal: prioritise (1) all-bound, (2) deltas, (3) input, then (4) rest
+    std::vector<double> cost;
+    for (const auto* atom : atoms) {
+        if (atom == nullptr) {
+            cost.push_back(std::numeric_limits<double>::max());
+            continue;
+        }
+
+        const auto& relName = atom->getQualifiedName();
+        int arity = atom->getArity();
+        int numBound = bindingStore.numBoundArguments(atom);
+        if (arity == numBound) {
+            // prioritise all-bound
+            cost.push_back(0);
+        } else if (isDeltaRelation(relName)) {
+            // then deltas
+            cost.push_back(1);
+        } else if (ioTypes.isInput(relDetail.getRelation(relName))) {
+            // then input
+            cost.push_back(2);
+        } else {
+            cost.push_back(3);
+        }
+    }
+    return cost;
+}
+
 };  // namespace souffle::ast

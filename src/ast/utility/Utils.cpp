@@ -238,6 +238,14 @@ bool isProposition(const Atom* atom) {
     return atom->getArguments().empty();
 }
 
+bool isDeltaRelation(const QualifiedName& name) {
+    const auto& qualifiers = name.getQualifiers();
+    if (qualifiers.empty()) {
+        return false;
+    }
+    return isPrefix("@delta_", qualifiers[0]);
+}
+
 Clause* cloneHead(const Clause* clause) {
     auto* clone = new Clause();
     clone->setSrcLoc(clause->getSrcLoc());

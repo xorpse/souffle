@@ -52,6 +52,7 @@
 #include "ast/analysis/AuxArity.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/RecursiveClauses.h"
+#include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/RelationSchedule.h"
 #include "ast/analysis/SCCGraph.h"
 #include "ast/analysis/TopologicallySortedSCCGraph.h"
@@ -411,7 +412,7 @@ Own<ast::Clause> AstToRamTranslator::ClauseTranslator::getReorderedClause(
     // check whether there is an imposed order constraint
     if (plan == nullptr) {
         // no plan, so reorder it according to the internal heuristic
-        auto sips = std::make_unique<ast::AllBoundSips>();
+        auto sips = getSipsFunction();
         if (auto* reorderedClause =
                         ast::transform::ReorderLiteralsTransformer::reorderClauseWithSips(*sips, &clause)) {
             return Own<ast::Clause>(reorderedClause);
@@ -441,6 +442,10 @@ Own<ast::Clause> AstToRamTranslator::ClauseTranslator::getReorderedClause(
     reorderedClause->clearExecutionPlan();
 
     return reorderedClause;
+}
+
+std::unique_ptr<ast::SipsMetric> AstToRamTranslator::ClauseTranslator::getSipsFunction() const {
+    return std::make_unique<ast::DeltaInputSips>(*translator.relDetail, *translator.ioType);
 }
 
 AstToRamTranslator::ClauseTranslator::arg_list* AstToRamTranslator::ClauseTranslator::getArgList(
@@ -1490,6 +1495,9 @@ Own<ram::Statement> AstToRamTranslator::makeNegationSubproofSubroutine(const ast
 void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {
     // obtain IO Type of relations
     ioType = translationUnit.getAnalysis<ast::analysis::IOTypeAnalysis>();
+
+    // obtain relation details from analysis
+    relDetail = translationUnit.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
 
     // obtain type environment from analysis
     typeEnv = &translationUnit.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
