@@ -16,8 +16,8 @@
 
 #include "ast/utility/SipsMetric.h"
 #include "ast/Clause.h"
-#include "ast/Variable.h"
 #include "ast/TranslationUnit.h"
+#include "ast/Variable.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/ProfileUse.h"
 #include "ast/analysis/RelationDetailCache.h"
@@ -76,6 +76,14 @@ std::unique_ptr<SipsMetric> SipsMetric::create(const std::string& heuristic, con
         return std::make_unique<LeastFreeVarsSips>();
     else if (heuristic == "profile-use")
         return std::make_unique<ProfileUseSips>(*tu.getAnalysis<analysis::ProfileUseAnalysis>());
+    else if (heuristic == "delta")
+        return std::make_unique<DeltaSips>();
+    else if (heuristic == "input")
+        return std::make_unique<InputSips>(*tu.getAnalysis<analysis::RelationDetailCacheAnalysis>(),
+                *tu.getAnalysis<analysis::IOTypeAnalysis>());
+    else if (heuristic == "delta-input")
+        return std::make_unique<DeltaInputSips>(*tu.getAnalysis<analysis::RelationDetailCacheAnalysis>(),
+                *tu.getAnalysis<analysis::IOTypeAnalysis>());
 
     // default is all-bound
     return create("all-bound", tu);
