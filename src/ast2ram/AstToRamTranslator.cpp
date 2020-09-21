@@ -60,6 +60,7 @@
 #include "ast/analysis/TypeSystem.h"
 #include "ast/transform/ReorderLiterals.h"
 #include "ast/utility/NodeMapper.h"
+#include "ast/utility/SipsMetric.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
 #include "parser/SrcLocation.h"

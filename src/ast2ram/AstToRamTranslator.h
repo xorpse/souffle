@@ -16,48 +16,54 @@
 
 #pragma once
 
-#include "ast/Argument.h"
-#include "ast/Atom.h"
 #include "ast/Clause.h"
-#include "ast/Constant.h"
-#include "ast/Literal.h"
-#include "ast/NilConstant.h"
-#include "ast/Node.h"
 #include "ast/NumericConstant.h"
-#include "ast/Program.h"
-#include "ast/QualifiedName.h"
-#include "ast/RecordInit.h"
-#include "ast/Relation.h"
 #include "ast/StringConstant.h"
-#include "ast/TranslationUnit.h"
 #include "ast/Variable.h"
-#include "ast/analysis/AuxArity.h"
-#include "ast/analysis/IOType.h"
-#include "ast/analysis/RecursiveClauses.h"
-#include "ast/analysis/TypeSystem.h"
 #include "ast/utility/SipsMetric.h"
 #include "ram/Condition.h"
 #include "ram/Expression.h"
 #include "ram/Operation.h"
+#include "ram/Relation.h"
 #include "ram/Statement.h"
-#include "ram/TranslationUnit.h"
 #include "ram/TupleElement.h"
-#include "souffle/RamTypes.h"
 #include "souffle/SymbolTable.h"
 #include "souffle/utility/FunctionalUtil.h"
-#include "souffle/utility/MiscUtil.h"
-#include "souffle/utility/StreamUtil.h"
 #include "souffle/utility/StringUtil.h"
 #include <cassert>
 #include <cstddef>
 #include <map>
 #include <memory>
-#include <optional>
 #include <ostream>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
+
+namespace souffle::ast {
+class Argument;
+class Atom;
+class Constant;
+class Literal;
+class NilConstant;
+class Node;
+class Program;
+class QualifiedName;
+class Relation;
+class RecordInit;
+class TranslationUnit;
+}  // namespace souffle::ast
+
+namespace souffle::ast::analysis {
+class IOTypeAnalysis;
+class AuxiliaryArityAnalysis;
+class RecursiveClausesAnalysis;
+class TypeEnvironment;
+}  // namespace souffle::ast::analysis
+
+namespace souffle::ram {
+class TranslationUnit;
+}
 
 namespace souffle {
 
