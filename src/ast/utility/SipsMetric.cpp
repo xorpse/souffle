@@ -278,6 +278,32 @@ std::vector<double> DeltaSips::evaluateCosts(
     return cost;
 }
 
+std::vector<double> InputSips::evaluateCosts(
+        const std::vector<Atom*> atoms, const BindingStore& bindingStore) const {
+    // Goal: prioritise (1) all-bound, (2) input, then (3) rest
+    std::vector<double> cost;
+    for (const auto* atom : atoms) {
+        if (atom == nullptr) {
+            cost.push_back(std::numeric_limits<double>::max());
+            continue;
+        }
+
+        const auto& relName = atom->getQualifiedName();
+        int arity = atom->getArity();
+        int numBound = bindingStore.numBoundArguments(atom);
+        if (arity == numBound) {
+            // prioritise all-bound
+            cost.push_back(0);
+        } else if (ioTypes.isInput(relDetail.getRelation(relName))) {
+            // then input
+            cost.push_back(1);
+        } else {
+            cost.push_back(2);
+        }
+    }
+    return cost;
+}
+
 std::vector<double> DeltaInputSips::evaluateCosts(
         const std::vector<Atom*> atoms, const BindingStore& bindingStore) const {
     // Goal: prioritise (1) all-bound, (2) deltas, (3) input, then (4) rest

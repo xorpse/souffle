@@ -157,6 +157,21 @@ protected:
             const std::vector<Atom*> atoms, const BindingStore& bindingStore) const override;
 };
 
+/** Goal: prioritise (1) all-bound, then (2) input, and then (3) left-most */
+class InputSips : public SipsMetric {
+public:
+    InputSips(const analysis::RelationDetailCacheAnalysis& relDetail, const analysis::IOTypeAnalysis& ioTypes)
+            : relDetail(relDetail), ioTypes(ioTypes) {}
+
+protected:
+    std::vector<double> evaluateCosts(
+            const std::vector<Atom*> atoms, const BindingStore& bindingStore) const override;
+
+private:
+    const analysis::RelationDetailCacheAnalysis& relDetail;
+    const analysis::IOTypeAnalysis& ioTypes;
+};
+
 /** Goal: prioritise (1) all-bound, then (2) deltas, then (3) input, and then (4) left-most */
 class DeltaInputSips : public SipsMetric {
 public:
