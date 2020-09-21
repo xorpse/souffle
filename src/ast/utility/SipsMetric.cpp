@@ -17,6 +17,7 @@
 #include "ast/utility/SipsMetric.h"
 #include "ast/Clause.h"
 #include "ast/Variable.h"
+#include "ast/TranslationUnit.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/ProfileUse.h"
 #include "ast/analysis/RelationDetailCache.h"
@@ -55,6 +56,29 @@ std::vector<unsigned int> SipsMetric::getReordering(const Clause* clause) const 
     }
 
     return newOrder;
+}
+
+/** Create a SIPS metric based on a given heuristic. */
+std::unique_ptr<SipsMetric> SipsMetric::create(const std::string& heuristic, const TranslationUnit& tu) {
+    if (heuristic == "strict")
+        return std::make_unique<StrictSips>();
+    else if (heuristic == "all-bound")
+        return std::make_unique<AllBoundSips>();
+    else if (heuristic == "naive")
+        return std::make_unique<NaiveSips>();
+    else if (heuristic == "max-bound")
+        return std::make_unique<MaxBoundSips>();
+    else if (heuristic == "max-ratio")
+        return std::make_unique<MaxRatioSips>();
+    else if (heuristic == "least-free")
+        return std::make_unique<LeastFreeSips>();
+    else if (heuristic == "least-free-vars")
+        return std::make_unique<LeastFreeVarsSips>();
+    else if (heuristic == "profile-use")
+        return std::make_unique<ProfileUseSips>(*tu.getAnalysis<analysis::ProfileUseAnalysis>());
+
+    // default is all-bound
+    return create("all-bound", tu);
 }
 
 std::vector<double> StrictSips::evaluateCosts(

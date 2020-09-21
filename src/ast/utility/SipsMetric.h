@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <memory>
 #include <vector>
 
 namespace souffle::ast::analysis {
@@ -28,6 +29,7 @@ namespace souffle::ast {
 class Atom;
 class BindingStore;
 class Clause;
+class TranslationUnit;
 
 /**
  * Class for SIPS cost-metric functions
@@ -44,6 +46,9 @@ public:
      * @return the vector of new positions; v[i] = j iff atom j moves to pos i
      */
     std::vector<unsigned int> getReordering(const Clause* clause) const;
+
+    /** Create a SIPS metric based on a given heuristic. */
+    static std::unique_ptr<SipsMetric> create(const std::string& heuristic, const TranslationUnit& tu);
 
 protected:
     /**
