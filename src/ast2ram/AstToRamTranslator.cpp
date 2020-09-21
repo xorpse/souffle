@@ -52,6 +52,7 @@
 #include "ast/analysis/AuxArity.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/RecursiveClauses.h"
+#include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/RelationSchedule.h"
 #include "ast/analysis/SCCGraph.h"
 #include "ast/analysis/TopologicallySortedSCCGraph.h"
@@ -411,9 +412,8 @@ Own<ast::Clause> AstToRamTranslator::ClauseTranslator::getReorderedClause(
     // check whether there is an imposed order constraint
     if (plan == nullptr) {
         // no plan, so reorder it according to the internal heuristic
-        auto sips = std::make_unique<ast::AllBoundSips>();
-        if (auto* reorderedClause =
-                        ast::transform::ReorderLiteralsTransformer::reorderClauseWithSips(*sips, &clause)) {
+        if (auto* reorderedClause = ast::transform::ReorderLiteralsTransformer::reorderClauseWithSips(
+                    *translator.sips, &clause)) {
             return Own<ast::Clause>(reorderedClause);
         }
         return nullptr;
@@ -1509,6 +1509,13 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
 
     // get auxiliary arity analysis
     auxArityAnalysis = translationUnit.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
+
+    // determine the sips to use
+    std::string sipsChosen = "all-bound";
+    if (Global::config().has("RamSIPS")) {
+        sipsChosen = Global::config().get("RamSIPS");
+    }
+    sips = ast::SipsMetric::create(sipsChosen, translationUnit);
 
     // handle the case of an empty SCC graph
     if (sccGraph.getNumberOfSCCs() == 0) return;

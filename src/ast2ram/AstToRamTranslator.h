@@ -96,6 +96,9 @@ private:
     /** Auxiliary Arity Analysis */
     const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
 
+    /** SIPS metric for reordering */
+    Own<ast::SipsMetric> sips;
+
     /**
      * Concrete attribute
      */
