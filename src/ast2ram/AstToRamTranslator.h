@@ -16,9 +16,6 @@
 
 #pragma once
 
-#include "ast/Clause.h"
-#include "ast/NumericConstant.h"
-#include "ast/StringConstant.h"
 #include "ast/Variable.h"
 #include "souffle/SymbolTable.h"
 #include "souffle/utility/FunctionalUtil.h"
@@ -36,6 +33,7 @@
 namespace souffle::ast {
 class Argument;
 class Atom;
+class Clause;
 class Constant;
 class Literal;
 class NilConstant;
@@ -128,9 +126,7 @@ private:
     void nameUnnamedVariables(ast::Clause* clause);
 
     /** converts the given relation identifier into a relation name */
-    std::string getRelationName(const ast::QualifiedName& id) {
-        return toString(join(id.getQualifiers(), "."));
-    }
+    static std::string getRelationName(const ast::QualifiedName& id);
 
     // TODO (b-scholz): revisit / refactor so that only one directive is translated
     std::vector<std::map<std::string, std::string>> getInputDirectives(const ast::Relation* rel);
@@ -165,27 +161,8 @@ private:
         return symbolTable;
     }
 
-    /**
-     *  Get ram representation of constant.
-     */
-    RamDomain getConstantRamRepresentation(const ast::Constant& constant) {
-        if (auto strConstant = dynamic_cast<const ast::StringConstant*>(&constant)) {
-            return getSymbolTable().lookup(strConstant->getConstant());
-        } else if (isA<ast::NilConstant>(&constant)) {
-            return 0;
-        } else if (auto* numConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
-            assert(numConstant->getType().has_value());
-            switch (*numConstant->getType()) {
-                case ast::NumericConstant::Type::Int:
-                    return RamSignedFromString(numConstant->getConstant(), nullptr, 0);
-                case ast::NumericConstant::Type::Uint:
-                    return RamUnsignedFromString(numConstant->getConstant(), nullptr, 0);
-                case ast::NumericConstant::Type::Float: return RamFloatFromString(numConstant->getConstant());
-            }
-        }
-
-        fatal("unaccounted-for constant");
-    }
+    /** Get ram representation of constant */
+    RamDomain getConstantRamRepresentation(const ast::Constant& constant);
 
     /** translate RAM code for a constant value */
     Own<ram::Expression> translateConstant(ast::Constant const& c);

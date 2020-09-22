@@ -409,6 +409,25 @@ Own<ram::Condition> AstToRamTranslator::translateConstraint(
     return ConstraintTranslator(*this, index)(*lit);
 }
 
+RamDomain AstToRamTranslator::getConstantRamRepresentation(const ast::Constant& constant) {
+    if (auto strConstant = dynamic_cast<const ast::StringConstant*>(&constant)) {
+        return getSymbolTable().lookup(strConstant->getConstant());
+    } else if (isA<ast::NilConstant>(&constant)) {
+        return 0;
+    } else if (auto* numConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
+        assert(numConstant->getType().has_value());
+        switch (*numConstant->getType()) {
+            case ast::NumericConstant::Type::Int:
+                return RamSignedFromString(numConstant->getConstant(), nullptr, 0);
+            case ast::NumericConstant::Type::Uint:
+                return RamUnsignedFromString(numConstant->getConstant(), nullptr, 0);
+            case ast::NumericConstant::Type::Float: return RamFloatFromString(numConstant->getConstant());
+        }
+    }
+
+    fatal("unaccounted-for constant");
+}
+
 Own<ast::Clause> AstToRamTranslator::ClauseTranslator::getReorderedClause(
         const ast::Clause& clause, const int version) const {
     const auto plan = clause.getExecutionPlan();
@@ -997,6 +1016,11 @@ void AstToRamTranslator::nameUnnamedVariables(ast::Clause* clause) {
     for (auto& atom : ast::getBodyLiterals<ast::Atom>(*clause)) {
         atom->apply(init);
     }
+}
+
+/** converts the given relation identifier into a relation name */
+std::string AstToRamTranslator::getRelationName(const ast::QualifiedName& id) {
+    return toString(join(id.getQualifiers(), "."));
 }
 
 /** generate RAM code for recursive relations in a strongly-connected component */
