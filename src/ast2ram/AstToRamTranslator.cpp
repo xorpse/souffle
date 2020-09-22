@@ -116,6 +116,7 @@
 #include "reports/DebugReport.h"
 #include "reports/ErrorReport.h"
 #include "souffle/BinaryConstraintOps.h"
+#include "souffle/SymbolTable.h"
 #include "souffle/TypeAttribute.h"
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/FunctionalUtil.h"
@@ -332,6 +333,11 @@ Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg
     };
 
     return ValueTranslator(*this, index)(*arg);
+}
+
+SymbolTable& AstToRamTranslator::getSymbolTable() {
+    static SymbolTable symbolTable;
+    return symbolTable;
 }
 
 Own<ram::Condition> AstToRamTranslator::translateConstraint(

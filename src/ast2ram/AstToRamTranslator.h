@@ -17,8 +17,10 @@
 #pragma once
 
 #include "ast/Variable.h"
-#include "souffle/SymbolTable.h"
 #include "souffle/utility/FunctionalUtil.h"
+#include "souffle/utility/ContainerUtil.h"
+#include "souffle/utility/MiscUtil.h"
+#include "souffle/utility/StreamUtil.h"
 #include "souffle/utility/StringUtil.h"
 #include <cassert>
 #include <cstddef>
@@ -66,6 +68,8 @@ class TupleElement;
 
 namespace souffle {
 
+class SymbolTable;
+
 /**
  * Main class for the AST->RAM translator
  */
@@ -100,9 +104,6 @@ private:
 
     /** RAM relations */
     std::map<std::string, Own<ram::Relation>> ramRels;
-
-    /** Symbol Table **/
-    SymbolTable symbolTable;
 
     /** Auxiliary Arity Analysis */
     const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
@@ -157,9 +158,7 @@ private:
     Own<ram::Condition> translateConstraint(const ast::Literal* arg, const ValueIndex& index);
 
     /** Return a symbol table **/
-    SymbolTable& getSymbolTable() {
-        return symbolTable;
-    }
+    SymbolTable& getSymbolTable();
 
     /** Get ram representation of constant */
     RamDomain getConstantRamRepresentation(const ast::Constant& constant);
