@@ -46,6 +46,7 @@
 #include "ast/analysis/SumTypeBranches.h"
 #include "ast/analysis/TypeEnvironment.h"
 #include "ast/analysis/TypeSystem.h"
+#include "ast/analysis/Functor.h"
 #include "ast/utility/NodeMapper.h"
 #include "ast/utility/Utils.h"
 #include "souffle/TypeAttribute.h"
@@ -566,6 +567,7 @@ private:
     const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>()->getTypeEnvironment();
     const Program& program = tu.getProgram();
     const SumTypeBranchesAnalysis& sumTypesBranches = *tu.getAnalysis<SumTypeBranchesAnalysis>();
+    const FunctorAnalysis& functorAnalysis = *tu.getAnalysis<FunctorAnalysis>();
 
     // Sinks = {head} ∪ {negated atoms}
     std::set<const Atom*> sinks;
@@ -684,14 +686,22 @@ private:
         }
 
         // add a constraint for the return type of the functor
-        addConstraint(isSubtypeOf(functorVar, typeEnv.getConstantType(fun.getReturnType())));
+        try {
+            TypeAttribute returnType = functorAnalysis.getReturnType(&fun);
+            addConstraint(isSubtypeOf(functorVar, typeEnv.getConstantType(returnType)));
+        } catch (...) {
+            // missing function information
+            return;
+        }
 
         // Special case. Ord returns the ram representation of any object.
         if (intrFun && intrFun->getFunctionInfo()->op == FunctorOp::ORD) return;
 
+        // Add constraints on arguments
         auto arguments = fun.getArguments();
         for (size_t i = 0; i < arguments.size(); ++i) {
-            addConstraint(isSubtypeOf(getVar(arguments[i]), typeEnv.getConstantType(fun.getArgType(i))));
+            TypeAttribute argType = functorAnalysis.getArgType(&fun, i);
+            addConstraint(isSubtypeOf(getVar(arguments[i]), typeEnv.getConstantType(argType)));
         }
     }
 

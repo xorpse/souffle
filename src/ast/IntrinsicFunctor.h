@@ -70,18 +70,6 @@ public:
         this->info = &info;
     }
 
-    /** Get the return type of the functor. */
-    TypeAttribute getReturnType() const override {
-        assert(info && "functor info not yet available");
-        return info->result;
-    }
-
-    /** Get type of the functor argument*/
-    TypeAttribute getArgType(const size_t arg) const override {
-        assert(info && "functor info not yet available");
-        return info->params.at(info->variadic ? 0 : arg);
-    }
-
     IntrinsicFunctor* clone() const override {
         return new IntrinsicFunctor(function, info, souffle::clone(args), getSrcLoc());
     }

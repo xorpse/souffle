@@ -293,16 +293,14 @@ Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg
         }
 
         Own<ram::Expression> visitUserDefinedFunctor(const ast::UserDefinedFunctor& udf) override {
-            // Sanity check.
-            assert(udf.getArguments().size() == udf.getArgsTypes().size());
-
             VecOwn<ram::Expression> values;
             for (const auto& cur : udf.getArguments()) {
                 values.push_back(translator.translateValue(cur, index));
             }
-
-            return mk<ram::UserDefinedOperator>(udf.getName(), udf.getArgsTypes(), udf.getReturnType(),
-                    udf.isStateful(), std::move(values));
+            auto returnType = translator.functorAnalysis->getReturnType(&udf);
+            auto argTypes = translator.functorAnalysis->getArgTypes(udf);
+            return mk<ram::UserDefinedOperator>(udf.getName(), argTypes, returnType,
+                    translator.functorAnalysis->isStateful(&udf), std::move(values));
         }
 
         Own<ram::Expression> visitCounter(const ast::Counter&) override {
@@ -636,7 +634,8 @@ Own<ram::Operation> AstToRamTranslator::ClauseTranslator::filterByConstraints(si
                     translator.translateConstant(*c));
         } else if (auto* func = dynamic_cast<const ast::Functor*>(a)) {
             if (constrainByFunctors) {
-                op = mkFilter(func->getReturnType() == TypeAttribute::Float,
+                TypeAttribute returnType = translator.functorAnalysis->getReturnType(func);
+                op = mkFilter(returnType == TypeAttribute::Float,
                         translator.translateValue(func, valueIndex));
             }
         }
@@ -1242,7 +1241,8 @@ Own<ram::Statement> AstToRamTranslator::makeSubproofSubroutine(const ast::Clause
             intermediateClause->addToBody(mk<ast::BinaryConstraint>(
                     BinaryConstraintOp::EQ, souffle::clone(var), mk<ast::SubroutineArgument>(i)));
         } else if (auto func = dynamic_cast<ast::Functor*>(arg)) {
-            auto opEq = func->getReturnType() == TypeAttribute::Float ? BinaryConstraintOp::FEQ
+            TypeAttribute returnType = functorAnalysis->getReturnType(func); 
+            auto opEq = returnType == TypeAttribute::Float ? BinaryConstraintOp::FEQ
                                                                       : BinaryConstraintOp::EQ;
             intermediateClause->addToBody(
                     mk<ast::BinaryConstraint>(opEq, souffle::clone(func), mk<ast::SubroutineArgument>(i)));
@@ -1509,6 +1509,9 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
 
     // get auxiliary arity analysis
     auxArityAnalysis = translationUnit.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
+
+    // get functor analysis
+    functorAnalysis = translationUnit.getAnalysis<ast::analysis::FunctorAnalysis>();
 
     // determine the sips to use
     std::string sipsChosen = "all-bound";

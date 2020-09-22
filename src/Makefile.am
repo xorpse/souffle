@@ -74,6 +74,8 @@ souffle_sources = \
         ast/analysis/ComponentLookup.h                     \
         ast/analysis/Constraint.h                          \
         ast/analysis/ConstraintSystem.h                    \
+	ast/analysis/Functor.h                             \
+	ast/analysis/Functor.cpp                           \
         ast/analysis/Ground.cpp                            \
         ast/analysis/Ground.h                              \
         ast/analysis/IOType.cpp                            \
@@ -176,8 +178,6 @@ souffle_sources = \
         ast/transform/Transformer.h                        \
         ast/transform/UniqueAggregationVariables.cpp       \
         ast/transform/UniqueAggregationVariables.h         \
-        ast/transform/UserDefinedFunctors.cpp              \
-        ast/transform/UserDefinedFunctors.h                \
         ast/transform/While.h                              \
         ast/utility/BindingStore.h                         \
         ast/utility/BindingStore.cpp                       \
