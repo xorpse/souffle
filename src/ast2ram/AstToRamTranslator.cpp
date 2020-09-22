@@ -132,6 +132,9 @@
 
 namespace souffle {
 
+AstToRamTranslator::AstToRamTranslator() = default;
+AstToRamTranslator::~AstToRamTranslator() = default;
+
 /** append statement to a list of statements */
 inline void appendStmt(VecOwn<ram::Statement>& stmtList, Own<ram::Statement> stmt) {
     if (stmt) {

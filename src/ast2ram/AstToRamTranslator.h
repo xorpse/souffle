@@ -20,13 +20,6 @@
 #include "ast/NumericConstant.h"
 #include "ast/StringConstant.h"
 #include "ast/Variable.h"
-#include "ast/utility/SipsMetric.h"
-#include "ram/Condition.h"
-#include "ram/Expression.h"
-#include "ram/Operation.h"
-#include "ram/Relation.h"
-#include "ram/Statement.h"
-#include "ram/TupleElement.h"
 #include "souffle/SymbolTable.h"
 #include "souffle/utility/FunctionalUtil.h"
 #include "souffle/utility/StringUtil.h"
@@ -51,6 +44,7 @@ class Program;
 class QualifiedName;
 class Relation;
 class RecordInit;
+class SipsMetric;
 class TranslationUnit;
 }  // namespace souffle::ast
 
@@ -62,8 +56,15 @@ class TypeEnvironment;
 }  // namespace souffle::ast::analysis
 
 namespace souffle::ram {
+class Condition;
+class Expression;
+class Operation;
+class Relation;
+class RelationReference;
+class Statement;
 class TranslationUnit;
-}
+class TupleElement;
+}  // namespace souffle::ram
 
 namespace souffle {
 
@@ -72,7 +73,8 @@ namespace souffle {
  */
 class AstToRamTranslator {
 public:
-    AstToRamTranslator() = default;
+    AstToRamTranslator();
+    ~AstToRamTranslator();
 
     /** translates AST to translation unit */
     Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
