@@ -411,4 +411,25 @@ public:
         src->extend(trg);
     }
 };
+
+// The type of index factory functions.
+using RelationFactory = Own<InterpreterRelationWrapper> (*)(
+        std::size_t auxiliaryArity, std::string name, const ram::analysis::MinIndexSelection& orderSet);
+
+// A factory for BTree based relation.
+Own<InterpreterRelationWrapper> createBTreeRelation(
+        std::size_t, std::string, const ram::analysis::MinIndexSelection&);
+
+// A factory for BTree provenance index.
+Own<InterpreterRelationWrapper> createProvenanceRelation(
+        std::size_t, std::string, const ram::analysis::MinIndexSelection&);
+
+// A factory for Brie based index.
+Own<InterpreterRelationWrapper> createBrieRelation(
+        std::size_t, std::string, const ram::analysis::MinIndexSelection&);
+
+// A factory for Eqrel index.
+Own<InterpreterRelationWrapper> createEqrelRelation(
+        std::size_t, std::string, const ram::analysis::MinIndexSelection&);
+
 }  // end of namespace souffle

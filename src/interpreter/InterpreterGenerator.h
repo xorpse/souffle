@@ -1004,35 +1004,5 @@ private:
         }
         return superOp;
     }
-
-#define __TO_STRING(a) #a
-#define SINGLE_TOKEN_ENTRY(tok) {__TO_STRING(I_##tok), I_##tok},
-#define __EXTENDED_TOKEN_ENTRY(Structure, arity, tok) \
-    {__TO_STRING(I_##tok##_##Structure##_##arity), I_##tok##_##Structure##_##arity},
-
-#define EXTENDED_TOKEN_ENTRY(tok) FOR_EACH(__EXTENDED_TOKEN_ENTRY, tok)
-
-    static InterpreterNodeType constructInterpreterNodeType(std::string tokBase, const ram::Relation& rel) {
-        static bool isProvenance = Global::config().has("provenance");
-
-        static const std::unordered_map<std::string, InterpreterNodeType> map = {
-                FOR_EACH_INTERPRETER_TOKEN(SINGLE_TOKEN_ENTRY, EXTENDED_TOKEN_ENTRY)};
-
-        RelationRepresentation Structure = rel.getRepresentation();
-        std::string arity = std::to_string(rel.getArity());
-        if (Structure == RelationRepresentation::EQREL) {
-            return map.at("I_" + tokBase + "_Eqrel_" + arity);
-        } else if (isProvenance) {
-            return map.at("I_" + tokBase + "_Provenance_" + arity);
-        } else {
-            return map.at("I_" + tokBase + "_Btree_" + arity);
-        }
-        fatal("Unrecognized node type: base:%s arity:%s.", tokBase, arity);
-    }
-
-#undef __TO_STRING
-#undef __EXTENDED_TOKEN_ENTRY
-#undef EXTENDED_TOKEN_ENTRY
-#undef SINGLE_TOKEN_ENTRY
 };
 }  // namespace souffle
