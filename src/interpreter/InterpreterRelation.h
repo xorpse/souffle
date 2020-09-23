@@ -375,10 +375,6 @@ protected:
     // a pointer to the main index within the managed index
     Index* main;
 
-    // relation level
-    // TODO need?
-    size_t level = 0;
-
 public:
     // Cast from a index wrapper.
 
