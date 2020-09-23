@@ -44,9 +44,7 @@ public:
 
     virtual ~InterpreterRelationWrapper() = default;
 
-    /**
-     * Define methods and interfaces for ProgInterface.
-     */
+     // -- Define methods and interfaces for ProgInterface. --
 public:
     /**
      * Virtualized iterator class.
@@ -122,9 +120,7 @@ public:
         return auxiliaryArity;
     }
 
-    /**
-     * Defines methods and interfaces for Interpreter execution.
-     */
+     // -- Defines methods and interfaces for Interpreter execution. --
 public:
     using IndexViewPtr = Own<InterpreterViewWrapper>;
 
@@ -191,8 +187,7 @@ public:
             // Expand the order to a total order
             ram::analysis::MinIndexSelection::AttributeSet set{order.begin(), order.end()};
 
-            // use (i + 1 < Arity + 1) to avoid compiler warning when Arity = 0.
-            for (std::size_t i = 0; i + 1 < Arity + 1; ++i) {
+            for (std::size_t i = 0; isLessThen(i, Arity); ++i) {
                 if (set.find(i) == set.end()) {
                     order.push_back(i);
                 }
@@ -207,9 +202,8 @@ public:
 
     InterpreterRelation(InterpreterRelation& other) = delete;
 
-    /**
-     * Implement all virtual interface.
-     */
+    
+    // -- Implement all virtual interface from Wrapper. --
 public:
     void purge() override {
         __purge();
@@ -251,8 +245,7 @@ public:
 
         const RamDomain* operator*() override {
             const auto& tuple = *iter;
-            // use (i + 1 < Arity + 1) to avoid compiler warning when Arity = 0.
-            for (size_t i = 0; i + 1 < Arity + 1; ++i) {
+            for (size_t i = 0; isLessThen(i, Arity); ++i) {
                 data[order[i]] = tuple[i];
             }
             return data;
@@ -262,7 +255,7 @@ public:
             return new iterator_base(iter, order);
         }
 
-        bool equal(const iterator_base& other) const override {
+        bool equal(const InterpreterRelationWrapper::iterator_base& other) const override {
             if (auto* o = dynamic_cast<const iterator_base*>(&other)) {
                 return iter == o->iter;
             }
@@ -278,12 +271,12 @@ public:
         return Iterator(new iterator_base(main->end(), main->getOrder()));
     }
 
-    /*
-     * This section defines and implement interfaces for interpreter execution.
-     * These functions are efficient but requires compile time knowledge and
-     * are not expected to be used other then the interpreter generator/engine.
-     */
-private:
+    // -----
+    // Following section defines and implement interfaces for interpreter execution.
+    // These functions are performance efficient but requires compile time knowledge and
+    // are not expected to be used other then the interpreter generator/engine.
+    // -----
+public:
     /**
      * Add the given tuple to this relation.
      */
@@ -409,9 +402,9 @@ public:
     using InterpreterRelation<2, InterpreterEqrel>::InterpreterRelation;
 
     void extend(const InterpreterEqrelRelation& rel) {
-        auto& src =  static_cast<InterpreterEqrelIndex*>(this->main);
-        auto& trg = static_cast<InterpreterEqrelIndex*>(rel.main);
+        auto src = static_cast<InterpreterEqrelIndex*>(this->main);
+        auto trg = static_cast<InterpreterEqrelIndex*>(rel.main);
+        src->extend(trg);
     }
 };
-
 }  // end of namespace souffle
