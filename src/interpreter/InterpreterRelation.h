@@ -187,7 +187,9 @@ public:
             // Expand the order to a total order
             ram::analysis::MinIndexSelection::AttributeSet set{order.begin(), order.end()};
 
-            for (std::size_t i = 0; isLessThen(i, Arity); ++i) {
+            // This operation is not performance critical.
+            // Not using Arity to avoid compiler warning. (When Arity == 0)
+            for (std::size_t i = 0; i < getArity(); ++i) {
                 if (set.find(i) == set.end()) {
                     order.push_back(i);
                 }
@@ -202,8 +204,8 @@ public:
 
     InterpreterRelation(InterpreterRelation& other) = delete;
 
-    
     // -- Implement all virtual interface from Wrapper. --
+    // -- Operations defined in this section are not performance-oriented.
 public:
     void purge() override {
         __purge();
@@ -245,7 +247,8 @@ public:
 
         const RamDomain* operator*() override {
             const auto& tuple = *iter;
-            for (size_t i = 0; isLessThen(i, Arity); ++i) {
+            // Not using Arity to avoid compiler warning. (When Arity == 0)
+            for (size_t i = 0; i < order.size(); ++i) {
                 data[order[i]] = tuple[i];
             }
             return data;
@@ -273,6 +276,7 @@ public:
 
     // -----
     // Following section defines and implement interfaces for interpreter execution.
+    //
     // These functions are performance efficient but requires compile time knowledge and
     // are not expected to be used other then the interpreter generator/engine.
     // -----
