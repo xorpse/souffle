@@ -165,7 +165,7 @@ private:
     template <typename Rel>
     RamDomain evalExistenceCheck(const ram::ExistenceCheck& cur, const InterpreterExistenceCheck& shadow,
             InterpreterContext& ctxt) {
-        constexpr size_t arity = Rel::arity;
+        constexpr size_t Arity = Rel::Arity;
         size_t viewPos = shadow.getViewId();
 
         if (profileEnabled && !cur.getRelation().isTemp()) {
@@ -175,7 +175,7 @@ private:
         const auto& superInfo = shadow.getSuperInst();
         // for total we use the exists test
         if (shadow.isTotalSearch()) {
-            souffle::Tuple<RamDomain, arity> tuple;
+            souffle::Tuple<RamDomain, Arity> tuple;
             memcpy(tuple.data, superInfo.first.data(), sizeof(tuple));
             /* TupleElement */
             for (const auto& tupleElement : superInfo.tupleFirst) {
@@ -189,8 +189,8 @@ private:
         }
 
         // for partial we search for lower and upper boundaries
-        souffle::Tuple<RamDomain, arity> low;
-        souffle::Tuple<RamDomain, arity> high;
+        souffle::Tuple<RamDomain, Arity> low;
+        souffle::Tuple<RamDomain, Arity> high;
         memcpy(low.data, superInfo.first.data(), sizeof(low));
         memcpy(high.data, superInfo.second.data(), sizeof(high));
 
@@ -212,12 +212,12 @@ private:
     RamDomain evalProvenanceExistenceCheck(
             const InterpreterProvenanceExistenceCheck& shadow, InterpreterContext& ctxt) {
         // construct the pattern tuple
-        constexpr size_t arity = Rel::arity;
+        constexpr size_t Arity = Rel::Arity;
         const auto& superInfo = shadow.getSuperInst();
 
         // for partial we search for lower and upper boundaries
-        souffle::Tuple<RamDomain, arity> low;
-        souffle::Tuple<RamDomain, arity> high;
+        souffle::Tuple<RamDomain, Arity> low;
+        souffle::Tuple<RamDomain, Arity> high;
         memcpy(low.data, superInfo.first.data(), sizeof(low));
         memcpy(high.data, superInfo.second.data(), sizeof(high));
 
@@ -234,10 +234,10 @@ private:
             high[expr.first] = low[expr.first];
         }
 
-        low[arity - 2] = MIN_RAM_SIGNED;
-        low[arity - 1] = MIN_RAM_SIGNED;
-        high[arity - 2] = MAX_RAM_SIGNED;
-        high[arity - 1] = MAX_RAM_SIGNED;
+        low[Arity - 2] = MIN_RAM_SIGNED;
+        low[Arity - 1] = MIN_RAM_SIGNED;
+        high[Arity - 2] = MAX_RAM_SIGNED;
+        high[Arity - 1] = MAX_RAM_SIGNED;
 
         // obtain view
         size_t viewPos = shadow.getViewId();
@@ -251,7 +251,7 @@ private:
         }
 
         // check whether the height is less than the current height
-        return (*equalRange.begin())[arity - 1] <= execute(shadow.getChild(), ctxt);
+        return (*equalRange.begin())[Arity - 1] <= execute(shadow.getChild(), ctxt);
     }
 
     template <typename Rel>
@@ -273,11 +273,11 @@ private:
     template <typename Rel>
     RamDomain evalIndexScan(
             const ram::IndexScan& cur, const InterpreterIndexScan& shadow, InterpreterContext& ctxt) {
-        constexpr size_t arity = Rel::arity;
+        constexpr size_t Arity = Rel::Arity;
         // create pattern tuple for range query
         const auto& superInfo = shadow.getSuperInst();
-        souffle::Tuple<RamDomain, arity> low;
-        souffle::Tuple<RamDomain, arity> high;
+        souffle::Tuple<RamDomain, Arity> low;
+        souffle::Tuple<RamDomain, Arity> high;
         CAL_SEARCH_BOUND(superInfo, low.data, high.data);
 
         size_t viewId = shadow.getViewId();
@@ -293,7 +293,7 @@ private:
     }
 
     // TODO
-    /* template <std::size_t arity, typename Index> */
+    /* template <std::size_t Arity, typename Index> */
     /* RamDomain evalParallelIndexScan(InterpreterContext& ctxt); */
 
     template <typename Rel>
@@ -311,16 +311,16 @@ private:
     }
 
     // TODO
-    /* template <std::size_t arity, typename Index> */
+    /* template <std::size_t Arity, typename Index> */
     /* RamDomain evalParallelChoice(InterpreterContext& ctxt); */
 
     template <typename Rel>
     RamDomain evalIndexChoice(
             const ram::IndexChoice& cur, const InterpreterIndexChoice& shadow, InterpreterContext& ctxt) {
-        constexpr size_t arity = Rel::arity;
+        constexpr size_t Arity = Rel::Arity;
         const auto& superInfo = shadow.getSuperInst();
-        souffle::Tuple<RamDomain, arity> low;
-        souffle::Tuple<RamDomain, arity> high;
+        souffle::Tuple<RamDomain, Arity> low;
+        souffle::Tuple<RamDomain, Arity> high;
         CAL_SEARCH_BOUND(superInfo, low.data, high.data);
 
         size_t viewId = shadow.getViewId();
@@ -348,17 +348,17 @@ private:
     /* RamDomain evalAggregate(InterpreterContext& ctxt); */
 
     // TODO
-    template <std::size_t arity, typename Index>
+    template <std::size_t Arity, typename Index>
     RamDomain evalParallelIndexAggregate(InterpreterContext& ctxt);
 
     template <typename Rel>
     RamDomain evalIndexAggregate(const ram::IndexAggregate& cur, const InterpreterIndexAggregate& shadow,
             InterpreterContext& ctxt) {
         // init temporary tuple for this level
-        const size_t arity = Rel::arity;
+        const size_t Arity = Rel::Arity;
         const auto& superInfo = shadow.getSuperInst();
-        souffle::Tuple<RamDomain, arity> low;
-        souffle::Tuple<RamDomain, arity> high;
+        souffle::Tuple<RamDomain, Arity> low;
+        souffle::Tuple<RamDomain, Arity> high;
         CAL_SEARCH_BOUND(superInfo, low.data, high.data)
 
         size_t viewId = shadow.getViewId();
@@ -370,10 +370,10 @@ private:
 
     template <typename Rel>
     RamDomain evalProject(Rel& rel, const InterpreterProject& shadow, InterpreterContext& ctxt) {
-        constexpr size_t arity = Rel::arity;
+        constexpr size_t Arity = Rel::Arity;
         const auto& superInfo = shadow.getSuperInst();
-        souffle::Tuple<RamDomain, arity> tuple;
-        memcpy(tuple.data, superInfo.first.data(), (arity * sizeof(RamDomain)));
+        souffle::Tuple<RamDomain, Arity> tuple;
+        memcpy(tuple.data, superInfo.first.data(), (Arity * sizeof(RamDomain)));
         /* TupleElement */
         for (const auto& tupleElement : superInfo.tupleFirst) {
             tuple[tupleElement[0]] = ctxt[tupleElement[1]][tupleElement[2]];

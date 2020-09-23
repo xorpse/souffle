@@ -828,25 +828,25 @@ private:
             if (isProvenance) {
                 // TODO need refactor
                 // Move creations into their individual files to hide macro (factory)
-#define CREATE_PROVENANCE_REL(structure, arity, ...)                        \
-    case (arity): {                                                         \
-        res = mk<InterpreterRelation<arity, InterpreterProvenance<arity>>>( \
-                id.getAuxiliaryArity(), id.getName(), orderSet);            \
-        break;                                                              \
+#define CREATE_PROVENANCE_REL(Structure, arity, ...)                 \
+    case (arity): {                                                  \
+        res = mk<InterpreterRelation<arity, InterpreterProvenance>>( \
+                id.getAuxiliaryArity(), id.getName(), orderSet);     \
+        break;                                                       \
     }
                 switch (arity) { FOR_EACH_PROVENANCE(CREATE_PROVENANCE_REL) }
             }
             {
-#define CREATE_BTREE_REL(structure, arity, ...)                        \
-    case (arity): {                                                    \
-        res = mk<InterpreterRelation<arity, InterpreterBtree<arity>>>( \
-                id.getAuxiliaryArity(), id.getName(), orderSet);       \
-        break;                                                         \
+#define CREATE_BTREE_REL(Structure, arity, ...)                  \
+    case (arity): {                                              \
+        res = mk<InterpreterRelation<arity, InterpreterBtree>>(  \
+                id.getAuxiliaryArity(), id.getName(), orderSet); \
+        break;                                                   \
     }
                 switch (arity) { FOR_EACH_BTREE(CREATE_BTREE_REL) }
             }
             /* else if (id.getRepresentation() == RelationRepresentation::BRIE) { */
-            /* #define CREATE_BRIE_REL(structure, arity, ...)                        \ */
+            /* #define CREATE_BRIE_REL(Structure, arity, ...)                        \ */
             /*     case (arity): {                                                   \ */
             /*         res = mk<InterpreterRelation<arity, InterpreterBrie<arity>>>( \ */
             /*                 id.getAuxiliaryArity(), id.getName(), orderSet);      \ */
@@ -1016,8 +1016,8 @@ private:
 
 #define __TO_STRING(a) #a
 #define SINGLE_TOKEN_ENTRY(tok) {__TO_STRING(I_##tok), I_##tok},
-#define __EXTENDED_TOKEN_ENTRY(structure, arity, tok) \
-    {__TO_STRING(I_##tok##_##structure##_##arity), I_##tok##_##structure##_##arity},
+#define __EXTENDED_TOKEN_ENTRY(Structure, arity, tok) \
+    {__TO_STRING(I_##tok##_##Structure##_##arity), I_##tok##_##Structure##_##arity},
 
 #define EXTENDED_TOKEN_ENTRY(tok) FOR_EACH(__EXTENDED_TOKEN_ENTRY, tok)
 
@@ -1027,9 +1027,9 @@ private:
         static const std::unordered_map<std::string, InterpreterNodeType> map = {
                 FOR_EACH_INTERPRETER_TOKEN(SINGLE_TOKEN_ENTRY, EXTENDED_TOKEN_ENTRY)};
 
-        RelationRepresentation structure = rel.getRepresentation();
+        RelationRepresentation Structure = rel.getRepresentation();
         std::string arity = std::to_string(rel.getArity());
-        if (structure == RelationRepresentation::EQREL) {
+        if (Structure == RelationRepresentation::EQREL) {
             return map.at("I_" + tokBase + "_Eqrel_" + arity);
         } else if (isProvenance) {
             return map.at("I_" + tokBase + "_Provenance_" + arity);
