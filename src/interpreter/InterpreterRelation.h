@@ -44,6 +44,14 @@ public:
 
     virtual ~InterpreterRelationWrapper() = default;
 
+    /**
+     * Define methods and interfaces for ProgInterface.
+     */
+public:
+    /**
+     * Virtualized iterator class.
+     * Define behaviors to uniformly access the underlying tuple regardless its structure and arity.
+     */
     class iterator_base {
     public:
         virtual ~iterator_base() = default;
@@ -52,11 +60,19 @@ public:
 
         virtual const RamDomain* operator*() = 0;
 
+        /*
+         * A clone method is required by ProgInterface.
+         */
         virtual iterator_base* clone() const = 0;
 
         virtual bool equal(const iterator_base& other) const = 0;
     };
 
+    /**
+     * The iterator interface.
+     *
+     * Other class should use this iterator class to traverse the relation.
+     */
     class Iterator {
         Own<iterator_base> iter;
 
@@ -106,11 +122,22 @@ public:
         return auxiliaryArity;
     }
 
+    /**
+     * Defines methods and interfaces for Interpreter execution.
+     */
 public:
     using IndexViewPtr = Own<InterpreterViewWrapper>;
 
-    virtual Order getIndexOrder(size_t idx) const = 0;
+    /**
+     * Return the order of an index.
+     */
+    virtual Order getIndexOrder(size_t) const = 0;
 
+    /**
+     * Obtains a view on an index of this relation, facilitating hint-supported accesses.
+     *
+     * This function is virtual because view creation require at least one indirect dispatch.
+     */
     virtual IndexViewPtr createView(const size_t&) const = 0;
 
 protected:
@@ -135,98 +162,36 @@ public:
     using AttributeSet = std::set<Attribute>;
     using Index = InterpreterIndex<Arity, Structure>;
     using Tuple = souffle::Tuple<RamDomain, Arity>;
+    using View = typename Index::InterpreterView;
     using iterator = typename Index::iterator;
 
+    /**
+     * A constructs a typed tuple from a raw data.
+     */
     static Tuple constructTuple(const RamDomain* data) {
-        Tuple tuple;
+        Tuple tuple{};
         memcpy(tuple.data, data, Arity * sizeof(RamDomain));
         return tuple;
     }
 
-    void purge() override {
-        __purge();
-    }
-
-    void insert(const RamDomain* data) override {
-        insert(constructTuple(data));
-    }
-
-    bool contains(const RamDomain* data) const override {
-        return contains(constructTuple(data));
-    }
-
     /**
-     * Obtains a view on an index of this relation, facilitating hint-supported accesses.
+     * Cast an abstract view into a view of this relation type.
      */
-    IndexViewPtr createView(const size_t& indexPos) const override {
-        return mk<typename Index::InterpreterView>(indexes[indexPos]->createView());
+    static View* castView(InterpreterViewWrapper* view) {
+        return static_cast<typename Index::InterpreterView*>(view);
     }
 
-    size_t size() const override {
-        return __size();
-    }
-
-    /**
-     * Return the order of an index.
-     */
-    Order getIndexOrder(size_t idx) const override {
-        return indexes[idx]->getOrder();
-    }
-
-    class iterator_wrapper : public InterpreterRelationWrapper::iterator_base {
-        typename Index::iterator iter;
-        Order order;
-        RamDomain data[Arity];
-
-    public:
-        iterator_wrapper(const typename Index::iterator& iter, Order order)
-                : iter(iter), order(std::move(order)) {}
-
-        iterator_wrapper& operator++() override {
-            ++iter;
-            return *this;
-        }
-
-        const RamDomain* operator*() override {
-            const auto& tuple = *iter;
-            for (size_t i = 0; i < Arity; ++i) {
-                data[order[i]] = tuple[i];
-            }
-            return data;
-        }
-
-        iterator_base* clone() const override {
-            return new iterator_wrapper(iter, order);
-        }
-
-        bool equal(const iterator_base& o) const override {
-            if (auto* other = dynamic_cast<const iterator_wrapper*>(&o)) {
-                return iter == other->iter;
-            }
-            return false;
-        }
-    };
-
-    Iterator begin() const override {
-        return Iterator(new iterator_wrapper(main->begin(), main->getOrder()));
-    }
-
-    Iterator end() const override {
-        return Iterator(new iterator_wrapper(main->end(), main->getOrder()));
-        /* return Iterator(new iterator_base(main->end(), main->getOrder())); */
-    }
-
-public:
     /**
      * Creates a relation, build all necessary indexes.
      */
     InterpreterRelation(
             std::size_t auxiliaryArity, std::string name, const ram::analysis::MinIndexSelection& orderSet)
-            : InterpreterRelationWrapper(arity, auxiliaryArity, std::move(name)) {
+            : InterpreterRelationWrapper(Arity, auxiliaryArity, std::move(name)) {
         for (auto order : orderSet.getAllOrders()) {
             // Expand the order to a total order
             ram::analysis::MinIndexSelection::AttributeSet set{order.begin(), order.end()};
 
+            // use (i + 1 < Arity + 1) to avoid compiler warning when Arity = 0.
             for (std::size_t i = 0; i + 1 < Arity + 1; ++i) {
                 if (set.find(i) == set.end()) {
                     order.push_back(i);
@@ -242,15 +207,83 @@ public:
 
     InterpreterRelation(InterpreterRelation& other) = delete;
 
-    // TODO private
-    iterator __begin() const {
-        return main->begin();
+    /**
+     * Implement all virtual interface.
+     */
+public:
+    void purge() override {
+        __purge();
     }
 
-    iterator __end() const {
-        return main->end();
+    void insert(const RamDomain* data) override {
+        insert(constructTuple(data));
     }
 
+    bool contains(const RamDomain* data) const override {
+        return contains(constructTuple(data));
+    }
+
+    IndexViewPtr createView(const size_t& indexPos) const override {
+        return mk<View>(indexes[indexPos]->createView());
+    }
+
+    size_t size() const override {
+        return __size();
+    }
+
+    Order getIndexOrder(size_t idx) const override {
+        return indexes[idx]->getOrder();
+    }
+
+    class iterator_base : public InterpreterRelationWrapper::iterator_base {
+        typename Index::iterator iter;
+        Order order;
+        RamDomain data[Arity];
+
+    public:
+        iterator_base(const typename Index::iterator& iter, Order order)
+                : iter(iter), order(std::move(order)) {}
+
+        iterator_base& operator++() override {
+            ++iter;
+            return *this;
+        }
+
+        const RamDomain* operator*() override {
+            const auto& tuple = *iter;
+            // use (i + 1 < Arity + 1) to avoid compiler warning when Arity = 0.
+            for (size_t i = 0; i + 1 < Arity + 1; ++i) {
+                data[order[i]] = tuple[i];
+            }
+            return data;
+        }
+
+        iterator_base* clone() const override {
+            return new iterator_base(iter, order);
+        }
+
+        bool equal(const iterator_base& other) const override {
+            if (auto* o = dynamic_cast<const iterator_base*>(&other)) {
+                return iter == o->iter;
+            }
+            return false;
+        }
+    };
+
+    Iterator begin() const override {
+        return Iterator(new iterator_base(main->begin(), main->getOrder()));
+    }
+
+    Iterator end() const override {
+        return Iterator(new iterator_base(main->end(), main->getOrder()));
+    }
+
+    /*
+     * This section defines and implement interfaces for interpreter execution.
+     * These functions are efficient but requires compile time knowledge and
+     * are not expected to be used other then the interpreter generator/engine.
+     */
+private:
     /**
      * Add the given tuple to this relation.
      */
@@ -289,6 +322,8 @@ public:
 
     /**
      * Obtains a stream to scan the entire relation.
+     *
+     * Return 'raw iterator' that returns tuple in undecoded form.
      */
     souffle::range<iterator> scan() const {
         return main->scan();
@@ -319,13 +354,6 @@ public:
      */
     void swap(InterpreterRelation<Arity, Structure>& other) {
         indexes.swap(other.indexes);
-    }
-
-    /**
-     * Return arity
-     */
-    constexpr size_t getArity() const {
-        return Arity;
     }
 
     /**
@@ -374,25 +402,15 @@ protected:
 
     // a pointer to the main index within the managed index
     Index* main;
-
-public:
-    // Cast from a index wrapper.
-
-    // Cast from a view wrapper.
-    static typename Index::InterpreterView* castView(InterpreterViewWrapper* view) {
-        return static_cast<typename Index::InterpreterView*>(view);
-    }
-
-};  // namespace souffle
+};
 
 class InterpreterEqrelRelation : public InterpreterRelation<2, InterpreterEqrel> {
 public:
     using InterpreterRelation<2, InterpreterEqrel>::InterpreterRelation;
 
     void extend(const InterpreterEqrelRelation& rel) {
-        // TODO must refactor
-        static_cast<InterpreterEqrelIndex*>(this->main)
-                ->extend(static_cast<InterpreterEqrelIndex*>(rel.main));
+        auto& src =  static_cast<InterpreterEqrelIndex*>(this->main);
+        auto& trg = static_cast<InterpreterEqrelIndex*>(rel.main);
     }
 };
 
