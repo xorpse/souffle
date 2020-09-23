@@ -25,6 +25,7 @@
 #include "ast/transform/ReorderLiterals.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
+#include "ast2ram/ValueIndex.h"
 #include "ram/Aggregate.h"
 #include "ram/Break.h"
 #include "ram/Conjunction.h"

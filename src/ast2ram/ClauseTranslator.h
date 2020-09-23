@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ast2ram/AstToRamTranslator.h"
+#include "ast2ram/ValueIndex.h"
 #include <map>
 #include <vector>
 
