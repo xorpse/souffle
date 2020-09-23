@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ast/Variable.h"
+#include "ram/Relation.h"
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/FunctionalUtil.h"
 #include "souffle/utility/MiscUtil.h"
@@ -63,8 +64,6 @@ namespace souffle::ram {
 class Condition;
 class Expression;
 class Operation;
-class Relation;
-class RelationReference;
 class Statement;
 class TranslationUnit;
 class TupleElement;
@@ -417,15 +416,6 @@ private:
             std::map<const arg_list*, int>& arg_level, ram::RelationReference* relation);
 
     void createValueIndex(const ast::Clause& clause);
-};
-
-class AstToRamTranslator::ProvenanceClauseTranslator : public AstToRamTranslator::ClauseTranslator {
-public:
-    ProvenanceClauseTranslator(AstToRamTranslator& translator) : ClauseTranslator(translator) {}
-
-protected:
-    Own<ram::Operation> createOperation(const ast::Clause& clause) override;
-    Own<ram::Condition> createCondition(const ast::Clause& originalClause) override;
 };
 
 }  // namespace souffle::ast2ram

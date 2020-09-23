@@ -39,7 +39,6 @@
 #include "ast/Node.h"
 #include "ast/NumericConstant.h"
 #include "ast/Program.h"
-#include "ast/ProvenanceNegation.h"
 #include "ast/QualifiedName.h"
 #include "ast/RecordInit.h"
 #include "ast/Relation.h"
@@ -63,6 +62,7 @@
 #include "ast/utility/SipsMetric.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
+#include "ast2ram/ProvenanceClauseTranslator.h"
 #include "parser/SrcLocation.h"
 #include "ram/Aggregate.h"
 #include "ram/AutoIncrement.h"
@@ -598,38 +598,6 @@ Own<ram::Operation> AstToRamTranslator::ClauseTranslator::createOperation(const 
     return project;  // start with innermost
 }
 
-Own<ram::Operation> AstToRamTranslator::ProvenanceClauseTranslator::createOperation(
-        const ast::Clause& clause) {
-    VecOwn<ram::Expression> values;
-
-    // get all values in the body
-    for (ast::Literal* lit : clause.getBodyLiterals()) {
-        if (auto atom = dynamic_cast<ast::Atom*>(lit)) {
-            for (ast::Argument* arg : atom->getArguments()) {
-                values.push_back(translator.translateValue(arg, valueIndex));
-            }
-        } else if (auto neg = dynamic_cast<ast::ProvenanceNegation*>(lit)) {
-            size_t auxiliaryArity = translator.getEvaluationArity(neg->getAtom());
-            for (size_t i = 0; i < neg->getAtom()->getArguments().size() - auxiliaryArity; ++i) {
-                auto arg = neg->getAtom()->getArguments()[i];
-                values.push_back(translator.translateValue(arg, valueIndex));
-            }
-            for (size_t i = 0; i < auxiliaryArity; ++i) {
-                values.push_back(mk<ram::SignedConstant>(-1));
-            }
-        } else if (auto neg = dynamic_cast<ast::Negation*>(lit)) {
-            for (ast::Argument* arg : neg->getAtom()->getArguments()) {
-                values.push_back(translator.translateValue(arg, valueIndex));
-            }
-        } else if (auto con = dynamic_cast<ast::BinaryConstraint*>(lit)) {
-            values.push_back(translator.translateValue(con->getLHS(), valueIndex));
-            values.push_back(translator.translateValue(con->getRHS(), valueIndex));
-        }
-    }
-
-    return mk<ram::SubroutineReturn>(std::move(values));
-}
-
 Own<ram::Condition> AstToRamTranslator::ClauseTranslator::createCondition(const ast::Clause& originalClause) {
     const auto head = originalClause.getHead();
 
@@ -638,11 +606,6 @@ Own<ram::Condition> AstToRamTranslator::ClauseTranslator::createCondition(const 
     if (head->getArity() == 0) {
         return mk<ram::EmptinessCheck>(translator.translateRelation(head));
     }
-    return nullptr;
-}
-
-Own<ram::Condition> AstToRamTranslator::ProvenanceClauseTranslator::createCondition(
-        const ast::Clause& /* originalClause */) {
     return nullptr;
 }
 
