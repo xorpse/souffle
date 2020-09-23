@@ -845,15 +845,6 @@ private:
     }
                 switch (arity) { FOR_EACH_BTREE(CREATE_BTREE_REL) }
             }
-            /* else if (id.getRepresentation() == RelationRepresentation::BRIE) { */
-            /* #define CREATE_BRIE_REL(Structure, arity, ...)                        \ */
-            /*     case (arity): {                                                   \ */
-            /*         res = mk<InterpreterRelation<arity, InterpreterBrie<arity>>>( \ */
-            /*                 id.getAuxiliaryArity(), id.getName(), orderSet);      \ */
-            /*         break;                                                        \ */
-            /*     } */
-            /*                 switch (arity) { FOR_EACH_BRIE(CREATE_BRIE_REL) } */
-            /*             } */
         }
         relations[idx] = mk<RelationHandle>(std::move(res));
     }

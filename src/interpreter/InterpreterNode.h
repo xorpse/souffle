@@ -44,6 +44,61 @@ class Node;
 
 // clang-format off
 
+/* This macro defines all the interpreterNode token. 
+ * For common operation, pass to Forward. 
+ * For specialized operation, pass to Extended. 
+ */
+#define FOR_EACH_INTERPRETER_TOKEN(Forward, Extended)\
+    Forward(Constant)\
+    Forward(TupleElement)\
+    Forward(AutoIncrement)\
+    Forward(IntrinsicOperator)\
+    Forward(UserDefinedOperator)\
+    Forward(NestedIntrinsicOperator)\
+    Forward(PackRecord)\
+    Forward(SubroutineArgument)\
+    Forward(True)\
+    Forward(False)\
+    Forward(Conjunction)\
+    Forward(Negation)\
+    Extended(EmptinessCheck)\
+    Extended(RelationSize)\
+    Extended(ExistenceCheck)\
+    Extended(ProvenanceExistenceCheck)\
+    Forward(Constraint)\
+    Forward(TupleOperation)\
+    Extended(Scan)\
+    Extended(ParallelScan)\
+    Extended(IndexScan)\
+    Extended(ParallelIndexScan)\
+    Extended(Choice)\
+    Extended(ParallelChoice)\
+    Extended(IndexChoice)\
+    Extended(ParallelIndexChoice)\
+    Forward(UnpackRecord)\
+    Extended(Aggregate)\
+    Extended(ParallelAggregate)\
+    Extended(IndexAggregate)\
+    Extended(ParallelIndexAggregate)\
+    Forward(Break)\
+    Forward(Filter)\
+    Extended(Project)\
+    Forward(SubroutineReturn)\
+    Forward(Sequence)\
+    Forward(Parallel)\
+    Forward(Loop)\
+    Forward(Exit)\
+    Forward(LogRelationTimer)\
+    Forward(LogTimer)\
+    Forward(DebugInfo)\
+    Extended(Clear)\
+    Forward(LogSize)\
+    Extended(IO)\
+    Forward(Query)\
+    Forward(Extend)\
+    Forward(Swap)\
+    Forward(Call)
+
 #define SINGLE_TOKEN(tok) I_##tok,
 
 #define __EXTENDED_TOKEN(structure, arity, tok)\
@@ -51,12 +106,55 @@ class Node;
 
 #define EXTENDED_TOKEN(tok) FOR_EACH(__EXTENDED_TOKEN, tok)
 
+/* 
+ * Declares all the tokens.
+ * For Forward token OP, creates I_OP
+ * For Extended token OP, generate I_OP_Structure_Arity for each data structure and supported arity.
+ */
 enum InterpreterNodeType {
     FOR_EACH_INTERPRETER_TOKEN(SINGLE_TOKEN, EXTENDED_TOKEN)
 };
+
 #undef SINGLE_TOKEN
 #undef __EXTENDED_TOKEN
 #undef EXTENDED_TOKEN
+
+#define __TO_STRING(a) #a
+#define SINGLE_TOKEN_ENTRY(tok) {__TO_STRING(I_##tok), I_##tok},
+#define __EXTENDED_TOKEN_ENTRY(Structure, arity, tok) \
+    {__TO_STRING(I_##tok##_##Structure##_##arity), I_##tok##_##Structure##_##arity},
+
+#define EXTENDED_TOKEN_ENTRY(tok) FOR_EACH(__EXTENDED_TOKEN_ENTRY, tok)
+
+/**
+ * Construct interpreterNodeType by looking at the representation and arity of the given rel.
+ *
+ * Add reflective from string to InterpreterNodeType.
+ */
+inline InterpreterNodeType constructInterpreterNodeType(std::string tokBase, const ram::Relation& rel) {
+    static bool isProvenance = Global::config().has("provenance");
+
+    static const std::unordered_map<std::string, InterpreterNodeType> map = {
+            FOR_EACH_INTERPRETER_TOKEN(SINGLE_TOKEN_ENTRY, EXTENDED_TOKEN_ENTRY)
+    };
+
+    RelationRepresentation Structure = rel.getRepresentation();
+    std::string arity = std::to_string(rel.getArity());
+    if (Structure == RelationRepresentation::EQREL) {
+        return map.at("I_" + tokBase + "_Eqrel_" + arity);
+    } else if (isProvenance) {
+        return map.at("I_" + tokBase + "_Provenance_" + arity);
+    } else {
+        return map.at("I_" + tokBase + "_Btree_" + arity);
+    }
+    fatal("Unrecognized node type: base:%s arity:%s.", tokBase, arity);
+}
+
+#undef __TO_STRING
+#undef __EXTENDED_TOKEN_ENTRY
+#undef EXTENDED_TOKEN_ENTRY
+#undef SINGLE_TOKEN_ENTRY
+
 // clang-format on
 
 /**
