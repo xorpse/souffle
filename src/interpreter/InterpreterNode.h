@@ -24,9 +24,9 @@
 #pragma once
 
 #include "interpreter/InterpreterUtil.h"
+#include "ram/Relation.h"
 #include "souffle/RamTypes.h"
 #include "souffle/utility/ContainerUtil.h"
-#include "ram/Relation.h"
 #include <array>
 #include <cassert>
 #include <cstddef>
