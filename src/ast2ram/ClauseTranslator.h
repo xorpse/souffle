@@ -25,7 +25,7 @@ namespace souffle::ast {
 class Argument;
 class Clause;
 class Node;
-}
+}  // namespace souffle::ast
 
 namespace souffle::ast::analysis {
 class AuxiliaryArityAnalsyis;
@@ -35,7 +35,7 @@ namespace souffle::ram {
 class Operation;
 class Condition;
 class RelationReference;
-}
+}  // namespace souffle::ram
 
 namespace souffle::ast2ram {
 
