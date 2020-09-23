@@ -20,6 +20,8 @@
 #include "ast2ram/AstToRamTranslator.h"
 #include "ast2ram/Location.h"
 #include "ram/Relation.h"
+#include "souffle/utility/FunctionalUtil.h"
+#include "souffle/utility/StreamUtil.h"
 #include <cassert>
 #include <set>
 
@@ -33,7 +35,7 @@ void AstToRamTranslator::ValueIndex::addVarReference(
 
 void AstToRamTranslator::ValueIndex::addVarReference(
         const ast::Variable& var, int ident, int pos, Own<ram::RelationReference> rel) {
-    addVarReference(var, AstToRamTranslator::Location({ident, pos, std::move(rel)}));
+    addVarReference(var, Location({ident, pos, std::move(rel)}));
 }
 
 bool AstToRamTranslator::ValueIndex::isDefined(const ast::Variable& var) const {
@@ -71,7 +73,7 @@ void AstToRamTranslator::ValueIndex::setRecordDefinition(
 
 void AstToRamTranslator::ValueIndex::setRecordDefinition(
         const ast::RecordInit& init, int ident, int pos, Own<ram::RelationReference> rel) {
-    setRecordDefinition(init, AstToRamTranslator::Location({ident, pos, std::move(rel)}));
+    setRecordDefinition(init, Location({ident, pos, std::move(rel)}));
 }
 
 const AstToRamTranslator::Location& AstToRamTranslator::ValueIndex::getDefinitionPoint(
@@ -105,6 +107,11 @@ bool AstToRamTranslator::ValueIndex::isSomethingDefinedOn(int level) const {
     }
     // nothing defined on this level
     return false;
+}
+
+void AstToRamTranslator::ValueIndex::print(std::ostream& out) const {
+    out << "Variables:\n\t";
+    out << join(var_references, "\n\t");
 }
 
 }  // namespace souffle::ast2ram

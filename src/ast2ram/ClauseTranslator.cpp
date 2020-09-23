@@ -41,6 +41,7 @@
 #include "ram/TupleElement.h"
 #include "ram/UnpackRecord.h"
 #include "ram/Utils.h"
+#include "souffle/utility/StringUtil.h"
 #include <map>
 #include <vector>
 

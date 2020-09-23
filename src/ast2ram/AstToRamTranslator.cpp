@@ -117,8 +117,8 @@
 #include "souffle/BinaryConstraintOps.h"
 #include "souffle/SymbolTable.h"
 #include "souffle/TypeAttribute.h"
-#include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/FunctionalUtil.h"
+#include "souffle/utility/MiscUtil.h"
 #include <algorithm>
 #include <cassert>
 #include <chrono>

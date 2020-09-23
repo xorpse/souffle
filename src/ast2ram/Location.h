@@ -15,6 +15,7 @@
 #pragma once
 
 #include "ast2ram/AstToRamTranslator.h"
+#include "souffle/utility/MiscUtil.h"
 
 namespace souffle::ast2ram {
 

@@ -90,15 +90,7 @@ public:
 
     bool isSomethingDefinedOn(int level) const;
 
-    void print(std::ostream& out) const {
-        out << "Variables:\n\t";
-        out << join(var_references, "\n\t");
-    }
-
-    friend std::ostream& operator<<(std::ostream& out, const ValueIndex& index) __attribute__((unused)) {
-        index.print(out);
-        return out;
-    }
+    void print(std::ostream& out) const;
 
 private:
     /** The index of variable accesses */
