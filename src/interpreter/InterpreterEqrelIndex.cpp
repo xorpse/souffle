@@ -14,41 +14,14 @@
  *
  ***********************************************************************/
 
-#include "interpreter/InterpreterIndex.h"
-#include "souffle/CompiledTuple.h"
-#include "souffle/RamTypes.h"
-#include "souffle/datastructure/EquivalenceRelation.h"
-#include "souffle/datastructure/PiggyList.h"
-#include <algorithm>
-#include <cassert>
-#include <cstddef>
-#include <memory>
-#include <ostream>
-#include <vector>
+#include "interpreter/InterpreterRelation.h"
 
 namespace souffle {
 
-// Node type
-template <std::size_t Arity>
-using t_tuple = typename souffle::Tuple<RamDomain, Arity>;
-
-/**
- * A index adapter for EquivalenceRelation, using the generic index adapter.
- */
-class EqrelIndex : public GenericIndex<EquivalenceRelation<t_tuple<2>>> {
-public:
-    using GenericIndex<EquivalenceRelation<t_tuple<2>>>::GenericIndex;
-
-    void extend(InterpreterIndex* other) override {
-        auto otherIndex = dynamic_cast<EqrelIndex*>(other);
-        assert(otherIndex != nullptr && "Can only extend to EqrelIndex");
-        this->data.extend(otherIndex->data);
-    }
-};
-
-Own<InterpreterIndex> createEqrelIndex(const Order& order) {
-    assert(order.size() == 2 && "Eqrel index must have tuple of 2 arities");
-    return mk<EqrelIndex>(order);
+Own<InterpreterRelationWrapper> createEqrelRelation(
+        const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet) {
+    assert(id.getArity() == 2 && "Eqivalence relation must have arity size 2.");
+    return mk<InterpreterEqrelRelation>(id.getAuxiliaryArity(), id.getName(), orderSet);
 }
 
 }  // namespace souffle

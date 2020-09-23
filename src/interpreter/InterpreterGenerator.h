@@ -822,28 +822,13 @@ private:
 
         RelationHandle res;
         if (id.getRepresentation() == RelationRepresentation::EQREL) {
-            res = mk<InterpreterEqrelRelation>(id.getAuxiliaryArity(), id.getName(), orderSet);
+            res = createEqrelRelation(id, orderSet);
         } else {
             size_t arity = id.getArity();
             if (isProvenance) {
-                // TODO need refactor
-                // Move creations into their individual files to hide macro (factory)
-#define CREATE_PROVENANCE_REL(Structure, arity, ...)                 \
-    case (arity): {                                                  \
-        res = mk<InterpreterRelation<arity, InterpreterProvenance>>( \
-                id.getAuxiliaryArity(), id.getName(), orderSet);     \
-        break;                                                       \
-    }
-                switch (arity) { FOR_EACH_PROVENANCE(CREATE_PROVENANCE_REL) }
-            }
-            {
-#define CREATE_BTREE_REL(Structure, arity, ...)                  \
-    case (arity): {                                              \
-        res = mk<InterpreterRelation<arity, InterpreterBtree>>(  \
-                id.getAuxiliaryArity(), id.getName(), orderSet); \
-        break;                                                   \
-    }
-                switch (arity) { FOR_EACH_BTREE(CREATE_BTREE_REL) }
+                res = createProvenanceRelation(id, orderSet);
+            } else {
+                res = createBTreeRelation(id, orderSet);
             }
         }
         relations[idx] = mk<RelationHandle>(std::move(res));
