@@ -732,103 +732,50 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
             return !execute(shadow.getChild(), ctxt);
         ESAC(Negation)
 
-        CASE(EmptinessCheck)
-            return node->getRelation()->empty();
-        ESAC(EmptinessCheck)
+#define EMPTINESS_CHECK(structure, arity, ...)                                                          \
+    case (I_EmptinessCheck_##structure##_##arity): {                                                    \
+        return [&]() -> RamDomain {                                                                     \
+            const auto& rel = *static_cast<InterpreterRelation<arity, Interpreter##structure<arity>>*>( \
+                    node->getRelation());                                                               \
+            return rel.empty();                                                                         \
+        }();                                                                                            \
+    }
+        FOR_EACH(EMPTINESS_CHECK)
+#undef EMPTINESS_CHECK
 
-        CASE(RelationSize)
-            return node->getRelation()->size();
-        ESAC(RelationSize)
+#define RELATION_SIZE(structure, arity, ...)                                                            \
+    case (I_RelationSize_##structure##_##arity): {                                                      \
+        return [&]() -> RamDomain {                                                                     \
+            const auto& rel = *static_cast<InterpreterRelation<arity, Interpreter##structure<arity>>*>( \
+                    node->getRelation());                                                               \
+            return rel.size();                                                                          \
+        }();                                                                                            \
+    }
+        FOR_EACH(RELATION_SIZE)
+#undef RELATION_SIZE
 
-        CASE(ExistenceCheck)
-            // construct the pattern tuple
-            size_t arity = cur.getRelation().getArity();
+#define EXISTENCE_CHECK(structure, arity, ...)                                         \
+    case (I_ExistenceCheck_##structure##_##arity): {                                   \
+        return [&]() -> RamDomain {                                                    \
+            using rel = InterpreterRelation<arity, Interpreter##structure<arity>>;     \
+            const auto& shadow = *static_cast<const InterpreterExistenceCheck*>(node); \
+            const auto& cur = *static_cast<const ExistenceCheck*>(node->getShadow());  \
+            return evalExistenceCheck<rel>(cur, shadow, ctxt);                         \
+        }();                                                                           \
+    }
+        FOR_EACH(EXISTENCE_CHECK)
+#undef EXISTENCE_CHECK
 
-            size_t viewPos = shadow.getViewId();
-
-            if (profileEnabled && !cur.getRelation().isTemp()) {
-                reads[cur.getRelation().getName()]++;
-            }
-
-            const auto& superInfo = shadow.getSuperInst();
-            // for total we use the exists test
-            if (shadow.isTotalSearch()) {
-                RamDomain tuple[arity];
-                memcpy(tuple, superInfo.first.data(), sizeof(tuple));
-                /* TupleElement */
-                for (const auto& tupleElement : superInfo.tupleFirst) {
-                    tuple[tupleElement[0]] = ctxt[tupleElement[1]][tupleElement[2]];
-                }
-                /* Generic */
-                for (const auto& expr : superInfo.exprFirst) {
-                    tuple[expr.first] = execute(expr.second.get(), ctxt);
-                }
-                return ctxt.getView(viewPos)->contains(TupleRef(tuple, arity));
-            }
-
-            // for partial we search for lower and upper boundaries
-            RamDomain low[arity];
-            RamDomain high[arity];
-            memcpy(low, superInfo.first.data(), sizeof(low));
-            memcpy(high, superInfo.second.data(), sizeof(high));
-
-            /* TupleElement */
-            for (const auto& tupleElement : superInfo.tupleFirst) {
-                low[tupleElement[0]] = ctxt[tupleElement[1]][tupleElement[2]];
-                high[tupleElement[0]] = low[tupleElement[0]];
-            }
-            /* Generic */
-            for (const auto& expr : superInfo.exprFirst) {
-                low[expr.first] = execute(expr.second.get(), ctxt);
-                high[expr.first] = low[expr.first];
-            }
-
-            return ctxt.getView(viewPos)->contains(TupleRef(low, arity), TupleRef(high, arity));
-        ESAC(ExistenceCheck)
-
-        CASE(ProvenanceExistenceCheck)
-            // construct the pattern tuple
-            const auto& superInfo = shadow.getSuperInst();
-            size_t arity = cur.getRelation().getArity();
-
-            // for partial we search for lower and upper boundaries
-            RamDomain low[arity];
-            RamDomain high[arity];
-            memcpy(low, superInfo.first.data(), sizeof(low));
-            memcpy(high, superInfo.second.data(), sizeof(high));
-
-            /* TupleElement */
-            for (const auto& tupleElement : superInfo.tupleFirst) {
-                low[tupleElement[0]] = ctxt[tupleElement[1]][tupleElement[2]];
-                high[tupleElement[0]] = low[tupleElement[0]];
-            }
-            /* Generic */
-            for (const auto& expr : superInfo.exprFirst) {
-                assert(expr.second.get() != nullptr &&
-                        "ProvenanceExistenceCheck should always be specified for payload");
-                low[expr.first] = execute(expr.second.get(), ctxt);
-                high[expr.first] = low[expr.first];
-            }
-
-            low[arity - 2] = MIN_RAM_SIGNED;
-            low[arity - 1] = MIN_RAM_SIGNED;
-            high[arity - 2] = MAX_RAM_SIGNED;
-            high[arity - 1] = MAX_RAM_SIGNED;
-
-            // obtain view
-            size_t viewPos = shadow.getViewId();
-
-            // get an equalRange
-            auto equalRange = ctxt.getView(viewPos)->range(TupleRef(low, arity), TupleRef(high, arity));
-
-            // if range is empty
-            if (equalRange.begin() == equalRange.end()) {
-                return false;
-            }
-
-            // check whether the height is less than the current height
-            return (*equalRange.begin())[arity - 1] <= execute(shadow.getChild(), ctxt);
-        ESAC(ProvenanceExistenceCheck)
+#define PROVENANCE_EXISTENCE_CHECK(structure, arity, ...)                                        \
+    case (I_ProvenanceExistenceCheck_##structure##_##arity): {                                   \
+        return [&]() -> RamDomain {                                                              \
+            using rel = InterpreterRelation<arity, Interpreter##structure<arity>>;               \
+            const auto& shadow = *static_cast<const InterpreterProvenanceExistenceCheck*>(node); \
+            return evalProvenanceExistenceCheck<rel>(shadow, ctxt);                              \
+        }();                                                                                     \
+    }
+        FOR_EACH_PROVENANCE(PROVENANCE_EXISTENCE_CHECK)
+#undef PROVENANCE_EXISTENCE_CHECK
 
         CASE(Constraint)
         // clang-format off
@@ -920,194 +867,181 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
             return result;
         ESAC(TupleOperation)
 
-        CASE(Scan)
-            // get the targeted relation
-            auto& rel = *node->getRelation();
+#define SCAN(structure, arity, ...)                                                                 \
+    case (I_Scan_##structure##_##arity): {                                                          \
+        return [&]() -> RamDomain {                                                                 \
+            const auto& rel =                                                                       \
+                    *static_cast<const InterpreterRelation<arity, Interpreter##structure<arity>>*>( \
+                            node->getRelation());                                                   \
+            const auto& cur = *static_cast<const Scan*>(node->getShadow());                         \
+            const auto& shadow = *static_cast<const InterpreterScan*>(node);                        \
+            return evalScan(rel, cur, shadow, ctxt);                                                \
+        }();                                                                                        \
+    }
 
-            // use simple iterator
-            for (const RamDomain* tuple : rel) {
-                ctxt[cur.getTupleId()] = tuple;
-                if (!execute(shadow.getNestedOperation(), ctxt)) {
-                    break;
-                }
-            }
-            return true;
-        ESAC(Scan)
+        FOR_EACH(SCAN)
+#undef SCAN
 
-        CASE(ParallelScan)
-            auto viewContext = shadow.getViewContext();
-            auto& rel = *node->getRelation();
+        // TODO
+        /* CASE(ParallelScan) */
+        /*     auto viewContext = shadow.getViewContext(); */
+        /*     auto& rel = *node->getRelation(); */
 
-            auto pStream = rel.partitionScan(numOfThreads);
+        /*     auto pStream = rel.partitionScan(numOfThreads); */
 
-            PARALLEL_START
-                InterpreterContext newCtxt(ctxt);
-                auto viewInfo = viewContext->getViewInfoForNested();
-                for (const auto& info : viewInfo) {
-                    newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
-                }
-                pfor(auto it = pStream.begin(); it < pStream.end(); it++) {
-                    for (const TupleRef& val : *it) {
-                        newCtxt[cur.getTupleId()] = val.getBase();
-                        if (!execute(shadow.getNestedOperation(), newCtxt)) {
-                            break;
-                        }
-                    }
-                }
-            PARALLEL_END
-            return true;
-        ESAC(ParallelScan)
+        /*     PARALLEL_START */
+        /*         InterpreterContext newCtxt(ctxt); */
+        /*         auto viewInfo = viewContext->getViewInfoForNested(); */
+        /*         for (const auto& info : viewInfo) { */
+        /*             newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]); */
+        /*         } */
+        /*         pfor(auto it = pStream.begin(); it < pStream.end(); it++) { */
+        /*             for (const TupleRef& val : *it) { */
+        /*                 newCtxt[cur.getTupleId()] = val.getBase(); */
+        /*                 if (!execute(shadow.getNestedOperation(), newCtxt)) { */
+        /*                     break; */
+        /*                 } */
+        /*             } */
+        /*         } */
+        /*     PARALLEL_END */
+        /*     return true; */
+        /* ESAC(ParallelScan) */
 
-        CASE(IndexScan)
-            // create pattern tuple for range query
-            size_t arity = cur.getRelation().getArity();
-            const auto& superInfo = shadow.getSuperInst();
-            RamDomain low[arity];
-            RamDomain high[arity];
-            CAL_SEARCH_BOUND(superInfo, low, high);
+#define INDEX_SCAN(structure, arity, ...)                                          \
+    case (I_IndexScan_##structure##_##arity): {                                    \
+        return [&]() -> RamDomain {                                                \
+            using rel = InterpreterRelation<arity, Interpreter##structure<arity>>; \
+            const auto& cur = *static_cast<const IndexScan*>(node->getShadow());   \
+            const auto& shadow = *static_cast<const InterpreterIndexScan*>(node);  \
+            return evalIndexScan<rel>(cur, shadow, ctxt);                          \
+        }();                                                                       \
+    }
+        FOR_EACH(INDEX_SCAN)
+#undef INDEX_SCAN
 
-            size_t viewId = shadow.getViewId();
-            auto& view = ctxt.getView(viewId);
-            // conduct range query
-            for (auto data : view->range(TupleRef(low, arity), TupleRef(high, arity))) {
-                ctxt[cur.getTupleId()] = &data[0];
-                if (!execute(shadow.getNestedOperation(), ctxt)) {
-                    break;
-                }
-            }
-            return true;
-        ESAC(IndexScan)
+        // TODO
+        /* CASE(ParallelIndexScan) */
+        /*     auto viewContext = shadow.getViewContext(); */
+        /*     auto& rel = *node->getRelation(); */
 
-        CASE(ParallelIndexScan)
-            auto viewContext = shadow.getViewContext();
-            auto& rel = *node->getRelation();
+        /*     // create pattern tuple for range query */
+        /*     size_t arity = rel.getArity(); */
+        /*     const auto& superInfo = shadow.getSuperInst(); */
+        /*     RamDomain low[arity]; */
+        /*     RamDomain high[arity]; */
+        /*     CAL_SEARCH_BOUND(superInfo, low, high); */
 
-            // create pattern tuple for range query
-            size_t arity = rel.getArity();
-            const auto& superInfo = shadow.getSuperInst();
-            RamDomain low[arity];
-            RamDomain high[arity];
-            CAL_SEARCH_BOUND(superInfo, low, high);
+        /*     size_t indexPos = shadow.getViewId(); */
+        /*     auto pStream = */
+        /*             rel.partitionRange(indexPos, TupleRef(low, arity), TupleRef(high, arity),
+         * numOfThreads); */
 
-            size_t indexPos = shadow.getViewId();
-            auto pStream =
-                    rel.partitionRange(indexPos, TupleRef(low, arity), TupleRef(high, arity), numOfThreads);
+        /*     PARALLEL_START */
+        /*         InterpreterContext newCtxt(ctxt); */
+        /*         auto viewInfo = viewContext->getViewInfoForNested(); */
+        /*         for (const auto& info : viewInfo) { */
+        /*             newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]); */
+        /*         } */
+        /*         pfor(auto it = pStream.begin(); it < pStream.end(); it++) { */
+        /*             for (const TupleRef& val : *it) { */
+        /*                 newCtxt[cur.getTupleId()] = val.getBase(); */
+        /*                 if (!execute(shadow.getNestedOperation(), newCtxt)) { */
+        /*                     break; */
+        /*                 } */
+        /*             } */
+        /*         } */
+        /*     PARALLEL_END */
 
-            PARALLEL_START
-                InterpreterContext newCtxt(ctxt);
-                auto viewInfo = viewContext->getViewInfoForNested();
-                for (const auto& info : viewInfo) {
-                    newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
-                }
-                pfor(auto it = pStream.begin(); it < pStream.end(); it++) {
-                    for (const TupleRef& val : *it) {
-                        newCtxt[cur.getTupleId()] = val.getBase();
-                        if (!execute(shadow.getNestedOperation(), newCtxt)) {
-                            break;
-                        }
-                    }
-                }
-            PARALLEL_END
+        /*     return true; */
+        /* ESAC(ParallelIndexScan) */
 
-            return true;
-        ESAC(ParallelIndexScan)
+#define CHOICE(structure, arity, ...)                                                               \
+    case (I_Choice_##structure##_##arity): {                                                        \
+        return [&]() -> RamDomain {                                                                 \
+            const auto& rel =                                                                       \
+                    *static_cast<const InterpreterRelation<arity, Interpreter##structure<arity>>*>( \
+                            node->getRelation());                                                   \
+            const auto& cur = *static_cast<const Choice*>(node->getShadow());                       \
+            const auto& shadow = *static_cast<const InterpreterChoice*>(node);                      \
+            return evalChoice(rel, cur, shadow, ctxt);                                              \
+        }();                                                                                        \
+    }
 
-        CASE(Choice)
-            // get the targeted relation
-            auto& rel = *node->getRelation();
+        FOR_EACH(CHOICE)
+#undef CHOICE
 
-            // use simple iterator
-            for (const RamDomain* tuple : rel) {
-                ctxt[cur.getTupleId()] = tuple;
-                if (execute(shadow.getCondition(), ctxt)) {
-                    execute(shadow.getNestedOperation(), ctxt);
-                    break;
-                }
-            }
-            return true;
-        ESAC(Choice)
+        /* CASE(ParallelChoice) */
+        /*     auto viewContext = shadow.getViewContext(); */
+        /*     auto& rel = *node->getRelation(); */
 
-        CASE(ParallelChoice)
-            auto viewContext = shadow.getViewContext();
-            auto& rel = *node->getRelation();
+        /*     auto pStream = rel.partitionScan(numOfThreads); */
+        /*     auto viewInfo = viewContext->getViewInfoForNested(); */
+        /*     PARALLEL_START */
+        /*         InterpreterContext newCtxt(ctxt); */
+        /*         for (const auto& info : viewInfo) { */
+        /*             newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]); */
+        /*         } */
+        /*         pfor(auto it = pStream.begin(); it < pStream.end(); it++) { */
+        /*             for (const TupleRef& val : *it) { */
+        /*                 newCtxt[cur.getTupleId()] = val.getBase(); */
+        /*                 if (execute(shadow.getCondition(), newCtxt)) { */
+        /*                     execute(shadow.getNestedOperation(), newCtxt); */
+        /*                     break; */
+        /*                 } */
+        /*             } */
+        /*         } */
+        /*     PARALLEL_END */
+        /*     return true; */
+        /* ESAC(ParallelChoice) */
 
-            auto pStream = rel.partitionScan(numOfThreads);
-            auto viewInfo = viewContext->getViewInfoForNested();
-            PARALLEL_START
-                InterpreterContext newCtxt(ctxt);
-                for (const auto& info : viewInfo) {
-                    newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
-                }
-                pfor(auto it = pStream.begin(); it < pStream.end(); it++) {
-                    for (const TupleRef& val : *it) {
-                        newCtxt[cur.getTupleId()] = val.getBase();
-                        if (execute(shadow.getCondition(), newCtxt)) {
-                            execute(shadow.getNestedOperation(), newCtxt);
-                            break;
-                        }
-                    }
-                }
-            PARALLEL_END
-            return true;
-        ESAC(ParallelChoice)
+#define INDEX_CHOICE(structure, arity, ...)                                         \
+    case (I_IndexChoice_##structure##_##arity): {                                   \
+        return [&]() -> RamDomain {                                                 \
+            using rel = InterpreterRelation<arity, Interpreter##structure<arity>>;  \
+            const auto& cur = *static_cast<const IndexChoice*>(node->getShadow());  \
+            const auto& shadow = *static_cast<const InterpreterIndexChoice*>(node); \
+            return evalIndexChoice<rel>(cur, shadow, ctxt);                         \
+        }();                                                                        \
+    }
+        FOR_EACH(INDEX_CHOICE)
+#undef INDEX_CHOICE
 
-        CASE(IndexChoice)
-            // create pattern tuple for range query
-            size_t arity = cur.getRelation().getArity();
-            const auto& superInfo = shadow.getSuperInst();
-            RamDomain low[arity];
-            RamDomain high[arity];
-            CAL_SEARCH_BOUND(superInfo, low, high);
+        /* CASE(ParallelIndexChoice) */
+        /*     auto viewContext = shadow.getViewContext(); */
+        /*     auto& rel = *node->getRelation(); */
 
-            size_t viewId = shadow.getViewId();
-            auto& view = ctxt.getView(viewId);
+        /*     auto viewInfo = viewContext->getViewInfoForNested(); */
 
-            for (auto ip : view->range(TupleRef(low, arity), TupleRef(high, arity))) {
-                const RamDomain* data = &ip[0];
-                ctxt[cur.getTupleId()] = data;
-                if (execute(shadow.getCondition(), ctxt)) {
-                    execute(shadow.getNestedOperation(), ctxt);
-                    break;
-                }
-            }
-            return true;
-        ESAC(IndexChoice)
+        /*     // create pattern tuple for range query */
+        /*     size_t arity = rel.getArity(); */
+        /*     const auto& superInfo = shadow.getSuperInst(); */
+        /*     RamDomain low[arity]; */
+        /*     RamDomain high[arity]; */
+        /*     CAL_SEARCH_BOUND(superInfo, low, high); */
 
-        CASE(ParallelIndexChoice)
-            auto viewContext = shadow.getViewContext();
-            auto& rel = *node->getRelation();
+        /*     size_t indexPos = shadow.getViewId(); */
+        /*     auto pStream = */
+        /*             rel.partitionRange(indexPos, TupleRef(low, arity), TupleRef(high, arity),
+         * numOfThreads); */
 
-            auto viewInfo = viewContext->getViewInfoForNested();
+        /*     PARALLEL_START */
+        /*         InterpreterContext newCtxt(ctxt); */
+        /*         for (const auto& info : viewInfo) { */
+        /*             newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]); */
+        /*         } */
+        /*         pfor(auto it = pStream.begin(); it < pStream.end(); it++) { */
+        /*             for (const TupleRef& val : *it) { */
+        /*                 newCtxt[cur.getTupleId()] = val.getBase(); */
+        /*                 if (execute(shadow.getCondition(), newCtxt)) { */
+        /*                     execute(shadow.getNestedOperation(), newCtxt); */
+        /*                     break; */
+        /*                 } */
+        /*             } */
+        /*         } */
+        /*     PARALLEL_END */
 
-            // create pattern tuple for range query
-            size_t arity = rel.getArity();
-            const auto& superInfo = shadow.getSuperInst();
-            RamDomain low[arity];
-            RamDomain high[arity];
-            CAL_SEARCH_BOUND(superInfo, low, high);
-
-            size_t indexPos = shadow.getViewId();
-            auto pStream =
-                    rel.partitionRange(indexPos, TupleRef(low, arity), TupleRef(high, arity), numOfThreads);
-
-            PARALLEL_START
-                InterpreterContext newCtxt(ctxt);
-                for (const auto& info : viewInfo) {
-                    newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
-                }
-                pfor(auto it = pStream.begin(); it < pStream.end(); it++) {
-                    for (const TupleRef& val : *it) {
-                        newCtxt[cur.getTupleId()] = val.getBase();
-                        if (execute(shadow.getCondition(), newCtxt)) {
-                            execute(shadow.getNestedOperation(), newCtxt);
-                            break;
-                        }
-                    }
-                }
-            PARALLEL_END
-
-            return true;
-        ESAC(ParallelIndexChoice)
+        /*     return true; */
+        /* ESAC(ParallelIndexChoice) */
 
         CASE(UnpackRecord)
             RamDomain ref = execute(shadow.getExpr(), ctxt);
@@ -1128,62 +1062,71 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
             return execute(shadow.getNestedOperation(), ctxt);
         ESAC(UnpackRecord)
 
-        CASE(ParallelAggregate)
-            // TODO (rdowavic): make parallel
-            auto viewContext = shadow.getViewContext();
+            /* CASE(ParallelAggregate) */
+            /*     // TODO (rdowavic): make parallel */
+            /*     auto viewContext = shadow.getViewContext(); */
 
-            InterpreterContext newCtxt(ctxt);
-            auto viewInfo = viewContext->getViewInfoForNested();
-            for (const auto& info : viewInfo) {
-                newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
-            }
-            return executeAggregate(newCtxt, cur, *shadow.getCondition(), shadow.getExpr(),
-                    *shadow.getNestedOperation(), node->getRelation()->scan());
-        ESAC(ParallelAggregate)
+            /*     InterpreterContext newCtxt(ctxt); */
+            /*     auto viewInfo = viewContext->getViewInfoForNested(); */
+            /*     for (const auto& info : viewInfo) { */
+            /*         newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]); */
+            /*     } */
+            /*     return executeAggregate(newCtxt, cur, *shadow.getCondition(), shadow.getExpr(), */
+            /*             *shadow.getNestedOperation(), node->getRelation()->scan()); */
+            /* ESAC(ParallelAggregate) */
 
-        CASE(Aggregate)
-            return executeAggregate(ctxt, cur, *shadow.getCondition(), shadow.getExpr(),
-                    *shadow.getNestedOperation(), node->getRelation()->scan());
-        ESAC(Aggregate)
+#define AGGREGATE(structure, arity, ...)                                                                \
+    case (I_Aggregate_##structure##_##arity): {                                                         \
+        return [&]() -> RamDomain {                                                                     \
+            const auto& rel = *static_cast<InterpreterRelation<arity, Interpreter##structure<arity>>*>( \
+                    node->getRelation());                                                               \
+            const auto& cur = *static_cast<const Aggregate*>(node->getShadow());                        \
+            const auto& shadow = *static_cast<const InterpreterAggregate*>(node);                       \
+            return executeAggregate(cur, *shadow.getCondition(), shadow.getExpr(),                      \
+                    *shadow.getNestedOperation(), rel.scan(), ctxt);                                    \
+        }();                                                                                            \
+    }
+        FOR_EACH(AGGREGATE)
+#undef AGGREGATE
 
-        CASE(ParallelIndexAggregate)
-            // TODO (rdowavic): make parallel
-            auto viewContext = shadow.getViewContext();
+        // TODO
+        /* CASE(ParallelIndexAggregate) */
+        /*     // TODO (rdowavic): make parallel */
+        /*     auto viewContext = shadow.getViewContext(); */
 
-            InterpreterContext newCtxt(ctxt);
-            auto viewInfo = viewContext->getViewInfoForNested();
-            for (const auto& info : viewInfo) {
-                newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
-            }
-            // init temporary tuple for this level
-            size_t arity = cur.getRelation().getArity();
-            const auto& superInfo = shadow.getSuperInst();
-            // get lower and upper boundaries for iteration
-            RamDomain low[arity];
-            RamDomain high[arity];
-            CAL_SEARCH_BOUND(superInfo, low, high);
+        /*     InterpreterContext newCtxt(ctxt); */
+        /*     auto viewInfo = viewContext->getViewInfoForNested(); */
+        /*     for (const auto& info : viewInfo) { */
+        /*         newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]); */
+        /*     } */
+        /*     // init temporary tuple for this level */
+        /*     size_t arity = cur.getRelation().getArity(); */
+        /*     const auto& superInfo = shadow.getSuperInst(); */
+        /*     // get lower and upper boundaries for iteration */
+        /*     RamDomain low[arity]; */
+        /*     RamDomain high[arity]; */
+        /*     CAL_SEARCH_BOUND(superInfo, low, high); */
 
-            size_t viewId = shadow.getViewId();
-            auto& view = newCtxt.getView(viewId);
+        /*     size_t viewId = shadow.getViewId(); */
+        /*     auto& view = newCtxt.getView(viewId); */
 
-            return executeAggregate(newCtxt, cur, *shadow.getCondition(), shadow.getExpr(),
-                    *shadow.getNestedOperation(), view->range(TupleRef(low, arity), TupleRef(high, arity)));
-        ESAC(ParallelIndexAggregate)
+        /*     return executeAggregate(newCtxt, cur, *shadow.getCondition(), shadow.getExpr(), */
+        /*             *shadow.getNestedOperation(), view->range(TupleRef(low, arity), TupleRef(high,
+         * arity))); */
+        /* ESAC(ParallelIndexAggregate) */
 
-        CASE(IndexAggregate)
-            // init temporary tuple for this level
-            size_t arity = cur.getRelation().getArity();
-            const auto& superInfo = shadow.getSuperInst();
-            RamDomain low[arity];
-            RamDomain high[arity];
-            CAL_SEARCH_BOUND(superInfo, low, high)
+#define INDEX_AGGREGATE(structure, arity, ...)                                         \
+    case (I_IndexAggregate_##structure##_##arity): {                                   \
+        return [&]() -> RamDomain {                                                    \
+            using Rel = InterpreterRelation<arity, Interpreter##structure<arity>>;     \
+            const auto& cur = *static_cast<const IndexAggregate*>(node->getShadow());  \
+            const auto& shadow = *static_cast<const InterpreterIndexAggregate*>(node); \
+            return evalIndexAggregate<Rel>(cur, shadow, ctxt);                         \
+        }();                                                                           \
+    }
 
-            size_t viewId = shadow.getViewId();
-            auto& view = ctxt.getView(viewId);
-
-            return executeAggregate(ctxt, cur, *shadow.getCondition(), shadow.getExpr(),
-                    *shadow.getNestedOperation(), view->range(TupleRef(low, arity), TupleRef(high, arity)));
-        ESAC(IndexAggregate)
+        FOR_EACH(INDEX_AGGREGATE)
+#undef INDEX_AGGREGATE
 
         CASE(Break)
             // check condition
@@ -1211,25 +1154,17 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
             return result;
         ESAC(Filter)
 
-        CASE(Project)
-            const auto& superInfo = shadow.getSuperInst();
-            size_t arity = cur.getRelation().getArity();
-            RamDomain tuple[arity];
-            memcpy(tuple, superInfo.first.data(), sizeof(tuple));
-            /* TupleElement */
-            for (const auto& tupleElement : superInfo.tupleFirst) {
-                tuple[tupleElement[0]] = ctxt[tupleElement[1]][tupleElement[2]];
-            }
-            /* Generic */
-            for (const auto& expr : superInfo.exprFirst) {
-                tuple[expr.first] = execute(expr.second.get(), ctxt);
-            }
-
-            // insert in target relation
-            InterpreterRelation& rel = *node->getRelation();
-            rel.insert(tuple);
-            return true;
-        ESAC(Project)
+#define PROJECT(structure, arity, ...)                                                            \
+    case (I_Project_##structure##_##arity): {                                                     \
+        return [&]() -> RamDomain {                                                               \
+            auto& rel = *static_cast<InterpreterRelation<arity, Interpreter##structure<arity>>*>( \
+                    node->getRelation());                                                         \
+            const auto& shadow = *static_cast<const InterpreterProject*>(node);                   \
+            return evalProject(rel, shadow, ctxt);                                                \
+        }();                                                                                      \
+    }
+        FOR_EACH(PROJECT)
+#undef PROJECT
 
         CASE(SubroutineReturn)
             for (size_t i = 0; i < cur.getValues().size(); ++i) {
@@ -1275,7 +1210,7 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
 
         CASE(LogRelationTimer)
             Logger logger(cur.getMessage(), getIterationNumber(),
-                    std::bind(&InterpreterRelation::size, node->getRelation()));
+                    std::bind(&InterpreterRelationWrapper::size, node->getRelation()));
             return execute(shadow.getChild(), ctxt);
         ESAC(LogRelationTimer)
 
@@ -1289,10 +1224,17 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
             return execute(shadow.getChild(), ctxt);
         ESAC(DebugInfo)
 
-        CASE(Clear)
-            node->getRelation()->purge();
-            return true;
-        ESAC(Clear)
+#define CLEAR(structure, arity, ...)                                                                   \
+    case (I_Clear_##structure##_##arity): {                                                            \
+        return [&]() -> RamDomain {                                                                    \
+            const auto& rel = static_cast<InterpreterRelation<arity, Interpreter##structure<arity>>*>( \
+                    node->getRelation());                                                              \
+            rel->__purge();                                                                            \
+            return true;                                                                               \
+        }();                                                                                           \
+    }
+        FOR_EACH(CLEAR)
+#undef CLEAR
 
         CASE(Call)
             execute(subroutine[shadow.getSubroutineId()].get(), ctxt);
@@ -1300,42 +1242,23 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
         ESAC(Call)
 
         CASE(LogSize)
-            const InterpreterRelation& rel = *node->getRelation();
+            const auto& rel = *node->getRelation();
             ProfileEventSingleton::instance().makeQuantityEvent(
                     cur.getMessage(), rel.size(), getIterationNumber());
             return true;
         ESAC(LogSize)
 
-        CASE(IO)
+#define IO(structure, arity, ...)                                                                 \
+    case (I_IO_##structure##_##arity): {                                                          \
+        return [&]() -> RamDomain {                                                               \
+            auto& rel = *static_cast<InterpreterRelation<arity, Interpreter##structure<arity>>*>( \
+                    node->getRelation());                                                         \
+            const auto& cur = *static_cast<const IO*>(node->getShadow());                         \
+            return evalIO(cur, rel);                                                              \
+        }();                                                                                      \
+    }
 
-            const auto& directive = cur.getDirectives();
-            const std::string& op = cur.get("operation");
-
-            if (op == "input") {
-                try {
-                    InterpreterRelation& relation = *node->getRelation();
-                    IOSystem::getInstance()
-                            .getReader(directive, getSymbolTable(), getRecordTable())
-                            ->readAll(relation);
-                } catch (std::exception& e) {
-                    std::cerr << "Error loading data: " << e.what() << "\n";
-                }
-                return true;
-            } else if (op == "output" || op == "printsize") {
-                try {
-                    IOSystem::getInstance()
-                            .getWriter(directive, getSymbolTable(), getRecordTable())
-                            ->writeAllWithOrder(*node->getRelation());
-                } catch (std::exception& e) {
-                    std::cerr << e.what();
-                    exit(EXIT_FAILURE);
-                }
-                return true;
-            } else {
-                assert("wrong i/o operation");
-                return true;
-            }
-        ESAC(IO)
+        FOR_EACH(IO)
 
         CASE(Query)
             InterpreterViewContext* viewContext = shadow.getViewContext();
@@ -1376,8 +1299,10 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
         ESAC(Query)
 
         CASE(Extend)
-            InterpreterRelation& src = *getRelationHandle(shadow.getSourceId());
-            InterpreterRelation& trg = *getRelationHandle(shadow.getTargetId());
+            auto& src =
+                    *static_cast<InterpreterEqrelRelation*>(getRelationHandle(shadow.getSourceId()).get());
+            auto& trg =
+                    *static_cast<InterpreterEqrelRelation*>(getRelationHandle(shadow.getTargetId()).get());
             src.extend(trg);
             trg.insert(src);
             return true;
@@ -1395,10 +1320,10 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
 #undef DEBUG
 }  // namespace souffle
 
-template <typename Aggregate>
-RamDomain InterpreterEngine::executeAggregate(InterpreterContext& ctxt, const Aggregate& aggregate,
-        const InterpreterNode& filter, const InterpreterNode* expression,
-        const InterpreterNode& nestedOperation, Stream stream) {
+template <typename Aggregate, typename Iter>
+RamDomain InterpreterEngine::executeAggregate(const Aggregate& aggregate, const InterpreterNode& filter,
+        const InterpreterNode* expression, const InterpreterNode& nestedOperation, const Iter& ranges,
+        InterpreterContext& ctxt) {
     bool shouldRunNested = false;
 
     // initialize result
@@ -1440,9 +1365,8 @@ RamDomain InterpreterEngine::executeAggregate(InterpreterContext& ctxt, const Ag
             break;
     }
 
-    for (auto ip : stream) {
-        const RamDomain* data = &ip[0];
-        ctxt[aggregate.getTupleId()] = data;
+    for (const auto& tuple : ranges) {
+        ctxt[aggregate.getTupleId()] = tuple.data;
 
         if (!execute(&filter, ctxt)) {
             continue;
@@ -1499,9 +1423,9 @@ RamDomain InterpreterEngine::executeAggregate(InterpreterContext& ctxt, const Ag
     }
 
     // write result to environment
-    RamDomain tuple[1];
+    souffle::Tuple<RamDomain, 1> tuple;
     tuple[0] = res;
-    ctxt[aggregate.getTupleId()] = tuple;
+    ctxt[aggregate.getTupleId()] = tuple.data;
 
     if (!shouldRunNested) {
         return true;

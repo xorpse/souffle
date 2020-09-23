@@ -31,250 +31,373 @@
 namespace souffle {
 
 /**
- * A relation, composed of a collection of indexes.
+ * Wrapper for InterpreterRelation.
+ *
+ * This class uniforms the InterpreterRelation template classes.
+ * It also define virtual interfaces for ProgInterface and some virtual helper functions for interpreter
+ * execution.
  */
-class InterpreterRelation {
+struct InterpreterRelationWrapper {
 public:
-    using Attribute = uint32_t;
-    using AttributeSet = std::set<Attribute>;
-    /**
-     * Creates a relation, build all necessary indexes.
-     */
-    InterpreterRelation(std::size_t arity, std::size_t auxiliaryArity, std::string name,
-            std::vector<std::string> attributeTypes, const ram::analysis::MinIndexSelection& orderSet,
-            IndexFactory factory = &createBTreeIndex);
+    InterpreterRelationWrapper(size_t arity, size_t auxiliaryArity, std::string relName)
+            : arity(arity), auxiliaryArity(auxiliaryArity), relName(std::move(relName)) {}
 
-    InterpreterRelation(InterpreterRelation& other) = delete;
+    virtual ~InterpreterRelationWrapper() = default;
 
-    virtual ~InterpreterRelation() = default;
+    class iterator_base {
+    public:
+        virtual ~iterator_base() = default;
 
-    /**
-     * Support for-each iteration for InterpreterRelation.
-     * This implicitly returns tuple in the decoded order.
-     */
-    class Iterator : public std::iterator<std::forward_iterator_tag, RamDomain*> {
-        Own<Stream> stream;
+        virtual iterator_base& operator++() = 0;
+
+        virtual const RamDomain* operator*() = 0;
+
+        virtual iterator_base* clone() const = 0;
+
+        virtual bool equal(const iterator_base& other) const = 0;
+    };
+
+    class Iterator {
+        Own<iterator_base> iter;
 
     public:
-        Iterator() : stream(mk<Stream>()) {}
-
-        Iterator(const InterpreterRelation& rel) : stream(mk<Stream>(rel.scan())) {}
-
-        Iterator(const Iterator& iter) : stream(iter.stream->clone()) {}
-
-        Iterator(Iterator&& iter) : stream(std::move(iter.stream)) {}
+        Iterator(const Iterator& other) : iter(other.iter->clone()) {}
+        Iterator(iterator_base* iter) : iter(Own<iterator_base>(iter)) {}
 
         Iterator& operator++() {
-            ++stream->begin();
+            ++(*iter);
             return *this;
         }
 
         const RamDomain* operator*() {
-            return (*stream->begin()).getBase();
-        }
-
-        bool operator!=(const Iterator& other) const {
-            return stream->begin() != other.stream->begin();
+            return **iter;
         }
 
         bool operator==(const Iterator& other) const {
-            return stream->begin() == other.stream->begin();
+            return iter->equal(*other.iter);
+        }
+
+        bool operator!=(const Iterator& other) const {
+            return !(*this == other);
         }
     };
 
-    Iterator begin() const {
-        return Iterator(*this);
+    virtual Iterator begin() const = 0;
+
+    virtual Iterator end() const = 0;
+
+    virtual void insert(const RamDomain*) = 0;
+
+    virtual bool contains(const RamDomain*) const = 0;
+
+    virtual std::size_t size() const = 0;
+
+    virtual void purge() = 0;
+
+    const std::string& getName() const {
+        return relName;
     }
 
-    Iterator end() const {
-        return Iterator();
+    size_t getArity() const {
+        return arity;
     }
 
-    /**
-     * Drops an index from the maintained indexes. All but one index
-     * may be removed.
-     */
-    void removeIndex(const size_t& indexPos);
+    size_t getAuxiliaryArity() const {
+        return auxiliaryArity;
+    }
+
+public:
+    using IndexViewPtr = Own<InterpreterViewWrapper>;
+
+    virtual Order getIndexOrder(size_t idx) const = 0;
+
+    virtual IndexViewPtr createView(const size_t&) const = 0;
+
+protected:
+    // Arity of the relation
+    size_t arity;
+
+    // Number of height parameters of relation
+    size_t auxiliaryArity;
+
+    // Relation name
+    std::string relName;
+};
+
+/**
+ * A relation, composed of a collection of indexes.
+ */
+template <std::size_t _Arity, template <size_t> typename Structure>
+class InterpreterRelation : public InterpreterRelationWrapper {
+public:
+    static constexpr std::size_t Arity = _Arity;
+    using Attribute = uint32_t;
+    using AttributeSet = std::set<Attribute>;
+    using Index = InterpreterIndex<Arity, Structure>;
+    using Tuple = souffle::Tuple<RamDomain, Arity>;
+    using iterator = typename Index::iterator;
+
+    static Tuple constructTuple(const RamDomain* data) {
+        Tuple tuple;
+        memcpy(tuple.data, data, Arity * sizeof(RamDomain));
+        return tuple;
+    }
+
+    void purge() override {
+        __purge();
+    }
+
+    void insert(const RamDomain* data) override {
+        insert(constructTuple(data));
+    }
+
+    bool contains(const RamDomain* data) const override {
+        return contains(constructTuple(data));
+    }
 
     /**
      * Obtains a view on an index of this relation, facilitating hint-supported accesses.
      */
-    IndexViewPtr getView(const size_t& indexPos) const;
+    IndexViewPtr createView(const size_t& indexPos) const override {
+        return mk<typename Index::InterpreterView>(indexes[indexPos]->createView());
+    }
+
+    size_t size() const override {
+        return __size();
+    }
+
+    /**
+     * Return the order of an index.
+     */
+    Order getIndexOrder(size_t idx) const override {
+        return indexes[idx]->getOrder();
+    }
+
+    class iterator_wrapper : public InterpreterRelationWrapper::iterator_base {
+        typename Index::iterator iter;
+        Order order;
+        RamDomain data[Arity];
+
+    public:
+        iterator_wrapper(const typename Index::iterator& iter, Order order)
+                : iter(iter), order(std::move(order)) {}
+
+        iterator_wrapper& operator++() override {
+            ++iter;
+            return *this;
+        }
+
+        const RamDomain* operator*() override {
+            const auto& tuple = *iter;
+            for (size_t i = 0; i < Arity; ++i) {
+                data[order[i]] = tuple[i];
+            }
+            return data;
+        }
+
+        iterator_base* clone() const override {
+            return new iterator_wrapper(iter, order);
+        }
+
+        bool equal(const iterator_base& o) const override {
+            if (auto* other = dynamic_cast<const iterator_wrapper*>(&o)) {
+                return iter == other->iter;
+            }
+            return false;
+        }
+    };
+
+    Iterator begin() const override {
+        return Iterator(new iterator_wrapper(main->begin(), main->getOrder()));
+    }
+
+    Iterator end() const override {
+        return Iterator(new iterator_wrapper(main->end(), main->getOrder()));
+        /* return Iterator(new iterator_base(main->end(), main->getOrder())); */
+    }
+
+public:
+    /**
+     * Creates a relation, build all necessary indexes.
+     */
+    InterpreterRelation(
+            std::size_t auxiliaryArity, std::string name, const ram::analysis::MinIndexSelection& orderSet)
+            : InterpreterRelationWrapper(arity, auxiliaryArity, std::move(name)) {
+        for (auto order : orderSet.getAllOrders()) {
+            // Expand the order to a total order
+            ram::analysis::MinIndexSelection::AttributeSet set{order.begin(), order.end()};
+
+            for (std::size_t i = 0; i + 1 < Arity + 1; ++i) {
+                if (set.find(i) == set.end()) {
+                    order.push_back(i);
+                }
+            }
+
+            indexes.push_back(mk<Index>(order));
+        }
+
+        // Use the first index as default main index
+        main = indexes[0].get();
+    }
+
+    InterpreterRelation(InterpreterRelation& other) = delete;
+
+    // TODO private
+    iterator __begin() const {
+        return main->begin();
+    }
+
+    iterator __end() const {
+        return main->end();
+    }
 
     /**
      * Add the given tuple to this relation.
      */
-    virtual bool insert(const TupleRef& tuple);
-
-    /**
-     * Add the given tuple to this relation.
-     */
-    virtual bool insert(const RamDomain* tuple) {
-        return insert(TupleRef(tuple, arity));
+    bool insert(const Tuple& tuple) {
+        if (!(main->insert(tuple))) {
+            return false;
+        }
+        for (size_t i = 1; i < indexes.size(); ++i) {
+            indexes[i]->insert(tuple);
+        }
+        return true;
     }
 
     /**
      * Add all entries of the given relation to this relation.
      */
-    void insert(const InterpreterRelation& other);
+    void insert(const InterpreterRelation<Arity, Structure>& other) {
+        for (const auto& tuple : other.scan()) {
+            this->insert(tuple);
+        }
+    }
 
     /**
      * Tests whether this relation contains the given tuple.
      */
-    bool contains(const TupleRef& tuple) const;
+    bool contains(const Tuple& tuple) const {
+        return main->contains(tuple);
+    }
 
     /**
      * Tests whether this relation contains any element between the given boundaries.
      */
-    bool contains(const size_t& indexPos, const TupleRef& low, const TupleRef& high) const;
+    bool contains(const size_t& indexPos, const Tuple& low, const Tuple& high) const {
+        return indexes[indexPos]->contains(low, high);
+    }
 
     /**
      * Obtains a stream to scan the entire relation.
      */
-    Stream scan() const;
+    souffle::range<iterator> scan() const {
+        return main->scan();
+    }
 
     /**
      * Obtains a partitioned stream list for parallel computation
      */
-    PartitionedStream partitionScan(size_t partitionCount) const;
+    /* PartitionedStream partitionScan(size_t partitionCount) const; */
 
     /**
-     * Obtains a stream covering the interval between the two given entries.
+     * Obtains a pair of iterators covering the interval between the two given entries.
      */
-    Stream range(const size_t& indexPos, const TupleRef& low, const TupleRef& high) const;
+    souffle::range<iterator> range(const size_t& indexPos, const Tuple& low, const Tuple& high) const {
+        return indexes[indexPos]->range(low, high);
+    }
 
     /**
      * Obtains a partitioned stream list for parallel computation
      */
-    PartitionedStream partitionRange(
-            const size_t& indexPos, const TupleRef& low, const TupleRef& high, size_t partitionCount) const;
+    /* PartitionedStream partitionRange( */
+    /*         const size_t& indexPos, const TupleRef& low, const TupleRef& high, size_t partitionCount)
+     * const; */
 
     /**
      * Swaps the content of this and the given relation, including the
      * installed indexes.
      */
-    void swap(InterpreterRelation& other);
-
-    /**
-     * Set level
-     */
-    void setLevel(size_t level) {
-        this->level = level;
-    }
-
-    /**
-     * Return the level of the relation.
-     */
-    size_t getLevel() const;
-
-    /**
-     * Return the relation name.
-     */
-    const std::string& getName() const;
-
-    /**
-     * Return the attribute types
-     */
-    const std::vector<std::string>& getAttributeTypes() const;
-
-    /**
-     * Return arity
-     */
-    size_t getArity() const {
-        return arity;
+    void swap(InterpreterRelation<Arity, Structure>& other) {
+        indexes.swap(other.indexes);
     }
 
     /**
      * Return arity
      */
-    size_t getAuxiliaryArity() const;
+    constexpr size_t getArity() const {
+        return Arity;
+    }
 
     /**
      * Return number of tuples in relation (full-order)
      */
-    size_t size() const;
-
-    /**
-     * Return the order of an index.
-     */
-    Order getIndexOrder(size_t idx) const;
+    size_t __size() const {
+        return main->size();
+    }
 
     /**
      * Check if the relation is empty
      */
-    bool empty() const;
+    bool empty() const {
+        return main->empty();
+    }
 
     /**
      * Clear all indexes
      */
-    virtual void purge();
+    void __purge() {
+        for (auto& idx : indexes) {
+            idx->clear();
+        }
+    }
 
     /**
      * Check if a tuple exists in relation
      */
-    bool exists(const TupleRef& tuple) const;
+    bool exists(const Tuple& tuple) const {
+        return main->contains(tuple);
+    }
 
-    /**
-     * Extend another relation
-     */
-    virtual void extend(const InterpreterRelation& rel);
+    Index* getIndex(size_t idx) {
+        return indexes[idx];
+    }
 
 protected:
-    // Relation name
-    std::string relName;
-
-    // Relation Arity
-    const size_t arity;
-
     // Number of height parameters of relation
     size_t auxiliaryArity;
 
-    // Relation attributes types
-    std::vector<std::string> attributeTypes;
+    // Relation name
+    std::string relName;
 
     // a map of managed indexes
-    VecOwn<InterpreterIndex> indexes;
+    VecOwn<Index> indexes;
 
     // a pointer to the main index within the managed index
-    InterpreterIndex* main;
+    Index* main;
 
     // relation level
+    // TODO need?
     size_t level = 0;
+
+public:
+    // Cast from a index wrapper.
+
+    // Cast from a view wrapper.
+    static typename Index::InterpreterView* castView(InterpreterViewWrapper* view) {
+        return static_cast<typename Index::InterpreterView*>(view);
+    }
+
 };  // namespace souffle
 
-/**
- * Interpreter Equivalence Relation
- */
-class InterpreterEqRelation : public InterpreterRelation {
+class InterpreterEqrelRelation : public InterpreterRelation<2, InterpreterEqrel> {
 public:
-    InterpreterEqRelation(size_t arity, size_t auxiliaryArity, const std::string& relName,
-            const std::vector<std::string>& attributeTypes, const ram::analysis::MinIndexSelection& orderSet);
+    using InterpreterRelation<2, InterpreterEqrel>::InterpreterRelation;
 
-    /** Extend this relation with new knowledge generated by inserting all tuples from a relation */
-    void extend(const InterpreterRelation& rel) override;
+    void extend(const InterpreterEqrelRelation& rel) {
+        // TODO must refactor
+        static_cast<InterpreterEqrelIndex*>(this->main)
+                ->extend(static_cast<InterpreterEqrelIndex*>(rel.main));
+    }
 };
 
-/**
- * Interpreter Indirect Relation
- */
-class InterpreterIndirectRelation : public InterpreterRelation {
-public:
-    InterpreterIndirectRelation(size_t arity, size_t auxiliaryArity, const std::string& relName,
-            const std::vector<std::string>& attributeTypes, const ram::analysis::MinIndexSelection& orderSet);
-    /** Insert tuple */
-    bool insert(const TupleRef& tuple) override;
-
-    bool insert(const RamDomain* tuple) override;
-
-    /** Clear all indexes */
-    void purge() override;
-
-private:
-    /** Size of blocks containing tuples */
-    static const int BLOCK_SIZE = 1024;
-
-    std::deque<Own<RamDomain[]>> blockList;
-
-    size_t numTuples = 0;
-};
 }  // end of namespace souffle

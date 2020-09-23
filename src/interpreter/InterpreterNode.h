@@ -23,8 +23,10 @@
 
 #pragma once
 
+#include "interpreter/InterpreterUtil.h"
 #include "souffle/RamTypes.h"
 #include "souffle/utility/ContainerUtil.h"
+#include "ram/Relation.h"
 #include <array>
 #include <cassert>
 #include <cstddef>
@@ -34,63 +36,28 @@
 
 namespace souffle {
 class InterpreterViewContext;
-class InterpreterRelation;
+class InterpreterRelationWrapper;
 
 namespace ram {
 class Node;
 }
 
+// clang-format off
+
+#define SINGLE_TOKEN(tok) I_##tok,
+
+#define __EXTENDED_TOKEN(structure, arity, tok)\
+    I_##tok##_##structure##_##arity,
+
+#define EXTENDED_TOKEN(tok) FOR_EACH(__EXTENDED_TOKEN, tok)
+
 enum InterpreterNodeType {
-    I_Constant,
-    I_TupleElement,
-    I_AutoIncrement,
-    I_IntrinsicOperator,
-    I_UserDefinedOperator,
-    I_NestedIntrinsicOperator,
-    I_PackRecord,
-    I_SubroutineArgument,
-    I_True,
-    I_False,
-    I_Conjunction,
-    I_Negation,
-    I_EmptinessCheck,
-    I_RelationSize,
-    I_ExistenceCheck,
-    I_ProvenanceExistenceCheck,
-    I_Constraint,
-    I_TupleOperation,
-    I_Scan,
-    I_ParallelScan,
-    I_IndexScan,
-    I_ParallelIndexScan,
-    I_Choice,
-    I_ParallelChoice,
-    I_IndexChoice,
-    I_ParallelIndexChoice,
-    I_UnpackRecord,
-    I_Aggregate,
-    I_ParallelAggregate,
-    I_IndexAggregate,
-    I_ParallelIndexAggregate,
-    I_Break,
-    I_Filter,
-    I_Project,
-    I_SubroutineReturn,
-    I_Sequence,
-    I_Parallel,
-    I_Loop,
-    I_Exit,
-    I_LogRelationTimer,
-    I_LogTimer,
-    I_DebugInfo,
-    I_Clear,
-    I_LogSize,
-    I_IO,
-    I_Query,
-    I_Extend,
-    I_Swap,
-    I_Call
+    FOR_EACH_INTERPRETER_TOKEN(SINGLE_TOKEN, EXTENDED_TOKEN)
 };
+#undef SINGLE_TOKEN
+#undef __EXTENDED_TOKEN
+#undef EXTENDED_TOKEN
+// clang-format on
 
 /**
  * @class InterpreterNode
@@ -101,7 +68,7 @@ enum InterpreterNodeType {
 
 class InterpreterNode {
 public:
-    using RelationHandle = Own<InterpreterRelation>;
+    using RelationHandle = Own<InterpreterRelationWrapper>;
 
     InterpreterNode(enum InterpreterNodeType ty, const ram::Node* sdw, RelationHandle* relHandle = nullptr)
             : type(ty), shadow(sdw), relHandle(relHandle) {}
@@ -118,7 +85,7 @@ public:
     }
 
     /** @brief get relation from handle */
-    InterpreterRelation* getRelation() const {
+    InterpreterRelationWrapper* getRelation() const {
         assert(relHandle && "No relation cached\n");
         return (*relHandle).get();
     }
