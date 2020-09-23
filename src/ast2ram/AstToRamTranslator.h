@@ -17,8 +17,8 @@
 #pragma once
 
 #include "ast/Variable.h"
-#include "souffle/utility/FunctionalUtil.h"
 #include "souffle/utility/ContainerUtil.h"
+#include "souffle/utility/FunctionalUtil.h"
 #include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include "souffle/utility/StringUtil.h"
@@ -31,6 +31,10 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+namespace souffle {
+class SymbolTable;
+}
 
 namespace souffle::ast {
 class Argument;
@@ -66,9 +70,7 @@ class TranslationUnit;
 class TupleElement;
 }  // namespace souffle::ram
 
-namespace souffle {
-
-class SymbolTable;
+namespace souffle::ast2ram {
 
 /**
  * Main class for the AST->RAM translator
@@ -424,4 +426,4 @@ public:
     ProvenanceClauseTranslator(AstToRamTranslator& translator) : ClauseTranslator(translator) {}
 };
 
-}  // end of namespace souffle
+}  // namespace souffle::ast2ram

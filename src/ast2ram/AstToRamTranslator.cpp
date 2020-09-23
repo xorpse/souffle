@@ -131,7 +131,7 @@
 #include <sstream>
 #include <vector>
 
-namespace souffle {
+namespace souffle::ast2ram {
 
 AstToRamTranslator::AstToRamTranslator() = default;
 AstToRamTranslator::~AstToRamTranslator() = default;
@@ -1738,4 +1738,4 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
     return mk<ram::TranslationUnit>(std::move(ramProg), std::move(symTab), errReport, debugReport);
 }
 
-}  // end of namespace souffle
+}  // namespace souffle::ast2ram
