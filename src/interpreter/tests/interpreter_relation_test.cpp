@@ -167,4 +167,46 @@ TEST(IndependentCopying, Iteration) {
     EXPECT_EQ(1, (*it)[0]);
 }
 
+TEST(Reordering, Iteration) {
+    // create a relation, with a non-default ordering.
+    SymbolTable symbolTable;
+
+    // create an index of order {0, 2, 1}
+    MinIndexSelection order{};
+    ram::analysis::SearchSignature cols(3);
+    cols[0] = ram::analysis::AttributeConstraint::Equal;
+    cols[1] = ram::analysis::AttributeConstraint::None;
+    cols[2] = ram::analysis::AttributeConstraint::Equal;
+    order.addSearch(cols);
+    order.solve();
+
+    InterpreterRelation<3, InterpreterBtree<3>> rel(0, "test", order);
+    souffle::Tuple<RamDomain, 3> tuple{0, 1, 2};
+    rel.insert(tuple);
+
+    // Scan should give undecoded tuple.
+    {
+        const auto& t = *(rel.scan().begin());
+        EXPECT_EQ((souffle::Tuple<RamDomain, 3>{0, 2, 1}), t);
+    }
+
+    // For-each should give decoded tuple.
+    {
+        const auto& t = *(rel.begin());
+        EXPECT_EQ(0, t[0]);
+        EXPECT_EQ(1, t[1]);
+        EXPECT_EQ(2, t[2]);
+    }
+
+    InterpreterRelInterface relInt(rel, symbolTable, "test", {"i", "i", "i"}, {"i", "i", "i"}, 3);
+
+    // ProgInterface should give decoded tuple.
+    {
+        const auto it = relInt.begin();
+        EXPECT_EQ(0, (*it)[0]);
+        EXPECT_EQ(1, (*it)[1]);
+        EXPECT_EQ(2, (*it)[2]);
+    }
+}
+
 }  // end namespace souffle::test
