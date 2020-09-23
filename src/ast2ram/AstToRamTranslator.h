@@ -63,7 +63,6 @@ class TypeEnvironment;
 namespace souffle::ram {
 class Condition;
 class Expression;
-class Operation;
 class Statement;
 class TranslationUnit;
 class TupleElement;
@@ -370,52 +369,6 @@ private:
 
     /** The level of a nested ram operation that is handling a generator operation */
     generator_location_map arg_generator_locations;
-};
-
-/** translate AST clause to RAM code */
-class AstToRamTranslator::ClauseTranslator {
-public:
-    ClauseTranslator(AstToRamTranslator& translator)
-            : translator(translator), auxArityAnalysis(translator.auxArityAnalysis) {}
-
-    Own<ram::Statement> translateClause(
-            const ast::Clause& clause, const ast::Clause& originalClause, const int version = 0);
-
-protected:
-    AstToRamTranslator& translator;
-
-    // create value index
-    ValueIndex valueIndex;
-
-    // current nesting level
-    int level = 0;
-
-    virtual Own<ram::Operation> createOperation(const ast::Clause& clause);
-    virtual Own<ram::Condition> createCondition(const ast::Clause& originalClause);
-
-    /** translate RAM code for a constant value */
-    Own<ram::Operation> filterByConstraints(size_t level, const std::vector<ast::Argument*>& args,
-            Own<ram::Operation> op, bool constrainByFunctors = true);
-
-    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis;
-
-private:
-    // index nested variables and records
-    using arg_list = std::vector<ast::Argument*>;
-
-    std::vector<const ast::Argument*> generators;
-
-    // the order of processed operations
-    std::vector<const ast::Node*> op_nesting;
-
-    Own<ast::Clause> getReorderedClause(const ast::Clause& clause, const int version) const;
-
-    arg_list* getArgList(const ast::Node* curNode, std::map<const ast::Node*, Own<arg_list>>& nodeArgs) const;
-
-    void indexValues(const ast::Node* curNode, std::map<const ast::Node*, Own<arg_list>>& nodeArgs,
-            std::map<const arg_list*, int>& arg_level, ram::RelationReference* relation);
-
-    void createValueIndex(const ast::Clause& clause);
 };
 
 }  // namespace souffle::ast2ram

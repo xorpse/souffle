@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ast2ram/AstToRamTranslator.h"
+#include "ast2ram/ClauseTranslator.h"
 
 namespace souffle::ast {
 class Clause;
