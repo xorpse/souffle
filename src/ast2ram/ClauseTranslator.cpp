@@ -36,6 +36,7 @@
 #include "ram/NestedIntrinsicOperator.h"
 #include "ram/Project.h"
 #include "ram/Query.h"
+#include "ram/Relation.h"
 #include "ram/Scan.h"
 #include "ram/TupleElement.h"
 #include "ram/UnpackRecord.h"

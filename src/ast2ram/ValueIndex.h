@@ -17,13 +17,15 @@
 
 #pragma once
 
-#include "ast/Variable.h"
 #include "ast2ram/AstToRamTranslator.h"
-#include "ram/Relation.h"
+#include "ast2ram/Location.h"
+#include <map>
+#include <vector>
 
 namespace souffle::ast {
 class Argument;
 class RecordInit;
+class Variable;
 }  // namespace souffle::ast
 
 namespace souffle::ast2ram {
@@ -52,93 +54,41 @@ public:
 
     // -- variables --
 
-    void addVarReference(const ast::Variable& var, const Location& l) {
-        std::set<Location>& locs = var_references[var.getName()];
-        locs.insert(l);
-    }
-
-    void addVarReference(
-            const ast::Variable& var, int ident, int pos, Own<ram::RelationReference> rel = nullptr) {
-        addVarReference(var, Location({ident, pos, std::move(rel)}));
-    }
-
-    bool isDefined(const ast::Variable& var) const {
-        return var_references.find(var.getName()) != var_references.end();
-    }
-
-    const Location& getDefinitionPoint(const ast::Variable& var) const {
-        auto pos = var_references.find(var.getName());
-        assert(pos != var_references.end() && "Undefined variable referenced!");
-        return *pos->second.begin();
-    }
-
     const variable_reference_map& getVariableReferences() const {
         return var_references;
     }
+
+    void addVarReference(const ast::Variable& var, const Location& l);
+
+    void addVarReference(
+            const ast::Variable& var, int ident, int pos, Own<ram::RelationReference> rel = nullptr);
+
+    bool isDefined(const ast::Variable& var) const;
+
+    const Location& getDefinitionPoint(const ast::Variable& var) const;
 
     // -- records --
 
     // - definition -
 
-    void setRecordDefinition(const ast::RecordInit& init, const Location& l) {
-        record_definitions[&init] = l;
-    }
+    void setRecordDefinition(const ast::RecordInit& init, const Location& l);
 
     void setRecordDefinition(
-            const ast::RecordInit& init, int ident, int pos, Own<ram::RelationReference> rel = nullptr) {
-        setRecordDefinition(init, Location({ident, pos, std::move(rel)}));
-    }
+            const ast::RecordInit& init, int ident, int pos, Own<ram::RelationReference> rel = nullptr);
 
-    const Location& getDefinitionPoint(const ast::RecordInit& init) const {
-        auto pos = record_definitions.find(&init);
-        if (pos != record_definitions.end()) {
-            return pos->second;
-        }
-
-        fatal("requested location for undefined record!");
-    }
+    const Location& getDefinitionPoint(const ast::RecordInit& init) const;
 
     // -- generators (aggregates & some functors) --
 
-    void setGeneratorLoc(const ast::Argument& agg, const Location& loc) {
-        arg_generator_locations.push_back(std::make_pair(&agg, loc));
-    }
+    void setGeneratorLoc(const ast::Argument& agg, const Location& loc);
 
-    const Location& getGeneratorLoc(const ast::Argument& arg) const {
-        // search list
-        for (const auto& cur : arg_generator_locations) {
-            if (*cur.first == arg) {
-                return cur.second;
-            }
-        }
-
-        fatal("arg `%s` has no generator location", arg);
-    }
+    const Location& getGeneratorLoc(const ast::Argument& arg) const;
 
     // -- others --
 
-    bool isGenerator(const int level) const {
-        // check for aggregator definitions
-        return any_of(arg_generator_locations,
-                [&level](const auto& location) { return location.second.identifier == level; });
-    }
+    bool isGenerator(const int level) const;
 
-    bool isSomethingDefinedOn(int level) const {
-        // check for variable definitions
-        for (const auto& cur : var_references) {
-            if (cur.second.begin()->identifier == level) {
-                return true;
-            }
-        }
-        // check for record definitions
-        for (const auto& cur : record_definitions) {
-            if (cur.second.identifier == level) {
-                return true;
-            }
-        }
-        // nothing defined on this level
-        return false;
-    }
+    bool isSomethingDefinedOn(int level) const;
 
     void print(std::ostream& out) const {
         out << "Variables:\n\t";

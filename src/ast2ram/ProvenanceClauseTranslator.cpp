@@ -21,6 +21,7 @@
 #include "ast/ProvenanceNegation.h"
 #include "ast2ram/ValueIndex.h"
 #include "ram/Condition.h"
+#include "ram/Relation.h"
 #include "ram/SignedConstant.h"
 #include "ram/SubroutineReturn.h"
 
