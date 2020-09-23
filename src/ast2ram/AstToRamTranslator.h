@@ -98,6 +98,9 @@ private:
     /** IO Type */
     const ast::analysis::IOTypeAnalysis* ioType = nullptr;
 
+    /** Auxiliary Arity Analysis */
+    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
+
     /** RAM program */
     Own<ram::Statement> ramMain;
 
@@ -106,9 +109,6 @@ private:
 
     /** RAM relations */
     std::map<std::string, Own<ram::Relation>> ramRels;
-
-    /** Auxiliary Arity Analysis */
-    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
 
     /** SIPS metric for reordering */
     Own<ast::SipsMetric> sips;
@@ -241,6 +241,7 @@ struct AstToRamTranslator::Location {
  * of a rule.
  */
 class AstToRamTranslator::ValueIndex {
+public:
     /**
      * The type mapping variables (referenced by their names) to the
      * locations where they are used.
@@ -261,16 +262,6 @@ class AstToRamTranslator::ValueIndex {
      */
     using generator_location_map = std::vector<std::pair<const ast::Argument*, Location>>;
 
-    /** The index of variable accesses */
-    variable_reference_map var_references;
-
-    /** The index of record definition points */
-    record_definition_map record_definitions;
-
-    /** The level of a nested ram operation that is handling a generator operation */
-    generator_location_map arg_generator_locations;
-
-public:
     // -- variables --
 
     void addVarReference(const ast::Variable& var, const Location& l) {
@@ -370,26 +361,26 @@ public:
         index.print(out);
         return out;
     }
+
+private:
+    /** The index of variable accesses */
+    variable_reference_map var_references;
+
+    /** The index of record definition points */
+    record_definition_map record_definitions;
+
+    /** The level of a nested ram operation that is handling a generator operation */
+    generator_location_map arg_generator_locations;
 };
 
 /** translate AST clause to RAM code */
 class AstToRamTranslator::ClauseTranslator {
-    // index nested variables and records
-    using arg_list = std::vector<ast::Argument*>;
+public:
+    ClauseTranslator(AstToRamTranslator& translator)
+            : translator(translator), auxArityAnalysis(translator.auxArityAnalysis) {}
 
-    std::vector<const ast::Argument*> generators;
-
-    // the order of processed operations
-    std::vector<const ast::Node*> op_nesting;
-
-    Own<ast::Clause> getReorderedClause(const ast::Clause& clause, const int version) const;
-
-    arg_list* getArgList(const ast::Node* curNode, std::map<const ast::Node*, Own<arg_list>>& nodeArgs) const;
-
-    void indexValues(const ast::Node* curNode, std::map<const ast::Node*, Own<arg_list>>& nodeArgs,
-            std::map<const arg_list*, int>& arg_level, ram::RelationReference* relation);
-
-    void createValueIndex(const ast::Clause& clause);
+    Own<ram::Statement> translateClause(
+            const ast::Clause& clause, const ast::Clause& originalClause, const int version = 0);
 
 protected:
     AstToRamTranslator& translator;
@@ -409,21 +400,32 @@ protected:
 
     const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis;
 
-public:
-    ClauseTranslator(AstToRamTranslator& translator)
-            : translator(translator), auxArityAnalysis(translator.auxArityAnalysis) {}
+private:
+    // index nested variables and records
+    using arg_list = std::vector<ast::Argument*>;
 
-    Own<ram::Statement> translateClause(
-            const ast::Clause& clause, const ast::Clause& originalClause, const int version = 0);
+    std::vector<const ast::Argument*> generators;
+
+    // the order of processed operations
+    std::vector<const ast::Node*> op_nesting;
+
+    Own<ast::Clause> getReorderedClause(const ast::Clause& clause, const int version) const;
+
+    arg_list* getArgList(const ast::Node* curNode, std::map<const ast::Node*, Own<arg_list>>& nodeArgs) const;
+
+    void indexValues(const ast::Node* curNode, std::map<const ast::Node*, Own<arg_list>>& nodeArgs,
+            std::map<const arg_list*, int>& arg_level, ram::RelationReference* relation);
+
+    void createValueIndex(const ast::Clause& clause);
 };
 
 class AstToRamTranslator::ProvenanceClauseTranslator : public AstToRamTranslator::ClauseTranslator {
+public:
+    ProvenanceClauseTranslator(AstToRamTranslator& translator) : ClauseTranslator(translator) {}
+
 protected:
     Own<ram::Operation> createOperation(const ast::Clause& clause) override;
     Own<ram::Condition> createCondition(const ast::Clause& originalClause) override;
-
-public:
-    ProvenanceClauseTranslator(AstToRamTranslator& translator) : ClauseTranslator(translator) {}
 };
 
 }  // namespace souffle::ast2ram
