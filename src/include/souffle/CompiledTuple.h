@@ -95,7 +95,6 @@ struct Tuple {
     }
 };
 
-#ifdef _MSC_VER
 /**
  * A template specialization for 0-arity tuples when compiling with microsoft's
  * compiler, because it doesn't like the 0 length array even though it is the
@@ -164,7 +163,6 @@ struct Tuple<Domain, 0> {
         return out << tuple.data[arity - 1] << "]";
     }
 };
-#endif  // _MSC_VER
 }  // end of namespace souffle
 
 // -- add hashing support --
