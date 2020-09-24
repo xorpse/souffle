@@ -16,11 +16,11 @@
 
 #pragma once
 
-#include "ast/Program.h"
 #include "ast/IntrinsicFunctor.h"
+#include "ast/Program.h"
 #include "ast/UserDefinedFunctor.h"
-#include "ast/utility/Visitor.h"
 #include "ast/analysis/Analysis.h"
+#include "ast/utility/Visitor.h"
 #include <memory>
 #include <sstream>
 #include <string>
@@ -36,14 +36,13 @@ public:
 
     void run(const TranslationUnit& translationUnit) override;
 
-    void print(std::ostream& /* os */ ) const override {}
+    void print(std::ostream& /* os */) const override {}
 
     /** Return return type of functor */
     TypeAttribute getReturnType(const Functor* functor) const;
 
     /** Return argument type of functor */
     TypeAttribute getArgType(const Functor* functor, const size_t idx) const;
-
 
     const std::vector<TypeAttribute>& getArgTypes(const UserDefinedFunctor& udf) const;
 

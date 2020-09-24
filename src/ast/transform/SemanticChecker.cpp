@@ -56,8 +56,8 @@
 #include "ast/UnnamedVariable.h"
 #include "ast/UserDefinedFunctor.h"
 #include "ast/Variable.h"
-#include "ast/analysis/Ground.h"
 #include "ast/analysis/Functor.h"
+#include "ast/analysis/Ground.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/PrecedenceGraph.h"
 #include "ast/analysis/RecursiveClauses.h"
@@ -1464,7 +1464,7 @@ void TypeChecker::visitUserDefinedFunctor(const UserDefinedFunctor& fun) {
         report.addError("Undeclared user functor", fun.getSrcLoc());
         return;
     }
-    
+
     if (!isOfKind(resultType, returnType)) {
         switch (returnType) {
             case TypeAttribute::Signed:

@@ -635,8 +635,8 @@ Own<ram::Operation> AstToRamTranslator::ClauseTranslator::filterByConstraints(si
         } else if (auto* func = dynamic_cast<const ast::Functor*>(a)) {
             if (constrainByFunctors) {
                 TypeAttribute returnType = translator.functorAnalysis->getReturnType(func);
-                op = mkFilter(returnType == TypeAttribute::Float,
-                        translator.translateValue(func, valueIndex));
+                op = mkFilter(
+                        returnType == TypeAttribute::Float, translator.translateValue(func, valueIndex));
             }
         }
 
@@ -1241,9 +1241,8 @@ Own<ram::Statement> AstToRamTranslator::makeSubproofSubroutine(const ast::Clause
             intermediateClause->addToBody(mk<ast::BinaryConstraint>(
                     BinaryConstraintOp::EQ, souffle::clone(var), mk<ast::SubroutineArgument>(i)));
         } else if (auto func = dynamic_cast<ast::Functor*>(arg)) {
-            TypeAttribute returnType = functorAnalysis->getReturnType(func); 
-            auto opEq = returnType == TypeAttribute::Float ? BinaryConstraintOp::FEQ
-                                                                      : BinaryConstraintOp::EQ;
+            TypeAttribute returnType = functorAnalysis->getReturnType(func);
+            auto opEq = returnType == TypeAttribute::Float ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ;
             intermediateClause->addToBody(
                     mk<ast::BinaryConstraint>(opEq, souffle::clone(func), mk<ast::SubroutineArgument>(i)));
         } else if (auto rec = dynamic_cast<ast::RecordInit*>(arg)) {
