@@ -147,6 +147,7 @@ public:
     using Data = Structure<Arity>;
     using Tuple = typename souffle::Tuple<RamDomain, Arity>;
     using iterator = typename Data::iterator;
+    using Hints = typename Data::operation_hints;
 
     InterpreterIndex(Order order) : order(std::move(order)) {}
 
@@ -161,7 +162,6 @@ public:
      * to exploit access patterns via operation hints.
      */
     class InterpreterView : public InterpreterViewWrapper {
-        using Hints = typename Data::operation_hints;
         mutable Hints hints;
         const Data& data;
 
@@ -198,13 +198,6 @@ public:
 
     iterator end() const {
         return data.end();
-    }
-
-    /**
-     * Obtains the arity of the given index.
-     */
-    constexpr size_t getArity() const {
-        return Arity;
     }
 
     /**
@@ -273,15 +266,32 @@ public:
     }
 
     /**
-     * Returns a partitioned stream covering the entire index content.
+     * Retruns a partitioned list of iterators for parallel computation
      */
-    /* virtual PartitionedStream partitionScan(int partitionCount) const = 0; */
+    std::vector<souffle::range<iterator>> partitionScan(int partitionCount) const {
+        auto chunks = data.partition(partitionCount);
+        std::vector<souffle::range<iterator>> res;
+        res.reserve(chunks.size());
+        for (const auto& cur : chunks) {
+            res.push_back({cur.begin(), cur.end()});
+        }
+        return res;
+    }
 
     /**
-     * Returns a partitioned stream covering elements in the range [low,high)
+     * Returns a partitioned list of iterators coving elements in range [low, high]
      */
-    /* virtual PartitionedStream partitionRange( */
-    /*         const TupleRef& low, const TupleRef& high, int partitionCount) const = 0; */
+    std::vector<souffle::range<iterator>> partitionRange(
+            const Tuple& low, const Tuple& high, int partitionCount) const {
+        auto ranges = this->range(low, high);
+        auto chunks = ranges.partition(partitionCount);
+        std::vector<souffle::range<iterator>> res;
+        res.reserve(chunks.size());
+        for (const auto& cur : chunks) {
+            res.push_back({cur.begin(), cur.end()});
+        }
+        return res;
+    }
 
     /**
      * Clears the content of this index, turning it empty.
@@ -368,10 +378,6 @@ public:
         return InterpreterView(this->data);
     }
 
-    constexpr size_t getArity() const {
-        return 0;
-    }
-
     Order getOrder() const {
         return Order({0});
     }
@@ -408,6 +414,17 @@ public:
         return {this->begin(), this->end()};
     }
 
+    std::vector<souffle::range<iterator>> partitionScan(int /* partitionCount */) const {
+        std::vector<souffle::range<iterator>> res;
+        res.push_back(scan());
+        return res;
+    }
+
+    std::vector<souffle::range<iterator>> partitionRange(
+            const Tuple& /* l */, const Tuple& /* h */, int /* partitionCount */) const {
+        return this->partitionScan(0);
+    }
+
     void clear() {
         data = false;
     }
@@ -432,23 +449,5 @@ public:
         this->data.extend(otherIndex->data);
     }
 };
-
-// The type of index factory functions.
-/* using IndexFactory = Own<InterpreterIndex> (*)(const Order&); */
-
-/* // A factory for BTree based index. */
-/* Own<InterpreterIndex> createBTreeIndex(const Order&); */
-
-/* // A factory for BTree provenance index. */
-/* Own<InterpreterIndex> createBTreeProvenanceIndex(const Order&); */
-
-/* // A factory for Brie based index. */
-/* Own<InterpreterIndex> createBrieIndex(const Order&); */
-
-/* // A factory for indirect index. */
-/* Own<InterpreterIndex> createIndirectIndex(const Order&); */
-
-/* // A factory for Eqrel index. */
-/* Own<InterpreterIndex> createEqrelIndex(const Order&); */
 
 }  // end of namespace souffle

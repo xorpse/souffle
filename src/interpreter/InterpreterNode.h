@@ -47,8 +47,9 @@ class Node;
 /* This macro defines all the interpreterNode token. 
  * For common operation, pass to Forward. 
  * For specialized operation, pass to Extended. 
+ * For provenance operation that target only on a provenance_btree structure, pass Provenance
  */
-#define FOR_EACH_INTERPRETER_TOKEN(Forward, Extended)\
+#define FOR_EACH_INTERPRETER_TOKEN(Forward, Extended, Provenance)\
     Forward(Constant)\
     Forward(TupleElement)\
     Forward(AutoIncrement)\
@@ -64,7 +65,7 @@ class Node;
     Extended(EmptinessCheck)\
     Extended(RelationSize)\
     Extended(ExistenceCheck)\
-    Extended(ProvenanceExistenceCheck)\
+    Provenance(ProvenanceExistenceCheck)\
     Forward(Constraint)\
     Forward(TupleOperation)\
     Extended(Scan)\
@@ -106,13 +107,15 @@ class Node;
 
 #define EXTENDED_TOKEN(tok) FOR_EACH(__EXTENDED_TOKEN, tok)
 
+#define PROVENANCE_TOKEN(tok) FOR_EACH_PROVENANCE(__EXTENDED_TOKEN, tok)
+
 /* 
  * Declares all the tokens.
  * For Forward token OP, creates I_OP
  * For Extended token OP, generate I_OP_Structure_Arity for each data structure and supported arity.
  */
 enum InterpreterNodeType {
-    FOR_EACH_INTERPRETER_TOKEN(SINGLE_TOKEN, EXTENDED_TOKEN)
+    FOR_EACH_INTERPRETER_TOKEN(SINGLE_TOKEN, EXTENDED_TOKEN, PROVENANCE_TOKEN)
 };
 
 #undef SINGLE_TOKEN
@@ -125,6 +128,7 @@ enum InterpreterNodeType {
     {__TO_STRING(I_##tok##_##Structure##_##arity), I_##tok##_##Structure##_##arity},
 
 #define EXTENDED_TOKEN_ENTRY(tok) FOR_EACH(__EXTENDED_TOKEN_ENTRY, tok)
+#define PROVENANCE_TOKEN_ENTRY(tok) FOR_EACH_PROVENANCE(__EXTENDED_TOKEN_ENTRY, tok)
 
 /**
  * Construct interpreterNodeType by looking at the representation and arity of the given rel.
@@ -135,7 +139,7 @@ inline InterpreterNodeType constructInterpreterNodeType(std::string tokBase, con
     static bool isProvenance = Global::config().has("provenance");
 
     static const std::unordered_map<std::string, InterpreterNodeType> map = {
-            FOR_EACH_INTERPRETER_TOKEN(SINGLE_TOKEN_ENTRY, EXTENDED_TOKEN_ENTRY)
+            FOR_EACH_INTERPRETER_TOKEN(SINGLE_TOKEN_ENTRY, EXTENDED_TOKEN_ENTRY, PROVENANCE_TOKEN_ENTRY)
     };
 
     std::string arity = std::to_string(rel.getArity());

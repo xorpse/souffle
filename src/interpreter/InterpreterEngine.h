@@ -153,15 +153,7 @@ private:
     for (const auto& expr : superInfo.exprSecond) {                     \
         high[expr.first] = execute(expr.second.get(), ctxt);            \
     }
-    // TODO
-    /* template <typename Rel> */
-    /* RamDomain evalEmptinessCheck(const Rel& rel); */
 
-    // TODO
-    /* template <std::size_t arity, typename Index> */
-    /* RamDomain evalRelationSize(const InterpreterRelation<arity, Index>& rel, InterpreterContext& ctxt); */
-
-    //
     template <typename Rel>
     RamDomain evalExistenceCheck(const ram::ExistenceCheck& cur, const InterpreterExistenceCheck& shadow,
             InterpreterContext& ctxt) {
@@ -266,9 +258,30 @@ private:
         return true;
     }
 
-    // TODO
-    /* template <std::size_t arity, typename Index> */
-    /* RamDomain evalParallelScan(InterpreterContext& ctxt); */
+    template <typename Rel>
+    RamDomain evalParallelScan(const Rel& rel, const ram::ParallelScan& cur,
+            const InterpreterParallelScan& shadow, InterpreterContext& ctxt) {
+        auto viewContext = shadow.getViewContext();
+
+        auto pStream = rel.partitionScan(numOfThreads);
+
+        PARALLEL_START
+            InterpreterContext newCtxt(ctxt);
+            auto viewInfo = viewContext->getViewInfoForNested();
+            for (const auto& info : viewInfo) {
+                newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
+            }
+            pfor(auto it = pStream.begin(); it < pStream.end(); it++) {
+                for (const auto& tuple : *it) {
+                    newCtxt[cur.getTupleId()] = tuple.data;
+                    if (!execute(shadow.getNestedOperation(), newCtxt)) {
+                        break;
+                    }
+                }
+            }
+        PARALLEL_END
+        return true;
+    }
 
     template <typename Rel>
     RamDomain evalIndexScan(
@@ -292,9 +305,37 @@ private:
         return true;
     }
 
-    // TODO
-    /* template <std::size_t Arity, typename Index> */
-    /* RamDomain evalParallelIndexScan(InterpreterContext& ctxt); */
+    template <typename Rel>
+    RamDomain evalParallelIndexScan(const Rel& rel, const ram::ParallelIndexScan& cur,
+            const InterpreterParallelIndexScan& shadow, InterpreterContext& ctxt) {
+        auto viewContext = shadow.getViewContext();
+
+        // create pattern tuple for range query
+        constexpr size_t Arity = Rel::Arity;
+        const auto& superInfo = shadow.getSuperInst();
+        souffle::Tuple<RamDomain, Arity> low;
+        souffle::Tuple<RamDomain, Arity> high;
+        CAL_SEARCH_BOUND(superInfo, low.data, high.data);
+
+        size_t indexPos = shadow.getViewId();
+        auto pStream = rel.partitionRange(indexPos, low, high, numOfThreads);
+        PARALLEL_START
+            InterpreterContext newCtxt(ctxt);
+            auto viewInfo = viewContext->getViewInfoForNested();
+            for (const auto& info : viewInfo) {
+                newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
+            }
+            pfor(auto it = pStream.begin(); it < pStream.end(); it++) {
+                for (const auto& tuple : *it) {
+                    newCtxt[cur.getTupleId()] = tuple.data;
+                    if (!execute(shadow.getNestedOperation(), newCtxt)) {
+                        break;
+                    }
+                }
+            }
+        PARALLEL_END
+        return true;
+    }
 
     template <typename Rel>
     RamDomain evalChoice(const Rel& rel, const ram::Choice& cur, const InterpreterChoice& shadow,
@@ -310,9 +351,30 @@ private:
         return true;
     }
 
-    // TODO
-    /* template <std::size_t Arity, typename Index> */
-    /* RamDomain evalParallelChoice(InterpreterContext& ctxt); */
+    template <typename Rel>
+    RamDomain evalParallelChoice(const Rel& rel, const ram::ParallelChoice& cur,
+            const InterpreterParallelChoice& shadow, InterpreterContext& ctxt) {
+        auto viewContext = shadow.getViewContext();
+
+        auto pStream = rel.partitionScan(numOfThreads);
+        auto viewInfo = viewContext->getViewInfoForNested();
+        PARALLEL_START
+            InterpreterContext newCtxt(ctxt);
+            for (const auto& info : viewInfo) {
+                newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
+            }
+            pfor(auto it = pStream.begin(); it < pStream.end(); it++) {
+                for (const auto& tuple : *it) {
+                    newCtxt[cur.getTupleId()] = tuple.data;
+                    if (execute(shadow.getCondition(), newCtxt)) {
+                        execute(shadow.getNestedOperation(), newCtxt);
+                        break;
+                    }
+                }
+            }
+        PARALLEL_END
+        return true;
+    }
 
     template <typename Rel>
     RamDomain evalIndexChoice(
@@ -335,21 +397,81 @@ private:
         }
         return true;
     }
-    // TODO
-    /* template <std::size_t arity, typename Index> */
-    /* RamDomain evalParallelIndexChoice(InterpreterContext& ctxt); */
 
-    // TODO
-    /* template <std::size_t arity, typename Index> */
-    /* RamDomain evalParallelAggregate(InterpreterContext& ctxt); */
+    template <typename Rel>
+    RamDomain evalParallelIndexChoice(const Rel& rel, const ram::ParallelIndexChoice& cur,
+            const InterpreterParallelIndexChoice& shadow, InterpreterContext& ctxt) {
+        auto viewContext = shadow.getViewContext();
 
-    // TODO merge with executeAggregate
-    /* template <std::size_t arity, typename Index> */
-    /* RamDomain evalAggregate(InterpreterContext& ctxt); */
+        auto viewInfo = viewContext->getViewInfoForNested();
 
-    // TODO
-    template <std::size_t Arity, typename Index>
-    RamDomain evalParallelIndexAggregate(InterpreterContext& ctxt);
+        // create pattern tuple for range query
+        constexpr size_t Arity = Rel::Arity;
+        const auto& superInfo = shadow.getSuperInst();
+        souffle::Tuple<RamDomain, Arity> low;
+        souffle::Tuple<RamDomain, Arity> high;
+        CAL_SEARCH_BOUND(superInfo, low.data, high.data);
+
+        size_t indexPos = shadow.getViewId();
+        auto pStream = rel.partitionRange(indexPos, low, high, numOfThreads);
+
+        PARALLEL_START
+            InterpreterContext newCtxt(ctxt);
+            for (const auto& info : viewInfo) {
+                newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
+            }
+            pfor(auto it = pStream.begin(); it < pStream.end(); it++) {
+                for (const auto& tuple : *it) {
+                    newCtxt[cur.getTupleId()] = tuple.data;
+                    if (execute(shadow.getCondition(), newCtxt)) {
+                        execute(shadow.getNestedOperation(), newCtxt);
+                        break;
+                    }
+                }
+            }
+        PARALLEL_END
+
+        return true;
+    }
+
+    template <typename Rel>
+    RamDomain evalParallelAggregate(const Rel& rel, const ram::ParallelAggregate& cur,
+            const InterpreterParallelAggregate& shadow, InterpreterContext& ctxt) {
+        // TODO (rdowavic): make parallel
+        auto viewContext = shadow.getViewContext();
+
+        InterpreterContext newCtxt(ctxt);
+        auto viewInfo = viewContext->getViewInfoForNested();
+        for (const auto& info : viewInfo) {
+            newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
+        }
+        return executeAggregate(cur, *shadow.getCondition(), shadow.getExpr(), *shadow.getNestedOperation(), rel.scan(), newCtxt);
+    }
+
+    template <typename Rel>
+    RamDomain evalParallelIndexAggregate(const ram::ParallelIndexAggregate& cur,
+            const InterpreterParallelIndexAggregate& shadow, InterpreterContext& ctxt) {
+        // TODO (rdowavic): make parallel
+        auto viewContext = shadow.getViewContext();
+
+        InterpreterContext newCtxt(ctxt);
+        auto viewInfo = viewContext->getViewInfoForNested();
+        for (const auto& info : viewInfo) {
+            newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
+        }
+        // init temporary tuple for this level
+        constexpr size_t Arity = Rel::Arity;
+        const auto& superInfo = shadow.getSuperInst();
+        // get lower and upper boundaries for iteration
+        souffle::Tuple<RamDomain, Arity> low;
+        souffle::Tuple<RamDomain, Arity> high;
+        CAL_SEARCH_BOUND(superInfo, low.data, high.data);
+
+        size_t viewId = shadow.getViewId();
+        auto view = Rel::castView(newCtxt.getView(viewId));
+
+        return executeAggregate(cur, *shadow.getCondition(), shadow.getExpr(), *shadow.getNestedOperation(), view->range(low, high), newCtxt);
+    }
 
     template <typename Rel>
     RamDomain evalIndexAggregate(const ram::IndexAggregate& cur, const InterpreterIndexAggregate& shadow,
@@ -388,10 +510,7 @@ private:
         return true;
     }
 
-    template <typename Rel>
-    RamDomain evalClear(Rel& rel);
-
-    // TODO: Try not specialized IO with virtual?
+    // TODO: No need to specialize IO with virtual?
     template <typename Rel>
     RamDomain evalIO(const ram::IO& cur, Rel& rel) {
         const auto& directive = cur.getDirectives();

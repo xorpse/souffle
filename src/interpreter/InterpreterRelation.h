@@ -44,7 +44,7 @@ public:
 
     virtual ~InterpreterRelationWrapper() = default;
 
-     // -- Define methods and interfaces for ProgInterface. --
+    // -- Define methods and interfaces for ProgInterface. --
 public:
     /**
      * Virtualized iterator class.
@@ -120,7 +120,7 @@ public:
         return auxiliaryArity;
     }
 
-     // -- Defines methods and interfaces for Interpreter execution. --
+    // -- Defines methods and interfaces for Interpreter execution. --
 public:
     using IndexViewPtr = Own<InterpreterViewWrapper>;
 
@@ -174,7 +174,7 @@ public:
      * Cast an abstract view into a view of this relation type.
      */
     static View* castView(InterpreterViewWrapper* view) {
-        return static_cast<typename Index::InterpreterView*>(view);
+        return static_cast<View*>(view);
     }
 
     /**
@@ -188,7 +188,7 @@ public:
             ram::analysis::MinIndexSelection::AttributeSet set{order.begin(), order.end()};
 
             // This operation is not performance critical.
-            // Not using Arity to avoid compiler warning. (When Arity == 0)
+            // Not using constexpr Arity to avoid compiler warning. (When Arity == 0)
             for (std::size_t i = 0; i < getArity(); ++i) {
                 if (set.find(i) == set.end()) {
                     order.push_back(i);
@@ -232,7 +232,7 @@ public:
     }
 
     class iterator_base : public InterpreterRelationWrapper::iterator_base {
-        typename Index::iterator iter;
+        iterator iter;
         Order order;
         RamDomain data[Arity];
 
@@ -247,7 +247,7 @@ public:
 
         const RamDomain* operator*() override {
             const auto& tuple = *iter;
-            // Not using Arity to avoid compiler warning. (When Arity == 0)
+            // Not using constexpr Arity to avoid compiler warning. (When Arity == 0)
             for (size_t i = 0; i < order.size(); ++i) {
                 data[order[i]] = tuple[i];
             }
@@ -318,7 +318,7 @@ public:
     }
 
     /**
-     * Obtains a stream to scan the entire relation.
+     * Obtains a pair of iterators to scan the entire relation.
      *
      * Return 'raw iterator' that returns tuple in undecoded form.
      */
@@ -327,9 +327,11 @@ public:
     }
 
     /**
-     * Obtains a partitioned stream list for parallel computation
+     * Returns a partitioned list of iterators for parallel computation
      */
-    /* PartitionedStream partitionScan(size_t partitionCount) const; */
+    std::vector<souffle::range<iterator>> partitionScan(size_t partitionCount) const {
+        return main->partitionScan(partitionCount);
+    }
 
     /**
      * Obtains a pair of iterators covering the interval between the two given entries.
@@ -339,11 +341,12 @@ public:
     }
 
     /**
-     * Obtains a partitioned stream list for parallel computation
+     * Returns a partitioned list of iterators coving elements in range [low, high]
      */
-    /* PartitionedStream partitionRange( */
-    /*         const size_t& indexPos, const TupleRef& low, const TupleRef& high, size_t partitionCount)
-     * const; */
+    std::vector<souffle::range<iterator>> partitionRange(
+            const size_t& indexPos, const Tuple& low, const Tuple& high, size_t partitionCount) const {
+        return indexes[indexPos]->partitionRange(low, high, partitionCount);
+    }
 
     /**
      * Swaps the content of this and the given relation, including the
@@ -414,22 +417,22 @@ public:
 
 // The type of index factory functions.
 using RelationFactory = Own<InterpreterRelationWrapper> (*)(
-        std::size_t auxiliaryArity, std::string name, const ram::analysis::MinIndexSelection& orderSet);
+        const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet);
 
 // A factory for BTree based relation.
 Own<InterpreterRelationWrapper> createBTreeRelation(
-        std::size_t, std::string, const ram::analysis::MinIndexSelection&);
+        const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet);
 
 // A factory for BTree provenance index.
 Own<InterpreterRelationWrapper> createProvenanceRelation(
-        std::size_t, std::string, const ram::analysis::MinIndexSelection&);
+        const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet);
 
 // A factory for Brie based index.
 Own<InterpreterRelationWrapper> createBrieRelation(
-        std::size_t, std::string, const ram::analysis::MinIndexSelection&);
+        const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet);
 
 // A factory for Eqrel index.
 Own<InterpreterRelationWrapper> createEqrelRelation(
-        std::size_t, std::string, const ram::analysis::MinIndexSelection&);
+        const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet);
 
 }  // end of namespace souffle

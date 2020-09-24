@@ -340,6 +340,7 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
         return [&]() -> RamDomain { \
             [[maybe_unused]] const auto& shadow = *static_cast<const Interpreter##Kind*>(node); \
             [[maybe_unused]] const auto& cur = *static_cast<const Kind*>(node->getShadow());
+// TODO: make rel casr automatic
 #define EXTEND_CASE(Kind, Structure, Arity)    \
     case (I_##Kind##_##Structure##_##Arity): { \
         return [&]() -> RamDomain { \
@@ -881,30 +882,14 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
         FOR_EACH(SCAN)
 #undef SCAN
 
-        // TODO
-        /* CASE(ParallelScan) */
-        /*     auto viewContext = shadow.getViewContext(); */
-        /*     auto& rel = *node->getRelation(); */
-
-        /*     auto pStream = rel.partitionScan(numOfThreads); */
-
-        /*     PARALLEL_START */
-        /*         InterpreterContext newCtxt(ctxt); */
-        /*         auto viewInfo = viewContext->getViewInfoForNested(); */
-        /*         for (const auto& info : viewInfo) { */
-        /*             newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]); */
-        /*         } */
-        /*         pfor(auto it = pStream.begin(); it < pStream.end(); it++) { */
-        /*             for (const TupleRef& val : *it) { */
-        /*                 newCtxt[cur.getTupleId()] = val.getBase(); */
-        /*                 if (!execute(shadow.getNestedOperation(), newCtxt)) { */
-        /*                     break; */
-        /*                 } */
-        /*             } */
-        /*         } */
-        /*     PARALLEL_END */
-        /*     return true; */
-        /* ESAC(ParallelScan) */
+#define PARALLEL_SCAN(Structure, Arity, ...)                                                       \
+    CASE(ParallelScan, Structure, Arity)                                                           \
+        const auto& rel = *static_cast<const InterpreterRelation<Arity, Interpreter##Structure>*>( \
+                node->getRelation());                                                              \
+        return evalParallelScan(rel, cur, shadow, ctxt);                                           \
+    ESAC(ParallelScan)
+        FOR_EACH(PARALLEL_SCAN)
+#undef PARALLEL_SCAN
 
 #define INDEX_SCAN(Structure, Arity, ...)                               \
     CASE(IndexScan, Structure, Arity)                                   \
@@ -915,41 +900,15 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
         FOR_EACH(INDEX_SCAN)
 #undef INDEX_SCAN
 
-        // TODO
-        /* CASE(ParallelIndexScan) */
-        /*     auto viewContext = shadow.getViewContext(); */
-        /*     auto& rel = *node->getRelation(); */
+#define PARALLEL_INDEX_SCAN(Structure, Arity, ...)                                                 \
+    CASE(ParallelIndexScan, Structure, Arity)                                                      \
+        const auto& rel = *static_cast<const InterpreterRelation<Arity, Interpreter##Structure>*>( \
+                node->getRelation());                                                              \
+        return evalParallelIndexScan(rel, cur, shadow, ctxt);                                      \
+    ESAC(ParallelIndexScan)
 
-        /*     // create pattern tuple for range query */
-        /*     size_t arity = rel.getArity(); */
-        /*     const auto& superInfo = shadow.getSuperInst(); */
-        /*     RamDomain low[arity]; */
-        /*     RamDomain high[arity]; */
-        /*     CAL_SEARCH_BOUND(superInfo, low, high); */
-
-        /*     size_t indexPos = shadow.getViewId(); */
-        /*     auto pStream = */
-        /*             rel.partitionRange(indexPos, TupleRef(low, arity), TupleRef(high, arity),
-         * numOfThreads); */
-
-        /*     PARALLEL_START */
-        /*         InterpreterContext newCtxt(ctxt); */
-        /*         auto viewInfo = viewContext->getViewInfoForNested(); */
-        /*         for (const auto& info : viewInfo) { */
-        /*             newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]); */
-        /*         } */
-        /*         pfor(auto it = pStream.begin(); it < pStream.end(); it++) { */
-        /*             for (const TupleRef& val : *it) { */
-        /*                 newCtxt[cur.getTupleId()] = val.getBase(); */
-        /*                 if (!execute(shadow.getNestedOperation(), newCtxt)) { */
-        /*                     break; */
-        /*                 } */
-        /*             } */
-        /*         } */
-        /*     PARALLEL_END */
-
-        /*     return true; */
-        /* ESAC(ParallelIndexScan) */
+        FOR_EACH(PARALLEL_INDEX_SCAN)
+#undef PARALLEL_INDEX_SCAN
 
 #define CHOICE(Structure, Arity, ...)                                                              \
     CASE(Choice, Structure, Arity)                                                                 \
@@ -961,29 +920,15 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
         FOR_EACH(CHOICE)
 #undef CHOICE
 
-        /* CASE(ParallelChoice) */
-        /*     auto viewContext = shadow.getViewContext(); */
-        /*     auto& rel = *node->getRelation(); */
+#define PARALLEL_CHOICE(Structure, Arity, ...)                                                     \
+    CASE(ParallelChoice, Structure, Arity)                                                         \
+        const auto& rel = *static_cast<const InterpreterRelation<Arity, Interpreter##Structure>*>( \
+                node->getRelation());                                                              \
+        return evalParallelChoice(rel, cur, shadow, ctxt);                                         \
+    ESAC(ParallelChoice)
 
-        /*     auto pStream = rel.partitionScan(numOfThreads); */
-        /*     auto viewInfo = viewContext->getViewInfoForNested(); */
-        /*     PARALLEL_START */
-        /*         InterpreterContext newCtxt(ctxt); */
-        /*         for (const auto& info : viewInfo) { */
-        /*             newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]); */
-        /*         } */
-        /*         pfor(auto it = pStream.begin(); it < pStream.end(); it++) { */
-        /*             for (const TupleRef& val : *it) { */
-        /*                 newCtxt[cur.getTupleId()] = val.getBase(); */
-        /*                 if (execute(shadow.getCondition(), newCtxt)) { */
-        /*                     execute(shadow.getNestedOperation(), newCtxt); */
-        /*                     break; */
-        /*                 } */
-        /*             } */
-        /*         } */
-        /*     PARALLEL_END */
-        /*     return true; */
-        /* ESAC(ParallelChoice) */
+        FOR_EACH(PARALLEL_CHOICE)
+#undef PARALLEL_CHOICE
 
 #define INDEX_CHOICE(Structure, Arity, ...)                             \
     CASE(IndexChoice, Structure, Arity)                                 \
@@ -994,42 +939,15 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
         FOR_EACH(INDEX_CHOICE)
 #undef INDEX_CHOICE
 
-        /* CASE(ParallelIndexChoice) */
-        /*     auto viewContext = shadow.getViewContext(); */
-        /*     auto& rel = *node->getRelation(); */
+#define PARALLEL_INDEX_CHOICE(Structure, Arity, ...)                                               \
+    CASE(ParallelIndexChoice, Structure, Arity)                                                    \
+        const auto& rel = *static_cast<const InterpreterRelation<Arity, Interpreter##Structure>*>( \
+                node->getRelation());                                                              \
+        return evalParallelIndexChoice(rel, cur, shadow, ctxt);                                    \
+    ESAC(ParallelIndexChoice)
 
-        /*     auto viewInfo = viewContext->getViewInfoForNested(); */
-
-        /*     // create pattern tuple for range query */
-        /*     size_t arity = rel.getArity(); */
-        /*     const auto& superInfo = shadow.getSuperInst(); */
-        /*     RamDomain low[arity]; */
-        /*     RamDomain high[arity]; */
-        /*     CAL_SEARCH_BOUND(superInfo, low, high); */
-
-        /*     size_t indexPos = shadow.getViewId(); */
-        /*     auto pStream = */
-        /*             rel.partitionRange(indexPos, TupleRef(low, arity), TupleRef(high, arity),
-         * numOfThreads); */
-
-        /*     PARALLEL_START */
-        /*         InterpreterContext newCtxt(ctxt); */
-        /*         for (const auto& info : viewInfo) { */
-        /*             newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]); */
-        /*         } */
-        /*         pfor(auto it = pStream.begin(); it < pStream.end(); it++) { */
-        /*             for (const TupleRef& val : *it) { */
-        /*                 newCtxt[cur.getTupleId()] = val.getBase(); */
-        /*                 if (execute(shadow.getCondition(), newCtxt)) { */
-        /*                     execute(shadow.getNestedOperation(), newCtxt); */
-        /*                     break; */
-        /*                 } */
-        /*             } */
-        /*         } */
-        /*     PARALLEL_END */
-
-        /*     return true; */
-        /* ESAC(ParallelIndexChoice) */
+        FOR_EACH(PARALLEL_INDEX_CHOICE)
+#undef PARALLEL_INDEX_CHOICE
 
         CASE(UnpackRecord)
             RamDomain ref = execute(shadow.getExpr(), ctxt);
@@ -1050,18 +968,15 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
             return execute(shadow.getNestedOperation(), ctxt);
         ESAC(UnpackRecord)
 
-            /* CASE(ParallelAggregate) */
-            /*     // TODO (rdowavic): make parallel */
-            /*     auto viewContext = shadow.getViewContext(); */
+#define PARALLEL_AGGREGATE(Structure, Arity, ...)                                                  \
+    CASE(ParallelAggregate, Structure, Arity)                                                      \
+        const auto& rel = *static_cast<const InterpreterRelation<Arity, Interpreter##Structure>*>( \
+                node->getRelation());                                                              \
+        return evalParallelAggregate(rel, cur, shadow, ctxt);                                      \
+    ESAC(ParallelAggregate)
 
-            /*     InterpreterContext newCtxt(ctxt); */
-            /*     auto viewInfo = viewContext->getViewInfoForNested(); */
-            /*     for (const auto& info : viewInfo) { */
-            /*         newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]); */
-            /*     } */
-            /*     return executeAggregate(newCtxt, cur, *shadow.getCondition(), shadow.getExpr(), */
-            /*             *shadow.getNestedOperation(), node->getRelation()->scan()); */
-            /* ESAC(ParallelAggregate) */
+        FOR_EACH(PARALLEL_AGGREGATE)
+#undef PARALLEL_AGGREGATE
 
 #define AGGREGATE(Structure, Arity, ...)                                                                     \
     CASE(Aggregate, Structure, Arity)                                                                        \
@@ -1074,31 +989,14 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
         FOR_EACH(AGGREGATE)
 #undef AGGREGATE
 
-        // TODO
-        /* CASE(ParallelIndexAggregate) */
-        /*     // TODO (rdowavic): make parallel */
-        /*     auto viewContext = shadow.getViewContext(); */
+#define PARALLEL_INDEX_AGGREGATE(Structure, Arity, ...)                 \
+    CASE(ParallelIndexAggregate, Structure, Arity)                      \
+        using Rel = InterpreterRelation<Arity, Interpreter##Structure>; \
+        return evalParallelIndexAggregate<Rel>(cur, shadow, ctxt);      \
+    ESAC(ParallelIndexAggregate)
 
-        /*     InterpreterContext newCtxt(ctxt); */
-        /*     auto viewInfo = viewContext->getViewInfoForNested(); */
-        /*     for (const auto& info : viewInfo) { */
-        /*         newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]); */
-        /*     } */
-        /*     // init temporary tuple for this level */
-        /*     size_t arity = cur.getRelation().getArity(); */
-        /*     const auto& superInfo = shadow.getSuperInst(); */
-        /*     // get lower and upper boundaries for iteration */
-        /*     RamDomain low[arity]; */
-        /*     RamDomain high[arity]; */
-        /*     CAL_SEARCH_BOUND(superInfo, low, high); */
-
-        /*     size_t viewId = shadow.getViewId(); */
-        /*     auto& view = newCtxt.getView(viewId); */
-
-        /*     return executeAggregate(newCtxt, cur, *shadow.getCondition(), shadow.getExpr(), */
-        /*             *shadow.getNestedOperation(), view->range(TupleRef(low, arity), TupleRef(high,
-         * arity))); */
-        /* ESAC(ParallelIndexAggregate) */
+        FOR_EACH(PARALLEL_INDEX_AGGREGATE)
+#undef PARALLEL_INDEX_AGGREGATE
 
 #define INDEX_AGGREGATE(Structure, Arity, ...)                          \
     CASE(IndexAggregate, Structure, Arity)                              \
