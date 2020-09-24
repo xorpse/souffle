@@ -14,12 +14,11 @@
 
 #pragma once
 
-#include "ast2ram/AstToRamTranslator.h"
 #include "souffle/utility/MiscUtil.h"
 
 namespace souffle::ast2ram {
 
-struct AstToRamTranslator::Location {
+struct Location {
     int identifier{};
     int element{};
     Own<ram::RelationReference> relation{nullptr};

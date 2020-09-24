@@ -28,8 +28,8 @@
 namespace souffle::ast2ram {
 
 void AstToRamTranslator::ValueIndex::addVarReference(
-        const ast::Variable& var, const AstToRamTranslator::Location& l) {
-    std::set<AstToRamTranslator::Location>& locs = var_references[var.getName()];
+        const ast::Variable& var, const Location& l) {
+    std::set<Location>& locs = var_references[var.getName()];
     locs.insert(l);
 }
 
@@ -42,7 +42,7 @@ bool AstToRamTranslator::ValueIndex::isDefined(const ast::Variable& var) const {
     return var_references.find(var.getName()) != var_references.end();
 }
 
-const AstToRamTranslator::Location& AstToRamTranslator::ValueIndex::getDefinitionPoint(
+const Location& AstToRamTranslator::ValueIndex::getDefinitionPoint(
         const ast::Variable& var) const {
     auto pos = var_references.find(var.getName());
     assert(pos != var_references.end() && "Undefined variable referenced!");
@@ -50,11 +50,11 @@ const AstToRamTranslator::Location& AstToRamTranslator::ValueIndex::getDefinitio
 }
 
 void AstToRamTranslator::ValueIndex::setGeneratorLoc(
-        const ast::Argument& agg, const AstToRamTranslator::Location& loc) {
+        const ast::Argument& agg, const Location& loc) {
     arg_generator_locations.push_back(std::make_pair(&agg, loc));
 }
 
-const AstToRamTranslator::Location& AstToRamTranslator::ValueIndex::getGeneratorLoc(
+const Location& AstToRamTranslator::ValueIndex::getGeneratorLoc(
         const ast::Argument& arg) const {
     // search list
     for (const auto& cur : arg_generator_locations) {
@@ -67,7 +67,7 @@ const AstToRamTranslator::Location& AstToRamTranslator::ValueIndex::getGenerator
 }
 
 void AstToRamTranslator::ValueIndex::setRecordDefinition(
-        const ast::RecordInit& init, const AstToRamTranslator::Location& l) {
+        const ast::RecordInit& init, const Location& l) {
     record_definitions[&init] = l;
 }
 
@@ -76,7 +76,7 @@ void AstToRamTranslator::ValueIndex::setRecordDefinition(
     setRecordDefinition(init, Location({ident, pos, std::move(rel)}));
 }
 
-const AstToRamTranslator::Location& AstToRamTranslator::ValueIndex::getDefinitionPoint(
+const Location& AstToRamTranslator::ValueIndex::getDefinitionPoint(
         const ast::RecordInit& init) const {
     auto pos = record_definitions.find(&init);
     if (pos != record_definitions.end()) {

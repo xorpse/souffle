@@ -66,6 +66,8 @@ class TupleElement;
 
 namespace souffle::ast2ram {
 
+struct Location;
+
 /**
  * Main class for the AST->RAM translator
  */
@@ -77,7 +79,6 @@ public:
     /** translates AST to translation unit */
     Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
 
-    struct Location;
     class ValueIndex;
     class ClauseTranslator;
     class ProvenanceClauseTranslator;
