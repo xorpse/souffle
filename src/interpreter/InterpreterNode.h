@@ -138,9 +138,8 @@ inline InterpreterNodeType constructInterpreterNodeType(std::string tokBase, con
             FOR_EACH_INTERPRETER_TOKEN(SINGLE_TOKEN_ENTRY, EXTENDED_TOKEN_ENTRY)
     };
 
-    RelationRepresentation Structure = rel.getRepresentation();
     std::string arity = std::to_string(rel.getArity());
-    if (Structure == RelationRepresentation::EQREL) {
+    if (rel.getRepresentation() == RelationRepresentation::EQREL) {
         return map.at("I_" + tokBase + "_Eqrel_" + arity);
     } else if (isProvenance) {
         return map.at("I_" + tokBase + "_Provenance_" + arity);
