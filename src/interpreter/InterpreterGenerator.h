@@ -824,7 +824,6 @@ private:
         if (id.getRepresentation() == RelationRepresentation::EQREL) {
             res = createEqrelRelation(id, orderSet);
         } else {
-            size_t arity = id.getArity();
             if (isProvenance) {
                 res = createProvenanceRelation(id, orderSet);
             } else {
