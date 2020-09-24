@@ -25,11 +25,11 @@ namespace souffle {
     }
 
 Own<InterpreterRelationWrapper> createBrieRelation(
-        const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet) {
+        const ram::Relation& id, const ram::analysis::MinIndexSelection& /* orderSet */) {
     switch (id.getArity()) {
         FOR_EACH_BRIE(CREATE_BRIE_REL);
 
-        default: fatal("Requested arity not yet supported. Feel free to add it.");
+        default: fatal("Brie is not supported in the interpreter mode.");
     }
 }
 
