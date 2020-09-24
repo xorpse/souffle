@@ -124,7 +124,7 @@ protected:
     public:
         iterator_base(
                 uint32_t arg_id, const InterpreterRelInterface* r, InterpreterRelationWrapper::Iterator i)
-                : Relation::iterator_base(arg_id), ramRelationInterface(r), it(std::move(i)), tup(r) {}
+                : Relation::iterator_base(arg_id), ramRelationInterface(r), it(i), tup(r) {}
         ~iterator_base() override = default;
 
         /** Increment iterator */

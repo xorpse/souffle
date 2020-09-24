@@ -115,7 +115,6 @@ namespace souffle {
     FOR_EACH_PROVENANCE(func, __VA_ARGS__)  \
     FOR_EACH_EQREL(func, __VA_ARGS__)
 
-
 // clang-format on
 
 /**
@@ -234,7 +233,6 @@ template <std::size_t Arity>
 using InterpreterProvenance = btree_set<t_tuple<Arity>, comparator<Arity>, std::allocator<t_tuple<Arity>>,
         256, typename detail::default_strategy<t_tuple<Arity>>::type, comparator<Arity - 2>,
         InterpreterProvenanceUpdater<Arity>>;
-
 
 // Alias for Eqrel
 // Note: require Arity = 2.
