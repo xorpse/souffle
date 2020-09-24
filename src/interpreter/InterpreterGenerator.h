@@ -516,9 +516,7 @@ public:
     NodePtr visitIO(const ram::IO& io) override {
         size_t relId = encodeRelation(io.getRelation());
         auto rel = relations[relId].get();
-        // TODO: use a decoded for-each interface and avoid enumeration
-        InterpreterNodeType type = constructInterpreterNodeType("IO", io.getRelation());
-        return mk<InterpreterIO>(type, &io, rel);
+        return mk<InterpreterIO>(I_IO, &io, rel);
     }
 
     NodePtr visitQuery(const ram::Query& query) override {

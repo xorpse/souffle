@@ -93,7 +93,7 @@ class Node;
     Forward(DebugInfo)\
     FOR_EACH(Expand, Clear)\
     Forward(LogSize)\
-    FOR_EACH(Expand, IO)\
+    Forward(IO)\
     Forward(Query)\
     Forward(Extend)\
     Forward(Swap)\
