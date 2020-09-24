@@ -46,10 +46,9 @@ class Node;
 
 /* This macro defines all the interpreterNode token. 
  * For common operation, pass to Forward. 
- * For specialized operation, pass to Extended. 
- * For provenance operation that target only on a provenance_btree structure, pass Provenance
+ * For specialized operation, pass to FOR_EACH(Expand, tok)
  */
-#define FOR_EACH_INTERPRETER_TOKEN(Forward, Extended, Provenance)\
+#define FOR_EACH_INTERPRETER_TOKEN(Forward, Expand)\
     Forward(Constant)\
     Forward(TupleElement)\
     Forward(AutoIncrement)\
@@ -62,28 +61,28 @@ class Node;
     Forward(False)\
     Forward(Conjunction)\
     Forward(Negation)\
-    Extended(EmptinessCheck)\
-    Extended(RelationSize)\
-    Extended(ExistenceCheck)\
-    Provenance(ProvenanceExistenceCheck)\
+    FOR_EACH(Expand, EmptinessCheck)\
+    FOR_EACH(Expand, RelationSize)\
+    FOR_EACH(Expand, ExistenceCheck)\
+    FOR_EACH_PROVENANCE(Expand, ProvenanceExistenceCheck)\
     Forward(Constraint)\
     Forward(TupleOperation)\
-    Extended(Scan)\
-    Extended(ParallelScan)\
-    Extended(IndexScan)\
-    Extended(ParallelIndexScan)\
-    Extended(Choice)\
-    Extended(ParallelChoice)\
-    Extended(IndexChoice)\
-    Extended(ParallelIndexChoice)\
+    FOR_EACH(Expand, Scan)\
+    FOR_EACH(Expand, ParallelScan)\
+    FOR_EACH(Expand, IndexScan)\
+    FOR_EACH(Expand, ParallelIndexScan)\
+    FOR_EACH(Expand, Choice)\
+    FOR_EACH(Expand, ParallelChoice)\
+    FOR_EACH(Expand, IndexChoice)\
+    FOR_EACH(Expand, ParallelIndexChoice)\
     Forward(UnpackRecord)\
-    Extended(Aggregate)\
-    Extended(ParallelAggregate)\
-    Extended(IndexAggregate)\
-    Extended(ParallelIndexAggregate)\
+    FOR_EACH(Expand, Aggregate)\
+    FOR_EACH(Expand, ParallelAggregate)\
+    FOR_EACH(Expand, IndexAggregate)\
+    FOR_EACH(Expand, ParallelIndexAggregate)\
     Forward(Break)\
     Forward(Filter)\
-    Extended(Project)\
+    FOR_EACH(Expand, Project)\
     Forward(SubroutineReturn)\
     Forward(Sequence)\
     Forward(Parallel)\
@@ -92,9 +91,9 @@ class Node;
     Forward(LogRelationTimer)\
     Forward(LogTimer)\
     Forward(DebugInfo)\
-    Extended(Clear)\
+    FOR_EACH(Expand, Clear)\
     Forward(LogSize)\
-    Extended(IO)\
+    FOR_EACH(Expand, IO)\
     Forward(Query)\
     Forward(Extend)\
     Forward(Swap)\
@@ -102,12 +101,8 @@ class Node;
 
 #define SINGLE_TOKEN(tok) I_##tok,
 
-#define __EXTENDED_TOKEN(structure, arity, tok)\
+#define EXPAND_TOEKN(structure, arity, tok)\
     I_##tok##_##structure##_##arity,
-
-#define EXTENDED_TOKEN(tok) FOR_EACH(__EXTENDED_TOKEN, tok)
-
-#define PROVENANCE_TOKEN(tok) FOR_EACH_PROVENANCE(__EXTENDED_TOKEN, tok)
 
 /* 
  * Declares all the tokens.
@@ -115,20 +110,16 @@ class Node;
  * For Extended token OP, generate I_OP_Structure_Arity for each data structure and supported arity.
  */
 enum InterpreterNodeType {
-    FOR_EACH_INTERPRETER_TOKEN(SINGLE_TOKEN, EXTENDED_TOKEN, PROVENANCE_TOKEN)
+    FOR_EACH_INTERPRETER_TOKEN(SINGLE_TOKEN, EXPAND_TOEKN)
 };
 
 #undef SINGLE_TOKEN
-#undef __EXTENDED_TOKEN
-#undef EXTENDED_TOKEN
+#undef EXPAND_TOEKN
 
 #define __TO_STRING(a) #a
 #define SINGLE_TOKEN_ENTRY(tok) {__TO_STRING(I_##tok), I_##tok},
-#define __EXTENDED_TOKEN_ENTRY(Structure, arity, tok) \
+#define EXPAND_TOKEN_ENTRY(Structure, arity, tok) \
     {__TO_STRING(I_##tok##_##Structure##_##arity), I_##tok##_##Structure##_##arity},
-
-#define EXTENDED_TOKEN_ENTRY(tok) FOR_EACH(__EXTENDED_TOKEN_ENTRY, tok)
-#define PROVENANCE_TOKEN_ENTRY(tok) FOR_EACH_PROVENANCE(__EXTENDED_TOKEN_ENTRY, tok)
 
 /**
  * Construct interpreterNodeType by looking at the representation and arity of the given rel.
@@ -139,7 +130,7 @@ inline InterpreterNodeType constructInterpreterNodeType(std::string tokBase, con
     static bool isProvenance = Global::config().has("provenance");
 
     static const std::unordered_map<std::string, InterpreterNodeType> map = {
-            FOR_EACH_INTERPRETER_TOKEN(SINGLE_TOKEN_ENTRY, EXTENDED_TOKEN_ENTRY, PROVENANCE_TOKEN_ENTRY)
+            FOR_EACH_INTERPRETER_TOKEN(SINGLE_TOKEN_ENTRY, EXPAND_TOKEN_ENTRY)
     };
 
     std::string arity = std::to_string(rel.getArity());
@@ -154,8 +145,7 @@ inline InterpreterNodeType constructInterpreterNodeType(std::string tokBase, con
 }
 
 #undef __TO_STRING
-#undef __EXTENDED_TOKEN_ENTRY
-#undef EXTENDED_TOKEN_ENTRY
+#undef EXPAND_TOKEN_ENTRY
 #undef SINGLE_TOKEN_ENTRY
 
 // clang-format on
