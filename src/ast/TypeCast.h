@@ -23,6 +23,7 @@
 #include "parser/SrcLocation.h"
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/MiscUtil.h"
+#include "souffle/utility/tinyformat.h"
 #include <memory>
 #include <ostream>
 #include <string>
@@ -72,7 +73,7 @@ public:
 
 protected:
     void print(std::ostream& os) const override {
-        os << "as(" << *value << "," << type << ")";
+        os << tfm::format("as(%s, %s)", *value, type);
     }
 
     bool equal(const Node& node) const override {

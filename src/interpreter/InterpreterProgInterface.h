@@ -274,10 +274,10 @@ public:
     void printAll(std::string) override {}
 
     /** Dump inputs: not implemented */
-    void dumpInputs(std::ostream&) override {}
+    void dumpInputs() override {}
 
     /** Dump outputs: not implemented */
-    void dumpOutputs(std::ostream&) override {}
+    void dumpOutputs() override {}
 
     /** Run subroutine */
     void executeSubroutine(
