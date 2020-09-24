@@ -135,7 +135,9 @@ inline std::ostream& operator<<(std::ostream& out, const Order& order) {
 /**
  * A dummy wrapper for indexViews.
  */
-struct InterpreterViewWrapper {};
+struct InterpreterViewWrapper {
+    virtual ~InterpreterViewWrapper() = default;
+};
 
 /**
  * An index is an abstraction of a data structure
