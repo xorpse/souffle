@@ -211,10 +211,10 @@ TEST(Reordering, Iteration) {
 
     // For-each should give decoded tuple.
     {
-        const auto& t = *(rel.begin());
-        EXPECT_EQ(0, t[0]);
-        EXPECT_EQ(1, t[1]);
-        EXPECT_EQ(2, t[2]);
+        auto t = rel.begin();
+        EXPECT_EQ(0, (*t)[0]);
+        EXPECT_EQ(1, (*t)[1]);
+        EXPECT_EQ(2, (*t)[2]);
     }
 
     InterpreterRelInterface relInt(rel, symbolTable, "test", {"i", "i", "i"}, {"i", "i", "i"}, 3);

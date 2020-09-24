@@ -76,7 +76,7 @@ public:
 
     public:
         Iterator(const Iterator& other) : iter(other.iter->clone()) {}
-        Iterator(iterator_base* iter) : iter(Own<iterator_base>(iter)) {}
+        Iterator(iterator_base* iter) : iter(iter) {}
 
         Iterator& operator++() {
             ++(*iter);
