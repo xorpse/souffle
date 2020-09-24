@@ -329,8 +329,19 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
 #define EVAL_LEFT(ty) ramBitCast<ty>(execute(shadow.getLhs(), ctxt))
 #define EVAL_RIGHT(ty) ramBitCast<ty>(execute(shadow.getRhs(), ctxt))
 
-#define CASE(Kind)     \
-    case (I_##Kind): { \
+// Overload CASE based on number of arguments.
+// CASE(Kind) -> BASE_CASE(Kind)
+// CASE(Kind, Structure, Arity) -> EXTEND_CASE(Kind, Structure, Arity)
+#define GET_MACRO(_1, _2, _3, NAME, ...) NAME
+#define CASE(...) GET_MACRO(__VA_ARGS__, EXTEND_CASE, _Dummy, BASE_CASE)(__VA_ARGS__)
+
+#define BASE_CASE(Kind) \
+    case (I_##Kind): {  \
+        return [&]() -> RamDomain { \
+            [[maybe_unused]] const auto& shadow = *static_cast<const Interpreter##Kind*>(node); \
+            [[maybe_unused]] const auto& cur = *static_cast<const Kind*>(node->getShadow());
+#define EXTEND_CASE(Kind, Structure, Arity)    \
+    case (I_##Kind##_##Structure##_##Arity): { \
         return [&]() -> RamDomain { \
             [[maybe_unused]] const auto& shadow = *static_cast<const Interpreter##Kind*>(node); \
             [[maybe_unused]] const auto& cur = *static_cast<const Kind*>(node->getShadow());
@@ -732,48 +743,41 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
             return !execute(shadow.getChild(), ctxt);
         ESAC(Negation)
 
-#define EMPTINESS_CHECK(Structure, Arity, ...)                                                              \
-    case (I_EmptinessCheck_##Structure##_##Arity): {                                                        \
-        return [&]() -> RamDomain {                                                                         \
-            const auto& rel =                                                                               \
-                    *static_cast<InterpreterRelation<Arity, Interpreter##Structure>*>(node->getRelation()); \
-            return rel.empty();                                                                             \
-        }();                                                                                                \
-    }
+#define EMPTINESS_CHECK(Structure, Arity, ...)                                                          \
+    CASE(EmptinessCheck, Structure, Arity)                                                              \
+        const auto& rel =                                                                               \
+                *static_cast<InterpreterRelation<Arity, Interpreter##Structure>*>(node->getRelation()); \
+        return rel.empty();                                                                             \
+    ESAC(EmptinessCheck)
+
         FOR_EACH(EMPTINESS_CHECK)
 #undef EMPTINESS_CHECK
 
-#define RELATION_SIZE(Structure, Arity, ...)                                                                \
-    case (I_RelationSize_##Structure##_##Arity): {                                                          \
-        return [&]() -> RamDomain {                                                                         \
-            const auto& rel =                                                                               \
-                    *static_cast<InterpreterRelation<Arity, Interpreter##Structure>*>(node->getRelation()); \
-            return rel.size();                                                                              \
-        }();                                                                                                \
-    }
+#define RELATION_SIZE(Structure, Arity, ...)                                                            \
+    CASE(RelationSize, Structure, Arity)                                                                \
+        const auto& rel =                                                                               \
+                *static_cast<InterpreterRelation<Arity, Interpreter##Structure>*>(node->getRelation()); \
+        return rel.size();                                                                              \
+    ESAC(RelationSize)
+
         FOR_EACH(RELATION_SIZE)
 #undef RELATION_SIZE
 
-#define EXISTENCE_CHECK(Structure, Arity, ...)                                         \
-    case (I_ExistenceCheck_##Structure##_##Arity): {                                   \
-        return [&]() -> RamDomain {                                                    \
-            using rel = InterpreterRelation<Arity, Interpreter##Structure>;            \
-            const auto& shadow = *static_cast<const InterpreterExistenceCheck*>(node); \
-            const auto& cur = *static_cast<const ExistenceCheck*>(node->getShadow());  \
-            return evalExistenceCheck<rel>(cur, shadow, ctxt);                         \
-        }();                                                                           \
-    }
+#define EXISTENCE_CHECK(Structure, Arity, ...)                          \
+    CASE(ExistenceCheck, Structure, Arity)                              \
+        using rel = InterpreterRelation<Arity, Interpreter##Structure>; \
+        return evalExistenceCheck<rel>(cur, shadow, ctxt);              \
+    ESAC(ExistenceCheck)
+
         FOR_EACH(EXISTENCE_CHECK)
 #undef EXISTENCE_CHECK
 
-#define PROVENANCE_EXISTENCE_CHECK(Structure, Arity, ...)                                        \
-    case (I_ProvenanceExistenceCheck_##Structure##_##Arity): {                                   \
-        return [&]() -> RamDomain {                                                              \
-            using rel = InterpreterRelation<Arity, Interpreter##Structure>;                      \
-            const auto& shadow = *static_cast<const InterpreterProvenanceExistenceCheck*>(node); \
-            return evalProvenanceExistenceCheck<rel>(shadow, ctxt);                              \
-        }();                                                                                     \
-    }
+#define PROVENANCE_EXISTENCE_CHECK(Structure, Arity, ...)               \
+    CASE(ProvenanceExistenceCheck, Structure, Arity)                    \
+        using rel = InterpreterRelation<Arity, Interpreter##Structure>; \
+        return evalProvenanceExistenceCheck<rel>(shadow, ctxt);         \
+    ESAC(ProvenanceExistenceCheck)
+
         FOR_EACH_PROVENANCE(PROVENANCE_EXISTENCE_CHECK)
 #undef PROVENANCE_EXISTENCE_CHECK
 
@@ -867,16 +871,12 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
             return result;
         ESAC(TupleOperation)
 
-#define SCAN(Structure, Arity, ...)                                                                    \
-    case (I_Scan_##Structure##_##Arity): {                                                             \
-        return [&]() -> RamDomain {                                                                    \
-            const auto& rel = *static_cast<const InterpreterRelation<Arity, Interpreter##Structure>*>( \
-                    node->getRelation());                                                              \
-            const auto& cur = *static_cast<const Scan*>(node->getShadow());                            \
-            const auto& shadow = *static_cast<const InterpreterScan*>(node);                           \
-            return evalScan(rel, cur, shadow, ctxt);                                                   \
-        }();                                                                                           \
-    }
+#define SCAN(Structure, Arity, ...)                                                                \
+    CASE(Scan, Structure, Arity)                                                                   \
+        const auto& rel = *static_cast<const InterpreterRelation<Arity, Interpreter##Structure>*>( \
+                node->getRelation());                                                              \
+        return evalScan(rel, cur, shadow, ctxt);                                                   \
+    ESAC(Scan)
 
         FOR_EACH(SCAN)
 #undef SCAN
@@ -906,15 +906,12 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
         /*     return true; */
         /* ESAC(ParallelScan) */
 
-#define INDEX_SCAN(Structure, Arity, ...)                                         \
-    case (I_IndexScan_##Structure##_##Arity): {                                   \
-        return [&]() -> RamDomain {                                               \
-            using rel = InterpreterRelation<Arity, Interpreter##Structure>;       \
-            const auto& cur = *static_cast<const IndexScan*>(node->getShadow());  \
-            const auto& shadow = *static_cast<const InterpreterIndexScan*>(node); \
-            return evalIndexScan<rel>(cur, shadow, ctxt);                         \
-        }();                                                                      \
-    }
+#define INDEX_SCAN(Structure, Arity, ...)                               \
+    CASE(IndexScan, Structure, Arity)                                   \
+        using rel = InterpreterRelation<Arity, Interpreter##Structure>; \
+        return evalIndexScan<rel>(cur, shadow, ctxt);                   \
+    ESAC(IndexScan)
+
         FOR_EACH(INDEX_SCAN)
 #undef INDEX_SCAN
 
@@ -954,16 +951,12 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
         /*     return true; */
         /* ESAC(ParallelIndexScan) */
 
-#define CHOICE(Structure, Arity, ...)                                                                  \
-    case (I_Choice_##Structure##_##Arity): {                                                           \
-        return [&]() -> RamDomain {                                                                    \
-            const auto& rel = *static_cast<const InterpreterRelation<Arity, Interpreter##Structure>*>( \
-                    node->getRelation());                                                              \
-            const auto& cur = *static_cast<const Choice*>(node->getShadow());                          \
-            const auto& shadow = *static_cast<const InterpreterChoice*>(node);                         \
-            return evalChoice(rel, cur, shadow, ctxt);                                                 \
-        }();                                                                                           \
-    }
+#define CHOICE(Structure, Arity, ...)                                                              \
+    CASE(Choice, Structure, Arity)                                                                 \
+        const auto& rel = *static_cast<const InterpreterRelation<Arity, Interpreter##Structure>*>( \
+                node->getRelation());                                                              \
+        return evalChoice(rel, cur, shadow, ctxt);                                                 \
+    ESAC(Choice)
 
         FOR_EACH(CHOICE)
 #undef CHOICE
@@ -992,15 +985,12 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
         /*     return true; */
         /* ESAC(ParallelChoice) */
 
-#define INDEX_CHOICE(Structure, Arity, ...)                                         \
-    case (I_IndexChoice_##Structure##_##Arity): {                                   \
-        return [&]() -> RamDomain {                                                 \
-            using rel = InterpreterRelation<Arity, Interpreter##Structure>;         \
-            const auto& cur = *static_cast<const IndexChoice*>(node->getShadow());  \
-            const auto& shadow = *static_cast<const InterpreterIndexChoice*>(node); \
-            return evalIndexChoice<rel>(cur, shadow, ctxt);                         \
-        }();                                                                        \
-    }
+#define INDEX_CHOICE(Structure, Arity, ...)                             \
+    CASE(IndexChoice, Structure, Arity)                                 \
+        using rel = InterpreterRelation<Arity, Interpreter##Structure>; \
+        return evalIndexChoice<rel>(cur, shadow, ctxt);                 \
+    ESAC(IndexChoice)
+
         FOR_EACH(INDEX_CHOICE)
 #undef INDEX_CHOICE
 
@@ -1073,17 +1063,14 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
             /*             *shadow.getNestedOperation(), node->getRelation()->scan()); */
             /* ESAC(ParallelAggregate) */
 
-#define AGGREGATE(Structure, Arity, ...)                                                                    \
-    case (I_Aggregate_##Structure##_##Arity): {                                                             \
-        return [&]() -> RamDomain {                                                                         \
-            const auto& rel =                                                                               \
-                    *static_cast<InterpreterRelation<Arity, Interpreter##Structure>*>(node->getRelation()); \
-            const auto& cur = *static_cast<const Aggregate*>(node->getShadow());                            \
-            const auto& shadow = *static_cast<const InterpreterAggregate*>(node);                           \
-            return executeAggregate(cur, *shadow.getCondition(), shadow.getExpr(),                          \
-                    *shadow.getNestedOperation(), rel.scan(), ctxt);                                        \
-        }();                                                                                                \
-    }
+#define AGGREGATE(Structure, Arity, ...)                                                                     \
+    CASE(Aggregate, Structure, Arity)                                                                        \
+        const auto& rel =                                                                                    \
+                *static_cast<InterpreterRelation<Arity, Interpreter##Structure>*>(node->getRelation());      \
+        return executeAggregate(cur, *shadow.getCondition(), shadow.getExpr(), *shadow.getNestedOperation(), \
+                rel.scan(), ctxt);                                                                           \
+    ESAC(Aggregate)
+
         FOR_EACH(AGGREGATE)
 #undef AGGREGATE
 
@@ -1113,15 +1100,11 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
          * arity))); */
         /* ESAC(ParallelIndexAggregate) */
 
-#define INDEX_AGGREGATE(Structure, Arity, ...)                                         \
-    case (I_IndexAggregate_##Structure##_##Arity): {                                   \
-        return [&]() -> RamDomain {                                                    \
-            using Rel = InterpreterRelation<Arity, Interpreter##Structure>;            \
-            const auto& cur = *static_cast<const IndexAggregate*>(node->getShadow());  \
-            const auto& shadow = *static_cast<const InterpreterIndexAggregate*>(node); \
-            return evalIndexAggregate<Rel>(cur, shadow, ctxt);                         \
-        }();                                                                           \
-    }
+#define INDEX_AGGREGATE(Structure, Arity, ...)                          \
+    CASE(IndexAggregate, Structure, Arity)                              \
+        using Rel = InterpreterRelation<Arity, Interpreter##Structure>; \
+        return evalIndexAggregate<Rel>(cur, shadow, ctxt);              \
+    ESAC(IndexAggregate)
 
         FOR_EACH(INDEX_AGGREGATE)
 #undef INDEX_AGGREGATE
@@ -1153,14 +1136,11 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
         ESAC(Filter)
 
 #define PROJECT(Structure, Arity, ...)                                                                      \
-    case (I_Project_##Structure##_##Arity): {                                                               \
-        return [&]() -> RamDomain {                                                                         \
-            auto& rel =                                                                                     \
-                    *static_cast<InterpreterRelation<Arity, Interpreter##Structure>*>(node->getRelation()); \
-            const auto& shadow = *static_cast<const InterpreterProject*>(node);                             \
-            return evalProject(rel, shadow, ctxt);                                                          \
-        }();                                                                                                \
-    }
+    CASE(Project, Structure, Arity)                                                                         \
+        auto& rel = *static_cast<InterpreterRelation<Arity, Interpreter##Structure>*>(node->getRelation()); \
+        return evalProject(rel, shadow, ctxt);                                                              \
+    ESAC(Project)
+
         FOR_EACH(PROJECT)
 #undef PROJECT
 
@@ -1222,15 +1202,14 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
             return execute(shadow.getChild(), ctxt);
         ESAC(DebugInfo)
 
-#define CLEAR(Structure, Arity, ...)                                                                       \
-    case (I_Clear_##Structure##_##Arity): {                                                                \
-        return [&]() -> RamDomain {                                                                        \
-            const auto& rel =                                                                              \
-                    static_cast<InterpreterRelation<Arity, Interpreter##Structure>*>(node->getRelation()); \
-            rel->__purge();                                                                                \
-            return true;                                                                                   \
-        }();                                                                                               \
-    }
+#define CLEAR(Structure, Arity, ...)                                                                   \
+    CASE(Clear, Structure, Arity)                                                                      \
+        const auto& rel =                                                                              \
+                static_cast<InterpreterRelation<Arity, Interpreter##Structure>*>(node->getRelation()); \
+        rel->__purge();                                                                                \
+        return true;                                                                                   \
+    ESAC(Clear)
+
         FOR_EACH(CLEAR)
 #undef CLEAR
 
@@ -1247,16 +1226,13 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
         ESAC(LogSize)
 
 #define IO(Structure, Arity, ...)                                                                           \
-    case (I_IO_##Structure##_##Arity): {                                                                    \
-        return [&]() -> RamDomain {                                                                         \
-            auto& rel =                                                                                     \
-                    *static_cast<InterpreterRelation<Arity, Interpreter##Structure>*>(node->getRelation()); \
-            const auto& cur = *static_cast<const IO*>(node->getShadow());                                   \
-            return evalIO(cur, rel);                                                                        \
-        }();                                                                                                \
-    }
+    CASE(IO, Structure, Arity)                                                                              \
+        auto& rel = *static_cast<InterpreterRelation<Arity, Interpreter##Structure>*>(node->getRelation()); \
+        return evalIO(cur, rel);                                                                            \
+    ESAC(IO)
 
         FOR_EACH(IO)
+#undef IO
 
         CASE(Query)
             InterpreterViewContext* viewContext = shadow.getViewContext();
