@@ -122,7 +122,7 @@ enum InterpreterNodeType {
     {__TO_STRING(I_##tok##_##Structure##_##arity), I_##tok##_##Structure##_##arity},
 
 /**
- * Construct interpreterNodeType by looking at the representation and arity of the given rel.
+ * Construct interpreterNodeType by looking at the representation and the arity of the given rel.
  *
  * Add reflective from string to InterpreterNodeType.
  */

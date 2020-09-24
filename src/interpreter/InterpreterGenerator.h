@@ -354,7 +354,7 @@ public:
     }
 
     NodePtr visitAggregate(const ram::Aggregate& aggregate) override {
-        // Notice: Aggregates are very sensitive to the visiting order of the subexpr in order to make
+        // Notice: Aggregate is sensitive to the visiting order of the subexprs in order to make
         // orderCtxt consistent. The order of visiting should be the same as the order of execution during
         // runtime.
         orderingContext.addTupleWithDefaultOrder(aggregate.getTupleId(), aggregate);
@@ -842,8 +842,8 @@ private:
         InterpreterSuperInstruction indexOperation(arity);
         const auto& first = ramIndex.getRangePattern().first;
         for (size_t i = 0; i < arity; ++i) {
-            // Note: unlike orderingContext::mapOrder where we try to decode the order,
-            // Here we have to encode the order.
+            // Note: unlike orderingContext::mapOrder, where we try to decode the order,
+            // here we have to encode the order.
             auto& low = first[order[i]];
 
             // Unbounded
@@ -956,8 +956,8 @@ private:
     /**
      * @brief Encode and return the super-instruction information about a project operation
      *
-     * No compilation reordering needed for projection as project has many target indexes and reordering
-     * can only be done during runtime.
+     * No reordering needed for projection as project can have more then one target indexes and reordering can
+     * only be done during runtime.
      */
     InterpreterSuperInstruction getProjectSuperInstInfo(const ram::Project& exist) {
         size_t arity = exist.getRelation().getArity();

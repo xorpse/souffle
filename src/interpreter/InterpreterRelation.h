@@ -33,8 +33,8 @@ namespace souffle {
 /**
  * Wrapper for InterpreterRelation.
  *
- * This class uniforms the InterpreterRelation template classes.
- * It also define virtual interfaces for ProgInterface and some virtual helper functions for interpreter
+ * This class unifies the InterpreterRelation template classes.
+ * It also defines virtual interfaces for ProgInterface and some virtual helper functions for interpreter
  * execution.
  */
 struct InterpreterRelationWrapper {
@@ -47,7 +47,7 @@ public:
     // -- Define methods and interfaces for ProgInterface. --
 public:
     /**
-     * Virtualized iterator class.
+     * A virtualized iterator class that can be used by the Proginterface.
      * Define behaviors to uniformly access the underlying tuple regardless its structure and arity.
      */
     class iterator_base {
@@ -162,7 +162,7 @@ public:
     using iterator = typename Index::iterator;
 
     /**
-     * A constructs a typed tuple from a raw data.
+     * Construct a typed tuple from a raw data.
      */
     static Tuple constructTuple(const RamDomain* data) {
         Tuple tuple{};
@@ -171,7 +171,7 @@ public:
     }
 
     /**
-     * Cast an abstract view into a view of this relation type.
+     * Cast an abstract view into a view of Index::InterpreterView type.
      */
     static View* castView(InterpreterViewWrapper* view) {
         return static_cast<View*>(view);
@@ -320,7 +320,7 @@ public:
     /**
      * Obtains a pair of iterators to scan the entire relation.
      *
-     * Return 'raw iterator' that returns tuple in undecoded form.
+     * Return 'raw iterator' that returns tuples in undecoded form.
      */
     souffle::range<iterator> scan() const {
         return main->scan();
@@ -394,9 +394,6 @@ protected:
     // Number of height parameters of relation
     size_t auxiliaryArity;
 
-    // Relation name
-    std::string relName;
-
     // a map of managed indexes
     VecOwn<Index> indexes;
 
@@ -415,7 +412,7 @@ public:
     }
 };
 
-// The type of index factory functions.
+// The type of relation factory functions.
 using RelationFactory = Own<InterpreterRelationWrapper> (*)(
         const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet);
 

@@ -27,7 +27,6 @@
 #include "souffle/RamTypes.h"
 #include "souffle/RecordTable.h"
 #include "souffle/SymbolTable.h"
-#include "souffle/io/IOSystem.h"  // Remove later
 #include "souffle/utility/ContainerUtil.h"
 #include <atomic>
 #include <cstddef>
