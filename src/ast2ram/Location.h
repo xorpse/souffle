@@ -15,6 +15,11 @@
 #pragma once
 
 #include "souffle/utility/MiscUtil.h"
+#include "souffle/utility/ContainerUtil.h"
+
+namespace souffle::ram {
+class RelationReference;
+}
 
 namespace souffle::ast2ram {
 

@@ -17,9 +17,10 @@
 
 #pragma once
 
-#include "ast2ram/AstToRamTranslator.h"
 #include "ast2ram/Location.h"
+#include "souffle/utility/ContainerUtil.h"
 #include <map>
+#include <set>
 #include <vector>
 
 namespace souffle::ast {
@@ -28,9 +29,13 @@ class RecordInit;
 class Variable;
 }  // namespace souffle::ast
 
+namespace souffle::ram {
+class RelationReference;
+}
+
 namespace souffle::ast2ram {
 
-class AstToRamTranslator::ValueIndex {
+class ValueIndex {
 public:
     /**
      * The type mapping variables (referenced by their names) to the

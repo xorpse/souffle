@@ -17,7 +17,6 @@
 
 #include "ast2ram/ValueIndex.h"
 #include "ast/Variable.h"
-#include "ast2ram/AstToRamTranslator.h"
 #include "ast2ram/Location.h"
 #include "ram/Relation.h"
 #include "souffle/utility/FunctionalUtil.h"
@@ -27,34 +26,34 @@
 
 namespace souffle::ast2ram {
 
-void AstToRamTranslator::ValueIndex::addVarReference(
+void ValueIndex::addVarReference(
         const ast::Variable& var, const Location& l) {
     std::set<Location>& locs = var_references[var.getName()];
     locs.insert(l);
 }
 
-void AstToRamTranslator::ValueIndex::addVarReference(
+void ValueIndex::addVarReference(
         const ast::Variable& var, int ident, int pos, Own<ram::RelationReference> rel) {
     addVarReference(var, Location({ident, pos, std::move(rel)}));
 }
 
-bool AstToRamTranslator::ValueIndex::isDefined(const ast::Variable& var) const {
+bool ValueIndex::isDefined(const ast::Variable& var) const {
     return var_references.find(var.getName()) != var_references.end();
 }
 
-const Location& AstToRamTranslator::ValueIndex::getDefinitionPoint(
+const Location& ValueIndex::getDefinitionPoint(
         const ast::Variable& var) const {
     auto pos = var_references.find(var.getName());
     assert(pos != var_references.end() && "Undefined variable referenced!");
     return *pos->second.begin();
 }
 
-void AstToRamTranslator::ValueIndex::setGeneratorLoc(
+void ValueIndex::setGeneratorLoc(
         const ast::Argument& agg, const Location& loc) {
     arg_generator_locations.push_back(std::make_pair(&agg, loc));
 }
 
-const Location& AstToRamTranslator::ValueIndex::getGeneratorLoc(
+const Location& ValueIndex::getGeneratorLoc(
         const ast::Argument& arg) const {
     // search list
     for (const auto& cur : arg_generator_locations) {
@@ -66,17 +65,17 @@ const Location& AstToRamTranslator::ValueIndex::getGeneratorLoc(
     fatal("arg `%s` has no generator location", arg);
 }
 
-void AstToRamTranslator::ValueIndex::setRecordDefinition(
+void ValueIndex::setRecordDefinition(
         const ast::RecordInit& init, const Location& l) {
     record_definitions[&init] = l;
 }
 
-void AstToRamTranslator::ValueIndex::setRecordDefinition(
+void ValueIndex::setRecordDefinition(
         const ast::RecordInit& init, int ident, int pos, Own<ram::RelationReference> rel) {
     setRecordDefinition(init, Location({ident, pos, std::move(rel)}));
 }
 
-const Location& AstToRamTranslator::ValueIndex::getDefinitionPoint(
+const Location& ValueIndex::getDefinitionPoint(
         const ast::RecordInit& init) const {
     auto pos = record_definitions.find(&init);
     if (pos != record_definitions.end()) {
@@ -86,13 +85,13 @@ const Location& AstToRamTranslator::ValueIndex::getDefinitionPoint(
     fatal("requested location for undefined record!");
 }
 
-bool AstToRamTranslator::ValueIndex::isGenerator(const int level) const {
+bool ValueIndex::isGenerator(const int level) const {
     // check for aggregator definitions
     return any_of(arg_generator_locations,
             [&level](const auto& location) { return location.second.identifier == level; });
 }
 
-bool AstToRamTranslator::ValueIndex::isSomethingDefinedOn(int level) const {
+bool ValueIndex::isSomethingDefinedOn(int level) const {
     // check for variable definitions
     for (const auto& cur : var_references) {
         if (cur.second.begin()->identifier == level) {
@@ -109,7 +108,7 @@ bool AstToRamTranslator::ValueIndex::isSomethingDefinedOn(int level) const {
     return false;
 }
 
-void AstToRamTranslator::ValueIndex::print(std::ostream& out) const {
+void ValueIndex::print(std::ostream& out) const {
     out << "Variables:\n\t";
     out << join(var_references, "\n\t");
 }
