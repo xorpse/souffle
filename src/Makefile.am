@@ -74,8 +74,8 @@ souffle_sources = \
         ast/analysis/ComponentLookup.h                     \
         ast/analysis/Constraint.h                          \
         ast/analysis/ConstraintSystem.h                    \
-	ast/analysis/Functor.h                             \
-	ast/analysis/Functor.cpp                           \
+        ast/analysis/Functor.h                             \
+        ast/analysis/Functor.cpp                           \
         ast/analysis/Ground.cpp                            \
         ast/analysis/Ground.h                              \
         ast/analysis/IOType.cpp                            \

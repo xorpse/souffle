@@ -15,6 +15,7 @@
  ***********************************************************************/
 
 #include "ast/analysis/Functor.h"
+#include "FunctorOps.h"
 #include "ast/FunctorDeclaration.h"
 #include "ast/IntrinsicFunctor.h"
 #include "ast/TranslationUnit.h"
@@ -67,6 +68,17 @@ TypeAttribute FunctorAnalysis::getArgType(const Functor* functor, const size_t i
     } else if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
         auto* info = functorInfo.at(intrinsic->getFunction());
         return info->params.at(info->variadic ? 0 : idx);
+    } else {
+        fatal("Missing functor type.");
+    }
+}
+
+bool FunctorAnalysis::isMultiResult(const Functor& functor) {
+    if (isA<UserDefinedFunctor>(functor)) {
+        return false;
+    } else if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
+        auto op = intrinsic->getFunctionOp();
+        return op && functorBuiltIn(*op).front().get().multipleResults;
     } else {
         fatal("Missing functor type.");
     }

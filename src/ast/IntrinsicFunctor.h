@@ -26,6 +26,7 @@
 #include "souffle/utility/StreamUtil.h"
 #include <cassert>
 #include <cstddef>
+#include <optional>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -61,25 +62,23 @@ public:
     }
 
     /** Get function information */
-    const IntrinsicFunctorInfo* getFunctionInfo() const {
-        return info;
+    std::optional<FunctorOp> getFunctionOp() const {
+        return op;
     }
 
     /** Set function information */
-    void setFunctionInfo(const IntrinsicFunctorInfo& info) {
-        this->info = &info;
+    void setFunctionOp(FunctorOp op) {
+        this->op = op;
     }
 
     IntrinsicFunctor* clone() const override {
-        return new IntrinsicFunctor(function, info, souffle::clone(args), getSrcLoc());
+        return new IntrinsicFunctor(function, op, souffle::clone(args), getSrcLoc());
     }
 
 protected:
-    IntrinsicFunctor(
-            std::string op, const IntrinsicFunctorInfo* info, VecOwn<Argument> args, SrcLocation loc = {})
-            : Functor(std::move(args), std::move(loc)), function(std::move(op)), info(info) {
-        assert((!info || info->symbol == function) && "functor info must match symbol");
-    }
+    IntrinsicFunctor(std::string function, const std::optional<FunctorOp> op, VecOwn<Argument> args,
+            SrcLocation loc = {})
+            : Functor(std::move(args), std::move(loc)), function(std::move(function)), op(std::move(op)) {}
 
     void print(std::ostream& os) const override {
         if (isInfixFunctorOp(function)) {
@@ -92,14 +91,14 @@ protected:
 
     bool equal(const Node& node) const override {
         const auto& other = static_cast<const IntrinsicFunctor&>(node);
-        return function == other.function && info == other.info && Functor::equal(node);
+        return function == other.function && op == other.op && Functor::equal(node);
     }
 
     /** Function */
     std::string function;
 
-    /** Functor information */
-    const IntrinsicFunctorInfo* info = nullptr;
+    /** Functor Op */
+    std::optional<FunctorOp> op;
 };
 
 }  // namespace souffle::ast

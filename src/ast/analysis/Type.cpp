@@ -666,7 +666,7 @@ private:
             auto argVars = map(intrFun->getArguments(), [&](auto&& x) { return getVar(x); });
             // The type of the user-defined function might not be set at this stage.
             // If so then add overloads as alternatives
-            if (!intrFun->getFunctionInfo())
+            if (!intrFun->getFunctionOp())
                 addConstraint(satisfiesOverload(typeEnv, functorBuiltIn(intrFun->getFunction()), functorVar,
                         argVars, isInfixFunctorOp(intrFun->getFunction())));
 
@@ -682,7 +682,7 @@ private:
                 return;
             }
 
-            if (!intrFun->getFunctionInfo()) return;
+            if (!intrFun->getFunctionOp()) return;
         }
 
         // add a constraint for the return type of the functor
@@ -695,7 +695,7 @@ private:
         }
 
         // Special case. Ord returns the ram representation of any object.
-        if (intrFun && intrFun->getFunctionInfo()->op == FunctorOp::ORD) return;
+        if (intrFun && intrFun->getFunctionOp().value() == FunctorOp::ORD) return;
 
         // Add constraints on arguments
         auto arguments = fun.getArguments();

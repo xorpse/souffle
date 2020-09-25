@@ -91,11 +91,11 @@ bool PolymorphicObjectsTransformer::transform(TranslationUnit& translationUnit) 
 
                 // Handle functor
                 auto* functor = as<IntrinsicFunctor>(node);
-                if (functor && !functor->getFunctionInfo()) {
+                if (functor && !functor->getFunctionOp()) {
                     // any valid candidate will do. pick the first.
                     auto candidates = validOverloads(typeAnalysis, *functor);
                     if (!candidates.empty()) {
-                        functor->setFunctionInfo(candidates.front().get());
+                        functor->setFunctionOp(candidates.front().get().op);
                         changed = true;
                     }
                 }

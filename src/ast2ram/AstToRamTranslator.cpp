@@ -50,6 +50,7 @@
 #include "ast/UserDefinedFunctor.h"
 #include "ast/Variable.h"
 #include "ast/analysis/AuxArity.h"
+#include "ast/analysis/Functor.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/RecursiveClauses.h"
 #include "ast/analysis/RelationDetailCache.h"
@@ -283,12 +284,10 @@ Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg
                 values.push_back(translator.translateValue(cur, index));
             }
 
-            auto* info = inf.getFunctionInfo();
-            assert(info && "no overload picked for instrinsic; missing transform pass?");
-            if (info->multipleResults) {
+            if (ast::analysis::FunctorAnalysis::isMultiResult(inf)) {
                 return translator.makeRamTupleElement(index.getGeneratorLoc(inf));
             } else {
-                return mk<ram::IntrinsicOperator>(info->op, std::move(values));
+                return mk<ram::IntrinsicOperator>(inf.getFunctionOp().value(), std::move(values));
             }
         }
 
@@ -541,8 +540,8 @@ void AstToRamTranslator::ClauseTranslator::createValueIndex(const ast::Clause& c
             }
         }
 
-        auto func = dynamic_cast<const ast::IntrinsicFunctor*>(&arg);
-        if (func && func->getFunctionInfo()->multipleResults) {
+        auto* func = as<ast::IntrinsicFunctor>(arg);
+        if (func && ast::analysis::FunctorAnalysis::isMultiResult(*func)) {
             addGenerator();
         }
     });
@@ -791,14 +790,12 @@ Own<ram::Statement> AstToRamTranslator::ClauseTranslator::translateClause(
             }
 
             auto func_op = [&]() -> ram::NestedIntrinsicOp {
-                switch (func->getFunctionInfo()->op) {
+                switch (func->getFunctionOp().value()) {
                     case FunctorOp::RANGE: return ram::NestedIntrinsicOp::RANGE;
                     case FunctorOp::URANGE: return ram::NestedIntrinsicOp::URANGE;
                     case FunctorOp::FRANGE: return ram::NestedIntrinsicOp::FRANGE;
 
-                    default:
-                        assert(func->getFunctionInfo()->multipleResults);
-                        fatal("missing case handler or bad code-gen");
+                    default: fatal("missing case handler or bad code-gen");
                 }
             };
 

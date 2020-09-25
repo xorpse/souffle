@@ -44,6 +44,8 @@ public:
     /** Return argument type of functor */
     TypeAttribute getArgType(const Functor* functor, const size_t idx) const;
 
+    static bool isMultiResult(const Functor& functor);
+
     const std::vector<TypeAttribute>& getArgTypes(const UserDefinedFunctor& udf) const;
 
     /** Return whether a UDF is stateful */

@@ -82,7 +82,7 @@ private:
     /** IO Type */
     const ast::analysis::IOTypeAnalysis* ioType = nullptr;
 
-    /** Functor Type */
+    /** Functors' analysis */
     const ast::analysis::FunctorAnalysis* functorAnalysis = nullptr;
 
     /** RAM program */

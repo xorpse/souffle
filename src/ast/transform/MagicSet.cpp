@@ -134,7 +134,7 @@ std::set<QualifiedName> MagicSetTransformer::getIgnoredRelations(const Translati
             {FunctorOp::MOD, FunctorOp::FDIV, FunctorOp::DIV, FunctorOp::UMOD});
     for (const auto* clause : program.getClauses()) {
         visitDepthFirst(*clause, [&](const IntrinsicFunctor& functor) {
-            if (contains(orderDepFuncOps, functor.getFunctionInfo()->op)) {
+            if (contains(orderDepFuncOps, functor.getFunctionOp().value())) {
                 relationsToIgnore.insert(clause->getHead()->getQualifiedName());
             }
         });

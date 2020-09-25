@@ -1441,7 +1441,7 @@ void TypeChecker::visitTypeCast(const ast::TypeCast& cast) {
 }
 
 void TypeChecker::visitIntrinsicFunctor(const IntrinsicFunctor& fun) {
-    if (!fun.getFunctionInfo()) {  // no info => no overload found during inference
+    if (!fun.getFunctionOp()) {  // no info => no overload found during inference
         auto args = fun.getArguments();
         if (!isValidFunctorOpArity(fun.getFunction(), args.size())) {
             report.addError("invalid overload (arity mismatch)", fun.getSrcLoc());
