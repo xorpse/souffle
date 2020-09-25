@@ -31,6 +31,8 @@
 #include <cassert>
 #include <cstddef>
 #include <memory>
+#include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -101,7 +103,7 @@ class Node;
 
 #define SINGLE_TOKEN(tok) I_##tok,
 
-#define EXPAND_TOEKN(structure, arity, tok)\
+#define EXPAND_TOKEN(structure, arity, tok)\
     I_##tok##_##structure##_##arity,
 
 /* 
@@ -110,11 +112,11 @@ class Node;
  * For Extended token OP, generate I_OP_Structure_Arity for each data structure and supported arity.
  */
 enum InterpreterNodeType {
-    FOR_EACH_INTERPRETER_TOKEN(SINGLE_TOKEN, EXPAND_TOEKN)
+    FOR_EACH_INTERPRETER_TOKEN(SINGLE_TOKEN, EXPAND_TOKEN)
 };
 
 #undef SINGLE_TOKEN
-#undef EXPAND_TOEKN
+#undef EXPAND_TOKEN
 
 #define __TO_STRING(a) #a
 #define SINGLE_TOKEN_ENTRY(tok) {__TO_STRING(I_##tok), I_##tok},

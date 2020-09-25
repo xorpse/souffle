@@ -15,6 +15,9 @@
  ***********************************************************************/
 
 #include "interpreter/InterpreterRelation.h"
+#include "ram/Relation.h"
+#include "ram/analysis/MinIndexSelection.h"
+#include "souffle/utility/MiscUtil.h"
 
 namespace souffle {
 

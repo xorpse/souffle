@@ -19,6 +19,7 @@
 #include "souffle/CompiledTuple.h"
 #include "souffle/RamTypes.h"
 #include "souffle/datastructure/EquivalenceRelation.h"
+#include "souffle/datastructure/UnionFind.h"
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/MiscUtil.h"
 #include <array>
@@ -31,7 +32,6 @@
 #include <memory>
 #include <utility>
 #include <vector>
-#include <souffle/datastructure/UnionFind.h>
 
 namespace souffle {
 /**
