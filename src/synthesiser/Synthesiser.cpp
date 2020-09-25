@@ -1499,7 +1499,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                     break;
             }
 
-            char const* type;
+            std::string type;
             switch (getTypeAttributeAggregate(aggregate.getFunction())) {
                 case TypeAttribute::Signed: type = "RamSigned"; break;
                 case TypeAttribute::Unsigned: type = "RamUnsigned"; break;
@@ -1507,7 +1507,8 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
                 case TypeAttribute::Symbol:
                 case TypeAttribute::ADT:
-                case TypeAttribute::Record: type = "RamDomain"; break;
+                case TypeAttribute::Record:
+                default: type = "RamDomain"; break;
             }
             out << type << " res0 = " << init << ";\n";
 
