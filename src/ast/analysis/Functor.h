@@ -22,7 +22,7 @@
 #include "ast/analysis/Analysis.h"
 #include "ast/utility/Visitor.h"
 #include <memory>
-#include <sstream>
+#include <ostream>
 #include <string>
 #include <vector>
 

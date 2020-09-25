@@ -8,7 +8,7 @@
 
 /************************************************************************
  *
- * @file Functor.h
+ * @file Functor.cpp
  *
  * Analysis that provides type information for functors
  *
