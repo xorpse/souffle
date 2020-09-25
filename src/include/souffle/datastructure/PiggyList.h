@@ -3,6 +3,7 @@
 #include "souffle/utility/ParallelUtil.h"
 #include <array>
 #include <atomic>
+#include <cassert>
 #include <cstring>
 #include <iostream>
 #include <iterator>

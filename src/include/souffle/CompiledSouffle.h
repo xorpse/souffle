@@ -86,8 +86,8 @@ private:
         tuple t;
 
     public:
-        iterator_wrapper(uint32_t arg_id, const Relation* rel, const typename RelType::iterator& arg_it)
-                : iterator_base(arg_id), it(arg_it), relation(rel), t(rel) {}
+        iterator_wrapper(uint32_t arg_id, const Relation* rel, typename RelType::iterator arg_it)
+                : iterator_base(arg_id), it(std::move(arg_it)), relation(rel), t(rel) {}
         void operator++() override {
             ++it;
         }
@@ -183,10 +183,10 @@ public:
 
     public:
         typedef std::forward_iterator_tag iterator_category;
-        typedef RamDomain* value_type;
-        typedef ptrdiff_t difference_type;
-        typedef value_type* pointer;
-        typedef value_type& reference;
+        using value_type = RamDomain*;
+        using difference_type = ptrdiff_t;
+        using pointer = value_type*;
+        using reference = value_type&;
 
         iterator(bool v = false) : value(v) {}
 
