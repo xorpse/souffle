@@ -38,8 +38,6 @@ class Atom;
 class Clause;
 class Constant;
 class Literal;
-class NilConstant;
-class Node;
 class Program;
 class QualifiedName;
 class Relation;
