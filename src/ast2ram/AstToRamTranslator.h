@@ -75,6 +75,14 @@ public:
     AstToRamTranslator();
     ~AstToRamTranslator();
 
+    const ast::analysis::AuxiliaryArityAnalysis* getAuxArityAnalysis() const {
+        return auxArityAnalysis;
+    }
+
+    const ast::SipsMetric* getSipsMetric() const {
+        return sips.get();
+    }
+
     /** translates AST to translation unit */
     Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
 
@@ -87,15 +95,6 @@ public:
     /** translate an AST relation to a RAM relation */
     Own<ram::RelationReference> translateRelation(
             const ast::Relation* rel, const std::string relationNamePrefix = "");
-
-    /** IO Type */
-    const ast::analysis::IOTypeAnalysis* ioType = nullptr;
-
-    /** Auxiliary Arity Analysis */
-    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
-
-    /** SIPS metric for reordering */
-    Own<ast::SipsMetric> sips;
 
     /** determine the auxiliary for relations */
     size_t getEvaluationArity(const ast::Atom* atom) const;
@@ -115,6 +114,15 @@ private:
 
     /** Type environment */
     const ast::analysis::TypeEnvironment* typeEnv = nullptr;
+
+    /** IO Type */
+    const ast::analysis::IOTypeAnalysis* ioType = nullptr;
+
+    /** Auxiliary Arity Analysis */
+    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
+
+    /** SIPS metric for reordering */
+    Own<ast::SipsMetric> sips;
 
     /** RAM program */
     Own<ram::Statement> ramMain;

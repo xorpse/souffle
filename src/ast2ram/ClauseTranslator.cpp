@@ -352,7 +352,7 @@ Own<ast::Clause> ClauseTranslator::getReorderedClause(const ast::Clause& clause,
     if (plan == nullptr) {
         // no plan, so reorder it according to the internal heuristic
         if (auto* reorderedClause = ast::transform::ReorderLiteralsTransformer::reorderClauseWithSips(
-                    *translator.sips, &clause)) {
+                    *translator.getSipsMetric(), &clause)) {
             return Own<ast::Clause>(reorderedClause);
         }
         return nullptr;

@@ -42,7 +42,7 @@ namespace souffle::ast2ram {
 class ClauseTranslator {
 public:
     ClauseTranslator(AstToRamTranslator& translator)
-            : translator(translator), auxArityAnalysis(translator.auxArityAnalysis) {}
+            : translator(translator), auxArityAnalysis(translator.getAuxArityAnalysis()) {}
 
     Own<ram::Statement> translateClause(
             const ast::Clause& clause, const ast::Clause& originalClause, const int version = 0);
