@@ -183,10 +183,10 @@ public:
 
     public:
         typedef std::forward_iterator_tag iterator_category;
-        typedef RamDomain* value_type;
-        typedef ptrdiff_t difference_type;
-        typedef value_type* pointer;
-        typedef value_type& reference;
+        using value_type = RamDomain*;
+        using difference_type = ptrdiff_t;
+        using pointer = value_type*;
+        using reference = value_type&;
 
         iterator(bool v = false) : value(v) {}
 
