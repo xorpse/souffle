@@ -27,13 +27,11 @@
 
 namespace souffle::ast2ram {
 
-Own<ram::Condition> AstToRamTranslator::ProvenanceClauseTranslator::createCondition(
-        const ast::Clause& /* originalClause */) {
+Own<ram::Condition> ProvenanceClauseTranslator::createCondition(const ast::Clause& /* originalClause */) {
     return nullptr;
 }
 
-Own<ram::Operation> AstToRamTranslator::ProvenanceClauseTranslator::createOperation(
-        const ast::Clause& clause) {
+Own<ram::Operation> ProvenanceClauseTranslator::createOperation(const ast::Clause& clause) {
     VecOwn<ram::Expression> values;
 
     // get all values in the body

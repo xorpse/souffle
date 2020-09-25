@@ -39,7 +39,7 @@ class RelationReference;
 
 namespace souffle::ast2ram {
 
-class AstToRamTranslator::ClauseTranslator {
+class ClauseTranslator {
 public:
     ClauseTranslator(AstToRamTranslator& translator)
             : translator(translator), auxArityAnalysis(translator.auxArityAnalysis) {}

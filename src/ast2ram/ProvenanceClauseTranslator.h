@@ -27,7 +27,7 @@ class Condition;
 }
 
 namespace souffle::ast2ram {
-class AstToRamTranslator::ProvenanceClauseTranslator : public AstToRamTranslator::ClauseTranslator {
+class ProvenanceClauseTranslator : public ClauseTranslator {
 public:
     ProvenanceClauseTranslator(AstToRamTranslator& translator) : ClauseTranslator(translator) {}
 

@@ -49,7 +49,7 @@
 namespace souffle::ast2ram {
 
 /** generate RAM code for a clause */
-Own<ram::Statement> AstToRamTranslator::ClauseTranslator::translateClause(
+Own<ram::Statement> ClauseTranslator::translateClause(
         const ast::Clause& clause, const ast::Clause& originalClause, const int version) {
     if (auto reorderedClause = getReorderedClause(clause, version)) {
         // translate reordered clause
@@ -88,8 +88,9 @@ Own<ram::Statement> AstToRamTranslator::ClauseTranslator::translateClause(
         for (const Location& loc : cur.second) {
             if (first != loc && !valueIndex.isGenerator(loc.identifier)) {
                 // FIXME: equiv' for float types (`FEQ`)
-                op = mk<ram::Filter>(mk<ram::Constraint>(BinaryConstraintOp::EQ, makeRamTupleElement(first),
-                                             makeRamTupleElement(loc)),
+                op = mk<ram::Filter>(
+                        mk<ram::Constraint>(BinaryConstraintOp::EQ, translator.makeRamTupleElement(first),
+                                translator.makeRamTupleElement(loc)),
                         std::move(op));
             }
         }
@@ -116,7 +117,7 @@ Own<ram::Statement> AstToRamTranslator::ClauseTranslator::translateClause(
                     // FIXME: equiv' for float types (`FEQ`)
                     op = mk<ram::Filter>(
                             mk<ram::Constraint>(BinaryConstraintOp::EQ, mk<ram::TupleElement>(curLevel, pos),
-                                    makeRamTupleElement(loc)),
+                                    translator.makeRamTupleElement(loc)),
                             std::move(op));
                 }
                 ++pos;
@@ -168,7 +169,7 @@ Own<ram::Statement> AstToRamTranslator::ClauseTranslator::translateClause(
                     if (auto* var = dynamic_cast<const ast::Variable*>(arg)) {
                         for (auto&& loc : valueIndex.getVariableReferences().find(var->getName())->second) {
                             if (level != loc.identifier || (int)pos != loc.element) {
-                                addAggEqCondition(makeRamTupleElement(loc));
+                                addAggEqCondition(translator.makeRamTupleElement(loc));
                                 break;
                             }
                         }
@@ -269,7 +270,7 @@ Own<ram::Statement> AstToRamTranslator::ClauseTranslator::translateClause(
             // add an unpack level
             const Location& loc = valueIndex.getDefinitionPoint(*rec);
             op = mk<ram::UnpackRecord>(
-                    std::move(op), level, makeRamTupleElement(loc), rec->getArguments().size());
+                    std::move(op), level, translator.makeRamTupleElement(loc), rec->getArguments().size());
         } else {
             fatal("Unsupported AST node for creation of scan-level!");
         }
@@ -284,7 +285,7 @@ Own<ram::Statement> AstToRamTranslator::ClauseTranslator::translateClause(
     }
 }
 
-Own<ram::Operation> AstToRamTranslator::ClauseTranslator::createOperation(const ast::Clause& clause) {
+Own<ram::Operation> ClauseTranslator::createOperation(const ast::Clause& clause) {
     const auto head = clause.getHead();
 
     VecOwn<ram::Expression> values;
@@ -303,7 +304,7 @@ Own<ram::Operation> AstToRamTranslator::ClauseTranslator::createOperation(const 
     return project;  // start with innermost
 }
 
-Own<ram::Condition> AstToRamTranslator::ClauseTranslator::createCondition(const ast::Clause& originalClause) {
+Own<ram::Condition> ClauseTranslator::createCondition(const ast::Clause& originalClause) {
     const auto head = originalClause.getHead();
 
     // add stopping criteria for nullary relations
@@ -314,7 +315,7 @@ Own<ram::Condition> AstToRamTranslator::ClauseTranslator::createCondition(const 
     return nullptr;
 }
 
-Own<ram::Operation> AstToRamTranslator::ClauseTranslator::filterByConstraints(size_t const level,
+Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
         const std::vector<ast::Argument*>& args, Own<ram::Operation> op, bool constrainByFunctors) {
     size_t pos = 0;
 
@@ -344,8 +345,7 @@ Own<ram::Operation> AstToRamTranslator::ClauseTranslator::filterByConstraints(si
     return op;
 }
 
-Own<ast::Clause> AstToRamTranslator::ClauseTranslator::getReorderedClause(
-        const ast::Clause& clause, const int version) const {
+Own<ast::Clause> ClauseTranslator::getReorderedClause(const ast::Clause& clause, const int version) const {
     const auto plan = clause.getExecutionPlan();
 
     // check whether there is an imposed order constraint
@@ -382,7 +382,7 @@ Own<ast::Clause> AstToRamTranslator::ClauseTranslator::getReorderedClause(
     return reorderedClause;
 }
 
-AstToRamTranslator::ClauseTranslator::arg_list* AstToRamTranslator::ClauseTranslator::getArgList(
+ClauseTranslator::arg_list* ClauseTranslator::getArgList(
         const ast::Node* curNode, std::map<const ast::Node*, Own<arg_list>>& nodeArgs) const {
     if (nodeArgs.count(curNode) == 0u) {
         if (auto rec = dynamic_cast<const ast::RecordInit*>(curNode)) {
@@ -396,7 +396,7 @@ AstToRamTranslator::ClauseTranslator::arg_list* AstToRamTranslator::ClauseTransl
     return nodeArgs[curNode].get();
 }
 
-void AstToRamTranslator::ClauseTranslator::indexValues(const ast::Node* curNode,
+void ClauseTranslator::indexValues(const ast::Node* curNode,
         std::map<const ast::Node*, Own<arg_list>>& nodeArgs, std::map<const arg_list*, int>& arg_level,
         ram::RelationReference* relation) {
     arg_list* cur = getArgList(curNode, nodeArgs);
@@ -429,7 +429,7 @@ void AstToRamTranslator::ClauseTranslator::indexValues(const ast::Node* curNode,
 }
 
 /** index values in rule */
-void AstToRamTranslator::ClauseTranslator::createValueIndex(const ast::Clause& clause) {
+void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
     for (const auto* atom : ast::getBodyLiterals<ast::Atom>(clause)) {
         // std::map<const arg_list*, int> arg_level;
         std::map<const ast::Node*, Own<arg_list>> nodeArgs;

@@ -78,8 +78,36 @@ public:
     /** translates AST to translation unit */
     Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
 
-    class ClauseTranslator;
-    class ProvenanceClauseTranslator;
+    /** translate an AST argument to a RAM value */
+    Own<ram::Expression> translateValue(const ast::Argument* arg, const ValueIndex& index);
+
+    /** a utility to translate atoms to relations */
+    Own<ram::RelationReference> translateRelation(const ast::Atom* atom);
+
+    /** translate an AST relation to a RAM relation */
+    Own<ram::RelationReference> translateRelation(
+            const ast::Relation* rel, const std::string relationNamePrefix = "");
+
+    /** IO Type */
+    const ast::analysis::IOTypeAnalysis* ioType = nullptr;
+
+    /** Auxiliary Arity Analysis */
+    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
+
+    /** SIPS metric for reordering */
+    Own<ast::SipsMetric> sips;
+
+    /** determine the auxiliary for relations */
+    size_t getEvaluationArity(const ast::Atom* atom) const;
+
+    /** create a RAM element access node */
+    static Own<ram::TupleElement> makeRamTupleElement(const Location& loc);
+
+    /** translate an AST constraint to a RAM condition */
+    Own<ram::Condition> translateConstraint(const ast::Literal* arg, const ValueIndex& index);
+
+    /** translate RAM code for a constant value */
+    Own<ram::Expression> translateConstant(ast::Constant const& c);
 
 private:
     /** AST program */
@@ -87,12 +115,6 @@ private:
 
     /** Type environment */
     const ast::analysis::TypeEnvironment* typeEnv = nullptr;
-
-    /** IO Type */
-    const ast::analysis::IOTypeAnalysis* ioType = nullptr;
-
-    /** Auxiliary Arity Analysis */
-    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
 
     /** RAM program */
     Own<ram::Statement> ramMain;
@@ -103,17 +125,8 @@ private:
     /** RAM relations */
     std::map<std::string, Own<ram::Relation>> ramRels;
 
-    /** SIPS metric for reordering */
-    Own<ast::SipsMetric> sips;
-
     /** translate AST to RAM Program */
     void translateProgram(const ast::TranslationUnit& translationUnit);
-
-    /** create a RAM element access node */
-    static Own<ram::TupleElement> makeRamTupleElement(const Location& loc);
-
-    /** determine the auxiliary for relations */
-    size_t getEvaluationArity(const ast::Atom* atom) const;
 
     /**
      * assigns names to unnamed variables such that enclosing
@@ -133,33 +146,17 @@ private:
     /** create a reference to a RAM relation */
     Own<ram::RelationReference> createRelationReference(const std::string name);
 
-    /** a utility to translate atoms to relations */
-    Own<ram::RelationReference> translateRelation(const ast::Atom* atom);
-
-    /** translate an AST relation to a RAM relation */
-    Own<ram::RelationReference> translateRelation(
-            const ast::Relation* rel, const std::string relationNamePrefix = "");
-
     /** translate a temporary `delta` relation to a RAM relation for semi-naive evaluation */
     Own<ram::RelationReference> translateDeltaRelation(const ast::Relation* rel);
 
     /** translate a temporary `new` relation to a RAM relation for semi-naive evaluation */
     Own<ram::RelationReference> translateNewRelation(const ast::Relation* rel);
 
-    /** translate an AST argument to a RAM value */
-    Own<ram::Expression> translateValue(const ast::Argument* arg, const ValueIndex& index);
-
-    /** translate an AST constraint to a RAM condition */
-    Own<ram::Condition> translateConstraint(const ast::Literal* arg, const ValueIndex& index);
-
     /** Return a symbol table **/
     SymbolTable& getSymbolTable();
 
     /** Get ram representation of constant */
     RamDomain getConstantRamRepresentation(const ast::Constant& constant);
-
-    /** translate RAM code for a constant value */
-    Own<ram::Expression> translateConstant(ast::Constant const& c);
 
     /**
      * translate RAM code for the non-recursive clauses of the given relation.
