@@ -86,8 +86,8 @@ private:
         tuple t;
 
     public:
-        iterator_wrapper(uint32_t arg_id, const Relation* rel, const typename RelType::iterator& arg_it)
-                : iterator_base(arg_id), it(arg_it), relation(rel), t(rel) {}
+        iterator_wrapper(uint32_t arg_id, const Relation* rel, typename RelType::iterator arg_it)
+                : iterator_base(arg_id), it(std::move(arg_it)), relation(rel), t(rel) {}
         void operator++() override {
             ++it;
         }

@@ -2122,9 +2122,9 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             auto args = op.getArguments();
             if (op.isStateful()) {
                 out << name << "(&symTable, &recordTable";
-                for (size_t i = 0; i < args.size(); i++) {
+                for (auto& arg : args) {
                     out << ",";
-                    visit(args[i], out);
+                    visit(arg, out);
                 }
                 out << ")";
             } else {
