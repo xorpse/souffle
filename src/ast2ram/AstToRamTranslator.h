@@ -19,13 +19,9 @@
 #include "souffle/RamTypes.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <cassert>
-#include <cstddef>
 #include <map>
-#include <memory>
-#include <ostream>
 #include <set>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace souffle {
