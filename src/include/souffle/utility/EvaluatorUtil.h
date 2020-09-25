@@ -18,7 +18,9 @@
 
 #include "souffle/CompiledTuple.h"
 #include "souffle/RamTypes.h"
-#include "tinyformat.h"
+#include "souffle/utility/StringUtil.h"
+#include "souffle/utility/tinyformat.h"
+#include <csignal>
 
 namespace souffle::evaluator {
 

@@ -245,10 +245,10 @@ public:
     class iterator {
     public:
         typedef std::forward_iterator_tag iterator_category;
-        typedef TupleType value_type;
-        typedef ptrdiff_t difference_type;
-        typedef value_type* pointer;
-        typedef value_type& reference;
+        using value_type = TupleType;
+        using difference_type = ptrdiff_t;
+        using pointer = value_type*;
+        using reference = value_type&;
 
         // one iterator for signalling the end (simplifies)
         explicit iterator(const EquivalenceRelation* br, bool /* signalIsEndIterator */)

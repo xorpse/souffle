@@ -78,8 +78,8 @@ bool SearchSignature::empty() const {
 }
 
 bool SearchSignature::containsEquality() const {
-    for (size_t i = 0; i < constraints.size(); ++i) {
-        if (constraints[i] == AttributeConstraint::Equal) {
+    for (auto constraint : constraints) {
+        if (constraint == AttributeConstraint::Equal) {
             return true;
         }
     }

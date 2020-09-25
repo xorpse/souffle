@@ -16,22 +16,19 @@
 
 #include "tests/test.h"
 
-#include "ram/analysis/Analysis.h"
 #include "ram/analysis/Index.h"
 #include <set>
 #include <string>
 
-namespace souffle {
+namespace souffle::ram::analysis::test {
 
 class TestMaxMatching : public MaxMatching {
 public:
     TestMaxMatching() : MaxMatching() {}
 };
 
-using Nodes = std::set<SearchSignature>;
-
 TEST(Matching, StaticTest_1) {
-    TestMaxMatching match;
+    MaxMatching match;
 
     match.addEdge(1, 7);
     match.addEdge(1, 8);
@@ -49,7 +46,7 @@ TEST(Matching, StaticTest_1) {
 }
 
 TEST(Matching, StaticTest_2) {
-    TestMaxMatching match;
+    MaxMatching match;
 
     match.addEdge(1, 6);
     match.addEdge(1, 7);
@@ -68,4 +65,4 @@ TEST(Matching, StaticTest_2) {
     EXPECT_EQ(num, 5);
 }
 
-}  // namespace souffle
+}  // namespace souffle::ram::analysis::test

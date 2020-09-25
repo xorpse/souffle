@@ -1627,10 +1627,10 @@ public:
 
     public:
         typedef std::forward_iterator_tag iterator_category;
-        typedef index_type value_type;
-        typedef ptrdiff_t difference_type;
-        typedef value_type* pointer;
-        typedef value_type& reference;
+        using value_type = index_type;
+        using difference_type = ptrdiff_t;
+        using pointer = value_type*;
+        using reference = value_type&;
 
         // default constructor -- creating an end-iterator
         iterator() = default;
@@ -1909,11 +1909,11 @@ public:
         entry_type value;
 
     public:
-        typedef std::forward_iterator_tag iterator_category;
-        typedef entry_type value_type;
-        typedef ptrdiff_t difference_type;
-        typedef value_type* pointer;
-        typedef value_type& reference;
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = entry_type;
+        using difference_type = ptrdiff_t;
+        using pointer = value_type*;
+        using reference = value_type&;
 
         // default constructor -- creating an end-iterator
         iterator() = default;

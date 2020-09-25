@@ -862,6 +862,7 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
             if (profileEnabled && !cur.getProfileText().empty()) {
                 auto& currentFrequencies = frequencies[cur.getProfileText()];
                 while (currentFrequencies.size() <= getIterationNumber()) {
+#pragma omp critical(frequencies)
                     currentFrequencies.emplace_back(0);
                 }
                 frequencies[cur.getProfileText()][getIterationNumber()]++;
