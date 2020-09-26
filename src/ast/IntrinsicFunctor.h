@@ -76,8 +76,8 @@ public:
     }
 
 protected:
-    IntrinsicFunctor(std::string function, std::optional<FunctorOp> op, VecOwn<Argument> args,
-            SrcLocation loc = {})
+    IntrinsicFunctor(
+            std::string function, std::optional<FunctorOp> op, VecOwn<Argument> args, SrcLocation loc = {})
             : Functor(std::move(args), std::move(loc)), function(std::move(function)), op(op) {}
 
     void print(std::ostream& os) const override {
