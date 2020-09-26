@@ -64,5 +64,10 @@ check_PROGRAMS += matching_test
 matching_test_SOURCES = matching_test.cpp
 matching_test_LDADD = $(top_builddir)/src/libsouffle.la
 
+# matching test
+check_PROGRAMS += max_matching_test
+max_matching_test_SOURCES = max_matching_test.cpp
+max_matching_test_LDADD = $(top_builddir)/src/libsouffle.la
+
 # make all check-programs tests
 TESTS = $(check_PROGRAMS)
