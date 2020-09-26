@@ -50,14 +50,14 @@
 
 namespace souffle::ast::transform {
 typedef MagicSetTransformer::NormaliseDatabaseTransformer NormaliseDatabaseTransformer;
-typedef MagicSetTransformer::LabelDatabaseTransformer LabelDatabaseTransformer;
-typedef MagicSetTransformer::AdornDatabaseTransformer AdornDatabaseTransformer;
-typedef MagicSetTransformer::MagicSetCoreTransformer MagicSetCoreTransformer;
+using LabelDatabaseTransformer = MagicSetTransformer::LabelDatabaseTransformer;
+using AdornDatabaseTransformer = MagicSetTransformer::AdornDatabaseTransformer;
+using MagicSetCoreTransformer = MagicSetTransformer::MagicSetCoreTransformer;
 
-typedef MagicSetTransformer::LabelDatabaseTransformer::NegativeLabellingTransformer
-        NegativeLabellingTransformer;
-typedef MagicSetTransformer::LabelDatabaseTransformer::PositiveLabellingTransformer
-        PositiveLabellingTransformer;
+using NegativeLabellingTransformer =
+        MagicSetTransformer::LabelDatabaseTransformer::NegativeLabellingTransformer;
+using PositiveLabellingTransformer =
+        MagicSetTransformer::LabelDatabaseTransformer::PositiveLabellingTransformer;
 
 std::set<QualifiedName> MagicSetTransformer::getIgnoredRelations(const TranslationUnit& tu) {
     Program& program = tu.getProgram();
