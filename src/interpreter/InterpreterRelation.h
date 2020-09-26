@@ -237,8 +237,8 @@ public:
         RamDomain data[Arity];
 
     public:
-        iterator_base(const typename Index::iterator& iter, Order order)
-                : iter(iter), order(std::move(order)) {}
+        iterator_base(typename Index::iterator iter, Order order)
+                : iter(std::move(iter)), order(std::move(order)) {}
 
         iterator_base& operator++() override {
             ++iter;
