@@ -4,7 +4,10 @@
 // - https://opensource.org/licenses/UPL
 // - <souffle root>/licenses/SOUFFLE-UPL.txt
 
-// Index comparator test for attributes of different type
+// This test is for indirect btree indexes. They are used for
+// relations with six or more attributes. The test ensures
+// that the right comparator is used depending on the type
+// of the attribute.
 
 .decl A(x:unsigned, y:unsigned, z:symbol, x1:symbol, y1:unsigned, z1:unsigned, x2:unsigned)
 A(1,5,"","X",0,0,0).
