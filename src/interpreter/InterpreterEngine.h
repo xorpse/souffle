@@ -48,7 +48,7 @@ class InterpreterProgInterface;
  * @brief This class translate the RAM Program into executable format and interpreter it.
  */
 class InterpreterEngine {
-    using RelationHandle = Own<InterpreterRelation>;
+    using RelationHandle = Own<InterpreterRelationWrapper>;
     friend InterpreterProgInterface;
 
 public:
@@ -85,11 +85,6 @@ private:
     ram::TranslationUnit& getTranslationUnit();
     /** @brief Execute the program */
     RamDomain execute(const InterpreterNode*, InterpreterContext&);
-    /** Execute helper. Common part of Aggregate & AggregateIndex. */
-    template <typename Aggregate>
-    RamDomain executeAggregate(InterpreterContext& ctxt, const Aggregate& aggregate,
-            const InterpreterNode& filter, const InterpreterNode* expression,
-            const InterpreterNode& nestedOperation, Stream stream);
     /** @brief Return method handler */
     void* getMethodHandle(const std::string& method);
     /** @brief Load DLL */
@@ -131,6 +126,68 @@ private:
     NodeGenerator generator;
     /** Record Table*/
     RecordTable recordTable;
+
+    // -- Defines template for specialized interpreter operation -- */
+private:
+    template <typename Rel>
+    RamDomain evalExistenceCheck(const ram::ExistenceCheck& cur, const InterpreterExistenceCheck& shadow,
+            InterpreterContext& ctxt);
+
+    template <typename Rel>
+    RamDomain evalProvenanceExistenceCheck(
+            const InterpreterProvenanceExistenceCheck& shadow, InterpreterContext& ctxt);
+
+    template <typename Rel>
+    RamDomain evalScan(
+            const Rel& rel, const ram::Scan& cur, const InterpreterScan& shadow, InterpreterContext& ctxt);
+
+    template <typename Rel>
+    RamDomain evalParallelScan(const Rel& rel, const ram::ParallelScan& cur,
+            const InterpreterParallelScan& shadow, InterpreterContext& ctxt);
+
+    template <typename Rel>
+    RamDomain evalIndexScan(
+            const ram::IndexScan& cur, const InterpreterIndexScan& shadow, InterpreterContext& ctxt);
+
+    template <typename Rel>
+    RamDomain evalParallelIndexScan(const Rel& rel, const ram::ParallelIndexScan& cur,
+            const InterpreterParallelIndexScan& shadow, InterpreterContext& ctxt);
+
+    template <typename Rel>
+    RamDomain evalChoice(const Rel& rel, const ram::Choice& cur, const InterpreterChoice& shadow,
+            InterpreterContext& ctxt);
+
+    template <typename Rel>
+    RamDomain evalParallelChoice(const Rel& rel, const ram::ParallelChoice& cur,
+            const InterpreterParallelChoice& shadow, InterpreterContext& ctxt);
+
+    template <typename Rel>
+    RamDomain evalIndexChoice(
+            const ram::IndexChoice& cur, const InterpreterIndexChoice& shadow, InterpreterContext& ctxt);
+
+    template <typename Rel>
+    RamDomain evalParallelIndexChoice(const Rel& rel, const ram::ParallelIndexChoice& cur,
+            const InterpreterParallelIndexChoice& shadow, InterpreterContext& ctxt);
+
+    template <typename Aggregate, typename Iter>
+    RamDomain evalAggregate(const Aggregate& aggregate, const InterpreterNode& filter,
+            const InterpreterNode* expression, const InterpreterNode& nestedOperation, const Iter& ranges,
+            InterpreterContext& ctxt);
+
+    template <typename Rel>
+    RamDomain evalParallelAggregate(const Rel& rel, const ram::ParallelAggregate& cur,
+            const InterpreterParallelAggregate& shadow, InterpreterContext& ctxt);
+
+    template <typename Rel>
+    RamDomain evalParallelIndexAggregate(const ram::ParallelIndexAggregate& cur,
+            const InterpreterParallelIndexAggregate& shadow, InterpreterContext& ctxt);
+
+    template <typename Rel>
+    RamDomain evalIndexAggregate(const ram::IndexAggregate& cur, const InterpreterIndexAggregate& shadow,
+            InterpreterContext& ctxt);
+
+    template <typename Rel>
+    RamDomain evalProject(Rel& rel, const InterpreterProject& shadow, InterpreterContext& ctxt);
 };
 
 }  // namespace souffle

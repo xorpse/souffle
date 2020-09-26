@@ -197,15 +197,13 @@ souffle_sources = \
         interpreter/InterpreterBrieIndex.cpp               \
         interpreter/InterpreterBTreeIndex.cpp              \
         interpreter/InterpreterEqrelIndex.cpp              \
-        interpreter/InterpreterIndirectIndex.cpp           \
         interpreter/InterpreterProvenanceIndex.cpp         \
-        interpreter/InterpreterIndex.cpp                   \
         interpreter/InterpreterIndex.h                     \
         interpreter/InterpreterNode.h                      \
         interpreter/InterpreterViewContext.h               \
         interpreter/InterpreterProgInterface.h             \
-        interpreter/InterpreterRelation.cpp                \
         interpreter/InterpreterRelation.h                  \
+        interpreter/InterpreterUtil.h                      \
         parser/ParserDriver.cpp                            \
         parser/ParserDriver.h                              \
         parser/ParserUtils.cpp                             \

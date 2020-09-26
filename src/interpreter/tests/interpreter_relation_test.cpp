@@ -34,15 +34,34 @@ TEST(Relation0, Construction) {
     SymbolTable symbolTable;
     MinIndexSelection order{};
     order.insertDefaultTotalIndex(0);
-    InterpreterRelation rel(0, 0, "test", {}, order);
-    InterpreterRelInterface relInt(rel, symbolTable, "test", {}, {}, 0);
+    InterpreterRelation<0, InterpreterBtree> rel(0, "test", order);
 
+    souffle::Tuple<RamDomain, 0> tuple;
     // add some values
     EXPECT_EQ(0, rel.size());
-    relInt.insert(tuple(&relInt, {}));
+    rel.insert(tuple);
     EXPECT_EQ(1, rel.size());
-    relInt.insert(tuple(&relInt, {}));
+    rel.insert(tuple);
     EXPECT_EQ(1, rel.size());
+}
+
+TEST(Relation0, Iteration) {
+    // create a nullary relation
+    SymbolTable symbolTable;
+    MinIndexSelection order{};
+    order.insertDefaultTotalIndex(0);
+    InterpreterRelation<0, InterpreterBtree> rel(0, "test", order);
+    InterpreterRelationWrapper* wrapper = &rel;
+
+    souffle::Tuple<RamDomain, 0> tuple;
+
+    // empty relation
+    EXPECT_EQ(wrapper->begin() == wrapper->end(), true);
+
+    // add some values
+    rel.insert(tuple);
+
+    EXPECT_EQ(wrapper->begin() == wrapper->end(), false);
 }
 
 TEST(Relation1, Construction) {
@@ -50,7 +69,7 @@ TEST(Relation1, Construction) {
     SymbolTable symbolTable;
     MinIndexSelection order{};
     order.insertDefaultTotalIndex(1);
-    InterpreterRelation rel(1, 0, "test", {"i"}, order);
+    InterpreterRelation<1, InterpreterBtree> rel(0, "test", order);
     InterpreterRelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
 
     tuple d1(&relInt, {1});
@@ -71,7 +90,7 @@ TEST(Basic, Iteration) {
     SymbolTable symbolTable;
     MinIndexSelection order{};
     order.insertDefaultTotalIndex(1);
-    InterpreterRelation rel(1, 0, "test", {"i"}, order);
+    InterpreterRelation<1, InterpreterBtree> rel(0, "test", order);
     InterpreterRelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
 
     // add some values
@@ -98,7 +117,7 @@ TEST(Independence, Iteration) {
     SymbolTable symbolTable;
     MinIndexSelection order{};
     order.insertDefaultTotalIndex(1);
-    InterpreterRelation rel(1, 0, "test", {"i"}, order);
+    InterpreterRelation<1, InterpreterBtree> rel(0, "test", order);
     InterpreterRelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
 
     // add a value
@@ -126,7 +145,7 @@ TEST(IndependentMoving, Iteration) {
     SymbolTable symbolTable;
     MinIndexSelection order{};
     order.insertDefaultTotalIndex(1);
-    InterpreterRelation rel(1, 0, "test", {"i"}, order);
+    InterpreterRelation<1, InterpreterBtree> rel(0, "test", order);
     InterpreterRelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
 
     // add a value
@@ -149,7 +168,7 @@ TEST(IndependentCopying, Iteration) {
     SymbolTable symbolTable;
     MinIndexSelection order{};
     order.insertDefaultTotalIndex(1);
-    InterpreterRelation rel(1, 0, "test", {"i"}, order);
+    InterpreterRelation<1, InterpreterBtree> rel(0, "test", order);
     InterpreterRelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
 
     // add a value
@@ -165,6 +184,48 @@ TEST(IndependentCopying, Iteration) {
         it = it2;
     }
     EXPECT_EQ(1, (*it)[0]);
+}
+
+TEST(Reordering, Iteration) {
+    // create a relation, with a non-default ordering.
+    SymbolTable symbolTable;
+
+    // create an index of order {0, 2, 1}
+    MinIndexSelection order{};
+    ram::analysis::SearchSignature cols(3);
+    cols[0] = ram::analysis::AttributeConstraint::Equal;
+    cols[1] = ram::analysis::AttributeConstraint::None;
+    cols[2] = ram::analysis::AttributeConstraint::Equal;
+    order.addSearch(cols);
+    order.solve();
+
+    InterpreterRelation<3, InterpreterBtree> rel(0, "test", order);
+    souffle::Tuple<RamDomain, 3> tuple{0, 1, 2};
+    rel.insert(tuple);
+
+    // Scan should give undecoded tuple.
+    {
+        const auto& t = *(rel.scan().begin());
+        EXPECT_EQ((souffle::Tuple<RamDomain, 3>{0, 2, 1}), t);
+    }
+
+    // For-each should give decoded tuple.
+    {
+        auto t = rel.begin();
+        EXPECT_EQ(0, (*t)[0]);
+        EXPECT_EQ(1, (*t)[1]);
+        EXPECT_EQ(2, (*t)[2]);
+    }
+
+    InterpreterRelInterface relInt(rel, symbolTable, "test", {"i", "i", "i"}, {"i", "i", "i"}, 3);
+
+    // ProgInterface should give decoded tuple.
+    {
+        const auto it = relInt.begin();
+        EXPECT_EQ(0, (*it)[0]);
+        EXPECT_EQ(1, (*it)[1]);
+        EXPECT_EQ(2, (*it)[2]);
+    }
 }
 
 }  // end namespace souffle::test

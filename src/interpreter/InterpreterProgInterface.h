@@ -46,8 +46,8 @@ namespace souffle {
  */
 class InterpreterRelInterface : public Relation {
 public:
-    InterpreterRelInterface(InterpreterRelation& r, SymbolTable& s, std::string n, std::vector<std::string> t,
-            std::vector<std::string> an, uint32_t i)
+    InterpreterRelInterface(InterpreterRelationWrapper& r, SymbolTable& s, std::string n,
+            std::vector<std::string> t, std::vector<std::string> an, uint32_t i)
             : relation(r), symTable(s), name(std::move(n)), types(std::move(t)), attrNames(std::move(an)),
               id(i) {}
     ~InterpreterRelInterface() override = default;
@@ -59,7 +59,7 @@ public:
 
     /** Check whether tuple exists */
     bool contains(const tuple& t) const override {
-        return relation.contains(TupleRef(&t.data[0], t.size()));
+        return relation.contains(t.data);
     }
 
     /** Iterator to first tuple */
@@ -122,8 +122,9 @@ protected:
      */
     class iterator_base : public Relation::iterator_base {
     public:
-        iterator_base(uint32_t arg_id, const InterpreterRelInterface* r, InterpreterRelation::Iterator i)
-                : Relation::iterator_base(arg_id), ramRelationInterface(r), it(std::move(i)), tup(r) {}
+        iterator_base(
+                uint32_t arg_id, const InterpreterRelInterface* r, InterpreterRelationWrapper::Iterator i)
+                : Relation::iterator_base(arg_id), ramRelationInterface(r), it(i), tup(r) {}
         ~iterator_base() override = default;
 
         /** Increment iterator */
@@ -180,13 +181,13 @@ protected:
 
     private:
         const InterpreterRelInterface* ramRelationInterface;
-        InterpreterRelation::Iterator it;
+        InterpreterRelationWrapper::Iterator it;
         tuple tup;
     };
 
 private:
     /** Wrapped interpreter relation */
-    InterpreterRelation& relation;
+    InterpreterRelationWrapper& relation;
 
     /** Symbol table */
     SymbolTable& symTable;

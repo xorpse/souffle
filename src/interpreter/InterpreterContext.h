@@ -31,7 +31,7 @@ namespace souffle {
  * Evaluation context for Interpreter operations
  */
 class InterpreterContext {
-    using ViewPtr = Own<IndexView>;
+    using ViewPtr = Own<InterpreterViewWrapper>;
 
     /** @brief Run-time value */
     std::vector<const RamDomain*> data;
@@ -42,7 +42,7 @@ class InterpreterContext {
     /** @bref Allocated data */
     VecOwn<RamDomain[]> allocatedDataContainer;
     /** @brief Views */
-    VecOwn<IndexView> views;
+    VecOwn<InterpreterViewWrapper> views;
 
 public:
     InterpreterContext(size_t size = 0) : data(size) {}
@@ -106,18 +106,18 @@ public:
     }
 
     /** @brief Create a view in the environment */
-    void createView(const InterpreterRelation& rel, size_t indexPos, size_t viewPos) {
+    void createView(const InterpreterRelationWrapper& rel, size_t indexPos, size_t viewPos) {
         ViewPtr view;
         if (views.size() < viewPos + 1) {
             views.resize(viewPos + 1);
         }
-        views[viewPos] = rel.getView(indexPos);
+        views[viewPos] = rel.createView(indexPos);
     }
 
     /** @brief Return a view */
-    ViewPtr& getView(size_t id) {
+    InterpreterViewWrapper* getView(size_t id) {
         assert(id < views.size());
-        return views[id];
+        return views[id].get();
     }
 };
 
