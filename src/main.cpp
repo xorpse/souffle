@@ -58,8 +58,8 @@
 #include "ast/transform/UniqueAggregationVariables.h"
 #include "ast2ram/AstToRamTranslator.h"
 #include "config.h"
-#include "interpreter/InterpreterEngine.h"
-#include "interpreter/InterpreterProgInterface.h"
+#include "interpreter/Engine.h"
+#include "interpreter/ProgInterface.h"
 #include "parser/ParserDriver.h"
 #include "ram/Node.h"
 #include "ram/Program.h"
@@ -630,7 +630,7 @@ int main(int argc, char** argv) {
             }
 
             // configure and execute interpreter
-            Own<InterpreterEngine> interpreter(mk<InterpreterEngine>(*ramTranslationUnit));
+            Own<interpreter::Engine> interpreter(mk<interpreter::Engine>(*ramTranslationUnit));
             interpreter->executeMain();
             // If the profiler was started, join back here once it exits.
             if (profiler.joinable()) {
@@ -638,7 +638,7 @@ int main(int argc, char** argv) {
             }
             if (Global::config().has("provenance")) {
                 // only run explain interface if interpreted
-                InterpreterProgInterface interface(*interpreter);
+                interpreter::ProgInterface interface(*interpreter);
                 if (Global::config().get("provenance") == "explain") {
                     explain(interface, false);
                 } else if (Global::config().get("provenance") == "explore") {

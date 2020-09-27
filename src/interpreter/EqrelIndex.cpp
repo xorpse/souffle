@@ -8,22 +8,22 @@
 
 /************************************************************************
  *
- * @file InterpreterEqrelIndex.cpp
+ * @file EqrelIndex.cpp
  *
  * Interpreter index with generic interface.
  *
  ***********************************************************************/
 
-#include "interpreter/InterpreterRelation.h"
+#include "interpreter/Relation.h"
 #include "ram/Relation.h"
 #include "ram/analysis/Index.h"
 
-namespace souffle {
+namespace souffle::interpreter {
 
-Own<InterpreterRelationWrapper> createEqrelRelation(
+Own<RelationWrapper> createEqrelRelation(
         const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet) {
     assert(id.getArity() == 2 && "Eqivalence relation must have arity size 2.");
-    return mk<InterpreterEqrelRelation>(id.getAuxiliaryArity(), id.getName(), orderSet);
+    return mk<EqrelRelation>(id.getAuxiliaryArity(), id.getName(), orderSet);
 }
 
-}  // namespace souffle
+}  // namespace souffle::interpreter

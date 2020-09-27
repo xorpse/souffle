@@ -190,20 +190,20 @@ souffle_sources = \
         ast/utility/Visitor.h                              \
         ast2ram/AstToRamTranslator.cpp                     \
         ast2ram/AstToRamTranslator.h                       \
-        interpreter/InterpreterContext.h                   \
-        interpreter/InterpreterEngine.cpp                  \
-        interpreter/InterpreterEngine.h                    \
-        interpreter/InterpreterGenerator.h                 \
-        interpreter/InterpreterBrieIndex.cpp               \
-        interpreter/InterpreterBTreeIndex.cpp              \
-        interpreter/InterpreterEqrelIndex.cpp              \
-        interpreter/InterpreterProvenanceIndex.cpp         \
-        interpreter/InterpreterIndex.h                     \
-        interpreter/InterpreterNode.h                      \
-        interpreter/InterpreterViewContext.h               \
-        interpreter/InterpreterProgInterface.h             \
-        interpreter/InterpreterRelation.h                  \
-        interpreter/InterpreterUtil.h                      \
+        interpreter/Context.h                              \
+        interpreter/Engine.cpp                             \
+        interpreter/Engine.h                               \
+        interpreter/Generator.h                            \
+        interpreter/BrieIndex.cpp                          \
+        interpreter/BTreeIndex.cpp                         \
+        interpreter/EqrelIndex.cpp                         \
+        interpreter/ProvenanceIndex.cpp                    \
+        interpreter/Index.h                                \
+        interpreter/Node.h                                 \
+        interpreter/ViewContext.h                          \
+        interpreter/ProgInterface.h                        \
+        interpreter/Relation.h                             \
+        interpreter/Util.h                                 \
         parser/ParserDriver.cpp                            \
         parser/ParserDriver.h                              \
         parser/ParserUtils.cpp                             \

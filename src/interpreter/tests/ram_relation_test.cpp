@@ -18,7 +18,7 @@
 
 #include "Global.h"
 #include "RelationTag.h"
-#include "interpreter/InterpreterEngine.h"
+#include "interpreter/Engine.h"
 #include "ram/Expression.h"
 #include "ram/IO.h"
 #include "ram/Program.h"
@@ -33,6 +33,7 @@
 #include "reports/ErrorReport.h"
 #include "souffle/RamTypes.h"
 #include "souffle/SymbolTable.h"
+#include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/json11.h"
 #include <algorithm>
 #include <cstddef>
@@ -46,7 +47,9 @@
 #include <utility>
 #include <vector>
 
-namespace souffle::ram::test {
+namespace souffle::interpreter::test {
+
+using namespace ram;
 
 using json11::Json;
 
@@ -58,9 +61,9 @@ const std::string testInterpreterStore(
 
     const size_t arity = attribs.size();
 
-    VecOwn<Relation> rels;
-    Own<Relation> myrel =
-            mk<Relation>("test", arity, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
+    VecOwn<ram::Relation> rels;
+    Own<ram::Relation> myrel =
+            mk<ram::Relation>("test", arity, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
 
     Own<RelationReference> ref1 = mk<RelationReference>(myrel.get());
     Own<RelationReference> ref2 = mk<RelationReference>(myrel.get());
@@ -74,12 +77,13 @@ const std::string testInterpreterStore(
 
     std::map<std::string, std::string> ioDirs = std::map<std::string, std::string>(dirs);
 
-    Own<Statement> main = mk<Sequence>(
-            mk<Query>(mk<Project>(std::move(ref1), std::move(exprs))), mk<IO>(std::move(ref2), ioDirs));
+    Own<ram::Statement> main =
+            mk<ram::Sequence>(mk<ram::Query>(mk<ram::Project>(std::move(ref1), std::move(exprs))),
+                    mk<ram::IO>(std::move(ref2), ioDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
-    Own<Program> prog = mk<Program>(std::move(rels), std::move(main), std::move(subs));
+    Own<ram::Program> prog = mk<Program>(std::move(rels), std::move(main), std::move(subs));
 
     SymbolTable symTab;
     ErrorReport errReport;
@@ -88,7 +92,7 @@ const std::string testInterpreterStore(
     TranslationUnit translationUnit(std::move(prog), symTab, errReport, debugReport);
 
     // configure and execute interpreter
-    Own<InterpreterEngine> interpreter = mk<InterpreterEngine>(translationUnit);
+    Own<Engine> interpreter = mk<Engine>(translationUnit);
 
     std::streambuf* oldCoutStreambuf = std::cout.rdbuf();
     std::ostringstream sout;
@@ -237,7 +241,7 @@ TEST(IO_store, SignedChangedDelimiter) {
 
     Global::config().set("jobs", "1");
 
-    VecOwn<Relation> rels;
+    VecOwn<ram::Relation> rels;
 
     // a0 a1 a2...
     std::vector<std::string> attribs(RANDOM_TESTS, "a");
@@ -247,8 +251,8 @@ TEST(IO_store, SignedChangedDelimiter) {
 
     std::vector<std::string> attribsTypes(RANDOM_TESTS, "i");
 
-    Own<Relation> myrel =
-            mk<Relation>("test", RANDOM_TESTS, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
+    Own<ram::Relation> myrel =
+            mk<ram::Relation>("test", RANDOM_TESTS, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
     Own<RelationReference> ref1 = mk<RelationReference>(myrel.get());
     Own<RelationReference> ref2 = mk<RelationReference>(myrel.get());
 
@@ -267,8 +271,9 @@ TEST(IO_store, SignedChangedDelimiter) {
         exprs.push_back(mk<SignedConstant>(i));
     }
 
-    Own<Statement> main = mk<Sequence>(
-            mk<Query>(mk<Project>(std::move(ref1), std::move(exprs))), mk<IO>(std::move(ref2), ioDirs));
+    Own<ram::Statement> main =
+            mk<ram::Sequence>(mk<ram::Query>(mk<ram::Project>(std::move(ref1), std::move(exprs))),
+                    mk<ram::IO>(std::move(ref2), ioDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -281,7 +286,7 @@ TEST(IO_store, SignedChangedDelimiter) {
     TranslationUnit translationUnit(std::move(prog), symTab, errReport, debugReport);
 
     // configure and execute interpreter
-    Own<InterpreterEngine> interpreter = mk<InterpreterEngine>(translationUnit);
+    Own<Engine> interpreter = mk<Engine>(translationUnit);
 
     std::streambuf* oldCoutStreambuf = std::cout.rdbuf();
     std::ostringstream sout;
@@ -313,13 +318,14 @@ TEST(IO_store, SignedChangedDelimiter) {
 TEST(IO_store, MixedTypes) {
     Global::config().set("jobs", "1");
 
-    VecOwn<Relation> rels;
+    VecOwn<ram::Relation> rels;
 
     std::vector<std::string> attribs{"t", "o", "s", "i", "a"};
 
     std::vector<std::string> attribsTypes{"i", "u", "f", "f", "s"};
 
-    Own<Relation> myrel = mk<Relation>("test", 5, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
+    Own<ram::Relation> myrel =
+            mk<ram::Relation>("test", 5, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
     Own<RelationReference> ref1 = mk<RelationReference>(myrel.get());
     Own<RelationReference> ref2 = mk<RelationReference>(myrel.get());
 
@@ -344,8 +350,9 @@ TEST(IO_store, MixedTypes) {
     exprs.push_back(mk<SignedConstant>(ramBitCast(static_cast<RamFloat>(floatValue))));
     exprs.push_back(mk<SignedConstant>(symbolTable.lookup("meow")));
 
-    Own<Statement> main = mk<Sequence>(
-            mk<Query>(mk<Project>(std::move(ref1), std::move(exprs))), mk<IO>(std::move(ref2), ioDirs));
+    Own<ram::Statement> main =
+            mk<ram::Sequence>(mk<ram::Query>(mk<ram::Project>(std::move(ref1), std::move(exprs))),
+                    mk<ram::IO>(std::move(ref2), ioDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -354,7 +361,7 @@ TEST(IO_store, MixedTypes) {
     TranslationUnit translationUnit(std::move(prog), symbolTable, errReport, debugReport);
 
     // configure and execute interpreter
-    Own<InterpreterEngine> interpreter = mk<InterpreterEngine>(translationUnit);
+    Own<Engine> interpreter = mk<Engine>(translationUnit);
 
     std::streambuf* oldCoutStreambuf = std::cout.rdbuf();
     std::ostringstream sout;
@@ -388,11 +395,12 @@ TEST(IO_load, Signed) {
 
     Global::config().set("jobs", "1");
 
-    VecOwn<Relation> rels;
+    VecOwn<ram::Relation> rels;
 
     std::vector<std::string> attribs = {"a", "b"};
     std::vector<std::string> attribsTypes = {"i", "i"};
-    Own<Relation> myrel = mk<Relation>("test", 2, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
+    Own<ram::Relation> myrel =
+            mk<ram::Relation>("test", 2, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
     Own<RelationReference> ref1 = mk<RelationReference>(myrel.get());
     Own<RelationReference> ref2 = mk<RelationReference>(myrel.get());
 
@@ -409,8 +417,8 @@ TEST(IO_load, Signed) {
             {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> writeIoDirs = std::map<std::string, std::string>(writeDirs);
 
-    Own<Statement> main =
-            mk<Sequence>(mk<IO>(std::move(ref1), readIoDirs), mk<IO>(std::move(ref2), writeIoDirs));
+    Own<ram::Statement> main = mk<ram::Sequence>(
+            mk<ram::IO>(std::move(ref1), readIoDirs), mk<ram::IO>(std::move(ref2), writeIoDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -423,7 +431,7 @@ TEST(IO_load, Signed) {
     TranslationUnit translationUnit(std::move(prog), symTab, errReport, debugReport);
 
     // configure and execute interpreter
-    Own<InterpreterEngine> interpreter = mk<InterpreterEngine>(translationUnit);
+    Own<Engine> interpreter = mk<Engine>(translationUnit);
 
     std::streambuf* oldCoutStreambuf = std::cout.rdbuf();
     std::ostringstream sout;
@@ -451,11 +459,12 @@ TEST(IO_load, Float) {
 
     Global::config().set("jobs", "1");
 
-    VecOwn<Relation> rels;
+    VecOwn<ram::Relation> rels;
 
     std::vector<std::string> attribs = {"a", "b"};
     std::vector<std::string> attribsTypes = {"f", "f"};
-    Own<Relation> myrel = mk<Relation>("test", 2, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
+    Own<ram::Relation> myrel =
+            mk<ram::Relation>("test", 2, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
     Own<RelationReference> ref1 = mk<RelationReference>(myrel.get());
     Own<RelationReference> ref2 = mk<RelationReference>(myrel.get());
 
@@ -472,8 +481,8 @@ TEST(IO_load, Float) {
             {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> writeIoDirs = std::map<std::string, std::string>(writeDirs);
 
-    Own<Statement> main =
-            mk<Sequence>(mk<IO>(std::move(ref1), readIoDirs), mk<IO>(std::move(ref2), writeIoDirs));
+    Own<ram::Statement> main = mk<ram::Sequence>(
+            mk<ram::IO>(std::move(ref1), readIoDirs), mk<ram::IO>(std::move(ref2), writeIoDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -486,7 +495,7 @@ TEST(IO_load, Float) {
     TranslationUnit translationUnit(std::move(prog), symTab, errReport, debugReport);
 
     // configure and execute interpreter
-    Own<InterpreterEngine> interpreter = mk<InterpreterEngine>(translationUnit);
+    Own<Engine> interpreter = mk<Engine>(translationUnit);
 
     std::streambuf* oldCoutStreambuf = std::cout.rdbuf();
     std::ostringstream sout;
@@ -514,11 +523,12 @@ TEST(IO_load, Unsigned) {
 
     Global::config().set("jobs", "1");
 
-    VecOwn<Relation> rels;
+    VecOwn<ram::Relation> rels;
 
     std::vector<std::string> attribs = {"a", "b"};
     std::vector<std::string> attribsTypes = {"u", "u"};
-    Own<Relation> myrel = mk<Relation>("test", 2, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
+    Own<ram::Relation> myrel =
+            mk<ram::Relation>("test", 2, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
     Own<RelationReference> ref1 = mk<RelationReference>(myrel.get());
     Own<RelationReference> ref2 = mk<RelationReference>(myrel.get());
 
@@ -535,8 +545,8 @@ TEST(IO_load, Unsigned) {
             {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> writeIoDirs = std::map<std::string, std::string>(writeDirs);
 
-    Own<Statement> main =
-            mk<Sequence>(mk<IO>(std::move(ref1), readIoDirs), mk<IO>(std::move(ref2), writeIoDirs));
+    Own<ram::Statement> main = mk<ram::Sequence>(
+            mk<ram::IO>(std::move(ref1), readIoDirs), mk<ram::IO>(std::move(ref2), writeIoDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -549,7 +559,7 @@ TEST(IO_load, Unsigned) {
     TranslationUnit translationUnit(std::move(prog), symTab, errReport, debugReport);
 
     // configure and execute interpreter
-    Own<InterpreterEngine> interpreter = mk<InterpreterEngine>(translationUnit);
+    Own<Engine> interpreter = mk<Engine>(translationUnit);
 
     std::streambuf* oldCoutStreambuf = std::cout.rdbuf();
     std::ostringstream sout;
@@ -577,11 +587,12 @@ TEST(IO_load, MixedTypesLoad) {
 
     Global::config().set("jobs", "1");
 
-    VecOwn<Relation> rels;
+    VecOwn<ram::Relation> rels;
 
     std::vector<std::string> attribs = {"l", "u", "b", "a"};
     std::vector<std::string> attribsTypes = {"s", "i", "u", "f"};
-    Own<Relation> myrel = mk<Relation>("test", 4, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
+    Own<ram::Relation> myrel =
+            mk<ram::Relation>("test", 4, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
     Own<RelationReference> ref1 = mk<RelationReference>(myrel.get());
     Own<RelationReference> ref2 = mk<RelationReference>(myrel.get());
 
@@ -598,8 +609,8 @@ TEST(IO_load, MixedTypesLoad) {
             {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> writeIoDirs = std::map<std::string, std::string>(writeDirs);
 
-    Own<Statement> main =
-            mk<Sequence>(mk<IO>(std::move(ref1), readIoDirs), mk<IO>(std::move(ref2), writeIoDirs));
+    Own<ram::Statement> main = mk<ram::Sequence>(
+            mk<ram::IO>(std::move(ref1), readIoDirs), mk<ram::IO>(std::move(ref2), writeIoDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -612,7 +623,7 @@ TEST(IO_load, MixedTypesLoad) {
     TranslationUnit translationUnit(std::move(prog), symTab, errReport, debugReport);
 
     // configure and execute interpreter
-    Own<InterpreterEngine> interpreter = mk<InterpreterEngine>(translationUnit);
+    Own<Engine> interpreter = mk<Engine>(translationUnit);
 
     std::streambuf* oldCoutStreambuf = std::cout.rdbuf();
     std::ostringstream sout;
@@ -634,4 +645,4 @@ meow	-3	3	0.5
     std::cin.rdbuf(backupCin);
 }
 
-}  // namespace souffle::ram::test
+}  // namespace souffle::interpreter::test

@@ -8,26 +8,25 @@
 
 /************************************************************************
  *
- * @file InterpreterBTreeIndex.cpp
+ * @file BTreeIndex.cpp
  *
  * Interpreter index with generic interface.
  *
  ***********************************************************************/
 
-#include "interpreter/InterpreterRelation.h"
+#include "interpreter/Relation.h"
 #include "ram/Relation.h"
 #include "ram/analysis/Index.h"
 #include "souffle/utility/MiscUtil.h"
 
-namespace souffle {
+namespace souffle::interpreter {
 
-#define CREATE_BTREE_REL(Structure, Arity, ...)                  \
-    case (Arity): {                                              \
-        return mk<InterpreterRelation<Arity, InterpreterBtree>>( \
-                id.getAuxiliaryArity(), id.getName(), orderSet); \
+#define CREATE_BTREE_REL(Structure, Arity, ...)                                                         \
+    case (Arity): {                                                                                     \
+        return mk<Relation<Arity, interpreter::Btree>>(id.getAuxiliaryArity(), id.getName(), orderSet); \
     }
 
-Own<InterpreterRelationWrapper> createBTreeRelation(
+Own<RelationWrapper> createBTreeRelation(
         const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet) {
     switch (id.getArity()) {
         FOR_EACH_BTREE(CREATE_BTREE_REL);
@@ -35,4 +34,5 @@ Own<InterpreterRelationWrapper> createBTreeRelation(
         default: fatal("Requested arity not yet supported. Feel free to add it.");
     }
 }
-}  // namespace souffle
+
+}  // namespace souffle::interpreter
