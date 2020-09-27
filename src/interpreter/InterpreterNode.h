@@ -23,74 +23,134 @@
 
 #pragma once
 
+#include "interpreter/InterpreterUtil.h"
+#include "ram/Relation.h"
 #include "souffle/RamTypes.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <array>
 #include <cassert>
 #include <cstddef>
 #include <memory>
+#include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
 namespace souffle {
 class InterpreterViewContext;
-class InterpreterRelation;
+class InterpreterRelationWrapper;
 
 namespace ram {
 class Node;
 }
 
+// clang-format off
+
+/* This macro defines all the interpreterNode token. 
+ * For common operation, pass to Forward. 
+ * For specialized operation, pass to FOR_EACH(Expand, tok)
+ */
+#define FOR_EACH_INTERPRETER_TOKEN(Forward, Expand)\
+    Forward(Constant)\
+    Forward(TupleElement)\
+    Forward(AutoIncrement)\
+    Forward(IntrinsicOperator)\
+    Forward(UserDefinedOperator)\
+    Forward(NestedIntrinsicOperator)\
+    Forward(PackRecord)\
+    Forward(SubroutineArgument)\
+    Forward(True)\
+    Forward(False)\
+    Forward(Conjunction)\
+    Forward(Negation)\
+    FOR_EACH(Expand, EmptinessCheck)\
+    FOR_EACH(Expand, RelationSize)\
+    FOR_EACH(Expand, ExistenceCheck)\
+    FOR_EACH_PROVENANCE(Expand, ProvenanceExistenceCheck)\
+    Forward(Constraint)\
+    Forward(TupleOperation)\
+    FOR_EACH(Expand, Scan)\
+    FOR_EACH(Expand, ParallelScan)\
+    FOR_EACH(Expand, IndexScan)\
+    FOR_EACH(Expand, ParallelIndexScan)\
+    FOR_EACH(Expand, Choice)\
+    FOR_EACH(Expand, ParallelChoice)\
+    FOR_EACH(Expand, IndexChoice)\
+    FOR_EACH(Expand, ParallelIndexChoice)\
+    Forward(UnpackRecord)\
+    FOR_EACH(Expand, Aggregate)\
+    FOR_EACH(Expand, ParallelAggregate)\
+    FOR_EACH(Expand, IndexAggregate)\
+    FOR_EACH(Expand, ParallelIndexAggregate)\
+    Forward(Break)\
+    Forward(Filter)\
+    FOR_EACH(Expand, Project)\
+    Forward(SubroutineReturn)\
+    Forward(Sequence)\
+    Forward(Parallel)\
+    Forward(Loop)\
+    Forward(Exit)\
+    Forward(LogRelationTimer)\
+    Forward(LogTimer)\
+    Forward(DebugInfo)\
+    FOR_EACH(Expand, Clear)\
+    Forward(LogSize)\
+    Forward(IO)\
+    Forward(Query)\
+    Forward(Extend)\
+    Forward(Swap)\
+    Forward(Call)
+
+#define SINGLE_TOKEN(tok) I_##tok,
+
+#define EXPAND_TOKEN(structure, arity, tok)\
+    I_##tok##_##structure##_##arity,
+
+/* 
+ * Declares all the tokens.
+ * For Forward token OP, creates I_OP
+ * For Extended token OP, generate I_OP_Structure_Arity for each data structure and supported arity.
+ */
 enum InterpreterNodeType {
-    I_Constant,
-    I_TupleElement,
-    I_AutoIncrement,
-    I_IntrinsicOperator,
-    I_UserDefinedOperator,
-    I_NestedIntrinsicOperator,
-    I_PackRecord,
-    I_SubroutineArgument,
-    I_True,
-    I_False,
-    I_Conjunction,
-    I_Negation,
-    I_EmptinessCheck,
-    I_RelationSize,
-    I_ExistenceCheck,
-    I_ProvenanceExistenceCheck,
-    I_Constraint,
-    I_TupleOperation,
-    I_Scan,
-    I_ParallelScan,
-    I_IndexScan,
-    I_ParallelIndexScan,
-    I_Choice,
-    I_ParallelChoice,
-    I_IndexChoice,
-    I_ParallelIndexChoice,
-    I_UnpackRecord,
-    I_Aggregate,
-    I_ParallelAggregate,
-    I_IndexAggregate,
-    I_ParallelIndexAggregate,
-    I_Break,
-    I_Filter,
-    I_Project,
-    I_SubroutineReturn,
-    I_Sequence,
-    I_Parallel,
-    I_Loop,
-    I_Exit,
-    I_LogRelationTimer,
-    I_LogTimer,
-    I_DebugInfo,
-    I_Clear,
-    I_LogSize,
-    I_IO,
-    I_Query,
-    I_Extend,
-    I_Swap,
-    I_Call
+    FOR_EACH_INTERPRETER_TOKEN(SINGLE_TOKEN, EXPAND_TOKEN)
 };
+
+#undef SINGLE_TOKEN
+#undef EXPAND_TOKEN
+
+#define __TO_STRING(a) #a
+#define SINGLE_TOKEN_ENTRY(tok) {__TO_STRING(I_##tok), I_##tok},
+#define EXPAND_TOKEN_ENTRY(Structure, arity, tok) \
+    {__TO_STRING(I_##tok##_##Structure##_##arity), I_##tok##_##Structure##_##arity},
+
+/**
+ * Construct interpreterNodeType by looking at the representation and the arity of the given rel.
+ *
+ * Add reflective from string to InterpreterNodeType.
+ */
+inline InterpreterNodeType constructInterpreterNodeType(std::string tokBase, const ram::Relation& rel) {
+    static bool isProvenance = Global::config().has("provenance");
+
+    static const std::unordered_map<std::string, InterpreterNodeType> map = {
+            FOR_EACH_INTERPRETER_TOKEN(SINGLE_TOKEN_ENTRY, EXPAND_TOKEN_ENTRY)
+    };
+
+    std::string arity = std::to_string(rel.getArity());
+    if (rel.getRepresentation() == RelationRepresentation::EQREL) {
+        return map.at("I_" + tokBase + "_Eqrel_" + arity);
+    } else if (isProvenance) {
+        return map.at("I_" + tokBase + "_Provenance_" + arity);
+    } else {
+        return map.at("I_" + tokBase + "_Btree_" + arity);
+    }
+    fatal("Unrecognized node type: base:%s arity:%s.", tokBase, arity);
+}
+
+#undef __TO_STRING
+#undef EXPAND_TOKEN_ENTRY
+#undef SINGLE_TOKEN_ENTRY
+
+// clang-format on
 
 /**
  * @class InterpreterNode
@@ -101,7 +161,7 @@ enum InterpreterNodeType {
 
 class InterpreterNode {
 public:
-    using RelationHandle = Own<InterpreterRelation>;
+    using RelationHandle = Own<InterpreterRelationWrapper>;
 
     InterpreterNode(enum InterpreterNodeType ty, const ram::Node* sdw, RelationHandle* relHandle = nullptr)
             : type(ty), shadow(sdw), relHandle(relHandle) {}
@@ -118,7 +178,7 @@ public:
     }
 
     /** @brief get relation from handle */
-    InterpreterRelation* getRelation() const {
+    InterpreterRelationWrapper* getRelation() const {
         assert(relHandle && "No relation cached\n");
         return (*relHandle).get();
     }
@@ -348,7 +408,22 @@ class InterpreterConstant : public InterpreterNode {
  * @class InterpreterTupleElement
  */
 class InterpreterTupleElement : public InterpreterNode {
-    using InterpreterNode::InterpreterNode;
+public:
+    InterpreterTupleElement(
+            enum InterpreterNodeType ty, const ram::Node* sdw, size_t tupleId, size_t elementId)
+            : InterpreterNode(ty, sdw), tupleId(tupleId), element(elementId) {}
+
+    size_t getTupleId() const {
+        return tupleId;
+    }
+
+    size_t getElement() const {
+        return element;
+    }
+
+private:
+    size_t tupleId;
+    size_t element;
 };
 
 /**
