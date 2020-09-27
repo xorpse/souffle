@@ -32,6 +32,7 @@
 #include "ast/QualifiedName.h"
 #include "ast/Relation.h"
 #include "ast/TranslationUnit.h"
+#include "ast/analysis/Functor.h"
 #include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/Type.h"
 #include "ast/analysis/TypeSystem.h"
@@ -217,15 +218,13 @@ bool isFact(const Clause& clause) {
     // and there are no aggregates
     bool hasAggregatesOrMultiResultFunctor = false;
     visitDepthFirst(*clause.getHead(), [&](const Argument& arg) {
-        if (dynamic_cast<const Aggregator*>(&arg)) {
+        if (isA<Aggregator>(arg)) {
             hasAggregatesOrMultiResultFunctor = true;
         }
 
-        auto func = dynamic_cast<const IntrinsicFunctor*>(&arg);
-        auto info = func ? func->getFunctionInfo() : nullptr;
-        if (info && info->multipleResults) {
-            hasAggregatesOrMultiResultFunctor = true;
-        }
+        auto* func = as<IntrinsicFunctor>(arg);
+        hasAggregatesOrMultiResultFunctor |=
+                (func != nullptr) && analysis::FunctorAnalysis::isMultiResult(*func);
     });
     return !hasAggregatesOrMultiResultFunctor;
 }

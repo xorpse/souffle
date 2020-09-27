@@ -50,6 +50,7 @@
 #include "ast/UserDefinedFunctor.h"
 #include "ast/Variable.h"
 #include "ast/analysis/AuxArity.h"
+#include "ast/analysis/Functor.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/RecursiveClauses.h"
 #include "ast/analysis/RelationDetailCache.h"
@@ -283,26 +284,22 @@ Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg
                 values.push_back(translator.translateValue(cur, index));
             }
 
-            auto* info = inf.getFunctionInfo();
-            assert(info && "no overload picked for instrinsic; missing transform pass?");
-            if (info->multipleResults) {
+            if (ast::analysis::FunctorAnalysis::isMultiResult(inf)) {
                 return translator.makeRamTupleElement(index.getGeneratorLoc(inf));
             } else {
-                return mk<ram::IntrinsicOperator>(info->op, std::move(values));
+                return mk<ram::IntrinsicOperator>(inf.getFunctionOp().value(), std::move(values));
             }
         }
 
         Own<ram::Expression> visitUserDefinedFunctor(const ast::UserDefinedFunctor& udf) override {
-            // Sanity check.
-            assert(udf.getArguments().size() == udf.getArgsTypes().size());
-
             VecOwn<ram::Expression> values;
             for (const auto& cur : udf.getArguments()) {
                 values.push_back(translator.translateValue(cur, index));
             }
-
-            return mk<ram::UserDefinedOperator>(udf.getName(), udf.getArgsTypes(), udf.getReturnType(),
-                    udf.isStateful(), std::move(values));
+            auto returnType = translator.functorAnalysis->getReturnType(&udf);
+            auto argTypes = translator.functorAnalysis->getArgTypes(udf);
+            return mk<ram::UserDefinedOperator>(udf.getName(), argTypes, returnType,
+                    translator.functorAnalysis->isStateful(&udf), std::move(values));
         }
 
         Own<ram::Expression> visitCounter(const ast::Counter&) override {
@@ -543,8 +540,8 @@ void AstToRamTranslator::ClauseTranslator::createValueIndex(const ast::Clause& c
             }
         }
 
-        auto func = dynamic_cast<const ast::IntrinsicFunctor*>(&arg);
-        if (func && func->getFunctionInfo()->multipleResults) {
+        auto* func = as<ast::IntrinsicFunctor>(arg);
+        if (func && ast::analysis::FunctorAnalysis::isMultiResult(*func)) {
             addGenerator();
         }
     });
@@ -636,8 +633,9 @@ Own<ram::Operation> AstToRamTranslator::ClauseTranslator::filterByConstraints(si
                     translator.translateConstant(*c));
         } else if (auto* func = dynamic_cast<const ast::Functor*>(a)) {
             if (constrainByFunctors) {
-                op = mkFilter(func->getReturnType() == TypeAttribute::Float,
-                        translator.translateValue(func, valueIndex));
+                TypeAttribute returnType = translator.functorAnalysis->getReturnType(func);
+                op = mkFilter(
+                        returnType == TypeAttribute::Float, translator.translateValue(func, valueIndex));
             }
         }
 
@@ -792,14 +790,12 @@ Own<ram::Statement> AstToRamTranslator::ClauseTranslator::translateClause(
             }
 
             auto func_op = [&]() -> ram::NestedIntrinsicOp {
-                switch (func->getFunctionInfo()->op) {
+                switch (func->getFunctionOp().value()) {
                     case FunctorOp::RANGE: return ram::NestedIntrinsicOp::RANGE;
                     case FunctorOp::URANGE: return ram::NestedIntrinsicOp::URANGE;
                     case FunctorOp::FRANGE: return ram::NestedIntrinsicOp::FRANGE;
 
-                    default:
-                        assert(func->getFunctionInfo()->multipleResults);
-                        fatal("missing case handler or bad code-gen");
+                    default: fatal("missing case handler or bad code-gen");
                 }
             };
 
@@ -1242,8 +1238,8 @@ Own<ram::Statement> AstToRamTranslator::makeSubproofSubroutine(const ast::Clause
             intermediateClause->addToBody(mk<ast::BinaryConstraint>(
                     BinaryConstraintOp::EQ, souffle::clone(var), mk<ast::SubroutineArgument>(i)));
         } else if (auto func = dynamic_cast<ast::Functor*>(arg)) {
-            auto opEq = func->getReturnType() == TypeAttribute::Float ? BinaryConstraintOp::FEQ
-                                                                      : BinaryConstraintOp::EQ;
+            TypeAttribute returnType = functorAnalysis->getReturnType(func);
+            auto opEq = returnType == TypeAttribute::Float ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ;
             intermediateClause->addToBody(
                     mk<ast::BinaryConstraint>(opEq, souffle::clone(func), mk<ast::SubroutineArgument>(i)));
         } else if (auto rec = dynamic_cast<ast::RecordInit*>(arg)) {
@@ -1509,6 +1505,9 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
 
     // get auxiliary arity analysis
     auxArityAnalysis = translationUnit.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
+
+    // get functor analysis
+    functorAnalysis = translationUnit.getAnalysis<ast::analysis::FunctorAnalysis>();
 
     // determine the sips to use
     std::string sipsChosen = "all-bound";

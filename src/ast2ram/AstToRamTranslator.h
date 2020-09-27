@@ -32,6 +32,7 @@
 #include "ast/TranslationUnit.h"
 #include "ast/Variable.h"
 #include "ast/analysis/AuxArity.h"
+#include "ast/analysis/Functor.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/RecursiveClauses.h"
 #include "ast/analysis/TypeSystem.h"
@@ -80,6 +81,9 @@ private:
 
     /** IO Type */
     const ast::analysis::IOTypeAnalysis* ioType = nullptr;
+
+    /** Functors' analysis */
+    const ast::analysis::FunctorAnalysis* functorAnalysis = nullptr;
 
     /** RAM program */
     Own<ram::Statement> ramMain;
