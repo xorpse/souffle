@@ -56,7 +56,6 @@
 #include "ast/transform/ResolveAnonymousRecordAliases.h"
 #include "ast/transform/SemanticChecker.h"
 #include "ast/transform/UniqueAggregationVariables.h"
-#include "ast/transform/UserDefinedFunctors.h"
 #include "ast2ram/AstToRamTranslator.h"
 #include "config.h"
 #include "interpreter/InterpreterEngine.h"
@@ -480,7 +479,6 @@ int main(int argc, char** argv) {
             mk<ast::transform::ComponentInstantiationTransformer>(),
             mk<ast::transform::IODefaultsTransformer>(),
             mk<ast::transform::UniqueAggregationVariablesTransformer>(),
-            mk<ast::transform::UserDefinedFunctorsTransformer>(),
             mk<ast::transform::FixpointTransformer>(mk<ast::transform::PipelineTransformer>(
                     mk<ast::transform::ResolveAnonymousRecordAliasesTransformer>(),
                     mk<ast::transform::FoldAnonymousRecords>())),

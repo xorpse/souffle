@@ -56,6 +56,7 @@
 #include "ast/UnnamedVariable.h"
 #include "ast/UserDefinedFunctor.h"
 #include "ast/Variable.h"
+#include "ast/analysis/Functor.h"
 #include "ast/analysis/Ground.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/PrecedenceGraph.h"
@@ -161,6 +162,7 @@ private:
     ErrorReport& report = tu.getErrorReport();
     const TypeAnalysis& typeAnalysis = *tu.getAnalysis<TypeAnalysis>();
     const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>()->getTypeEnvironment();
+    const FunctorAnalysis& functorAnalysis = *tu.getAnalysis<FunctorAnalysis>();
     const Program& program = tu.getProgram();
 
     void visitAtom(const Atom& atom) override;
@@ -1439,7 +1441,7 @@ void TypeChecker::visitTypeCast(const ast::TypeCast& cast) {
 }
 
 void TypeChecker::visitIntrinsicFunctor(const IntrinsicFunctor& fun) {
-    if (!fun.getFunctionInfo()) {  // no info => no overload found during inference
+    if (!fun.getFunctionOp()) {  // no info => no overload found during inference
         auto args = fun.getArguments();
         if (!isValidFunctorOpArity(fun.getFunction(), args.size())) {
             report.addError("invalid overload (arity mismatch)", fun.getSrcLoc());
@@ -1455,8 +1457,16 @@ void TypeChecker::visitUserDefinedFunctor(const UserDefinedFunctor& fun) {
     // check type of result
     const TypeSet& resultType = typeAnalysis.getTypes(&fun);
 
-    if (!isOfKind(resultType, fun.getReturnType())) {
-        switch (fun.getReturnType()) {
+    TypeAttribute returnType;
+    try {
+        returnType = functorAnalysis.getReturnType(&fun);
+    } catch (...) {
+        report.addError("Undeclared user functor", fun.getSrcLoc());
+        return;
+    }
+
+    if (!isOfKind(resultType, returnType)) {
+        switch (returnType) {
             case TypeAttribute::Signed:
                 report.addError("Non-numeric use for numeric functor", fun.getSrcLoc());
                 break;
@@ -1476,8 +1486,9 @@ void TypeChecker::visitUserDefinedFunctor(const UserDefinedFunctor& fun) {
 
     size_t i = 0;
     for (auto arg : fun.getArguments()) {
-        if (!isOfKind(typeAnalysis.getTypes(arg), fun.getArgType(i))) {
-            switch (fun.getArgType(i)) {
+        TypeAttribute argType = functorAnalysis.getArgType(&fun, i);
+        if (!isOfKind(typeAnalysis.getTypes(arg), argType)) {
+            switch (argType) {
                 case TypeAttribute::Signed:
                     report.addError("Non-numeric argument for functor", arg->getSrcLoc());
                     break;
