@@ -3,7 +3,10 @@
 // Licensed under the Universal Permissive License v 1.0 as shown at:
 // - https://opensource.org/licenses/UPL
 // - <souffle root>/licenses/SOUFFLE-UPL.txt
-// Test that multiple signed inequalities are not indexed with the B-Tree index
+// A B-Tree index can only perform range queries across 1 dimension
+// When there are multiple attributes with inequality constraints only one of them can be leveraged by the B-Tree index
+// The inequality constraint over the attribute should be transformed into a filter operation retaining the overall semantics of all inequality constraints
+// This test has multiple attribute constraints with inequalities to ensure that the evaluation with B-Tree indexes is performed correctly.
 
 .decl A(x:number, y:number)
 A(x,y) :- x = range(1,5), y = range(1,10).
