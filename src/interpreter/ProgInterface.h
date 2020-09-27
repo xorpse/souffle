@@ -105,7 +105,7 @@ public:
     }
 
     /** Get number of tuples in relation */
-    std::size_t size() const override {
+    size_t size() const override {
         return relation.size();
     }
 

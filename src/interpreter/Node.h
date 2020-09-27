@@ -204,7 +204,7 @@ public:
             : Node(ty, sdw, relHandle), children(std::move(children)) {}
 
     /** @brief get children of node */
-    inline const Node* getChild(std::size_t i) const {
+    inline const Node* getChild(size_t i) const {
         return children[i].get();
     }
 

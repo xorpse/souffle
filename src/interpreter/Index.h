@@ -61,7 +61,7 @@ public:
         return res;
     }
 
-    std::size_t size() const {
+    size_t size() const {
         return order.size();
     }
 
@@ -76,8 +76,8 @@ public:
             }
         }
         // Check that there are no duplicates.
-        for (std::size_t i = 0; i < order.size(); i++) {
-            for (std::size_t j = i + 1; j < order.size(); j++) {
+        for (size_t i = 0; i < order.size(); i++) {
+            for (size_t j = i + 1; j < order.size(); j++) {
                 if (order[i] == order[j]) {
                     return false;
                 }
@@ -89,10 +89,10 @@ public:
     /**
      * Encode the tuple with order
      */
-    template <std::size_t Arity>
+    template <size_t Arity>
     Tuple<RamDomain, Arity> encode(const Tuple<RamDomain, Arity>& entry) const {
         Tuple<RamDomain, Arity> res{};
-        for (std::size_t i = 0; i < Arity; ++i) {
+        for (size_t i = 0; i < Arity; ++i) {
             res[i] = entry[order[i]];
         }
         return res;
@@ -101,10 +101,10 @@ public:
     /**
      * Decode the tuple by order
      */
-    template <std::size_t Arity>
+    template <size_t Arity>
     Tuple<RamDomain, Arity> decode(const Tuple<RamDomain, Arity>& entry) const {
         Tuple<RamDomain, Arity> res{};
-        for (std::size_t i = 0; i < Arity; ++i) {
+        for (size_t i = 0; i < Arity; ++i) {
             res[order[i]] = entry[i];
         }
         return res;
@@ -220,7 +220,7 @@ public:
     /**
      * Obtains the number of elements stored in this index.
      */
-    std::size_t size() const {
+    size_t size() const {
         return data.size();
     }
 
@@ -389,7 +389,7 @@ public:
         return !data;
     }
 
-    std::size_t size() const {
+    size_t size() const {
         return data ? 1 : 0;
     }
 
@@ -432,9 +432,6 @@ public:
         data = false;
     }
 };
-
-template <std::size_t Arity>
-using Eqrel = EquivalenceRelation<t_tuple<Arity>>;
 
 /**
  * For EqrelIndex we do inheritence since EqrelIndex only diff with one extra function.

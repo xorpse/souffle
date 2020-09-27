@@ -105,7 +105,7 @@ public:
 
     virtual bool contains(const RamDomain*) const = 0;
 
-    virtual std::size_t size() const = 0;
+    virtual size_t size() const = 0;
 
     virtual void purge() = 0;
 
@@ -151,10 +151,10 @@ protected:
 /**
  * A relation, composed of a collection of indexes.
  */
-template <std::size_t _Arity, template <size_t> typename Structure>
+template <size_t _Arity, template <size_t> typename Structure>
 class Relation : public RelationWrapper {
 public:
-    static constexpr std::size_t Arity = _Arity;
+    static constexpr size_t Arity = _Arity;
     using Attribute = uint32_t;
     using AttributeSet = std::set<Attribute>;
     using Index = interpreter::Index<Arity, Structure>;
@@ -181,7 +181,7 @@ public:
     /**
      * Creates a relation, build all necessary indexes.
      */
-    Relation(std::size_t auxiliaryArity, std::string name, const ram::analysis::MinIndexSelection& orderSet)
+    Relation(size_t auxiliaryArity, std::string name, const ram::analysis::MinIndexSelection& orderSet)
             : RelationWrapper(Arity, auxiliaryArity, std::move(name)) {
         for (auto order : orderSet.getAllOrders()) {
             // Expand the order to a total order
@@ -189,7 +189,7 @@ public:
 
             // This operation is not performance critical.
             // Not using constexpr Arity to avoid compiler warning. (When Arity == 0)
-            for (std::size_t i = 0; i < getArity(); ++i) {
+            for (size_t i = 0; i < getArity(); ++i) {
                 if (set.find(i) == set.end()) {
                     order.push_back(i);
                 }
