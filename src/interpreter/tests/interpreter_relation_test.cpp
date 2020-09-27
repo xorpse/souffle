@@ -10,14 +10,14 @@
  *
  * @file interpreter_relation_test.cpp
  *
- * Tests InterpreterRelInterface
+ * Tests RelInterface
  *
  ***********************************************************************/
 
 #include "tests/test.h"
 
-#include "interpreter/InterpreterProgInterface.h"
-#include "interpreter/InterpreterRelation.h"
+#include "interpreter/ProgInterface.h"
+#include "interpreter/Relation.h"
 #include "ram/analysis/Index.h"
 #include "souffle/SouffleInterface.h"
 #include "souffle/SymbolTable.h"
@@ -25,16 +25,16 @@
 #include <string>
 #include <utility>
 
-namespace souffle::test {
+namespace souffle::interpreter::test {
 
-using ram::analysis::MinIndexSelection;
+using ::souffle::ram::analysis::MinIndexSelection;
 
 TEST(Relation0, Construction) {
     // create a nullary relation
     SymbolTable symbolTable;
     MinIndexSelection order{};
     order.insertDefaultTotalIndex(0);
-    InterpreterRelation<0, InterpreterBtree> rel(0, "test", order);
+    Relation<0, interpreter::Btree> rel(0, "test", order);
 
     souffle::Tuple<RamDomain, 0> tuple;
     // add some values
@@ -50,8 +50,8 @@ TEST(Relation0, Iteration) {
     SymbolTable symbolTable;
     MinIndexSelection order{};
     order.insertDefaultTotalIndex(0);
-    InterpreterRelation<0, InterpreterBtree> rel(0, "test", order);
-    InterpreterRelationWrapper* wrapper = &rel;
+    Relation<0, interpreter::Btree> rel(0, "test", order);
+    RelationWrapper* wrapper = &rel;
 
     souffle::Tuple<RamDomain, 0> tuple;
 
@@ -69,8 +69,8 @@ TEST(Relation1, Construction) {
     SymbolTable symbolTable;
     MinIndexSelection order{};
     order.insertDefaultTotalIndex(1);
-    InterpreterRelation<1, InterpreterBtree> rel(0, "test", order);
-    InterpreterRelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
+    Relation<1, interpreter::Btree> rel(0, "test", order);
+    RelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
 
     tuple d1(&relInt, {1});
     // add some values
@@ -90,8 +90,8 @@ TEST(Basic, Iteration) {
     SymbolTable symbolTable;
     MinIndexSelection order{};
     order.insertDefaultTotalIndex(1);
-    InterpreterRelation<1, InterpreterBtree> rel(0, "test", order);
-    InterpreterRelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
+    Relation<1, interpreter::Btree> rel(0, "test", order);
+    RelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
 
     // add some values
     relInt.insert(tuple(&relInt, {1}));
@@ -100,7 +100,7 @@ TEST(Basic, Iteration) {
     relInt.insert(tuple(&relInt, {4}));
 
     // Iterate
-    Relation::iterator it = relInt.begin();
+    souffle::Relation::iterator it = relInt.begin();
     std::size_t count = 0;
     while (it != relInt.end()) {
         // Check the 'deref' doesn't crash
@@ -117,26 +117,26 @@ TEST(Independence, Iteration) {
     SymbolTable symbolTable;
     MinIndexSelection order{};
     order.insertDefaultTotalIndex(1);
-    InterpreterRelation<1, InterpreterBtree> rel(0, "test", order);
-    InterpreterRelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
+    Relation<1, interpreter::Btree> rel(0, "test", order);
+    RelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
 
     // add a value
     relInt.insert(tuple(&relInt, {1}));
 
     // Test a iterator returns the correct value
-    Relation::iterator it = relInt.begin();
+    souffle::Relation::iterator it = relInt.begin();
     EXPECT_EQ(1, (*it)[0]);
 
     // Copy the iterator and modify the copy
     {
-        Relation::iterator it2(it);
+        souffle::Relation::iterator it2(it);
         EXPECT_EQ(1, (*it2)[0]);
         ++it2;
     }
     EXPECT_EQ(1, (*it)[0]);
 
     // Test that a new iterator is also valid
-    Relation::iterator it3 = relInt.begin();
+    souffle::Relation::iterator it3 = relInt.begin();
     EXPECT_EQ(1, (*it3)[0]);
 }
 
@@ -145,18 +145,18 @@ TEST(IndependentMoving, Iteration) {
     SymbolTable symbolTable;
     MinIndexSelection order{};
     order.insertDefaultTotalIndex(1);
-    InterpreterRelation<1, InterpreterBtree> rel(0, "test", order);
-    InterpreterRelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
+    Relation<1, interpreter::Btree> rel(0, "test", order);
+    RelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
 
     // add a value
     relInt.insert(tuple(&relInt, {1}));
 
-    Relation::iterator it = relInt.begin();
+    souffle::Relation::iterator it = relInt.begin();
     EXPECT_EQ(1, (*it)[0]);
 
     // Make a new iterator, move it to the first iterator, then let the new iterator go out of scope
     {
-        Relation::iterator it2(relInt.begin());
+        souffle::Relation::iterator it2(relInt.begin());
         EXPECT_EQ(1, (*it2)[0]);
         it = std::move(it2);
     }
@@ -168,18 +168,18 @@ TEST(IndependentCopying, Iteration) {
     SymbolTable symbolTable;
     MinIndexSelection order{};
     order.insertDefaultTotalIndex(1);
-    InterpreterRelation<1, InterpreterBtree> rel(0, "test", order);
-    InterpreterRelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
+    Relation<1, interpreter::Btree> rel(0, "test", order);
+    RelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
 
     // add a value
     relInt.insert(tuple(&relInt, {1}));
 
-    Relation::iterator it = relInt.begin();
+    souffle::Relation::iterator it = relInt.begin();
     EXPECT_EQ(1, (*it)[0]);
 
     // Make a new iterator, copy it to the first iterator, then let the new iterator go out of scope
     {
-        Relation::iterator it2(relInt.begin());
+        souffle::Relation::iterator it2(relInt.begin());
         EXPECT_EQ(1, (*it2)[0]);
         it = it2;
     }
@@ -199,7 +199,7 @@ TEST(Reordering, Iteration) {
     order.addSearch(cols);
     order.solve();
 
-    InterpreterRelation<3, InterpreterBtree> rel(0, "test", order);
+    Relation<3, interpreter::Btree> rel(0, "test", order);
     souffle::Tuple<RamDomain, 3> tuple{0, 1, 2};
     rel.insert(tuple);
 
@@ -217,7 +217,7 @@ TEST(Reordering, Iteration) {
         EXPECT_EQ(2, (*t)[2]);
     }
 
-    InterpreterRelInterface relInt(rel, symbolTable, "test", {"i", "i", "i"}, {"i", "i", "i"}, 3);
+    RelInterface relInt(rel, symbolTable, "test", {"i", "i", "i"}, {"i", "i", "i"}, 3);
 
     // ProgInterface should give decoded tuple.
     {
@@ -228,4 +228,4 @@ TEST(Reordering, Iteration) {
     }
 }
 
-}  // end namespace souffle::test
+}  // namespace souffle::interpreter::test

@@ -8,21 +8,21 @@
 
 /************************************************************************
  *
- * @file InterpreterEngine.cpp
+ * @file Engine.cpp
  *
  * Define the Interpreter Engine class.
  ***********************************************************************/
 
-#include "interpreter/InterpreterEngine.h"
+#include "interpreter/Engine.h"
 #include "AggregateOp.h"
 #include "FunctorOps.h"
 #include "Global.h"
-#include "interpreter/InterpreterContext.h"
-#include "interpreter/InterpreterGenerator.h"
-#include "interpreter/InterpreterIndex.h"
-#include "interpreter/InterpreterNode.h"
-#include "interpreter/InterpreterRelation.h"
-#include "interpreter/InterpreterViewContext.h"
+#include "interpreter/Context.h"
+#include "interpreter/Generator.h"
+#include "interpreter/Index.h"
+#include "interpreter/Node.h"
+#include "interpreter/Relation.h"
+#include "interpreter/ViewContext.h"
 #include "ram/Aggregate.h"
 #include "ram/AutoIncrement.h"
 #include "ram/Break.h"
@@ -113,9 +113,7 @@
 #include <dlfcn.h>
 #include <ffi.h>
 
-namespace souffle {
-
-using namespace ram;
+namespace souffle::interpreter {
 
 // Handle difference in dynamic libraries suffixes.
 #ifdef __APPLE__
@@ -141,33 +139,33 @@ namespace {
 constexpr RamDomain RAM_BIT_SHIFT_MASK = RAM_DOMAIN_SIZE - 1;
 }
 
-InterpreterEngine::RelationHandle& InterpreterEngine::getRelationHandle(const size_t idx) {
+Engine::RelationHandle& Engine::getRelationHandle(const size_t idx) {
     return generator.getRelationHandle(idx);
 }
 
-void InterpreterEngine::swapRelation(const size_t ramRel1, const size_t ramRel2) {
+void Engine::swapRelation(const size_t ramRel1, const size_t ramRel2) {
     RelationHandle& rel1 = getRelationHandle(ramRel1);
     RelationHandle& rel2 = getRelationHandle(ramRel2);
     std::swap(rel1, rel2);
 }
 
-int InterpreterEngine::incCounter() {
+int Engine::incCounter() {
     return counter++;
 }
 
-SymbolTable& InterpreterEngine::getSymbolTable() {
+SymbolTable& Engine::getSymbolTable() {
     return tUnit.getSymbolTable();
 }
 
-RecordTable& InterpreterEngine::getRecordTable() {
+RecordTable& Engine::getRecordTable() {
     return recordTable;
 }
 
-TranslationUnit& InterpreterEngine::getTranslationUnit() {
+ram::TranslationUnit& Engine::getTranslationUnit() {
     return tUnit;
 }
 
-void* InterpreterEngine::getMethodHandle(const std::string& method) {
+void* Engine::getMethodHandle(const std::string& method) {
     // load DLLs (if not done yet)
     for (void* libHandle : loadDLL()) {
         auto* methodHandle = dlsym(libHandle, method.c_str());
@@ -178,11 +176,11 @@ void* InterpreterEngine::getMethodHandle(const std::string& method) {
     return nullptr;
 }
 
-VecOwn<InterpreterEngine::RelationHandle>& InterpreterEngine::getRelationMap() {
+VecOwn<Engine::RelationHandle>& Engine::getRelationMap() {
     return generator.getRelations();
 }
 
-const std::vector<void*>& InterpreterEngine::loadDLL() {
+const std::vector<void*>& Engine::loadDLL() {
     if (!dll.empty()) {
         return dll;
     }
@@ -227,17 +225,17 @@ const std::vector<void*>& InterpreterEngine::loadDLL() {
     return dll;
 }
 
-size_t InterpreterEngine::getIterationNumber() const {
+size_t Engine::getIterationNumber() const {
     return iteration;
 }
-void InterpreterEngine::incIterationNumber() {
+void Engine::incIterationNumber() {
     ++iteration;
 }
-void InterpreterEngine::resetIterationNumber() {
+void Engine::resetIterationNumber() {
     iteration = 0;
 }
 
-void InterpreterEngine::executeMain() {
+void Engine::executeMain() {
     SignalHandler::instance()->set();
     if (Global::config().has("verbose")) {
         SignalHandler::instance()->enableLogging();
@@ -246,16 +244,16 @@ void InterpreterEngine::executeMain() {
     generateIR();
     assert(main != nullptr && "Executing an empty program");
 
-    InterpreterContext ctxt;
+    Context ctxt;
 
     if (!profileEnabled) {
-        InterpreterContext ctxt;
+        Context ctxt;
         execute(main.get(), ctxt);
     } else {
         ProfileEventSingleton::instance().setOutputFile(Global::config().get("profile"));
         // Prepare the frequency table for threaded use
-        const Program& program = tUnit.getProgram();
-        visitDepthFirst(program, [&](const TupleOperation& node) {
+        const ram::Program& program = tUnit.getProgram();
+        ram::visitDepthFirst(program, [&](const ram::TupleOperation& node) {
             if (!node.getProfileText().empty()) {
                 frequencies.emplace(node.getProfileText(), std::deque<std::atomic<size_t>>());
                 frequencies[node.getProfileText()].emplace_back(0);
@@ -280,10 +278,10 @@ void InterpreterEngine::executeMain() {
 
         // Store count of rules
         size_t ruleCount = 0;
-        visitDepthFirst(program, [&](const Query&) { ++ruleCount; });
+        ram::visitDepthFirst(program, [&](const ram::Query&) { ++ruleCount; });
         ProfileEventSingleton::instance().makeConfigRecord("ruleCount", std::to_string(ruleCount));
 
-        InterpreterContext ctxt;
+        Context ctxt;
         execute(main.get(), ctxt);
         ProfileEventSingleton::instance().stopTimer();
         for (auto const& cur : frequencies) {
@@ -299,8 +297,8 @@ void InterpreterEngine::executeMain() {
     SignalHandler::instance()->reset();
 }
 
-void InterpreterEngine::generateIR() {
-    const Program& program = tUnit.getProgram();
+void Engine::generateIR() {
+    const ram::Program& program = tUnit.getProgram();
     if (subroutine.empty()) {
         for (const auto& sub : program.getSubroutines()) {
             subroutine.push_back(generator.generateTree(*sub.second, program));
@@ -311,19 +309,19 @@ void InterpreterEngine::generateIR() {
     }
 }
 
-void InterpreterEngine::executeSubroutine(
+void Engine::executeSubroutine(
         const std::string& name, const std::vector<RamDomain>& args, std::vector<RamDomain>& ret) {
-    InterpreterContext ctxt;
+    Context ctxt;
     ctxt.setReturnValues(ret);
     ctxt.setArguments(args);
     generateIR();
-    const Program& program = tUnit.getProgram();
+    const ram::Program& program = tUnit.getProgram();
     auto subs = program.getSubroutines();
     size_t i = distance(subs.begin(), subs.find(name));
     execute(subroutine[i].get(), ctxt);
 }
 
-RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterContext& ctxt) {
+RamDomain Engine::execute(const Node* node, Context& ctxt) {
 #define DEBUG(Kind) std::cout << "Running Node: " << #Kind << "\n";
 #define EVAL_CHILD(ty, idx) ramBitCast<ty>(execute(shadow.getChild(idx), ctxt))
 #define EVAL_LEFT(ty) ramBitCast<ty>(execute(shadow.getLhs(), ctxt))
@@ -338,15 +336,15 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
 #define BASE_CASE(Kind) \
     case (I_##Kind): {  \
         return [&]() -> RamDomain { \
-            [[maybe_unused]] const auto& shadow = *static_cast<const Interpreter##Kind*>(node); \
-            [[maybe_unused]] const auto& cur = *static_cast<const Kind*>(node->getShadow());
+            [[maybe_unused]] const auto& shadow = *static_cast<const interpreter::Kind*>(node); \
+            [[maybe_unused]] const auto& cur = *static_cast<const ram::Kind*>(node->getShadow());
 // EXTEND_CASE also defer the relation type
 #define EXTEND_CASE(Kind, Structure, Arity)    \
     case (I_##Kind##_##Structure##_##Arity): { \
         return [&]() -> RamDomain { \
-            [[maybe_unused]] const auto& shadow = *static_cast<const Interpreter##Kind*>(node); \
-            [[maybe_unused]] const auto& cur = *static_cast<const Kind*>(node->getShadow());\
-            using RelType = InterpreterRelation<Arity, Interpreter##Structure>;
+            [[maybe_unused]] const auto& shadow = *static_cast<const interpreter::Kind*>(node); \
+            [[maybe_unused]] const auto& cur = *static_cast<const ram::Kind*>(node->getShadow());\
+            using RelType = Relation<Arity, interpreter::Structure>;
 #define ESAC(Kind) \
     }              \
     ();            \
@@ -590,9 +588,9 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
             true
 
             switch (cur.getFunction()) {
-                case NestedIntrinsicOp::RANGE: return RUN_RANGE(RamSigned);
-                case NestedIntrinsicOp::URANGE: return RUN_RANGE(RamUnsigned);
-                case NestedIntrinsicOp::FRANGE: return RUN_RANGE(RamFloat);
+                case ram::NestedIntrinsicOp::RANGE: return RUN_RANGE(RamSigned);
+                case ram::NestedIntrinsicOp::URANGE: return RUN_RANGE(RamUnsigned);
+                case ram::NestedIntrinsicOp::FRANGE: return RUN_RANGE(RamFloat);
             }
 
             { UNREACHABLE_BAD_CASE_ANALYSIS }
@@ -1072,7 +1070,7 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
 
         CASE(LogRelationTimer)
             Logger logger(cur.getMessage(), getIterationNumber(),
-                    std::bind(&InterpreterRelationWrapper::size, node->getRelation()));
+                    std::bind(&RelationWrapper::size, node->getRelation()));
             return execute(shadow.getChild(), ctxt);
         ESAC(LogRelationTimer)
 
@@ -1139,7 +1137,7 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
         ESAC(IO)
 
         CASE(Query)
-            InterpreterViewContext* viewContext = shadow.getViewContext();
+            ViewContext* viewContext = shadow.getViewContext();
 
             // Execute view-free operations in outer filter if any.
             auto& viewFreeOps = viewContext->getOuterFilterViewFreeOps();
@@ -1177,10 +1175,8 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
         ESAC(Query)
 
         CASE(Extend)
-            auto& src =
-                    *static_cast<InterpreterEqrelRelation*>(getRelationHandle(shadow.getSourceId()).get());
-            auto& trg =
-                    *static_cast<InterpreterEqrelRelation*>(getRelationHandle(shadow.getTargetId()).get());
+            auto& src = *static_cast<EqrelRelation*>(getRelationHandle(shadow.getSourceId()).get());
+            auto& trg = *static_cast<EqrelRelation*>(getRelationHandle(shadow.getTargetId()).get());
             src.extend(trg);
             trg.insert(src);
             return true;
@@ -1199,8 +1195,8 @@ RamDomain InterpreterEngine::execute(const InterpreterNode* node, InterpreterCon
 }
 
 template <typename Rel>
-RamDomain InterpreterEngine::evalExistenceCheck(
-        const ram::ExistenceCheck& cur, const InterpreterExistenceCheck& shadow, InterpreterContext& ctxt) {
+RamDomain Engine::evalExistenceCheck(
+        const ram::ExistenceCheck& cur, const ExistenceCheck& shadow, Context& ctxt) {
     constexpr size_t Arity = Rel::Arity;
     size_t viewPos = shadow.getViewId();
 
@@ -1245,8 +1241,7 @@ RamDomain InterpreterEngine::evalExistenceCheck(
 }
 
 template <typename Rel>
-RamDomain InterpreterEngine::evalProvenanceExistenceCheck(
-        const InterpreterProvenanceExistenceCheck& shadow, InterpreterContext& ctxt) {
+RamDomain Engine::evalProvenanceExistenceCheck(const ProvenanceExistenceCheck& shadow, Context& ctxt) {
     // construct the pattern tuple
     constexpr size_t Arity = Rel::Arity;
     const auto& superInfo = shadow.getSuperInst();
@@ -1291,8 +1286,7 @@ RamDomain InterpreterEngine::evalProvenanceExistenceCheck(
 }
 
 template <typename Rel>
-RamDomain InterpreterEngine::evalScan(
-        const Rel& rel, const ram::Scan& cur, const InterpreterScan& shadow, InterpreterContext& ctxt) {
+RamDomain Engine::evalScan(const Rel& rel, const ram::Scan& cur, const Scan& shadow, Context& ctxt) {
     for (const auto& tuple : rel.scan()) {
         ctxt[cur.getTupleId()] = tuple.data;
         if (!execute(shadow.getNestedOperation(), ctxt)) {
@@ -1303,14 +1297,14 @@ RamDomain InterpreterEngine::evalScan(
 }
 
 template <typename Rel>
-RamDomain InterpreterEngine::evalParallelScan(const Rel& rel, const ram::ParallelScan& cur,
-        const InterpreterParallelScan& shadow, InterpreterContext& ctxt) {
+RamDomain Engine::evalParallelScan(
+        const Rel& rel, const ram::ParallelScan& cur, const ParallelScan& shadow, Context& ctxt) {
     auto viewContext = shadow.getViewContext();
 
     auto pStream = rel.partitionScan(numOfThreads);
 
     PARALLEL_START
-        InterpreterContext newCtxt(ctxt);
+        Context newCtxt(ctxt);
         auto viewInfo = viewContext->getViewInfoForNested();
         for (const auto& info : viewInfo) {
             newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
@@ -1328,8 +1322,7 @@ RamDomain InterpreterEngine::evalParallelScan(const Rel& rel, const ram::Paralle
 }
 
 template <typename Rel>
-RamDomain InterpreterEngine::evalIndexScan(
-        const ram::IndexScan& cur, const InterpreterIndexScan& shadow, InterpreterContext& ctxt) {
+RamDomain Engine::evalIndexScan(const ram::IndexScan& cur, const IndexScan& shadow, Context& ctxt) {
     constexpr size_t Arity = Rel::Arity;
     // create pattern tuple for range query
     const auto& superInfo = shadow.getSuperInst();
@@ -1350,8 +1343,8 @@ RamDomain InterpreterEngine::evalIndexScan(
 }
 
 template <typename Rel>
-RamDomain InterpreterEngine::evalParallelIndexScan(const Rel& rel, const ram::ParallelIndexScan& cur,
-        const InterpreterParallelIndexScan& shadow, InterpreterContext& ctxt) {
+RamDomain Engine::evalParallelIndexScan(
+        const Rel& rel, const ram::ParallelIndexScan& cur, const ParallelIndexScan& shadow, Context& ctxt) {
     auto viewContext = shadow.getViewContext();
 
     // create pattern tuple for range query
@@ -1364,7 +1357,7 @@ RamDomain InterpreterEngine::evalParallelIndexScan(const Rel& rel, const ram::Pa
     size_t indexPos = shadow.getViewId();
     auto pStream = rel.partitionRange(indexPos, low, high, numOfThreads);
     PARALLEL_START
-        InterpreterContext newCtxt(ctxt);
+        Context newCtxt(ctxt);
         auto viewInfo = viewContext->getViewInfoForNested();
         for (const auto& info : viewInfo) {
             newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
@@ -1382,8 +1375,7 @@ RamDomain InterpreterEngine::evalParallelIndexScan(const Rel& rel, const ram::Pa
 }
 
 template <typename Rel>
-RamDomain InterpreterEngine::evalChoice(
-        const Rel& rel, const ram::Choice& cur, const InterpreterChoice& shadow, InterpreterContext& ctxt) {
+RamDomain Engine::evalChoice(const Rel& rel, const ram::Choice& cur, const Choice& shadow, Context& ctxt) {
     // use simple iterator
     for (const auto& tuple : rel.scan()) {
         ctxt[cur.getTupleId()] = tuple.data;
@@ -1396,14 +1388,14 @@ RamDomain InterpreterEngine::evalChoice(
 }
 
 template <typename Rel>
-RamDomain InterpreterEngine::evalParallelChoice(const Rel& rel, const ram::ParallelChoice& cur,
-        const InterpreterParallelChoice& shadow, InterpreterContext& ctxt) {
+RamDomain Engine::evalParallelChoice(
+        const Rel& rel, const ram::ParallelChoice& cur, const ParallelChoice& shadow, Context& ctxt) {
     auto viewContext = shadow.getViewContext();
 
     auto pStream = rel.partitionScan(numOfThreads);
     auto viewInfo = viewContext->getViewInfoForNested();
     PARALLEL_START
-        InterpreterContext newCtxt(ctxt);
+        Context newCtxt(ctxt);
         for (const auto& info : viewInfo) {
             newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
         }
@@ -1421,8 +1413,7 @@ RamDomain InterpreterEngine::evalParallelChoice(const Rel& rel, const ram::Paral
 }
 
 template <typename Rel>
-RamDomain InterpreterEngine::evalIndexChoice(
-        const ram::IndexChoice& cur, const InterpreterIndexChoice& shadow, InterpreterContext& ctxt) {
+RamDomain Engine::evalIndexChoice(const ram::IndexChoice& cur, const IndexChoice& shadow, Context& ctxt) {
     constexpr size_t Arity = Rel::Arity;
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> low;
@@ -1443,8 +1434,8 @@ RamDomain InterpreterEngine::evalIndexChoice(
 }
 
 template <typename Rel>
-RamDomain InterpreterEngine::evalParallelIndexChoice(const Rel& rel, const ram::ParallelIndexChoice& cur,
-        const InterpreterParallelIndexChoice& shadow, InterpreterContext& ctxt) {
+RamDomain Engine::evalParallelIndexChoice(const Rel& rel, const ram::ParallelIndexChoice& cur,
+        const ParallelIndexChoice& shadow, Context& ctxt) {
     auto viewContext = shadow.getViewContext();
 
     auto viewInfo = viewContext->getViewInfoForNested();
@@ -1460,7 +1451,7 @@ RamDomain InterpreterEngine::evalParallelIndexChoice(const Rel& rel, const ram::
     auto pStream = rel.partitionRange(indexPos, low, high, numOfThreads);
 
     PARALLEL_START
-        InterpreterContext newCtxt(ctxt);
+        Context newCtxt(ctxt);
         for (const auto& info : viewInfo) {
             newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
         }
@@ -1479,9 +1470,8 @@ RamDomain InterpreterEngine::evalParallelIndexChoice(const Rel& rel, const ram::
 }
 
 template <typename Aggregate, typename Iter>
-RamDomain InterpreterEngine::evalAggregate(const Aggregate& aggregate, const InterpreterNode& filter,
-        const InterpreterNode* expression, const InterpreterNode& nestedOperation, const Iter& ranges,
-        InterpreterContext& ctxt) {
+RamDomain Engine::evalAggregate(const Aggregate& aggregate, const Node& filter, const Node* expression,
+        const Node& nestedOperation, const Iter& ranges, Context& ctxt) {
     bool shouldRunNested = false;
 
     // initialize result
@@ -1592,12 +1582,12 @@ RamDomain InterpreterEngine::evalAggregate(const Aggregate& aggregate, const Int
     }
 }
 template <typename Rel>
-RamDomain InterpreterEngine::evalParallelAggregate(const Rel& rel, const ram::ParallelAggregate& cur,
-        const InterpreterParallelAggregate& shadow, InterpreterContext& ctxt) {
+RamDomain Engine::evalParallelAggregate(
+        const Rel& rel, const ram::ParallelAggregate& cur, const ParallelAggregate& shadow, Context& ctxt) {
     // TODO (rdowavic): make parallel
     auto viewContext = shadow.getViewContext();
 
-    InterpreterContext newCtxt(ctxt);
+    Context newCtxt(ctxt);
     auto viewInfo = viewContext->getViewInfoForNested();
     for (const auto& info : viewInfo) {
         newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
@@ -1607,12 +1597,12 @@ RamDomain InterpreterEngine::evalParallelAggregate(const Rel& rel, const ram::Pa
 }
 
 template <typename Rel>
-RamDomain InterpreterEngine::evalParallelIndexAggregate(const ram::ParallelIndexAggregate& cur,
-        const InterpreterParallelIndexAggregate& shadow, InterpreterContext& ctxt) {
+RamDomain Engine::evalParallelIndexAggregate(
+        const ram::ParallelIndexAggregate& cur, const ParallelIndexAggregate& shadow, Context& ctxt) {
     // TODO (rdowavic): make parallel
     auto viewContext = shadow.getViewContext();
 
-    InterpreterContext newCtxt(ctxt);
+    Context newCtxt(ctxt);
     auto viewInfo = viewContext->getViewInfoForNested();
     for (const auto& info : viewInfo) {
         newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
@@ -1633,8 +1623,8 @@ RamDomain InterpreterEngine::evalParallelIndexAggregate(const ram::ParallelIndex
 }
 
 template <typename Rel>
-RamDomain InterpreterEngine::evalIndexAggregate(
-        const ram::IndexAggregate& cur, const InterpreterIndexAggregate& shadow, InterpreterContext& ctxt) {
+RamDomain Engine::evalIndexAggregate(
+        const ram::IndexAggregate& cur, const IndexAggregate& shadow, Context& ctxt) {
     // init temporary tuple for this level
     const size_t Arity = Rel::Arity;
     const auto& superInfo = shadow.getSuperInst();
@@ -1650,8 +1640,7 @@ RamDomain InterpreterEngine::evalIndexAggregate(
 }
 
 template <typename Rel>
-RamDomain InterpreterEngine::evalProject(
-        Rel& rel, const InterpreterProject& shadow, InterpreterContext& ctxt) {
+RamDomain Engine::evalProject(Rel& rel, const Project& shadow, Context& ctxt) {
     constexpr size_t Arity = Rel::Arity;
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> tuple;
@@ -1670,4 +1659,4 @@ RamDomain InterpreterEngine::evalProject(
     return true;
 }
 
-}  // namespace souffle
+}  // namespace souffle::interpreter

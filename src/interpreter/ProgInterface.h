@@ -8,7 +8,7 @@
 
 /************************************************************************
  *
- * @file InterpreterProgInterface.h
+ * @file ProgInterface.h
  *
  * Defines classes that implement the SouffleInterface abstract class
  *
@@ -16,9 +16,9 @@
 
 #pragma once
 
-#include "interpreter/InterpreterEngine.h"
-#include "interpreter/InterpreterIndex.h"
-#include "interpreter/InterpreterRelation.h"
+#include "interpreter/Engine.h"
+#include "interpreter/Index.h"
+#include "interpreter/Relation.h"
 #include "ram/IO.h"
 #include "ram/Node.h"
 #include "ram/Program.h"
@@ -39,18 +39,18 @@
 #include <utility>
 #include <vector>
 
-namespace souffle {
+namespace souffle::interpreter {
 
 /**
  * Wrapper class for interpreter relations
  */
-class InterpreterRelInterface : public Relation {
+class RelInterface : public souffle::Relation {
 public:
-    InterpreterRelInterface(InterpreterRelationWrapper& r, SymbolTable& s, std::string n,
-            std::vector<std::string> t, std::vector<std::string> an, uint32_t i)
+    RelInterface(RelationWrapper& r, SymbolTable& s, std::string n, std::vector<std::string> t,
+            std::vector<std::string> an, uint32_t i)
             : relation(r), symTable(s), name(std::move(n)), types(std::move(t)), attrNames(std::move(an)),
               id(i) {}
-    ~InterpreterRelInterface() override = default;
+    ~RelInterface() override = default;
 
     /** Insert tuple */
     void insert(const tuple& t) override {
@@ -64,14 +64,12 @@ public:
 
     /** Iterator to first tuple */
     iterator begin() const override {
-        return InterpreterRelInterface::iterator(
-                new InterpreterRelInterface::iterator_base(id, this, relation.begin()));
+        return RelInterface::iterator(new RelInterface::iterator_base(id, this, relation.begin()));
     }
 
     /** Iterator to last tuple */
     iterator end() const override {
-        return InterpreterRelInterface::iterator(
-                new InterpreterRelInterface::iterator_base(id, this, relation.end()));
+        return RelInterface::iterator(new RelInterface::iterator_base(id, this, relation.end()));
     }
 
     /** Get name */
@@ -107,7 +105,7 @@ public:
     }
 
     /** Get number of tuples in relation */
-    std::size_t size() const override {
+    size_t size() const override {
         return relation.size();
     }
 
@@ -120,10 +118,9 @@ protected:
     /**
      * Iterator wrapper class
      */
-    class iterator_base : public Relation::iterator_base {
+    class iterator_base : public souffle::Relation::iterator_base {
     public:
-        iterator_base(
-                uint32_t arg_id, const InterpreterRelInterface* r, InterpreterRelationWrapper::Iterator i)
+        iterator_base(uint32_t arg_id, const RelInterface* r, RelationWrapper::Iterator i)
                 : Relation::iterator_base(arg_id), ramRelationInterface(r), it(i), tup(r) {}
         ~iterator_base() override = default;
 
@@ -165,14 +162,14 @@ protected:
 
         /** Clone iterator */
         iterator_base* clone() const override {
-            return new InterpreterRelInterface::iterator_base(getId(), ramRelationInterface, it);
+            return new RelInterface::iterator_base(getId(), ramRelationInterface, it);
         }
 
     protected:
         /** Check equivalence */
-        bool equal(const Relation::iterator_base& o) const override {
+        bool equal(const souffle::Relation::iterator_base& o) const override {
             try {
-                auto& iter = dynamic_cast<const InterpreterRelInterface::iterator_base&>(o);
+                auto& iter = dynamic_cast<const RelInterface::iterator_base&>(o);
                 return ramRelationInterface == iter.ramRelationInterface && it == iter.it;
             } catch (const std::bad_cast& e) {
                 return false;
@@ -180,14 +177,14 @@ protected:
         }
 
     private:
-        const InterpreterRelInterface* ramRelationInterface;
-        InterpreterRelationWrapper::Iterator it;
+        const RelInterface* ramRelationInterface;
+        RelationWrapper::Iterator it;
         tuple tup;
     };
 
 private:
     /** Wrapped interpreter relation */
-    InterpreterRelationWrapper& relation;
+    RelationWrapper& relation;
 
     /** Symbol table */
     SymbolTable& symTable;
@@ -208,9 +205,9 @@ private:
 /**
  * Implementation of SouffleProgram interface for an interpreter instance
  */
-class InterpreterProgInterface : public SouffleProgram {
+class ProgInterface : public SouffleProgram {
 public:
-    explicit InterpreterProgInterface(InterpreterEngine& interp)
+    explicit ProgInterface(Engine& interp)
             : prog(interp.getTranslationUnit().getProgram()), exec(interp),
               symTable(interp.getTranslationUnit().getSymbolTable()) {
         uint32_t id = 0;
@@ -234,8 +231,7 @@ public:
             std::vector<std::string> types = rel.getAttributeTypes();
             std::vector<std::string> attrNames = rel.getAttributeNames();
 
-            auto* interface = new InterpreterRelInterface(
-                    interpreterRel, symTable, rel.getName(), types, attrNames, id);
+            auto* interface = new RelInterface(interpreterRel, symTable, rel.getName(), types, attrNames, id);
             interfaces.push_back(interface);
             bool input = false;
             bool output = false;
@@ -255,7 +251,7 @@ public:
             id++;
         }
     }
-    ~InterpreterProgInterface() override {
+    ~ProgInterface() override {
         for (auto* interface : interfaces) {
             delete interface;
         }
@@ -292,9 +288,9 @@ public:
 
 private:
     const ram::Program& prog;
-    InterpreterEngine& exec;
+    Engine& exec;
     SymbolTable& symTable;
-    std::vector<InterpreterRelInterface*> interfaces;
+    std::vector<RelInterface*> interfaces;
 };
 
-}  // end of namespace souffle
+}  // namespace souffle::interpreter

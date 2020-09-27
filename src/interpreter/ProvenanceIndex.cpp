@@ -8,23 +8,22 @@
 
 /************************************************************************
  *
- * @file InterpreterProvenanceIndex.cpp
+ * @file ProvenanceIndex.cpp
  *
  * Interpreter index with generic interface.
  *
  ***********************************************************************/
 
-#include "interpreter/InterpreterRelation.h"
+#include "interpreter/Relation.h"
 
-namespace souffle {
+namespace souffle::interpreter {
 
-#define CREATE_PROVENANCE_REL(Structure, Arity, ...)                  \
-    case (Arity): {                                                   \
-        return mk<InterpreterRelation<Arity, InterpreterProvenance>>( \
-                id.getAuxiliaryArity(), id.getName(), orderSet);      \
+#define CREATE_PROVENANCE_REL(Structure, Arity, ...)                                                         \
+    case (Arity): {                                                                                          \
+        return mk<Relation<Arity, interpreter::Provenance>>(id.getAuxiliaryArity(), id.getName(), orderSet); \
     }
 
-Own<InterpreterRelationWrapper> createProvenanceRelation(
+Own<RelationWrapper> createProvenanceRelation(
         const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet) {
     switch (id.getArity()) {
         FOR_EACH_PROVENANCE(CREATE_PROVENANCE_REL);
@@ -33,4 +32,4 @@ Own<InterpreterRelationWrapper> createProvenanceRelation(
     }
 }
 
-}  // namespace souffle
+}  // namespace souffle::interpreter
