@@ -42,7 +42,7 @@
 #include "ram/Scan.h"
 #include "ram/TupleElement.h"
 #include "ram/UnpackRecord.h"
-#include "ram/Utils.h"
+#include "ram/utility/Utils.h"
 #include "souffle/utility/StringUtil.h"
 #include <map>
 #include <vector>
