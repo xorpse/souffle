@@ -455,7 +455,8 @@ MinIndexSelection::AttributeSet MinIndexSelection::getAttributesToDischarge(
     }
 
     // if we are in the interpreter then we only permit signed inequalities
-    AttributeSet inequalitiesNotSigned;
+    // remembering to discharge any excess signed inequalities!
+    AttributeSet inequalitiesNotSigned(dischargedMap[s]);
     for (size_t i = 0; i < s.arity(); ++i) {
         if (s[i] == AttributeConstraint::Inequal && rel.getAttributeTypes()[i][0] != 'i') {
             inequalitiesNotSigned.insert(i);

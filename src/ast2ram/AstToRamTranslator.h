@@ -44,6 +44,7 @@ class TranslationUnit;
 namespace souffle::ast::analysis {
 class IOTypeAnalysis;
 class AuxiliaryArityAnalysis;
+class FunctorAnalysis;
 class RecursiveClausesAnalysis;
 class TypeEnvironment;
 }  // namespace souffle::ast::analysis
@@ -113,6 +114,9 @@ private:
 
     /** IO Type */
     const ast::analysis::IOTypeAnalysis* ioType = nullptr;
+
+    /** Functors' analysis */
+    const ast::analysis::FunctorAnalysis* functorAnalysis = nullptr;
 
     /** Auxiliary Arity Analysis */
     const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;

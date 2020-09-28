@@ -18,7 +18,7 @@
 
 #include "FunctorOps.h"
 #include "Global.h"
-#include "interpreter/InterpreterEngine.h"
+#include "interpreter/Engine.h"
 #include "ram/Expression.h"
 #include "ram/IntrinsicOperator.h"
 #include "ram/Program.h"
@@ -43,7 +43,9 @@
 #include <utility>
 #include <vector>
 
-namespace souffle::ram::test {
+namespace souffle::interpreter::test {
+
+using namespace ram;
 
 #define TESTS_PER_OPERATION 20
 
@@ -54,12 +56,12 @@ RamDomain evalExpression(Own<Expression> expression, SymbolTable& symTab) {
     returnValues.emplace_back(std::move(expression));
 
     Global::config().set("jobs", "1");
-    Own<Statement> query = mk<Query>(mk<SubroutineReturn>(std::move(returnValues)));
+    Own<Statement> query = mk<ram::Query>(mk<ram::SubroutineReturn>(std::move(returnValues)));
     std::map<std::string, Own<Statement>> subs;
     subs.insert(std::make_pair("test", std::move(query)));
-    VecOwn<Relation> rels;
+    VecOwn<ram::Relation> rels;
 
-    Own<Program> prog = mk<Program>(std::move(rels), mk<Sequence>(), std::move(subs));
+    Own<Program> prog = mk<Program>(std::move(rels), mk<ram::Sequence>(), std::move(subs));
 
     ErrorReport errReport;
     DebugReport debugReport;
@@ -67,7 +69,7 @@ RamDomain evalExpression(Own<Expression> expression, SymbolTable& symTab) {
     TranslationUnit translationUnit(std::move(prog), symTab, errReport, debugReport);
 
     // configure and execute interpreter
-    Own<InterpreterEngine> interpreter = mk<InterpreterEngine>(translationUnit);
+    Own<Engine> interpreter = mk<Engine>(translationUnit);
 
     std::string name("test");
     std::vector<RamDomain> ret;
@@ -84,7 +86,7 @@ RamDomain evalExpression(Own<Expression> expression) {
 }
 
 RamDomain evalMultiArg(FunctorOp functor, VecOwn<Expression> args, SymbolTable& symTab) {
-    return evalExpression(mk<IntrinsicOperator>(functor, std::move(args)), symTab);
+    return evalExpression(mk<ram::IntrinsicOperator>(functor, std::move(args)), symTab);
 }
 
 RamDomain evalMultiArg(FunctorOp functor, VecOwn<Expression> args) {
@@ -712,4 +714,4 @@ TEST(MultiArg, SymbolMin) {
     EXPECT_EQ(result, "-1");
 }
 
-}  // namespace souffle::ram::test
+}  // namespace souffle::interpreter::test

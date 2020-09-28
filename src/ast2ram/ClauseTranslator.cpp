@@ -334,8 +334,9 @@ Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
                     translator.translateConstant(*c));
         } else if (auto* func = dynamic_cast<const ast::Functor*>(a)) {
             if (constrainByFunctors) {
-                op = mkFilter(func->getReturnType() == TypeAttribute::Float,
-                        translator.translateValue(func, valueIndex));
+                TypeAttribute returnType = translator.functorAnalysis->getReturnType(func);
+                op = mkFilter(
+                        returnType == TypeAttribute::Float, translator.translateValue(func, valueIndex));
             }
         }
 

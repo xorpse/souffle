@@ -8,7 +8,7 @@
 
 /************************************************************************
  *
- * @file InterpreterContext.h
+ * @file Context.h
  *
  * Defines Interpreter interpreter context
  *
@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include "interpreter/InterpreterIndex.h"
-#include "interpreter/InterpreterRelation.h"
+#include "interpreter/Index.h"
+#include "interpreter/Relation.h"
 #include "souffle/RamTypes.h"
 #include <cassert>
 #include <cstddef>
@@ -25,13 +25,13 @@
 #include <utility>
 #include <vector>
 
-namespace souffle {
+namespace souffle::interpreter {
 
 /**
  * Evaluation context for Interpreter operations
  */
-class InterpreterContext {
-    using ViewPtr = Own<IndexView>;
+class Context {
+    using ViewPtr = Own<ViewWrapper>;
 
     /** @brief Run-time value */
     std::vector<const RamDomain*> data;
@@ -42,15 +42,15 @@ class InterpreterContext {
     /** @bref Allocated data */
     VecOwn<RamDomain[]> allocatedDataContainer;
     /** @brief Views */
-    VecOwn<IndexView> views;
+    VecOwn<ViewWrapper> views;
 
 public:
-    InterpreterContext(size_t size = 0) : data(size) {}
+    Context(size_t size = 0) : data(size) {}
 
     /** This constructor is used when program enter a new scope.
      * Only Subroutine value needs to be copied */
-    InterpreterContext(InterpreterContext& ctxt) : returnValues(ctxt.returnValues), args(ctxt.args) {}
-    virtual ~InterpreterContext() = default;
+    Context(Context& ctxt) : returnValues(ctxt.returnValues), args(ctxt.args) {}
+    virtual ~Context() = default;
 
     const RamDomain*& operator[](size_t index) {
         if (index >= data.size()) {
@@ -106,19 +106,19 @@ public:
     }
 
     /** @brief Create a view in the environment */
-    void createView(const InterpreterRelation& rel, size_t indexPos, size_t viewPos) {
+    void createView(const RelationWrapper& rel, size_t indexPos, size_t viewPos) {
         ViewPtr view;
         if (views.size() < viewPos + 1) {
             views.resize(viewPos + 1);
         }
-        views[viewPos] = rel.getView(indexPos);
+        views[viewPos] = rel.createView(indexPos);
     }
 
     /** @brief Return a view */
-    ViewPtr& getView(size_t id) {
+    ViewWrapper* getView(size_t id) {
         assert(id < views.size());
-        return views[id];
+        return views[id].get();
     }
 };
 
-}  // end of namespace souffle
+}  // namespace souffle::interpreter

@@ -192,6 +192,10 @@ public:
         return contains(tuple[0], tuple[1]);
     };
 
+    bool contains(const TupleType& tuple) const {
+        return contains(tuple[0], tuple[1]);
+    };
+
     void emptyPartition() const {
         // delete the beautiful values inside (they're raw ptrs, so they need to be.)
         for (auto& pair : equivalencePartition) {
@@ -561,6 +565,11 @@ public:
         return end();
     }
 
+    iterator lower_bound(const TupleType& entry) const {
+        operation_hints hints;
+        return lower_bound(entry, hints);
+    }
+
     /**
      * This function is only here in order to unify interfaces in InterpreterIndex.
      * Unlike the name suggestes, it omit the arguments and simply return the end
@@ -571,6 +580,11 @@ public:
      */
     iterator upper_bound(const TupleType&, operation_hints&) const {
         return end();
+    }
+
+    iterator upper_bound(const TupleType& entry) const {
+        operation_hints hints;
+        return upper_bound(entry, hints);
     }
 
     /**
