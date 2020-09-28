@@ -23,8 +23,8 @@
 #include "ram/Relation.h"
 #include "ram/Swap.h"
 #include "ram/TranslationUnit.h"
-#include "ram/Utils.h"
-#include "ram/Visitor.h"
+#include "ram/utility/Utils.h"
+#include "ram/utility/Visitor.h"
 #include "souffle/utility/StreamUtil.h"
 #include <algorithm>
 #include <cstdint>

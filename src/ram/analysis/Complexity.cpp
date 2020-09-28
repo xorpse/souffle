@@ -24,7 +24,7 @@
 #include "ram/Node.h"
 #include "ram/ProvenanceExistenceCheck.h"
 #include "ram/Relation.h"
-#include "ram/Visitor.h"
+#include "ram/utility/Visitor.h"
 #include <cassert>
 
 namespace souffle::ram::analysis {

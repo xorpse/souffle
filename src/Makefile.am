@@ -254,7 +254,6 @@ souffle_sources = \
         ram/IndexOperation.h                               \
         ram/IndexScan.h                                    \
         ram/IntrinsicOperator.h                            \
-        ram/LambdaNodeMapper.h                             \
         ram/ListStatement.h                                \
         ram/LogRelationTimer.h                             \
         ram/LogSize.h                                      \
@@ -264,7 +263,6 @@ souffle_sources = \
         ram/NestedIntrinsicOperator.h                      \
         ram/NestedOperation.h                              \
         ram/Node.h                                         \
-        ram/NodeMapper.h                                   \
         ram/Operation.h                                    \
         ram/PackRecord.h                                   \
         ram/Parallel.h                                     \
@@ -298,8 +296,6 @@ souffle_sources = \
         ram/UnpackRecord.h                                 \
         ram/UnsignedConstant.h                             \
         ram/UserDefinedOperator.h                          \
-        ram/Utils.h                                        \
-        ram/Visitor.h                                      \
         ram/analysis/Analysis.h                            \
         ram/analysis/Complexity.cpp                        \
         ram/analysis/Complexity.h                          \
@@ -340,6 +336,10 @@ souffle_sources = \
         ram/transform/Transformer.h                        \
         ram/transform/TupleId.cpp                          \
         ram/transform/TupleId.h                            \
+        ram/utility/LambdaNodeMapper.h                     \
+        ram/utility/NodeMapper.h                           \
+        ram/utility/Utils.h                                \
+        ram/utility/Visitor.h                              \
         reports/DebugReport.cpp                            \
         reports/DebugReport.h                              \
         reports/ErrorReport.h                              \

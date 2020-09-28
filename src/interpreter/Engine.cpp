@@ -76,7 +76,7 @@
 #include "ram/TupleOperation.h"
 #include "ram/UnpackRecord.h"
 #include "ram/UserDefinedOperator.h"
-#include "ram/Visitor.h"
+#include "ram/utility/Visitor.h"
 #include "souffle/BinaryConstraintOps.h"
 #include "souffle/RamTypes.h"
 #include "souffle/RecordTable.h"
