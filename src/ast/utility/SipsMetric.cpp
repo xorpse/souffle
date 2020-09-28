@@ -341,4 +341,4 @@ std::vector<double> DeltaInputSips::evaluateCosts(
     return cost;
 }
 
-};  // namespace souffle::ast
+}  // namespace souffle::ast

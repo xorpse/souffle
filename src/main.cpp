@@ -583,7 +583,8 @@ int main(int argc, char** argv) {
     // ------- execution -------------
     /* translate AST to RAM */
     debugReport.startSection();
-    Own<ram::TranslationUnit> ramTranslationUnit = AstToRamTranslator().translateUnit(*astTranslationUnit);
+    Own<ram::TranslationUnit> ramTranslationUnit =
+            ast2ram::AstToRamTranslator().translateUnit(*astTranslationUnit);
     debugReport.endSection("ast-to-ram", "Translate AST to RAM");
 
     // Apply RAM transforms
