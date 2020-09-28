@@ -76,6 +76,10 @@ public:
         return auxArityAnalysis;
     }
 
+    const ast::analysis::FunctorAnalysis* getFunctorAnalysis() const {
+        return functorAnalysis;
+    }
+
     const ast::SipsMetric* getSipsMetric() const {
         return sips.get();
     }

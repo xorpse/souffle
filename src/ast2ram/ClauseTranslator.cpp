@@ -22,6 +22,7 @@
 #include "ast/NumericConstant.h"
 #include "ast/RecordInit.h"
 #include "ast/UnnamedVariable.h"
+#include "ast/analysis/Functor.h"
 #include "ast/transform/ReorderLiterals.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
@@ -194,14 +195,12 @@ Own<ram::Statement> ClauseTranslator::translateClause(
             }
 
             auto func_op = [&]() -> ram::NestedIntrinsicOp {
-                switch (func->getFunctionInfo()->op) {
+                switch (func->getFunctionOp().value()) {
                     case FunctorOp::RANGE: return ram::NestedIntrinsicOp::RANGE;
                     case FunctorOp::URANGE: return ram::NestedIntrinsicOp::URANGE;
                     case FunctorOp::FRANGE: return ram::NestedIntrinsicOp::FRANGE;
 
-                    default:
-                        assert(func->getFunctionInfo()->multipleResults);
-                        fatal("missing case handler or bad code-gen");
+                    default: fatal("missing case handler or bad code-gen");
                 }
             };
 
@@ -334,7 +333,7 @@ Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
                     translator.translateConstant(*c));
         } else if (auto* func = dynamic_cast<const ast::Functor*>(a)) {
             if (constrainByFunctors) {
-                TypeAttribute returnType = translator.functorAnalysis->getReturnType(func);
+                TypeAttribute returnType = translator.getFunctorAnalysis()->getReturnType(func);
                 op = mkFilter(
                         returnType == TypeAttribute::Float, translator.translateValue(func, valueIndex));
             }
@@ -483,8 +482,8 @@ void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
             }
         }
 
-        auto func = dynamic_cast<const ast::IntrinsicFunctor*>(&arg);
-        if (func && func->getFunctionInfo()->multipleResults) {
+        auto* func = as<ast::IntrinsicFunctor>(arg);
+        if (func && ast::analysis::FunctorAnalysis::isMultiResult(*func)) {
             addGenerator();
         }
     });
