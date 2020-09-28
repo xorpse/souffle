@@ -24,7 +24,7 @@
 #include "ram/Node.h"
 #include "ram/Operation.h"
 #include "ram/Relation.h"
-#include "ram/Utils.h"
+#include "ram/utility/Utils.h"
 #include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include <iosfwd>

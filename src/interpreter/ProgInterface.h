@@ -24,7 +24,7 @@
 #include "ram/Program.h"
 #include "ram/Relation.h"
 #include "ram/TranslationUnit.h"
-#include "ram/Visitor.h"
+#include "ram/utility/Visitor.h"
 #include "souffle/RamTypes.h"
 #include "souffle/SouffleInterface.h"
 #include "souffle/SymbolTable.h"
