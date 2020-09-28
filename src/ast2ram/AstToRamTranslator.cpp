@@ -112,7 +112,7 @@
 #include "ram/UnpackRecord.h"
 #include "ram/UnsignedConstant.h"
 #include "ram/UserDefinedOperator.h"
-#include "ram/Utils.h"
+#include "ram/utility/Utils.h"
 #include "reports/DebugReport.h"
 #include "reports/ErrorReport.h"
 #include "souffle/BinaryConstraintOps.h"

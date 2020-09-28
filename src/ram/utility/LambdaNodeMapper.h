@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ram/NodeMapper.h"
+#include "ram/utility/NodeMapper.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <cassert>
 #include <functional>
