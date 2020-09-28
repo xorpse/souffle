@@ -41,7 +41,7 @@ namespace souffle::ram {
  */
 class Clear : public RelationStatement {
 public:
-    Clear(Own<RelationReference> relRef) : RelationStatement(std::move(relRef)) {}
+    Clear(std::string relRef) : RelationStatement(std::move(relRef)) {}
 
     Clear* clone() const override {
         return new Clear(souffle::clone(relationRef));

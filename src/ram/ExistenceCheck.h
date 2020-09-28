@@ -41,7 +41,7 @@ namespace souffle::ram {
  */
 class ExistenceCheck : public AbstractExistenceCheck {
 public:
-    ExistenceCheck(Own<RelationReference> relRef, VecOwn<Expression> vals)
+    ExistenceCheck(std::string relRef, VecOwn<Expression> vals)
             : AbstractExistenceCheck(std::move(relRef), std::move(vals)) {}
 
     ExistenceCheck* clone() const override {

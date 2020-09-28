@@ -45,7 +45,7 @@ namespace souffle::ram {
  */
 class EmptinessCheck : public Condition {
 public:
-    EmptinessCheck(Own<RelationReference> relRef) : relationRef(std::move(relRef)) {
+    EmptinessCheck(std::string relRef) : relationRef(std::move(relRef)) {
         assert(relationRef != nullptr && "Relation reference is a nullptr");
     }
 
@@ -77,7 +77,7 @@ protected:
     }
 
     /** Relation */
-    Own<RelationReference> relationRef;
+    std::string relationRef;
 };
 
 }  // namespace souffle::ram

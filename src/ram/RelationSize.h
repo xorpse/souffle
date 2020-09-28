@@ -42,39 +42,30 @@ namespace souffle::ram {
  */
 class RelationSize : public Expression {
 public:
-    RelationSize(Own<RelationReference> relRef) : relationRef(std::move(relRef)) {
-        assert(relationRef != nullptr && "Relation reference is a nullptr");
+    RelationSize(std::string rel) : relation(rel) {
     }
 
     /** @brief Get relation */
-    const Relation& getRelation() const {
-        return *relationRef->get();
-    }
-
-    std::vector<const Node*> getChildNodes() const override {
-        return {relationRef.get()};
+    const std::string getRelation() const {
+        return relation;
     }
 
     RelationSize* clone() const override {
-        return new RelationSize(souffle::clone(relationRef));
-    }
-
-    void apply(const NodeMapper& map) override {
-        relationRef = map(std::move(relationRef));
+        return new RelationSize(relation);
     }
 
 protected:
     void print(std::ostream& os) const override {
-        os << "size(" << getRelation().getName() << ")";
+        os << "size(" << relation << ")";
     }
 
     bool equal(const Node& node) const override {
         const auto& other = static_cast<const RelationSize&>(node);
-        return equal_ptr(relationRef, other.relationRef);
+        return relation == other.relation;
     }
 
     /** Relation */
-    Own<RelationReference> relationRef;
+    std::string relation;
 };
 
 }  // namespace souffle::ram

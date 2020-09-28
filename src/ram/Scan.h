@@ -42,12 +42,11 @@ namespace souffle::ram {
  */
 class Scan : public RelationOperation {
 public:
-    Scan(Own<RelationReference> rel, int ident, Own<Operation> nested, std::string profileText = "")
-            : RelationOperation(std::move(rel), ident, std::move(nested), std::move(profileText)) {}
+    Scan(std::string rel, int ident, Own<Operation> nested, std::string profileText = "")
+            : RelationOperation(rel, ident, std::move(nested), std::move(profileText)) {}
 
     Scan* clone() const override {
-        return new Scan(
-                souffle::clone(relationRef), getTupleId(), souffle::clone(&getOperation()), getProfileText());
+        return new Scan(relation, getTupleId(), souffle::clone(&getOperation()), getProfileText());
     }
 
 protected:

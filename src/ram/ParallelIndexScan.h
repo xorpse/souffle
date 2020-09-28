@@ -53,7 +53,7 @@ namespace souffle::ram {
  */
 class ParallelIndexScan : public IndexScan, public AbstractParallel {
 public:
-    ParallelIndexScan(Own<RelationReference> rel, int ident, RamPattern queryPattern, Own<Operation> nested,
+    ParallelIndexScan(std::string rel, int ident, RamPattern queryPattern, Own<Operation> nested,
             std::string profileText = "")
             : IndexScan(std::move(rel), ident, std::move(queryPattern), std::move(nested), profileText) {}
 

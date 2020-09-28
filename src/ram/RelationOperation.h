@@ -37,38 +37,26 @@ namespace souffle::ram {
 class RelationOperation : public TupleOperation {
 public:
     RelationOperation(
-            Own<RelationReference> relRef, int ident, Own<Operation> nested, std::string profileText = "")
+            std::string rel, int ident, Own<Operation> nested, std::string profileText = "")
             : TupleOperation(ident, std::move(nested), std::move(profileText)),
-              relationRef(std::move(relRef)) {
-        assert(relationRef != nullptr && "relation reference is a null-pointer");
+              relation(rel) {
     }
 
     RelationOperation* clone() const override = 0;
 
     /** @brief Get search relation */
-    const Relation& getRelation() const {
-        return *relationRef->get();
-    }
-
-    void apply(const NodeMapper& map) override {
-        TupleOperation::apply(map);
-        relationRef = map(std::move(relationRef));
-    }
-
-    std::vector<const Node*> getChildNodes() const override {
-        auto res = TupleOperation::getChildNodes();
-        res.push_back(relationRef.get());
-        return res;
+    const std::string &getRelation() const {
+        return relation;
     }
 
 protected:
     bool equal(const Node& node) const override {
         const auto& other = static_cast<const RelationOperation&>(node);
-        return TupleOperation::equal(other) && equal_ptr(relationRef, other.relationRef);
+        return TupleOperation::equal(other) && relation == other.relation;
     }
 
     /** Search relation */
-    Own<RelationReference> relationRef;
+    std::string relation;
 };
 
 }  // namespace souffle::ram

@@ -46,7 +46,7 @@ namespace souffle::ram {
  */
 class ParallelChoice : public Choice, public AbstractParallel {
 public:
-    ParallelChoice(Own<RelationReference> rel, size_t ident, Own<Condition> cond, Own<Operation> nested,
+    ParallelChoice(std::string rel, size_t ident, Own<Condition> cond, Own<Operation> nested,
             std::string profileText = "")
             : Choice(std::move(rel), ident, std::move(cond), std::move(nested), profileText) {}
 

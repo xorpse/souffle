@@ -54,7 +54,7 @@ namespace souffle::ram {
  */
 class ParallelIndexChoice : public IndexChoice, public AbstractParallel {
 public:
-    ParallelIndexChoice(Own<RelationReference> r, int ident, Own<Condition> cond, RamPattern queryPattern,
+    ParallelIndexChoice(std::string r, int ident, Own<Condition> cond, RamPattern queryPattern,
             Own<Operation> nested, std::string profileText = "")
             : IndexChoice(std::move(r), ident, std::move(cond), std::move(queryPattern), std::move(nested),
                       profileText) {}

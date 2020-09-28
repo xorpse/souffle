@@ -45,17 +45,16 @@ namespace souffle::ram {
  */
 class Project : public Operation {
 public:
-    Project(Own<RelationReference> relRef, VecOwn<Expression> expressions)
-            : relationRef(std::move(relRef)), expressions(std::move(expressions)) {
-        assert(relationRef != nullptr && "Relation reference is a null-pointer");
+    Project(std::string rel, VecOwn<Expression> expressions)
+            : relation(rel), expressions(std::move(expressions)) {
         for (auto const& expr : expressions) {
             assert(expr != nullptr && "Expression is a null-pointer");
         }
     }
 
     /** @brief Get relation */
-    const Relation& getRelation() const {
-        return *relationRef->get();
+    const std::string getRelation() const {
+        return relation;
     }
 
     /** @brief Get expressions */
@@ -65,7 +64,7 @@ public:
 
     std::vector<const Node*> getChildNodes() const override {
         std::vector<const Node*> res;
-        res.push_back(relationRef.get());
+        res.push_back(relation.get());
         for (const auto& expr : expressions) {
             res.push_back(expr.get());
         }
@@ -77,11 +76,10 @@ public:
         for (auto& expr : expressions) {
             newValues.emplace_back(expr->clone());
         }
-        return new Project(souffle::clone(relationRef), std::move(newValues));
+        return new Project(relation, std::move(newValues));
     }
 
     void apply(const NodeMapper& map) override {
-        relationRef = map(std::move(relationRef));
         for (auto& expr : expressions) {
             expr = map(std::move(expr));
         }
@@ -91,16 +89,16 @@ protected:
     void print(std::ostream& os, int tabpos) const override {
         os << times(" ", tabpos);
         os << "PROJECT (" << join(expressions, ", ", print_deref<Own<Expression>>()) << ") INTO "
-           << getRelation().getName() << std::endl;
+           << relation << std::endl;
     }
 
     bool equal(const Node& node) const override {
         const auto& other = static_cast<const Project&>(node);
-        return equal_ptr(relationRef, other.relationRef) && equal_targets(expressions, other.expressions);
+        return relation == other.relation && equal_targets(expressions, other.expressions);
     }
 
-    /** Relation that values are projected into */
-    Own<RelationReference> relationRef;
+    /** Relation name */
+    std::string relation;
 
     /* Values (expressions) for projection */
     VecOwn<Expression> expressions;

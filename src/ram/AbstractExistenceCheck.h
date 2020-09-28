@@ -39,7 +39,7 @@ namespace souffle::ram {
  */
 class AbstractExistenceCheck : public Condition {
 public:
-    AbstractExistenceCheck(Own<RelationReference> relRef, VecOwn<Expression> vals)
+    AbstractExistenceCheck(std::string relRef, VecOwn<Expression> vals)
             : relationRef(std::move(relRef)), values(std::move(vals)) {
         assert(relationRef != nullptr && "Relation reference is a nullptr");
         for (const auto& v : values) {
@@ -96,7 +96,7 @@ protected:
     }
 
     /** Relation */
-    Own<RelationReference> relationRef;
+    std::string relationRef;
 
     /** Pattern -- nullptr if undefined */
     VecOwn<Expression> values;

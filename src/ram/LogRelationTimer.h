@@ -50,7 +50,7 @@ namespace souffle::ram {
  */
 class LogRelationTimer : public RelationStatement, public AbstractLog {
 public:
-    LogRelationTimer(Own<Statement> stmt, std::string msg, Own<RelationReference> relRef)
+    LogRelationTimer(Own<Statement> stmt, std::string msg, std::string relRef)
             : RelationStatement(std::move(relRef)), AbstractLog(std::move(stmt), std::move(msg)) {}
 
     std::vector<const Node*> getChildNodes() const override {

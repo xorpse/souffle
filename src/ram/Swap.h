@@ -38,7 +38,7 @@ namespace souffle::ram {
  */
 class Swap : public BinRelationStatement {
 public:
-    Swap(Own<RelationReference> f, Own<RelationReference> s)
+    Swap(std::string f, std::string s)
             : BinRelationStatement(std::move(f), std::move(s)) {}
 
     Swap* clone() const override {

@@ -52,7 +52,7 @@ namespace souffle::ram {
  */
 class Choice : public RelationOperation, public AbstractChoice {
 public:
-    Choice(Own<RelationReference> rel, size_t ident, Own<Condition> cond, Own<Operation> nested,
+    Choice(std::string rel, size_t ident, Own<Condition> cond, Own<Operation> nested,
             std::string profileText = "")
             : RelationOperation(std::move(rel), ident, std::move(nested), std::move(profileText)),
               AbstractChoice(std::move(cond)) {}

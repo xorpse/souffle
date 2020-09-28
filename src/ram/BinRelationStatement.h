@@ -36,7 +36,7 @@ namespace souffle::ram {
  */
 class BinRelationStatement : public Statement {
 public:
-    BinRelationStatement(Own<RelationReference> f, Own<RelationReference> s)
+    BinRelationStatement(std::string f, std::string s)
             : first(std::move(f)), second(std::move(s)) {
         assert(first->get()->getArity() == second->get()->getArity() && "mismatching arities");
 
@@ -76,10 +76,10 @@ protected:
 
 protected:
     /** first argument of binary statement */
-    Own<RelationReference> first;
+    std::string first;
 
     /** second argument of binary statement */
-    Own<RelationReference> second;
+    std::string second;
 };
 
 }  // namespace souffle::ram
