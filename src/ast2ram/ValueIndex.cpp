@@ -26,8 +26,7 @@
 
 namespace souffle::ast2ram {
 
-void ValueIndex::addVarReference(
-        const ast::Variable& var, const Location& l) {
+void ValueIndex::addVarReference(const ast::Variable& var, const Location& l) {
     std::set<Location>& locs = var_references[var.getName()];
     locs.insert(l);
 }
@@ -41,20 +40,17 @@ bool ValueIndex::isDefined(const ast::Variable& var) const {
     return var_references.find(var.getName()) != var_references.end();
 }
 
-const Location& ValueIndex::getDefinitionPoint(
-        const ast::Variable& var) const {
+const Location& ValueIndex::getDefinitionPoint(const ast::Variable& var) const {
     auto pos = var_references.find(var.getName());
     assert(pos != var_references.end() && "Undefined variable referenced!");
     return *pos->second.begin();
 }
 
-void ValueIndex::setGeneratorLoc(
-        const ast::Argument& agg, const Location& loc) {
+void ValueIndex::setGeneratorLoc(const ast::Argument& agg, const Location& loc) {
     arg_generator_locations.push_back(std::make_pair(&agg, loc));
 }
 
-const Location& ValueIndex::getGeneratorLoc(
-        const ast::Argument& arg) const {
+const Location& ValueIndex::getGeneratorLoc(const ast::Argument& arg) const {
     // search list
     for (const auto& cur : arg_generator_locations) {
         if (*cur.first == arg) {
@@ -65,8 +61,7 @@ const Location& ValueIndex::getGeneratorLoc(
     fatal("arg `%s` has no generator location", arg);
 }
 
-void ValueIndex::setRecordDefinition(
-        const ast::RecordInit& init, const Location& l) {
+void ValueIndex::setRecordDefinition(const ast::RecordInit& init, const Location& l) {
     record_definitions[&init] = l;
 }
 
@@ -75,8 +70,7 @@ void ValueIndex::setRecordDefinition(
     setRecordDefinition(init, Location({ident, pos, std::move(rel)}));
 }
 
-const Location& ValueIndex::getDefinitionPoint(
-        const ast::RecordInit& init) const {
+const Location& ValueIndex::getDefinitionPoint(const ast::RecordInit& init) const {
     auto pos = record_definitions.find(&init);
     if (pos != record_definitions.end()) {
         return pos->second;

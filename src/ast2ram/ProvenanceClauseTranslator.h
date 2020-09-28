@@ -25,7 +25,7 @@ class Clause;
 namespace souffle::ram {
 class Condition;
 class Operation;
-}
+}  // namespace souffle::ram
 
 namespace souffle::ast2ram {
 
