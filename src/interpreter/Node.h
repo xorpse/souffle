@@ -44,7 +44,7 @@ class Node;
 
 namespace interpreter {
 class ViewContext;
-struct RelationWrapper;
+class RelationWrapper;
 
 // clang-format off
 
