@@ -59,7 +59,7 @@ protected:
     virtual Own<ram::Operation> createOperation(const ast::Clause& clause);
     virtual Own<ram::Condition> createCondition(const ast::Clause& originalClause);
 
-    /** translate RAM code for a constant value */
+    /** apply constraint filters to a given operation */
     Own<ram::Operation> filterByConstraints(size_t level, const std::vector<ast::Argument*>& args,
             Own<ram::Operation> op, bool constrainByFunctors = true);
 
