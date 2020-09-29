@@ -17,7 +17,6 @@
 #pragma once
 
 #include "ast2ram/AstToRamTranslator.h"
-#include "ast2ram/ValueIndex.h"
 #include <map>
 #include <vector>
 
@@ -39,6 +38,8 @@ class RelationReference;
 
 namespace souffle::ast2ram {
 
+class ValueIndex;
+
 class ClauseTranslator {
 public:
     ClauseTranslator(AstToRamTranslator& translator)
@@ -50,6 +51,7 @@ public:
 protected:
     AstToRamTranslator& translator;
 
+    // value index to keep track of references in the loop nest
     Own<ValueIndex> valueIndex = mk<ValueIndex>();
 
     // current nesting level
