@@ -50,8 +50,7 @@ public:
 protected:
     AstToRamTranslator& translator;
 
-    // create value index
-    ValueIndex valueIndex;
+    Own<ValueIndex> valueIndex = mk<ValueIndex>();
 
     // current nesting level
     int level = 0;
