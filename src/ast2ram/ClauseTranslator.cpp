@@ -384,7 +384,7 @@ Own<ast::Clause> ClauseTranslator::getReorderedClause(const ast::Clause& clause,
 
 ClauseTranslator::arg_list* ClauseTranslator::getArgList(
         const ast::Node* curNode, std::map<const ast::Node*, Own<arg_list>>& nodeArgs) const {
-    if (nodeArgs.count(curNode) == 0u) {
+    if (!contains(nodeArgs, curNode)) {
         if (auto rec = dynamic_cast<const ast::RecordInit*>(curNode)) {
             nodeArgs[curNode] = mk<arg_list>(rec->getArguments());
         } else if (auto atom = dynamic_cast<const ast::Atom*>(curNode)) {
@@ -431,9 +431,7 @@ void ClauseTranslator::indexValues(const ast::Node* curNode,
 /** index values in rule */
 void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
     for (const auto* atom : ast::getBodyLiterals<ast::Atom>(clause)) {
-        // std::map<const arg_list*, int> arg_level;
         std::map<const ast::Node*, Own<arg_list>> nodeArgs;
-
         std::map<const arg_list*, int> arg_level;
         nodeArgs[atom] = mk<arg_list>(atom->getArguments());
         // the atom is obtained at the current level

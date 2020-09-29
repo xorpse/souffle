@@ -26,10 +26,6 @@ class Clause;
 class Node;
 }  // namespace souffle::ast
 
-namespace souffle::ast::analysis {
-class AuxiliaryArityAnalsyis;
-}
-
 namespace souffle::ram {
 class Operation;
 class Condition;
@@ -42,8 +38,7 @@ class ValueIndex;
 
 class ClauseTranslator {
 public:
-    ClauseTranslator(AstToRamTranslator& translator)
-            : translator(translator), auxArityAnalysis(translator.getAuxArityAnalysis()) {}
+    ClauseTranslator(AstToRamTranslator& translator) : translator(translator) {}
 
     Own<ram::Statement> translateClause(
             const ast::Clause& clause, const ast::Clause& originalClause, const int version = 0);
@@ -63,8 +58,6 @@ protected:
     /** apply constraint filters to a given operation */
     Own<ram::Operation> filterByConstraints(size_t level, const std::vector<ast::Argument*>& args,
             Own<ram::Operation> op, bool constrainByFunctors = true);
-
-    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis;
 
 private:
     // index nested variables and records
