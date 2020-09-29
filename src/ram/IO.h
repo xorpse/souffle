@@ -37,8 +37,8 @@ namespace souffle::ram {
  */
 class IO : public RelationStatement {
 public:
-    IO(std::string relRef, std::map<std::string, std::string> directives)
-            : RelationStatement(std::move(relRef)), directives(std::move(directives)) {}
+    IO(const std::string &rel, std::map<std::string, std::string> directives)
+            : RelationStatement(rel), directives(std::move(directives)) {}
 
     /** @brief get I/O directives */
     const std::map<std::string, std::string>& getDirectives() const {
@@ -51,14 +51,13 @@ public:
     }
 
     IO* clone() const override {
-        return new IO(souffle::clone(relationRef), directives);
+        return new IO(relation, directives);
     }
 
 protected:
     void print(std::ostream& os, int tabpos) const override {
-        const Relation& rel = getRelation();
         os << times(" ", tabpos);
-        os << "IO " << rel.getName() << " (";
+        os << "IO " << relation << " (";
         os << join(directives, ",", [](std::ostream& out, const auto& arg) {
             out << arg.first << "=\"" << escape(arg.second) << "\"";
         });

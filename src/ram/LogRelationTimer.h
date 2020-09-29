@@ -60,7 +60,7 @@ public:
     }
 
     LogRelationTimer* clone() const override {
-        return new LogRelationTimer(souffle::clone(statement), message, souffle::clone(relationRef));
+        return new LogRelationTimer(souffle::clone(statement), message, relation);
     }
 
     void apply(const NodeMapper& map) override {
@@ -70,7 +70,7 @@ public:
 
 protected:
     void print(std::ostream& os, int tabpos) const override {
-        os << times(" ", tabpos) << "START_TIMER ON " << getRelation().getName() << " \""
+        os << times(" ", tabpos) << "START_TIMER ON " << relation << " \""
            << stringify(message) << "\"" << std::endl;
         Statement::print(statement.get(), os, tabpos + 1);
         os << times(" ", tabpos) << "END_TIMER" << std::endl;

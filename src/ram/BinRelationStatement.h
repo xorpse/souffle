@@ -36,49 +36,31 @@ namespace souffle::ram {
  */
 class BinRelationStatement : public Statement {
 public:
-    BinRelationStatement(std::string f, std::string s)
-            : first(std::move(f)), second(std::move(s)) {
-        assert(first->get()->getArity() == second->get()->getArity() && "mismatching arities");
-
-        assert(first != nullptr && "First relation is a null-pointer");
-        assert(second != nullptr && "Second relation is a null-pointer");
-        const auto& type1 = first->get()->getAttributeTypes();
-        const auto& type2 = first->get()->getAttributeTypes();
-        for (size_t i = 0; i < first->get()->getArity(); i++) {
-            assert(type1[i] == type2[i] && "mismatching type");
-        }
+    BinRelationStatement(const std::string &f, const std::string &s)
+            : first(f), second(s) {
     }
 
     /** @brief Get first relation */
-    const Relation& getFirstRelation() const {
-        return *first->get();
+    const std::string& getFirstRelation() const {
+        return first;
     }
 
     /** @brief Get second relation */
-    const Relation& getSecondRelation() const {
-        return *second->get();
-    }
-
-    std::vector<const Node*> getChildNodes() const override {
-        return {first.get(), second.get()};
-    }
-
-    void apply(const NodeMapper& map) override {
-        first = map(std::move(first));
-        second = map(std::move(second));
+    const std::string& getSecondRelation() const {
+        return second;
     }
 
 protected:
     bool equal(const Node& node) const override {
         const auto& other = static_cast<const BinRelationStatement&>(node);
-        return equal_ptr(first, other.first) && equal_ptr(second, other.second);
+        return first == other.first && second == other.second;
     }
 
 protected:
-    /** first argument of binary statement */
+    /** first relation */ 
     std::string first;
 
-    /** second argument of binary statement */
+    /** second relation */ 
     std::string second;
 };
 

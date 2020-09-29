@@ -48,13 +48,13 @@ namespace souffle::ram {
  */
 class ParallelAggregate : public Aggregate, public AbstractParallel {
 public:
-    ParallelAggregate(Own<Operation> nested, AggregateOp fun, std::string relRef,
+    ParallelAggregate(Own<Operation> nested, AggregateOp fun, const std::string &rel,
             Own<Expression> expression, Own<Condition> condition, int ident)
-            : Aggregate(std::move(nested), fun, std::move(relRef), std::move(expression),
+            : Aggregate(std::move(nested), fun, rel, std::move(expression),
                       std::move(condition), ident) {}
 
     ParallelAggregate* clone() const override {
-        return new ParallelAggregate(souffle::clone(&getOperation()), function, souffle::clone(relationRef),
+        return new ParallelAggregate(souffle::clone(&getOperation()), function, relation,
                 souffle::clone(expression), souffle::clone(condition), identifier);
     }
 
@@ -63,7 +63,7 @@ protected:
         os << times(" ", tabpos);
         os << "PARALLEL t" << getTupleId() << ".0=";
         AbstractAggregate::print(os, tabpos);
-        os << "FOR ALL t" << getTupleId() << " ∈ " << getRelation().getName();
+        os << "FOR ALL t" << getTupleId() << " ∈ " << relation;
         if (!isTrue(condition.get())) {
             os << " WHERE " << getCondition();
         }

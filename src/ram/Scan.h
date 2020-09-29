@@ -42,7 +42,7 @@ namespace souffle::ram {
  */
 class Scan : public RelationOperation {
 public:
-    Scan(std::string rel, int ident, Own<Operation> nested, std::string profileText = "")
+    Scan(const std::string &rel, int ident, Own<Operation> nested, std::string profileText = "")
             : RelationOperation(rel, ident, std::move(nested), std::move(profileText)) {}
 
     Scan* clone() const override {
@@ -53,7 +53,7 @@ protected:
     void print(std::ostream& os, int tabpos) const override {
         os << times(" ", tabpos);
         os << "FOR t" << getTupleId();
-        os << " IN " << getRelation().getName() << std::endl;
+        os << " IN " << relation << std::endl;
         RelationOperation::print(os, tabpos + 1);
     }
 };

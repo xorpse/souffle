@@ -48,9 +48,9 @@ namespace souffle::ram {
  */
 class Aggregate : public RelationOperation, public AbstractAggregate {
 public:
-    Aggregate(Own<Operation> nested, AggregateOp fun, std::string relRef,
+    Aggregate(Own<Operation> nested, AggregateOp fun, const std::string &rel,
             Own<Expression> expression, Own<Condition> condition, int ident)
-            : RelationOperation(std::move(relRef), ident, std::move(nested)),
+            : RelationOperation(rel, ident, std::move(nested)),
               AbstractAggregate(fun, std::move(expression), std::move(condition)) {}
 
     std::vector<const Node*> getChildNodes() const override {
@@ -61,7 +61,7 @@ public:
     }
 
     Aggregate* clone() const override {
-        return new Aggregate(souffle::clone(&getOperation()), function, souffle::clone(relationRef),
+        return new Aggregate(souffle::clone(&getOperation()), function, relation,
                 souffle::clone(expression), souffle::clone(condition), getTupleId());
     }
 
@@ -76,7 +76,7 @@ protected:
         os << times(" ", tabpos);
         os << "t" << getTupleId() << ".0=";
         AbstractAggregate::print(os, tabpos);
-        os << "FOR ALL t" << getTupleId() << " ∈ " << getRelation().getName();
+        os << "FOR ALL t" << getTupleId() << " ∈ " << getRelation(); 
         if (!isTrue(condition.get())) {
             os << " WHERE " << getCondition();
         }

@@ -43,12 +43,12 @@ using RamPattern = std::pair<RamBound, RamBound>;
  */
 class IndexOperation : public RelationOperation {
 public:
-    IndexOperation(std::string r, int ident, RamPattern queryPattern, Own<Operation> nested,
+    IndexOperation(const std::string &rel, int ident, RamPattern queryPattern, Own<Operation> nested,
             std::string profileText = "")
-            : RelationOperation(std::move(r), ident, std::move(nested), std::move(profileText)),
+            : RelationOperation(rel, ident, std::move(nested), std::move(profileText)),
               queryPattern(std::move(queryPattern)) {
-        assert(getRangePattern().first.size() == getRelation().getArity() &&
-                getRangePattern().second.size() == getRelation().getArity());
+        assert(getRangePattern().first.size() == getRangePattern().second.size() 
+ && "Arity mismatch");
         for (const auto& pattern : queryPattern.first) {
             assert(pattern != nullptr && "pattern is a null-pointer");
         }
@@ -97,7 +97,7 @@ public:
         for (const auto& i : queryPattern.second) {
             resQueryPattern.second.emplace_back(i->clone());
         }
-        return new IndexOperation(souffle::clone(relationRef), getTupleId(), std::move(resQueryPattern),
+        return new IndexOperation(relation, getTupleId(), std::move(resQueryPattern),
                 souffle::clone(&getOperation()), getProfileText());
     }
 
@@ -105,7 +105,7 @@ public:
     void printIndex(std::ostream& os) const {
         //  const auto& attrib = getRelation().getAttributeNames();
         bool first = true;
-        for (unsigned int i = 0; i < getRelation().getArity(); ++i) {
+        for (unsigned int i = 0; i < queryPattern.first.size(); ++i) {
             // TODO: print proper upper lower/bound
 
             // early exit if no upper/lower bounds are defined

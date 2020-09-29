@@ -47,9 +47,9 @@ namespace souffle::ram {
  */
 class ParallelIndexAggregate : public IndexAggregate, public AbstractParallel {
 public:
-    ParallelIndexAggregate(Own<Operation> nested, AggregateOp fun, std::string relRef,
+    ParallelIndexAggregate(Own<Operation> nested, AggregateOp fun, const std::string &rel,
             Own<Expression> expression, Own<Condition> condition, RamPattern queryPattern, int ident)
-            : IndexAggregate(std::move(nested), fun, std::move(relRef), std::move(expression),
+            : IndexAggregate(std::move(nested), fun, rel, std::move(expression),
                       std::move(condition), std::move(queryPattern), ident) {}
 
     ParallelIndexAggregate* clone() const override {
@@ -61,7 +61,7 @@ public:
             pattern.second.emplace_back(i->clone());
         }
         return new ParallelIndexAggregate(souffle::clone(&getOperation()), function,
-                souffle::clone(relationRef), souffle::clone(expression), souffle::clone(condition),
+                relation, souffle::clone(expression), souffle::clone(condition),
                 std::move(pattern), getTupleId());
     }
 
@@ -70,7 +70,7 @@ protected:
         os << times(" ", tabpos);
         os << "PARALLEL t" << getTupleId() << ".0=";
         AbstractAggregate::print(os, tabpos);
-        os << "SEARCH t" << getTupleId() << " ∈ " << getRelation().getName();
+        os << "SEARCH t" << getTupleId() << " ∈ " << relation;
         printIndex(os);
         if (!isTrue(condition.get())) {
             os << " WHERE " << getCondition();

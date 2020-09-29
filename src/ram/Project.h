@@ -64,7 +64,6 @@ public:
 
     std::vector<const Node*> getChildNodes() const override {
         std::vector<const Node*> res;
-        res.push_back(relation.get());
         for (const auto& expr : expressions) {
             res.push_back(expr.get());
         }

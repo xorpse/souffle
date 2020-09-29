@@ -53,9 +53,9 @@ namespace souffle::ram {
  */
 class ParallelIndexScan : public IndexScan, public AbstractParallel {
 public:
-    ParallelIndexScan(std::string rel, int ident, RamPattern queryPattern, Own<Operation> nested,
+    ParallelIndexScan(const std::string &rel, int ident, RamPattern queryPattern, Own<Operation> nested,
             std::string profileText = "")
-            : IndexScan(std::move(rel), ident, std::move(queryPattern), std::move(nested), profileText) {}
+            : IndexScan(rel, ident, std::move(queryPattern), std::move(nested), profileText) {}
 
     ParallelIndexScan* clone() const override {
         RamPattern resQueryPattern;
@@ -65,16 +65,14 @@ public:
         for (const auto& i : queryPattern.second) {
             resQueryPattern.second.emplace_back(i->clone());
         }
-        return new ParallelIndexScan(souffle::clone(relationRef), getTupleId(), std::move(resQueryPattern),
+        return new ParallelIndexScan(relation, getTupleId(), std::move(resQueryPattern),
                 souffle::clone(&getOperation()), getProfileText());
     }
 
 protected:
     void print(std::ostream& os, int tabpos) const override {
-        const Relation& rel = getRelation();
         os << times(" ", tabpos);
-        os << "PARALLEL FOR t" << getTupleId() << " IN ";
-        os << rel.getName();
+        os << "PARALLEL FOR t" << getTupleId() << " IN " << relation; 
         printIndex(os);
         os << std::endl;
         IndexOperation::print(os, tabpos + 1);
