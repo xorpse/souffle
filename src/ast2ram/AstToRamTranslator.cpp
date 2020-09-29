@@ -1027,29 +1027,15 @@ Own<ram::Statement> AstToRamTranslator::makeNegationSubproofSubroutine(const ast
 
 /** translates the given datalog program into an equivalent RAM program  */
 void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {
-    // obtain IO Type of relations
+    // keep track of relevant analyses
     ioType = translationUnit.getAnalysis<ast::analysis::IOTypeAnalysis>();
-
-    // obtain type environment from analysis
     typeEnv = &translationUnit.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
-
-    // obtain recursive clauses from analysis
     const auto* recursiveClauses = translationUnit.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
-
-    // obtain strongly connected component (SCC) graph from analysis
     const auto& sccGraph = *translationUnit.getAnalysis<ast::analysis::SCCGraphAnalysis>();
-
-    // obtain some topological order over the nodes of the SCC graph
     const auto& sccOrder = *translationUnit.getAnalysis<ast::analysis::TopologicallySortedSCCGraphAnalysis>();
-
-    // obtain the schedule of relations expired at each index of the topological order
     const auto& expirySchedule =
             translationUnit.getAnalysis<ast::analysis::RelationScheduleAnalysis>()->schedule();
-
-    // get auxiliary arity analysis
     auxArityAnalysis = translationUnit.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
-
-    // get functor analysis
     functorAnalysis = translationUnit.getAnalysis<ast::analysis::FunctorAnalysis>();
 
     // determine the sips to use
@@ -1097,9 +1083,6 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
         appendStmt(current, mk<ram::Clear>(translateRelation(relation)));
     };
 
-    // maintain the index of the SCC within the topological order
-    size_t indexOfScc = 0;
-
     // create all Ram relations in ramRels
     for (const auto& scc : sccOrder.order()) {
         const auto& isRecursive = sccGraph.isRecursive(scc);
@@ -1110,6 +1093,7 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
             auto auxiliaryArity = auxArityAnalysis->getArity(rel);
             auto representation = rel->getRepresentation();
             const auto& attributes = rel->getAttributes();
+
             std::vector<std::string> attributeNames;
             std::vector<std::string> attributeTypeQualifiers;
             for (size_t i = 0; i < rel->getArity(); ++i) {
@@ -1121,6 +1105,8 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
             }
             ramRels[name] = mk<ram::Relation>(
                     name, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
+
+            // recursive relations also require @delta and @new variants, with the same signature
             if (isRecursive) {
                 std::string deltaName = "@delta_" + name;
                 std::string newName = "@new_" + name;
@@ -1131,6 +1117,10 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
             }
         }
     }
+
+    // maintain the index of the SCC within the topological order
+    size_t indexOfScc = 0;
+
     // iterate over each SCC according to the topological order
     for (const auto& scc : sccOrder.order()) {
         // make a new ram statement for the current SCC
@@ -1165,9 +1155,8 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
             makeRamStore(current, relation);
         }
 
-        // if provenance is not enabled...
+        // if provenance is disabled, drop all relations expired as per the topological order
         if (!Global::config().has("provenance")) {
-            // otherwise, drop all  relations expired as per the topological order
             for (const auto& relation : internExps) {
                 makeRamClear(current, relation);
             }
