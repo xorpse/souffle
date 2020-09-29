@@ -73,6 +73,7 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
             for (const auto& cur : agg.getBodyLiterals()) {
                 aggClause->addToBody(souffle::clone(cur));
             }
+            std::set<std::string> groundedVariables;
             // find stuff for which we need a grounding
             for (const auto& argPair : analysis::getGroundedTerms(translationUnit, *aggClause)) {
                 const auto* variable = dynamic_cast<const ast::Variable*>(argPair.first);
@@ -89,14 +90,13 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
                         continue;  // it's not an atom so it can't help ground anything
                     }
                     // Pull in everything that will restrict OR ground the variable
-                    bool added = false;
                     visitDepthFirst(*atom, [&](const ast::Variable& var) {
-                        if (added) {
+                        if (groundedVariables.find(var.getName()) != groundedVariables.end()) {
                             return;
                         }
                         if (var.getName() == variable->getName()) {
                             aggClause->addToBody(souffle::clone(atom));
-                            added = true;
+                            groundedVariables.insert(var.getName());
                         }
                     });
                 }

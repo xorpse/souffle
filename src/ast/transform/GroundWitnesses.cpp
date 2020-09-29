@@ -1,0 +1,118 @@
+/*
+ * Souffle - A Datalog Compiler
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved
+ * Licensed under the Universal Permissive License v 1.0 as shown at:
+ * - https://opensource.org/licenses/UPL
+ * - <souffle root>/licenses/SOUFFLE-UPL.txt
+ */
+
+/************************************************************************
+ *
+ * @file GroundWitnesses.cpp
+ *
+ ***********************************************************************/
+
+#include "ast/Clause.h"
+#include "ast/Aggregator.h"
+#include "ast/analysis/Aggregate.h"
+#include "ast/analysis/Ground.h"
+#include "ast/transform/GroundWitnesses.h"
+#include "ast/utility/Visitor.h"
+#include "souffle/utility/StringUtil.h"
+
+#include <set>
+
+namespace souffle::ast::transform {
+
+bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
+    Program& program = *translationUnit.getProgram();
+    
+    struct AggregateWithWitnesses {
+        Aggregator* aggregate;
+        Clause* originatingClause;
+        std::set<std::string> witnesses;
+
+        AggregateWithWitnesses(Aggregator* agg, Clause* clause, std::set<std::string> witnesses) 
+            : aggregate(agg), originatingClause(clause), witnesses(witnesses) {}
+    };
+
+    std::vector<AggregateWithWitnesses> aggregatesToFix;
+
+    visitDepthFirst(program, [&](const Clause& clause) {
+        visitDepthFirst(clause, [&](const Aggregator& agg) {
+            auto witnessVariables = analysis::getWitnessVariables(translationUnit, clause, agg);
+            if (witnessVariables.empty()) {
+                return;
+            }
+            AggregateWithWitnesses instance(const_cast<Aggregator*>(&agg), const_cast<Clause*>(&clause), witnessVariables);
+            aggregatesToFix.push_back(instance);
+        });        
+    });
+    
+    for (struct AggregateWithWitnesses& a : aggregatesToFix) {
+       Aggregator* agg = a.aggregate;
+       Clause* clause = a.originatingClause;
+       std::set<std::string> witnesses = a.witnesses; 
+       // agg will become invalid when it gets replaced, so we have to be careful
+       // not to use it after that point.
+       // 1. make a copy of all aggregate body literals, because they will need to
+       // be added to the rule body
+       std::vector<std::unique_ptr<Literal>> aggregateLiterals;
+       for (const auto& literal : agg->getBodyLiterals()) {
+           aggregateLiterals.push_back(souffle::clone(literal));
+       }
+       // 2. Replace witness variables with unique names so they don't clash with the outside
+       // scope anymore
+       // (Quickly create a set of all variables present in the rule to make sure
+       // we're making something new)
+       std::set<std::string> variablesInClause;
+       visitDepthFirst(*clause, [&](const Variable& var) {
+            variablesInClause.insert(var.getName());        
+       });
+       std::map<std::string, std::string> newWitnessVariableName;
+       for (std::string witness : witnesses) {
+           std::string candidate = witness + "_w";
+           int i = 0;
+           while (variablesInClause.find(candidate) != variablesInClause.end()) {
+              candidate = witness + "_w" + toString(i++); 
+           }
+           newWitnessVariableName[witness] = candidate;
+       }
+       visitDepthFirst(*agg, [&](const Variable& var) {
+            if (witnesses.find(var.getName()) != witnesses.end()) {
+                // if this variable is a witness, we need to replace it with its new name
+                const_cast<Variable&>(var).setName(newWitnessVariableName[var.getName()]);
+            }
+       });
+
+       // 3. Replace any instance of the target variable with a clone of the aggregate
+       struct TargetVariableReplacer : public NodeMapper {
+            Aggregator* aggregate;
+            std::string targetVariable;
+            TargetVariableReplacer(Aggregator* agg, std::string target)
+                : aggregate(agg), targetVariable(target) {}
+            std::unique_ptr<Node> operator()(std::unique_ptr<Node> node) const override { 
+                if (Variable* variable = dynamic_cast<Variable*>(node.get())) {
+                    if (variable->getName() == targetVariable) {
+                        auto replacement = souffle::clone(aggregate);
+                        return replacement;
+                    }
+                }
+                node->apply(*this);
+                return node; 
+            }
+       };
+       const Variable* targetVariable = dynamic_cast<const Variable*>(agg->getTargetExpression());
+       std::string targetVariableName = targetVariable->getName();
+       TargetVariableReplacer replacer(agg, targetVariableName);
+       for (std::unique_ptr<Literal>& literal : aggregateLiterals) {
+           literal->apply(replacer);
+           // 4. Finally add these new grounding literals for the witness 
+           // to the body of the clause and voila! We've grounded
+           // the witness(es)! Yay!
+           clause->addToBody(souffle::clone(literal));
+       }
+    }
+    return !aggregatesToFix.empty();
+}
+}  // namespace souffle::ast::transform

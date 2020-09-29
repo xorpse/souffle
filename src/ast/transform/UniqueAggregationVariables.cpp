@@ -13,6 +13,7 @@
  ***********************************************************************/
 
 #include "ast/transform/UniqueAggregationVariables.h"
+#include "ast/analysis/Aggregate.h"
 #include "ast/Aggregator.h"
 #include "ast/Argument.h"
 #include "ast/Program.h"
@@ -25,34 +26,38 @@
 
 namespace souffle::ast::transform {
 
+/**
+ * Renames all local variables of the aggregate to something unique, so that
+ *  the scope of the local variable is limited to the body of the aggregate subclause.
+ *  This assumes that we have simplified the target expression to a target variable.
+ **/
 bool UniqueAggregationVariablesTransformer::transform(TranslationUnit& translationUnit) {
     bool changed = false;
 
     // make variables in aggregates unique
-    int aggNumber = 0;
-    visitDepthFirstPostOrder(*translationUnit.getProgram(), [&](const Aggregator& agg) {
-        // only applicable for aggregates with target expression
-        if (agg.getTargetExpression() == nullptr) {
-            return;
-        }
+    visitDepthFirst(*translationUnit.getProgram(), [&](const Clause& clause) {
+        // find out if the target expression variable occurs elsewhere in the rule. If so, rename it
+        // to avoid naming conflicts
+        visitDepthFirst(clause, [&](const Aggregator& agg) {
+            // get the set of local variables in this aggregate and rename
+            // those that occur outside the aggregate
+            std::set<std::string> localVariables = analysis::getLocalVariables(translationUnit, clause, agg);
+            std::set<std::string> variablesOutsideAggregate = analysis::getVariablesOutsideAggregate(clause, agg);
+            for (const std::string& name : localVariables) {
+                if (variablesOutsideAggregate.find(name) != variablesOutsideAggregate.end()) {
+                    // then this MUST be renamed to avoid scoping issues
+                    std::string uniqueName = analysis::findUniqueVariableName(clause, name);
+                    visitDepthFirst(agg, [&](const Variable& var) {
+                        if (var.getName() == name) {
+                            const_cast<Variable&>(var).setName(uniqueName);
+                            changed = true;
+                        }
+                    });
 
-        // get all variables in the target expression
-        std::set<std::string> names;
-        visitDepthFirst(
-                *agg.getTargetExpression(), [&](const ast::Variable& var) { names.insert(var.getName()); });
 
-        // rename them
-        visitDepthFirst(agg, [&](const ast::Variable& var) {
-            auto pos = names.find(var.getName());
-            if (pos == names.end()) {
-                return;
+                }
             }
-            const_cast<ast::Variable&>(var).setName(" " + var.getName() + toString(aggNumber));
-            changed = true;
-        });
-
-        // increment aggregation number
-        aggNumber++;
+        });        
     });
     return changed;
 }

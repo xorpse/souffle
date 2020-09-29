@@ -56,6 +56,7 @@
 #include "ast/UnnamedVariable.h"
 #include "ast/UserDefinedFunctor.h"
 #include "ast/Variable.h"
+#include "ast/analysis/Aggregate.h"
 #include "ast/analysis/Ground.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/PrecedenceGraph.h"
@@ -820,148 +821,36 @@ void SemanticCheckerImpl::checkIO() {
     }
 }
 
-static const std::vector<SrcLocation> usesInvalidWitness(TranslationUnit& tu,
-        const std::vector<Literal*>& literals, const std::set<Own<Argument>>& groundedArguments) {
-    // Node-mapper that replaces aggregators with new (unique) variables
-    struct M : public NodeMapper {
-        // Variables introduced to replace aggregators
-        mutable std::set<std::string> aggregatorVariables;
-
-        const std::set<std::string>& getAggregatorVariables() {
-            return aggregatorVariables;
-        }
-
-        Own<Node> operator()(Own<Node> node) const override {
-            static int numReplaced = 0;
-            if (isA<Aggregator>(node.get())) {
-                // Replace the aggregator with a variable
-                std::stringstream newVariableName;
-                newVariableName << "+aggr_var_" << numReplaced++;
-
-                // Keep track of which variables are bound to aggregators
-                aggregatorVariables.insert(newVariableName.str());
-
-                return mk<ast::Variable>(newVariableName.str());
-            }
-            node->apply(*this);
-            return node;
-        }
-    };
-
-    std::vector<SrcLocation> result;
-
-    // Create two versions of the original clause
-
-    // Clause 1 - will remain equivalent to the original clause in terms of variable groundedness
-    auto originalClause = mk<Clause>();
-    originalClause->setHead(mk<Atom>("*"));
-
-    // Clause 2 - will have aggregators replaced with intrinsically grounded variables
-    auto aggregatorlessClause = mk<Clause>();
-    aggregatorlessClause->setHead(mk<Atom>("*"));
-
-    // Construct both clauses in the same manner to match the original clause
-    // Must keep track of the subnode in Clause 1 that each subnode in Clause 2 matches to
-    std::map<const Argument*, const Argument*> identicalSubnodeMap;
-    for (const Literal* lit : literals) {
-        auto firstClone = souffle::clone(lit);
-        auto secondClone = souffle::clone(lit);
-
-        // Construct the mapping between equivalent literal subnodes
-        std::vector<const Argument*> firstCloneArguments;
-        visitDepthFirst(*firstClone, [&](const Argument& arg) { firstCloneArguments.push_back(&arg); });
-
-        std::vector<const Argument*> secondCloneArguments;
-        visitDepthFirst(*secondClone, [&](const Argument& arg) { secondCloneArguments.push_back(&arg); });
-
-        for (size_t i = 0; i < firstCloneArguments.size(); i++) {
-            identicalSubnodeMap[secondCloneArguments[i]] = firstCloneArguments[i];
-        }
-
-        // Actually add the literal clones to each clause
-        originalClause->addToBody(std::move(firstClone));
-        aggregatorlessClause->addToBody(std::move(secondClone));
-    }
-
-    // Replace the aggregators in Clause 2 with variables
-    M update;
-    aggregatorlessClause->apply(update);
-
-    // Create a dummy atom to force certain arguments to be grounded in the aggregatorlessClause
-    auto groundingAtomAggregatorless = mk<Atom>("grounding_atom");
-    auto groundingAtomOriginal = mk<Atom>("grounding_atom");
-
-    // Force the new aggregator variables to be grounded in the aggregatorless clause
-    const std::set<std::string>& aggregatorVariables = update.getAggregatorVariables();
-    for (const std::string& str : aggregatorVariables) {
-        groundingAtomAggregatorless->addArgument(mk<ast::Variable>(str));
-    }
-
-    // Force the given grounded arguments to be grounded in both clauses
-    for (const Own<Argument>& arg : groundedArguments) {
-        groundingAtomAggregatorless->addArgument(souffle::clone(arg));
-        groundingAtomOriginal->addArgument(souffle::clone(arg));
-    }
-
-    aggregatorlessClause->addToBody(std::move(groundingAtomAggregatorless));
-    originalClause->addToBody(std::move(groundingAtomOriginal));
-
-    // Compare the grounded analysis of both generated clauses
-    // All added arguments in Clause 2 were forced to be grounded, so if an ungrounded argument
-    // appears in Clause 2, it must also appear in Clause 1. Consequently, have two cases:
-    //   - The argument is also ungrounded in Clause 1 - handled by another check
-    //   - The argument is grounded in Clause 1 => the argument was grounded in the
-    //     first clause somewhere along the line by an aggregator-body - not allowed!
-    std::set<Own<Argument>> newlyGroundedArguments;
-    auto originalGrounded = getGroundedTerms(tu, *originalClause);
-    for (auto&& pair : getGroundedTerms(tu, *aggregatorlessClause)) {
-        if (!pair.second && originalGrounded[identicalSubnodeMap[pair.first]]) {
-            result.push_back(pair.first->getSrcLoc());
-        }
-
-        // Otherwise, it can now be considered grounded
-        newlyGroundedArguments.insert(souffle::clone(pair.first));
-    }
-
-    // All previously grounded are still grounded
-    for (const Own<Argument>& arg : groundedArguments) {
-        newlyGroundedArguments.insert(souffle::clone(arg));
-    }
-
-    // Everything on this level is fine, check subaggregators of each literal
-    for (const Literal* lit : literals) {
-        visitDepthFirst(*lit, [&](const Aggregator& aggr) {
-            // Check recursively if an invalid witness is used
-            for (auto&& argloc : usesInvalidWitness(tu, aggr.getBodyLiterals(), newlyGroundedArguments)) {
-                result.push_back(argloc);
-            }
-        });
-    }
-
-    return result;
-}
-
 void SemanticCheckerImpl::checkWitnessProblem() {
-    // Visit each clause to check if an invalid aggregator witness is used
+    // Check whether there is the use of a witness in
+    // an aggregate where it doesn't make sense to use it, i.e.
+    // count, sum, mean
     visitDepthFirst(program, [&](const Clause& clause) {
-        // Body literals of the clause to check
-        std::vector<Literal*> bodyLiterals = clause.getBodyLiterals();
-
-        // Add in all head variables as new ungrounded body literals
-        auto headVariables = mk<Atom>("*");
-        visitDepthFirst(*clause.getHead(),
-                [&](const ast::Variable& var) { headVariables->addArgument(souffle::clone(&var)); });
-        auto headNegation = mk<Negation>(std::move(headVariables));
-        bodyLiterals.push_back(headNegation.get());
-
-        // Perform the check
-        std::set<Own<Argument>> groundedArguments;
-        for (auto&& invalidArgument : usesInvalidWitness(tu, bodyLiterals, groundedArguments)) {
-            report.addError(
-                    "Witness problem: argument grounded by an aggregator's inner scope is used ungrounded in "
-                    "outer scope",
-                    invalidArgument);
-        }
+       visitDepthFirst(clause, [&](const Aggregator& agg) {
+           auto witnesses = analysis::getWitnessVariables(tu, clause, agg);
+           if (!witnesses.empty()) {
+           AggregateOp fun = agg.getOperator();
+                if (fun == AggregateOp::MEAN  ||
+                    fun == AggregateOp::SUM   ||
+                    fun == AggregateOp::COUNT) {
+                    for (auto witnessName : witnesses) {
+                       // find srcLocation of this thing
+                       SrcLocation srcLoc;
+                       visitDepthFirst(agg, [&](const Variable& var) {
+                            if (var.getName() == witnessName) {
+                                srcLoc = var.getSrcLoc();
+                                return;
+                            } 
+                       });
+                       report.addError(
+                         "Witness problem: argument grounded by an aggregator's inner scope is used ungrounded in "
+                         "outer scope in a count/sum/mean aggregate",
+                         srcLoc
+                       );
+                    }
+                }
+           }
+       });         
     });
 }
 

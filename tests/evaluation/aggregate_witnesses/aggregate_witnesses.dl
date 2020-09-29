@@ -1,0 +1,32 @@
+/*
+ * Souffle - A Datalog Compiler
+ * Copyright (c) 2020 The Souffle Developers. All Rights reserved
+ * Licensed under the Universal Permissive License v 1.0 as shown at:
+ * - https://opensource.org/licenses/UPL
+ * - <souffle root>/licenses/SOUFFLE-UPL.txt
+ */
+// Test that witnesses grounded in the aggregate body can be exported to the head
+
+.decl Student(name:symbol, height:number)
+.decl Tallest(student:symbol, height:number)
+
+Student("Anna", 170).
+Student("Rachel", 177).
+Student("Quarantina", 180).
+
+Tallest(student, n) :- n = max height : { Student(student, height) }.
+
+.output Student, Tallest()
+
+.decl A(x:number, y:number)
+.decl MinSum, MinSumNotReduced(x:number, y:number, s:number)
+
+A(1, 2).
+A(5, 6).
+A(-50, 3).
+A(54, 5).
+
+MinSum(x, y, s) :- s = min w : { A(x, y), w = x + y }.
+MinSumNotReduced(x, y, s) :- s = min x + y : { A(x, y) }.
+
+.output A, MinSum, MinSumNotReduced()
