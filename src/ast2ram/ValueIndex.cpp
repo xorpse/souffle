@@ -26,6 +26,9 @@
 
 namespace souffle::ast2ram {
 
+ValueIndex::ValueIndex() = default;
+ValueIndex::~ValueIndex() = default;
+
 void ValueIndex::addVarReference(const ast::Variable& var, const Location& l) {
     std::set<Location>& locs = var_references[var.getName()];
     locs.insert(l);

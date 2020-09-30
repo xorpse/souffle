@@ -55,6 +55,7 @@
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
 #include "ast2ram/ClauseTranslator.h"
+#include "ast2ram/Location.h"
 #include "ast2ram/ProvenanceClauseTranslator.h"
 #include "ast2ram/ValueIndex.h"
 #include "parser/SrcLocation.h"
