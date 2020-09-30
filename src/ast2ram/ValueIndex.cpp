@@ -62,7 +62,7 @@ const Location& ValueIndex::getGeneratorLoc(const ast::Argument& arg) const {
 }
 
 void ValueIndex::setRecordDefinition(const ast::RecordInit& init, const Location& l) {
-    record_definitions[&init] = l;
+    record_definitions.insert({&init, l});
 }
 
 void ValueIndex::setRecordDefinition(

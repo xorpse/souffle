@@ -24,27 +24,15 @@ class RelationReference;
 namespace souffle::ast2ram {
 
 struct Location {
-    int identifier{};
-    int element{};
-    Own<ram::RelationReference> relation{nullptr};
-
-    Location() = default;
+    const int identifier;
+    const int element;
+    const Own<const ram::RelationReference> relation;
 
     Location(int ident, int elem, Own<ram::RelationReference> rel = nullptr)
             : identifier(ident), element(elem), relation(std::move(rel)) {}
 
-    Location(const Location& l) : identifier(l.identifier), element(l.element) {
-        if (l.relation != nullptr) {
-            relation = souffle::clone(l.relation);
-        }
-    }
-
-    Location& operator=(Location other) {
-        identifier = other.identifier;
-        element = other.element;
-        relation = std::move(other.relation);
-        return *this;
-    }
+    Location(const Location& l)
+            : identifier(l.identifier), element(l.element), relation(souffle::clone(l.relation)) {}
 
     bool operator==(const Location& loc) const {
         return identifier == loc.identifier && element == loc.element;
