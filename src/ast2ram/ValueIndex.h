@@ -88,8 +88,7 @@ public:
     const Location& getDefinitionPoint(const ast::RecordInit& init) const;
 
     // -- generators (aggregates & some functors) --
-
-    void setGeneratorLoc(const ast::Argument& agg, const Location& loc);
+    void setGeneratorLoc(const ast::Argument& arg, const Location& loc);
 
     const Location& getGeneratorLoc(const ast::Argument& arg) const;
 

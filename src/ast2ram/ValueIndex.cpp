@@ -16,6 +16,7 @@
  ***********************************************************************/
 
 #include "ast2ram/ValueIndex.h"
+#include "ast/Aggregator.h"
 #include "ast/Variable.h"
 #include "ast2ram/Location.h"
 #include "ram/Relation.h"
@@ -49,18 +50,26 @@ const Location& ValueIndex::getDefinitionPoint(const ast::Variable& var) const {
     return *pos->second.begin();
 }
 
-void ValueIndex::setGeneratorLoc(const ast::Argument& agg, const Location& loc) {
-    arg_generator_locations.push_back(std::make_pair(&agg, loc));
+void ValueIndex::setGeneratorLoc(const ast::Argument& arg, const Location& loc) {
+    arg_generator_locations.push_back(std::make_pair(&arg, loc));
 }
 
 const Location& ValueIndex::getGeneratorLoc(const ast::Argument& arg) const {
-    // search list
-    for (const auto& cur : arg_generator_locations) {
-        if (*cur.first == arg) {
-            return cur.second;
+    if (dynamic_cast<const ast::Aggregator*>(&arg) != nullptr) {
+        // aggregators can be used interchangeably if syntactically equal
+        for (const auto& cur : arg_generator_locations) {
+            if (*cur.first == arg) {
+                return cur.second;
+            }
+        }
+    } else {
+        // otherwise, unique for each appearance
+        for (const auto& cur : arg_generator_locations) {
+            if (cur.first == &arg) {
+                return cur.second;
+            }
         }
     }
-
     fatal("arg `%s` has no generator location", arg);
 }
 
