@@ -30,7 +30,6 @@ class Variable;
 }  // namespace souffle::ast
 
 namespace souffle::ram {
-class RelationReference;
 }
 
 namespace souffle::ast2ram {
@@ -66,7 +65,7 @@ public:
     void addVarReference(const ast::Variable& var, const Location& l);
 
     void addVarReference(
-            const ast::Variable& var, int ident, int pos, Own<ram::RelationReference> rel = nullptr);
+            const ast::Variable& var, int ident, int pos, const std::string &rel = "");
 
     bool isDefined(const ast::Variable& var) const;
 
@@ -79,7 +78,7 @@ public:
     void setRecordDefinition(const ast::RecordInit& init, const Location& l);
 
     void setRecordDefinition(
-            const ast::RecordInit& init, int ident, int pos, Own<ram::RelationReference> rel = nullptr);
+            const ast::RecordInit& init, int ident, int pos, const std::string &rel = "");
 
     const Location& getDefinitionPoint(const ast::RecordInit& init) const;
 

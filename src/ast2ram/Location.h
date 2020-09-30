@@ -26,23 +26,23 @@ namespace souffle::ast2ram {
 struct Location {
     int identifier{};
     int element{};
-    Own<ram::RelationReference> relation{nullptr};
+    std::string relation{""};
 
     Location() = default;
 
-    Location(int ident, int elem, Own<ram::RelationReference> rel = nullptr)
-            : identifier(ident), element(elem), relation(std::move(rel)) {}
+    Location(int ident, int elem, const std::string &rel = "")
+            : identifier(ident), element(elem), relation(rel) {}
 
     Location(const Location& l) : identifier(l.identifier), element(l.element) {
-        if (l.relation != nullptr) {
-            relation = souffle::clone(l.relation);
+        if (l.relation != "") {
+            relation = l.relation;
         }
     }
 
     Location& operator=(Location other) {
         identifier = other.identifier;
         element = other.element;
-        relation = std::move(other.relation);
+        relation = other.relation;
         return *this;
     }
 

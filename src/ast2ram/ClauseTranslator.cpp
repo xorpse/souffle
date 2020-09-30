@@ -398,7 +398,7 @@ ClauseTranslator::arg_list* ClauseTranslator::getArgList(
 
 void ClauseTranslator::indexValues(const ast::Node* curNode,
         std::map<const ast::Node*, Own<arg_list>>& nodeArgs, std::map<const arg_list*, int>& arg_level,
-        ram::RelationReference* relation) {
+        const std::string &relation) {
     arg_list* cur = getArgList(curNode, nodeArgs);
     for (size_t pos = 0; pos < cur->size(); ++pos) {
         // get argument
@@ -406,11 +406,15 @@ void ClauseTranslator::indexValues(const ast::Node* curNode,
 
         // check for variable references
         if (auto var = dynamic_cast<const ast::Variable*>(arg)) {
+#if 0
             if (pos < relation->get()->getArity()) {
-                valueIndex.addVarReference(*var, arg_level[cur], pos, souffle::clone(relation));
+#endif 
+                valueIndex.addVarReference(*var, arg_level[cur], pos, relation);
+#if 0
             } else {
                 valueIndex.addVarReference(*var, arg_level[cur], pos);
             }
+#endif 
         }
 
         // check for nested records

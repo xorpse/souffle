@@ -79,7 +79,7 @@ private:
     arg_list* getArgList(const ast::Node* curNode, std::map<const ast::Node*, Own<arg_list>>& nodeArgs) const;
 
     void indexValues(const ast::Node* curNode, std::map<const ast::Node*, Own<arg_list>>& nodeArgs,
-            std::map<const arg_list*, int>& arg_level, ram::RelationReference* relation);
+            std::map<const arg_list*, int>& arg_level, const std::string &relation);
 
     void createValueIndex(const ast::Clause& clause);
 };
