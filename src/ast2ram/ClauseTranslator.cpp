@@ -26,6 +26,7 @@
 #include "ast/transform/ReorderLiterals.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
+#include "ast2ram/AstToRamTranslator.h"
 #include "ast2ram/Location.h"
 #include "ast2ram/ValueIndex.h"
 #include "ram/Aggregate.h"

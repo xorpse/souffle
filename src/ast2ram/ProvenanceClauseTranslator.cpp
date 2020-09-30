@@ -19,6 +19,7 @@
 #include "ast/BinaryConstraint.h"
 #include "ast/Clause.h"
 #include "ast/ProvenanceNegation.h"
+#include "ast2ram/AstToRamTranslator.h"
 #include "ast2ram/ValueIndex.h"
 #include "ram/Condition.h"
 #include "ram/Relation.h"

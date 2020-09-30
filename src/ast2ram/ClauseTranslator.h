@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ast2ram/AstToRamTranslator.h"
+#include "souffle/utility/ContainerUtil.h"
 #include <map>
 #include <vector>
 
@@ -30,10 +30,12 @@ namespace souffle::ram {
 class Operation;
 class Condition;
 class RelationReference;
+class Statement;
 }  // namespace souffle::ram
 
 namespace souffle::ast2ram {
 
+class AstToRamTranslator;
 class ValueIndex;
 
 class ClauseTranslator {
