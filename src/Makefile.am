@@ -4,7 +4,8 @@
 # - https://opensource.org/licenses/UPL
 # - <souffle root>/licenses/SOUFFLE-UPL.txt
 
-SUBDIRS = . tests ast/tests ram/tests interpreter/tests
+SUBDIRS = . tests ast/tests ram/tests 
+// SUBDIRS = . tests ast/tests ram/tests interpreter/tests
 
 SUFFIXES = .cpp .h .yy .ll .cc .hh .h
 
@@ -197,20 +198,20 @@ souffle_sources = \
         ast2ram/ProvenanceClauseTranslator.h               \
         ast2ram/ValueIndex.cpp                             \
         ast2ram/ValueIndex.h                               \
-        interpreter/Context.h                              \
-        interpreter/Engine.cpp                             \
-        interpreter/Engine.h                               \
-        interpreter/Generator.h                            \
-        interpreter/BrieIndex.cpp                          \
-        interpreter/BTreeIndex.cpp                         \
-        interpreter/EqrelIndex.cpp                         \
-        interpreter/ProvenanceIndex.cpp                    \
-        interpreter/Index.h                                \
-        interpreter/Node.h                                 \
-        interpreter/ViewContext.h                          \
-        interpreter/ProgInterface.h                        \
-        interpreter/Relation.h                             \
-        interpreter/Util.h                                 \
+//        interpreter/Context.h                              \
+//        interpreter/Engine.cpp                             \
+//        interpreter/Engine.h                               \
+//        interpreter/Generator.h                            \
+//        interpreter/BrieIndex.cpp                          \
+//        interpreter/BTreeIndex.cpp                         \
+//        interpreter/EqrelIndex.cpp                         \
+//        interpreter/ProvenanceIndex.cpp                    \
+//        interpreter/Index.h                                \
+//        interpreter/Node.h                                 \
+//        interpreter/ViewContext.h                          \
+//        interpreter/ProgInterface.h                        \
+//        interpreter/Relation.h                             \
+//        interpreter/Util.h                                 \
         parser/ParserDriver.cpp                            \
         parser/ParserDriver.h                              \
         parser/ParserUtils.cpp                             \
@@ -343,10 +344,10 @@ souffle_sources = \
         reports/DebugReport.cpp                            \
         reports/DebugReport.h                              \
         reports/ErrorReport.h                              \
-        synthesiser/Synthesiser.cpp                        \
-        synthesiser/Synthesiser.h                          \
-        synthesiser/Relation.cpp                           \
-        synthesiser/Relation.h                             \
+//        synthesiser/Synthesiser.cpp                        \
+//        synthesiser/Synthesiser.h                          \
+//        synthesiser/Relation.cpp                           \
+//        synthesiser/Relation.h                             \
         $(souffle_utility_sources)                         \
         $(souffle_profile_sources)
 
