@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "ast2ram/Location.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <map>
 #include <set>
@@ -35,8 +34,13 @@ class RelationReference;
 
 namespace souffle::ast2ram {
 
+struct Location;
+
 class ValueIndex {
 public:
+    ValueIndex();
+    ~ValueIndex();
+
     /**
      * The type mapping variables (referenced by their names) to the
      * locations where they are used.

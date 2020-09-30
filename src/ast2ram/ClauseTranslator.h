@@ -16,8 +16,7 @@
 
 #pragma once
 
-#include "ast2ram/AstToRamTranslator.h"
-#include "ast2ram/ValueIndex.h"
+#include "souffle/utility/ContainerUtil.h"
 #include <map>
 #include <vector>
 
@@ -27,22 +26,21 @@ class Clause;
 class Node;
 }  // namespace souffle::ast
 
-namespace souffle::ast::analysis {
-class AuxiliaryArityAnalsyis;
-}
-
 namespace souffle::ram {
 class Operation;
 class Condition;
 class RelationReference;
+class Statement;
 }  // namespace souffle::ram
 
 namespace souffle::ast2ram {
 
+class AstToRamTranslator;
+class ValueIndex;
+
 class ClauseTranslator {
 public:
-    ClauseTranslator(AstToRamTranslator& translator)
-            : translator(translator), auxArityAnalysis(translator.getAuxArityAnalysis()) {}
+    ClauseTranslator(AstToRamTranslator& translator) : translator(translator) {}
 
     Own<ram::Statement> translateClause(
             const ast::Clause& clause, const ast::Clause& originalClause, const int version = 0);
@@ -50,8 +48,8 @@ public:
 protected:
     AstToRamTranslator& translator;
 
-    // create value index
-    ValueIndex valueIndex;
+    // value index to keep track of references in the loop nest
+    Own<ValueIndex> valueIndex = mk<ValueIndex>();
 
     // current nesting level
     int level = 0;
@@ -59,16 +57,11 @@ protected:
     virtual Own<ram::Operation> createOperation(const ast::Clause& clause);
     virtual Own<ram::Condition> createCondition(const ast::Clause& originalClause);
 
-    /** translate RAM code for a constant value */
+    /** apply constraint filters to a given operation */
     Own<ram::Operation> filterByConstraints(size_t level, const std::vector<ast::Argument*>& args,
             Own<ram::Operation> op, bool constrainByFunctors = true);
 
-    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis;
-
 private:
-    // index nested variables and records
-    using arg_list = std::vector<ast::Argument*>;
-
     std::vector<const ast::Argument*> generators;
 
     // the order of processed operations
@@ -76,10 +69,8 @@ private:
 
     Own<ast::Clause> getReorderedClause(const ast::Clause& clause, const int version) const;
 
-    arg_list* getArgList(const ast::Node* curNode, std::map<const ast::Node*, Own<arg_list>>& nodeArgs) const;
-
-    void indexValues(const ast::Node* curNode, std::map<const ast::Node*, Own<arg_list>>& nodeArgs,
-            std::map<const arg_list*, int>& arg_level, ram::RelationReference* relation);
+    void indexValues(const ast::Node* curNode, const std::vector<ast::Argument*>& curNodeArgs,
+            std::map<const ast::Node*, int>& nodeLevel, ram::RelationReference* relation);
 
     void createValueIndex(const ast::Clause& clause);
 };
