@@ -60,9 +60,6 @@ protected:
             Own<ram::Operation> op, bool constrainByFunctors = true);
 
 private:
-    // index nested variables and records
-    using arg_list = std::vector<ast::Argument*>;
-
     std::vector<const ast::Argument*> generators;
 
     // the order of processed operations
@@ -70,10 +67,8 @@ private:
 
     Own<ast::Clause> getReorderedClause(const ast::Clause& clause, const int version) const;
 
-    arg_list* getArgList(const ast::Node* curNode, std::map<const ast::Node*, Own<arg_list>>& nodeArgs) const;
-
-    void indexValues(const ast::Node* curNode, std::map<const ast::Node*, Own<arg_list>>& nodeArgs,
-            std::map<const arg_list*, int>& arg_level, ram::RelationReference* relation);
+    void indexValues(const ast::Node* curNode, const std::vector<ast::Argument*>& curNodeArgs, std::map<const ast::Node*, int>& nodeLevel,
+            ram::RelationReference* relation);
 
     void createValueIndex(const ast::Clause& clause);
 };

@@ -382,34 +382,18 @@ Own<ast::Clause> ClauseTranslator::getReorderedClause(const ast::Clause& clause,
     return reorderedClause;
 }
 
-ClauseTranslator::arg_list* ClauseTranslator::getArgList(
-        const ast::Node* curNode, std::map<const ast::Node*, Own<arg_list>>& nodeArgs) const {
-    if (!contains(nodeArgs, curNode)) {
-        if (auto rec = dynamic_cast<const ast::RecordInit*>(curNode)) {
-            nodeArgs[curNode] = mk<arg_list>(rec->getArguments());
-        } else if (auto atom = dynamic_cast<const ast::Atom*>(curNode)) {
-            nodeArgs[curNode] = mk<arg_list>(atom->getArguments());
-        } else {
-            fatal("node type doesn't have arguments!");
-        }
-    }
-    return nodeArgs[curNode].get();
-}
-
-void ClauseTranslator::indexValues(const ast::Node* curNode,
-        std::map<const ast::Node*, Own<arg_list>>& nodeArgs, std::map<const arg_list*, int>& arg_level,
-        ram::RelationReference* relation) {
-    arg_list* cur = getArgList(curNode, nodeArgs);
-    for (size_t pos = 0; pos < cur->size(); ++pos) {
+void ClauseTranslator::indexValues(const ast::Node* curNode, const std::vector<ast::Argument*>& curNodeArgs,
+        std::map<const ast::Node*, int>& nodeLevel, ram::RelationReference* relation) {
+    for (size_t pos = 0; pos < curNodeArgs.size(); ++pos) {
         // get argument
-        auto& arg = (*cur)[pos];
+        auto& arg = curNodeArgs[pos];
 
         // check for variable references
         if (auto var = dynamic_cast<const ast::Variable*>(arg)) {
             if (pos < relation->get()->getArity()) {
-                valueIndex->addVarReference(*var, arg_level[cur], pos, souffle::clone(relation));
+                valueIndex->addVarReference(*var, nodeLevel[curNode], pos, souffle::clone(relation));
             } else {
-                valueIndex->addVarReference(*var, arg_level[cur], pos);
+                valueIndex->addVarReference(*var, nodeLevel[curNode], pos);
             }
         }
 
@@ -417,13 +401,13 @@ void ClauseTranslator::indexValues(const ast::Node* curNode,
         if (auto rec = dynamic_cast<const ast::RecordInit*>(arg)) {
             // introduce new nesting level for unpack
             op_nesting.push_back(rec);
-            arg_level[getArgList(rec, nodeArgs)] = level++;
+            nodeLevel[rec] = level++;
 
             // register location of record
-            valueIndex->setRecordDefinition(*rec, arg_level[cur], pos);
+            valueIndex->setRecordDefinition(*rec, nodeLevel[curNode], pos);
 
             // resolve nested components
-            indexValues(rec, nodeArgs, arg_level, relation);
+            indexValues(rec, rec->getArguments(), nodeLevel, relation);
         }
     }
 }
@@ -431,15 +415,15 @@ void ClauseTranslator::indexValues(const ast::Node* curNode,
 /** index values in rule */
 void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
     for (const auto* atom : ast::getBodyLiterals<ast::Atom>(clause)) {
-        std::map<const ast::Node*, Own<arg_list>> nodeArgs;
-        std::map<const arg_list*, int> arg_level;
-        nodeArgs[atom] = mk<arg_list>(atom->getArguments());
-        // the atom is obtained at the current level
-        // increment nesting level for the atom
-        arg_level[nodeArgs[atom].get()] = level++;
+        // map from each list of arguments to its nesting level
+        std::map<const ast::Node*, int> nodeLevel;
+
+        // give the atom the current level
+        nodeLevel[atom] = level++;
         op_nesting.push_back(atom);
 
-        indexValues(atom, nodeArgs, arg_level, translator.translateRelation(atom).get());
+        // index each value in the atom
+        indexValues(atom, atom->getArguments(), nodeLevel, translator.translateRelation(atom).get());
     }
 
     // add aggregation functions
