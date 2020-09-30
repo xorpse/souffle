@@ -433,7 +433,9 @@ void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
         auto addGenerator = [&]() -> std::optional<int> {
             // The by-value compare means that we're effectively doing CSE for any
             // generator args during code-gen. This is a weird place to do this.
-            if (any_of(generators, [&](auto* x) { return *x == arg; })) return {};
+            if (dynamic_cast<const ast::Aggregator*>(&arg) != nullptr &&
+                    any_of(generators, [&](auto* x) { return *x == arg; }))
+                return {};
             generators.push_back(&arg);
 
             int aggLoc = level++;
