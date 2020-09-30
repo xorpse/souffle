@@ -67,8 +67,8 @@ private:
 
     Own<ast::Clause> getReorderedClause(const ast::Clause& clause, const int version) const;
 
-    void indexValues(const ast::Node* curNode, const std::vector<ast::Argument*>& curNodeArgs, std::map<const ast::Node*, int>& nodeLevel,
-            ram::RelationReference* relation);
+    void indexValues(const ast::Node* curNode, const std::vector<ast::Argument*>& curNodeArgs,
+            std::map<const ast::Node*, int>& nodeLevel, ram::RelationReference* relation);
 
     void createValueIndex(const ast::Clause& clause);
 };
