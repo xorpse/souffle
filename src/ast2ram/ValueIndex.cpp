@@ -51,7 +51,7 @@ const Location& ValueIndex::getDefinitionPoint(const ast::Variable& var) const {
 }
 
 void ValueIndex::setGeneratorLoc(const ast::Argument& arg, const Location& loc) {
-    arg_generator_locations.push_back(std::make_pair(&agg, loc));
+    arg_generator_locations.push_back(std::make_pair(&arg, loc));
 }
 
 const Location& ValueIndex::getGeneratorLoc(const ast::Argument& arg) const {
