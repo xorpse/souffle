@@ -446,10 +446,17 @@ public:
     bool isTotalSignature(const AbstractExistenceCheck* existCheck) const;
 
 private:
+    inline const Relation *lookupRelation(const std::string &name) const { 
+        auto it = relationMap.find(name);  
+        assert (it != relationMap.end() && "relation not found"); 
+        return it->second; 
+    } 
+
     /**
      * minimal index cover for relations, i.e., maps a relation to a set of indexes
      */
     std::map<const Relation*, MinIndexSelection> minIndexCover;
+    std::map<std::string, const Relation*> relationMap;
 };
 
 }  // namespace souffle::ram::analysis

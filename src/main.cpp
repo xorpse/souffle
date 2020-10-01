@@ -58,10 +58,8 @@
 #include "ast/transform/UniqueAggregationVariables.h"
 #include "ast2ram/AstToRamTranslator.h"
 #include "config.h"
-#if 0
 #include "interpreter/Engine.h"
 #include "interpreter/ProgInterface.h"
-#endif 
 #include "parser/ParserDriver.h"
 #include "ram/Node.h"
 #include "ram/Program.h"
@@ -620,12 +618,11 @@ int main(int argc, char** argv) {
     }
 
     // Output the transformed RAM program and return
-//    if (Global::config().get("show") == "transformed-ram") {
+    if (Global::config().get("show") == "transformed-ram") {
         std::cout << ramTranslationUnit->getProgram();
         return 0;
-//    }
+    }
 
-#if 0
     try {
         if (!Global::config().has("compile") && !Global::config().has("dl-program") &&
                 !Global::config().has("generate") && !Global::config().has("swig")) {
@@ -653,7 +650,9 @@ int main(int argc, char** argv) {
                     explain(interface, true);
                 }
             }
-        } else {
+        }
+#if 0
+ else {
             // ------- compiler -------------
             auto synthesiser = mk<synthesiser::Synthesiser>(*ramTranslationUnit);
 
@@ -723,6 +722,7 @@ int main(int argc, char** argv) {
                 }
             }
         }
+#endif 
     } catch (std::exception& e) {
         std::cerr << e.what() << std::endl;
         std::exit(EXIT_FAILURE);
@@ -736,7 +736,6 @@ int main(int argc, char** argv) {
     }
 
     return 0;
-#endif 
 }
 
 }  // end of namespace souffle

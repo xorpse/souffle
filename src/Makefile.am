@@ -287,6 +287,8 @@ souffle_sources = \
         ram/utility/NodeMapper.h                           \
         ram/utility/Utils.h                                \
         ram/utility/Visitor.h                              \
+        ram/analysis/Index.cpp                             \
+        ram/analysis/Index.h                               \
         reports/DebugReport.cpp                            \
         reports/DebugReport.h                              \
         reports/ErrorReport.h                              \

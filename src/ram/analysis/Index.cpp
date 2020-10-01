@@ -495,7 +495,8 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
         } else if (const auto* ramRel = dynamic_cast<const Relation*>(&node)) {
             MinIndexSelection& indexes = getIndexes(*ramRel);
             indexes.addSearch(getSearchSignature(ramRel));
-        }
+            relationMap[ramRel->getName()]=ramRel; 
+        } 
     });
 
     // A swap happen between rel A and rel B indicates A should include all indices of B, vice versa.
@@ -506,9 +507,8 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
         // in any of the relation in a complete iteration.
         //
         // Currently RAM does not have such situation.
-        const Relation& relA = swap.getFirstRelation();
-        const Relation& relB = swap.getSecondRelation();
-
+        const Relation &relA = *lookupRelation(swap.getFirstRelation());
+        const Relation &relB = *lookupRelation(swap.getSecondRelation());
         MinIndexSelection& indexesA = getIndexes(relA);
         MinIndexSelection& indexesB = getIndexes(relB);
         // Add all searchSignature of A into B
@@ -537,6 +537,9 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
     }
 }
 
+MinIndexSelection& IndexAnalysis::getIndexes(const std::string &name) {
+    return getIndexes(*lookupRelation(name)); 
+} 
 MinIndexSelection& IndexAnalysis::getIndexes(const Relation& rel) {
     auto pos = minIndexCover.find(&rel);
     if (pos != minIndexCover.end()) {
@@ -602,7 +605,9 @@ SearchSignature searchSignature(size_t arity, Seq const& xs) {
 }  // namespace
 
 SearchSignature IndexAnalysis::getSearchSignature(const IndexOperation* search) const {
-    size_t arity = search->getRelation().getArity();
+ 
+    const Relation *rel = lookupRelation(search->getRelation()); 
+    size_t arity = rel->getArity();
 
     auto lower = search->getRangePattern().first;
     auto upper = search->getRangePattern().second;
@@ -623,7 +628,8 @@ SearchSignature IndexAnalysis::getSearchSignature(const IndexOperation* search) 
 
 SearchSignature IndexAnalysis::getSearchSignature(const ProvenanceExistenceCheck* provExistCheck) const {
     const auto values = provExistCheck->getValues();
-    auto auxiliaryArity = provExistCheck->getRelation().getAuxiliaryArity();
+    const Relation *rel = lookupRelation(provExistCheck->getRelation()); 
+    auto auxiliaryArity = rel->getAuxiliaryArity();
 
     SearchSignature keys(values.size());
 
@@ -643,7 +649,8 @@ SearchSignature IndexAnalysis::getSearchSignature(const ProvenanceExistenceCheck
 }
 
 SearchSignature IndexAnalysis::getSearchSignature(const ExistenceCheck* existCheck) const {
-    return searchSignature(existCheck->getRelation().getArity(), existCheck->getValues());
+    const Relation *rel = lookupRelation(existCheck->getRelation()); 
+    return searchSignature(rel->getArity(), existCheck->getValues());
 }
 
 SearchSignature IndexAnalysis::getSearchSignature(const Relation* ramRel) const {

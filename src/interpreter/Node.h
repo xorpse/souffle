@@ -130,17 +130,14 @@ enum NodeType {
  *
  * Add reflective from string to NodeType.
  */
-inline NodeType constructNodeType(std::string tokBase, const std::string& rel) {
+inline NodeType constructNodeType(std::string tokBase, const ram::Relation &rel) {
     static bool isProvenance = Global::config().has("provenance");
 
     static const std::unordered_map<std::string, NodeType> map = {
             FOR_EACH_INTERPRETER_TOKEN(SINGLE_TOKEN_ENTRY, EXPAND_TOKEN_ENTRY)
     };
 
-    // std::string arity = std::to_string(rel.getArity());
-    std::string arity = "0";
-    return map.at("I_" + tokBase + "_Btree_" + arity);
-#if 0
+    std::string arity = std::to_string(rel.getArity());
     if (rel.getRepresentation() == RelationRepresentation::EQREL) {
         return map.at("I_" + tokBase + "_Eqrel_" + arity);
     } else if (isProvenance) {
@@ -148,7 +145,7 @@ inline NodeType constructNodeType(std::string tokBase, const std::string& rel) {
     } else {
         return map.at("I_" + tokBase + "_Btree_" + arity);
     }
-#endif 
+
     fatal("Unrecognized node type: base:%s arity:%s.", tokBase, arity);
 }
 
