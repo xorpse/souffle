@@ -15,6 +15,7 @@
  ***********************************************************************/
 
 #include "ast/transform/NormaliseRanges.h"
+#include "ast/BinaryConstraint.h"
 #include "ast/IntrinsicFunctor.h"
 #include "ast/Program.h"
 #include "ast/TranslationUnit.h"
@@ -32,8 +33,8 @@ bool NormaliseRangesTransformer::transform(TranslationUnit& translationUnit) {
         mutable std::vector<std::pair<std::string, Own<IntrinsicFunctor>>> rangeNames{};
         name_ranges() = default;
 
-        const std::vector<std::pair<std::string, Own<IntrinsicFunctor>>>& getRangeNames() {
-            return rangeNames;
+        std::vector<std::pair<std::string, Own<IntrinsicFunctor>>> getRangeNames() {
+            return std::move(rangeNames);
         }
 
         Own<Node> operator()(Own<Node> node) const override {
@@ -56,7 +57,10 @@ bool NormaliseRangesTransformer::transform(TranslationUnit& translationUnit) {
     for (auto* clause : program.getClauses()) {
         name_ranges update;
         clause->apply(update);
-        std::cout << *clause << std::endl;
+        for (auto& [name, func] : update.getRangeNames()) {
+            clause->addToBody(
+                    mk<BinaryConstraint>(BinaryConstraintOp::EQ, mk<Variable>(name), std::move(func)));
+        }
     }
     return true;
 }
