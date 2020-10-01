@@ -126,7 +126,7 @@ public:
     NodePtr generateTree(const ram::Node& root, const ram::Program& program) {
         this->program = const_cast<ram::Program*>(&program);
         // Encode all relation, indexPos and viewId.
-        visitDepthFirst(root, [&](const ram::Relation& relation) {
+        visitDepthFirst(program, [&](const ram::Relation& relation) {
                 std::cout << relation.getName() << std::endl; 
                 assert(relationMap.find(relation.getName()) == relationMap.end()
                           && "double-naming of relations");
