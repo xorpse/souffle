@@ -25,6 +25,7 @@
 namespace souffle::ast::transform {
 
 bool NormaliseRangesTransformer::transform(TranslationUnit& translationUnit) {
+    bool changed = false;
     auto& program = translationUnit.getProgram();
 
     // Assign a unique name to each range
@@ -58,11 +59,12 @@ bool NormaliseRangesTransformer::transform(TranslationUnit& translationUnit) {
         name_ranges update;
         clause->apply(update);
         for (auto& [name, func] : update.getRangeNames()) {
+            changed = true;
             clause->addToBody(
                     mk<BinaryConstraint>(BinaryConstraintOp::EQ, mk<Variable>(name), std::move(func)));
         }
     }
-    return true;
+    return changed;
 }
 
 }  // namespace souffle::ast::transform
