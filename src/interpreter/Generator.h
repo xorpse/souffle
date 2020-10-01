@@ -724,6 +724,8 @@ private:
     }
 
     /** @brief Encode and create the relation, return the relation id */
+    size_t encodeRelation(const ram::Relation *rel) {
+    } 
     size_t encodeRelation(const std::string &rel) {
 #if 0
         auto pos = relTable.find(&rel);

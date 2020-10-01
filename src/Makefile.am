@@ -290,6 +290,20 @@ souffle_sources = \
         reports/DebugReport.cpp                            \
         reports/DebugReport.h                              \
         reports/ErrorReport.h                              \
+        interpreter/Context.h                              \
+        interpreter/Engine.cpp                             \
+        interpreter/Engine.h                               \
+        interpreter/Generator.h                            \
+        interpreter/BrieIndex.cpp                          \
+        interpreter/BTreeIndex.cpp                         \
+        interpreter/EqrelIndex.cpp                         \
+        interpreter/ProvenanceIndex.cpp                    \
+        interpreter/Index.h                                \
+        interpreter/Node.h                                 \
+        interpreter/ViewContext.h                          \
+        interpreter/ProgInterface.h                        \
+        interpreter/Relation.h                             \
+        interpreter/Util.h                                 \
         $(souffle_utility_sources)                         \
         $(souffle_profile_sources)
 
