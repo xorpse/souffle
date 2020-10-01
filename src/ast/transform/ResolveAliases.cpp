@@ -212,6 +212,15 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
     // tests whether something is a record
     auto isRec = [&](const Argument& arg) { return isA<RecordInit>(&arg); };
 
+    // tests whether something is a range operator
+    auto isRange = [&](const Argument& arg) {
+        const auto* inf = dynamic_cast<const IntrinsicFunctor*>(&arg);
+        if (inf == nullptr) return false;
+        const auto& op = inf->getFunctionOp();
+        return op && (op.value() == FunctorOp::RANGE || op.value() == FunctorOp::FRANGE ||
+                             op.value() == FunctorOp::URANGE);
+    };
+
     // tests whether a value `a` occurs in a term `b`
     auto occurs = [](const Argument& a, const Argument& b) {
         bool res = false;
@@ -318,20 +327,25 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
         const auto& v = static_cast<const ast::Variable&>(lhs);
         const Argument& t = rhs;
 
-        // #6:  v occurs in t   => skip
+        // #6:  t is a range operator   => skip
+        if (isRange(t)) {
+            continue;
+        }
+
+        // #7:  v occurs in t   => skip
         if (occurs(v, t)) {
             continue;
         }
 
         assert(!occurs(v, t));
 
-        // #7:  t is a record   => add mapping
+        // #8:  t is a record   => add mapping
         if (isRec(t)) {
             newMapping(v.getName(), &t);
             continue;
         }
 
-        // #8:  v is already grounded   => skip
+        // #9:  v is already grounded   => skip
         auto pos = baseGroundedVariables.find(v.getName());
         if (pos != baseGroundedVariables.end()) {
             continue;
