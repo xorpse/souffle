@@ -50,11 +50,11 @@
 namespace souffle::ast2ram {
 
 /** generate RAM code for a clause */
-Own<ram::Statement> ClauseTranslator::translateClause(
+Own<ram::Statement> ClauseTranslator::translateClause(const ast::Relation *relation, 
         const ast::Clause& clause, const ast::Clause& originalClause, const int version) {
     if (auto reorderedClause = getReorderedClause(clause, version)) {
         // translate reordered clause
-        return translateClause(*reorderedClause, originalClause, version);
+        return translateClause(relation, *reorderedClause, originalClause, version);
     }
 
     // get extract some details
@@ -75,7 +75,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
     // the rest should be rules
     assert(isRule(clause));
 
-    createValueIndex(clause);
+    createValueIndex(clause, relation);
 
     // -- create RAM statement --
 
@@ -398,7 +398,7 @@ ClauseTranslator::arg_list* ClauseTranslator::getArgList(
 
 void ClauseTranslator::indexValues(const ast::Node* curNode,
         std::map<const ast::Node*, Own<arg_list>>& nodeArgs, std::map<const arg_list*, int>& arg_level,
-        const std::string &relation) {
+        const std::string &relation, const ast::Relation *astRelation) {
     arg_list* cur = getArgList(curNode, nodeArgs);
     for (size_t pos = 0; pos < cur->size(); ++pos) {
         // get argument
@@ -406,15 +406,11 @@ void ClauseTranslator::indexValues(const ast::Node* curNode,
 
         // check for variable references
         if (auto var = dynamic_cast<const ast::Variable*>(arg)) {
-#if 0
-            if (pos < relation->get()->getArity()) {
-#endif 
+            if (pos < astRelation->getArity()) {
                 valueIndex.addVarReference(*var, arg_level[cur], pos, relation);
-#if 0
             } else {
                 valueIndex.addVarReference(*var, arg_level[cur], pos);
             }
-#endif 
         }
 
         // check for nested records
@@ -427,13 +423,13 @@ void ClauseTranslator::indexValues(const ast::Node* curNode,
             valueIndex.setRecordDefinition(*rec, arg_level[cur], pos);
 
             // resolve nested components
-            indexValues(rec, nodeArgs, arg_level, relation);
+            indexValues(rec, nodeArgs, arg_level, relation, astRelation);
         }
     }
 }
 
 /** index values in rule */
-void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
+void ClauseTranslator::createValueIndex(const ast::Clause& clause, const ast::Relation *rel) {
     for (const auto* atom : ast::getBodyLiterals<ast::Atom>(clause)) {
         // std::map<const arg_list*, int> arg_level;
         std::map<const ast::Node*, Own<arg_list>> nodeArgs;
@@ -445,7 +441,7 @@ void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
         arg_level[nodeArgs[atom].get()] = level++;
         op_nesting.push_back(atom);
 
-        indexValues(atom, nodeArgs, arg_level, translator.translateRelation(atom).get());
+        indexValues(atom, nodeArgs, arg_level, translator.translateRelation(atom), rel);
     }
 
     // add aggregation functions

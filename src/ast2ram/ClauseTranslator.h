@@ -45,6 +45,7 @@ public:
             : translator(translator), auxArityAnalysis(translator.getAuxArityAnalysis()) {}
 
     Own<ram::Statement> translateClause(
+            const ast::Relation *relation, 
             const ast::Clause& clause, const ast::Clause& originalClause, const int version = 0);
 
 protected:
@@ -79,9 +80,9 @@ private:
     arg_list* getArgList(const ast::Node* curNode, std::map<const ast::Node*, Own<arg_list>>& nodeArgs) const;
 
     void indexValues(const ast::Node* curNode, std::map<const ast::Node*, Own<arg_list>>& nodeArgs,
-            std::map<const arg_list*, int>& arg_level, const std::string &relation);
+            std::map<const arg_list*, int>& arg_level, const std::string &relation, const ast::Relation *astRelation);
 
-    void createValueIndex(const ast::Clause& clause);
+    void createValueIndex(const ast::Clause& clause, const ast::Relation *rel);
 };
 
 }  // namespace souffle::ast2ram

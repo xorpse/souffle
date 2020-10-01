@@ -441,7 +441,7 @@ Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(
         }
 
         // translate clause
-        Own<ram::Statement> rule = ClauseTranslator(*this).translateClause(*clause, *clause);
+        Own<ram::Statement> rule = ClauseTranslator(*this).translateClause(&rel, *clause, *clause);
 
         // add logging
         if (Global::config().has("profile")) {
@@ -452,7 +452,7 @@ Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(
                     LogStatement::tNonrecursiveRule(relationName, srcLocation, clauseText);
             const std::string logSizeStatement =
                     LogStatement::nNonrecursiveRule(relationName, srcLocation, clauseText);
-            rule = mk<ram::LogRelationTimer>(std::move(rule), logTimerStatement, souffle::clone(rrel));
+            rule = mk<ram::LogRelationTimer>(std::move(rule), logTimerStatement, rrel);
         }
 
         // add debug info
@@ -476,12 +476,12 @@ Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(
             const std::string logTimerStatement =
                     LogStatement::tNonrecursiveRelation(relationName, srcLocation);
             auto newStmt = mk<ram::LogRelationTimer>(
-                    mk<ram::Sequence>(std::move(res)), logTimerStatement, souffle::clone(rrel));
+                    mk<ram::Sequence>(std::move(res)), logTimerStatement, rrel);
             res.clear();
             appendStmt(res, std::move(newStmt));
         } else {
             // add table size printer
-            appendStmt(res, mk<ram::LogSize>(souffle::clone(rrel), logSizeStatement));
+            appendStmt(res, mk<ram::LogSize>(rrel, logSizeStatement));
         }
     }
 
@@ -535,42 +535,21 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
     VecOwn<ram::Statement> updateTable;
     VecOwn<ram::Statement> postamble;
 
-    auto genMerge = [](const ast::Relation *dest,
-                            const std::string src) -> Own<ram::Statement> {
+    auto genMerge = [&](const ast::Relation *rel, const std::string &destRel, const std::string &srcRel) -> Own<ram::Statement> {
         VecOwn<ram::Expression> values;
-        if (dest->getArity() == 0) {
+        if (rel->getArity() == 0) {
             return mk<ram::Query>(
-                    mk<ram::Filter>(mk<ram::Negation>(mk<ram::EmptinessCheck>(src)),
-                            mk<ram::Project>(translateRelation(dest), std::move(values))));
+                    mk<ram::Filter>(mk<ram::Negation>(mk<ram::EmptinessCheck>(srcRel)),
+                            mk<ram::Project>(destRel, std::move(values))));
         }
-        for (std::size_t i = 0; i < dest->getArity(); i++) {
+        for (std::size_t i = 0; i < rel->getArity(); i++) {
             values.push_back(mk<ram::TupleElement>(0, i));
         }
         auto stmt = mk<ram::Query>(mk<ram::Scan>(
-                src, 0, mk<ram::Project>(translateRelation(dest), std::move(values))));
-        if (dest->getRepresentation() == RelationRepresentation::EQREL) {
+                srcRel, 0, mk<ram::Project>(destRel, std::move(values))));
+        if (rel->getRepresentation() == RelationRepresentation::EQREL) {
             return mk<ram::Sequence>(
-                    mk<ram::Extend>(translateRelation(dest), src)), std::move(stmt));
-        }
-        return stmt;
-    };
-
-    auto genMerge = [](const std::string &dest,
-                            const ast::Relation src) -> Own<ram::Statement> {
-        VecOwn<ram::Expression> values;
-        if (src->getArity() == 0) {
-            return mk<ram::Query>(
-                    mk<ram::Filter>(mk<ram::Negation>(mk<ram::EmptinessCheck>(translateRelation(src))),
-                            mk<ram::Project>(dest, std::move(values))));
-        }
-        for (std::size_t i = 0; i < src->getArity(); i++) {
-            values.push_back(mk<ram::TupleElement>(0, i));
-        }
-        auto stmt = mk<ram::Query>(mk<ram::Scan>(
-                src, 0, mk<ram::Project>(dest, std::move(values))));
-        if (src->getRepresentation() == RelationRepresentation::EQREL) {
-            return mk<ram::Sequence>(
-                    mk<ram::Extend>(dest, translateRelation(src)), std::move(stmt));
+                    mk<ram::Extend>(destRel, srcRel), std::move(stmt));
         }
         return stmt;
     };
@@ -582,7 +561,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
     for (const ast::Relation* rel : scc) {
         /* create update statements for fixpoint (even iteration) */
         Own<ram::Statement> updateRelTable =
-                mk<ram::Sequence>(genMerge(rel, translateNewRelation(rel)),
+                mk<ram::Sequence>(genMerge(rel, translateRelation(rel), translateNewRelation(rel)),
                         mk<ram::Swap>(translateDeltaRelation(rel), translateNewRelation(rel)),
                         mk<ram::Clear>(translateNewRelation(rel)));
 
@@ -600,7 +579,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
         /* Generate code for non-recursive part of relation */
         /* Generate merge operation for temp tables */
         appendStmt(preamble, translateNonRecursiveRelation(*rel, recursiveClauses));
-        appendStmt(preamble, genMerge(translateDeltaRelation(rel), rel));
+        appendStmt(preamble, genMerge(rel,translateDeltaRelation(rel), translateRelation(rel)));
 
         /* Add update operations of relations to parallel statements */
         appendStmt(updateTable, std::move(updateRelTable));
@@ -640,9 +619,9 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
 
                 // modify the processed rule to use delta relation and write to new relation
                 Own<ast::Clause> r1(cl->clone());
-                r1->getHead()->setQualifiedName(translateNewRelation(rel)->get()->getName());
+                r1->getHead()->setQualifiedName(translateNewRelation(rel));
                 ast::getBodyLiterals<ast::Atom>(*r1)[j]->setQualifiedName(
-                        translateDeltaRelation(atomRelation)->get()->getName());
+                        translateDeltaRelation(atomRelation));
                 if (Global::config().has("provenance")) {
                     r1->addToBody(mk<ast::ProvenanceNegation>(souffle::clone(cl->getHead())));
                 } else {
@@ -660,12 +639,12 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
                     if (isInSameSCC(getAtomRelation(atoms[k], program))) {
                         auto cur = souffle::clone(ast::getBodyLiterals<ast::Atom>(*r1)[k]);
                         cur->setQualifiedName(
-                                translateDeltaRelation(getAtomRelation(atoms[k], program))->get()->getName());
+                                translateDeltaRelation(getAtomRelation(atoms[k], program)));
                         r1->addToBody(mk<ast::Negation>(std::move(cur)));
                     }
                 }
 
-                Own<ram::Statement> rule = ClauseTranslator(*this).translateClause(*r1, *cl, version);
+                Own<ram::Statement> rule = ClauseTranslator(*this).translateClause(rel, *r1, *cl, version);
 
                 /* add logging */
                 if (Global::config().has("profile")) {
@@ -818,7 +797,7 @@ Own<ram::Statement> AstToRamTranslator::makeSubproofSubroutine(const ast::Clause
                     souffle::clone(atomArgs[arity - 1]), mk<ast::SubroutineArgument>(levelIndex)));
         }
     }
-    return ProvenanceClauseTranslator(*this).translateClause(*intermediateClause, clause);
+    return ProvenanceClauseTranslator(*this).translateClause(nullptr, *intermediateClause, clause);
 }
 
 /** make a subroutine to search for subproofs for the non-existence of a tuple */
@@ -948,7 +927,7 @@ Own<ram::Statement> AstToRamTranslator::makeNegationSubproofSubroutine(const ast
             assert(query.size() == atom->getArity() && "wrong query tuple size");
 
             // create existence checks to check if the tuple exists or not
-            auto existenceCheck = mk<ram::ExistenceCheck>(souffle::clone(relName), std::move(query));
+            auto existenceCheck = mk<ram::ExistenceCheck>(relName, std::move(query));
             auto negativeExistenceCheck = mk<ram::Negation>(souffle::clone(existenceCheck));
 
             // return true if the tuple exists
@@ -992,7 +971,7 @@ Own<ram::Statement> AstToRamTranslator::makeNegationSubproofSubroutine(const ast
             assert(query.size() == atom->getArity() && "wrong query tuple size");
 
             // create existence checks to check if the tuple exists or not
-            auto existenceCheck = mk<ram::ExistenceCheck>(souffle::clone(relName), std::move(query));
+            auto existenceCheck = mk<ram::ExistenceCheck>(relName, std::move(query));
             auto negativeExistenceCheck = mk<ram::Negation>(souffle::clone(existenceCheck));
 
             // return true if the tuple exists
