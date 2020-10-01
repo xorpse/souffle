@@ -38,6 +38,7 @@
 #include "ast/transform/MaterializeSingletonAggregation.h"
 #include "ast/transform/MinimiseProgram.h"
 #include "ast/transform/NameUnnamedVariables.h"
+#include "ast/transform/NormaliseRanges.h"
 #include "ast/transform/PartitionBodyLiterals.h"
 #include "ast/transform/Pipeline.h"
 #include "ast/transform/PolymorphicObjects.h"
@@ -483,7 +484,7 @@ int main(int argc, char** argv) {
                     mk<ast::transform::ResolveAnonymousRecordAliasesTransformer>(),
                     mk<ast::transform::FoldAnonymousRecords>())),
             mk<ast::transform::PolymorphicObjectsTransformer>(), mk<ast::transform::SemanticChecker>(),
-            mk<ast::transform::ADTtoRecordsTransformer>(),
+            mk<ast::transform::ADTtoRecordsTransformer>(), mk<ast::transform::NormaliseRangesTransformer>(),
             mk<ast::transform::MaterializeSingletonAggregationTransformer>(),
             mk<ast::transform::FixpointTransformer>(
                     mk<ast::transform::MaterializeAggregationQueriesTransformer>()),
