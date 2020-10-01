@@ -15,9 +15,50 @@
  ***********************************************************************/
 
 #include "ast/transform/NormaliseRanges.h"
+#include "ast/IntrinsicFunctor.h"
+#include "ast/Program.h"
+#include "ast/TranslationUnit.h"
+#include "ast/Variable.h"
+#include "souffle/utility/ContainerUtil.h"
 
 namespace souffle::ast::transform {
+
 bool NormaliseRangesTransformer::transform(TranslationUnit& translationUnit) {
-    return false;
+    auto& program = translationUnit.getProgram();
+
+    // Assign a unique name to each range
+    struct name_ranges : public NodeMapper {
+        mutable int count{0};
+        mutable std::vector<std::pair<std::string, Own<IntrinsicFunctor>>> rangeNames{};
+        name_ranges() = default;
+
+        const std::vector<std::pair<std::string, Own<IntrinsicFunctor>>>& getRangeNames() {
+            return rangeNames;
+        }
+
+        Own<Node> operator()(Own<Node> node) const override {
+            node->apply(*this);
+            if (auto* inf = dynamic_cast<IntrinsicFunctor*>(node.get())) {
+                const auto& op = inf->getFunctionOp();
+                if (op && (op.value() == FunctorOp::URANGE || op.value() == FunctorOp::FRANGE ||
+                                  op.value() == FunctorOp::RANGE)) {
+                    std::stringstream newName;
+                    newName << "@range_" << count++;
+                    rangeNames.push_back({newName.str(), Own<IntrinsicFunctor>(inf->clone())});
+                    return mk<Variable>(newName.str());
+                }
+            }
+            return node;
+        }
+    };
+
+    // Apply the mapper to each clause
+    for (auto* clause : program.getClauses()) {
+        name_ranges update;
+        clause->apply(update);
+        std::cout << *clause << std::endl;
+    }
+    return true;
 }
+
 }  // namespace souffle::ast::transform
