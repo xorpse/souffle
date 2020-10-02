@@ -650,9 +650,7 @@ int main(int argc, char** argv) {
                     explain(interface, true);
                 }
             }
-        }
-#if 0
- else {
+        } else {
             // ------- compiler -------------
             auto synthesiser = mk<synthesiser::Synthesiser>(*ramTranslationUnit);
 
@@ -722,7 +720,6 @@ int main(int argc, char** argv) {
                 }
             }
         }
-#endif 
     } catch (std::exception& e) {
         std::cerr << e.what() << std::endl;
         std::exit(EXIT_FAILURE);
