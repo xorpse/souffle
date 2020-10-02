@@ -5,7 +5,7 @@
 # - <souffle root>/licenses/SOUFFLE-UPL.txt
 
 SUBDIRS = . tests ast/tests ram/tests 
-// SUBDIRS = . tests ast/tests ram/tests interpreter/tests
+# SUBDIRS = . tests ast/tests ram/tests interpreter/tests
 
 SUFFIXES = .cpp .h .yy .ll .cc .hh .h
 

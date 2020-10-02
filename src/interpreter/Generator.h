@@ -21,6 +21,7 @@
 #include "RelationTag.h"
 #include "interpreter/Index.h"
 #include "interpreter/Relation.h"
+#include "souffle/utility/StreamUtil.h"
 #include "interpreter/ViewContext.h"
 #include "ram/AbstractExistenceCheck.h"
 #include "ram/AbstractParallel.h"
@@ -115,24 +116,23 @@ class NodeGenerator : public ram::Visitor<Own<Node>> {
     using RelationHandle = Own<RelationWrapper>;
 
 public:
-    NodeGenerator(ram::analysis::IndexAnalysis* isa)
+    NodeGenerator(ram::Program &program, ram::analysis::IndexAnalysis* isa)
             : isa(isa), isProvenance(Global::config().has("provenance")),
-              profileEnabled(Global::config().has("profile")) {}
+              profileEnabled(Global::config().has("profile")), program(&program) {
+
+        visitDepthFirst(program, [&](const ram::Relation& relation) {
+                assert(relationMap.find(relation.getName()) == relationMap.end()
+                          && "double-naming of relations");
+                relationMap[relation.getName()] = &relation;
+        });
+    }
 
     /**
      * @brief Generate the tree based on given entry.
      * Return a NodePtr to the root.
      */
-    NodePtr generateTree(const ram::Node& root, const ram::Program& program) {
-        this->program = const_cast<ram::Program*>(&program);
+    NodePtr generateTree(const ram::Node& root) {
         // Encode all relation, indexPos and viewId.
-        visitDepthFirst(program, [&](const ram::Relation& relation) {
-                std::cout << relation.getName() << std::endl; 
-                assert(relationMap.find(relation.getName()) == relationMap.end()
-                          && "double-naming of relations");
-                relationMap[relation.getName()] = &relation;
-        });
-
         visitDepthFirst(root, [&](const ram::Node& node) {
             if (isA<ram::Query>(&node)) {
                 newQueryBlock();
@@ -677,7 +677,7 @@ private:
     /** Environment encoding, store a mapping from ram::Node to its View id. */
     std::unordered_map<const ram::Node*, size_t> viewTable;
     /** Environment encoding, store a mapping from ram::Relation to its id */
-    std::unordered_map<const ram::Relation *, size_t> relTable;
+    std::unordered_map<std::string, size_t> relTable;
     /** name / relation mapping */ 
     std::unordered_map<std::string, const ram::Relation *> relationMap; 
     /** Symbol table for relations */
@@ -710,7 +710,8 @@ private:
     /** @brief Return operation index id from the result of indexAnalysis */
     template <class RamNode>
     size_t encodeIndexPos(RamNode& node) {
-        const ram::analysis::MinIndexSelection& orderSet = isa->getIndexes(node.getRelation());
+        const std::string &name = node.getRelation();
+        auto& orderSet = isa->getIndexes(name);
         ram::analysis::SearchSignature signature = isa->getSearchSignature(&node);
         // A zero signature is equivalent as a full order signature.
         if (signature.empty()) {
@@ -735,7 +736,6 @@ private:
     /** @brief get arity of relation */
     const ram::Relation &lookup(const std::string &relName) {
        auto it = relationMap.find(relName);
-       std::cout << relName << std::endl;
        assert(it != relationMap.end() && "relation not found");
        return *it->second;
     }
@@ -748,14 +748,14 @@ private:
 
     /** @brief Encode and create the relation, return the relation id */
     size_t encodeRelation(const std::string &relName) {
-        auto rel = lookup(relName); 
-        auto pos = relTable.find(&rel);
+        auto pos = relTable.find(relName);
         if (pos != relTable.end()) {
             return pos->second;
         }
         size_t id = getNewRelId();
-        relTable[&rel] = id;
-        createRelation(rel, isa->getIndexes(rel), id);
+        relTable[relName] = id;
+        auto indexes = isa->getIndexes(relName); 
+        createRelation(lookup(relName), indexes, id);
         return id;
     }
 

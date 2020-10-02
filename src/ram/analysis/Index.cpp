@@ -480,6 +480,10 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
     //
     // TODO:
     // 0-arity relation in a provenance program still need to be revisited.
+    // visit all nodes to collect searches of each relation
+    visitDepthFirst(translationUnit.getProgram(), [&](const Relation& relation) {
+            relationMap[relation.getName()]=&relation; 
+    }); 
 
     // visit all nodes to collect searches of each relation
     visitDepthFirst(translationUnit.getProgram(), [&](const Node& node) {
@@ -493,9 +497,8 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
             MinIndexSelection& indexes = getIndexes(provExists->getRelation());
             indexes.addSearch(getSearchSignature(provExists));
         } else if (const auto* ramRel = dynamic_cast<const Relation*>(&node)) {
-            MinIndexSelection& indexes = getIndexes(*ramRel);
+            MinIndexSelection& indexes = getIndexes(ramRel->getName());
             indexes.addSearch(getSearchSignature(ramRel));
-            relationMap[ramRel->getName()]=ramRel; 
         } 
     });
 
@@ -507,8 +510,8 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
         // in any of the relation in a complete iteration.
         //
         // Currently RAM does not have such situation.
-        const Relation &relA = *lookupRelation(swap.getFirstRelation());
-        const Relation &relB = *lookupRelation(swap.getSecondRelation());
+        const std::string &relA = swap.getFirstRelation();
+        const std::string &relB = swap.getSecondRelation();
         MinIndexSelection& indexesA = getIndexes(relA);
         MinIndexSelection& indexesB = getIndexes(relB);
         // Add all searchSignature of A into B
@@ -537,15 +540,12 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
     }
 }
 
-MinIndexSelection& IndexAnalysis::getIndexes(const std::string &name) {
-    return getIndexes(*lookupRelation(name)); 
-} 
-MinIndexSelection& IndexAnalysis::getIndexes(const Relation& rel) {
-    auto pos = minIndexCover.find(&rel);
+MinIndexSelection& IndexAnalysis::getIndexes(const std::string &relName) {
+    auto pos = minIndexCover.find(relName);
     if (pos != minIndexCover.end()) {
         return pos->second;
     } else {
-        auto ret = minIndexCover.insert(std::make_pair(&rel, MinIndexSelection()));
+        auto ret = minIndexCover.insert(std::make_pair(relName, MinIndexSelection()));
         assert(ret.second);
         return ret.first->second;
     }
@@ -553,9 +553,8 @@ MinIndexSelection& IndexAnalysis::getIndexes(const Relation& rel) {
 
 void IndexAnalysis::print(std::ostream& os) const {
     for (auto& cur : minIndexCover) {
-        const Relation& rel = *cur.first;
+        const std::string& relName = cur.first;
         const MinIndexSelection& indexes = cur.second;
-        const std::string& relName = rel.getName();
 
         /* Print searches */
         os << "Relation " << relName << "\n";
