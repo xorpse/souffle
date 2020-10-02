@@ -20,6 +20,7 @@
 #include "ram/Relation.h"
 #include "ram/Statement.h"
 #include "ram/TranslationUnit.h"
+#include "ram/utility/Visitor.h"
 #include "souffle/RecordTable.h"
 #include "souffle/utility/ContainerUtil.h"
 #include "synthesiser/Relation.h"
@@ -96,7 +97,11 @@ protected:
 
 public:
     explicit Synthesiser(ram::TranslationUnit& tUnit) : translationUnit(tUnit) {
+       ram::visitDepthFirst(tUnit.getProgram(), [&](const ram::Relation& relation) {
+            relationMap[relation.getName()]=&relation; 
+       }); 
     }
+
     virtual ~Synthesiser() = default;
 
     /** Get translation unit */
