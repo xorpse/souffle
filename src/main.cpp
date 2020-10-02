@@ -94,7 +94,7 @@
 #include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include "souffle/utility/StringUtil.h"
-//#include "synthesiser/Synthesiser.h"
+#include "synthesiser/Synthesiser.h"
 #include <cassert>
 #include <chrono>
 #include <cstdio>

@@ -208,6 +208,10 @@ souffle_sources = \
         parser/parser.hh                                   \
         parser/scanner.cc                                  \
         parser/stack.hh                                    \
+        synthesiser/Synthesiser.cpp                        \
+        synthesiser/Synthesiser.h                          \
+        synthesiser/Relation.cpp                           \
+        synthesiser/Relation.h                             \
         ram/AbstractAggregate.h                            \
         ram/AbstractChoice.h                               \
         ram/AbstractConditional.h                          \
