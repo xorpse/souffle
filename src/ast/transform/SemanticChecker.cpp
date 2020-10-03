@@ -758,6 +758,12 @@ void SemanticCheckerImpl::checkSubsetType(const ast::SubsetType& astType) {
                                 astType.getQualifiedName(), rootType.getName()),
                 astType.getSrcLoc());
     }
+
+    if (isA<analysis::RecordType>(rootType)) {
+        report.addError(tfm::format("Subset type %s can't be derived from record type %s",
+                                astType.getQualifiedName(), rootType.getName()),
+                astType.getSrcLoc());
+    }
 }
 
 void SemanticCheckerImpl::checkTypesDeclarations() {
