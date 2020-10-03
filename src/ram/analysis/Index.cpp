@@ -456,15 +456,15 @@ MinIndexSelection::AttributeSet MinIndexSelection::getAttributesToDischarge(
 
     // if we are in the interpreter then we only permit signed inequalities
     // remembering to discharge any excess signed inequalities!
-    AttributeSet inequalitiesNotSigned(dischargedMap[s]);
+    AttributeSet interpreterAttributesToDischarge(dischargedMap[s]);
     for (size_t i = 0; i < s.arity(); ++i) {
         if (s[i] == AttributeConstraint::Inequal && rel.getAttributeTypes()[i][0] != 'i') {
-            inequalitiesNotSigned.insert(i);
+            interpreterAttributesToDischarge.insert(i);
         }
     }
     if (!Global::config().has("compile") && !Global::config().has("dl-program") &&
             !Global::config().has("generate") && !Global::config().has("swig")) {
-        return inequalitiesNotSigned;
+        return interpreterAttributesToDischarge;
     }
 
     return dischargedMap[s];

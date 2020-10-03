@@ -87,7 +87,12 @@ ExpressionPair MakeIndexTransformer::getExpressionPair(
 // <expr2> }
 ExpressionPair MakeIndexTransformer::getLowerUpperExpression(Condition* c, size_t& element, int identifier) {
     if (auto* binRelOp = dynamic_cast<Constraint*>(c)) {
-        if (isEqConstraint(binRelOp->getOperator())) {
+        bool interpreter = !Global::config().has("compile") && !Global::config().has("dl-program") &&
+                           !Global::config().has("generate") && !Global::config().has("swig");
+        // don't index FEQ in interpreter mode
+        if (binRelOp->getOperator() == BinaryConstraintOp::FEQ && interpreter) {
+            return {mk<UndefValue>(), mk<UndefValue>()};
+        } else if (isEqConstraint(binRelOp->getOperator())) {
             if (const auto* lhs = dynamic_cast<const TupleElement*>(&binRelOp->getLHS())) {
                 const Expression* rhs = &binRelOp->getRHS();
                 if (lhs->getTupleId() == identifier && rla->getLevel(rhs) < identifier) {
