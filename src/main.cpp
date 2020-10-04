@@ -64,7 +64,6 @@
 #include "ram/Node.h"
 #include "ram/Program.h"
 #include "ram/TranslationUnit.h"
-#if 0
 #include "ram/transform/ChoiceConversion.h"
 #include "ram/transform/CollapseFilters.h"
 #include "ram/transform/Conditional.h"
@@ -83,7 +82,6 @@
 #include "ram/transform/Sequence.h"
 #include "ram/transform/Transformer.h"
 #include "ram/transform/TupleId.h"
-#endif 
 #include "reports/DebugReport.h"
 #include "reports/ErrorReport.h"
 #include "souffle/RamTypes.h"
@@ -589,7 +587,6 @@ int main(int argc, char** argv) {
             ast2ram::AstToRamTranslator().translateUnit(*astTranslationUnit);
     debugReport.endSection("ast-to-ram", "Translate AST to RAM");
 
-#if 0
     // Apply RAM transforms
     {
         using namespace ram::transform;
@@ -611,7 +608,6 @@ int main(int argc, char** argv) {
 
         ramTransform->apply(*ramTranslationUnit);
     }
-#endif 
 
     if (ramTranslationUnit->getErrorReport().getNumIssues() != 0) {
         std::cerr << ramTranslationUnit->getErrorReport();
