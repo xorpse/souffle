@@ -79,7 +79,7 @@ bool ParallelTransformer::parallelizeOperations(Program& program) {
                             Own<Condition>(aggregate->getCondition().clone()), aggregate->getTupleId());
                 }
             } else if (const IndexAggregate* indexAggregate = dynamic_cast<IndexAggregate*>(node.get())) {
-                const Relation &rel = relAnalysis -> lookup(aggregate->getRelation()); 
+                const Relation &rel = relAnalysis -> lookup(indexAggregate->getRelation()); 
                 if (indexAggregate->getTupleId() == 0 && !rel.isNullary()) {
                     changed = true;
                     RamPattern queryPattern = clone(indexAggregate->getRangePattern());
