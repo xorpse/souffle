@@ -51,6 +51,7 @@
     #include "ast/Counter.h"
     #include "ast/ExecutionOrder.h"
     #include "ast/ExecutionPlan.h"
+    #include "ast/FunctionalConstraint.h"
     #include "ast/FunctorDeclaration.h"
     #include "ast/Directive.h"
     #include "ast/IntrinsicFunctor.h"
@@ -239,6 +240,7 @@
 %token TRUE                      "true literal constraint"
 %token FALSE                     "false literal constraint"
 %token PLAN                      "plan keyword"
+%token CONSTRAINS                "relational functional dependencies declaration"
 %token IF                        ":-"
 %token DECL                      "relation declaration"
 %token FUNCTOR                   "functor declaration"
@@ -293,6 +295,7 @@
 %token LE                        "<="
 %token GE                        ">="
 %token NE                        "!="
+%token RIGHTARROW                "->"
 %token BW_AND                    "band"
 %token BW_OR                     "bor"
 %token BW_XOR                    "bxor"
@@ -320,6 +323,7 @@
 %type <Mov<Own<ast::Component>>>               component_head
 %type <Mov<RuleBody>>                          conjunction
 %type <Mov<Own<ast::Constraint>>>              constraint
+%type <Mov<VecOwn<ast::FunctionalConstraint>>> dependencies
 %type <Mov<RuleBody>>                          disjunction
 %type <Mov<Own<ast::ExecutionOrder>>>          exec_order
 %type <Mov<Own<ast::ExecutionPlan>>>           exec_plan
@@ -338,6 +342,7 @@
 %type <Mov<VecOwn<ast::Argument>>>             non_empty_arg_list
 %type <Mov<Own<ast::Attribute>>>               attribute
 %type <Mov<VecOwn<ast::Attribute>>>            non_empty_attributes
+%type <Mov<std::vector<std::string>>>          non_empty_variables
 %type <Mov<ast::ExecutionOrder::ExecOrder>>    non_empty_exec_order_list
 %type <Mov<std::vector<TypeAttribute>>>        non_empty_functor_arg_type_list
 %type <Mov<std::vector<std::pair
@@ -469,6 +474,30 @@ relation_decl
             rel->setAttributes(clone(attributes_list));
         }
     }
+  | DECL non_empty_relation_list attributes_list relation_tags CONSTRAINS dependencies {
+        auto tags             = $relation_tags;
+        auto attributes_list  = $attributes_list;
+
+        $$ = $non_empty_relation_list;
+        for (auto&& rel : $$) {
+            for (auto tag : tags) {
+                if (isRelationQualifierTag(tag)) {
+                    rel->addQualifier(getRelationQualifierFromTag(tag));
+                } else if (isRelationRepresentationTag(tag)) {
+                    rel->setRepresentation(getRelationRepresentationFromTag(tag));
+                } else {
+                    assert(false && "unhandled tag");
+                }
+            }
+
+            for (auto&& fd : $dependencies) {
+                rel->addDependency(Own<ast::FunctionalConstraint>(fd->clone()));
+            }
+
+            rel->setAttributes(clone(attributes_list));
+        }
+    }
+  ;
   ;
 
 /* List of relation names to declare */
@@ -513,6 +542,48 @@ relation_tags
   | relation_tags        BRIE_QUALIFIER { $$ = driver.addReprTag(RelationTag::BRIE    , @2, $1); }
   | relation_tags       BTREE_QUALIFIER { $$ = driver.addReprTag(RelationTag::BTREE   , @2, $1); }
   | relation_tags       EQREL_QUALIFIER { $$ = driver.addReprTag(RelationTag::EQREL   , @2, $1); }
+  ;
+
+  /* List of variables */
+non_empty_variables
+  : IDENT {
+        $$.push_back($IDENT);
+  }
+
+  | non_empty_variables[curr_var_list] COMMA IDENT {
+        $$ = $curr_var_list;
+        $$.push_back($IDENT);
+        std::cout << "Found " << $IDENT << "\n";
+    }
+  ;
+
+/* List of functional dependencies on relation */
+dependencies
+  : IDENT[left] RIGHTARROW IDENT[right] {
+        $$.push_back(mk<ast::FunctionalConstraint>(
+              mk<ast::Variable>($left, @$),
+              mk<ast::Variable>($right, @$),
+              @$));
+    }
+
+  | LPAREN non_empty_variables RPAREN RIGHTARROW IDENT[right] {
+        VecOwn<ast::Variable> lhs;
+        for (std::string s : $non_empty_variables) {
+          std::cout << "Adding " << s << "\n";
+          lhs.push_back(mk<ast::Variable>(s, @$));
+        }
+        $$.push_back(mk<ast::FunctionalConstraint>(
+              std::move(lhs),
+              mk<ast::Variable>($right, @$),
+              @$));
+  }
+  | dependencies[curr_list] COMMA IDENT[left] RIGHTARROW IDENT[right] {
+        $$ = $curr_list;
+        $$.push_back(std::move(mk<ast::FunctionalConstraint>(
+              mk<ast::Variable>($left, @$),
+              mk<ast::Variable>($right, @$),
+              @$)));
+    }
   ;
 
 /**
