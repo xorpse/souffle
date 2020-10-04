@@ -55,7 +55,7 @@ Own<Operation> ChoiceConversionTransformer::rewriteScan(const Scan* scan) {
         const auto* filter = dynamic_cast<const Filter*>(&scan->getOperation());
         const int identifier = scan->getTupleId();
 
-        return mk<Choice>(mk<RelationReference>(&scan->getRelation()), identifier,
+        return mk<Choice>(scan->getRelation(), identifier,
                 souffle::clone(&filter->getCondition()), souffle::clone(&filter->getOperation()),
                 scan->getProfileText());
     }
@@ -87,7 +87,7 @@ Own<Operation> ChoiceConversionTransformer::rewriteIndexScan(const IndexScan* in
         RamPattern newValues;
         const auto* filter = dynamic_cast<const Filter*>(&indexScan->getOperation());
         const int identifier = indexScan->getTupleId();
-        const Relation& rel = indexScan->getRelation();
+        const std::string & rel = indexScan->getRelation();
 
         for (auto& cur : indexScan->getRangePattern().first) {
             Expression* val = nullptr;
@@ -104,7 +104,7 @@ Own<Operation> ChoiceConversionTransformer::rewriteIndexScan(const IndexScan* in
             newValues.second.emplace_back(val);
         }
 
-        return mk<IndexChoice>(mk<RelationReference>(&rel), identifier,
+        return mk<IndexChoice>(rel, identifier,
                 souffle::clone(&filter->getCondition()), std::move(newValues),
                 souffle::clone(&filter->getOperation()), indexScan->getProfileText());
     }

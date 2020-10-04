@@ -4,8 +4,7 @@
 # - https://opensource.org/licenses/UPL
 # - <souffle root>/licenses/SOUFFLE-UPL.txt
 
-SUBDIRS = . tests ast/tests ram/tests 
-# SUBDIRS = . tests ast/tests ram/tests interpreter/tests
+SUBDIRS = . tests ast/tests ram/tests interpreter/tests
 
 SUFFIXES = .cpp .h .yy .ll .cc .hh .h
 
@@ -198,6 +197,20 @@ souffle_sources = \
         ast2ram/ProvenanceClauseTranslator.h               \
         ast2ram/ValueIndex.cpp                             \
         ast2ram/ValueIndex.h                               \
+        interpreter/Context.h                              \
+        interpreter/Engine.cpp                             \
+        interpreter/Engine.h                               \
+        interpreter/Generator.h                            \
+        interpreter/BrieIndex.cpp                          \
+        interpreter/BTreeIndex.cpp                         \
+        interpreter/EqrelIndex.cpp                         \
+        interpreter/ProvenanceIndex.cpp                    \
+        interpreter/Index.h                                \
+        interpreter/Node.h                                 \
+        interpreter/ViewContext.h                          \
+        interpreter/ProgInterface.h                        \
+        interpreter/Relation.h                             \
+        interpreter/Util.h                                 \
         parser/ParserDriver.cpp                            \
         parser/ParserDriver.h                              \
         parser/ParserUtils.cpp                             \
@@ -208,10 +221,6 @@ souffle_sources = \
         parser/parser.hh                                   \
         parser/scanner.cc                                  \
         parser/stack.hh                                    \
-        synthesiser/Synthesiser.cpp                        \
-        synthesiser/Synthesiser.h                          \
-        synthesiser/Relation.cpp                           \
-        synthesiser/Relation.h                             \
         ram/AbstractAggregate.h                            \
         ram/AbstractChoice.h                               \
         ram/AbstractConditional.h                          \
@@ -287,29 +296,57 @@ souffle_sources = \
         ram/UnpackRecord.h                                 \
         ram/UnsignedConstant.h                             \
         ram/UserDefinedOperator.h                          \
+        ram/analysis/Analysis.h                            \
+        ram/analysis/Complexity.cpp                        \
+        ram/analysis/Complexity.h                          \
+        ram/analysis/Index.cpp                             \
+        ram/analysis/Index.h                               \
+        ram/analysis/Level.cpp                             \
+        ram/analysis/Level.h                               \
+        ram/transform/ChoiceConversion.cpp                 \
+        ram/transform/ChoiceConversion.h                   \
+        ram/transform/CollapseFilters.cpp                  \
+        ram/transform/CollapseFilters.h                    \
+        ram/transform/Conditional.h                        \
+        ram/transform/EliminateDuplicates.cpp              \
+        ram/transform/EliminateDuplicates.h                \
+        ram/transform/ExpandFilter.cpp                     \
+        ram/transform/ExpandFilter.h                       \
+        ram/transform/HoistAggregate.cpp                   \
+        ram/transform/HoistAggregate.h                     \
+        ram/transform/HoistConditions.cpp                  \
+        ram/transform/HoistConditions.h                    \
+        ram/transform/IfConversion.cpp                     \
+        ram/transform/IfConversion.h                       \
+        ram/transform/IndexedInequality.cpp                \
+        ram/transform/IndexedInequality.h                  \
+        ram/transform/Loop.h                               \
+        ram/transform/MakeIndex.cpp                        \
+        ram/transform/MakeIndex.h                          \
+        ram/transform/Meta.h                               \
+        ram/transform/Parallel.cpp                         \
+        ram/transform/Parallel.h                           \
+        ram/transform/ReorderConditions.cpp                \
+        ram/transform/ReorderConditions.h                  \
+        ram/transform/ReorderFilterBreak.cpp               \
+        ram/transform/ReorderFilterBreak.h                 \
+        ram/transform/ReportIndex.h                        \
+        ram/transform/Sequence.h                           \
+        ram/transform/Transformer.cpp                      \
+        ram/transform/Transformer.h                        \
+        ram/transform/TupleId.cpp                          \
+        ram/transform/TupleId.h                            \
         ram/utility/LambdaNodeMapper.h                     \
         ram/utility/NodeMapper.h                           \
         ram/utility/Utils.h                                \
         ram/utility/Visitor.h                              \
-        ram/analysis/Index.cpp                             \
-        ram/analysis/Index.h                               \
         reports/DebugReport.cpp                            \
         reports/DebugReport.h                              \
         reports/ErrorReport.h                              \
-        interpreter/Context.h                              \
-        interpreter/Engine.cpp                             \
-        interpreter/Engine.h                               \
-        interpreter/Generator.h                            \
-        interpreter/BrieIndex.cpp                          \
-        interpreter/BTreeIndex.cpp                         \
-        interpreter/EqrelIndex.cpp                         \
-        interpreter/ProvenanceIndex.cpp                    \
-        interpreter/Index.h                                \
-        interpreter/Node.h                                 \
-        interpreter/ViewContext.h                          \
-        interpreter/ProgInterface.h                        \
-        interpreter/Relation.h                             \
-        interpreter/Util.h                                 \
+        synthesiser/Synthesiser.cpp                        \
+        synthesiser/Synthesiser.h                          \
+        synthesiser/Relation.cpp                           \
+        synthesiser/Relation.h                             \
         $(souffle_utility_sources)                         \
         $(souffle_profile_sources)
 

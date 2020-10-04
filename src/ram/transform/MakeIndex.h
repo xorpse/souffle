@@ -25,6 +25,7 @@
 #include "ram/Scan.h"
 #include "ram/TranslationUnit.h"
 #include "ram/analysis/Level.h"
+#include "ram/analysis/Relation.h"
 #include "ram/transform/Transformer.h"
 #include <cstddef>
 #include <memory>
@@ -125,10 +126,14 @@ public:
 
 protected:
     analysis::LevelAnalysis* rla{nullptr};
+
     bool transform(TranslationUnit& translationUnit) override {
         rla = translationUnit.getAnalysis<analysis::LevelAnalysis>();
+        relAnalysis = translationUnit.getAnalysis<analysis::RelationAnalysis>();
         return makeIndex(translationUnit.getProgram());
     }
+
+    analysis::RelationAnalysis* relAnalysis{nullptr};
 };
 
 }  // namespace souffle::ram::transform
