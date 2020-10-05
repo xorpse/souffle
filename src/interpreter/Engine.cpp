@@ -1200,11 +1200,9 @@ RamDomain Engine::evalExistenceCheck(
     constexpr size_t Arity = Rel::Arity;
     size_t viewPos = shadow.getViewId();
 
-#if 0
-    if (profileEnabled && !cur.getRelation().isTemp()) {
-        reads[cur.getRelation().getName()]++;
+    if (profileEnabled && !shadow.isTemp()) {
+        reads[shadow.getRelationName()]++;
     }
-#endif 
 
     const auto& superInfo = shadow.getSuperInst();
     // for total we use the exists test

@@ -517,16 +517,27 @@ class RelationSize : public Node {
 class ExistenceCheck : public Node, public SuperOperation, public ViewOperation {
 public:
     ExistenceCheck(enum NodeType ty, const ram::Node* sdw, bool totalSearch, size_t viewId,
-            SuperInstruction superInst)
+            SuperInstruction superInst, bool tempRelation, const std::string &relationName)
             : Node(ty, sdw), SuperOperation(std::move(superInst)), ViewOperation(viewId),
-              totalSearch(totalSearch) {}
+              totalSearch(totalSearch), tempRelation(tempRelation), relationName(relationName) {
+    }
 
     bool isTotalSearch() const {
         return totalSearch;
     }
 
+    bool isTemp() const{
+        return tempRelation;
+    } 
+
+    const std::string &getRelationName() const {
+        return relationName;
+    } 
+
 private:
     const bool totalSearch;
+    const bool tempRelation; 
+    const std::string relationName; 
 };
 
 /**

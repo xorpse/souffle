@@ -246,8 +246,9 @@ public:
                 isTotal = false;
             }
         }
-        NodeType type = constructNodeType("ExistenceCheck", lookup(exists.getRelation()));
-        return mk<ExistenceCheck>(type, &exists, isTotal, encodeView(&exists), std::move(superOp));
+        auto ramRelation = lookup(exists.getRelation());
+        NodeType type = constructNodeType("ExistenceCheck", ramRelation);
+        return mk<ExistenceCheck>(type, &exists, isTotal, encodeView(&exists), std::move(superOp), ramRelation.isTemp(), ramRelation.getName());
     }
 
     NodePtr visitProvenanceExistenceCheck(const ram::ProvenanceExistenceCheck& provExists) override {
