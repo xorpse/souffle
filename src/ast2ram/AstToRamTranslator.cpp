@@ -797,7 +797,8 @@ Own<ram::Statement> AstToRamTranslator::makeSubproofSubroutine(const ast::Clause
                     souffle::clone(atomArgs[arity - 1]), mk<ast::SubroutineArgument>(levelIndex)));
         }
     }
-    return ProvenanceClauseTranslator(*this).translateClause(nullptr, *intermediateClause, clause);
+    auto rel = getRelation(*program, head->getQualifiedName());
+    return ProvenanceClauseTranslator(*this).translateClause(rel, *intermediateClause, clause);
 }
 
 /** make a subroutine to search for subproofs for the non-existence of a tuple */
