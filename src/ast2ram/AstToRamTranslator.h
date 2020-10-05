@@ -84,6 +84,10 @@ public:
         return sips.get();
     }
 
+    const ast::Program* getProgram() const {
+        return program;
+    }
+
     /** translates AST to translation unit */
     Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
 

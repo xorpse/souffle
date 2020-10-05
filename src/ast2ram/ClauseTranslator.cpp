@@ -34,6 +34,7 @@
 #include "ram/Conjunction.h"
 #include "ram/Constraint.h"
 #include "ram/EmptinessCheck.h"
+#include "ram/FDExistenceCheck.h"
 #include "ram/Filter.h"
 #include "ram/Negation.h"
 #include "ram/NestedIntrinsicOperator.h"
@@ -80,7 +81,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
 
     // -- create RAM statement --
 
-    Own<ram::Operation> op = createOperation(clause);
+    Own<ram::Operation> op = createOperation(clause, originalClause);
 
     /* add equivalence constraints imposed by variable binding */
     for (const auto& cur : valueIndex->getVariableReferences()) {
@@ -285,8 +286,11 @@ Own<ram::Statement> ClauseTranslator::translateClause(
     }
 }
 
-Own<ram::Operation> ClauseTranslator::createOperation(const ast::Clause& clause) {
+Own<ram::Operation> ClauseTranslator::createOperation(const ast::Clause& clause, const ast::Clause& originalClause) {
     const auto head = clause.getHead();
+    const auto originalHead = originalClause.getHead();
+    const ast::Relation* originalHeadRelation = getHeadRelation(&originalClause, translator.getProgram());
+
 
     VecOwn<ram::Expression> values;
     for (ast::Argument* arg : head->getArguments()) {
@@ -298,6 +302,65 @@ Own<ram::Operation> ClauseTranslator::createOperation(const ast::Clause& clause)
     if (head->getArity() == 0) {
         project = mk<ram::Filter>(
                 mk<ram::EmptinessCheck>(translator.translateRelation(head)), std::move(project));
+    }
+
+    // Impose the functional dependencies of the relation on each PROJECT
+    if (!originalHeadRelation->getFunctionalDependencies().empty()) {
+        Own<ram::Condition> dependencyConditions = nullptr;
+        for (const ast::FunctionalConstraint* fd : originalHeadRelation->getFunctionalDependencies()) {
+            // For .decl B(x, y) constrains x -> y
+            // B(x,y) :- A(x,y).
+            // Return an existence check for whether x already exists in B.
+            VecOwn<ram::Expression> vals;
+            VecOwn<ram::Expression> valsCopy;
+            // Populate the values for our functional dependency condition
+            // eg. A(x,y,z) constrains x->y:
+            //  vals should contain (t0.0,⊥,⊥) to be used for the following condition before PROJECT:
+            //  IF (NOT (t0.0,⊥,⊥) ∈ A)
+            for (size_t i = 0; i < head->getArguments().size(); i++) {
+                // Need to add all source arguments of the dependency.
+                // So, for each head argument, we need to check if any of the source arguments match it.
+                bool sourceFound = false;
+                for (size_t j = 0; j < fd->getArity(); j++) {
+                    if (i == fd->getPosition(j)) {
+                        sourceFound = true;
+                    }
+                }
+                // If this particular source argument matches the head argument, insert it.
+                if (sourceFound) {
+                    vals.push_back(translator.translateValue(head->getArguments()[i], *valueIndex));
+                    valsCopy.push_back(translator.translateValue(head->getArguments()[i], *valueIndex));
+                // Otherwise insert ⊥
+                } else {
+                    vals.push_back(mk<ram::UndefValue>());
+                    valsCopy.push_back(mk<ram::UndefValue>());
+                }
+            }
+
+            Own<ram::Condition> currDependencyCondition = nullptr;
+            // If both heads are equal, then we know we are in a non-recursive clause
+            if (*head == *originalHead) {
+                currDependencyCondition = mk<ram::Negation>(mk<ram::FDExistenceCheck>(
+                        translator.translateRelation(head), std::move(vals)));
+            // Otherwise, if not equal, then in recursive clause, and needing conjunction
+            } else {
+                currDependencyCondition = mk<ram::Conjunction>(
+                    mk<ram::Negation>(mk<ram::FDExistenceCheck>(
+                        translator.translateRelation(originalHead), std::move(valsCopy))), 
+                    mk<ram::Negation>(mk<ram::FDExistenceCheck>(
+                        translator.translateRelation(head), std::move(vals))));
+            }
+
+            // Add the current functional dependency condition to the rest
+            if (dependencyConditions == nullptr) {
+                dependencyConditions = std::move(currDependencyCondition);
+            } else {
+                dependencyConditions = mk<ram::Conjunction>(
+                    std::move(dependencyConditions), std::move(currDependencyCondition));
+            }
+        }
+        // Wrap PROJECT with our functional dependencies 'layer'
+        project = std::make_unique<ram::Filter>(std::move(dependencyConditions), std::move(project));
     }
 
     // build up insertion call

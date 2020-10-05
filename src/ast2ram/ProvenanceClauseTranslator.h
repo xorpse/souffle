@@ -36,7 +36,7 @@ public:
     ProvenanceClauseTranslator(AstToRamTranslator& translator) : ClauseTranslator(translator) {}
 
 protected:
-    Own<ram::Operation> createOperation(const ast::Clause& clause) override;
+    Own<ram::Operation> createOperation(const ast::Clause& clause, const ast::Clause& originalClause) override;
     Own<ram::Condition> createCondition(const ast::Clause& originalClause) override;
 };
 }  // namespace souffle::ast2ram
