@@ -71,7 +71,7 @@ jobs:
       create:
         name: bionic_clang
         paths: .
-    script: docker exec souf /bin/sh -c "export CXX=g++ && .travis/init_test.sh '--enable-swig'"
+    script: docker exec souf /bin/sh -c "export CXX=clang++ && .travis/init_test.sh '--enable-swig'"
 
 # MSVC souffle-interface
   - stage: Testing
