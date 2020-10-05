@@ -123,6 +123,7 @@ private:
     void checkClause(const Clause& clause);
     void checkComplexRule(std::set<const Clause*> multiRule);
     void checkRelationDeclaration(const Relation& relation);
+    void checkRelationDependencies(const Relation& relation);
     void checkRelation(const Relation& relation);
 
     void checkTypesDeclarations();
@@ -623,6 +624,53 @@ void SemanticCheckerImpl::checkRelationDeclaration(const Relation& relation) {
     }
 }
 
+/* check that each functional dependency argument appears in the relation, and set their positions */
+void SemanticCheckerImpl::checkRelationDependencies(const Relation& relation) {
+    for (const auto& fd : relation.getFunctionalDependencies()) {
+        size_t leftFound = 0;
+        bool rightFound = false;
+        // Check that LHS and RHS of FD appear in relation arguments
+        std::cout << "AstSemanticChecker\n";
+        for (size_t i = 0; i < relation.getAttributes().size(); i++) {
+            std::cout << "AstSemanticChecker: loop over relation attributes\n";
+            ast::Attribute* a = relation.getAttributes().at(i);
+            // if (a->getAttributeName() == fd->getLHS()->getName()) {
+            //     leftFound = true;
+            //     // Set the source location
+            //     fd->setPosition(i);
+            // }
+            for (size_t j = 0; j < fd->getArity(); j++) {
+                std::cout << "AstSemanticChecker: loop over fd nodes\n";
+                if (a->getName() == fd->getLHS(j)->getName()) {
+                    std::cout << "AstSemanticChecker: before set position\n";
+                    std::cout << "i: " << i << " j: " << j << "\n";
+                    fd->setPosition(j, i);
+                    std::cout << "AstSemanticChecker: after set position\n";
+                    leftFound++;
+                }
+                
+            }
+
+            if (a->getName() == fd->getRHS()->getName()) {
+                rightFound = true;
+            }
+
+            if (leftFound == fd->getArity() && rightFound) {
+                break;
+            }
+        }
+        std::cout << "AstSemanticChecker: exited loop over relation attributes\n";
+
+        if (leftFound != fd->getArity()) {
+            report.addError("LHS of functional dependency not found in relation definition.", fd->getSrcLoc());
+        }
+        if (!rightFound) {
+            report.addError("RHS of functional dependency not found in relation definition: " + fd->getRHS()->getName(),
+                fd->getSrcLoc());
+        }
+    }
+}
+
 void SemanticCheckerImpl::checkRelation(const Relation& relation) {
     if (relation.getRepresentation() == RelationRepresentation::EQREL) {
         if (relation.getArity() == 2) {
@@ -642,6 +690,9 @@ void SemanticCheckerImpl::checkRelation(const Relation& relation) {
 
     // start with declaration
     checkRelationDeclaration(relation);
+
+    // check dependencies of relation are valid (i.e. attribute names occur in relation)
+    checkRelationDependencies(relation);
 
     // check whether this relation is empty
     if (getClauses(program, relation).empty() && !ioTypes.isInput(&relation) &&
