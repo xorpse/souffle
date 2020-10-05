@@ -62,7 +62,7 @@ public:
     }
 
     /** get arity of the functional constraint (i.e. number of source nodes: (x,y)->z has an arity of 2) */
-    const size_t getArity() const {
+    size_t getArity() const {
         return lhs.size();
     }
 
@@ -86,7 +86,7 @@ public:
             newLHS.push_back(Own<Variable>(lhs.at(i)->clone()));
         }
         auto* res = new FunctionalConstraint(
-            std::move(newLHS), // parsing newLHS on its own giving "use of deleted function" error
+            std::move(newLHS),
             Own<Variable>(rhs->clone()));
         for (size_t i = 0; i < lhs.size(); i++) {
             res->setPosition(i, (this->getPosition(i)));
@@ -109,16 +109,16 @@ public:
         positions.at(lhsNum) = pos;
     }
 
-protected:
+public:
     void print(std::ostream& os) const override {
-        // if (lhs.size() > 1) {
-        //     os << "(";
-        // }
-        // os << join(lhs, ",", print_deref<std::unique_ptr<AstVariable>>());
-        // if (lhs.size() > 1) {
-        //     os << ")";
-        // }
-        // os << "->" << *rhs;
+        if (lhs.size() > 1) {
+            os << "(";
+        }
+        os << join(lhs, ",", print_deref<Own<ast::Variable>>());
+        if (lhs.size() > 1) {
+            os << ")";
+        }
+        os << "->" << *rhs;
     }
 
     bool equal(const Node& node) const override {
