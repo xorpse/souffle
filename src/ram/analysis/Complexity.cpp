@@ -20,6 +20,7 @@
 #include "ram/EmptinessCheck.h"
 #include "ram/ExistenceCheck.h"
 #include "ram/Expression.h"
+#include "ram/FDExistenceCheck.h"
 #include "ram/Negation.h"
 #include "ram/Node.h"
 #include "ram/ProvenanceExistenceCheck.h"
@@ -50,6 +51,11 @@ int ComplexityAnalysis::getComplexity(const Node* node) const {
 
         // provenance existence check
         int visitProvenanceExistenceCheck(const ProvenanceExistenceCheck&) override {
+            return 2;
+        }
+
+        // existence check
+        int visitFDExistenceCheck(const FDExistenceCheck&) override {
             return 2;
         }
 

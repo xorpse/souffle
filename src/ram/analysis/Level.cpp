@@ -27,6 +27,7 @@
 #include "ram/ExistenceCheck.h"
 #include "ram/Expression.h"
 #include "ram/False.h"
+#include "ram/FDExistenceCheck.h"
 #include "ram/Filter.h"
 #include "ram/IndexAggregate.h"
 #include "ram/IndexChoice.h"
@@ -234,6 +235,15 @@ int LevelAnalysis::getLevel(const Node* node) const {
         int visitProvenanceExistenceCheck(const ProvenanceExistenceCheck& provExists) override {
             int level = -1;
             for (const auto& cur : provExists.getValues()) {
+                level = std::max(level, visit(cur));
+            }
+            return level;
+        }
+
+        // fd existence check
+        int visitFDExistenceCheck(const FDExistenceCheck& exists) override {
+            int level = -1;
+            for (const auto& cur : exists.getValues()) {
                 level = std::max(level, visit(cur));
             }
             return level;

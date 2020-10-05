@@ -38,6 +38,7 @@
 #include "ram/Expression.h"
 #include "ram/Extend.h"
 #include "ram/False.h"
+#include "ram/FDExistenceCheck.h"
 #include "ram/Filter.h"
 #include "ram/FloatConstant.h"
 #include "ram/IO.h"
@@ -164,6 +165,7 @@ struct Visitor : public ram_visitor_tag {
         FORWARD(EmptinessCheck);
         FORWARD(ProvenanceExistenceCheck);
         FORWARD(ExistenceCheck);
+        FORWARD(FDExistenceCheck);
         FORWARD(Conjunction);
         FORWARD(Negation);
         FORWARD(Constraint);
@@ -283,6 +285,7 @@ protected:
     LINK(Constraint, Condition);
     LINK(ProvenanceExistenceCheck, AbstractExistenceCheck);
     LINK(ExistenceCheck, AbstractExistenceCheck);
+    LINK(FDExistenceCheck, AbstractExistenceCheck);
     LINK(EmptinessCheck, Condition);
     LINK(AbstractExistenceCheck, Condition);
 

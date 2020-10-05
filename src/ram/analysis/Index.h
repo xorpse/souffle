@@ -18,6 +18,7 @@
 
 #include "ram/AbstractExistenceCheck.h"
 #include "ram/ExistenceCheck.h"
+#include "ram/FDExistenceCheck.h"
 #include "ram/IndexOperation.h"
 #include "ram/ProvenanceExistenceCheck.h"
 #include "ram/Relation.h"
@@ -428,6 +429,13 @@ public:
      * @result index signature of provenance-existence check
      */
     SearchSignature getSearchSignature(const ProvenanceExistenceCheck* existCheck) const;
+
+    /**
+     * @Brief Get the index signature for an functional dependency existence check
+     * @param FD-Existence check
+     * @result index signature of functional dependency existence check
+     */
+    SearchSignature getSearchSignature(const FDExistenceCheck* existCheck) const;
 
     /**
      * @Brief Get the default index signature for a relation (the total-order index)

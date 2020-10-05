@@ -38,6 +38,7 @@
 #include "ram/Exit.h"
 #include "ram/Extend.h"
 #include "ram/False.h"
+#include "ram/FDExistenceCheck.h"
 #include "ram/Filter.h"
 #include "ram/IO.h"
 #include "ram/IndexAggregate.h"
@@ -777,6 +778,14 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
         FOR_EACH_PROVENANCE(PROVENANCE_EXISTENCE_CHECK)
 #undef PROVENANCE_EXISTENCE_CHECK
 
+#define FD_EXISTENCE_CHECK(Structure, Arity, ...)                 \
+    CASE(FDExistenceCheck, Structure, Arity)                     \
+        return evalFDExistenceCheck<RelType>(cur, shadow, ctxt); \
+    ESAC(FDExistenceCheck)
+
+        FOR_EACH(FD_EXISTENCE_CHECK)
+#undef FD_EXISTENCE_CHECK
+
         CASE(Constraint)
         // clang-format off
 #define COMPARE_NUMERIC(ty, op) return EVAL_LEFT(ty) op EVAL_RIGHT(ty)
@@ -1283,6 +1292,52 @@ RamDomain Engine::evalProvenanceExistenceCheck(const ProvenanceExistenceCheck& s
 
     // check whether the height is less than the current height
     return (*equalRange.begin())[Arity - 1] <= execute(shadow.getChild(), ctxt);
+}
+
+template <typename Rel>
+RamDomain Engine::evalFDExistenceCheck(
+        const ram::FDExistenceCheck& cur, const FDExistenceCheck& shadow, Context& ctxt) {
+    constexpr size_t Arity = Rel::Arity;
+    size_t viewPos = shadow.getViewId();
+
+    if (profileEnabled && !cur.getRelation().isTemp()) {
+        reads[cur.getRelation().getName()]++;
+    }
+
+    const auto& superInfo = shadow.getSuperInst();
+    // for total we use the exists test
+    if (shadow.isTotalSearch()) {
+        souffle::Tuple<RamDomain, Arity> tuple;
+        memcpy(tuple.data, superInfo.first.data(), sizeof(tuple));
+        /* TupleElement */
+        for (const auto& tupleElement : superInfo.tupleFirst) {
+            tuple[tupleElement[0]] = ctxt[tupleElement[1]][tupleElement[2]];
+        }
+        /* Generic */
+        for (const auto& expr : superInfo.exprFirst) {
+            tuple[expr.first] = execute(expr.second.get(), ctxt);
+        }
+        return Rel::castView(ctxt.getView(viewPos))->contains(tuple);
+    }
+
+    // for partial we search for lower and upper boundaries
+    souffle::Tuple<RamDomain, Arity> low;
+    souffle::Tuple<RamDomain, Arity> high;
+    memcpy(low.data, superInfo.first.data(), sizeof(low));
+    memcpy(high.data, superInfo.second.data(), sizeof(high));
+
+    /* TupleElement */
+    for (const auto& tupleElement : superInfo.tupleFirst) {
+        low[tupleElement[0]] = ctxt[tupleElement[1]][tupleElement[2]];
+        high[tupleElement[0]] = low[tupleElement[0]];
+    }
+    /* Generic */
+    for (const auto& expr : superInfo.exprFirst) {
+        low[expr.first] = execute(expr.second.get(), ctxt);
+        high[expr.first] = low[expr.first];
+    }
+
+    return Rel::castView(ctxt.getView(viewPos))->contains(low, high);
 }
 
 template <typename Rel>

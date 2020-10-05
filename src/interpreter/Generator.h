@@ -41,6 +41,7 @@
 #include "ram/Expression.h"
 #include "ram/Extend.h"
 #include "ram/False.h"
+#include "ram/FDExistenceCheck.h"
 #include "ram/Filter.h"
 #include "ram/IO.h"
 #include "ram/IndexAggregate.h"
@@ -248,6 +249,19 @@ public:
         NodeType type = constructNodeType("ProvenanceExistenceCheck", provExists.getRelation());
         return mk<ProvenanceExistenceCheck>(type, &provExists, visit(provExists.getChildNodes().back()),
                 encodeView(&provExists), std::move(superOp));
+    }
+
+    NodePtr visitFDExistenceCheck(const ram::FDExistenceCheck& exists) override {
+        SuperInstruction superOp = getExistenceSuperInstInfo(exists);
+        // Check if the search signature is a total signature
+        bool isTotal = true;
+        for (const auto& cur : exists.getValues()) {
+            if (isUndefValue(cur)) {
+                isTotal = false;
+            }
+        }
+        NodeType type = constructNodeType("FDExistenceCheck", exists.getRelation());
+        return mk<FDExistenceCheck>(type, &exists, isTotal, encodeView(&exists), std::move(superOp));
     }
 
     // -- comparison operators --
@@ -904,6 +918,9 @@ private:
             indexId = encodeIndexPos(*dynamic_cast<const ram::ExistenceCheck*>(&abstractExist));
         } else if (isA<ram::ProvenanceExistenceCheck>(&abstractExist)) {
             indexId = encodeIndexPos(*dynamic_cast<const ram::ProvenanceExistenceCheck*>(&abstractExist));
+        } else if (isA<ram::FDExistenceCheck>(&abstractExist)) {
+            indexId = encodeIndexPos(*dynamic_cast<const ram::FDExistenceCheck*>(&abstractExist));
+
         } else {
             fatal("Unrecognized ram::AbstractExistenceCheck.");
         }

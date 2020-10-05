@@ -69,6 +69,7 @@ struct RelationWrapper;
     FOR_EACH(Expand, RelationSize)\
     FOR_EACH(Expand, ExistenceCheck)\
     FOR_EACH_PROVENANCE(Expand, ProvenanceExistenceCheck)\
+    FOR_EACH(Expand, FDExistenceCheck)\
     Forward(Constraint)\
     Forward(TupleOperation)\
     FOR_EACH(Expand, Scan)\
@@ -537,6 +538,24 @@ public:
             SuperInstruction superInst)
             : UnaryNode(ty, sdw, std::move(child)), SuperOperation(std::move(superInst)),
               ViewOperation(viewId) {}
+};
+
+/**
+ * @class FDxistenceCheck
+ */
+class FDExistenceCheck : public Node, public SuperOperation, public ViewOperation {
+public:
+    FDExistenceCheck(enum NodeType ty, const ram::Node* sdw, bool totalSearch, size_t viewId,
+            SuperInstruction superInst)
+            : Node(ty, sdw), SuperOperation(std::move(superInst)), ViewOperation(viewId),
+              totalSearch(totalSearch) {}
+
+    bool isTotalSearch() const {
+        return totalSearch;
+    }
+
+private:
+    const bool totalSearch;
 };
 
 /**

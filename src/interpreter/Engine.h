@@ -136,6 +136,9 @@ private:
     RamDomain evalProvenanceExistenceCheck(const ProvenanceExistenceCheck& shadow, Context& ctxt);
 
     template <typename Rel>
+    RamDomain evalFDExistenceCheck(const ram::FDExistenceCheck& cur, const FDExistenceCheck& shadow, Context& ctxt);
+
+    template <typename Rel>
     RamDomain evalScan(const Rel& rel, const ram::Scan& cur, const Scan& shadow, Context& ctxt);
 
     template <typename Rel>
