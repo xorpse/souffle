@@ -627,39 +627,27 @@ void SemanticCheckerImpl::checkRelationDeclaration(const Relation& relation) {
 /* check that each functional dependency argument appears in the relation, and set their positions */
 void SemanticCheckerImpl::checkRelationDependencies(const Relation& relation) {
     for (const auto& fd : relation.getFunctionalDependencies()) {
+        // Can have more than one source node (LHS args), so find all before breaking
         size_t leftFound = 0;
         bool rightFound = false;
-        // Check that LHS and RHS of FD appear in relation arguments
-        std::cout << "AstSemanticChecker\n";
+        // Check that LHS (source) and RHS of FD appear in relation arguments
         for (size_t i = 0; i < relation.getAttributes().size(); i++) {
-            std::cout << "AstSemanticChecker: loop over relation attributes\n";
             ast::Attribute* a = relation.getAttributes().at(i);
-            // if (a->getAttributeName() == fd->getLHS()->getName()) {
-            //     leftFound = true;
-            //     // Set the source location
-            //     fd->setPosition(i);
-            // }
             for (size_t j = 0; j < fd->getArity(); j++) {
-                std::cout << "AstSemanticChecker: loop over fd nodes\n";
                 if (a->getName() == fd->getLHS(j)->getName()) {
-                    std::cout << "AstSemanticChecker: before set position\n";
-                    std::cout << "i: " << i << " j: " << j << "\n";
                     fd->setPosition(j, i);
-                    std::cout << "AstSemanticChecker: after set position\n";
                     leftFound++;
                 }
-                
             }
-
             if (a->getName() == fd->getRHS()->getName()) {
                 rightFound = true;
             }
-
+            
+            // Once all LHS (source) and RHS args are found, safely break
             if (leftFound == fd->getArity() && rightFound) {
                 break;
             }
         }
-        std::cout << "AstSemanticChecker: exited loop over relation attributes\n";
 
         if (leftFound != fd->getArity()) {
             report.addError("LHS of functional dependency not found in relation definition.", fd->getSrcLoc());

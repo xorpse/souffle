@@ -553,7 +553,6 @@ non_empty_variables
   | non_empty_variables[curr_var_list] COMMA IDENT {
         $$ = $curr_var_list;
         $$.push_back($IDENT);
-        std::cout << "Found " << $IDENT << "\n";
     }
   ;
 
@@ -569,7 +568,6 @@ dependencies
   | LPAREN non_empty_variables RPAREN RIGHTARROW IDENT[right] {
         VecOwn<ast::Variable> lhs;
         for (std::string s : $non_empty_variables) {
-          std::cout << "Adding " << s << "\n";
           lhs.push_back(mk<ast::Variable>(s, @$));
         }
         $$.push_back(mk<ast::FunctionalConstraint>(

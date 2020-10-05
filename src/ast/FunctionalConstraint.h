@@ -106,7 +106,6 @@ public:
      * pos: the attribute's index position in relation (0-indexed)
     */
     void setPosition (size_t lhsNum, size_t pos) {
-        std::cout << "lhsNum (j): " << lhsNum << " pos (i): " << pos << "\n";
         positions.at(lhsNum) = pos;
     }
 
