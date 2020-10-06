@@ -23,6 +23,7 @@
 #include "ram/Relation.h"
 #include "ram/Swap.h"
 #include "ram/TranslationUnit.h"
+#include "ram/analysis/Relation.h"
 #include "ram/utility/Utils.h"
 #include "ram/utility/Visitor.h"
 #include "souffle/utility/StreamUtil.h"
@@ -471,6 +472,8 @@ MinIndexSelection::AttributeSet MinIndexSelection::getAttributesToDischarge(
 }
 
 void IndexAnalysis::run(const TranslationUnit& translationUnit) {
+    relAnalysis = translationUnit.getAnalysis<RelationAnalysis>();
+
     // After complete:
     // 1. All relations should have at least one index (for full-order search).
     // 2. Two relations involved in a swap operation will have same set of indices.
@@ -481,8 +484,6 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
     // TODO:
     // 0-arity relation in a provenance program still need to be revisited.
     // visit all nodes to collect searches of each relation
-    visitDepthFirst(translationUnit.getProgram(),
-            [&](const Relation& relation) { relationMap[relation.getName()] = &relation; });
 
     // visit all nodes to collect searches of each relation
     visitDepthFirst(translationUnit.getProgram(), [&](const Node& node) {
@@ -603,7 +604,7 @@ SearchSignature searchSignature(size_t arity, Seq const& xs) {
 }  // namespace
 
 SearchSignature IndexAnalysis::getSearchSignature(const IndexOperation* search) const {
-    const Relation* rel = lookupRelation(search->getRelation());
+    const Relation* rel = &relAnalysis->lookup(search->getRelation());
     size_t arity = rel->getArity();
 
     auto lower = search->getRangePattern().first;
@@ -625,7 +626,7 @@ SearchSignature IndexAnalysis::getSearchSignature(const IndexOperation* search) 
 
 SearchSignature IndexAnalysis::getSearchSignature(const ProvenanceExistenceCheck* provExistCheck) const {
     const auto values = provExistCheck->getValues();
-    const Relation* rel = lookupRelation(provExistCheck->getRelation());
+    const Relation* rel = &relAnalysis->lookup(provExistCheck->getRelation());
     auto auxiliaryArity = rel->getAuxiliaryArity();
 
     SearchSignature keys(values.size());
@@ -646,7 +647,7 @@ SearchSignature IndexAnalysis::getSearchSignature(const ProvenanceExistenceCheck
 }
 
 SearchSignature IndexAnalysis::getSearchSignature(const ExistenceCheck* existCheck) const {
-    const Relation* rel = lookupRelation(existCheck->getRelation());
+    const Relation* rel = &relAnalysis->lookup(existCheck->getRelation());
     return searchSignature(rel->getArity(), existCheck->getValues());
 }
 

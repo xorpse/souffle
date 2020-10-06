@@ -23,6 +23,7 @@
 #include "ram/Relation.h"
 #include "ram/TranslationUnit.h"
 #include "ram/analysis/Analysis.h"
+#include "ram/analysis/Relation.h"
 #include "souffle/utility/MiscUtil.h"
 #include <algorithm>
 #include <cassert>
@@ -411,7 +412,7 @@ protected:
  */
 class IndexAnalysis : public Analysis {
 public:
-    IndexAnalysis(const char* id) : Analysis(id) {}
+    IndexAnalysis(const char* id) : Analysis(id), relAnalysis(nullptr) {}
 
     static constexpr const char* name = "index-analysis";
 
@@ -464,20 +465,13 @@ public:
     bool isTotalSignature(const AbstractExistenceCheck* existCheck) const;
 
 private:
-    /**
-     * lookup relation by name
-     */
-    inline const Relation* lookupRelation(const std::string& name) const {
-        auto it = relationMap.find(name);
-        assert(it != relationMap.end() && "relation not found");
-        return it->second;
-    }
+    /** relation analysis for looking up relations by name */
+    RelationAnalysis* relAnalysis;
 
     /**
      * minimal index cover for relations, i.e., maps a relation to a set of indexes
      */
     std::map<std::string, MinIndexSelection> minIndexCover;
-    std::map<std::string, const Relation*> relationMap;
 };
 
 }  // namespace souffle::ram::analysis
