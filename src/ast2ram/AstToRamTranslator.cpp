@@ -430,8 +430,7 @@ Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(
     /* start with an empty sequence */
     VecOwn<ram::Statement> res;
 
-    // the ram table reference
-    std::string rrel = translateRelation(&rel);
+    std::string relName = translateRelation(&rel);
 
     /* iterate over all clauses that belong to the relation */
     for (ast::Clause* clause : getClauses(*program, rel)) {
@@ -452,7 +451,7 @@ Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(
                     LogStatement::tNonrecursiveRule(relationName, srcLocation, clauseText);
             const std::string logSizeStatement =
                     LogStatement::nNonrecursiveRule(relationName, srcLocation, clauseText);
-            rule = mk<ram::LogRelationTimer>(std::move(rule), logTimerStatement, rrel);
+            rule = mk<ram::LogRelationTimer>(std::move(rule), logTimerStatement, relName);
         }
 
         // add debug info
@@ -476,12 +475,12 @@ Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(
             const std::string logTimerStatement =
                     LogStatement::tNonrecursiveRelation(relationName, srcLocation);
             auto newStmt =
-                    mk<ram::LogRelationTimer>(mk<ram::Sequence>(std::move(res)), logTimerStatement, rrel);
+                    mk<ram::LogRelationTimer>(mk<ram::Sequence>(std::move(res)), logTimerStatement, relName);
             res.clear();
             appendStmt(res, std::move(newStmt));
         } else {
             // add table size printer
-            appendStmt(res, mk<ram::LogSize>(rrel, logSizeStatement));
+            appendStmt(res, mk<ram::LogSize>(relName, logSizeStatement));
         }
     }
 

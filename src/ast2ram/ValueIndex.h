@@ -29,8 +29,6 @@ class RecordInit;
 class Variable;
 }  // namespace souffle::ast
 
-namespace souffle::ram {}
-
 namespace souffle::ast2ram {
 
 struct Location;
