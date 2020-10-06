@@ -43,12 +43,11 @@ using RamPattern = std::pair<RamBound, RamBound>;
  */
 class IndexOperation : public RelationOperation {
 public:
-    IndexOperation(const std::string &rel, int ident, RamPattern queryPattern, Own<Operation> nested,
+    IndexOperation(const std::string& rel, int ident, RamPattern queryPattern, Own<Operation> nested,
             std::string profileText = "")
             : RelationOperation(rel, ident, std::move(nested), std::move(profileText)),
               queryPattern(std::move(queryPattern)) {
-        assert(getRangePattern().first.size() == getRangePattern().second.size() 
- && "Arity mismatch");
+        assert(getRangePattern().first.size() == getRangePattern().second.size() && "Arity mismatch");
         for (const auto& pattern : queryPattern.first) {
             assert(pattern != nullptr && "pattern is a null-pointer");
         }

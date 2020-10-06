@@ -37,7 +37,7 @@ namespace souffle::ram {
  */
 class IO : public RelationStatement {
 public:
-    IO(const std::string &rel, std::map<std::string, std::string> directives)
+    IO(const std::string& rel, std::map<std::string, std::string> directives)
             : RelationStatement(rel), directives(std::move(directives)) {}
 
     /** @brief get I/O directives */

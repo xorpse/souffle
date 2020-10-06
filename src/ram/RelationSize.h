@@ -42,8 +42,7 @@ namespace souffle::ram {
  */
 class RelationSize : public Expression {
 public:
-    RelationSize(std::string rel) : relation(rel) {
-    }
+    RelationSize(std::string rel) : relation(rel) {}
 
     /** @brief Get relation */
     const std::string getRelation() const {

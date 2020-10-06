@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ram/Relation.h"
 #include "souffle/RamTypes.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <cassert>
@@ -93,8 +94,7 @@ public:
     std::string translateRelation(const ast::Atom* atom);
 
     /** translate an AST relation to a RAM relation */
-    std::string translateRelation(
-            const ast::Relation* rel, const std::string relationNamePrefix = "");
+    std::string translateRelation(const ast::Relation* rel, const std::string relationNamePrefix = "");
 
     /** determine the auxiliary for relations */
     size_t getEvaluationArity(const ast::Atom* atom) const;
@@ -107,6 +107,12 @@ public:
 
     /** translate RAM code for a constant value */
     Own<ram::Expression> translateConstant(ast::Constant const& c);
+
+    const ram::Relation* lookupRelation(const std::string& name) const {
+        auto it = ramRels.find(name);
+        assert(it != ramRels.end() && "relation not found");
+        return (*it).second.get();
+    }
 
 private:
     /** AST program */

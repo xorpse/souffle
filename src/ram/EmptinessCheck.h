@@ -45,12 +45,11 @@ namespace souffle::ram {
  */
 class EmptinessCheck : public Condition {
 public:
-    EmptinessCheck(const std::string &rel) : relation(rel) {
-    }
+    EmptinessCheck(const std::string& rel) : relation(rel) {}
 
     /** @brief Get relation */
     const std::string& getRelation() const {
-        return relation; 
+        return relation;
     }
 
     EmptinessCheck* clone() const override {

@@ -33,7 +33,7 @@ namespace souffle::ram {
  */
 class LogSize : public RelationStatement {
 public:
-    LogSize(const std::string &rel, std::string message)
+    LogSize(const std::string& rel, std::string message)
             : RelationStatement(rel), message(std::move(message)) {}
 
     /** @brief Get logging message */

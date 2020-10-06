@@ -87,8 +87,8 @@ public:
 protected:
     void print(std::ostream& os, int tabpos) const override {
         os << times(" ", tabpos);
-        os << "PROJECT (" << join(expressions, ", ", print_deref<Own<Expression>>()) << ") INTO "
-           << relation << std::endl;
+        os << "PROJECT (" << join(expressions, ", ", print_deref<Own<Expression>>()) << ") INTO " << relation
+           << std::endl;
     }
 
     bool equal(const Node& node) const override {

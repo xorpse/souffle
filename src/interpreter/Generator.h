@@ -21,7 +21,6 @@
 #include "RelationTag.h"
 #include "interpreter/Index.h"
 #include "interpreter/Relation.h"
-#include "souffle/utility/StreamUtil.h"
 #include "interpreter/ViewContext.h"
 #include "ram/AbstractExistenceCheck.h"
 #include "ram/AbstractParallel.h"
@@ -116,14 +115,12 @@ class NodeGenerator : public ram::Visitor<Own<Node>> {
     using RelationHandle = Own<RelationWrapper>;
 
 public:
-    NodeGenerator(ram::Program &program, ram::analysis::IndexAnalysis* isa)
+    NodeGenerator(ram::Program& program, ram::analysis::IndexAnalysis* isa)
             : isa(isa), isProvenance(Global::config().has("provenance")),
               profileEnabled(Global::config().has("profile")), program(&program) {
-
         visitDepthFirst(program, [&](const ram::Relation& relation) {
-                assert(relationMap.find(relation.getName()) == relationMap.end()
-                          && "double-naming of relations");
-                relationMap[relation.getName()] = &relation;
+            assert(relationMap.find(relation.getName()) == relationMap.end() && "double-naming of relations");
+            relationMap[relation.getName()] = &relation;
         });
     }
 
@@ -146,7 +143,7 @@ public:
             } else if (const auto* provExists = dynamic_cast<const ram::ProvenanceExistenceCheck*>(&node)) {
                 encodeIndexPos(*provExists);
                 encodeView(provExists);
-            } 
+            }
         });
         // Parse program
         return visit(root);
@@ -248,7 +245,8 @@ public:
         }
         auto ramRelation = lookup(exists.getRelation());
         NodeType type = constructNodeType("ExistenceCheck", ramRelation);
-        return mk<ExistenceCheck>(type, &exists, isTotal, encodeView(&exists), std::move(superOp), ramRelation.isTemp(), ramRelation.getName());
+        return mk<ExistenceCheck>(type, &exists, isTotal, encodeView(&exists), std::move(superOp),
+                ramRelation.isTemp(), ramRelation.getName());
     }
 
     NodePtr visitProvenanceExistenceCheck(const ram::ProvenanceExistenceCheck& provExists) override {
@@ -679,8 +677,8 @@ private:
     std::unordered_map<const ram::Node*, size_t> viewTable;
     /** Environment encoding, store a mapping from ram::Relation to its id */
     std::unordered_map<std::string, size_t> relTable;
-    /** name / relation mapping */ 
-    std::unordered_map<std::string, const ram::Relation *> relationMap; 
+    /** name / relation mapping */
+    std::unordered_map<std::string, const ram::Relation*> relationMap;
     /** Symbol table for relations */
     VecOwn<RelationHandle> relations;
     /** If generating a provenance program */
@@ -711,7 +709,7 @@ private:
     /** @brief Return operation index id from the result of indexAnalysis */
     template <class RamNode>
     size_t encodeIndexPos(RamNode& node) {
-        const std::string &name = node.getRelation();
+        const std::string& name = node.getRelation();
         auto& orderSet = isa->getIndexes(name);
         ram::analysis::SearchSignature signature = isa->getSearchSignature(&node);
         // A zero signature is equivalent as a full order signature.
@@ -735,27 +733,27 @@ private:
     }
 
     /** @brief get arity of relation */
-    const ram::Relation &lookup(const std::string &relName) {
-       auto it = relationMap.find(relName);
-       assert(it != relationMap.end() && "relation not found");
-       return *it->second;
+    const ram::Relation& lookup(const std::string& relName) {
+        auto it = relationMap.find(relName);
+        assert(it != relationMap.end() && "relation not found");
+        return *it->second;
     }
 
     /** @brief get arity of relation */
-    size_t getArity(const std::string &relName) { 
-       auto rel = lookup(relName);
-       return rel.getArity(); 
-    } 
+    size_t getArity(const std::string& relName) {
+        auto rel = lookup(relName);
+        return rel.getArity();
+    }
 
     /** @brief Encode and create the relation, return the relation id */
-    size_t encodeRelation(const std::string &relName) {
+    size_t encodeRelation(const std::string& relName) {
         auto pos = relTable.find(relName);
         if (pos != relTable.end()) {
             return pos->second;
         }
         size_t id = getNewRelId();
         relTable[relName] = id;
-        auto indexes = isa->getIndexes(relName); 
+        auto indexes = isa->getIndexes(relName);
         createRelation(lookup(relName), indexes, id);
         return id;
     }
@@ -851,7 +849,7 @@ private:
      * @brief Encode and return the super-instruction information about a index operation.
      */
     SuperInstruction getIndexSuperInstInfo(const ram::IndexOperation& ramIndex) {
-        size_t arity = getArity(ramIndex.getRelation()); 
+        size_t arity = getArity(ramIndex.getRelation());
         auto interpreterRel = encodeRelation(ramIndex.getRelation());
         auto indexId = encodeIndexPos(ramIndex);
         auto order = (**relations[interpreterRel]).getIndexOrder(indexId);

@@ -67,8 +67,7 @@ Own<Operation> IfConversionTransformer::rewriteIndexScan(const IndexScan* indexS
             newOp = indexScan->getOperation().clone();
         }
 
-        return mk<Filter>(
-                mk<ExistenceCheck>(indexScan->getRelation(), std::move(newValues)),
+        return mk<Filter>(mk<ExistenceCheck>(indexScan->getRelation(), std::move(newValues)),
                 Own<Operation>(newOp), indexScan->getProfileText());
     }
     return nullptr;

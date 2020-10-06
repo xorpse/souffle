@@ -162,16 +162,14 @@ TEST(Query, CloneAndEquals) {
     auto d_return = mk<SubroutineReturn>(std::move(d_return_value));
     // condition t1.0 = 0
     auto d_cond = mk<Constraint>(BinaryConstraintOp::EQ, mk<TupleElement>(1, 0), mk<SignedConstant>(0));
-    auto d_parallel_choice =
-            mk<ParallelChoice>("A", 1, std::move(d_cond), std::move(d_return), "");
+    auto d_parallel_choice = mk<ParallelChoice>("A", 1, std::move(d_cond), std::move(d_return), "");
 
     VecOwn<Expression> e_return_value;
     e_return_value.emplace_back(new TupleElement(1, 0));
     auto e_return = mk<SubroutineReturn>(std::move(e_return_value));
     // condition t1.0 = 0
     auto e_cond = mk<Constraint>(BinaryConstraintOp::EQ, mk<TupleElement>(1, 0), mk<SignedConstant>(0));
-    auto e_parallel_choice =
-            mk<ParallelChoice>("A", 1, std::move(e_cond), std::move(e_return), "");
+    auto e_parallel_choice = mk<ParallelChoice>("A", 1, std::move(e_cond), std::move(e_return), "");
     Query d(std::move(d_parallel_choice));
     Query e(std::move(e_parallel_choice));
     EXPECT_EQ(d, e);
@@ -213,10 +211,8 @@ TEST(Sequence, CloneAndEquals) {
     // CLEAR A
     std::map<std::string, std::string> g_load_IODir;
     std::map<std::string, std::string> h_load_IODir;
-    Sequence g(
-            mk<IO>("A", std::move(g_load_IODir)), mk<Clear>("A"));
-    Sequence h(
-            mk<IO>("A", std::move(h_load_IODir)), mk<Clear>("A"));
+    Sequence g(mk<IO>("A", std::move(g_load_IODir)), mk<Clear>("A"));
+    Sequence h(mk<IO>("A", std::move(h_load_IODir)), mk<Clear>("A"));
     EXPECT_EQ(g, h);
     EXPECT_NE(&g, &h);
 
@@ -329,10 +325,8 @@ TEST(LogRelationTimer, CloneAndEquals) {
      * */
     std::map<std::string, std::string> a_IODir;
     std::map<std::string, std::string> b_IODir;
-    LogRelationTimer a(mk<IO>("A", std::move(a_IODir)), "file.dl [8:1-8:8]",
-            "A");
-    LogRelationTimer b(mk<IO>("A", std::move(b_IODir)), "file.dl [8:1-8:8]",
-            "A");
+    LogRelationTimer a(mk<IO>("A", std::move(a_IODir)), "file.dl [8:1-8:8]", "A");
+    LogRelationTimer b(mk<IO>("A", std::move(b_IODir)), "file.dl [8:1-8:8]", "A");
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 

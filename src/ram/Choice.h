@@ -52,7 +52,7 @@ namespace souffle::ram {
  */
 class Choice : public RelationOperation, public AbstractChoice {
 public:
-    Choice(const std::string &rel, size_t ident, Own<Condition> cond, Own<Operation> nested,
+    Choice(const std::string& rel, size_t ident, Own<Condition> cond, Own<Operation> nested,
             std::string profileText = "")
             : RelationOperation(rel, ident, std::move(nested), std::move(profileText)),
               AbstractChoice(std::move(cond)) {}
@@ -63,8 +63,8 @@ public:
     }
 
     Choice* clone() const override {
-        return new Choice(relation, getTupleId(), souffle::clone(condition),
-                souffle::clone(&getOperation()), getProfileText());
+        return new Choice(relation, getTupleId(), souffle::clone(condition), souffle::clone(&getOperation()),
+                getProfileText());
     }
 
     std::vector<const Node*> getChildNodes() const override {
@@ -75,7 +75,7 @@ protected:
     void print(std::ostream& os, int tabpos) const override {
         os << times(" ", tabpos);
         os << "CHOICE t" << getTupleId();
-        os << " IN " << getRelation(); 
+        os << " IN " << getRelation();
         os << " WHERE " << getCondition();
         os << std::endl;
         RelationOperation::print(os, tabpos + 1);

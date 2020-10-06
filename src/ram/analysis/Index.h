@@ -298,8 +298,7 @@ public:
      */
     AttributeSet getAttributesToDischarge(const SearchSignature& s, const Relation& rel);
 
-
-    void print(std::ostream &os) { 
+    void print(std::ostream& os) {
         /* Print searches */
         os << "\tNumber of Searches: " << getSearches().size() << "\n";
 
@@ -404,7 +403,6 @@ protected:
         }
         return unmatched;
     }
-
 };
 
 /**
@@ -469,11 +467,11 @@ private:
     /**
      * lookup relation by name
      */
-    inline const Relation *lookupRelation(const std::string &name) const { 
-        auto it = relationMap.find(name);  
-        assert (it != relationMap.end() && "relation not found"); 
-        return it->second; 
-    } 
+    inline const Relation* lookupRelation(const std::string& name) const {
+        auto it = relationMap.find(name);
+        assert(it != relationMap.end() && "relation not found");
+        return it->second;
+    }
 
     /**
      * minimal index cover for relations, i.e., maps a relation to a set of indexes

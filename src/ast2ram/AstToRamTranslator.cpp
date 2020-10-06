@@ -55,6 +55,7 @@
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
 #include "ast2ram/ClauseTranslator.h"
+#include "ast2ram/Location.h"
 #include "ast2ram/ProvenanceClauseTranslator.h"
 #include "ast2ram/ValueIndex.h"
 #include "parser/SrcLocation.h"
@@ -198,7 +199,6 @@ std::vector<std::map<std::string, std::string>> AstToRamTranslator::getOutputDir
 
     return outputDirectives;
 }
-
 
 std::string AstToRamTranslator::translateRelation(const ast::Atom* atom) {
     return getRelationName(atom->getQualifiedName());
@@ -441,7 +441,7 @@ Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(
         }
 
         // translate clause
-        Own<ram::Statement> rule = ClauseTranslator(*this).translateClause(&rel, *clause, *clause);
+        Own<ram::Statement> rule = ClauseTranslator(*this).translateClause(*clause, *clause);
 
         // add logging
         if (Global::config().has("profile")) {
@@ -475,8 +475,8 @@ Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(
         if (!res.empty()) {
             const std::string logTimerStatement =
                     LogStatement::tNonrecursiveRelation(relationName, srcLocation);
-            auto newStmt = mk<ram::LogRelationTimer>(
-                    mk<ram::Sequence>(std::move(res)), logTimerStatement, rrel);
+            auto newStmt =
+                    mk<ram::LogRelationTimer>(mk<ram::Sequence>(std::move(res)), logTimerStatement, rrel);
             res.clear();
             appendStmt(res, std::move(newStmt));
         } else {
@@ -535,21 +535,19 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
     VecOwn<ram::Statement> updateTable;
     VecOwn<ram::Statement> postamble;
 
-    auto genMerge = [&](const ast::Relation *rel, const std::string &destRel, const std::string &srcRel) -> Own<ram::Statement> {
+    auto genMerge = [&](const ast::Relation* rel, const std::string& destRel,
+                            const std::string& srcRel) -> Own<ram::Statement> {
         VecOwn<ram::Expression> values;
         if (rel->getArity() == 0) {
-            return mk<ram::Query>(
-                    mk<ram::Filter>(mk<ram::Negation>(mk<ram::EmptinessCheck>(srcRel)),
-                            mk<ram::Project>(destRel, std::move(values))));
+            return mk<ram::Query>(mk<ram::Filter>(mk<ram::Negation>(mk<ram::EmptinessCheck>(srcRel)),
+                    mk<ram::Project>(destRel, std::move(values))));
         }
         for (std::size_t i = 0; i < rel->getArity(); i++) {
             values.push_back(mk<ram::TupleElement>(0, i));
         }
-        auto stmt = mk<ram::Query>(mk<ram::Scan>(
-                srcRel, 0, mk<ram::Project>(destRel, std::move(values))));
+        auto stmt = mk<ram::Query>(mk<ram::Scan>(srcRel, 0, mk<ram::Project>(destRel, std::move(values))));
         if (rel->getRepresentation() == RelationRepresentation::EQREL) {
-            return mk<ram::Sequence>(
-                    mk<ram::Extend>(destRel, srcRel), std::move(stmt));
+            return mk<ram::Sequence>(mk<ram::Extend>(destRel, srcRel), std::move(stmt));
         }
         return stmt;
     };
@@ -579,7 +577,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
         /* Generate code for non-recursive part of relation */
         /* Generate merge operation for temp tables */
         appendStmt(preamble, translateNonRecursiveRelation(*rel, recursiveClauses));
-        appendStmt(preamble, genMerge(rel,translateDeltaRelation(rel), translateRelation(rel)));
+        appendStmt(preamble, genMerge(rel, translateDeltaRelation(rel), translateRelation(rel)));
 
         /* Add update operations of relations to parallel statements */
         appendStmt(updateTable, std::move(updateRelTable));
@@ -638,13 +636,12 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
                 for (size_t k = j + 1; k < atoms.size(); k++) {
                     if (isInSameSCC(getAtomRelation(atoms[k], program))) {
                         auto cur = souffle::clone(ast::getBodyLiterals<ast::Atom>(*r1)[k]);
-                        cur->setQualifiedName(
-                                translateDeltaRelation(getAtomRelation(atoms[k], program)));
+                        cur->setQualifiedName(translateDeltaRelation(getAtomRelation(atoms[k], program)));
                         r1->addToBody(mk<ast::Negation>(std::move(cur)));
                     }
                 }
 
-                Own<ram::Statement> rule = ClauseTranslator(*this).translateClause(rel, *r1, *cl, version);
+                Own<ram::Statement> rule = ClauseTranslator(*this).translateClause(*r1, *cl, version);
 
                 /* add logging */
                 if (Global::config().has("profile")) {
@@ -797,8 +794,7 @@ Own<ram::Statement> AstToRamTranslator::makeSubproofSubroutine(const ast::Clause
                     souffle::clone(atomArgs[arity - 1]), mk<ast::SubroutineArgument>(levelIndex)));
         }
     }
-    auto rel = getRelation(*program, head->getQualifiedName());
-    return ProvenanceClauseTranslator(*this).translateClause(rel, *intermediateClause, clause);
+    return ProvenanceClauseTranslator(*this).translateClause(*intermediateClause, clause);
 }
 
 /** make a subroutine to search for subproofs for the non-existence of a tuple */
@@ -1019,29 +1015,15 @@ Own<ram::Statement> AstToRamTranslator::makeNegationSubproofSubroutine(const ast
 
 /** translates the given datalog program into an equivalent RAM program  */
 void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {
-    // obtain IO Type of relations
+    // keep track of relevant analyses
     ioType = translationUnit.getAnalysis<ast::analysis::IOTypeAnalysis>();
-
-    // obtain type environment from analysis
     typeEnv = &translationUnit.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
-
-    // obtain recursive clauses from analysis
     const auto* recursiveClauses = translationUnit.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
-
-    // obtain strongly connected component (SCC) graph from analysis
     const auto& sccGraph = *translationUnit.getAnalysis<ast::analysis::SCCGraphAnalysis>();
-
-    // obtain some topological order over the nodes of the SCC graph
     const auto& sccOrder = *translationUnit.getAnalysis<ast::analysis::TopologicallySortedSCCGraphAnalysis>();
-
-    // obtain the schedule of relations expired at each index of the topological order
     const auto& expirySchedule =
             translationUnit.getAnalysis<ast::analysis::RelationScheduleAnalysis>()->schedule();
-
-    // get auxiliary arity analysis
     auxArityAnalysis = translationUnit.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
-
-    // get functor analysis
     functorAnalysis = translationUnit.getAnalysis<ast::analysis::FunctorAnalysis>();
 
     // determine the sips to use
@@ -1057,13 +1039,12 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     // a function to load relations
     const auto& makeRamLoad = [&](VecOwn<ram::Statement>& current, const ast::Relation* relation) {
         for (auto directives : getInputDirectives(relation)) {
-            Own<ram::Statement> statement =
-                    mk<ram::IO>(translateRelation(relation), directives);
+            Own<ram::Statement> statement = mk<ram::IO>(translateRelation(relation), directives);
             if (Global::config().has("profile")) {
                 const std::string logTimerStatement = LogStatement::tRelationLoadTime(
                         toString(relation->getQualifiedName()), relation->getSrcLoc());
-                statement = mk<ram::LogRelationTimer>(std::move(statement), logTimerStatement,
-                        translateRelation(relation));
+                statement = mk<ram::LogRelationTimer>(
+                        std::move(statement), logTimerStatement, translateRelation(relation));
             }
             appendStmt(current, std::move(statement));
         }
@@ -1072,13 +1053,12 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     // a function to store relations
     const auto& makeRamStore = [&](VecOwn<ram::Statement>& current, const ast::Relation* relation) {
         for (auto directives : getOutputDirectives(relation)) {
-            Own<ram::Statement> statement =
-                    mk<ram::IO>(translateRelation(relation), directives);
+            Own<ram::Statement> statement = mk<ram::IO>(translateRelation(relation), directives);
             if (Global::config().has("profile")) {
                 const std::string logTimerStatement = LogStatement::tRelationSaveTime(
                         toString(relation->getQualifiedName()), relation->getSrcLoc());
-                statement = mk<ram::LogRelationTimer>(std::move(statement), logTimerStatement,
-                        translateRelation(relation));
+                statement = mk<ram::LogRelationTimer>(
+                        std::move(statement), logTimerStatement, translateRelation(relation));
             }
             appendStmt(current, std::move(statement));
         }
@@ -1088,9 +1068,6 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     const auto& makeRamClear = [&](VecOwn<ram::Statement>& current, const ast::Relation* relation) {
         appendStmt(current, mk<ram::Clear>(translateRelation(relation)));
     };
-
-    // maintain the index of the SCC within the topological order
-    size_t indexOfScc = 0;
 
     // create all Ram relations in ramRels
     for (const auto& scc : sccOrder.order()) {
@@ -1102,6 +1079,7 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
             auto auxiliaryArity = auxArityAnalysis->getArity(rel);
             auto representation = rel->getRepresentation();
             const auto& attributes = rel->getAttributes();
+
             std::vector<std::string> attributeNames;
             std::vector<std::string> attributeTypeQualifiers;
             for (size_t i = 0; i < rel->getArity(); ++i) {
@@ -1113,6 +1091,8 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
             }
             ramRels[name] = mk<ram::Relation>(
                     name, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
+
+            // recursive relations also require @delta and @new variants, with the same signature
             if (isRecursive) {
                 std::string deltaName = "@delta_" + name;
                 std::string newName = "@new_" + name;
@@ -1123,6 +1103,10 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
             }
         }
     }
+
+    // maintain the index of the SCC within the topological order
+    size_t indexOfScc = 0;
+
     // iterate over each SCC according to the topological order
     for (const auto& scc : sccOrder.order()) {
         // make a new ram statement for the current SCC
@@ -1157,9 +1141,8 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
             makeRamStore(current, relation);
         }
 
-        // if provenance is not enabled...
+        // if provenance is disabled, drop all relations expired as per the topological order
         if (!Global::config().has("provenance")) {
-            // otherwise, drop all  relations expired as per the topological order
             for (const auto& relation : internExps) {
                 makeRamClear(current, relation);
             }

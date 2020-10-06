@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "ast2ram/Location.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <map>
 #include <set>
@@ -29,13 +28,17 @@ class RecordInit;
 class Variable;
 }  // namespace souffle::ast
 
-namespace souffle::ram {
-}
+namespace souffle::ram {}
 
 namespace souffle::ast2ram {
 
+struct Location;
+
 class ValueIndex {
 public:
+    ValueIndex();
+    ~ValueIndex();
+
     /**
      * The type mapping variables (referenced by their names) to the
      * locations where they are used.
@@ -64,8 +67,7 @@ public:
 
     void addVarReference(const ast::Variable& var, const Location& l);
 
-    void addVarReference(
-            const ast::Variable& var, int ident, int pos, const std::string &rel = "");
+    void addVarReference(const ast::Variable& var, int ident, int pos, const std::string& rel = "");
 
     bool isDefined(const ast::Variable& var) const;
 
@@ -77,14 +79,12 @@ public:
 
     void setRecordDefinition(const ast::RecordInit& init, const Location& l);
 
-    void setRecordDefinition(
-            const ast::RecordInit& init, int ident, int pos, const std::string &rel = "");
+    void setRecordDefinition(const ast::RecordInit& init, int ident, int pos, const std::string& rel = "");
 
     const Location& getDefinitionPoint(const ast::RecordInit& init) const;
 
     // -- generators (aggregates & some functors) --
-
-    void setGeneratorLoc(const ast::Argument& agg, const Location& loc);
+    void setGeneratorLoc(const ast::Argument& arg, const Location& loc);
 
     const Location& getGeneratorLoc(const ast::Argument& arg) const;
 

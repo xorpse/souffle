@@ -56,8 +56,8 @@ private:
     /** Cache for generated types for relations */
     std::set<std::string> typeCache;
 
-    /** Relation map */ 
-    std::map<std::string, const ram::Relation *> relationMap;  
+    /** Relation map */
+    std::map<std::string, const ram::Relation*> relationMap;
 
 protected:
     /** Get record table */
@@ -88,18 +88,17 @@ protected:
     /** Lookup read counter */
     size_t lookupReadIdx(const std::string& txt);
 
-    /** Lookup relation by relation name */ 
-    const ram::Relation *lookup(const std::string &relName) {
-        auto it = relationMap.find(relName); 
-        assert (it != relationMap.end() && "relation not found");
+    /** Lookup relation by relation name */
+    const ram::Relation* lookup(const std::string& relName) {
+        auto it = relationMap.find(relName);
+        assert(it != relationMap.end() && "relation not found");
         return it->second;
-    } 
+    }
 
 public:
     explicit Synthesiser(ram::TranslationUnit& tUnit) : translationUnit(tUnit) {
-       ram::visitDepthFirst(tUnit.getProgram(), [&](const ram::Relation& relation) {
-            relationMap[relation.getName()]=&relation; 
-       }); 
+        ram::visitDepthFirst(tUnit.getProgram(),
+                [&](const ram::Relation& relation) { relationMap[relation.getName()] = &relation; });
     }
 
     virtual ~Synthesiser() = default;

@@ -42,7 +42,7 @@ namespace souffle::ram {
 
 class Clear : public RelationStatement {
 public:
-    Clear(const std::string &rel) : RelationStatement(rel) {}
+    Clear(const std::string& rel) : RelationStatement(rel) {}
 
     Clear* clone() const override {
         return new Clear(relation);

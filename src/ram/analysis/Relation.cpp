@@ -24,16 +24,15 @@
 
 namespace souffle::ram::analysis {
 
-const ram::Relation &RelationAnalysis::lookup(const std::string &name) const {
-   auto it = relationMap.find(name);
-   assert (it != relationMap.end() && "relation not found");
-   return *(it->second);
+const ram::Relation& RelationAnalysis::lookup(const std::string& name) const {
+    auto it = relationMap.find(name);
+    assert(it != relationMap.end() && "relation not found");
+    return *(it->second);
 }
 
-void RelationAnalysis::run(const TranslationUnit& translationUnit) { 
-    visitDepthFirst(translationUnit.getProgram(), [&](const Relation& relation) {
-            relationMap[relation.getName()]=&relation; 
-    }); 
+void RelationAnalysis::run(const TranslationUnit& translationUnit) {
+    visitDepthFirst(translationUnit.getProgram(),
+            [&](const Relation& relation) { relationMap[relation.getName()] = &relation; });
 }
 
 }  // namespace souffle::ram::analysis

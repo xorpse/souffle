@@ -74,9 +74,8 @@ const std::string testInterpreterStore(
 
     std::map<std::string, std::string> ioDirs = std::map<std::string, std::string>(dirs);
 
-    Own<ram::Statement> main =
-            mk<ram::Sequence>(mk<ram::Query>(mk<ram::Project>("test", std::move(exprs))),
-                    mk<ram::IO>("test", ioDirs));
+    Own<ram::Statement> main = mk<ram::Sequence>(
+            mk<ram::Query>(mk<ram::Project>("test", std::move(exprs))), mk<ram::IO>("test", ioDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -266,9 +265,8 @@ TEST(IO_store, SignedChangedDelimiter) {
         exprs.push_back(mk<SignedConstant>(i));
     }
 
-    Own<ram::Statement> main =
-            mk<ram::Sequence>(mk<ram::Query>(mk<ram::Project>("test", std::move(exprs))),
-                    mk<ram::IO>("test", ioDirs));
+    Own<ram::Statement> main = mk<ram::Sequence>(
+            mk<ram::Query>(mk<ram::Project>("test", std::move(exprs))), mk<ram::IO>("test", ioDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -343,9 +341,8 @@ TEST(IO_store, MixedTypes) {
     exprs.push_back(mk<SignedConstant>(ramBitCast(static_cast<RamFloat>(floatValue))));
     exprs.push_back(mk<SignedConstant>(symbolTable.lookup("meow")));
 
-    Own<ram::Statement> main =
-            mk<ram::Sequence>(mk<ram::Query>(mk<ram::Project>("test", std::move(exprs))),
-                    mk<ram::IO>("test", ioDirs));
+    Own<ram::Statement> main = mk<ram::Sequence>(
+            mk<ram::Query>(mk<ram::Project>("test", std::move(exprs))), mk<ram::IO>("test", ioDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -408,8 +405,8 @@ TEST(IO_load, Signed) {
             {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> writeIoDirs = std::map<std::string, std::string>(writeDirs);
 
-    Own<ram::Statement> main = mk<ram::Sequence>(
-            mk<ram::IO>("test", readIoDirs), mk<ram::IO>("test", writeIoDirs));
+    Own<ram::Statement> main =
+            mk<ram::Sequence>(mk<ram::IO>("test", readIoDirs), mk<ram::IO>("test", writeIoDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -470,8 +467,8 @@ TEST(IO_load, Float) {
             {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> writeIoDirs = std::map<std::string, std::string>(writeDirs);
 
-    Own<ram::Statement> main = mk<ram::Sequence>(
-            mk<ram::IO>("test", readIoDirs), mk<ram::IO>("test", writeIoDirs));
+    Own<ram::Statement> main =
+            mk<ram::Sequence>(mk<ram::IO>("test", readIoDirs), mk<ram::IO>("test", writeIoDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -532,8 +529,8 @@ TEST(IO_load, Unsigned) {
             {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> writeIoDirs = std::map<std::string, std::string>(writeDirs);
 
-    Own<ram::Statement> main = mk<ram::Sequence>(
-            mk<ram::IO>("test", readIoDirs), mk<ram::IO>("test", writeIoDirs));
+    Own<ram::Statement> main =
+            mk<ram::Sequence>(mk<ram::IO>("test", readIoDirs), mk<ram::IO>("test", writeIoDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -594,8 +591,8 @@ TEST(IO_load, MixedTypesLoad) {
             {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> writeIoDirs = std::map<std::string, std::string>(writeDirs);
 
-    Own<ram::Statement> main = mk<ram::Sequence>(
-            mk<ram::IO>("test", readIoDirs), mk<ram::IO>("test", writeIoDirs));
+    Own<ram::Statement> main =
+            mk<ram::Sequence>(mk<ram::IO>("test", readIoDirs), mk<ram::IO>("test", writeIoDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;

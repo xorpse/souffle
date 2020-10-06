@@ -33,7 +33,7 @@ int ComplexityAnalysis::getComplexity(const Node* node) const {
     // visitor
     class ValueComplexityVisitor : public Visitor<int> {
     public:
-        ValueComplexityVisitor(RelationAnalysis *relAnalysis) : ra(relAnalysis) { } 
+        ValueComplexityVisitor(RelationAnalysis* relAnalysis) : ra(relAnalysis) {}
 
         // conjunction
         int visitConjunction(const Conjunction& conj) override {
@@ -65,8 +65,9 @@ int ComplexityAnalysis::getComplexity(const Node* node) const {
         int visitNode(const Node&) override {
             return 0;
         }
+
     protected:
-        RelationAnalysis *ra{nullptr}; 
+        RelationAnalysis* ra{nullptr};
     };
 
     assert((isA<Expression>(node) || isA<Condition>(node)) && "not an expression/condition/operation");

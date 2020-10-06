@@ -17,34 +17,17 @@
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/MiscUtil.h"
 
-namespace souffle::ram {
-class RelationReference;
-}
-
 namespace souffle::ast2ram {
 
 struct Location {
-    int identifier{};
-    int element{};
-    std::string relation{""};
+    const int identifier;
+    const int element;
+    std::string relation;
 
-    Location() = default;
-
-    Location(int ident, int elem, const std::string &rel = "")
+    Location(int ident, int elem, const std::string& rel = "")
             : identifier(ident), element(elem), relation(rel) {}
 
-    Location(const Location& l) : identifier(l.identifier), element(l.element) {
-        if (l.relation != "") {
-            relation = l.relation;
-        }
-    }
-
-    Location& operator=(Location other) {
-        identifier = other.identifier;
-        element = other.element;
-        relation = other.relation;
-        return *this;
-    }
+    Location(const Location& l) : identifier(l.identifier), element(l.element), relation(l.relation) {}
 
     bool operator==(const Location& loc) const {
         return identifier == loc.identifier && element == loc.element;

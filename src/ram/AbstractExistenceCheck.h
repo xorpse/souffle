@@ -39,7 +39,7 @@ namespace souffle::ram {
  */
 class AbstractExistenceCheck : public Condition {
 public:
-    AbstractExistenceCheck(const std::string &rel, VecOwn<Expression> vals)
+    AbstractExistenceCheck(const std::string& rel, VecOwn<Expression> vals)
             : relation(rel), values(std::move(vals)) {
         for (const auto& v : values) {
             assert(v != nullptr && "NULL value");
@@ -47,7 +47,7 @@ public:
     }
 
     /** @brief Get relation */
-    const std::string &getRelation() const {
+    const std::string& getRelation() const {
         return relation;
     }
 

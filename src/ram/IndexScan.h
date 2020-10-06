@@ -47,10 +47,10 @@ using RamPattern = std::pair<RamBound, RamBound>;
  */
 class IndexScan : public IndexOperation {
 public:
-    IndexScan(const std::string &rel, int ident, RamPattern queryPattern, Own<Operation> nested,
+    IndexScan(const std::string& rel, int ident, RamPattern queryPattern, Own<Operation> nested,
             std::string profileText = "")
-            : IndexOperation(rel, ident, std::move(queryPattern), std::move(nested),
-                      std::move(profileText)) {}
+            : IndexOperation(rel, ident, std::move(queryPattern), std::move(nested), std::move(profileText)) {
+    }
 
     IndexScan* clone() const override {
         RamPattern resQueryPattern;
@@ -67,7 +67,7 @@ public:
 protected:
     void print(std::ostream& os, int tabpos) const override {
         os << times(" ", tabpos);
-        os << "FOR t" << getTupleId() << " IN " << relation; 
+        os << "FOR t" << getTupleId() << " IN " << relation;
         printIndex(os);
         os << std::endl;
         IndexOperation::print(os, tabpos + 1);

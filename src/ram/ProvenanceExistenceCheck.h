@@ -34,7 +34,7 @@ namespace souffle::ram {
  */
 class ProvenanceExistenceCheck : public AbstractExistenceCheck {
 public:
-    ProvenanceExistenceCheck(const std::string &rel, VecOwn<Expression> vals)
+    ProvenanceExistenceCheck(const std::string& rel, VecOwn<Expression> vals)
             : AbstractExistenceCheck(rel, std::move(vals)) {}
 
     ProvenanceExistenceCheck* clone() const override {

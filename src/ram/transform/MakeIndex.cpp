@@ -87,7 +87,12 @@ ExpressionPair MakeIndexTransformer::getExpressionPair(
 // <expr2> }
 ExpressionPair MakeIndexTransformer::getLowerUpperExpression(Condition* c, size_t& element, int identifier) {
     if (auto* binRelOp = dynamic_cast<Constraint*>(c)) {
-        if (isEqConstraint(binRelOp->getOperator())) {
+        bool interpreter = !Global::config().has("compile") && !Global::config().has("dl-program") &&
+                           !Global::config().has("generate") && !Global::config().has("swig");
+        // don't index FEQ in interpreter mode
+        if (binRelOp->getOperator() == BinaryConstraintOp::FEQ && interpreter) {
+            return {mk<UndefValue>(), mk<UndefValue>()};
+        } else if (isEqConstraint(binRelOp->getOperator())) {
             if (const auto* lhs = dynamic_cast<const TupleElement*>(&binRelOp->getLHS())) {
                 const Expression* rhs = &binRelOp->getRHS();
                 if (lhs->getTupleId() == identifier && rla->getLevel(rhs) < identifier) {
@@ -314,8 +319,8 @@ Own<Operation> MakeIndexTransformer::rewriteScan(const Scan* scan) {
             if (!isTrue(condition.get())) {
                 op = mk<Filter>(std::move(condition), std::move(op));
             }
-            return mk<IndexScan>(scan->getRelation(), identifier, std::move(queryPattern),
-                    std::move(op), scan->getProfileText());
+            return mk<IndexScan>(scan->getRelation(), identifier, std::move(queryPattern), std::move(op),
+                    scan->getProfileText());
         }
     }
     return nullptr;
@@ -354,7 +359,7 @@ bool MakeIndexTransformer::makeIndex(Program& program) {
     visitDepthFirst(program, [&](const Query& query) {
         std::function<Own<Node>(Own<Node>)> scanRewriter = [&](Own<Node> node) -> Own<Node> {
             if (const Scan* scan = dynamic_cast<Scan*>(node.get())) {
-                const Relation &rel = relAnalysis->lookup(scan->getRelation()); 
+                const Relation& rel = relAnalysis->lookup(scan->getRelation());
                 if (rel.getRepresentation() != RelationRepresentation::INFO) {
                     if (Own<Operation> op = rewriteScan(scan)) {
                         changed = true;

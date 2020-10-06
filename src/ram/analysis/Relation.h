@@ -37,10 +37,10 @@ public:
 
     void run(const TranslationUnit&) override;
 
-    const ram::Relation &lookup(const std::string &name) const; 
+    const ram::Relation& lookup(const std::string& name) const;
 
 protected:
-    std::map<std::string, const ram::Relation *> relationMap;
+    std::map<std::string, const ram::Relation*> relationMap;
 };
 
 }  // namespace souffle::ram::analysis

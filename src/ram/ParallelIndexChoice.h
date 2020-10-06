@@ -54,10 +54,10 @@ namespace souffle::ram {
  */
 class ParallelIndexChoice : public IndexChoice, public AbstractParallel {
 public:
-    ParallelIndexChoice(const std::string &rel, int ident, Own<Condition> cond, RamPattern queryPattern,
+    ParallelIndexChoice(const std::string& rel, int ident, Own<Condition> cond, RamPattern queryPattern,
             Own<Operation> nested, std::string profileText = "")
-            : IndexChoice(rel, ident, std::move(cond), std::move(queryPattern), std::move(nested),
-                      profileText) {}
+            : IndexChoice(
+                      rel, ident, std::move(cond), std::move(queryPattern), std::move(nested), profileText) {}
 
     ParallelIndexChoice* clone() const override {
         RamPattern resQueryPattern;
@@ -67,9 +67,8 @@ public:
         for (const auto& i : queryPattern.second) {
             resQueryPattern.second.emplace_back(i->clone());
         }
-        auto* res =
-                new ParallelIndexChoice(relation, getTupleId(), souffle::clone(condition),
-                        std::move(resQueryPattern), souffle::clone(&getOperation()), getProfileText());
+        auto* res = new ParallelIndexChoice(relation, getTupleId(), souffle::clone(condition),
+                std::move(resQueryPattern), souffle::clone(&getOperation()), getProfileText());
         return res;
     }
 

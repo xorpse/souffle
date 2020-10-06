@@ -32,11 +32,10 @@ namespace souffle::ram {
  */
 class RelationStatement : public Statement {
 public:
-    RelationStatement(std::string rel) : relation(rel) {
-    }
+    RelationStatement(std::string rel) : relation(rel) {}
 
     /** @brief Get RAM relation */
-    const std::string &getRelation() const {
+    const std::string& getRelation() const {
         return relation;
     }
 

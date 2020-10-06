@@ -53,7 +53,7 @@ namespace souffle::ram {
  */
 class ParallelIndexScan : public IndexScan, public AbstractParallel {
 public:
-    ParallelIndexScan(const std::string &rel, int ident, RamPattern queryPattern, Own<Operation> nested,
+    ParallelIndexScan(const std::string& rel, int ident, RamPattern queryPattern, Own<Operation> nested,
             std::string profileText = "")
             : IndexScan(rel, ident, std::move(queryPattern), std::move(nested), profileText) {}
 
@@ -72,7 +72,7 @@ public:
 protected:
     void print(std::ostream& os, int tabpos) const override {
         os << times(" ", tabpos);
-        os << "PARALLEL FOR t" << getTupleId() << " IN " << relation; 
+        os << "PARALLEL FOR t" << getTupleId() << " IN " << relation;
         printIndex(os);
         os << std::endl;
         IndexOperation::print(os, tabpos + 1);

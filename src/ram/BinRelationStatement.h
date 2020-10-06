@@ -36,9 +36,7 @@ namespace souffle::ram {
  */
 class BinRelationStatement : public Statement {
 public:
-    BinRelationStatement(const std::string &f, const std::string &s)
-            : first(f), second(s) {
-    }
+    BinRelationStatement(const std::string& f, const std::string& s) : first(f), second(s) {}
 
     /** @brief Get first relation */
     const std::string& getFirstRelation() const {
@@ -57,10 +55,10 @@ protected:
     }
 
 protected:
-    /** first relation */ 
+    /** first relation */
     std::string first;
 
-    /** second relation */ 
+    /** second relation */
     std::string second;
 };
 

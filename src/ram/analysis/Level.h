@@ -46,8 +46,8 @@ public:
 
     static constexpr const char* name = "level-analysis";
 
-    void run(const TranslationUnit &tUnit) override {
-         ra = tUnit.getAnalysis<RelationAnalysis>(); 
+    void run(const TranslationUnit& tUnit) override {
+        ra = tUnit.getAnalysis<RelationAnalysis>();
     }
 
     /**
@@ -55,8 +55,8 @@ public:
      */
     int getLevel(const Node* value) const;
 
-protected: 
-    RelationAnalysis *ra{nullptr}; 
+protected:
+    RelationAnalysis* ra{nullptr};
 };
 
 }  // namespace souffle::ram::analysis

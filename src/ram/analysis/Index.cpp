@@ -456,15 +456,15 @@ MinIndexSelection::AttributeSet MinIndexSelection::getAttributesToDischarge(
 
     // if we are in the interpreter then we only permit signed inequalities
     // remembering to discharge any excess signed inequalities!
-    AttributeSet inequalitiesNotSigned(dischargedMap[s]);
+    AttributeSet interpreterAttributesToDischarge(dischargedMap[s]);
     for (size_t i = 0; i < s.arity(); ++i) {
         if (s[i] == AttributeConstraint::Inequal && rel.getAttributeTypes()[i][0] != 'i') {
-            inequalitiesNotSigned.insert(i);
+            interpreterAttributesToDischarge.insert(i);
         }
     }
     if (!Global::config().has("compile") && !Global::config().has("dl-program") &&
             !Global::config().has("generate") && !Global::config().has("swig")) {
-        return inequalitiesNotSigned;
+        return interpreterAttributesToDischarge;
     }
 
     return dischargedMap[s];
@@ -481,9 +481,8 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
     // TODO:
     // 0-arity relation in a provenance program still need to be revisited.
     // visit all nodes to collect searches of each relation
-    visitDepthFirst(translationUnit.getProgram(), [&](const Relation& relation) {
-            relationMap[relation.getName()]=&relation; 
-    }); 
+    visitDepthFirst(translationUnit.getProgram(),
+            [&](const Relation& relation) { relationMap[relation.getName()] = &relation; });
 
     // visit all nodes to collect searches of each relation
     visitDepthFirst(translationUnit.getProgram(), [&](const Node& node) {
@@ -499,7 +498,7 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
         } else if (const auto* ramRel = dynamic_cast<const Relation*>(&node)) {
             MinIndexSelection& indexes = getIndexes(ramRel->getName());
             indexes.addSearch(getSearchSignature(ramRel));
-        } 
+        }
     });
 
     // A swap happen between rel A and rel B indicates A should include all indices of B, vice versa.
@@ -510,8 +509,8 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
         // in any of the relation in a complete iteration.
         //
         // Currently RAM does not have such situation.
-        const std::string &relA = swap.getFirstRelation();
-        const std::string &relB = swap.getSecondRelation();
+        const std::string& relA = swap.getFirstRelation();
+        const std::string& relB = swap.getSecondRelation();
         MinIndexSelection& indexesA = getIndexes(relA);
         MinIndexSelection& indexesB = getIndexes(relB);
         // Add all searchSignature of A into B
@@ -540,7 +539,7 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
     }
 }
 
-MinIndexSelection& IndexAnalysis::getIndexes(const std::string &relName) {
+MinIndexSelection& IndexAnalysis::getIndexes(const std::string& relName) {
     auto pos = minIndexCover.find(relName);
     if (pos != minIndexCover.end()) {
         return pos->second;
@@ -604,8 +603,7 @@ SearchSignature searchSignature(size_t arity, Seq const& xs) {
 }  // namespace
 
 SearchSignature IndexAnalysis::getSearchSignature(const IndexOperation* search) const {
- 
-    const Relation *rel = lookupRelation(search->getRelation()); 
+    const Relation* rel = lookupRelation(search->getRelation());
     size_t arity = rel->getArity();
 
     auto lower = search->getRangePattern().first;
@@ -627,7 +625,7 @@ SearchSignature IndexAnalysis::getSearchSignature(const IndexOperation* search) 
 
 SearchSignature IndexAnalysis::getSearchSignature(const ProvenanceExistenceCheck* provExistCheck) const {
     const auto values = provExistCheck->getValues();
-    const Relation *rel = lookupRelation(provExistCheck->getRelation()); 
+    const Relation* rel = lookupRelation(provExistCheck->getRelation());
     auto auxiliaryArity = rel->getAuxiliaryArity();
 
     SearchSignature keys(values.size());
@@ -648,7 +646,7 @@ SearchSignature IndexAnalysis::getSearchSignature(const ProvenanceExistenceCheck
 }
 
 SearchSignature IndexAnalysis::getSearchSignature(const ExistenceCheck* existCheck) const {
-    const Relation *rel = lookupRelation(existCheck->getRelation()); 
+    const Relation* rel = lookupRelation(existCheck->getRelation());
     return searchSignature(rel->getArity(), existCheck->getValues());
 }
 

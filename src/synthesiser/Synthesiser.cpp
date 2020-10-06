@@ -370,7 +370,8 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 out << "}\n";
                 out << "IOSystem::getInstance().getWriter(";
                 out << "directiveMap, symTable, recordTable";
-                out << ")->writeAll(*" << synthesiser.getRelationName(synthesiser.lookup(io.getRelation())) << ");\n";
+                out << ")->writeAll(*" << synthesiser.getRelationName(synthesiser.lookup(io.getRelation()))
+                    << ");\n";
                 out << "} catch (std::exception& e) {std::cerr << e.what();exit(1);}\n";
             } else {
                 assert("Wrong i/o operation");
@@ -547,8 +548,10 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
         void visitSwap(const Swap& swap, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
-            const std::string& deltaKnowledge = synthesiser.getRelationName(synthesiser.lookup(swap.getFirstRelation()));
-            const std::string& newKnowledge = synthesiser.getRelationName(synthesiser.lookup(swap.getSecondRelation()));
+            const std::string& deltaKnowledge =
+                    synthesiser.getRelationName(synthesiser.lookup(swap.getFirstRelation()));
+            const std::string& newKnowledge =
+                    synthesiser.getRelationName(synthesiser.lookup(swap.getSecondRelation()));
 
             out << "std::swap(" << deltaKnowledge << ", " << newKnowledge << ");\n";
             PRINT_END_COMMENT(out);
@@ -558,7 +561,8 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_BEGIN_COMMENT(out);
             out << synthesiser.getRelationName(synthesiser.lookup(extend.getSourceRelation())) << "->"
                 << "extend("
-                << "*" << synthesiser.getRelationName(synthesiser.lookup(extend.getTargetRelation())) << ");\n";
+                << "*" << synthesiser.getRelationName(synthesiser.lookup(extend.getTargetRelation()))
+                << ");\n";
             PRINT_END_COMMENT(out);
         }
 
@@ -719,7 +723,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         }
 
         void visitParallelChoice(const ParallelChoice& pchoice, std::ostream& out) override {
-            const auto& rel =  synthesiser.lookup(pchoice.getRelation());
+            const auto& rel = synthesiser.lookup(pchoice.getRelation());
             auto relName = synthesiser.getRelationName(rel);
 
             assert(pchoice.getTupleId() == 0 && "not outer-most loop");
@@ -782,7 +786,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         }
 
         void visitParallelIndexScan(const ParallelIndexScan& piscan, std::ostream& out) override {
-            const auto& rel =  synthesiser.lookup(piscan.getRelation());
+            const auto& rel = synthesiser.lookup(piscan.getRelation());
             auto relName = synthesiser.getRelationName(rel);
             auto arity = rel->getArity();
             auto keys = isa->getSearchSignature(&piscan);
@@ -1747,7 +1751,8 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
         void visitRelationSize(const RelationSize& size, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
-            out << "(RamDomain)" << synthesiser.getRelationName(synthesiser.lookup(size.getRelation())) << "->"
+            out << "(RamDomain)" << synthesiser.getRelationName(synthesiser.lookup(size.getRelation()))
+                << "->"
                 << "size()";
             PRINT_END_COMMENT(out);
         }
@@ -2311,8 +2316,8 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     // synthesise data-structures for relations
     for (auto rel : prog.getRelations()) {
         bool isProvInfo = rel->getRepresentation() == RelationRepresentation::INFO;
-        auto relationType = Relation::getSynthesiserRelation(
-                *rel, idxAnalysis->getIndexes(rel->getName()), Global::config().has("provenance") && !isProvInfo);
+        auto relationType = Relation::getSynthesiserRelation(*rel, idxAnalysis->getIndexes(rel->getName()),
+                Global::config().has("provenance") && !isProvInfo);
 
         generateRelationTypeStruct(os, std::move(relationType));
     }
@@ -2411,8 +2416,8 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
         const std::string& cppName = getRelationName(*rel);
 
         bool isProvInfo = rel->getRepresentation() == RelationRepresentation::INFO;
-        auto relationType = Relation::getSynthesiserRelation(
-                *rel, idxAnalysis->getIndexes(datalogName), Global::config().has("provenance") && !isProvInfo);
+        auto relationType = Relation::getSynthesiserRelation(*rel, idxAnalysis->getIndexes(datalogName),
+                Global::config().has("provenance") && !isProvInfo);
         const std::string& type = relationType->getTypeName();
 
         // defining table

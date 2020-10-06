@@ -28,7 +28,6 @@ namespace souffle::interpreter {
 
 Own<RelationWrapper> createBTreeRelation(
         const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet) {
-  
     switch (id.getArity()) {
         FOR_EACH_BTREE(CREATE_BTREE_REL);
 
