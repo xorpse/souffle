@@ -49,7 +49,7 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
             if (auto* aggregate = dynamic_cast<Aggregator*>(node.get())) {
                 // Check if the target expression is complex
                 if (aggregate->getTargetExpression() != nullptr &&
-                        dynamic_cast<const Variable*>(aggregate->getTargetExpression()) != nullptr) {
+                        dynamic_cast<const Variable*>(aggregate->getTargetExpression()) == nullptr) {
                     // If it's complex, come up with a unique variable name to stand
                     // in the place of the target expression. This will be set equal to the target
                     // expression.

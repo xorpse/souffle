@@ -489,8 +489,9 @@ int main(int argc, char** argv) {
                     mk<ast::transform::FoldAnonymousRecords>())),
             mk<ast::transform::PolymorphicObjectsTransformer>(), mk<ast::transform::SemanticChecker>(),
             mk<ast::transform::ADTtoRecordsTransformer>(),
-            mk<ast::transform::MaterializeSingletonAggregationTransformer>(),
             mk<ast::transform::GroundWitnessesTransformer>(),
+            mk<ast::transform::UniqueAggregationVariablesTransformer>(),
+            mk<ast::transform::MaterializeSingletonAggregationTransformer>(),
             mk<ast::transform::FixpointTransformer>(
                     mk<ast::transform::MaterializeAggregationQueriesTransformer>()),
             mk<ast::transform::ResolveAliasesTransformer>(), mk<ast::transform::RemoveTypecastsTransformer>(),

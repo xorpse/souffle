@@ -47,17 +47,6 @@ private:
      * ie the aggregate does not depend on the outer scope.
      */
     static bool isSingleValued(const Aggregator& agg, const Clause& clause);
-    /**
-     * findUniqueVariableName returns a variable name that hasn't appeared
-     * in the given clause.
-     */
-    static std::string findUniqueVariableName(const Clause& clause);
-    /**
-     * findUniqueAggregateRelationName returns a synthesised aggregate
-     * relation name that hasn't appeared
-     * in the given clause.
-     */
-    static std::string findUniqueAggregateRelationName(const Program& program);
 };
 
 }  // namespace souffle::ast::transform

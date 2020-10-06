@@ -41,6 +41,16 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
     visitDepthFirst(program, [&](const Clause& clause) {
         visitDepthFirst(clause, [&](const Aggregator& agg) {
             auto witnessVariables = analysis::getWitnessVariables(translationUnit, clause, agg);
+            // remove any witness variables that originate from an inner aggregate
+            visitDepthFirst(agg, [&](const Aggregator& a) {
+                if (agg == a) {
+                    return;
+                }
+                auto innerWitnesses = analysis::getWitnessVariables(translationUnit, clause, a);
+                for (const auto& w : innerWitnesses) {
+                    witnessVariables.erase(w);
+                }
+            });
             if (witnessVariables.empty()) {
                 return;
             }
@@ -61,22 +71,14 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
        for (const auto& literal : agg->getBodyLiterals()) {
            aggregateLiterals.push_back(souffle::clone(literal));
        }
+       // 1a. TODO: Be sure to rename any INNER witnesses! They have no meaning here and should just be made into
+       // (For now I won't allow multi-leveled witnesses)
+       // an anonymous variable.
+
        // 2. Replace witness variables with unique names so they don't clash with the outside
-       // scope anymore
-       // (Quickly create a set of all variables present in the rule to make sure
-       // we're making something new)
-       std::set<std::string> variablesInClause;
-       visitDepthFirst(*clause, [&](const Variable& var) {
-            variablesInClause.insert(var.getName());        
-       });
        std::map<std::string, std::string> newWitnessVariableName;
        for (std::string witness : witnesses) {
-           std::string candidate = witness + "_w";
-           int i = 0;
-           while (variablesInClause.find(candidate) != variablesInClause.end()) {
-              candidate = witness + "_w" + toString(i++); 
-           }
-           newWitnessVariableName[witness] = candidate;
+           newWitnessVariableName[witness] = analysis::findUniqueVariableName(*clause, witness + "_w");
        }
        visitDepthFirst(*agg, [&](const Variable& var) {
             if (witnesses.find(var.getName()) != witnesses.end()) {

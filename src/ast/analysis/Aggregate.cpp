@@ -63,6 +63,8 @@ std::set<std::string> getLocalVariables(const TranslationUnit& tu, const Clause&
 }
 /**
  * Computes the set of witness variables that are used in the aggregate
+ * A variable is a witness if it occurs in the aggregate body (but not in an inner aggregate)
+ * and also occurs ungrounded in the outer scope.
  **/
 std::set<std::string> getWitnessVariables(const TranslationUnit& tu, const Clause& clause, const Aggregator& aggregate) {
 
@@ -114,9 +116,33 @@ std::set<std::string> getWitnessVariables(const TranslationUnit& tu, const Claus
     // 2. Create an aggregate clause so that we can check
     // that it IS this aggregate giving a grounding to the candidate variable.
     auto aggregateSubclause = std::make_unique<Clause>();
+    aggregateSubclause->setHead(mk<Atom>("*"));
     for (const auto& lit : aggregate.getBodyLiterals()) {
         aggregateSubclause->addToBody(souffle::clone(lit));
     }
+    //// 2a. We need to remove inner aggregates because we don't want to count
+    //// the witness twice. IE
+    //// count : { A(x), x < min y : { B(y, z) } }
+    //// z should not be considered a witness of the outer aggregate, only the inner one.
+    //struct InnerAggregateMasker : public NodeMapper {
+    //        std::unique_ptr<Node> operator()(std::unique_ptr<Node> node) const override {
+    //            static int numReplaced = 0;
+    //            if (dynamic_cast<Aggregator*>(node.get()) != nullptr) {
+    //                // Replace the aggregator with a variable
+    //                std::stringstream newVariableName;
+    //                newVariableName << "+aggr_var_" << numReplaced++;
+    //                return std::make_unique<Variable>(newVariableName.str());
+    //            }
+    //            node->apply(*this);
+    //            return node;
+    //        }
+    //};
+
+    //InnerAggregateMasker masker;
+    //aggregateSubclause->apply(masker);
+    //std::cout << "Trying to calculate witnesses.. What is ungrounded in aggregatorlessSubclause but grounded in aggregateSubclause?" << std::endl;
+    //std::cout << "AggregatorlessSubclause: " << *aggregatorlessClause << std::endl;
+    //std::cout << "Aggregate subclause: " << *aggregateSubclause << std::endl;
 
     std::set<std::string> witnessVariables;
     auto isGroundedInAggregateSubclause = analysis::getGroundedTerms(tu, *aggregateSubclause);
@@ -139,6 +165,14 @@ std::set<std::string> getWitnessVariables(const TranslationUnit& tu, const Claus
             }
         }
     }
+    // 4. A witness variable may actually "originate" from an outer scope and
+    // just have been injected into this inner aggregate. Just check the set of injected variables
+    // and quickly minus them out.
+    std::set<std::string> injectedVariables = analysis::getInjectedVariables(tu, clause, aggregate);
+    for (const std::string& injected : injectedVariables) {
+        witnessVariables.erase(injected);
+    }
+
     return witnessVariables;
 
 }
@@ -177,10 +211,20 @@ std::string findUniqueVariableName(const Clause& clause, std::string base) {
     return candidate;
 }
 
+std::string findUniqueRelationName(const Program& program, std::string base) {
+    int counter = 0;
+    auto candidate = base;
+    while (getRelation(program, candidate) != nullptr) {
+        candidate = base + toString(counter++);
+    }
+    return candidate;
+}
+
 /**
  *  Given an aggregate and a clause, we find all the variables that have been
  *  injected into the aggregate.
  *  This means that the variable occurs grounded in an outer scope.
+ *  BUT does not occur in the target expression.
  **/
 std::set<std::string> getInjectedVariables(const TranslationUnit& tu, const Clause& clause, const Aggregator& aggregate) {
     /**
@@ -321,6 +365,12 @@ std::set<std::string> getInjectedVariables(const TranslationUnit& tu, const Clau
                 injectedVariables.insert(variable->getName());
             }
         }
+    }
+    // Remove any variables that occur in the target expression of the aggregate
+    if (aggregate.getTargetExpression() != nullptr) {
+        visitDepthFirst(*aggregate.getTargetExpression(), [&](const Variable& v) {
+            injectedVariables.erase(v.getName());        
+        });
     }
 
     return injectedVariables;

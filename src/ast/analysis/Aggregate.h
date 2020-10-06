@@ -20,6 +20,7 @@
 #include "ast/Aggregator.h"
 #include "ast/Argument.h"
 #include "ast/Clause.h"
+#include "ast/Program.h"
 #include "ast/TranslationUnit.h"
 #include "ast/Variable.h"
 #include <set>
@@ -43,6 +44,11 @@ std::set<std::string> getWitnessVariables(const TranslationUnit& tu, const Claus
  **/ 
 std::set<std::string> getVariablesOutsideAggregate(const Clause& clause, const Aggregator& aggregate);
 
+/**
+ *  Find a new relation name. I use this when I create new relations either for
+ *  aggregate bodies or singleton aggregates.
+ **/
+std::string findUniqueRelationName(const Program& program, std::string base);
 /**
  * Find a variable name using base to form a string like base1
  * Use this when you need to limit the scope of a variable to the inside of an aggregate.

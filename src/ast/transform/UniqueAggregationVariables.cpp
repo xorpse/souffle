@@ -53,8 +53,6 @@ bool UniqueAggregationVariablesTransformer::transform(TranslationUnit& translati
                             changed = true;
                         }
                     });
-
-
                 }
             }
         });        

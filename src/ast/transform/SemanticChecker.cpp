@@ -821,36 +821,77 @@ void SemanticCheckerImpl::checkIO() {
     }
 }
 
+/**
+ *  A witness is considered "invalid" if it is trying to export a witness
+ *  out of a count, sum, or mean aggregate.
+ *
+ *  However we need to be careful: Sometimes a witness variables occurs within the body
+ *  of a count, sum, or mean aggregate, but this is valid, because the witness
+ *  actually belongs to an inner min or max aggregate.
+ *
+ *  We just need to check that that witness only occurs on this level.
+ *
+ **/
+static const std::vector<SrcLocation> usesInvalidWitness(TranslationUnit& tu, 
+        const Clause& clause, const Aggregator& aggregate) {
+    std::vector<SrcLocation> invalidWitnessLocations;
+
+    if (aggregate.getOperator() == AggregateOp::MIN ||
+        aggregate.getOperator() == AggregateOp::MAX) {
+        return invalidWitnessLocations; // ie empty result
+    }
+
+    auto aggregateSubclause = mk<Clause>();
+    aggregateSubclause->setHead(mk<Atom>("*"));
+    for (const Literal* lit : aggregate.getBodyLiterals()) {
+        aggregateSubclause->addToBody(souffle::clone(lit));
+    }
+    struct InnerAggregateMasker : public NodeMapper {
+        mutable int numReplaced = 0;
+        Own<Node> operator()(Own<Node> node) const override {
+           if (isA<Aggregator>(node.get())) {
+                std::string newVariableName = "+aggr_var_" + toString(numReplaced++);
+                return mk<Variable>(newVariableName);         
+           }
+           node->apply(*this);
+           return node;
+        }
+    };
+    InnerAggregateMasker update;
+    aggregateSubclause->apply(update);
+
+    // Find the witnesses of the original aggregate.
+    // If we can find occurrences of the witness in
+    // this masked version of the aggregate subclause,
+    // AND the aggregate is a sum / count / mean (we know this because
+    // of the early exit for a min/max aggregate)
+    // then we have an invalid witness and we'll add the source location
+    // of the variable to the invalidWitnessLocations vector.
+    auto witnesses = analysis::getWitnessVariables(tu, clause, aggregate);
+    for (const auto& witness : witnesses) {
+        visitDepthFirst(*aggregateSubclause, [&](const Variable& var) {
+            if (var.getName() == witness) {
+               invalidWitnessLocations.push_back(var.getSrcLoc()); 
+            }
+        });
+    }
+    return invalidWitnessLocations;
+}
+
 void SemanticCheckerImpl::checkWitnessProblem() {
     // Check whether there is the use of a witness in
     // an aggregate where it doesn't make sense to use it, i.e.
     // count, sum, mean
     visitDepthFirst(program, [&](const Clause& clause) {
        visitDepthFirst(clause, [&](const Aggregator& agg) {
-           auto witnesses = analysis::getWitnessVariables(tu, clause, agg);
-           if (!witnesses.empty()) {
-           AggregateOp fun = agg.getOperator();
-                if (fun == AggregateOp::MEAN  ||
-                    fun == AggregateOp::SUM   ||
-                    fun == AggregateOp::COUNT) {
-                    for (auto witnessName : witnesses) {
-                       // find srcLocation of this thing
-                       SrcLocation srcLoc;
-                       visitDepthFirst(agg, [&](const Variable& var) {
-                            if (var.getName() == witnessName) {
-                                srcLoc = var.getSrcLoc();
-                                return;
-                            } 
-                       });
-                       report.addError(
+           for (auto&& invalidArgument : usesInvalidWitness(tu, clause, agg)) {
+                report.addError(
                          "Witness problem: argument grounded by an aggregator's inner scope is used ungrounded in "
                          "outer scope in a count/sum/mean aggregate",
-                         srcLoc
-                       );
-                    }
-                }
+                         invalidArgument
+               );
            }
-       });         
+       });
     });
 }
 
