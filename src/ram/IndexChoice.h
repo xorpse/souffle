@@ -55,8 +55,8 @@ class IndexChoice : public IndexOperation, public AbstractChoice {
 public:
     IndexChoice(const std::string& rel, int ident, Own<Condition> cond, RamPattern queryPattern,
             Own<Operation> nested, std::string profileText = "")
-            : IndexOperation(std::move(rel), ident, std::move(queryPattern), std::move(nested),
-                      std::move(profileText)),
+
+            : IndexOperation(rel, ident, std::move(queryPattern), std::move(nested), std::move(profileText)),
               AbstractChoice(std::move(cond)) {
         assert(getRangePattern().first.size() == getRangePattern().second.size() && "Arity mismatch");
     }

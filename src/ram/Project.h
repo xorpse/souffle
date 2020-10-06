@@ -46,7 +46,7 @@ namespace souffle::ram {
 class Project : public Operation {
 public:
     Project(std::string rel, VecOwn<Expression> expressions)
-            : relation(rel), expressions(std::move(expressions)) {
+            : relation(std::move(rel)), expressions(std::move(expressions)) {
         for (auto const& expr : expressions) {
             assert(expr != nullptr && "Expression is a null-pointer");
         }

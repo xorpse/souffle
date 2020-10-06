@@ -20,6 +20,7 @@
 #include "souffle/utility/ContainerUtil.h"
 #include <map>
 #include <set>
+#include <string>
 #include <vector>
 
 namespace souffle::ast {
@@ -67,7 +68,7 @@ public:
 
     void addVarReference(const ast::Variable& var, const Location& l);
 
-    void addVarReference(const ast::Variable& var, int ident, int pos, const std::string& rel = "");
+    void addVarReference(const ast::Variable& var, int ident, int pos, std::string rel = "");
 
     bool isDefined(const ast::Variable& var) const;
 
@@ -79,7 +80,7 @@ public:
 
     void setRecordDefinition(const ast::RecordInit& init, const Location& l);
 
-    void setRecordDefinition(const ast::RecordInit& init, int ident, int pos, const std::string& rel = "");
+    void setRecordDefinition(const ast::RecordInit& init, int ident, int pos, std::string rel = "");
 
     const Location& getDefinitionPoint(const ast::RecordInit& init) const;
 

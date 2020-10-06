@@ -45,7 +45,7 @@ namespace souffle::ram {
  */
 class EmptinessCheck : public Condition {
 public:
-    EmptinessCheck(const std::string& rel) : relation(rel) {}
+    EmptinessCheck(std::string rel) : relation(std::move(rel)) {}
 
     /** @brief Get relation */
     const std::string& getRelation() const {

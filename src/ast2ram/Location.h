@@ -16,6 +16,7 @@
 
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/MiscUtil.h"
+#include <utility>
 
 namespace souffle::ast2ram {
 
@@ -24,10 +25,10 @@ struct Location {
     const int element;
     std::string relation;
 
-    Location(int ident, int elem, const std::string& rel = "")
-            : identifier(ident), element(elem), relation(rel) {}
+    Location(int ident, int elem, std::string rel = "")
+            : identifier(ident), element(elem), relation(std::move(rel)) {}
 
-    Location(const Location& l) : identifier(l.identifier), element(l.element), relation(l.relation) {}
+    Location(const Location& l) = default;
 
     bool operator==(const Location& loc) const {
         return identifier == loc.identifier && element == loc.element;
