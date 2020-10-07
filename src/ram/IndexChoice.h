@@ -53,7 +53,7 @@ namespace souffle::ram {
  */
 class IndexChoice : public IndexOperation, public AbstractChoice {
 public:
-    IndexChoice(const std::string& rel, int ident, Own<Condition> cond, RamPattern queryPattern,
+    IndexChoice(std::string rel, int ident, Own<Condition> cond, RamPattern queryPattern,
             Own<Operation> nested, std::string profileText = "")
 
             : IndexOperation(rel, ident, std::move(queryPattern), std::move(nested), std::move(profileText)),

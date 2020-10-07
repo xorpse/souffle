@@ -16,6 +16,8 @@
 
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/MiscUtil.h"
+#include <ostream>
+#include <string>
 #include <utility>
 
 namespace souffle::ast2ram {

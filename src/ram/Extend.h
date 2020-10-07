@@ -36,7 +36,7 @@ namespace souffle::ram {
  */
 class Extend : public BinRelationStatement {
 public:
-    Extend(const std::string& tRef, const std::string& sRef) : BinRelationStatement(sRef, tRef) {}
+    Extend(std::string tRef, const std::string& sRef) : BinRelationStatement(sRef, tRef) {}
 
     /** @brief Get source relation */
     const std::string& getSourceRelation() const {

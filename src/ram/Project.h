@@ -53,7 +53,7 @@ public:
     }
 
     /** @brief Get relation */
-    const std::string getRelation() const {
+    const std::string& getRelation() const {
         return relation;
     }
 

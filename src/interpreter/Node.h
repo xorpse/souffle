@@ -130,7 +130,7 @@ enum NodeType {
  *
  * Add reflective from string to NodeType.
  */
-inline NodeType constructNodeType(std::string tokBase, const ram::Relation &rel) {
+inline NodeType constructNodeType(std::string tokBase, const ram::Relation& rel) {
     static bool isProvenance = Global::config().has("provenance");
 
     static const std::unordered_map<std::string, NodeType> map = {

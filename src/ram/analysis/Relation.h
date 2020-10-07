@@ -1,6 +1,6 @@
 /*
  * Souffle - A Datalog Compiler
- * Copyright (c) 2019, The Souffle Developers. All rights reserved
+ * Copyright (c) 2020, The Souffle Developers. All rights reserved
  * Licensed under the Universal Permissive License v 1.0 as shown at:
  * - https://opensource.org/licenses/UPL
  * - <souffle root>/licenses/SOUFFLE-UPL.txt
@@ -8,11 +8,9 @@
 
 /************************************************************************
  *
- * @file Level.h
+ * @file Relation.h
  *
- * Get level of an expression/condition. The level of a condition/expression
- * determines the outer-most scope in a loop-next of a query,  for which the
- * expression/condition is still safe to be computed.
+ * Analysis that looks up a relation by name.
  *
  ***********************************************************************/
 

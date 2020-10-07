@@ -43,7 +43,7 @@ using RamPattern = std::pair<RamBound, RamBound>;
  */
 class IndexOperation : public RelationOperation {
 public:
-    IndexOperation(const std::string& rel, int ident, RamPattern queryPattern, Own<Operation> nested,
+    IndexOperation(std::string rel, int ident, RamPattern queryPattern, Own<Operation> nested,
             std::string profileText = "")
             : RelationOperation(rel, ident, std::move(nested), std::move(profileText)),
               queryPattern(std::move(queryPattern)) {

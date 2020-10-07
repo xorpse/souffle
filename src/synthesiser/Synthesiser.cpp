@@ -592,7 +592,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             const std::string ext = fileExtension(Global::config().get("profile"));
 
-            const auto& rel = synthesiser.lookup(timer.getRelation());
+            const auto* rel = synthesiser.lookup(timer.getRelation());
             auto relName = synthesiser.getRelationName(rel);
 
             out << "\tLogger logger(R\"_(" << timer.getMessage() << ")_\",iter, [&](){return " << relName
@@ -649,7 +649,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         }
 
         void visitParallelScan(const ParallelScan& pscan, std::ostream& out) override {
-            const auto& rel = synthesiser.lookup(pscan.getRelation());
+            const auto* rel = synthesiser.lookup(pscan.getRelation());
             const auto& relName = synthesiser.getRelationName(rel);
 
             assert(pscan.getTupleId() == 0 && "not outer-most loop");
@@ -678,7 +678,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         }
 
         void visitScan(const Scan& scan, std::ostream& out) override {
-            const auto& rel = synthesiser.lookup(scan.getRelation());
+            const auto* rel = synthesiser.lookup(scan.getRelation());
             auto relName = synthesiser.getRelationName(rel);
             auto id = scan.getTupleId();
 
@@ -697,7 +697,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         }
 
         void visitChoice(const Choice& choice, std::ostream& out) override {
-            const auto& rel = synthesiser.lookup(choice.getRelation());
+            const auto* rel = synthesiser.lookup(choice.getRelation());
             auto relName = synthesiser.getRelationName(rel);
             auto identifier = choice.getTupleId();
 
@@ -723,7 +723,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         }
 
         void visitParallelChoice(const ParallelChoice& pchoice, std::ostream& out) override {
-            const auto& rel = synthesiser.lookup(pchoice.getRelation());
+            const auto* rel = synthesiser.lookup(pchoice.getRelation());
             auto relName = synthesiser.getRelationName(rel);
 
             assert(pchoice.getTupleId() == 0 && "not outer-most loop");
@@ -759,7 +759,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         }
 
         void visitIndexScan(const IndexScan& iscan, std::ostream& out) override {
-            const auto& rel = synthesiser.lookup(iscan.getRelation());
+            const auto* rel = synthesiser.lookup(iscan.getRelation());
             auto relName = synthesiser.getRelationName(rel);
             auto identifier = iscan.getTupleId();
             auto keys = isa->getSearchSignature(&iscan);
@@ -786,7 +786,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         }
 
         void visitParallelIndexScan(const ParallelIndexScan& piscan, std::ostream& out) override {
-            const auto& rel = synthesiser.lookup(piscan.getRelation());
+            const auto* rel = synthesiser.lookup(piscan.getRelation());
             auto relName = synthesiser.getRelationName(rel);
             auto arity = rel->getArity();
             auto keys = isa->getSearchSignature(&piscan);
@@ -826,7 +826,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
         void visitIndexChoice(const IndexChoice& ichoice, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
-            const auto& rel = synthesiser.lookup(ichoice.getRelation());
+            const auto* rel = synthesiser.lookup(ichoice.getRelation());
             auto relName = synthesiser.getRelationName(rel);
             auto identifier = ichoice.getTupleId();
             auto arity = rel->getArity();
@@ -860,7 +860,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
         void visitParallelIndexChoice(const ParallelIndexChoice& pichoice, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
-            const auto& rel = synthesiser.lookup(pichoice.getRelation());
+            const auto* rel = synthesiser.lookup(pichoice.getRelation());
             auto relName = synthesiser.getRelationName(rel);
             auto arity = rel->getArity();
             const auto& rangePatternLower = pichoice.getRangePattern().first;
@@ -904,13 +904,13 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitUnpackRecord(const UnpackRecord& lookup, std::ostream& out) override {
+        void visitUnpackRecord(const UnpackRecord& unpack, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
-            auto arity = lookup.getArity();
+            auto arity = unpack.getArity();
 
             // look up reference
             out << "RamDomain const ref = ";
-            visit(lookup.getExpression(), out);
+            visit(unpack.getExpression(), out);
             out << ";\n";
 
             // Handle nil case.
@@ -918,14 +918,14 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             // Unpack tuple
             out << "const RamDomain *"
-                << "env" << lookup.getTupleId() << " = "
+                << "env" << unpack.getTupleId() << " = "
                 << "recordTable.unpack(ref," << arity << ");"
                 << "\n";
 
             out << "{\n";
 
             // continue with condition checks and nested body
-            visitTupleOperation(lookup, out);
+            visitTupleOperation(unpack, out);
 
             out << "}\n";
             PRINT_END_COMMENT(out);
@@ -938,7 +938,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             preambleIssued = true;
             PRINT_BEGIN_COMMENT(out);
             // get some properties
-            const auto& rel = synthesiser.lookup(aggregate.getRelation());
+            const auto* rel = synthesiser.lookup(aggregate.getRelation());
             auto arity = rel->getArity();
             auto relName = synthesiser.getRelationName(rel);
             auto ctxName = "READ_OP_CONTEXT(" + synthesiser.getOpContextName(*rel) + ")";
@@ -1136,7 +1136,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         void visitIndexAggregate(const IndexAggregate& aggregate, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             // get some properties
-            const auto& rel = synthesiser.lookup(aggregate.getRelation());
+            const auto* rel = synthesiser.lookup(aggregate.getRelation());
             auto arity = rel->getArity();
             auto relName = synthesiser.getRelationName(rel);
             auto ctxName = "READ_OP_CONTEXT(" + synthesiser.getOpContextName(*rel) + ")";
@@ -1287,7 +1287,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         void visitParallelAggregate(const ParallelAggregate& aggregate, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             // get some properties
-            const auto& rel = synthesiser.lookup(aggregate.getRelation());
+            const auto* rel = synthesiser.lookup(aggregate.getRelation());
             auto relName = synthesiser.getRelationName(rel);
             auto ctxName = "READ_OP_CONTEXT(" + synthesiser.getOpContextName(*rel) + ")";
             auto identifier = aggregate.getTupleId();
@@ -1463,7 +1463,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         void visitAggregate(const Aggregate& aggregate, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             // get some properties
-            const auto& rel = synthesiser.lookup(aggregate.getRelation());
+            const auto* rel = synthesiser.lookup(aggregate.getRelation());
             auto relName = synthesiser.getRelationName(rel);
             auto ctxName = "READ_OP_CONTEXT(" + synthesiser.getOpContextName(*rel) + ")";
             auto identifier = aggregate.getTupleId();
@@ -1611,7 +1611,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
         void visitProject(const Project& project, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
-            const auto& rel = synthesiser.lookup(project.getRelation());
+            const auto* rel = synthesiser.lookup(project.getRelation());
             auto arity = rel->getArity();
             auto relName = synthesiser.getRelationName(rel);
             auto ctxName = "READ_OP_CONTEXT(" + synthesiser.getOpContextName(*rel) + ")";
@@ -1760,7 +1760,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         void visitExistenceCheck(const ExistenceCheck& exists, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             // get some details
-            const auto& rel = synthesiser.lookup(exists.getRelation());
+            const auto* rel = synthesiser.lookup(exists.getRelation());
             auto relName = synthesiser.getRelationName(rel);
             auto ctxName = "READ_OP_CONTEXT(" + synthesiser.getOpContextName(*rel) + ")";
             auto arity = rel->getArity();
@@ -1797,7 +1797,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 const ProvenanceExistenceCheck& provExists, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             // get some details
-            const auto& rel = synthesiser.lookup(provExists.getRelation());
+            const auto* rel = synthesiser.lookup(provExists.getRelation());
             auto relName = synthesiser.getRelationName(rel);
             auto ctxName = "READ_OP_CONTEXT(" + synthesiser.getOpContextName(*rel) + ")";
             auto arity = rel->getArity();

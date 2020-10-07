@@ -53,7 +53,7 @@ protected:
     }
 
     /** Search relation */
-    std::string relation;
+    const std::string relation;
 };
 
 }  // namespace souffle::ram
