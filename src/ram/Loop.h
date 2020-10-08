@@ -76,7 +76,7 @@ protected:
         return equal_ptr(body, other.body);
     }
 
-    /** loop body */
+    /** Loop body */
     Own<Statement> body;
 };
 

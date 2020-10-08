@@ -63,10 +63,10 @@ protected:
     }
 
 protected:
-    /** logging statement */
+    /** Logging statement */
     Own<Statement> statement;
 
-    /** logging message */
+    /** Logging message */
     std::string message;
 };
 

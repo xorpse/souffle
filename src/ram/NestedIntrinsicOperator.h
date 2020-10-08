@@ -101,7 +101,10 @@ protected:
         return TupleOperation::equal(node) && op == other.op && equal_targets(args, other.args);
     }
 
+    /* Arguments */
     VecOwn<Expression> args;
+
+    /* Operator */
     NestedIntrinsicOp op;
 };
 

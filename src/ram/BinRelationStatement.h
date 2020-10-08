@@ -55,10 +55,10 @@ protected:
     }
 
 protected:
-    /** first relation */
+    /** First relation */
     std::string first;
 
-    /** second relation */
+    /** Second relation */
     std::string second;
 };
 

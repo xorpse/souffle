@@ -74,7 +74,7 @@ protected:
         return equal_ptr(condition, other.condition);
     }
 
-    /** exit condition */
+    /** Exit condition */
     Own<Condition> condition;
 };
 
