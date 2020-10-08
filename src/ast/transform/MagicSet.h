@@ -77,12 +77,17 @@ private:
     static bool shouldRun(const TranslationUnit& tu);
 
     /**
-     * Gets set of relations to ignore during the MST process.
-     * Ignored relations are relations that should not be copied or altered beyond normalisation.
+     * Gets the set of relations to weakly ignore during the MST process.
+     * Weakly-ignored relations cannot be adorned/magic'd.
+     * Superset of strongly-ignored relations.
      */
-    static std::pair<std::set<QualifiedName>, std::set<QualifiedName>> getIgnoredRelations(
-            const TranslationUnit& tu);
+    static std::set<QualifiedName> getWeaklyIgnoredRelations(const TranslationUnit& tu);
 
+    /**
+     * Gets the set of relations to strongly ignore during the MST process.
+     * Strongly-ignored relations cannot be safely duplicated without affecting semantics.
+     */
+    static std::set<QualifiedName> getStronglyIgnoredRelations(const TranslationUnit& tu);
     static void computeStronglyIgnoredClosure(const Program& program, std::set<QualifiedName>& relations);
 };
 

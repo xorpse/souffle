@@ -59,22 +59,10 @@ using NegativeLabellingTransformer =
 using PositiveLabellingTransformer =
         MagicSetTransformer::LabelDatabaseTransformer::PositiveLabellingTransformer;
 
-std::pair<std::set<QualifiedName>, std::set<QualifiedName>> MagicSetTransformer::getIgnoredRelations(
-        const TranslationUnit& tu) {
-    Program& program = tu.getProgram();
+std::set<QualifiedName> MagicSetTransformer::getWeaklyIgnoredRelations(const TranslationUnit& tu) {
+    const auto& program = tu.getProgram();
     const auto& ioTypes = *tu.getAnalysis<analysis::IOTypeAnalysis>();
-
-    /* Relations to ignore:
-     *      - weakly ignored relations: ignored, but can be duplicated
-     *          - relations not specified by the user
-     *          - trivially computable relations - e.g. input/facts
-     *          - relations using float equalities, etc.
-     *      - strongly ignored relations
-     *          - relations that should be ignored, and cannot be duplicated
-     *          - e.g. relations associated with the counter '$' operator
-     */
     std::set<QualifiedName> weaklyIgnoredRelations;
-    std::set<QualifiedName> stronglyIgnoredRelations;
 
     // - Any relations not specified to magic-set
     std::vector<QualifiedName> specifiedRelations;
@@ -165,6 +153,18 @@ std::pair<std::set<QualifiedName>, std::set<QualifiedName>> MagicSetTransformer:
         }
     }
 
+    // - Plus any strongly ignored relations
+    for (const auto& relName : getStronglyIgnoredRelations(tu)) {
+        weaklyIgnoredRelations.insert(relName);
+    }
+
+    return weaklyIgnoredRelations;
+}
+
+std::set<QualifiedName> MagicSetTransformer::getStronglyIgnoredRelations(const TranslationUnit& tu) {
+    const auto& program = tu.getProgram();
+    std::set<QualifiedName> stronglyIgnoredRelations;
+
     // - Any atom appearing in a clause containing a counter
     for (auto* clause : program.getClauses()) {
         bool containsCounter = false;
@@ -177,11 +177,8 @@ std::pair<std::set<QualifiedName>, std::set<QualifiedName>> MagicSetTransformer:
 
     // - Calculate the closure of strongly ignored relations
     computeStronglyIgnoredClosure(program, stronglyIgnoredRelations);
-    for (const auto& relName : stronglyIgnoredRelations) {
-        weaklyIgnoredRelations.insert(relName);
-    }
 
-    return std::make_pair(weaklyIgnoredRelations, stronglyIgnoredRelations);
+    return stronglyIgnoredRelations;
 }
 
 void MagicSetTransformer::computeStronglyIgnoredClosure(
@@ -670,7 +667,7 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
 bool AdornDatabaseTransformer::transform(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
     const auto& ioTypes = *translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
-    weaklyIgnoredRelations = getIgnoredRelations(translationUnit).first;
+    weaklyIgnoredRelations = getWeaklyIgnoredRelations(translationUnit);
 
     // Output relations trigger the adornment process
     for (const auto* rel : program.getRelations()) {
@@ -744,7 +741,7 @@ bool NegativeLabellingTransformer::transform(TranslationUnit& translationUnit) {
 
     std::set<QualifiedName> relationsToLabel;
     std::set<Own<Clause>> clausesToAdd;
-    const auto& [_, stronglyIgnoredRelations] = getIgnoredRelations(translationUnit);
+    const auto& stronglyIgnoredRelations = getStronglyIgnoredRelations(translationUnit);
 
     // Negatively label all relations that might affect stratification after MST
     //      - Negated relations
@@ -808,7 +805,7 @@ bool PositiveLabellingTransformer::transform(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
     const auto& sccGraph = *translationUnit.getAnalysis<analysis::SCCGraphAnalysis>();
     const auto& precedenceGraph = translationUnit.getAnalysis<analysis::PrecedenceGraphAnalysis>()->graph();
-    const auto& [_, stronglyIgnoredRelations] = getIgnoredRelations(translationUnit);
+    const auto& stronglyIgnoredRelations = getStronglyIgnoredRelations(translationUnit);
 
     // Partition the strata into neglabelled and regular
     std::set<size_t> neglabelledStrata;
