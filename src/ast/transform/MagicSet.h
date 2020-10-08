@@ -20,7 +20,6 @@
 #include "ast/BinaryConstraint.h"
 #include "ast/Clause.h"
 #include "ast/QualifiedName.h"
-#include "ast/TranslationUnit.h"
 #include "ast/transform/Pipeline.h"
 #include "ast/transform/RemoveRedundantRelations.h"
 #include "ast/transform/Transformer.h"
@@ -33,6 +32,11 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+namespace souffle::ast {
+class Program;
+class TranslationUnit;
+}  // namespace souffle::ast
 
 namespace souffle::ast::transform {
 
@@ -76,7 +80,10 @@ private:
      * Gets set of relations to ignore during the MST process.
      * Ignored relations are relations that should not be copied or altered beyond normalisation.
      */
-    static std::set<QualifiedName> getIgnoredRelations(const TranslationUnit& tu);
+    static std::pair<std::set<QualifiedName>, std::set<QualifiedName>> getIgnoredRelations(
+            const TranslationUnit& tu);
+
+    static void computeStronglyIgnoredClosure(const Program& program, std::set<QualifiedName>& relations);
 };
 
 /**
@@ -222,7 +229,7 @@ private:
 
     VecOwn<Clause> adornedClauses;
     VecOwn<Clause> redundantClauses;
-    std::set<QualifiedName> relationsToIgnore;
+    std::set<QualifiedName> weaklyIgnoredRelations;
 
     bool transform(TranslationUnit& translationUnit) override;
 

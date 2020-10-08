@@ -59,11 +59,22 @@ using NegativeLabellingTransformer =
 using PositiveLabellingTransformer =
         MagicSetTransformer::LabelDatabaseTransformer::PositiveLabellingTransformer;
 
-std::set<QualifiedName> MagicSetTransformer::getIgnoredRelations(const TranslationUnit& tu) {
+std::pair<std::set<QualifiedName>, std::set<QualifiedName>> MagicSetTransformer::getIgnoredRelations(
+        const TranslationUnit& tu) {
     Program& program = tu.getProgram();
     const auto& ioTypes = *tu.getAnalysis<analysis::IOTypeAnalysis>();
 
-    std::set<QualifiedName> relationsToIgnore;
+    /* Relations to ignore:
+     *      - weakly ignored relations: ignored, but can be duplicated
+     *          - relations not specified by the user
+     *          - trivially computable relations - e.g. input/facts
+     *          - relations using float equalities, etc.
+     *      - strongly ignored relations
+     *          - relations that should be ignored, and cannot be duplicated
+     *          - e.g. relations associated with the counter '$' operator
+     */
+    std::set<QualifiedName> weaklyIgnoredRelations;
+    std::set<QualifiedName> stronglyIgnoredRelations;
 
     // - Any relations not specified to magic-set
     std::vector<QualifiedName> specifiedRelations;
@@ -86,17 +97,16 @@ std::set<QualifiedName> MagicSetTransformer::getIgnoredRelations(const Translati
     if (!contains(configRels, "*")) {
         for (const Relation* rel : program.getRelations()) {
             if (!contains(specifiedRelations, rel->getQualifiedName())) {
-                relationsToIgnore.insert(rel->getQualifiedName());
+                weaklyIgnoredRelations.insert(rel->getQualifiedName());
             }
         }
     }
 
     // - Any relations known in constant time (IDB relations)
-    std::set<QualifiedName> trivialRelations;
     for (auto* rel : program.getRelations()) {
         // Input relations
         if (ioTypes.isInput(rel)) {
-            trivialRelations.insert(rel->getQualifiedName());
+            weaklyIgnoredRelations.insert(rel->getQualifiedName());
             continue;
         }
 
@@ -106,18 +116,15 @@ std::set<QualifiedName> MagicSetTransformer::getIgnoredRelations(const Translati
             visitDepthFirst(clause->getBodyLiterals(), [&](const Atom& /* atom */) { hasRules = true; });
         }
         if (!hasRules) {
-            trivialRelations.insert(rel->getQualifiedName());
+            weaklyIgnoredRelations.insert(rel->getQualifiedName());
         }
-    }
-    for (const auto& relName : trivialRelations) {
-        relationsToIgnore.insert(relName);
     }
 
     // - Any relation with a neglabel
     visitDepthFirst(program, [&](const Atom& atom) {
         const auto& qualifiers = atom.getQualifiedName().getQualifiers();
         if (!qualifiers.empty() && qualifiers[0] == "@neglabel") {
-            relationsToIgnore.insert(atom.getQualifiedName());
+            weaklyIgnoredRelations.insert(atom.getQualifiedName());
         }
     });
 
@@ -128,7 +135,7 @@ std::set<QualifiedName> MagicSetTransformer::getIgnoredRelations(const Translati
     for (const auto* clause : program.getClauses()) {
         visitDepthFirst(*clause, [&](const BinaryConstraint& bc) {
             if (contains(floatOps, bc.getOperator())) {
-                relationsToIgnore.insert(clause->getHead()->getQualifiedName());
+                weaklyIgnoredRelations.insert(clause->getHead()->getQualifiedName());
             }
         });
     }
@@ -139,7 +146,7 @@ std::set<QualifiedName> MagicSetTransformer::getIgnoredRelations(const Translati
     for (const auto* clause : program.getClauses()) {
         visitDepthFirst(*clause, [&](const IntrinsicFunctor& functor) {
             if (contains(orderDepFuncOps, functor.getFunctionOp().value())) {
-                relationsToIgnore.insert(clause->getHead()->getQualifiedName());
+                weaklyIgnoredRelations.insert(clause->getHead()->getQualifiedName());
             }
         });
     }
@@ -147,14 +154,14 @@ std::set<QualifiedName> MagicSetTransformer::getIgnoredRelations(const Translati
     // - Any eqrel relation
     for (auto* rel : program.getRelations()) {
         if (rel->getRepresentation() == RelationRepresentation::EQREL) {
-            relationsToIgnore.insert(rel->getQualifiedName());
+            weaklyIgnoredRelations.insert(rel->getQualifiedName());
         }
     }
 
     // - Any relation with execution plans
     for (auto* clause : program.getClauses()) {
         if (clause->getExecutionPlan() != nullptr) {
-            relationsToIgnore.insert(clause->getHead()->getQualifiedName());
+            weaklyIgnoredRelations.insert(clause->getHead()->getQualifiedName());
         }
     }
 
@@ -163,34 +170,52 @@ std::set<QualifiedName> MagicSetTransformer::getIgnoredRelations(const Translati
         bool containsCounter = false;
         visitDepthFirst(*clause, [&](const Counter& /* counter */) { containsCounter = true; });
         if (containsCounter) {
-            visitDepthFirst(
-                    *clause, [&](const Atom& atom) { relationsToIgnore.insert(atom.getQualifiedName()); });
+            visitDepthFirst(*clause,
+                    [&](const Atom& atom) { stronglyIgnoredRelations.insert(atom.getQualifiedName()); });
         }
     }
 
-    // - Ignore negated relations that use an ignored positively-derived literal
-    std::set<QualifiedName> negatedRelations;
-    visitDepthFirst(program.getClauses(),
-            [&](const Negation& neg) { negatedRelations.insert(neg.getAtom()->getQualifiedName()); });
-    bool newDependencyFound = true;
-    while (newDependencyFound) {
-        std::set<QualifiedName> dependenciesToIgnore;
-        for (const auto& relName : negatedRelations) {
-            if (contains(relationsToIgnore, relName)) continue;
-            visitDepthFirst(getClauses(program, relName), [&](const Atom& atom) {
-                if (!contains(trivialRelations, atom.getQualifiedName()) &&
-                        contains(relationsToIgnore, atom.getQualifiedName())) {
-                    dependenciesToIgnore.insert(relName);
-                }
-            });
-        }
-        newDependencyFound = !dependenciesToIgnore.empty();
-        for (const auto& depName : dependenciesToIgnore) {
-            relationsToIgnore.insert(depName);
-        }
+    // - Calculate the closure of strongly ignored relations
+    computeStronglyIgnoredClosure(program, stronglyIgnoredRelations);
+    for (const auto& relName : stronglyIgnoredRelations) {
+        weaklyIgnoredRelations.insert(relName);
     }
 
-    return relationsToIgnore;
+    return std::make_pair(weaklyIgnoredRelations, stronglyIgnoredRelations);
+}
+
+void MagicSetTransformer::computeStronglyIgnoredClosure(
+        const Program& program, std::set<QualifiedName>& relations) {
+    std::set<QualifiedName> newRelsToIgnore;
+
+    // // - Ignore negated relations that use an ignored positively-derived literal
+    // std::set<QualifiedName> negatedRelations;
+    // visitDepthFirst(program.getClauses(),
+    //         [&](const Negation& neg) { negatedRelations.insert(neg.getAtom()->getQualifiedName()); });
+    // bool newDependencyFound = true;
+    // while (newDependencyFound) {
+    //     std::set<QualifiedName> dependenciesToIgnore;
+    //     for (const auto& relName : negatedRelations) {
+    //         if (contains(relationsToIgnore, relName)) continue;
+    //         visitDepthFirst(getClauses(program, relName), [&](const Atom& atom) {
+    //             if (!contains(trivialRelations, atom.getQualifiedName()) &&
+    //                     contains(relationsToIgnore, atom.getQualifiedName())) {
+    //                 dependenciesToIgnore.insert(relName);
+    //             }
+    //         });
+    //     }
+    //     newDependencyFound = !dependenciesToIgnore.empty();
+    //     for (const auto& depName : dependenciesToIgnore) {
+    //         relationsToIgnore.insert(depName);
+    //     }
+    // }
+
+    for (const auto& relName : newRelsToIgnore) {
+        relations.insert(relName);
+    }
+    if (!newRelsToIgnore.empty()) {
+        computeStronglyIgnoredClosure(program, relations);
+    }
 }
 
 bool MagicSetTransformer::shouldRun(const TranslationUnit& tu) {
@@ -575,7 +600,7 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
 
     // Copy over plans if needed
     if (clause->getExecutionPlan() != nullptr) {
-        assert(contains(relationsToIgnore, clause->getHead()->getQualifiedName()) &&
+        assert(contains(weaklyIgnoredRelations, clause->getHead()->getQualifiedName()) &&
                 "clauses with plans should be ignored");
         adornedClause->setExecutionPlan(souffle::clone(clause->getExecutionPlan()));
     }
@@ -597,7 +622,8 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
         if (const auto* negation = dynamic_cast<const Negation*>(lit)) {
             // Negated atoms should not be adorned, but their clauses should be anyway
             const auto negatedAtomName = negation->getAtom()->getQualifiedName();
-            assert(contains(relationsToIgnore, negatedAtomName) && "negated atoms should not be adorned");
+            assert(contains(weaklyIgnoredRelations, negatedAtomName) &&
+                    "negated atoms should not be adorned");
             queueAdornment(negatedAtomName, "");
         }
 
@@ -612,7 +638,7 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
 
         // Form the appropriate adornment marker
         std::stringstream atomAdornment;
-        if (!contains(relationsToIgnore, atom->getQualifiedName())) {
+        if (!contains(weaklyIgnoredRelations, atom->getQualifiedName())) {
             for (const auto* arg : atom->getArguments()) {
                 const auto* var = dynamic_cast<const ast::Variable*>(arg);
                 assert(var != nullptr && "expected only variables in atom");
@@ -644,8 +670,7 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
 bool AdornDatabaseTransformer::transform(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
     const auto& ioTypes = *translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
-
-    relationsToIgnore = getIgnoredRelations(translationUnit);
+    weaklyIgnoredRelations = getIgnoredRelations(translationUnit).first;
 
     // Output relations trigger the adornment process
     for (const auto* rel : program.getRelations()) {
@@ -719,7 +744,7 @@ bool NegativeLabellingTransformer::transform(TranslationUnit& translationUnit) {
 
     std::set<QualifiedName> relationsToLabel;
     std::set<Own<Clause>> clausesToAdd;
-    auto ignoredRelations = getIgnoredRelations(translationUnit);
+    const auto& [_, stronglyIgnoredRelations] = getIgnoredRelations(translationUnit);
 
     // Negatively label all relations that might affect stratification after MST
     //      - Negated relations
@@ -727,14 +752,14 @@ bool NegativeLabellingTransformer::transform(TranslationUnit& translationUnit) {
     visitDepthFirst(program, [&](const Negation& neg) {
         auto* atom = neg.getAtom();
         auto relName = atom->getQualifiedName();
-        if (contains(ignoredRelations, relName)) return;
+        if (contains(stronglyIgnoredRelations, relName)) return;
         atom->setQualifiedName(getNegativeLabel(relName));
         relationsToLabel.insert(relName);
     });
     visitDepthFirst(program, [&](const Aggregator& aggr) {
         visitDepthFirst(aggr, [&](const Atom& atom) {
             auto relName = atom.getQualifiedName();
-            if (contains(ignoredRelations, relName)) return;
+            if (contains(stronglyIgnoredRelations, relName)) return;
             const_cast<Atom&>(atom).setQualifiedName(getNegativeLabel(relName));
             relationsToLabel.insert(relName);
         });
@@ -747,7 +772,7 @@ bool NegativeLabellingTransformer::transform(TranslationUnit& translationUnit) {
         std::map<QualifiedName, QualifiedName> newSccFriendNames;
         for (const auto* rel : stratumRels) {
             auto relName = rel->getQualifiedName();
-            if (contains(ignoredRelations, relName)) continue;
+            if (contains(stronglyIgnoredRelations, relName)) continue;
             relationsToLabel.insert(relName);
             newSccFriendNames[relName] = getNegativeLabel(relName);
         }
@@ -783,7 +808,7 @@ bool PositiveLabellingTransformer::transform(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
     const auto& sccGraph = *translationUnit.getAnalysis<analysis::SCCGraphAnalysis>();
     const auto& precedenceGraph = translationUnit.getAnalysis<analysis::PrecedenceGraphAnalysis>()->graph();
-    auto ignoredRelations = getIgnoredRelations(translationUnit);
+    const auto& [_, stronglyIgnoredRelations] = getIgnoredRelations(translationUnit);
 
     // Partition the strata into neglabelled and regular
     std::set<size_t> neglabelledStrata;
@@ -839,7 +864,7 @@ bool PositiveLabellingTransformer::transform(TranslationUnit& translationUnit) {
             for (const auto* clause : clauses) {
                 visitDepthFirst(*clause, [&](const Atom& atom) {
                     const auto& name = atom.getQualifiedName();
-                    if (!contains(ignoredRelations, name) && !isNegativelyLabelled(name)) {
+                    if (!contains(stronglyIgnoredRelations, name) && !isNegativelyLabelled(name)) {
                         relsToCopy.insert(name);
                     }
                 });
@@ -863,14 +888,15 @@ bool PositiveLabellingTransformer::transform(TranslationUnit& translationUnit) {
             if (!contains(dependentStrata[preStratum], stratum)) continue;
 
             for (const auto* rel : sccGraph.getInternalRelations(preStratum)) {
-                if (contains(ignoredRelations, rel->getQualifiedName())) continue;
+                if (contains(stronglyIgnoredRelations, rel->getQualifiedName())) continue;
 
                 for (const auto* clause : getClauses(program, rel->getQualifiedName())) {
                     // Grab the new names for all unignored unlabelled positive atoms
                     std::map<QualifiedName, QualifiedName> labelledNames;
                     visitDepthFirst(*clause, [&](const Atom& atom) {
                         const auto& relName = atom.getQualifiedName();
-                        if (contains(ignoredRelations, relName) || isNegativelyLabelled(relName)) return;
+                        if (contains(stronglyIgnoredRelations, relName) || isNegativelyLabelled(relName))
+                            return;
                         size_t relStratum = sccGraph.getSCC(getRelation(program, relName));
                         size_t copyCount = originalStrataCopyCount.at(relStratum) + 1;
                         labelledNames[relName] = getPositiveLabel(relName, copyCount);
