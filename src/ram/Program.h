@@ -110,17 +110,6 @@ public:
         for (auto& sub : subroutines) {
             res->subroutines[sub.first] = souffle::clone(sub.second);
         }
-        std::map<const Relation*, const Relation*> refMap;
-        res->apply(makeLambdaRamMapper([&](Own<Node> node) -> Own<Node> {
-            // rewire relation references to newly cloned relations
-            if (const RelationReference* relRef = dynamic_cast<RelationReference*>(node.get())) {
-                const Relation* rel = refMap[relRef->get()];
-                assert(rel != nullptr && "dangling RAM relation reference");
-                return mk<RelationReference>(rel);
-            } else {
-                return node;
-            }
-        }));
         return res;
     }
 

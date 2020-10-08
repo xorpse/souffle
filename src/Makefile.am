@@ -301,6 +301,8 @@ souffle_sources = \
         ram/analysis/Index.h                               \
         ram/analysis/Level.cpp                             \
         ram/analysis/Level.h                               \
+        ram/analysis/Relation.cpp                          \
+        ram/analysis/Relation.h                            \
         ram/transform/ChoiceConversion.cpp                 \
         ram/transform/ChoiceConversion.h                   \
         ram/transform/CollapseFilters.cpp                  \

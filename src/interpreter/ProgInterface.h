@@ -236,7 +236,7 @@ public:
             bool input = false;
             bool output = false;
             visitDepthFirst(prog, [&](const ram::IO& io) {
-                if (io.getRelation() == rel) {
+                if (map[io.getRelation()] == &rel) {
                     const std::string& op = io.get("operation");
                     if (op == "input") {
                         input = true;
