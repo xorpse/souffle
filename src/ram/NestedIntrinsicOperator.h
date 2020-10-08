@@ -105,7 +105,7 @@ protected:
     VecOwn<Expression> args;
 
     /* Operator */
-    NestedIntrinsicOp op;
+    const NestedIntrinsicOp op;
 };
 
 }  // namespace souffle::ram

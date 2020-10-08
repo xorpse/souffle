@@ -70,7 +70,7 @@ protected:
     }
 
     /** IO directives */
-    std::map<std::string, std::string> directives;
+    const std::map<std::string, std::string> directives;
 };
 
 }  // namespace souffle::ram
