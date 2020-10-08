@@ -8,7 +8,7 @@
 
 /************************************************************************
  *
- * @file CompiledSouffle.h
+ * @file SouffleInterface.h
  *
  * Main include file for generated C++ classes of Souffle
  *
@@ -17,6 +17,7 @@
 #pragma once
 
 #include "souffle/RamTypes.h"
+#include "souffle/RecordTable.h"
 #include "souffle/SymbolTable.h"
 #include "souffle/utility/MiscUtil.h"
 #include <algorithm>
@@ -151,7 +152,7 @@ public:
          * iterator_base class pointer.
          *
          */
-        Own<iterator_base> iter = nullptr;
+        std::unique_ptr<iterator_base> iter = nullptr;
 
     public:
         /**
@@ -865,6 +866,11 @@ public:
      * Get the symbol table of the program.
      */
     virtual SymbolTable& getSymbolTable() = 0;
+
+    /**
+     * Get the record table of the program.
+     */
+    virtual RecordTable& getRecordTable() = 0;
 
     /**
      * Remove all the tuples from the outputRelations, calling the purge method of each.

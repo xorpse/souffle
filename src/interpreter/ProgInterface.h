@@ -208,8 +208,8 @@ private:
 class ProgInterface : public SouffleProgram {
 public:
     explicit ProgInterface(Engine& interp)
-            : prog(interp.getTranslationUnit().getProgram()), exec(interp),
-              symTable(interp.getTranslationUnit().getSymbolTable()) {
+            : prog(interp.getTranslationUnit().getProgram()), exec(interp), symTable(interp.getSymbolTable()),
+              recordTable(interp.getRecordTable()) {
         uint32_t id = 0;
 
         // Retrieve AST Relations and store them in a map
@@ -286,10 +286,15 @@ public:
         return symTable;
     }
 
+    RecordTable& getRecordTable() override {
+        return recordTable;
+    }
+
 private:
     const ram::Program& prog;
     Engine& exec;
     SymbolTable& symTable;
+    RecordTable& recordTable;
     std::vector<RelInterface*> interfaces;
 };
 
