@@ -46,7 +46,15 @@ private:
      * Determines whether an aggregate is single-valued,
      * ie the aggregate does not depend on the outer scope.
      */
-    static bool isSingleValued(const Aggregator& agg, const Clause& clause);
+    static bool isSingleValued(const TranslationUnit& tu, const Aggregator& agg, const Clause& clause);
+    /**
+     *  Modify the aggClause by adding in grounding literals for every
+     *  variable that appears in the clause ungrounded. The source of literals
+     *  to copy from is the originalClause.
+     **/
+    void groundInjectedParameters(
+        const TranslationUnit& translationUnit, Clause& aggClause, const Clause& originalClause);
+
 };
 
 }  // namespace souffle::ast::transform

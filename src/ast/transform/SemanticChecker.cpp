@@ -362,6 +362,10 @@ void SemanticCheckerImpl::checkLiteral(const Literal& literal) {
             }
         });
 
+        // Don't worry about underscores if either side is an aggregate (because of witness exporting)
+        if (isA<Aggregator>(*constraint->getLHS()) || isA<Aggregator>(*constraint->getRHS())) {
+            return;
+        }
         // Check if constraint contains unnamed variables.
         for (auto* unnamed : getUnnamedVariables(*constraint)) {
             if (!contains(unnamedInRecord, unnamed)) {

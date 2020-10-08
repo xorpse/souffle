@@ -30,3 +30,61 @@ MinSum(x, y, s) :- s = min w : { A(x, y), w = x + y }.
 MinSumNotReduced(x, y, s) :- s = min x + y : { A(x, y) }.
 
 .output A, MinSum, MinSumNotReduced()
+
+/**
+* Later on I realised I had been ignorant and there were many more interesting witness cases.
+* A witness could also be an injected variable, or occur in an inner aggregate, for example.
+*
+**/
+.decl D, B(x:number, y:number)
+.decl H(x:number, y:number, z:number)
+.decl F(s:symbol, x:number, y:number)
+.decl G(s:symbol, groupby:number, x:number, y:number)
+
+D(1, 1).
+D(1, 2).
+D(1, 3).
+D(1, 4).
+
+B(2, 1).
+B(2, 2).
+B(2, 3).
+B(2, 4).
+
+H(1, 2, 3).
+H(24, 5, 6).
+H(7, 8, 9).
+H(10, 11, 12).
+
+// test witnesses in complex target expression and discard of result
+F("Two witnesses", x, y) :- _ = min x + y : { D(x, y) }.
+
+// test one witness in complex target expression
+F("One witness", result, witness) :- result = min 2 * witness : { D(witness, _) }.
+
+// test regular side witness
+G("Two side witnesses", result, w1, w2) :- result = max x : { H(x, w1, w2) }.
+
+// test reaching witness
+F("Reaching witness", result, witness) :- result = count : { B(x, _), x > min y : { D(y, witness) } }.
+
+// test that local variables are scoped (renamed uniquely)
+F("two side-by-side aggregates", res1, res2) :- res1 = count : { D(_, y), y > 1 }, res2 = count : { D(_, y), y < 4 }.
+
+// check that scoping is all gucci!
+G("Serious scoping test", x, y, z) :- x = max y : { D(_, y), y < min y : { B(_, y) } }, y = min y : { H(_, y, _) }, z = min y : { B(y, _), y != 2 }.
+
+/**
+*   Can I have a witness that is then injected into an inner aggregate??
+*   I can't see why not? It can just be treated as "local".
+*   But then that obviously DOES mean that the aggregate needs to be a max/min.
+*   It actually shouldn't even be considered a "witness" in the inner aggregate but let's make sure we test this cuz
+*   that would fuck things up.
+*
+*   Dh yeah look when we are looking to inner stuff, we are looking at "y" as a local variable.
+*   "y" in the outer scope takes on a special meaning. This should be preserved.
+*   
+**/
+F("Witness that is also injected", result, witness) :- result = max x : { D(x, witness), x < count : { B(_, witness) }  }.
+
+.output D, B, H, F, G()

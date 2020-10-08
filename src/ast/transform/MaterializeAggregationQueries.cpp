@@ -50,12 +50,12 @@ void MaterializeAggregationQueriesTransformer::instantiateUnnamedVariables(Claus
 // I should not be fiddling with aggregates that are in the aggregate clause.
 // We can short circuit if we find an aggregate node.
     struct InstantiateUnnamedVariables : public NodeMapper {
-        static int count = 0;
+        mutable int count = 0;
         Own<Node> operator()(Own<Node> node) const override {
-           if (auto* variable = dynamic_cast<UnnamedVariable*>(node.get())) {
+           if (isA<UnnamedVariable>(node.get())) {
                return mk<Variable>("_" + toString(count++));
            }
-           if (isA<Aggregator>(node)) {
+           if (isA<Aggregator>(node.get())) {
                 // then DON'T recurse
                 return node;
            }
@@ -108,17 +108,64 @@ std::set<std::string> MaterializeAggregationQueriesTransformer::distinguishHeadA
 
 // TODO: Deal with recursive parameters with an assert statement.
 void MaterializeAggregationQueriesTransformer::groundInjectedParameters(
-        TranslationUnit& translationUnit, Clause* aggClause, const Clause* originalClause) {
+        const TranslationUnit& translationUnit, Clause& aggClause, const Clause& originalClause,
+        const Aggregator& aggregate) {
+    /**
+     *  Mask inner aggregates to make sure we don't consider them grounded and everything.
+     **/
+    struct NegateAggregateAtoms : public NodeMapper {
+            std::unique_ptr<Node> operator()(std::unique_ptr<Node> node) const override {
+                if (auto* aggregate = dynamic_cast<Aggregator*>(node.get())) {
+                    /**
+                     * Go through body literals. If the literal is an atom,
+                     * then replace the atom with a negated version of the atom, so that
+                     * injected parameters that occur in an inner aggregate don't "seem" grounded.
+                     **/
+                    std::vector<Own<Literal>> newBody;
+                    for (const auto& lit : aggregate->getBodyLiterals()) {
+                       if (auto* atom = dynamic_cast<Atom*>(lit)) {
+                            newBody.push_back(mk<Negation>(souffle::clone(atom)));
+                       } 
+                    }
+                    aggregate->setBody(std::move(newBody));        
+                }
+                node->apply(*this);
+                return node;
+            }
+    };
+
+    auto aggClauseInnerAggregatesMasked = souffle::clone(&aggClause);
+    aggClauseInnerAggregatesMasked->setHead(mk<Atom>("*"));
+    NegateAggregateAtoms update;
+    aggClauseInnerAggregatesMasked->apply(update);
+
+    // what is the set of injected variables? Those are the ones we need to ground.
+    std::set<std::string> injectedVariables = analysis::getInjectedVariables(translationUnit, originalClause, aggregate);
+
     std::set<std::string> alreadyGrounded;
-    for (const auto& argPair : analysis::getGroundedTerms(translationUint, *aggClause)) {
+    for (const auto& argPair : analysis::getGroundedTerms(translationUnit, *aggClauseInnerAggregatesMasked)) {
         const auto* variable = dynamic_cast<const ast::Variable*>(argPair.first);
         bool variableIsGrounded = argPair.second;
         if (variable == nullptr || variableIsGrounded) {
             continue;
         }
+        // If it's not an injected variable, we don't need to ground it
+        if (injectedVariables.find(variable->getName()) == injectedVariables.end()) {
+            continue;
+        }
+
         std::string ungroundedVariableName = variable->getName();
+        if (alreadyGrounded.find(ungroundedVariableName) != alreadyGrounded.end()) {
+            // may as well not bother with it because it has already
+            // been grounded in a previous iteration
+            continue;
+        }
         // Try to find any atom in the rule where this ungrounded variable is mentioned
-        for (const auto& lit : originalClause->getBodyLiterals()) {
+        for (const auto& lit : originalClause.getBodyLiterals()) {
+            // 0. Variable must not already have been grounded
+            if (alreadyGrounded.find(ungroundedVariableName) != alreadyGrounded.end()) {
+                continue;
+            }
             // 1. Variable must occur in this literal
             bool variableOccursInLit = false;
             visitDepthFirst(*lit, [&](const Variable& var) {
@@ -127,7 +174,7 @@ void MaterializeAggregationQueriesTransformer::groundInjectedParameters(
                 }
             }); 
             if (!variableOccursInLit) {
-                return;
+                continue;
             }
             // 2. Variable must be grounded by this literal.
             auto singleLiteralClause = mk<Clause>();
@@ -135,71 +182,51 @@ void MaterializeAggregationQueriesTransformer::groundInjectedParameters(
             bool variableGroundedByLiteral = false;
             for (const auto& ap : analysis::getGroundedTerms(translationUnit, *singleLiteralClause)) {
                 const auto* var = dynamic_cast<const ast::Variable*>(ap.first);
+                if (var == nullptr) {
+                    continue;
+                }
                 bool isGrounded = ap.second;
                 if (var->getName() == ungroundedVariableName && isGrounded) {
                     variableGroundedByLiteral = true;
                 }
             }
             if (!variableGroundedByLiteral) {
-                return;
+                continue;
             }
             // 3. if it's an atom:
-            //  TODO: the relation must be of a lower stratum for us to be able to add it.
+            //  the relation must be of a lower stratum for us to be able to add it. (not implemented)
             //  sanitise the atom by removing any unnecessary arguments that aren't constants
             //  or basically just any other variables
-            if (const auto* atom = dynamic_cast<const Atom*>(lit.get())) {
-                //  add it to the aggClause since it's successfully passed all the tests
-                aggClause->addToBody(souffle::clone(lit));
+            if (const auto* atom = dynamic_cast<const Atom*>(lit)) {
+                // Right now we only allow things to be grounded by atoms.
+                // This is limiting but the case of it being grounded by
+                // something else becomes complicated VERY quickly.
+                // It may involve pulling in a cascading series of literals like
+                // x = y, y = 4. It just seems very painful.
+                // remove other unnecessary bloating arguments and replace with an underscore
+                VecOwn<Argument> arguments;
+                for (auto arg : atom->getArguments()) {
+                    if (auto* var = dynamic_cast<ast::Variable*>(arg)) {
+                        if (var->getName() == ungroundedVariableName) {
+                            arguments.emplace_back(arg->clone());
+                            continue;
+                        }
+                    }
+                    arguments.emplace_back(new UnnamedVariable());
+                }
+  
+                auto groundingAtom = mk<Atom>(atom->getQualifiedName(), std::move(arguments), atom->getSrcLoc());
+                aggClause.addToBody(souffle::clone(groundingAtom));
+                alreadyGrounded.insert(ungroundedVariableName);
             }
-
-
         }
+        assert(alreadyGrounded.find(ungroundedVariableName) != alreadyGrounded.end() 
+                && "Error: Unable to ground parameter in materialisation-requiring aggregate body");
         // after this loop, we should have added at least one thing to provide a grounding.
         // If not, we should error out. The program will not be able to run.
         // We have an ungrounded variable that we cannot ground once the aggregate body is
         // outlined.
     }
- //            for (const auto& argPair : analysis::getGroundedTerms(translationUnit, *aggClause)) {
-//                const auto* variable = dynamic_cast<const ast::Variable*>(argPair.first);
-//                bool variableIsGrounded = argPair.second;
-//                // if it's not even a variable type or the term is grounded
-//                // then skip it
-//                if (variable == nullptr || variableIsGrounded) {
-//                    continue;
-//                }
-//
-//                for (const auto& lit : clause.getBodyLiterals()) {
-//                    const auto* atom = dynamic_cast<const Atom*>(lit);
-//                    if (atom == nullptr) {
-//                        continue;  // it's not an atom so it can't help ground anything
-//                    }
-//                    // Pull in a grounding atom
-//                    visitDepthFirst(*atom, [&](const ast::Variable& var) {
-//                        if (groundedVariables.find(var.getName()) != groundedVariables.end()) {
-//                            return;
-//                        }
-//                        if (var.getName() == variable->getName()) {
-//                            // auto groundingAtom = souffle::clone(atom);
-//                            // remove other unnecessary bloating arguments and replace with an underscore
-//                            VecOwn<Argument> arguments;
-//                            for (auto arg : atom->getArguments()) {
-//                                if (auto* var = dynamic_cast<ast::Variable*>(arg)) {
-//                                    if (var->getName() == variable->getName()) {
-//                                        arguments.emplace_back(arg->clone());
-//                                        continue;
-//                                    }
-//                                }
-//                                arguments.emplace_back(new UnnamedVariable());
-//                            }
-//
-//                            auto groundingAtom = mk<Atom>(atom->getQualifiedName(), std::move(arguments), atom->getSrcLoc());
-//                            aggClause->addToBody(souffle::clone(groundingAtom));
-//                            groundedVariables.insert(var.getName());
-//                        }
-//                    });
-//                }
-//            }
-   
 }
 
 bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
@@ -228,7 +255,7 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
         });        
     });
 
-    visitDepthFirst(program [&](const Clause& clause) {
+    visitDepthFirst(program, [&](const Clause& clause) {
         visitDepthFirst(clause, [&](const Aggregator& agg) {
             if (!needsMaterializedRelation(agg)) {
                 return;
@@ -238,7 +265,7 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
                 return;
             }
             // begin materialisation process
-            auto aggregateBodyRelationName = analysis::findUniqueRelationName(program, "__agg_body_rel");
+            auto aggregateBodyRelationName = analysis::findUniqueRelationName(program, "__agg_subclause");
             auto aggClause = mk<Clause>();
             // quickly copy in all the literals from the aggregate body
             for (const auto& lit : agg.getBodyLiterals()) {
@@ -248,247 +275,63 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
                 instantiateUnnamedVariables(*aggClause);
             }
             // pull in any necessary grounding atoms
-            groundInjectedParameters(translationUnit, aggClause, clause);
+            groundInjectedParameters(translationUnit, *aggClause, clause, agg);
             // the head must contain all injected/local variables, but not variables
             // local to any inner aggregates. So we'll just take a set minus here.
-            auto aggClauseHead = mk<Atom>(aggregateBodyRelationName);
-            std::vector<std::string> headArguments = distinguishHeadArguments(translationUnit, clause, agg);
-            // insert the head arguments into the fricken head atom
+            //auto aggClauseHead = mk<Atom>(aggregateBodyRelationName);
+            auto* aggClauseHead = new Atom(aggregateBodyRelationName);
+            std::set<std::string> headArguments = distinguishHeadArguments(translationUnit, clause, agg);
+            // insert the head arguments into the head atom
             for (const auto& variableName : headArguments) {
                 aggClauseHead->addArgument(mk<Variable>(variableName));
             }
-            auto aggBodyAtom = souffle::clone(aggClauseHead);
+            aggClause->setHead(Own<Atom>(aggClauseHead));
             // add them to the relation as well (need to do a bit of type analysis to make this work)
             auto aggRel = mk<Relation>(aggregateBodyRelationName);
             std::map<const Argument*, analysis::TypeSet> argTypes =
                     analysis::TypeAnalysis::analyseTypes(translationUnit, *aggClause);
+            
             for (const auto& cur : aggClauseHead->getArguments()) {
+                // cur will point us to a particular argument 
+                // that is found in the aggClause
                 aggRel->addAttribute(mk<Attribute>(toString(*cur),
                         (analysis::isOfKind(argTypes[cur], TypeAttribute::Signed)) ? "number" : "symbol"));
             }
-            aggClause->setHead(std::move(aggClauseHead));
-            // Now we can just add these new things (relation and its single clause) to the program
-            program.addClause(std::move(aggClause));
-            program.addRelation(std::move(aggRel));
+            // Set up the aggregate body atom that will represent the materialised relation we just created
+            // and slip in place of the unrestricted literal(s) body.
             // Now it's time to update the aggregate body atom. We can now
             // replace the complex body (with literals) with a body with just the single atom referring
             // to the new relation we just created.
+            // all local variables will be replaced by an underscore
+            // so we should just quickly fetch the set of local variables for this aggregate.
+            auto localVariables = analysis::getLocalVariables(translationUnit, clause, agg);
+            if (agg.getTargetExpression() != nullptr) {
+                const auto* targetExpressionVariable = dynamic_cast<const Variable*>(agg.getTargetExpression());
+                localVariables.erase(targetExpressionVariable->getName());
+            }
             VecOwn<Argument> args;
-            for (auto arg : head->getArguments()) {
+            for (auto arg : aggClauseHead->getArguments()) {
                 if (auto* var = dynamic_cast<ast::Variable*>(arg)) {
-                    // replace local variable by underscore if local
-                    if (varCtr[var->getName()] == 0) {
+                    // replace local variable by underscore if local, only injected or
+                    // target variables will appear
+                    if (localVariables.find(var->getName()) != localVariables.end()) {
                         args.emplace_back(new UnnamedVariable());
                         continue;
                     }
                 }
                 args.emplace_back(arg->clone());
             }
-            auto aggAtom = mk<Atom>(head->getQualifiedName(), std::move(args), head->getSrcLoc());
+            auto aggAtom = mk<Atom>(aggClauseHead->getQualifiedName(), std::move(args), aggClauseHead->getSrcLoc());
 
             VecOwn<Literal> newBody;
             newBody.push_back(std::move(aggAtom));
             const_cast<Aggregator&>(agg).setBody(std::move(newBody));
+            // Now we can just add these new things (relation and its single clause) to the program
+            program.addClause(std::move(aggClause));
+            program.addRelation(std::move(aggRel));
+            changed = true;
         });
     });
-
-
-//    // if an aggregator has a body consisting of more than an atom => create new relation
-//    visitDepthFirst(program, [&](const Clause& clause) {
-//        visitDepthFirst(clause, [&](const Aggregator& agg) {
-//            // check whether a materialization is required
-//            if (!needsMaterializedRelation(agg)) {
-//                return;
-//            }
-//            changed = true;
-//
-//            // -- create a new clause --
-//            auto relName = analysis::findUniqueRelationName(program, "__agg_body_rel");
-//            // create the new clause for the materialised rule
-//            auto* aggClause = new Clause();
-//            // create the body of the new materialised rule
-//            for (const auto& cur : agg.getBodyLiterals()) {
-//                aggClause->addToBody(souffle::clone(cur));
-//            }
-//            std::set<std::string> groundedVariables;
-//            // find stuff for which we need a grounding
-//            for (const auto& argPair : analysis::getGroundedTerms(translationUnit, *aggClause)) {
-//                const auto* variable = dynamic_cast<const ast::Variable*>(argPair.first);
-//                bool variableIsGrounded = argPair.second;
-//                // if it's not even a variable type or the term is grounded
-//                // then skip it
-//                if (variable == nullptr || variableIsGrounded) {
-//                    continue;
-//                }
-//
-//                for (const auto& lit : clause.getBodyLiterals()) {
-//                    const auto* atom = dynamic_cast<const Atom*>(lit);
-//                    if (atom == nullptr) {
-//                        continue;  // it's not an atom so it can't help ground anything
-//                    }
-//                    // Pull in a grounding atom
-//                    visitDepthFirst(*atom, [&](const ast::Variable& var) {
-//                        if (groundedVariables.find(var.getName()) != groundedVariables.end()) {
-//                            return;
-//                        }
-//                        if (var.getName() == variable->getName()) {
-//                            // auto groundingAtom = souffle::clone(atom);
-//                            // remove other unnecessary bloating arguments and replace with an underscore
-//                            VecOwn<Argument> arguments;
-//                            for (auto arg : atom->getArguments()) {
-//                                if (auto* var = dynamic_cast<ast::Variable*>(arg)) {
-//                                    if (var->getName() == variable->getName()) {
-//                                        arguments.emplace_back(arg->clone());
-//                                        continue;
-//                                    }
-//                                }
-//                                arguments.emplace_back(new UnnamedVariable());
-//                            }
-//
-//                            auto groundingAtom = mk<Atom>(atom->getQualifiedName(), std::move(arguments), atom->getSrcLoc());
-//                            aggClause->addToBody(souffle::clone(groundingAtom));
-//                            groundedVariables.insert(var.getName());
-//                        }
-//                    });
-//                }
-//            }
-//            // -- update aggregate --
-//
-//            // Keep track of variables that occur in the outer scope (i.e. NOT inside any aggregate)
-//            std::map<std::string, int> varCtr;
-//
-//            // Start by counting occurrences of all variables in the clause
-//            visitDepthFirst(clause, [&](const ast::Variable& var) { varCtr[var.getName()]++; });
-//
-//            // Then count variables occurring in each aggregate
-//            // so that we can deduce which variable occur only on the outer scope
-//            std::map<const Aggregator*, std::map<std::string, int>> aggVarMap;
-//            visitDepthFirst(clause, [&](const Aggregator& agg) {
-//                visitDepthFirst(agg, [&](const ast::Variable& var) { aggVarMap[&agg][var.getName()]++; });
-//            });
-//
-//            std::map<const Aggregator*, const Aggregator*> parent;
-//            // Figure out parent/child relationships between the aggregates
-//            // so that we know which variables are occurring on each level
-//            visitDepthFirstPostOrder(clause, [&](const Aggregator& agg) {
-//                visitDepthFirst(agg, [&](const Aggregator& descendantAgg) {
-//                    if (agg == descendantAgg) {
-//                        return;
-//                    }
-//                    if (parent[&descendantAgg] == nullptr) {
-//                        parent[&descendantAgg] = &agg;
-//                    }
-//                });
-//            });
-//
-//            // Figure out which variables occur on the outer scope by looking at
-//            // the aggregates without agggregate parents, and minusing those from
-//            // the outer scope varCtr map
-//            visitDepthFirst(clause, [&](const Aggregator& agg) {
-//                if (parent[&agg] == nullptr) {
-//                    for (auto const& pair : aggVarMap[&agg]) {
-//                        std::string varName = pair.first;
-//                        int numOccurrences = pair.second;
-//                        varCtr[varName] -= numOccurrences;
-//                    }
-//                }
-//            });
-//            // But the current aggregate we're dealing with's target expression
-//            // "counts" as the outer scope, so restore this
-//            if (agg.getTargetExpression() != nullptr) {
-//                visitDepthFirst(*agg.getTargetExpression(),
-//                        [&](const ast::Variable& var) { varCtr[var.getName()]++; });
-//            }
-//
-//            // correct aggVarMap so that it counts which variables occurr in the aggregate,
-//            // and not the variables that occur in an inner aggregate
-//            // This way, we know which arguments are necessary for the head of the aggregate body relation
-//            visitDepthFirst(clause, [&](const Aggregator& agg) {
-//                if (parent[&agg] != nullptr) {
-//                    // iterate through child map and minus it from the parent map
-//                    for (auto const& pair : aggVarMap[&agg]) {
-//                        std::string varName = pair.first;
-//                        int numOccurrences = pair.second;
-//                        aggVarMap[parent[&agg]][varName] -= numOccurrences;
-//                    }
-//                }
-//            });
-//
-//            // build new relation and atom
-//            auto* head = new Atom();
-//            head->setQualifiedName(relName);
-//            std::vector<bool> symbolArguments;
-//
-//            // Insert all variables occurring in the body of the aggregate into the head
-//            for (const auto& pair : aggVarMap[&agg]) {
-//                std::string var = pair.first;
-//                int n = pair.second;
-//                // if it doesn't occur in this level, don't add it
-//                if (n > 0) {
-//                    head->addArgument(mk<ast::Variable>(var));
-//                }
-//            }
-//
-//            aggClause->setHead(Own<Atom>(head));
-//
-//            // instantiate unnamed variables in count operations
-//            if (agg.getOperator() == AggregateOp::COUNT) {
-//                int count = 0;
-//                for (const auto& cur : aggClause->getBodyLiterals()) {
-//                    cur->apply(makeLambdaAstMapper([&](Own<Node> node) -> Own<Node> {
-//                        // check whether it is a unnamed variable
-//                        auto* var = dynamic_cast<UnnamedVariable*>(node.get());
-//                        if (var == nullptr) {
-//                            return node;
-//                        }
-//
-//                        // replace by variable
-//                        auto name = " _" + toString(count++);
-//                        auto res = new ast::Variable(name);
-//
-//                        // extend head
-//                        head->addArgument(souffle::clone(res));
-//
-//                        // return replacement
-//                        return Own<Node>(res);
-//                    }));
-//                }
-//            }
-//
-//            // -- build relation --
-//
-//            auto* rel = new Relation();
-//            rel->setQualifiedName(relName);
-//            // add attributes
-//            std::map<const Argument*, analysis::TypeSet> argTypes =
-//                    analysis::TypeAnalysis::analyseTypes(translationUnit, *aggClause);
-//            for (const auto& cur : head->getArguments()) {
-//                rel->addAttribute(mk<Attribute>(toString(*cur),
-//                        (analysis::isOfKind(argTypes[cur], TypeAttribute::Signed)) ? "number" : "symbol"));
-//            }
-//
-//            program.addClause(Own<Clause>(aggClause));
-//            program.addRelation(Own<Relation>(rel));
-//
-//            // add arguments to head of aggregate body atom (__agg_body_rel_n)
-//            VecOwn<Argument> args;
-//            for (auto arg : head->getArguments()) {
-//                if (auto* var = dynamic_cast<ast::Variable*>(arg)) {
-//                    // replace local variable by underscore if local
-//                    if (varCtr[var->getName()] == 0) {
-//                        args.emplace_back(new UnnamedVariable());
-//                        continue;
-//                    }
-//                }
-//                args.emplace_back(arg->clone());
-//            }
-//            auto aggAtom = mk<Atom>(head->getQualifiedName(), std::move(args), head->getSrcLoc());
-//
-//            VecOwn<Literal> newBody;
-//            newBody.push_back(std::move(aggAtom));
-//            const_cast<Aggregator&>(agg).setBody(std::move(newBody));
-//        });
-//    });
     return changed;
 }
 

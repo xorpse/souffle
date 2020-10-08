@@ -86,7 +86,7 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
         auto aggHead = mk<Atom>();
         auto aggClause = mk<Clause>();
 
-        std::string aggRelName = analysis::findUniqueRelationName(program, "__agg_rel");
+        std::string aggRelName = analysis::findUniqueRelationName(program, "__agg");
         aggRel->setQualifiedName(aggRelName);
         aggHead->setQualifiedName(aggRelName);
 
@@ -116,7 +116,6 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
             replaceAggregate(const Aggregator& aggregate, Own<ast::Variable> variable)
                     : aggregate(aggregate), variable(std::move(variable)) {}
             Own<Node> operator()(Own<Node> node) const override {
-                assert(node != nullptr);
                 if (auto* current = dynamic_cast<Aggregator*>(node.get())) {
                     if (*current == aggregate) {
                         auto replacement = souffle::clone(variable);
@@ -125,7 +124,6 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
                     }
                 }
                 node->apply(*this);
-                assert(node != nullptr);
                 return node;
             }
         };
@@ -133,8 +131,6 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
         clause->apply(update);
         clause->addToBody(std::move(aggHead));
     }
-    std::cout << "Program after Singleton transformation: " << std::endl;
-    std::cout << program << std::endl;
     return pairs.size() > 0;
 }
 

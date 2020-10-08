@@ -1,6 +1,12 @@
 Error: Ungrounded variable X in file agg_checks.dl at line 10
 r("X",Y) :- Y = min X : { X != Y }.
 --------------------^---------------
+Error: Ungrounded variable Y0 in file agg_checks.dl at line 10
+r("X",Y) :- Y = min X : { X != Y }.
+-------------------------------^----
+Warning: Variable Y0 only occurs once in file agg_checks.dl at line 10
+r("X",Y) :- Y = min X : { X != Y }.
+-------------------------------^----
 Error: Unable to deduce type for variable Y in file agg_checks.dl at line 11
 r("X",Y) :- Y = min X : { X != Y, !a(X,Y) }.
 ------^--------------------------------------
@@ -19,13 +25,16 @@ r("X",Y) :- Y = min X : { X != Y, !a(X,Y) }.
 Error: Unable to deduce type for variable X in file agg_checks.dl at line 11
 r("X",Y) :- Y = min X : { X != Y, !a(X,Y) }.
 --------------------------^------------------
-Error: Unable to deduce type for variable Y in file agg_checks.dl at line 11
+Error: Unable to deduce type for variable Y0 in file agg_checks.dl at line 11
+r("X",Y) :- Y = min X : { X != Y, !a(X,Y) }.
+-------------------------------^-------------
+Error: Ungrounded variable Y0 in file agg_checks.dl at line 11
 r("X",Y) :- Y = min X : { X != Y, !a(X,Y) }.
 -------------------------------^-------------
 Error: Unable to deduce type for variable X in file agg_checks.dl at line 11
 r("X",Y) :- Y = min X : { X != Y, !a(X,Y) }.
 -------------------------------------^-------
-Error: Unable to deduce type for variable Y in file agg_checks.dl at line 11
+Error: Unable to deduce type for variable Y0 in file agg_checks.dl at line 11
 r("X",Y) :- Y = min X : { X != Y, !a(X,Y) }.
 ---------------------------------------^-----
 Error: Ungrounded variable X in file agg_checks.dl at line 14
@@ -65,4 +74,4 @@ Relation r in file agg_checks.dl at line 6
 has cyclic aggregation in file agg_checks.dl at line 28
 r("X",Y) :- Y = min Y : r("X",Y).
 ------------------------^---------
-20 errors generated, evaluation aborted
+22 errors generated, evaluation aborted

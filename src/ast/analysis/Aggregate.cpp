@@ -22,6 +22,7 @@
 #include "ast/Relation.h"
 #include "ast/TranslationUnit.h"
 #include "ast/utility/NodeMapper.h"
+#include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
 #include "ast/Variable.h"
 #include "souffle/utility/StringUtil.h"
@@ -120,30 +121,7 @@ std::set<std::string> getWitnessVariables(const TranslationUnit& tu, const Claus
     for (const auto& lit : aggregate.getBodyLiterals()) {
         aggregateSubclause->addToBody(souffle::clone(lit));
     }
-    //// 2a. We need to remove inner aggregates because we don't want to count
-    //// the witness twice. IE
-    //// count : { A(x), x < min y : { B(y, z) } }
-    //// z should not be considered a witness of the outer aggregate, only the inner one.
-    //struct InnerAggregateMasker : public NodeMapper {
-    //        std::unique_ptr<Node> operator()(std::unique_ptr<Node> node) const override {
-    //            static int numReplaced = 0;
-    //            if (dynamic_cast<Aggregator*>(node.get()) != nullptr) {
-    //                // Replace the aggregator with a variable
-    //                std::stringstream newVariableName;
-    //                newVariableName << "+aggr_var_" << numReplaced++;
-    //                return std::make_unique<Variable>(newVariableName.str());
-    //            }
-    //            node->apply(*this);
-    //            return node;
-    //        }
-    //};
-
-    //InnerAggregateMasker masker;
-    //aggregateSubclause->apply(masker);
-    //std::cout << "Trying to calculate witnesses.. What is ungrounded in aggregatorlessSubclause but grounded in aggregateSubclause?" << std::endl;
-    //std::cout << "AggregatorlessSubclause: " << *aggregatorlessClause << std::endl;
-    //std::cout << "Aggregate subclause: " << *aggregateSubclause << std::endl;
-
+    
     std::set<std::string> witnessVariables;
     auto isGroundedInAggregateSubclause = analysis::getGroundedTerms(tu, *aggregateSubclause);
     // 3. Calculate all the witness variables
