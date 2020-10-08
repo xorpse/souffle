@@ -8,7 +8,7 @@
 
 /************************************************************************
  *
- * @file CompiledSouffle.h
+ * @file SouffleInterface.h
  *
  * Main include file for generated C++ classes of Souffle
  *
@@ -152,7 +152,7 @@ public:
          * iterator_base class pointer.
          *
          */
-        Own<iterator_base> iter = nullptr;
+        std::unique_ptr<iterator_base> iter = nullptr;
 
     public:
         /**
