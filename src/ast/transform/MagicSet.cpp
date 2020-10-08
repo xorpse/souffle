@@ -92,10 +92,11 @@ std::set<QualifiedName> MagicSetTransformer::getIgnoredRelations(const Translati
     }
 
     // - Any relations known in constant time (IDB relations)
+    std::set<QualifiedName> trivialRelations;
     for (auto* rel : program.getRelations()) {
         // Input relations
         if (ioTypes.isInput(rel)) {
-            relationsToIgnore.insert(rel->getQualifiedName());
+            trivialRelations.insert(rel->getQualifiedName());
             continue;
         }
 
@@ -105,8 +106,11 @@ std::set<QualifiedName> MagicSetTransformer::getIgnoredRelations(const Translati
             visitDepthFirst(clause->getBodyLiterals(), [&](const Atom& /* atom */) { hasRules = true; });
         }
         if (!hasRules) {
-            relationsToIgnore.insert(rel->getQualifiedName());
+            trivialRelations.insert(rel->getQualifiedName());
         }
+    }
+    for (const auto& relName : trivialRelations) {
+        relationsToIgnore.insert(relName);
     }
 
     // - Any relation with a neglabel
@@ -161,6 +165,28 @@ std::set<QualifiedName> MagicSetTransformer::getIgnoredRelations(const Translati
         if (containsCounter) {
             visitDepthFirst(
                     *clause, [&](const Atom& atom) { relationsToIgnore.insert(atom.getQualifiedName()); });
+        }
+    }
+
+    // - Ignore negated relations that use an ignored positively-derived literal
+    std::set<QualifiedName> negatedRelations;
+    visitDepthFirst(program.getClauses(),
+            [&](const Negation& neg) { negatedRelations.insert(neg.getAtom()->getQualifiedName()); });
+    bool newDependencyFound = true;
+    while (newDependencyFound) {
+        std::set<QualifiedName> dependenciesToIgnore;
+        for (const auto& relName : negatedRelations) {
+            if (contains(relationsToIgnore, relName)) continue;
+            visitDepthFirst(getClauses(program, relName), [&](const Atom& atom) {
+                if (!contains(trivialRelations, atom.getQualifiedName()) &&
+                        contains(relationsToIgnore, atom.getQualifiedName())) {
+                    dependenciesToIgnore.insert(relName);
+                }
+            });
+        }
+        newDependencyFound = !dependenciesToIgnore.empty();
+        for (const auto& depName : dependenciesToIgnore) {
+            relationsToIgnore.insert(depName);
         }
     }
 
