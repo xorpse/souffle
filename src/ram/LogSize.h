@@ -57,7 +57,7 @@ protected:
         return RelationStatement::equal(other) && message == other.message;
     }
 
-    /** logging message */
+    /** Logging message */
     std::string message;
 };
 

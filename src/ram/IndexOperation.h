@@ -105,8 +105,6 @@ public:
         //  const auto& attrib = getRelation().getAttributeNames();
         bool first = true;
         for (unsigned int i = 0; i < queryPattern.first.size(); ++i) {
-            // TODO: print proper upper lower/bound
-
             // early exit if no upper/lower bounds are defined
             if (isUndefValue(queryPattern.first[i].get()) && isUndefValue(queryPattern.second[i].get())) {
                 continue;

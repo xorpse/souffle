@@ -46,7 +46,7 @@ protected:
     }
 
 protected:
-    /** relation */
+    /** Relation */
     std::string relation;
 };
 

@@ -58,7 +58,7 @@ protected:
         return name == other.name;
     }
 
-    /** name of subroutine */
+    /** Name of subroutine */
     std::string name;
 };
 

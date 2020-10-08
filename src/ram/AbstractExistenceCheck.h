@@ -76,16 +76,7 @@ public:
 
 protected:
     void print(std::ostream& os) const override {
-        os << "("
-           << join(values, ",",
-                      [](std::ostream& out, const Own<Expression>& value) {
-                          if (!value) {
-                              out << "_";
-                          } else {
-                              out << *value;
-                          }
-                      })
-           << ") ∈ " << relation;
+        os << "(" << join(values, ",") << ") ∈ " << relation;
     }
 
     bool equal(const Node& node) const override {
@@ -96,7 +87,7 @@ protected:
     /** Relation */
     std::string relation;
 
-    /** Pattern -- nullptr if undefined */
+    /** Search tuple */
     VecOwn<Expression> values;
 };
 
