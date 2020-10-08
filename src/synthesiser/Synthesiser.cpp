@@ -2678,6 +2678,10 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     os << "return symTable;\n";
     os << "}\n";  // end of getSymbolTable() method
 
+    os << "RecordTable& getRecordTable() override {\n";
+    os << "return recordTable;\n";
+    os << "}\n";  // end of getRecordTable() method
+
     if (!prog.getSubroutines().empty()) {
         // generate subroutine adapter
         os << "void executeSubroutine(std::string name, const std::vector<RamDomain>& args, "
