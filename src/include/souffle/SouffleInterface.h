@@ -17,6 +17,7 @@
 #pragma once
 
 #include "souffle/RamTypes.h"
+#include "souffle/RecordTable.h"
 #include "souffle/SymbolTable.h"
 #include "souffle/utility/MiscUtil.h"
 #include <algorithm>
@@ -865,6 +866,11 @@ public:
      * Get the symbol table of the program.
      */
     virtual SymbolTable& getSymbolTable() = 0;
+
+    /**
+     * Get the record table of the program.
+     */
+    virtual RecordTable& getRecordTable() = 0;
 
     /**
      * Remove all the tuples from the outputRelations, calling the purge method of each.
