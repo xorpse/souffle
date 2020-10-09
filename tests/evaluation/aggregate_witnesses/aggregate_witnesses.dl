@@ -83,7 +83,7 @@ G("Serious scoping test", x, y, z) :- x = max y : { D(_, y), y < min y : { B(_, 
 *
 *   Dh yeah look when we are looking to inner stuff, we are looking at "y" as a local variable.
 *   "y" in the outer scope takes on a special meaning. This should be preserved.
-*   
+*
 **/
 F("Witness that is also injected", result, witness) :- result = max x : { D(x, witness), x < count : { B(_, witness) }  }.
 
