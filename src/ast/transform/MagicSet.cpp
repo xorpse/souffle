@@ -197,15 +197,27 @@ std::set<QualifiedName> MagicSetTransformer::getWeaklyIgnoredRelations(const Tra
 
 std::set<QualifiedName> MagicSetTransformer::getStronglyIgnoredRelations(const TranslationUnit& tu) {
     const auto& program = tu.getProgram();
+    const auto& precedenceGraph = tu.getAnalysis<analysis::PrecedenceGraphAnalysis>()->graph();
     std::set<QualifiedName> stronglyIgnoredRelations;
 
     // - Any atom appearing at the head of a clause containing a counter
-    for (auto* clause : program.getClauses()) {
+    for (const auto* clause : program.getClauses()) {
         bool containsCounter = false;
         visitDepthFirst(*clause, [&](const Counter& /* counter */) { containsCounter = true; });
         if (containsCounter) {
             stronglyIgnoredRelations.insert(clause->getHead()->getQualifiedName());
         }
+    }
+
+    // - To prevent poslabelling issues, all dependent strata should also be strongly ignored
+    std::set<QualifiedName> dependentRelations;
+    for (const auto& relName : stronglyIgnoredRelations) {
+        precedenceGraph.visitDepthFirst(getRelation(program, relName), [&](const auto* dependentRel) {
+            dependentRelations.insert(dependentRel->getQualifiedName());
+        });
+    }
+    for (const auto& depRel : dependentRelations) {
+        stronglyIgnoredRelations.insert(depRel);
     }
 
     return stronglyIgnoredRelations;
