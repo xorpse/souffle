@@ -62,6 +62,7 @@ using PositiveLabellingTransformer =
 std::set<QualifiedName> MagicSetTransformer::getWeaklyIgnoredRelations(const TranslationUnit& tu) {
     const auto& program = tu.getProgram();
     const auto& ioTypes = *tu.getAnalysis<analysis::IOTypeAnalysis>();
+    const auto& precedenceGraph = tu.getAnalysis<analysis::PrecedenceGraphAnalysis>()->graph();
     std::set<QualifiedName> weaklyIgnoredRelations;
 
     // - Any relations not specified to magic-set
@@ -163,9 +164,32 @@ std::set<QualifiedName> MagicSetTransformer::getWeaklyIgnoredRelations(const Tra
         }
     }
 
-    // - Plus any strongly ignored relations
-    for (const auto& relName : getStronglyIgnoredRelations(tu)) {
+    // - Deal with strongly ignored relations
+    const auto& stronglyIgnoredRelations = getStronglyIgnoredRelations(tu);
+
+    // Add them in directly
+    for (const auto& relName : stronglyIgnoredRelations) {
         weaklyIgnoredRelations.insert(relName);
+    }
+
+    // Add in any atoms whose magic rules might cause a need for neglabelling
+    //  - Essentially, suppose R is strongly-ignored and A depends on R. Then, we must weakly ignore
+    //    any relation that appears after A in any clause, otherwise a magic-set might be created that
+    //    requires R to be neglabelled.
+    for (const auto& relName : stronglyIgnoredRelations) {
+        precedenceGraph.visitDepthFirst(getRelation(program, relName), [&](const auto* dependentRel) {
+            const auto& depName = dependentRel->getQualifiedName();
+            for (const auto* clause : program.getClauses()) {
+                const auto& atoms = getBodyLiterals<Atom>(*clause);
+                bool startIgnoring = false;
+                for (const auto& atom : atoms) {
+                    startIgnoring |= (atom->getQualifiedName() == depName);
+                    if (startIgnoring) {
+                        weaklyIgnoredRelations.insert(atom->getQualifiedName());
+                    }
+                }
+            }
+        });
     }
 
     return weaklyIgnoredRelations;
