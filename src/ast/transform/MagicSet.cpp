@@ -153,6 +153,16 @@ std::set<QualifiedName> MagicSetTransformer::getWeaklyIgnoredRelations(const Tra
         }
     }
 
+    // - Any atom appearing in a clause containing a counter
+    for (auto* clause : program.getClauses()) {
+        bool containsCounter = false;
+        visitDepthFirst(*clause, [&](const Counter& /* counter */) { containsCounter = true; });
+        if (containsCounter) {
+            visitDepthFirst(*clause,
+                    [&](const Atom& atom) { weaklyIgnoredRelations.insert(atom.getQualifiedName()); });
+        }
+    }
+
     // - Plus any strongly ignored relations
     for (const auto& relName : getStronglyIgnoredRelations(tu)) {
         weaklyIgnoredRelations.insert(relName);
@@ -165,13 +175,12 @@ std::set<QualifiedName> MagicSetTransformer::getStronglyIgnoredRelations(const T
     const auto& program = tu.getProgram();
     std::set<QualifiedName> stronglyIgnoredRelations;
 
-    // - Any atom appearing in a clause containing a counter
+    // - Any atom appearing at the head of a clause containing a counter
     for (auto* clause : program.getClauses()) {
         bool containsCounter = false;
         visitDepthFirst(*clause, [&](const Counter& /* counter */) { containsCounter = true; });
         if (containsCounter) {
-            visitDepthFirst(*clause,
-                    [&](const Atom& atom) { stronglyIgnoredRelations.insert(atom.getQualifiedName()); });
+            stronglyIgnoredRelations.insert(clause->getHead()->getQualifiedName());
         }
     }
 
