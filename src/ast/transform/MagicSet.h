@@ -77,6 +77,12 @@ private:
     static bool shouldRun(const TranslationUnit& tu);
 
     /**
+     * Gets the set of relations that are trivially computable,
+     * and so should not be magic-set.
+     */
+    static std::set<QualifiedName> getTriviallyIgnoredRelations(const TranslationUnit& tu);
+
+    /**
      * Gets the set of relations to weakly ignore during the MST process.
      * Weakly-ignored relations cannot be adorned/magic'd.
      * Superset of strongly-ignored relations.

@@ -59,9 +59,34 @@ using NegativeLabellingTransformer =
 using PositiveLabellingTransformer =
         MagicSetTransformer::LabelDatabaseTransformer::PositiveLabellingTransformer;
 
-std::set<QualifiedName> MagicSetTransformer::getWeaklyIgnoredRelations(const TranslationUnit& tu) {
+std::set<QualifiedName> MagicSetTransformer::getTriviallyIgnoredRelations(const TranslationUnit& tu) {
     const auto& program = tu.getProgram();
     const auto& ioTypes = *tu.getAnalysis<analysis::IOTypeAnalysis>();
+    std::set<QualifiedName> triviallyIgnoredRelations;
+
+    // - Any relations known in constant time (IDB relations)
+    for (auto* rel : program.getRelations()) {
+        // Input relations
+        if (ioTypes.isInput(rel)) {
+            triviallyIgnoredRelations.insert(rel->getQualifiedName());
+            continue;
+        }
+
+        // Any relations not dependent on any atoms
+        bool hasRules = false;
+        for (const auto* clause : getClauses(program, rel->getQualifiedName())) {
+            visitDepthFirst(clause->getBodyLiterals(), [&](const Atom& /* atom */) { hasRules = true; });
+        }
+        if (!hasRules) {
+            triviallyIgnoredRelations.insert(rel->getQualifiedName());
+        }
+    }
+
+    return triviallyIgnoredRelations;
+}
+
+std::set<QualifiedName> MagicSetTransformer::getWeaklyIgnoredRelations(const TranslationUnit& tu) {
+    const auto& program = tu.getProgram();
     const auto& precedenceGraph = tu.getAnalysis<analysis::PrecedenceGraphAnalysis>()->graph();
     std::set<QualifiedName> weaklyIgnoredRelations;
 
@@ -91,22 +116,9 @@ std::set<QualifiedName> MagicSetTransformer::getWeaklyIgnoredRelations(const Tra
         }
     }
 
-    // - Any relations known in constant time (IDB relations)
-    for (auto* rel : program.getRelations()) {
-        // Input relations
-        if (ioTypes.isInput(rel)) {
-            weaklyIgnoredRelations.insert(rel->getQualifiedName());
-            continue;
-        }
-
-        // Any relations not dependent on any atoms
-        bool hasRules = false;
-        for (const auto* clause : getClauses(program, rel->getQualifiedName())) {
-            visitDepthFirst(clause->getBodyLiterals(), [&](const Atom& /* atom */) { hasRules = true; });
-        }
-        if (!hasRules) {
-            weaklyIgnoredRelations.insert(rel->getQualifiedName());
-        }
+    // - Add trivially computable relations
+    for (const auto& relName : getTriviallyIgnoredRelations(tu)) {
+        weaklyIgnoredRelations.insert(relName);
     }
 
     // - Any relation with a neglabel
