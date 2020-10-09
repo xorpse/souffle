@@ -67,8 +67,8 @@ private:
      */
     bool setDefaults(TranslationUnit& translationUnit) {
         bool changed = false;
-        Program* program = translationUnit.getProgram();
-        for (Directive* io : program->getDirectives()) {
+        Program& program = translationUnit.getProgram();
+        for (Directive* io : program.getDirectives()) {
             // Don't do anything for a directive which
             // is not an I/O directive
             if (io->getType() == ast::DirectiveType::limitsize) continue;

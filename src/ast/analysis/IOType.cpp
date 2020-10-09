@@ -30,7 +30,7 @@
 namespace souffle::ast::analysis {
 
 void IOTypeAnalysis::run(const TranslationUnit& translationUnit) {
-    const Program& program = *translationUnit.getProgram();
+    const Program& program = translationUnit.getProgram();
     visitDepthFirst(program, [&](const Directive& directive) {
         auto* relation = getRelation(program, directive.getQualifiedName());
         if (relation == nullptr) {

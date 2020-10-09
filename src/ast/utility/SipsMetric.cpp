@@ -16,8 +16,11 @@
 
 #include "ast/utility/SipsMetric.h"
 #include "ast/Clause.h"
+#include "ast/TranslationUnit.h"
 #include "ast/Variable.h"
+#include "ast/analysis/IOType.h"
 #include "ast/analysis/ProfileUse.h"
+#include "ast/analysis/RelationDetailCache.h"
 #include "ast/utility/BindingStore.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
@@ -55,10 +58,41 @@ std::vector<unsigned int> SipsMetric::getReordering(const Clause* clause) const 
     return newOrder;
 }
 
+/** Create a SIPS metric based on a given heuristic. */
+std::unique_ptr<SipsMetric> SipsMetric::create(const std::string& heuristic, const TranslationUnit& tu) {
+    if (heuristic == "strict")
+        return std::make_unique<StrictSips>();
+    else if (heuristic == "all-bound")
+        return std::make_unique<AllBoundSips>();
+    else if (heuristic == "naive")
+        return std::make_unique<NaiveSips>();
+    else if (heuristic == "max-bound")
+        return std::make_unique<MaxBoundSips>();
+    else if (heuristic == "max-ratio")
+        return std::make_unique<MaxRatioSips>();
+    else if (heuristic == "least-free")
+        return std::make_unique<LeastFreeSips>();
+    else if (heuristic == "least-free-vars")
+        return std::make_unique<LeastFreeVarsSips>();
+    else if (heuristic == "profile-use")
+        return std::make_unique<ProfileUseSips>(*tu.getAnalysis<analysis::ProfileUseAnalysis>());
+    else if (heuristic == "delta")
+        return std::make_unique<DeltaSips>();
+    else if (heuristic == "input")
+        return std::make_unique<InputSips>(*tu.getAnalysis<analysis::RelationDetailCacheAnalysis>(),
+                *tu.getAnalysis<analysis::IOTypeAnalysis>());
+    else if (heuristic == "delta-input")
+        return std::make_unique<DeltaInputSips>(*tu.getAnalysis<analysis::RelationDetailCacheAnalysis>(),
+                *tu.getAnalysis<analysis::IOTypeAnalysis>());
+
+    // default is all-bound
+    return create("all-bound", tu);
+}
+
 std::vector<double> StrictSips::evaluateCosts(
         const std::vector<Atom*> atoms, const BindingStore& /* bindingStore */) const {
     // Goal: Always choose the left-most atom
-    std::vector<double> cost(atoms.size());
+    std::vector<double> cost;
     for (const auto* atom : atoms) {
         cost.push_back(atom == nullptr ? std::numeric_limits<double>::max() : 0);
     }
@@ -226,4 +260,85 @@ std::vector<double> ProfileUseSips::evaluateCosts(
     }
     return cost;
 }
-};  // namespace souffle::ast
+
+std::vector<double> DeltaSips::evaluateCosts(
+        const std::vector<Atom*> atoms, const BindingStore& bindingStore) const {
+    // Goal: prioritise (1) all-bound, then (2) deltas, and then (3) left-most
+    std::vector<double> cost;
+    for (const auto* atom : atoms) {
+        if (atom == nullptr) {
+            cost.push_back(std::numeric_limits<double>::max());
+            continue;
+        }
+
+        int arity = atom->getArity();
+        int numBound = bindingStore.numBoundArguments(atom);
+        if (arity == numBound) {
+            // prioritise all-bound
+            cost.push_back(0);
+        } else if (isDeltaRelation(atom->getQualifiedName())) {
+            // then deltas
+            cost.push_back(1);
+        } else {
+            cost.push_back(2);
+        }
+    }
+    return cost;
+}
+
+std::vector<double> InputSips::evaluateCosts(
+        const std::vector<Atom*> atoms, const BindingStore& bindingStore) const {
+    // Goal: prioritise (1) all-bound, (2) input, then (3) rest
+    std::vector<double> cost;
+    for (const auto* atom : atoms) {
+        if (atom == nullptr) {
+            cost.push_back(std::numeric_limits<double>::max());
+            continue;
+        }
+
+        const auto& relName = atom->getQualifiedName();
+        int arity = atom->getArity();
+        int numBound = bindingStore.numBoundArguments(atom);
+        if (arity == numBound) {
+            // prioritise all-bound
+            cost.push_back(0);
+        } else if (ioTypes.isInput(relDetail.getRelation(relName))) {
+            // then input
+            cost.push_back(1);
+        } else {
+            cost.push_back(2);
+        }
+    }
+    return cost;
+}
+
+std::vector<double> DeltaInputSips::evaluateCosts(
+        const std::vector<Atom*> atoms, const BindingStore& bindingStore) const {
+    // Goal: prioritise (1) all-bound, (2) deltas, (3) input, then (4) rest
+    std::vector<double> cost;
+    for (const auto* atom : atoms) {
+        if (atom == nullptr) {
+            cost.push_back(std::numeric_limits<double>::max());
+            continue;
+        }
+
+        const auto& relName = atom->getQualifiedName();
+        int arity = atom->getArity();
+        int numBound = bindingStore.numBoundArguments(atom);
+        if (arity == numBound) {
+            // prioritise all-bound
+            cost.push_back(0);
+        } else if (isDeltaRelation(relName)) {
+            // then deltas
+            cost.push_back(1);
+        } else if (ioTypes.isInput(relDetail.getRelation(relName))) {
+            // then input
+            cost.push_back(2);
+        } else {
+            cost.push_back(3);
+        }
+    }
+    return cost;
+}
+
+}  // namespace souffle::ast

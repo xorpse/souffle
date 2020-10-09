@@ -29,8 +29,8 @@
 #include "ast/transform/ExecutionPlanChecker.h"
 #include "ast/transform/Fixpoint.h"
 #include "ast/transform/FoldAnonymousRecords.h"
-#include "ast/transform/GroundedTermsChecker.h"
 #include "ast/transform/GroundWitnesses.h"
+#include "ast/transform/GroundedTermsChecker.h"
 #include "ast/transform/IOAttributes.h"
 #include "ast/transform/IODefaults.h"
 #include "ast/transform/InlineRelations.h"
@@ -58,11 +58,10 @@
 #include "ast/transform/SemanticChecker.h"
 #include "ast/transform/SimplifyAggregateTargetExpression.h"
 #include "ast/transform/UniqueAggregationVariables.h"
-#include "ast/transform/UserDefinedFunctors.h"
 #include "ast2ram/AstToRamTranslator.h"
 #include "config.h"
-#include "interpreter/InterpreterEngine.h"
-#include "interpreter/InterpreterProgInterface.h"
+#include "interpreter/Engine.h"
+#include "interpreter/ProgInterface.h"
 #include "parser/ParserDriver.h"
 #include "ram/Node.h"
 #include "ram/Program.h"
@@ -483,13 +482,11 @@ int main(int argc, char** argv) {
             mk<ast::transform::IODefaultsTransformer>(),
             mk<ast::transform::SimplifyAggregateTargetExpressionTransformer>(),
             mk<ast::transform::UniqueAggregationVariablesTransformer>(),
-            mk<ast::transform::UserDefinedFunctorsTransformer>(),
             mk<ast::transform::FixpointTransformer>(mk<ast::transform::PipelineTransformer>(
                     mk<ast::transform::ResolveAnonymousRecordAliasesTransformer>(),
                     mk<ast::transform::FoldAnonymousRecords>())),
             mk<ast::transform::PolymorphicObjectsTransformer>(), mk<ast::transform::SemanticChecker>(),
-            mk<ast::transform::ADTtoRecordsTransformer>(),
-            mk<ast::transform::GroundWitnessesTransformer>(),
+            mk<ast::transform::ADTtoRecordsTransformer>(), mk<ast::transform::GroundWitnessesTransformer>(),
             mk<ast::transform::UniqueAggregationVariablesTransformer>(),
             mk<ast::transform::MaterializeSingletonAggregationTransformer>(),
             mk<ast::transform::FixpointTransformer>(
@@ -561,7 +558,7 @@ int main(int argc, char** argv) {
     if (Global::config().has("show")) {
         // Output the transformed datalog and return
         if (Global::config().get("show") == "transformed-datalog") {
-            std::cout << *astTranslationUnit->getProgram() << std::endl;
+            std::cout << astTranslationUnit->getProgram() << std::endl;
             return 0;
         }
 
@@ -590,7 +587,7 @@ int main(int argc, char** argv) {
     // ------- execution -------------
     /* translate AST to RAM */
     debugReport.startSection();
-    Own<ram::TranslationUnit> ramTranslationUnit = AstToRamTranslator().translateUnit(*astTranslationUnit);
+    auto ramTranslationUnit = ast2ram::AstToRamTranslator().translateUnit(*astTranslationUnit);
     debugReport.endSection("ast-to-ram", "Translate AST to RAM");
 
     // Apply RAM transforms
@@ -637,7 +634,7 @@ int main(int argc, char** argv) {
             }
 
             // configure and execute interpreter
-            Own<InterpreterEngine> interpreter(mk<InterpreterEngine>(*ramTranslationUnit));
+            Own<interpreter::Engine> interpreter(mk<interpreter::Engine>(*ramTranslationUnit));
             interpreter->executeMain();
             // If the profiler was started, join back here once it exits.
             if (profiler.joinable()) {
@@ -645,7 +642,7 @@ int main(int argc, char** argv) {
             }
             if (Global::config().has("provenance")) {
                 // only run explain interface if interpreted
-                InterpreterProgInterface interface(*interpreter);
+                interpreter::ProgInterface interface(*interpreter);
                 if (Global::config().get("provenance") == "explain") {
                     explain(interface, false);
                 } else if (Global::config().get("provenance") == "explore") {

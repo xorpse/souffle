@@ -32,6 +32,7 @@
 #include "ast/QualifiedName.h"
 #include "ast/Relation.h"
 #include "ast/TranslationUnit.h"
+#include "ast/analysis/Functor.h"
 #include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/Type.h"
 #include "ast/analysis/TypeSystem.h"
@@ -96,22 +97,24 @@ Relation* getRelation(const Program& program, const QualifiedName& name) {
 }
 
 void removeRelation(TranslationUnit& tu, const QualifiedName& name) {
-    if (getRelation(*tu.getProgram(), name) != nullptr) {
+    Program& program = tu.getProgram();
+    if (getRelation(program, name) != nullptr) {
         removeRelationClauses(tu, name);
         removeRelationIOs(tu, name);
-        tu.getProgram()->removeRelationDecl(name);
+        program.removeRelationDecl(name);
     }
 }
 
 void removeRelationClauses(TranslationUnit& tu, const QualifiedName& name) {
+    Program& program = tu.getProgram();
     const auto& relDetail = *tu.getAnalysis<analysis::RelationDetailCacheAnalysis>();
     for (const auto* clause : relDetail.getClauses(name)) {
-        tu.getProgram()->removeClause(clause);
+        program.removeClause(clause);
     }
 }
 
 void removeRelationIOs(TranslationUnit& tu, const QualifiedName& name) {
-    auto& program = *tu.getProgram();
+    Program& program = tu.getProgram();
     for (const auto* directive : getDirectives(program, name)) {
         program.removeDirective(directive);
     }
@@ -215,15 +218,13 @@ bool isFact(const Clause& clause) {
     // and there are no aggregates
     bool hasAggregatesOrMultiResultFunctor = false;
     visitDepthFirst(*clause.getHead(), [&](const Argument& arg) {
-        if (dynamic_cast<const Aggregator*>(&arg)) {
+        if (isA<Aggregator>(arg)) {
             hasAggregatesOrMultiResultFunctor = true;
         }
 
-        auto func = dynamic_cast<const IntrinsicFunctor*>(&arg);
-        auto info = func ? func->getFunctionInfo() : nullptr;
-        if (info && info->multipleResults) {
-            hasAggregatesOrMultiResultFunctor = true;
-        }
+        auto* func = as<IntrinsicFunctor>(arg);
+        hasAggregatesOrMultiResultFunctor |=
+                (func != nullptr) && analysis::FunctorAnalysis::isMultiResult(*func);
     });
     return !hasAggregatesOrMultiResultFunctor;
 }
@@ -234,6 +235,14 @@ bool isRule(const Clause& clause) {
 
 bool isProposition(const Atom* atom) {
     return atom->getArguments().empty();
+}
+
+bool isDeltaRelation(const QualifiedName& name) {
+    const auto& qualifiers = name.getQualifiers();
+    if (qualifiers.empty()) {
+        return false;
+    }
+    return isPrefix("@delta_", qualifiers[0]);
 }
 
 Clause* cloneHead(const Clause* clause) {

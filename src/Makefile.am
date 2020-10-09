@@ -76,6 +76,8 @@ souffle_sources = \
         ast/analysis/ComponentLookup.h                     \
         ast/analysis/Constraint.h                          \
         ast/analysis/ConstraintSystem.h                    \
+        ast/analysis/Functor.h                             \
+        ast/analysis/Functor.cpp                           \
         ast/analysis/Ground.cpp                            \
         ast/analysis/Ground.h                              \
         ast/analysis/IOType.cpp                            \
@@ -140,8 +142,6 @@ souffle_sources = \
         ast/transform/MinimiseProgram.h                    \
         ast/transform/NameUnnamedVariables.cpp             \
         ast/transform/NameUnnamedVariables.h               \
-        ast/transform/NormaliseConstraints.cpp             \
-        ast/transform/NormaliseConstraints.h               \
         ast/transform/Null.h                               \
         ast/transform/PartitionBodyLiterals.cpp            \
         ast/transform/PartitionBodyLiterals.h              \
@@ -182,8 +182,6 @@ souffle_sources = \
         ast/transform/Transformer.h                        \
         ast/transform/UniqueAggregationVariables.cpp       \
         ast/transform/UniqueAggregationVariables.h         \
-        ast/transform/UserDefinedFunctors.cpp              \
-        ast/transform/UserDefinedFunctors.h                \
         ast/transform/While.h                              \
         ast/utility/BindingStore.h                         \
         ast/utility/BindingStore.cpp                       \
@@ -196,22 +194,27 @@ souffle_sources = \
         ast/utility/Visitor.h                              \
         ast2ram/AstToRamTranslator.cpp                     \
         ast2ram/AstToRamTranslator.h                       \
-        interpreter/InterpreterContext.h                   \
-        interpreter/InterpreterEngine.cpp                  \
-        interpreter/InterpreterEngine.h                    \
-        interpreter/InterpreterGenerator.h                 \
-        interpreter/InterpreterBrieIndex.cpp               \
-        interpreter/InterpreterBTreeIndex.cpp              \
-        interpreter/InterpreterEqrelIndex.cpp              \
-        interpreter/InterpreterIndirectIndex.cpp           \
-        interpreter/InterpreterProvenanceIndex.cpp         \
-        interpreter/InterpreterIndex.cpp                   \
-        interpreter/InterpreterIndex.h                     \
-        interpreter/InterpreterNode.h                      \
-        interpreter/InterpreterViewContext.h               \
-        interpreter/InterpreterProgInterface.h             \
-        interpreter/InterpreterRelation.cpp                \
-        interpreter/InterpreterRelation.h                  \
+        ast2ram/ClauseTranslator.cpp                       \
+        ast2ram/ClauseTranslator.h                         \
+        ast2ram/Location.h                                 \
+        ast2ram/ProvenanceClauseTranslator.cpp             \
+        ast2ram/ProvenanceClauseTranslator.h               \
+        ast2ram/ValueIndex.cpp                             \
+        ast2ram/ValueIndex.h                               \
+        interpreter/Context.h                              \
+        interpreter/Engine.cpp                             \
+        interpreter/Engine.h                               \
+        interpreter/Generator.h                            \
+        interpreter/BrieIndex.cpp                          \
+        interpreter/BTreeIndex.cpp                         \
+        interpreter/EqrelIndex.cpp                         \
+        interpreter/ProvenanceIndex.cpp                    \
+        interpreter/Index.h                                \
+        interpreter/Node.h                                 \
+        interpreter/ViewContext.h                          \
+        interpreter/ProgInterface.h                        \
+        interpreter/Relation.h                             \
+        interpreter/Util.h                                 \
         parser/ParserDriver.cpp                            \
         parser/ParserDriver.h                              \
         parser/ParserUtils.cpp                             \
@@ -255,7 +258,6 @@ souffle_sources = \
         ram/IndexOperation.h                               \
         ram/IndexScan.h                                    \
         ram/IntrinsicOperator.h                            \
-        ram/LambdaNodeMapper.h                             \
         ram/ListStatement.h                                \
         ram/LogRelationTimer.h                             \
         ram/LogSize.h                                      \
@@ -265,7 +267,6 @@ souffle_sources = \
         ram/NestedIntrinsicOperator.h                      \
         ram/NestedOperation.h                              \
         ram/Node.h                                         \
-        ram/NodeMapper.h                                   \
         ram/Operation.h                                    \
         ram/PackRecord.h                                   \
         ram/Parallel.h                                     \
@@ -299,8 +300,6 @@ souffle_sources = \
         ram/UnpackRecord.h                                 \
         ram/UnsignedConstant.h                             \
         ram/UserDefinedOperator.h                          \
-        ram/Utils.h                                        \
-        ram/Visitor.h                                      \
         ram/analysis/Analysis.h                            \
         ram/analysis/Complexity.cpp                        \
         ram/analysis/Complexity.h                          \
@@ -308,6 +307,8 @@ souffle_sources = \
         ram/analysis/Index.h                               \
         ram/analysis/Level.cpp                             \
         ram/analysis/Level.h                               \
+        ram/analysis/Relation.cpp                          \
+        ram/analysis/Relation.h                            \
         ram/transform/ChoiceConversion.cpp                 \
         ram/transform/ChoiceConversion.h                   \
         ram/transform/CollapseFilters.cpp                  \
@@ -341,6 +342,10 @@ souffle_sources = \
         ram/transform/Transformer.h                        \
         ram/transform/TupleId.cpp                          \
         ram/transform/TupleId.h                            \
+        ram/utility/LambdaNodeMapper.h                     \
+        ram/utility/NodeMapper.h                           \
+        ram/utility/Utils.h                                \
+        ram/utility/Visitor.h                              \
         reports/DebugReport.cpp                            \
         reports/DebugReport.h                              \
         reports/ErrorReport.h                              \

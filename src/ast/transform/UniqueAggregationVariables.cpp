@@ -13,12 +13,12 @@
  ***********************************************************************/
 
 #include "ast/transform/UniqueAggregationVariables.h"
-#include "ast/analysis/Aggregate.h"
 #include "ast/Aggregator.h"
 #include "ast/Argument.h"
 #include "ast/Program.h"
 #include "ast/TranslationUnit.h"
 #include "ast/Variable.h"
+#include "ast/analysis/Aggregate.h"
 #include "ast/utility/Visitor.h"
 #include "souffle/utility/StringUtil.h"
 #include <set>
@@ -35,14 +35,15 @@ bool UniqueAggregationVariablesTransformer::transform(TranslationUnit& translati
     bool changed = false;
 
     // make variables in aggregates unique
-    visitDepthFirst(*translationUnit.getProgram(), [&](const Clause& clause) {
+    visitDepthFirst(translationUnit.getProgram(), [&](const Clause& clause) {
         // find out if the target expression variable occurs elsewhere in the rule. If so, rename it
         // to avoid naming conflicts
         visitDepthFirst(clause, [&](const Aggregator& agg) {
             // get the set of local variables in this aggregate and rename
             // those that occur outside the aggregate
             std::set<std::string> localVariables = analysis::getLocalVariables(translationUnit, clause, agg);
-            std::set<std::string> variablesOutsideAggregate = analysis::getVariablesOutsideAggregate(clause, agg);
+            std::set<std::string> variablesOutsideAggregate =
+                    analysis::getVariablesOutsideAggregate(clause, agg);
             for (const std::string& name : localVariables) {
                 if (variablesOutsideAggregate.find(name) != variablesOutsideAggregate.end()) {
                     // then this MUST be renamed to avoid scoping issues
@@ -55,7 +56,7 @@ bool UniqueAggregationVariablesTransformer::transform(TranslationUnit& translati
                     });
                 }
             }
-        });        
+        });
     });
     return changed;
 }

@@ -36,29 +36,6 @@
 
 namespace souffle::ast::transform {
 
-std::unique_ptr<SipsMetric> ReorderLiteralsTransformer::getSipsFunction(
-        const std::string& sipsChosen, const TranslationUnit& tu) {
-    if (sipsChosen == "strict")
-        return std::make_unique<StrictSips>();
-    else if (sipsChosen == "all-bound")
-        return std::make_unique<AllBoundSips>();
-    else if (sipsChosen == "naive")
-        return std::make_unique<NaiveSips>();
-    else if (sipsChosen == "max-bound")
-        return std::make_unique<MaxBoundSips>();
-    else if (sipsChosen == "max-ratio")
-        return std::make_unique<MaxRatioSips>();
-    else if (sipsChosen == "least-free")
-        return std::make_unique<LeastFreeSips>();
-    else if (sipsChosen == "least-free-vars")
-        return std::make_unique<LeastFreeVarsSips>();
-    else if (sipsChosen == "profile-use")
-        return std::make_unique<ProfileUseSips>(*tu.getAnalysis<analysis::ProfileUseAnalysis>());
-
-    // default is all-bound
-    return getSipsFunction("all-bound", tu);
-}
-
 Clause* ReorderLiteralsTransformer::reorderClauseWithSips(const SipsMetric& sips, const Clause* clause) {
     // ignore clauses with fixed execution plans
     if (clause->getExecutionPlan() != nullptr) {
@@ -82,7 +59,7 @@ Clause* ReorderLiteralsTransformer::reorderClauseWithSips(const SipsMetric& sips
 
 bool ReorderLiteralsTransformer::transform(TranslationUnit& translationUnit) {
     bool changed = false;
-    Program& program = *translationUnit.getProgram();
+    Program& program = translationUnit.getProgram();
 
     // --- SIPS-based static reordering ---
     // ordering is based on the given SIPS
@@ -92,7 +69,7 @@ bool ReorderLiteralsTransformer::transform(TranslationUnit& translationUnit) {
     if (Global::config().has("SIPS")) {
         sipsChosen = Global::config().get("SIPS");
     }
-    auto sipsFunction = getSipsFunction(sipsChosen, translationUnit);
+    auto sipsFunction = SipsMetric::create(sipsChosen, translationUnit);
 
     // literal reordering is a rule-local transformation
     std::vector<Clause*> clausesToRemove;
@@ -114,7 +91,7 @@ bool ReorderLiteralsTransformer::transform(TranslationUnit& translationUnit) {
     // --- profile-guided reordering ---
     if (Global::config().has("profile-use")) {
         // parse supplied profile information
-        auto profilerSips = getSipsFunction("profiler", translationUnit);
+        auto profilerSips = SipsMetric::create("profiler", translationUnit);
 
         // change the ordering of literals within clauses
         std::vector<Clause*> clausesToRemove;

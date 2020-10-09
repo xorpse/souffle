@@ -23,8 +23,8 @@
 #include "ram/Program.h"
 #include "ram/Relation.h"
 #include "ram/Statement.h"
-#include "ram/Utils.h"
-#include "ram/Visitor.h"
+#include "ram/utility/Utils.h"
+#include "ram/utility/Visitor.h"
 #include "souffle/BinaryConstraintOps.h"
 #include "souffle/RamTypes.h"
 #include "souffle/utility/ContainerUtil.h"
@@ -87,7 +87,12 @@ ExpressionPair MakeIndexTransformer::getExpressionPair(
 // <expr2> }
 ExpressionPair MakeIndexTransformer::getLowerUpperExpression(Condition* c, size_t& element, int identifier) {
     if (auto* binRelOp = dynamic_cast<Constraint*>(c)) {
-        if (isEqConstraint(binRelOp->getOperator())) {
+        bool interpreter = !Global::config().has("compile") && !Global::config().has("dl-program") &&
+                           !Global::config().has("generate") && !Global::config().has("swig");
+        // don't index FEQ in interpreter mode
+        if (binRelOp->getOperator() == BinaryConstraintOp::FEQ && interpreter) {
+            return {mk<UndefValue>(), mk<UndefValue>()};
+        } else if (isEqConstraint(binRelOp->getOperator())) {
             if (const auto* lhs = dynamic_cast<const TupleElement*>(&binRelOp->getLHS())) {
                 const Expression* rhs = &binRelOp->getRHS();
                 if (lhs->getTupleId() == identifier && rla->getLevel(rhs) < identifier) {
@@ -168,7 +173,7 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
     }
 
     std::transform(toAppend.begin(), toAppend.end(), std::back_inserter(conditionList),
-            [](const std::unique_ptr<Condition>& cond) { return std::move(clone(cond)); });
+            [](const std::unique_ptr<Condition>& cond) { return clone(cond); });
 
     // Build query pattern and remaining condition
     for (auto& cond : conditionList) {
@@ -276,7 +281,7 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
 
 Own<Operation> MakeIndexTransformer::rewriteAggregate(const Aggregate* agg) {
     if (dynamic_cast<const True*>(&agg->getCondition()) == nullptr) {
-        const Relation& rel = agg->getRelation();
+        const Relation& rel = relAnalysis->lookup(agg->getRelation());
         int identifier = agg->getTupleId();
         RamPattern queryPattern;
         for (unsigned int i = 0; i < rel.getArity(); ++i) {
@@ -289,7 +294,7 @@ Own<Operation> MakeIndexTransformer::rewriteAggregate(const Aggregate* agg) {
                 toConjunctionList(&agg->getCondition()), identifier);
         if (indexable) {
             return mk<IndexAggregate>(souffle::clone(&agg->getOperation()), agg->getFunction(),
-                    mk<RelationReference>(&rel), souffle::clone(&agg->getExpression()), std::move(condition),
+                    agg->getRelation(), souffle::clone(&agg->getExpression()), std::move(condition),
                     std::move(queryPattern), agg->getTupleId());
         }
     }
@@ -298,7 +303,7 @@ Own<Operation> MakeIndexTransformer::rewriteAggregate(const Aggregate* agg) {
 
 Own<Operation> MakeIndexTransformer::rewriteScan(const Scan* scan) {
     if (const auto* filter = dynamic_cast<const Filter*>(&scan->getOperation())) {
-        const Relation& rel = scan->getRelation();
+        const Relation& rel = relAnalysis->lookup(scan->getRelation());
         const int identifier = scan->getTupleId();
         RamPattern queryPattern;
         for (unsigned int i = 0; i < rel.getArity(); ++i) {
@@ -314,8 +319,8 @@ Own<Operation> MakeIndexTransformer::rewriteScan(const Scan* scan) {
             if (!isTrue(condition.get())) {
                 op = mk<Filter>(std::move(condition), std::move(op));
             }
-            return mk<IndexScan>(mk<RelationReference>(&rel), identifier, std::move(queryPattern),
-                    std::move(op), scan->getProfileText());
+            return mk<IndexScan>(scan->getRelation(), identifier, std::move(queryPattern), std::move(op),
+                    scan->getProfileText());
         }
     }
     return nullptr;
@@ -323,7 +328,7 @@ Own<Operation> MakeIndexTransformer::rewriteScan(const Scan* scan) {
 
 Own<Operation> MakeIndexTransformer::rewriteIndexScan(const IndexScan* iscan) {
     if (const auto* filter = dynamic_cast<const Filter*>(&iscan->getOperation())) {
-        const Relation& rel = iscan->getRelation();
+        const Relation& rel = relAnalysis->lookup(iscan->getRelation());
         const int identifier = iscan->getTupleId();
 
         RamPattern strengthenedPattern;
@@ -342,7 +347,7 @@ Own<Operation> MakeIndexTransformer::rewriteIndexScan(const IndexScan* iscan) {
             if (!isTrue(condition.get())) {
                 op = mk<Filter>(std::move(condition), std::move(op));
             }
-            return mk<IndexScan>(mk<RelationReference>(&rel), identifier, std::move(strengthenedPattern),
+            return mk<IndexScan>(iscan->getRelation(), identifier, std::move(strengthenedPattern),
                     std::move(op), iscan->getProfileText());
         }
     }
@@ -354,7 +359,8 @@ bool MakeIndexTransformer::makeIndex(Program& program) {
     visitDepthFirst(program, [&](const Query& query) {
         std::function<Own<Node>(Own<Node>)> scanRewriter = [&](Own<Node> node) -> Own<Node> {
             if (const Scan* scan = dynamic_cast<Scan*>(node.get())) {
-                if (scan->getRelation().getRepresentation() != RelationRepresentation::INFO) {
+                const Relation& rel = relAnalysis->lookup(scan->getRelation());
+                if (rel.getRepresentation() != RelationRepresentation::INFO) {
                     if (Own<Operation> op = rewriteScan(scan)) {
                         changed = true;
                         node = std::move(op);

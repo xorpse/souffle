@@ -43,6 +43,7 @@
 #include "ast/UnnamedVariable.h"
 #include "ast/Variable.h"
 #include "ast/analysis/Constraint.h"
+#include "ast/analysis/Functor.h"
 #include "ast/analysis/SumTypeBranches.h"
 #include "ast/analysis/TypeEnvironment.h"
 #include "ast/analysis/TypeSystem.h"
@@ -564,8 +565,9 @@ public:
 private:
     const TranslationUnit& tu;
     const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>()->getTypeEnvironment();
-    const Program& program = *tu.getProgram();
+    const Program& program = tu.getProgram();
     const SumTypeBranchesAnalysis& sumTypesBranches = *tu.getAnalysis<SumTypeBranchesAnalysis>();
+    const FunctorAnalysis& functorAnalysis = *tu.getAnalysis<FunctorAnalysis>();
 
     // Sinks = {head} ∪ {negated atoms}
     std::set<const Atom*> sinks;
@@ -664,7 +666,7 @@ private:
             auto argVars = map(intrFun->getArguments(), [&](auto&& x) { return getVar(x); });
             // The type of the user-defined function might not be set at this stage.
             // If so then add overloads as alternatives
-            if (!intrFun->getFunctionInfo())
+            if (!intrFun->getFunctionOp())
                 addConstraint(satisfiesOverload(typeEnv, functorBuiltIn(intrFun->getFunction()), functorVar,
                         argVars, isInfixFunctorOp(intrFun->getFunction())));
 
@@ -680,18 +682,26 @@ private:
                 return;
             }
 
-            if (!intrFun->getFunctionInfo()) return;
+            if (!intrFun->getFunctionOp()) return;
         }
 
         // add a constraint for the return type of the functor
-        addConstraint(isSubtypeOf(functorVar, typeEnv.getConstantType(fun.getReturnType())));
+        try {
+            TypeAttribute returnType = functorAnalysis.getReturnType(&fun);
+            addConstraint(isSubtypeOf(functorVar, typeEnv.getConstantType(returnType)));
+        } catch (...) {
+            // missing function information
+            return;
+        }
 
         // Special case. Ord returns the ram representation of any object.
-        if (intrFun && intrFun->getFunctionInfo()->op == FunctorOp::ORD) return;
+        if (intrFun && intrFun->getFunctionOp().value() == FunctorOp::ORD) return;
 
+        // Add constraints on arguments
         auto arguments = fun.getArguments();
         for (size_t i = 0; i < arguments.size(); ++i) {
-            addConstraint(isSubtypeOf(getVar(arguments[i]), typeEnv.getConstantType(fun.getArgType(i))));
+            TypeAttribute argType = functorAnalysis.getArgType(&fun, i);
+            addConstraint(isSubtypeOf(getVar(arguments[i]), typeEnv.getConstantType(argType)));
         }
     }
 
@@ -821,7 +831,8 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
     }
 
     // Analyse types, clause by clause.
-    for (const Clause* clause : translationUnit.getProgram()->getClauses()) {
+    const Program& program = translationUnit.getProgram();
+    for (const Clause* clause : program.getClauses()) {
         auto clauseArgumentTypes = analyseTypes(translationUnit, *clause, debugStream);
         argumentTypes.insert(clauseArgumentTypes.begin(), clauseArgumentTypes.end());
 

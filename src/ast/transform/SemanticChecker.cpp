@@ -57,6 +57,7 @@
 #include "ast/UserDefinedFunctor.h"
 #include "ast/Variable.h"
 #include "ast/analysis/Aggregate.h"
+#include "ast/analysis/Functor.h"
 #include "ast/analysis/Ground.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/PrecedenceGraph.h"
@@ -110,7 +111,7 @@ private:
     const SumTypeBranchesAnalysis& sumTypesBranches = *tu.getAnalysis<SumTypeBranchesAnalysis>();
 
     const TypeEnvironment& typeEnv = typeEnvAnalysis.getTypeEnvironment();
-    const Program& program = *tu.getProgram();
+    const Program& program = tu.getProgram();
     ErrorReport& report = tu.getErrorReport();
 
     void checkAtom(const Atom& atom);
@@ -151,7 +152,8 @@ public:
 
     /** Analyse types, clause by clause */
     void run() {
-        for (auto* clause : tu.getProgram()->getClauses()) {
+        const Program& program = tu.getProgram();
+        for (auto* clause : program.getClauses()) {
             visitDepthFirstPreOrder(*clause, *this);
         }
     }
@@ -161,7 +163,8 @@ private:
     ErrorReport& report = tu.getErrorReport();
     const TypeAnalysis& typeAnalysis = *tu.getAnalysis<TypeAnalysis>();
     const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>()->getTypeEnvironment();
-    const Program& program = *tu.getProgram();
+    const FunctorAnalysis& functorAnalysis = *tu.getAnalysis<FunctorAnalysis>();
+    const Program& program = tu.getProgram();
 
     void visitAtom(const Atom& atom) override;
     void visitVariable(const ast::Variable& var) override;
@@ -407,7 +410,7 @@ bool SemanticCheckerImpl::isDependent(const Clause& agg1, const Clause& agg2) {
 
 void SemanticCheckerImpl::checkAggregator(const Aggregator& aggregator) {
     auto& report = tu.getErrorReport();
-    auto& program = *tu.getProgram();
+    const Program& program = tu.getProgram();
     Clause dummyClauseAggregator;
 
     visitDepthFirst(program, [&](const Literal& parentLiteral) {
@@ -760,6 +763,12 @@ void SemanticCheckerImpl::checkSubsetType(const ast::SubsetType& astType) {
                                 astType.getQualifiedName(), rootType.getName()),
                 astType.getSrcLoc());
     }
+
+    if (isA<analysis::RecordType>(rootType)) {
+        report.addError(tfm::format("Subset type %s can't be derived from record type %s",
+                                astType.getQualifiedName(), rootType.getName()),
+                astType.getSrcLoc());
+    }
 }
 
 void SemanticCheckerImpl::checkTypesDeclarations() {
@@ -836,13 +845,12 @@ void SemanticCheckerImpl::checkIO() {
  *  We just need to check that that witness only occurs on this level.
  *
  **/
-static const std::vector<SrcLocation> usesInvalidWitness(TranslationUnit& tu, 
-        const Clause& clause, const Aggregator& aggregate) {
+static const std::vector<SrcLocation> usesInvalidWitness(
+        TranslationUnit& tu, const Clause& clause, const Aggregator& aggregate) {
     std::vector<SrcLocation> invalidWitnessLocations;
 
-    if (aggregate.getOperator() == AggregateOp::MIN ||
-        aggregate.getOperator() == AggregateOp::MAX) {
-        return invalidWitnessLocations; // ie empty result
+    if (aggregate.getOperator() == AggregateOp::MIN || aggregate.getOperator() == AggregateOp::MAX) {
+        return invalidWitnessLocations;  // ie empty result
     }
 
     auto aggregateSubclause = mk<Clause>();
@@ -853,12 +861,12 @@ static const std::vector<SrcLocation> usesInvalidWitness(TranslationUnit& tu,
     struct InnerAggregateMasker : public NodeMapper {
         mutable int numReplaced = 0;
         Own<Node> operator()(Own<Node> node) const override {
-           if (isA<Aggregator>(node.get())) {
+            if (isA<Aggregator>(node.get())) {
                 std::string newVariableName = "+aggr_var_" + toString(numReplaced++);
-                return mk<Variable>(newVariableName);         
-           }
-           node->apply(*this);
-           return node;
+                return mk<Variable>(newVariableName);
+            }
+            node->apply(*this);
+            return node;
         }
     };
     InnerAggregateMasker update;
@@ -875,7 +883,7 @@ static const std::vector<SrcLocation> usesInvalidWitness(TranslationUnit& tu,
     for (const auto& witness : witnesses) {
         visitDepthFirst(*aggregateSubclause, [&](const Variable& var) {
             if (var.getName() == witness) {
-               invalidWitnessLocations.push_back(var.getSrcLoc()); 
+                invalidWitnessLocations.push_back(var.getSrcLoc());
             }
         });
     }
@@ -887,15 +895,15 @@ void SemanticCheckerImpl::checkWitnessProblem() {
     // an aggregate where it doesn't make sense to use it, i.e.
     // count, sum, mean
     visitDepthFirst(program, [&](const Clause& clause) {
-       visitDepthFirst(clause, [&](const Aggregator& agg) {
-           for (auto&& invalidArgument : usesInvalidWitness(tu, clause, agg)) {
+        visitDepthFirst(clause, [&](const Aggregator& agg) {
+            for (auto&& invalidArgument : usesInvalidWitness(tu, clause, agg)) {
                 report.addError(
-                         "Witness problem: argument grounded by an aggregator's inner scope is used ungrounded in "
-                         "outer scope in a count/sum/mean aggregate",
-                         invalidArgument
-               );
-           }
-       });
+                        "Witness problem: argument grounded by an aggregator's inner scope is used "
+                        "ungrounded in "
+                        "outer scope in a count/sum/mean aggregate",
+                        invalidArgument);
+            }
+        });
     });
 }
 
@@ -1372,7 +1380,7 @@ void TypeChecker::visitTypeCast(const ast::TypeCast& cast) {
 }
 
 void TypeChecker::visitIntrinsicFunctor(const IntrinsicFunctor& fun) {
-    if (!fun.getFunctionInfo()) {  // no info => no overload found during inference
+    if (!fun.getFunctionOp()) {  // no info => no overload found during inference
         auto args = fun.getArguments();
         if (!isValidFunctorOpArity(fun.getFunction(), args.size())) {
             report.addError("invalid overload (arity mismatch)", fun.getSrcLoc());
@@ -1388,8 +1396,16 @@ void TypeChecker::visitUserDefinedFunctor(const UserDefinedFunctor& fun) {
     // check type of result
     const TypeSet& resultType = typeAnalysis.getTypes(&fun);
 
-    if (!isOfKind(resultType, fun.getReturnType())) {
-        switch (fun.getReturnType()) {
+    TypeAttribute returnType;
+    try {
+        returnType = functorAnalysis.getReturnType(&fun);
+    } catch (...) {
+        report.addError("Undeclared user functor", fun.getSrcLoc());
+        return;
+    }
+
+    if (!isOfKind(resultType, returnType)) {
+        switch (returnType) {
             case TypeAttribute::Signed:
                 report.addError("Non-numeric use for numeric functor", fun.getSrcLoc());
                 break;
@@ -1409,8 +1425,9 @@ void TypeChecker::visitUserDefinedFunctor(const UserDefinedFunctor& fun) {
 
     size_t i = 0;
     for (auto arg : fun.getArguments()) {
-        if (!isOfKind(typeAnalysis.getTypes(arg), fun.getArgType(i))) {
-            switch (fun.getArgType(i)) {
+        TypeAttribute argType = functorAnalysis.getArgType(&fun, i);
+        if (!isOfKind(typeAnalysis.getTypes(arg), argType)) {
+            switch (argType) {
                 case TypeAttribute::Signed:
                     report.addError("Non-numeric argument for functor", arg->getSrcLoc());
                     break;

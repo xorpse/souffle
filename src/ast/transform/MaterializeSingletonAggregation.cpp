@@ -13,7 +13,6 @@
  ***********************************************************************/
 
 #include "ast/transform/MaterializeSingletonAggregation.h"
-#include "ast/analysis/Aggregate.h"
 #include "ast/Aggregator.h"
 #include "ast/Argument.h"
 #include "ast/Atom.h"
@@ -27,6 +26,7 @@
 #include "ast/Relation.h"
 #include "ast/TranslationUnit.h"
 #include "ast/Variable.h"
+#include "ast/analysis/Aggregate.h"
 #include "ast/utility/NodeMapper.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
@@ -43,7 +43,7 @@
 namespace souffle::ast::transform {
 
 bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& translationUnit) {
-    Program& program = *translationUnit.getProgram();
+    Program& program = translationUnit.getProgram();
     std::set<std::pair<Aggregator*, Clause*>> pairs;
     // avoid trying to deal with inner aggregates directly.
     // We will apply a fixpoint operator so that it ends up all getting
@@ -53,8 +53,8 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
         visitDepthFirst(agg, [&](const Aggregator& innerAgg) {
             if (agg != innerAgg) {
                 innerAggregates.insert(&innerAgg);
-            }        
-        });        
+            }
+        });
     });
 
     // collect references to clause / aggregate pairs
@@ -66,7 +66,7 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
             }
             // if the aggregate isn't single valued
             // (ie it relies on a grounding from the outer scope)
-            // or it's a constituent of the only atom in the clause, 
+            // or it's a constituent of the only atom in the clause,
             // then there's no point materialising it!
             if (!isSingleValued(translationUnit, agg, clause) || clause.getBodyLiterals().size() == 1) {
                 return;
@@ -134,7 +134,8 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
     return pairs.size() > 0;
 }
 
-bool MaterializeSingletonAggregationTransformer::isSingleValued(const TranslationUnit& tu, const Aggregator& agg, const Clause& clause) {
+bool MaterializeSingletonAggregationTransformer::isSingleValued(
+        const TranslationUnit& tu, const Aggregator& agg, const Clause& clause) {
     // An aggregate is single valued as long as it is not complex.
     // This just means there are NO injected variables in the aggregate.
     auto injectedVariables = analysis::getInjectedVariables(tu, clause, agg);

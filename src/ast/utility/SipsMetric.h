@@ -16,16 +16,20 @@
 
 #pragma once
 
+#include <memory>
 #include <vector>
 
 namespace souffle::ast::analysis {
+class IOTypeAnalysis;
 class ProfileUseAnalysis;
-}
+class RelationDetailCacheAnalysis;
+}  // namespace souffle::ast::analysis
 namespace souffle::ast {
 
 class Atom;
 class BindingStore;
 class Clause;
+class TranslationUnit;
 
 /**
  * Class for SIPS cost-metric functions
@@ -42,6 +46,9 @@ public:
      * @return the vector of new positions; v[i] = j iff atom j moves to pos i
      */
     std::vector<unsigned int> getReordering(const Clause* clause) const;
+
+    /** Create a SIPS metric based on a given heuristic. */
+    static std::unique_ptr<SipsMetric> create(const std::string& heuristic, const TranslationUnit& tu);
 
 protected:
     /**
@@ -140,4 +147,45 @@ private:
     const analysis::ProfileUseAnalysis& profileUse;
 };
 
-};  // namespace souffle::ast
+/** Goal: prioritise (1) all-bound, then (2) deltas, and then (3) left-most */
+class DeltaSips : public SipsMetric {
+public:
+    DeltaSips() = default;
+
+protected:
+    std::vector<double> evaluateCosts(
+            const std::vector<Atom*> atoms, const BindingStore& bindingStore) const override;
+};
+
+/** Goal: prioritise (1) all-bound, then (2) input, and then (3) left-most */
+class InputSips : public SipsMetric {
+public:
+    InputSips(const analysis::RelationDetailCacheAnalysis& relDetail, const analysis::IOTypeAnalysis& ioTypes)
+            : relDetail(relDetail), ioTypes(ioTypes) {}
+
+protected:
+    std::vector<double> evaluateCosts(
+            const std::vector<Atom*> atoms, const BindingStore& bindingStore) const override;
+
+private:
+    const analysis::RelationDetailCacheAnalysis& relDetail;
+    const analysis::IOTypeAnalysis& ioTypes;
+};
+
+/** Goal: prioritise (1) all-bound, then (2) deltas, then (3) input, and then (4) left-most */
+class DeltaInputSips : public SipsMetric {
+public:
+    DeltaInputSips(
+            const analysis::RelationDetailCacheAnalysis& relDetail, const analysis::IOTypeAnalysis& ioTypes)
+            : relDetail(relDetail), ioTypes(ioTypes) {}
+
+protected:
+    std::vector<double> evaluateCosts(
+            const std::vector<Atom*> atoms, const BindingStore& bindingStore) const override;
+
+private:
+    const analysis::RelationDetailCacheAnalysis& relDetail;
+    const analysis::IOTypeAnalysis& ioTypes;
+};
+
+}  // namespace souffle::ast
