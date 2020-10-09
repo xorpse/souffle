@@ -85,7 +85,7 @@ protected:
     }
 
     /** Relation */
-    std::string relation;
+    const std::string relation;
 
     /** Search tuple */
     VecOwn<Expression> values;

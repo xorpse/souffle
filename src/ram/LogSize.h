@@ -58,7 +58,7 @@ protected:
     }
 
     /** Logging message */
-    std::string message;
+    const std::string message;
 };
 
 }  // namespace souffle::ram

@@ -59,7 +59,7 @@ protected:
     }
 
     /** Name of subroutine */
-    std::string name;
+    const std::string name;
 };
 
 }  // namespace souffle::ram

@@ -56,10 +56,10 @@ protected:
 
 protected:
     /** First relation */
-    std::string first;
+    const std::string first;
 
     /** Second relation */
-    std::string second;
+    const std::string second;
 };
 
 }  // namespace souffle::ram
