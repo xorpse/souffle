@@ -88,7 +88,6 @@ private:
      * Strongly-ignored relations cannot be safely duplicated without affecting semantics.
      */
     static std::set<QualifiedName> getStronglyIgnoredRelations(const TranslationUnit& tu);
-    static void computeStronglyIgnoredClosure(const Program& program, std::set<QualifiedName>& relations);
 };
 
 /**

@@ -208,44 +208,7 @@ std::set<QualifiedName> MagicSetTransformer::getStronglyIgnoredRelations(const T
         }
     }
 
-    // - Calculate the closure of strongly ignored relations
-    computeStronglyIgnoredClosure(program, stronglyIgnoredRelations);
-
     return stronglyIgnoredRelations;
-}
-
-void MagicSetTransformer::computeStronglyIgnoredClosure(
-        const Program& program, std::set<QualifiedName>& relations) {
-    std::set<QualifiedName> newRelsToIgnore;
-
-    // // - Ignore negated relations that use an ignored positively-derived literal
-    // std::set<QualifiedName> negatedRelations;
-    // visitDepthFirst(program.getClauses(),
-    //         [&](const Negation& neg) { negatedRelations.insert(neg.getAtom()->getQualifiedName()); });
-    // bool newDependencyFound = true;
-    // while (newDependencyFound) {
-    //     std::set<QualifiedName> dependenciesToIgnore;
-    //     for (const auto& relName : negatedRelations) {
-    //         if (contains(relationsToIgnore, relName)) continue;
-    //         visitDepthFirst(getClauses(program, relName), [&](const Atom& atom) {
-    //             if (!contains(trivialRelations, atom.getQualifiedName()) &&
-    //                     contains(relationsToIgnore, atom.getQualifiedName())) {
-    //                 dependenciesToIgnore.insert(relName);
-    //             }
-    //         });
-    //     }
-    //     newDependencyFound = !dependenciesToIgnore.empty();
-    //     for (const auto& depName : dependenciesToIgnore) {
-    //         relationsToIgnore.insert(depName);
-    //     }
-    // }
-
-    for (const auto& relName : newRelsToIgnore) {
-        relations.insert(relName);
-    }
-    if (!newRelsToIgnore.empty()) {
-        computeStronglyIgnoredClosure(program, relations);
-    }
 }
 
 bool MagicSetTransformer::shouldRun(const TranslationUnit& tu) {
