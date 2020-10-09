@@ -94,6 +94,12 @@ private:
      * Strongly-ignored relations cannot be safely duplicated without affecting semantics.
      */
     static std::set<QualifiedName> getStronglyIgnoredRelations(const TranslationUnit& tu);
+
+    /**
+     * Gets the set of relations to not label.
+     * The union of strongly and trivially ignored.
+     */
+    static std::set<QualifiedName> getRelationsToNotLabel(const TranslationUnit& tu);
 };
 
 /**

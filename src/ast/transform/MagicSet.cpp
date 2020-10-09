@@ -235,6 +235,17 @@ std::set<QualifiedName> MagicSetTransformer::getStronglyIgnoredRelations(const T
     return stronglyIgnoredRelations;
 }
 
+std::set<QualifiedName> MagicSetTransformer::getRelationsToNotLabel(const TranslationUnit& tu) {
+    std::set<QualifiedName> result;
+    for (const auto& name : getTriviallyIgnoredRelations(tu)) {
+        result.insert(name);
+    }
+    for (const auto& name : getStronglyIgnoredRelations(tu)) {
+        result.insert(name);
+    }
+    return result;
+}
+
 bool MagicSetTransformer::shouldRun(const TranslationUnit& tu) {
     const Program& program = tu.getProgram();
     if (Global::config().has("magic-transform")) return true;
@@ -761,7 +772,7 @@ bool NegativeLabellingTransformer::transform(TranslationUnit& translationUnit) {
 
     std::set<QualifiedName> relationsToLabel;
     std::set<Own<Clause>> clausesToAdd;
-    const auto& stronglyIgnoredRelations = getStronglyIgnoredRelations(translationUnit);
+    const auto& relationsToNotLabel = getRelationsToNotLabel(translationUnit);
 
     // Negatively label all relations that might affect stratification after MST
     //      - Negated relations
@@ -769,14 +780,14 @@ bool NegativeLabellingTransformer::transform(TranslationUnit& translationUnit) {
     visitDepthFirst(program, [&](const Negation& neg) {
         auto* atom = neg.getAtom();
         auto relName = atom->getQualifiedName();
-        if (contains(stronglyIgnoredRelations, relName)) return;
+        if (contains(relationsToNotLabel, relName)) return;
         atom->setQualifiedName(getNegativeLabel(relName));
         relationsToLabel.insert(relName);
     });
     visitDepthFirst(program, [&](const Aggregator& aggr) {
         visitDepthFirst(aggr, [&](const Atom& atom) {
             auto relName = atom.getQualifiedName();
-            if (contains(stronglyIgnoredRelations, relName)) return;
+            if (contains(relationsToNotLabel, relName)) return;
             const_cast<Atom&>(atom).setQualifiedName(getNegativeLabel(relName));
             relationsToLabel.insert(relName);
         });
@@ -789,7 +800,7 @@ bool NegativeLabellingTransformer::transform(TranslationUnit& translationUnit) {
         std::map<QualifiedName, QualifiedName> newSccFriendNames;
         for (const auto* rel : stratumRels) {
             auto relName = rel->getQualifiedName();
-            if (contains(stronglyIgnoredRelations, relName)) continue;
+            if (contains(relationsToNotLabel, relName)) continue;
             relationsToLabel.insert(relName);
             newSccFriendNames[relName] = getNegativeLabel(relName);
         }
@@ -825,7 +836,7 @@ bool PositiveLabellingTransformer::transform(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
     const auto& sccGraph = *translationUnit.getAnalysis<analysis::SCCGraphAnalysis>();
     const auto& precedenceGraph = translationUnit.getAnalysis<analysis::PrecedenceGraphAnalysis>()->graph();
-    const auto& stronglyIgnoredRelations = getStronglyIgnoredRelations(translationUnit);
+    const auto& relationsToNotLabel = getRelationsToNotLabel(translationUnit);
 
     // Partition the strata into neglabelled and regular
     std::set<size_t> neglabelledStrata;
@@ -881,7 +892,7 @@ bool PositiveLabellingTransformer::transform(TranslationUnit& translationUnit) {
             for (const auto* clause : clauses) {
                 visitDepthFirst(*clause, [&](const Atom& atom) {
                     const auto& name = atom.getQualifiedName();
-                    if (!contains(stronglyIgnoredRelations, name) && !isNegativelyLabelled(name)) {
+                    if (!contains(relationsToNotLabel, name) && !isNegativelyLabelled(name)) {
                         relsToCopy.insert(name);
                     }
                 });
@@ -905,15 +916,14 @@ bool PositiveLabellingTransformer::transform(TranslationUnit& translationUnit) {
             if (!contains(dependentStrata[preStratum], stratum)) continue;
 
             for (const auto* rel : sccGraph.getInternalRelations(preStratum)) {
-                if (contains(stronglyIgnoredRelations, rel->getQualifiedName())) continue;
+                if (contains(relationsToNotLabel, rel->getQualifiedName())) continue;
 
                 for (const auto* clause : getClauses(program, rel->getQualifiedName())) {
                     // Grab the new names for all unignored unlabelled positive atoms
                     std::map<QualifiedName, QualifiedName> labelledNames;
                     visitDepthFirst(*clause, [&](const Atom& atom) {
                         const auto& relName = atom.getQualifiedName();
-                        if (contains(stronglyIgnoredRelations, relName) || isNegativelyLabelled(relName))
-                            return;
+                        if (contains(relationsToNotLabel, relName) || isNegativelyLabelled(relName)) return;
                         size_t relStratum = sccGraph.getSCC(getRelation(program, relName));
                         size_t copyCount = originalStrataCopyCount.at(relStratum) + 1;
                         labelledNames[relName] = getPositiveLabel(relName, copyCount);
