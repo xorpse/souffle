@@ -234,7 +234,7 @@ void MaterializeAggregationQueriesTransformer::groundInjectedParameters(
 bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
         TranslationUnit& translationUnit) {
     bool changed = false;
-    Program& program = *translationUnit.getProgram();
+    Program& program = translationUnit.getProgram();
     /**
      * GENERAL PROCEDURE FOR MATERIALISING THE BODY OF AN AGGREGATE:
      * NB:

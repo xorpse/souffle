@@ -25,7 +25,7 @@
 namespace souffle::ast::transform {
 
 bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
-    Program& program = *translationUnit.getProgram();
+    Program& program = translationUnit.getProgram();
 
     struct AggregateWithWitnesses {
         Aggregator* aggregate;

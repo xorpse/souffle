@@ -25,7 +25,7 @@
 namespace souffle::ast::transform {
 
 bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& translationUnit) {
-    Program& program = *translationUnit.getProgram();
+    Program& program = translationUnit.getProgram();
     // Map all aggregates with complex target expressions to aggregates
     // with simple target expressions and an extra equality literal in the body
     // Note: we need to be careful that we don't inadvertently turn
