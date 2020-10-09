@@ -163,6 +163,17 @@ void MaterializeAggregationQueriesTransformer::groundInjectedParameters(
         }
         // Try to find any atom in the rule where this ungrounded variable is mentioned
         for (const auto& lit : originalClause.getBodyLiterals()) {
+            // -1. This may not be the same literal
+            bool originalAggregateFound = false;
+            visitDepthFirst(*lit, [&](const Aggregator& a) {
+                if (a == aggregate) {
+                    originalAggregateFound = true;
+                    return;
+                }        
+            });
+            if (originalAggregateFound) {
+                continue;
+            }
             // 0. Variable must not already have been grounded
             if (alreadyGrounded.find(ungroundedVariableName) != alreadyGrounded.end()) {
                 continue;

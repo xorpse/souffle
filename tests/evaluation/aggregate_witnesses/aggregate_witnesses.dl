@@ -74,17 +74,6 @@ F("two side-by-side aggregates", res1, res2) :- res1 = count : { D(_, y), y > 1 
 // check that scoping is all gucci!
 G("Serious scoping test", x, y, z) :- x = max y : { D(_, y), y < min y : { B(_, y) } }, y = min y : { H(_, y, _) }, z = min y : { B(y, _), y != 2 }.
 
-/**
-*   Can I have a witness that is then injected into an inner aggregate??
-*   I can't see why not? It can just be treated as "local".
-*   But then that obviously DOES mean that the aggregate needs to be a max/min.
-*   It actually shouldn't even be considered a "witness" in the inner aggregate but let's make sure we test this cuz
-*   that would fuck things up.
-*
-*   Dh yeah look when we are looking to inner stuff, we are looking at "y" as a local variable.
-*   "y" in the outer scope takes on a special meaning. This should be preserved.
-*
-**/
 F("Witness that is also injected", result, witness) :- result = max x : { D(x, witness), x < count : { B(_, witness) }  }.
 
 .output D, B, H, F, G()
