@@ -5,8 +5,8 @@
 // - <souffle root>/licenses/SOUFFLE-UPL.txt
 
 // Tests magic-set where an atom that must be poslabelled cannot be
-// transformed. In this case, atom dependencies should be ignored too
-// to prevent stratification issues - see issue #1679.
+// transformed. The atom should still be poslabelled to prevent
+// stratification issues - see issue #1679.
 
 .pragma "magic-transform" "*"
 
