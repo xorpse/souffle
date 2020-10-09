@@ -35,4 +35,4 @@ public:
 private:
     bool transform(TranslationUnit& translationUnit) override;
 };
-} // namespace souffle::ast::transform
+}  // namespace souffle::ast::transform

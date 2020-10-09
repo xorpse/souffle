@@ -55,9 +55,8 @@ private:
      *  variable that appears in the clause ungrounded. The source of literals
      *  to copy from is the originalClause.
      **/
-    static void groundInjectedParameters(
-        const TranslationUnit& translationUnit, Clause& aggClause, const Clause& originalClause,
-        const Aggregator& aggregate);
+    static void groundInjectedParameters(const TranslationUnit& translationUnit, Clause& aggClause,
+            const Clause& originalClause, const Aggregator& aggregate);
 
     /**
      * A test determining whether the body of a given aggregation needs to be
@@ -75,7 +74,7 @@ private:
     static void instantiateUnnamedVariables(Clause& aggClause);
     /**
      * When we materialise an aggregate subclause,
-     * it's a good question which variables belong in the 
+     * it's a good question which variables belong in the
      * head of that materialised clause and which don't.
      *
      * For a count aggregate for example, it's important that
@@ -93,40 +92,40 @@ private:
      * reuse this materialised subclause to retrieve the witness almost instantly.
      *
      * (This is assuming that we have a good enough machinery to recognise when
-     *  rules are exactly the same, because the witness transformation actually has to take place BEFORE
-     *  the materialisation, meaning that there will be two separate relations that actually will represent
-     *  exactly the same relation semantically, and we would want those to be recognised as a single relation)
+     * rules are exactly the same, because the witness transformation actually has to take place BEFORE
+     * the materialisation, meaning that there will be two separate relations that actually will represent
+     * exactly the same relation semantically, and we would want those to be recognised as a single relation)
      *
-     *  So not only then (assuming we have good "equality of rules" machinery) does using the "count" aggregate
-     *  technique (just giving each variable a place in the head) allow us to save and retrieve witnesses easily,
-     *  but it also just makes the treatment of aggregates uniform, which I suppose is simpler, nicer, more
-     *  aesthetic maybe.
+     * So not only then (assuming we have good "equality of rules" machinery) does using the "count"
+     * aggregate technique (just giving each variable a place in the head) allow us to save and retrieve
+     * witnesses easily, but it also just makes the treatment of aggregates uniform, which I suppose is
+     * simpler, nicer, more aesthetic maybe.
      *
-     *  Giving min/max/mean/sum aggregate materialised relations only a single column would be far more efficient,
-     *  but then we would lose the ability to retrieve witnesses. So this was the tradeoff, and losing witnesses
-     *  is just not an option. We NEED them to be able to give the user witness functionality.
+     * Giving min/max/mean/sum aggregate materialised relations only a single column would be far more
+     * efficient, but then we would lose the ability to retrieve witnesses. So this was the tradeoff, and
+     * losing witnesses is just not an option. We NEED them to be able to give the user witness functionality.
      *
-     *  To clarify, we don't want to include local variables of any inner aggregates appearing in this aggregate.
-     *  My reasoning for deciding this was really just a hunch that I felt like local variables of an inner aggregate
-     *  should be totally irrelevant. So we include "immediate" local variables, not local variables of any inner aggregate.
+     * To clarify, we don't want to include local variables of any inner aggregates appearing in this
+     * aggregate. My reasoning for deciding this was really just a hunch that I felt like local variables of
+     *an inner aggregate should be totally irrelevant. So we include "immediate" local variables, not local
+     * variables of any inner aggregate.
      *
-     *  The other thing we must include is any injected variables. Depending on the assignment of the injected variable,
-     *  the aggregate's value may change, but so, still, why would it be important to include the injected variable
-     *  in the head then?
+     * The other thing we must include is any injected variables. Depending on the assignment of the injected
+     * variable, the aggregate's value may change, but so, still, why would it be important to include the
+     * injected variable in the head then?
      *
-     *      A(x, n) :- B(x), n = sum y : { C(y, x) }.
+     *       A(x, n) :- B(x), n = sum y : { C(y, x) }.
      *
-     *  Because we need the assignment of x in the outer scope to COINCIDE with the assignment of x in the inner scope.
-     *  The only thing visible to the outer scope is whatever is in the head. That is good enough justification. And this
-     *  applies to any type of aggregate.
+     * Because we need the assignment of x in the outer scope to COINCIDE with the assignment of x in the
+     * inner scope. The only thing visible to the outer scope is whatever is in the head. That is good enough
+     * justification. And this applies to any type of aggregate.
      *
      *  So the overall conclusion is that what we should include are:
      *      * injected variables
      *      * *immediate* local variables
      **/
-    static std::set<std::string> distinguishHeadArguments(const TranslationUnit& tu, 
-            const Clause& clause, const Aggregator& aggregate);
-
+    static std::set<std::string> distinguishHeadArguments(
+            const TranslationUnit& tu, const Clause& clause, const Aggregator& aggregate);
 };
 
 }  // namespace souffle::ast::transform

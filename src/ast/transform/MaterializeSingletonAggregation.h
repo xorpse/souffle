@@ -53,8 +53,7 @@ private:
      *  to copy from is the originalClause.
      **/
     void groundInjectedParameters(
-        const TranslationUnit& translationUnit, Clause& aggClause, const Clause& originalClause);
-
+            const TranslationUnit& translationUnit, Clause& aggClause, const Clause& originalClause);
 };
 
 }  // namespace souffle::ast::transform

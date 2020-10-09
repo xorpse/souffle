@@ -12,11 +12,11 @@
  *
  ***********************************************************************/
 
-#include "ast/analysis/Aggregate.h"
-#include "ast/Argument.h"
-#include "ast/transform/GroundWitnesses.h"
 #include "ast/transform/SimplifyAggregateTargetExpression.h"
+#include "ast/Argument.h"
 #include "ast/TranslationUnit.h"
+#include "ast/analysis/Aggregate.h"
+#include "ast/transform/GroundWitnesses.h"
 #include "ast/utility/NodeMapper.h"
 #include "ast/utility/Visitor.h"
 
@@ -38,9 +38,8 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
         mutable bool changed = false;
         TranslationUnit* tu;
         const Clause* originatingClause;
-        
-        AggregateTESimplifier(TranslationUnit* unit, const Clause* c)
-            : tu(unit), originatingClause(c) {}
+
+        AggregateTESimplifier(TranslationUnit* unit, const Clause* c) : tu(unit), originatingClause(c) {}
 
         bool causedChange() {
             return changed;
@@ -60,9 +59,11 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
                     // if a variable with the same name appears range-restricted in the outer scope.
 
                     // make a unique target expression variable
-                    auto newTargetExpression = mk<Variable>(analysis::findUniqueVariableName(*originatingClause, "x"));
-                    auto equalityLiteral = std::make_unique<BinaryConstraint>(
-                            BinaryConstraintOp::EQ, souffle::clone(newTargetExpression), souffle::clone(aggregate->getTargetExpression()));
+                    auto newTargetExpression =
+                            mk<Variable>(analysis::findUniqueVariableName(*originatingClause, "x"));
+                    auto equalityLiteral = std::make_unique<BinaryConstraint>(BinaryConstraintOp::EQ,
+                            souffle::clone(newTargetExpression),
+                            souffle::clone(aggregate->getTargetExpression()));
                     std::vector<std::unique_ptr<Literal>> newBody;
                     for (Literal* literal : aggregate->getBodyLiterals()) {
                         newBody.push_back(souffle::clone(literal));
@@ -71,17 +72,20 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
                     // If there are occurrences of the same variable in the outer scope
                     // Then we need to be careful. There are two ensuing situations:
                     // 1) The variable in the outer scope is ungrounded (or occurs in the head)
-                    //      => We have a witness, and we shouldn't rename this variable, because it is not local.
+                    //      => We have a witness, and we shouldn't rename this variable, because it is not
+                    //      local.
                     // 2) The variable in the outer scope is grounded
-                    //      => We need to rename this because it is a local variable (the grounding of the outer scope
+                    //      => We need to rename this because it is a local variable (the grounding of the
+                    //      outer scope
                     //         variable is shadowed by occurrence of the variable in the target expression)
 
-                    // We already have a way to find witnesses and also to find variables occurring outside this aggregate.
-                    // We will take the set minus of variablesOccurringOutside - witnesses. Whichever variables are in this set
-                    // need to be renamed within the aggregate subclause.
+                    // We already have a way to find witnesses and also to find variables occurring outside
+                    // this aggregate. We will take the set minus of variablesOccurringOutside - witnesses.
+                    // Whichever variables are in this set need to be renamed within the aggregate subclause.
                     auto witnesses = analysis::getWitnessVariables(*tu, *originatingClause, *aggregate);
-                    std::set<std::string> varsOutside = analysis::getVariablesOutsideAggregate(*originatingClause, *aggregate);
-                    
+                    std::set<std::string> varsOutside =
+                            analysis::getVariablesOutsideAggregate(*originatingClause, *aggregate);
+
                     std::set<std::string> varsGroundedOutside;
                     for (auto& varName : varsOutside) {
                         if (witnesses.find(varName) == witnesses.end()) {
@@ -96,18 +100,19 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
                     visitDepthFirst(*aggregate->getTargetExpression(), [&](const Variable& v) {
                         if (varsGroundedOutside.find(v.getName()) != varsGroundedOutside.end()) {
                             // rename it everywhere in the body so that we've scoped this properly.
-                            std::string newVarName = analysis::findUniqueVariableName(*originatingClause, v.getName());
+                            std::string newVarName =
+                                    analysis::findUniqueVariableName(*originatingClause, v.getName());
                             for (auto& literal : newBody) {
-                               visitDepthFirst(*literal, [&](const Variable& literalVar) {
+                                visitDepthFirst(*literal, [&](const Variable& literalVar) {
                                     if (literalVar == v) {
                                         const_cast<Variable&>(literalVar).setName(newVarName);
-                                    } 
-                               }); 
+                                    }
+                                });
                             }
                         }
                     });
-        
-                    // set up a new aggregate to replace this one        
+
+                    // set up a new aggregate to replace this one
                     auto newAggregate = mk<Aggregator>(
                             aggregate->getOperator(), std::move(newTargetExpression), std::move(newBody));
                     changed = true;
@@ -128,4 +133,4 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
     });
     return changed;
 }
-} // namespace souffle::ast::transform
+}  // namespace souffle::ast::transform

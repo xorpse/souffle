@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "ast/transform/Transformer.h"
 #include "ast/TranslationUnit.h"
+#include "ast/transform/Transformer.h"
 
 #include <string>
 
@@ -33,8 +33,8 @@ namespace souffle::ast::transform {
  * student occurs ungrounded in the outer scope, but we can fix this by using the
  * aggregate result to figure out which students satisfy this aggregate.
  *
- * Tallest(student) :- n = max height : { Student(student0, height) }, 
- *                      Student(student, n). 
+ * Tallest(student) :- n = max height : { Student(student0, height) },
+ *                      Student(student, n).
  *
  * This transformation is really just syntactic sugar.
  *
