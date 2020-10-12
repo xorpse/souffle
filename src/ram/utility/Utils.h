@@ -88,7 +88,7 @@ inline Own<Condition> toCondition(const VecOwn<Condition>& conds) {
 }
 
 /**
- * @brief store terms of a conjunction in an array of pointers without cloning 
+ * @brief store terms of a conjunction in an array of pointers without cloning
  *
  * Convert a condition of the format C1 /\ C2 /\ ... /\ Cn
  * to a list {C1, C2, ..., Cn}.
