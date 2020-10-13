@@ -19,8 +19,10 @@
 #include "ast/analysis/Ground.h"
 #include "ast/utility/Visitor.h"
 #include "souffle/utility/StringUtil.h"
-
+#include <map>
+#include <memory>
 #include <set>
+#include <string>
 
 namespace souffle::ast::transform {
 
