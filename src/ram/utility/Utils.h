@@ -87,4 +87,29 @@ inline Own<Condition> toCondition(const VecOwn<Condition>& conds) {
     return result;
 }
 
+/**
+ * @brief store terms of a conjunction in an array of pointers without cloning
+ *
+ * Convert a condition of the format C1 /\ C2 /\ ... /\ Cn
+ * to a list {C1, C2, ..., Cn}.
+ */
+inline std::vector<const ram::Condition*> findConjunctiveTerms(const ram::Condition* condition) {
+    std::vector<const ram::Condition*> conditionList;
+    std::queue<const ram::Condition*> conditionsToProcess;
+    if (condition != nullptr) {
+        conditionsToProcess.push(condition);
+        while (!conditionsToProcess.empty()) {
+            condition = conditionsToProcess.front();
+            conditionsToProcess.pop();
+            if (const auto* ramConj = dynamic_cast<const ram::Conjunction*>(condition)) {
+                conditionsToProcess.push(&ramConj->getLHS());
+                conditionsToProcess.push(&ramConj->getRHS());
+            } else {
+                conditionList.emplace_back(condition);
+            }
+        }
+    }
+    return conditionList;
+}
+
 }  // namespace souffle::ram

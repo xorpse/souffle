@@ -528,13 +528,13 @@ public:
             next = &filter->getOperation();
             // Check terms of outer filter operation whether they can be pushed before
             // the view-generation for speed improvements
-            auto conditions = toConjunctionList(&filter->getCondition());
+            auto conditions = findConjunctiveTerms(&filter->getCondition());
             for (auto const& cur : conditions) {
                 bool needView = false;
                 visitDepthFirst(*cur, [&](const ram::Node& node) {
                     if (requireView(&node)) {
                         needView = true;
-                        const auto& rel = getRelationRefForView(&node);
+                        const auto& rel = getViewRelation(&node);
                         viewContext->addViewInfoForFilter(
                                 encodeRelation(rel), indexTable[&node], encodeView(&node));
                     }
@@ -550,7 +550,7 @@ public:
 
         visitDepthFirst(*next, [&](const ram::Node& node) {
             if (requireView(&node)) {
-                const auto& rel = getRelationRefForView(&node);
+                const auto& rel = getViewRelation(&node);
                 viewContext->addViewInfoForNested(encodeRelation(rel), indexTable[&node], encodeView(&node));
             };
         });
@@ -661,35 +661,6 @@ private:
     };
 
 private:
-    /** Environment encoding, store a mapping from ram::Node to its operation index id. */
-    std::unordered_map<const ram::Node*, size_t> indexTable;
-    /** Used by index encoding */
-    ram::analysis::IndexAnalysis* isa;
-    /** Points to the current viewContext during the generation.
-     * It is used to passing viewContext between parent query and its nested parallel operation.
-     * As parallel operation requires its own view information. */
-    std::shared_ptr<ViewContext> parentQueryViewContext = nullptr;
-    /** Next available location to encode View */
-    size_t viewId = 0;
-    /** Next available location to encode a relation */
-    size_t relId = 0;
-    /** Environment encoding, store a mapping from ram::Node to its View id. */
-    std::unordered_map<const ram::Node*, size_t> viewTable;
-    /** Environment encoding, store a mapping from ram::Relation to its id */
-    std::unordered_map<std::string, size_t> relTable;
-    /** name / relation mapping */
-    std::unordered_map<std::string, const ram::Relation*> relationMap;
-    /** Symbol table for relations */
-    VecOwn<RelationHandle> relations;
-    /** If generating a provenance program */
-    const bool isProvenance;
-    /** If profile is enable in this program */
-    const bool profileEnabled;
-    /** ram::Program */
-    ram::Program* program;
-    /** ordering context */
-    OrderingContext orderingContext = OrderingContext(*this);
-
     /** @brief Reset view allocation system, since view's life time is within each query. */
     void newQueryBlock() {
         viewTable.clear();
@@ -759,20 +730,6 @@ private:
     }
 
     /**
-     * @brief Find all operations under the root node that requires a view.
-     * Return a list of Nodes.
-     */
-    NodePtrVec findAllViews(const ram::Node& node) {
-        NodePtrVec res;
-        visitDepthFirst(node, [&](const ram::Node& node) {
-            if (requireView(&node)) {
-                res.push_back(visit(node));
-            };
-        });
-        return res;
-    }
-
-    /**
      * Return true if the given operation requires a view.
      */
     bool requireView(const ram::Node* node) {
@@ -788,7 +745,7 @@ private:
      * @brief Return the associated relation of a operation which requires a view.
      * This function assume the operation does requires a view.
      */
-    const std::string& getRelationRefForView(const ram::Node* node) {
+    const std::string& getViewRelation(const ram::Node* node) {
         if (const auto* exist = dynamic_cast<const ram::AbstractExistenceCheck*>(node)) {
             return exist->getRelation();
         } else if (const auto* index = dynamic_cast<const ram::IndexOperation*>(node)) {
@@ -796,31 +753,6 @@ private:
         }
 
         fatal("The ram::Node does not require a view.");
-    }
-
-    /**
-     * @brief Convert terms of a conjunction to a list
-     *
-     * Convert a condition of the format C1 /\ C2 /\ ... /\ Cn
-     * to a list {C1, C2, ..., Cn}.
-     */
-    inline std::vector<const ram::Condition*> toConjunctionList(const ram::Condition* condition) {
-        std::vector<const ram::Condition*> conditionList;
-        std::queue<const ram::Condition*> conditionsToProcess;
-        if (condition != nullptr) {
-            conditionsToProcess.push(condition);
-            while (!conditionsToProcess.empty()) {
-                condition = conditionsToProcess.front();
-                conditionsToProcess.pop();
-                if (const auto* ramConj = dynamic_cast<const ram::Conjunction*>(condition)) {
-                    conditionsToProcess.push(&ramConj->getLHS());
-                    conditionsToProcess.push(&ramConj->getRHS());
-                } else {
-                    conditionList.emplace_back(condition);
-                }
-            }
-        }
-        return conditionList;
     }
 
     /**
@@ -1000,5 +932,34 @@ private:
         }
         return superOp;
     }
+
+    /** Environment encoding, store a mapping from ram::Node to its operation index id. */
+    std::unordered_map<const ram::Node*, size_t> indexTable;
+    /** Used by index encoding */
+    ram::analysis::IndexAnalysis* isa;
+    /** Points to the current viewContext during the generation.
+     * It is used to passing viewContext between parent query and its nested parallel operation.
+     * As parallel operation requires its own view information. */
+    std::shared_ptr<ViewContext> parentQueryViewContext = nullptr;
+    /** Next available location to encode View */
+    size_t viewId = 0;
+    /** Next available location to encode a relation */
+    size_t relId = 0;
+    /** Environment encoding, store a mapping from ram::Node to its View id. */
+    std::unordered_map<const ram::Node*, size_t> viewTable;
+    /** Environment encoding, store a mapping from ram::Relation to its id */
+    std::unordered_map<std::string, size_t> relTable;
+    /** name / relation mapping */
+    std::unordered_map<std::string, const ram::Relation*> relationMap;
+    /** Symbol table for relations */
+    VecOwn<RelationHandle> relations;
+    /** If generating a provenance program */
+    const bool isProvenance;
+    /** If profile is enable in this program */
+    const bool profileEnabled;
+    /** ram::Program */
+    ram::Program* program;
+    /** ordering context */
+    OrderingContext orderingContext = OrderingContext(*this);
 };
 }  // namespace souffle::interpreter
