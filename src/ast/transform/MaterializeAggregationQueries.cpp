@@ -106,7 +106,7 @@ std::set<std::string> MaterializeAggregationQueriesTransformer::distinguishHeadA
     return headArguments;
 }
 
-// TODO: Deal with recursive parameters with an assert statement.
+// TODO (Issue 1696): Deal with recursive parameters with an assert statement.
 void MaterializeAggregationQueriesTransformer::groundInjectedParameters(
         const TranslationUnit& translationUnit, Clause& aggClause, const Clause& originalClause,
         const Aggregator& aggregate) {
@@ -169,7 +169,7 @@ void MaterializeAggregationQueriesTransformer::groundInjectedParameters(
                 if (a == aggregate) {
                     originalAggregateFound = true;
                     return;
-                }        
+                }
             });
             if (originalAggregateFound) {
                 continue;
@@ -192,12 +192,12 @@ void MaterializeAggregationQueriesTransformer::groundInjectedParameters(
             auto singleLiteralClause = mk<Clause>();
             singleLiteralClause->addToBody(souffle::clone(lit));
             bool variableGroundedByLiteral = false;
-            for (const auto& ap : analysis::getGroundedTerms(translationUnit, *singleLiteralClause)) {
-                const auto* var = dynamic_cast<const ast::Variable*>(ap.first);
+            for (const auto& argPair : analysis::getGroundedTerms(translationUnit, *singleLiteralClause)) {
+                const auto* var = dynamic_cast<const ast::Variable*>(argPair.first);
                 if (var == nullptr) {
                     continue;
                 }
-                bool isGrounded = ap.second;
+                bool isGrounded = argPair.second;
                 if (var->getName() == ungroundedVariableName && isGrounded) {
                     variableGroundedByLiteral = true;
                 }

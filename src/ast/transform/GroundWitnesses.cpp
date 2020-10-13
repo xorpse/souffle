@@ -1,6 +1,6 @@
 /*
  * Souffle - A Datalog Compiler
- * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved
+ * Copyright (c) 2020, The Souffle Developers. All rights reserved
  * Licensed under the Universal Permissive License v 1.0 as shown at:
  * - https://opensource.org/licenses/UPL
  * - <souffle root>/licenses/SOUFFLE-UPL.txt
@@ -20,7 +20,7 @@
 #include "ast/utility/Visitor.h"
 #include "souffle/utility/StringUtil.h"
 
-#include <set>
+#include <utility>
 
 namespace souffle::ast::transform {
 
@@ -33,7 +33,7 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
         std::set<std::string> witnesses;
 
         AggregateWithWitnesses(Aggregator* agg, Clause* clause, std::set<std::string> witnesses)
-                : aggregate(agg), originatingClause(clause), witnesses(witnesses) {}
+                : aggregate(agg), originatingClause(clause), witnesses(std::move(witnesses)) {}
     };
 
     std::vector<AggregateWithWitnesses> aggregatesToFix;
@@ -42,13 +42,13 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
         visitDepthFirst(clause, [&](const Aggregator& agg) {
             auto witnessVariables = analysis::getWitnessVariables(translationUnit, clause, agg);
             // remove any witness variables that originate from an inner aggregate
-            visitDepthFirst(agg, [&](const Aggregator& a) {
-                if (agg == a) {
+            visitDepthFirst(agg, [&](const Aggregator& innerAgg) {
+                if (agg == innerAgg) {
                     return;
                 }
-                auto innerWitnesses = analysis::getWitnessVariables(translationUnit, clause, a);
-                for (const auto& w : innerWitnesses) {
-                    witnessVariables.erase(w);
+                auto innerWitnesses = analysis::getWitnessVariables(translationUnit, clause, innerAgg);
+                for (const auto& witness : innerWitnesses) {
+                    witnessVariables.erase(witness);
                 }
             });
             if (witnessVariables.empty()) {
@@ -60,10 +60,10 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
         });
     });
 
-    for (struct AggregateWithWitnesses& a : aggregatesToFix) {
-        Aggregator* agg = a.aggregate;
-        Clause* clause = a.originatingClause;
-        std::set<std::string> witnesses = a.witnesses;
+    for (struct AggregateWithWitnesses& aggregateToFix : aggregatesToFix) {
+        Aggregator* agg = aggregateToFix.aggregate;
+        Clause* clause = aggregateToFix.originatingClause;
+        std::set<std::string> witnesses = aggregateToFix.witnesses;
         // agg will become invalid when it gets replaced, so we have to be careful
         // not to use it after that point.
         // 1. make a copy of all aggregate body literals, because they will need to
@@ -92,9 +92,9 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
             Aggregator* aggregate;
             std::string targetVariable;
             TargetVariableReplacer(Aggregator* agg, std::string target)
-                    : aggregate(agg), targetVariable(target) {}
+                    : aggregate(agg), targetVariable(std::move(target)) {}
             std::unique_ptr<Node> operator()(std::unique_ptr<Node> node) const override {
-                if (Variable* variable = dynamic_cast<Variable*>(node.get())) {
+                if (auto* variable = dynamic_cast<Variable*>(node.get())) {
                     if (variable->getName() == targetVariable) {
                         auto replacement = souffle::clone(aggregate);
                         return replacement;
@@ -104,7 +104,7 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
                 return node;
             }
         };
-        const Variable* targetVariable = dynamic_cast<const Variable*>(agg->getTargetExpression());
+        const auto* targetVariable = dynamic_cast<const Variable*>(agg->getTargetExpression());
         std::string targetVariableName = targetVariable->getName();
         TargetVariableReplacer replacer(agg, targetVariableName);
         for (std::unique_ptr<Literal>& literal : aggregateLiterals) {
