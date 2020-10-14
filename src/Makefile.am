@@ -65,6 +65,8 @@ souffle_sources = \
         ast/UnnamedVariable.h                              \
         ast/UserDefinedFunctor.h                           \
         ast/Variable.h                                     \
+        ast/analysis/Aggregate.cpp                         \
+        ast/analysis/Aggregate.h                           \
         ast/analysis/Analysis.h                            \
         ast/analysis/AuxArity.cpp                          \
         ast/analysis/AuxArity.h                            \
@@ -122,6 +124,8 @@ souffle_sources = \
         ast/transform/FoldAnonymousRecords.h               \
         ast/transform/GroundedTermsChecker.cpp             \
         ast/transform/GroundedTermsChecker.h               \
+        ast/transform/GroundWitnesses.cpp                  \
+        ast/transform/GroundWitnesses.h                    \
         ast/transform/IOAttributes.h                       \
         ast/transform/IODefaults.h                         \
         ast/transform/InlineRelations.cpp                  \
@@ -172,6 +176,8 @@ souffle_sources = \
         ast/transform/ResolveAnonymousRecordAliases.h      \
         ast/transform/SemanticChecker.cpp                  \
         ast/transform/SemanticChecker.h                    \
+        ast/transform/SimplifyAggregateTargetExpression.cpp\
+        ast/transform/SimplifyAggregateTargetExpression.h  \
         ast/transform/Transformer.cpp                      \
         ast/transform/Transformer.h                        \
         ast/transform/UniqueAggregationVariables.cpp       \
