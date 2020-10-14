@@ -326,7 +326,7 @@ public:
     template <
         std::size_t E = Extent,
         typename std::enable_if<(E == dynamic_extent || E <= 0), int>::type = 0>
-    constexpr span() noexcept
+    constexpr span() noexcept // NOLINT : clang-tidy is mistaken. one cannot `default` a template ctor
     {}
 
     TCB_SPAN_CONSTEXPR11 span(pointer ptr, size_type count)
