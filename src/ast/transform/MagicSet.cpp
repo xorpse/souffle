@@ -33,6 +33,7 @@
 #include "ast/UnnamedVariable.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/PrecedenceGraph.h"
+#include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/SCCGraph.h"
 #include "ast/utility/BindingStore.h"
 #include "ast/utility/NodeMapper.h"
@@ -209,6 +210,7 @@ std::set<QualifiedName> MagicSetTransformer::getWeaklyIgnoredRelations(const Tra
 
 std::set<QualifiedName> MagicSetTransformer::getStronglyIgnoredRelations(const TranslationUnit& tu) {
     const auto& program = tu.getProgram();
+    const auto& relDetail = *tu.getAnalysis<analysis::RelationDetailCacheAnalysis>();
     const auto& precedenceGraph = tu.getAnalysis<analysis::PrecedenceGraphAnalysis>()->graph();
     std::set<QualifiedName> stronglyIgnoredRelations;
 
@@ -221,15 +223,37 @@ std::set<QualifiedName> MagicSetTransformer::getStronglyIgnoredRelations(const T
         }
     }
 
-    // - To prevent poslabelling issues, all dependent strata should also be strongly ignored
-    std::set<QualifiedName> dependentRelations;
-    for (const auto& relName : stronglyIgnoredRelations) {
-        precedenceGraph.visitDepthFirst(getRelation(program, relName), [&](const auto* dependentRel) {
-            dependentRelations.insert(dependentRel->getQualifiedName());
-        });
-    }
-    for (const auto& depRel : dependentRelations) {
-        stronglyIgnoredRelations.insert(depRel);
+    bool fixpointReached = false;
+    while (!fixpointReached) {
+        fixpointReached = true;
+        // - To prevent poslabelling issues, all dependent strata should also be strongly ignored
+        std::set<QualifiedName> dependentRelations;
+        for (const auto& relName : stronglyIgnoredRelations) {
+            precedenceGraph.visitDepthFirst(getRelation(program, relName), [&](const auto* dependentRel) {
+                dependentRelations.insert(dependentRel->getQualifiedName());
+            });
+        }
+        for (const auto& depRel : dependentRelations) {
+            if (!contains(stronglyIgnoredRelations, depRel)) {
+                fixpointReached = false;
+                stronglyIgnoredRelations.insert(depRel);
+            }
+        }
+
+        // - Since we can't duplicate the rules, nothing should be labelled in the bodies as well
+        std::set<QualifiedName> bodyRelations;
+        for (const auto& relName : stronglyIgnoredRelations) {
+            for (const auto* clause : relDetail.getClauses(relName)) {
+                visitDepthFirst(
+                        *clause, [&](const Atom& atom) { bodyRelations.insert(atom.getQualifiedName()); });
+            }
+        }
+        for (const auto& bodyRel : bodyRelations) {
+            if (!contains(stronglyIgnoredRelations, bodyRel)) {
+                fixpointReached = false;
+                stronglyIgnoredRelations.insert(bodyRel);
+            }
+        }
     }
 
     return stronglyIgnoredRelations;
@@ -807,6 +831,7 @@ bool NegativeLabellingTransformer::transform(TranslationUnit& translationUnit) {
 
         // Negatively label the relations in a new copy of this stratum
         for (const auto* rel : stratumRels) {
+            if (contains(relationsToNotLabel, rel->getQualifiedName())) continue;
             for (auto* clause : getClauses(program, rel->getQualifiedName())) {
                 auto neggedClause = souffle::clone(clause);
                 renameAtoms(*neggedClause, newSccFriendNames);
