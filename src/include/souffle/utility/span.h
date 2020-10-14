@@ -605,22 +605,46 @@ constexpr auto get(span<E, S> s) -> decltype(s[N])
 
 namespace std {
 
+// see:     https://gcc.gnu.org/bugzilla/show_bug.cgi?id=82716
+// libc++:  https://reviews.llvm.org/D55466#1325498
+//          `libc++` changed to use `struct`
+// spec:    http://eel.is/c++draft/tuple.helper
+//          Spec says to use `struct`.
+// MSVC:    Has different ABI for `class`/`struct`.
+//          Defined `tuple_size` as `class`.
+#if defined(_MSC_VER)
+    #define TCB_SPAN_TUPLE_SIZE_KIND class
+#else
+    #define TCB_SPAN_TUPLE_SIZE_KIND struct
+#endif
+
+#if defined(__clang__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wmismatched-tags"
+#endif
+
 template <typename ElementType, size_t Extent>
-class tuple_size<TCB_SPAN_NAMESPACE_NAME::span<ElementType, Extent>>
+TCB_SPAN_TUPLE_SIZE_KIND tuple_size<TCB_SPAN_NAMESPACE_NAME::span<ElementType, Extent>>
     : public integral_constant<size_t, Extent> {};
 
 template <typename ElementType>
-class tuple_size<TCB_SPAN_NAMESPACE_NAME::span<
+TCB_SPAN_TUPLE_SIZE_KIND tuple_size<TCB_SPAN_NAMESPACE_NAME::span<
     ElementType, TCB_SPAN_NAMESPACE_NAME::dynamic_extent>>; // not defined
 
 template <size_t I, typename ElementType, size_t Extent>
-class tuple_element<I, TCB_SPAN_NAMESPACE_NAME::span<ElementType, Extent>> {
+TCB_SPAN_TUPLE_SIZE_KIND tuple_element<I, TCB_SPAN_NAMESPACE_NAME::span<ElementType, Extent>> {
 public:
     static_assert(Extent != TCB_SPAN_NAMESPACE_NAME::dynamic_extent &&
                       I < Extent,
                   "");
     using type = ElementType;
 };
+
+#if defined(__clang__)
+    #pragma clang diagnostic pop
+#endif
+
+#undef TCB_SPAN_TUPLE_SIZE_KIND
 
 } // end namespace std
 
