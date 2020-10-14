@@ -187,14 +187,14 @@ constexpr bool JoinShouldDeref = IsPtrLike<A>::value && !std::is_same_v<A, char 
  * For use cases see the test case {util_test.cpp}.
  */
 template <typename Container, typename Iter = typename Container::const_iterator,
-        typename T = typename Iter::value_type>
+        typename T = typename std::iterator_traits<Iter>::value_type>
 std::enable_if_t<!JoinShouldDeref<T>, detail::joined_sequence<Iter, detail::print<id<T>>>> join(
         const Container& c, const std::string& sep = ",") {
     return join(c.begin(), c.end(), sep, detail::print<id<T>>());
 }
 
 template <typename Container, typename Iter = typename Container::const_iterator,
-        typename T = typename Iter::value_type>
+        typename T = typename std::iterator_traits<Iter>::value_type>
 std::enable_if_t<JoinShouldDeref<T>, detail::joined_sequence<Iter, detail::print<deref<T>>>> join(
         const Container& c, const std::string& sep = ",") {
     return join(c.begin(), c.end(), sep, detail::print<deref<T>>());
