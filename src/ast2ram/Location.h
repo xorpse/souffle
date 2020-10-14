@@ -16,23 +16,21 @@
 
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/MiscUtil.h"
-
-namespace souffle::ram {
-class RelationReference;
-}
+#include <ostream>
+#include <string>
+#include <utility>
 
 namespace souffle::ast2ram {
 
 struct Location {
     const int identifier;
     const int element;
-    const Own<const ram::RelationReference> relation;
+    std::string relation;
 
-    Location(int ident, int elem, Own<ram::RelationReference> rel = nullptr)
+    Location(int ident, int elem, std::string rel = "")
             : identifier(ident), element(elem), relation(std::move(rel)) {}
 
-    Location(const Location& l)
-            : identifier(l.identifier), element(l.element), relation(souffle::clone(l.relation)) {}
+    Location(const Location& l) = default;
 
     bool operator==(const Location& loc) const {
         return identifier == loc.identifier && element == loc.element;

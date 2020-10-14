@@ -65,9 +65,6 @@ const std::string testInterpreterStore(
     Own<ram::Relation> myrel =
             mk<ram::Relation>("test", arity, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
 
-    Own<RelationReference> ref1 = mk<RelationReference>(myrel.get());
-    Own<RelationReference> ref2 = mk<RelationReference>(myrel.get());
-
     Json types = Json::object{{"relation",
             Json::object{{"arity", static_cast<long long>(arity)}, {"auxArity", static_cast<long long>(0)},
                     {"types", Json::array(attribsTypes.begin(), attribsTypes.end())}}}};
@@ -77,9 +74,8 @@ const std::string testInterpreterStore(
 
     std::map<std::string, std::string> ioDirs = std::map<std::string, std::string>(dirs);
 
-    Own<ram::Statement> main =
-            mk<ram::Sequence>(mk<ram::Query>(mk<ram::Project>(std::move(ref1), std::move(exprs))),
-                    mk<ram::IO>(std::move(ref2), ioDirs));
+    Own<ram::Statement> main = mk<ram::Sequence>(
+            mk<ram::Query>(mk<ram::Project>("test", std::move(exprs))), mk<ram::IO>("test", ioDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -253,8 +249,6 @@ TEST(IO_store, SignedChangedDelimiter) {
 
     Own<ram::Relation> myrel =
             mk<ram::Relation>("test", RANDOM_TESTS, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
-    Own<RelationReference> ref1 = mk<RelationReference>(myrel.get());
-    Own<RelationReference> ref2 = mk<RelationReference>(myrel.get());
 
     Json types = Json::object{
             {"relation", Json::object{{"arity", static_cast<long long>(attribsTypes.size())},
@@ -271,9 +265,8 @@ TEST(IO_store, SignedChangedDelimiter) {
         exprs.push_back(mk<SignedConstant>(i));
     }
 
-    Own<ram::Statement> main =
-            mk<ram::Sequence>(mk<ram::Query>(mk<ram::Project>(std::move(ref1), std::move(exprs))),
-                    mk<ram::IO>(std::move(ref2), ioDirs));
+    Own<ram::Statement> main = mk<ram::Sequence>(
+            mk<ram::Query>(mk<ram::Project>("test", std::move(exprs))), mk<ram::IO>("test", ioDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -326,8 +319,6 @@ TEST(IO_store, MixedTypes) {
 
     Own<ram::Relation> myrel =
             mk<ram::Relation>("test", 5, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
-    Own<RelationReference> ref1 = mk<RelationReference>(myrel.get());
-    Own<RelationReference> ref2 = mk<RelationReference>(myrel.get());
 
     Json types = Json::object{
             {"relation", Json::object{{"arity", static_cast<long long>(attribsTypes.size())},
@@ -350,9 +341,8 @@ TEST(IO_store, MixedTypes) {
     exprs.push_back(mk<SignedConstant>(ramBitCast(static_cast<RamFloat>(floatValue))));
     exprs.push_back(mk<SignedConstant>(symbolTable.lookup("meow")));
 
-    Own<ram::Statement> main =
-            mk<ram::Sequence>(mk<ram::Query>(mk<ram::Project>(std::move(ref1), std::move(exprs))),
-                    mk<ram::IO>(std::move(ref2), ioDirs));
+    Own<ram::Statement> main = mk<ram::Sequence>(
+            mk<ram::Query>(mk<ram::Project>("test", std::move(exprs))), mk<ram::IO>("test", ioDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -401,8 +391,6 @@ TEST(IO_load, Signed) {
     std::vector<std::string> attribsTypes = {"i", "i"};
     Own<ram::Relation> myrel =
             mk<ram::Relation>("test", 2, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
-    Own<RelationReference> ref1 = mk<RelationReference>(myrel.get());
-    Own<RelationReference> ref2 = mk<RelationReference>(myrel.get());
 
     Json types = Json::object{
             {"relation", Json::object{{"arity", static_cast<long long>(attribsTypes.size())},
@@ -417,8 +405,8 @@ TEST(IO_load, Signed) {
             {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> writeIoDirs = std::map<std::string, std::string>(writeDirs);
 
-    Own<ram::Statement> main = mk<ram::Sequence>(
-            mk<ram::IO>(std::move(ref1), readIoDirs), mk<ram::IO>(std::move(ref2), writeIoDirs));
+    Own<ram::Statement> main =
+            mk<ram::Sequence>(mk<ram::IO>("test", readIoDirs), mk<ram::IO>("test", writeIoDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -465,8 +453,6 @@ TEST(IO_load, Float) {
     std::vector<std::string> attribsTypes = {"f", "f"};
     Own<ram::Relation> myrel =
             mk<ram::Relation>("test", 2, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
-    Own<RelationReference> ref1 = mk<RelationReference>(myrel.get());
-    Own<RelationReference> ref2 = mk<RelationReference>(myrel.get());
 
     Json types = Json::object{
             {"relation", Json::object{{"arity", static_cast<long long>(attribsTypes.size())},
@@ -481,8 +467,8 @@ TEST(IO_load, Float) {
             {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> writeIoDirs = std::map<std::string, std::string>(writeDirs);
 
-    Own<ram::Statement> main = mk<ram::Sequence>(
-            mk<ram::IO>(std::move(ref1), readIoDirs), mk<ram::IO>(std::move(ref2), writeIoDirs));
+    Own<ram::Statement> main =
+            mk<ram::Sequence>(mk<ram::IO>("test", readIoDirs), mk<ram::IO>("test", writeIoDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -529,8 +515,6 @@ TEST(IO_load, Unsigned) {
     std::vector<std::string> attribsTypes = {"u", "u"};
     Own<ram::Relation> myrel =
             mk<ram::Relation>("test", 2, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
-    Own<RelationReference> ref1 = mk<RelationReference>(myrel.get());
-    Own<RelationReference> ref2 = mk<RelationReference>(myrel.get());
 
     Json types = Json::object{
             {"relation", Json::object{{"arity", static_cast<long long>(attribsTypes.size())},
@@ -545,8 +529,8 @@ TEST(IO_load, Unsigned) {
             {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> writeIoDirs = std::map<std::string, std::string>(writeDirs);
 
-    Own<ram::Statement> main = mk<ram::Sequence>(
-            mk<ram::IO>(std::move(ref1), readIoDirs), mk<ram::IO>(std::move(ref2), writeIoDirs));
+    Own<ram::Statement> main =
+            mk<ram::Sequence>(mk<ram::IO>("test", readIoDirs), mk<ram::IO>("test", writeIoDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -593,8 +577,6 @@ TEST(IO_load, MixedTypesLoad) {
     std::vector<std::string> attribsTypes = {"s", "i", "u", "f"};
     Own<ram::Relation> myrel =
             mk<ram::Relation>("test", 4, 0, attribs, attribsTypes, RelationRepresentation::BTREE);
-    Own<RelationReference> ref1 = mk<RelationReference>(myrel.get());
-    Own<RelationReference> ref2 = mk<RelationReference>(myrel.get());
 
     Json types = Json::object{
             {"relation", Json::object{{"arity", static_cast<long long>(attribsTypes.size())},
@@ -609,8 +591,8 @@ TEST(IO_load, MixedTypesLoad) {
             {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> writeIoDirs = std::map<std::string, std::string>(writeDirs);
 
-    Own<ram::Statement> main = mk<ram::Sequence>(
-            mk<ram::IO>(std::move(ref1), readIoDirs), mk<ram::IO>(std::move(ref2), writeIoDirs));
+    Own<ram::Statement> main =
+            mk<ram::Sequence>(mk<ram::IO>("test", readIoDirs), mk<ram::IO>("test", writeIoDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;

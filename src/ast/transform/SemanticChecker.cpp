@@ -56,6 +56,7 @@
 #include "ast/UnnamedVariable.h"
 #include "ast/UserDefinedFunctor.h"
 #include "ast/Variable.h"
+#include "ast/analysis/Aggregate.h"
 #include "ast/analysis/Functor.h"
 #include "ast/analysis/Ground.h"
 #include "ast/analysis/IOType.h"
@@ -364,6 +365,10 @@ void SemanticCheckerImpl::checkLiteral(const Literal& literal) {
             }
         });
 
+        // Don't worry about underscores if either side is an aggregate (because of witness exporting)
+        if (isA<Aggregator>(*constraint->getLHS()) || isA<Aggregator>(*constraint->getRHS())) {
+            return;
+        }
         // Check if constraint contains unnamed variables.
         for (auto* unnamed : getUnnamedVariables(*constraint)) {
             if (!contains(unnamedInRecord, unnamed)) {
@@ -829,148 +834,76 @@ void SemanticCheckerImpl::checkIO() {
     }
 }
 
-static const std::vector<SrcLocation> usesInvalidWitness(TranslationUnit& tu,
-        const std::vector<Literal*>& literals, const std::set<Own<Argument>>& groundedArguments) {
-    // Node-mapper that replaces aggregators with new (unique) variables
-    struct M : public NodeMapper {
-        // Variables introduced to replace aggregators
-        mutable std::set<std::string> aggregatorVariables;
+/**
+ *  A witness is considered "invalid" if it is trying to export a witness
+ *  out of a count, sum, or mean aggregate.
+ *
+ *  However we need to be careful: Sometimes a witness variables occurs within the body
+ *  of a count, sum, or mean aggregate, but this is valid, because the witness
+ *  actually belongs to an inner min or max aggregate.
+ *
+ *  We just need to check that that witness only occurs on this level.
+ *
+ **/
+static const std::vector<SrcLocation> usesInvalidWitness(
+        TranslationUnit& tu, const Clause& clause, const Aggregator& aggregate) {
+    std::vector<SrcLocation> invalidWitnessLocations;
 
-        const std::set<std::string>& getAggregatorVariables() {
-            return aggregatorVariables;
-        }
+    if (aggregate.getOperator() == AggregateOp::MIN || aggregate.getOperator() == AggregateOp::MAX) {
+        return invalidWitnessLocations;  // ie empty result
+    }
 
+    auto aggregateSubclause = mk<Clause>();
+    aggregateSubclause->setHead(mk<Atom>("*"));
+    for (const Literal* lit : aggregate.getBodyLiterals()) {
+        aggregateSubclause->addToBody(souffle::clone(lit));
+    }
+    struct InnerAggregateMasker : public NodeMapper {
+        mutable int numReplaced = 0;
         Own<Node> operator()(Own<Node> node) const override {
-            static int numReplaced = 0;
             if (isA<Aggregator>(node.get())) {
-                // Replace the aggregator with a variable
-                std::stringstream newVariableName;
-                newVariableName << "+aggr_var_" << numReplaced++;
-
-                // Keep track of which variables are bound to aggregators
-                aggregatorVariables.insert(newVariableName.str());
-
-                return mk<ast::Variable>(newVariableName.str());
+                std::string newVariableName = "+aggr_var_" + toString(numReplaced++);
+                return mk<Variable>(newVariableName);
             }
             node->apply(*this);
             return node;
         }
     };
+    InnerAggregateMasker update;
+    aggregateSubclause->apply(update);
 
-    std::vector<SrcLocation> result;
-
-    // Create two versions of the original clause
-
-    // Clause 1 - will remain equivalent to the original clause in terms of variable groundedness
-    auto originalClause = mk<Clause>();
-    originalClause->setHead(mk<Atom>("*"));
-
-    // Clause 2 - will have aggregators replaced with intrinsically grounded variables
-    auto aggregatorlessClause = mk<Clause>();
-    aggregatorlessClause->setHead(mk<Atom>("*"));
-
-    // Construct both clauses in the same manner to match the original clause
-    // Must keep track of the subnode in Clause 1 that each subnode in Clause 2 matches to
-    std::map<const Argument*, const Argument*> identicalSubnodeMap;
-    for (const Literal* lit : literals) {
-        auto firstClone = souffle::clone(lit);
-        auto secondClone = souffle::clone(lit);
-
-        // Construct the mapping between equivalent literal subnodes
-        std::vector<const Argument*> firstCloneArguments;
-        visitDepthFirst(*firstClone, [&](const Argument& arg) { firstCloneArguments.push_back(&arg); });
-
-        std::vector<const Argument*> secondCloneArguments;
-        visitDepthFirst(*secondClone, [&](const Argument& arg) { secondCloneArguments.push_back(&arg); });
-
-        for (size_t i = 0; i < firstCloneArguments.size(); i++) {
-            identicalSubnodeMap[secondCloneArguments[i]] = firstCloneArguments[i];
-        }
-
-        // Actually add the literal clones to each clause
-        originalClause->addToBody(std::move(firstClone));
-        aggregatorlessClause->addToBody(std::move(secondClone));
-    }
-
-    // Replace the aggregators in Clause 2 with variables
-    M update;
-    aggregatorlessClause->apply(update);
-
-    // Create a dummy atom to force certain arguments to be grounded in the aggregatorlessClause
-    auto groundingAtomAggregatorless = mk<Atom>("grounding_atom");
-    auto groundingAtomOriginal = mk<Atom>("grounding_atom");
-
-    // Force the new aggregator variables to be grounded in the aggregatorless clause
-    const std::set<std::string>& aggregatorVariables = update.getAggregatorVariables();
-    for (const std::string& str : aggregatorVariables) {
-        groundingAtomAggregatorless->addArgument(mk<ast::Variable>(str));
-    }
-
-    // Force the given grounded arguments to be grounded in both clauses
-    for (const Own<Argument>& arg : groundedArguments) {
-        groundingAtomAggregatorless->addArgument(souffle::clone(arg));
-        groundingAtomOriginal->addArgument(souffle::clone(arg));
-    }
-
-    aggregatorlessClause->addToBody(std::move(groundingAtomAggregatorless));
-    originalClause->addToBody(std::move(groundingAtomOriginal));
-
-    // Compare the grounded analysis of both generated clauses
-    // All added arguments in Clause 2 were forced to be grounded, so if an ungrounded argument
-    // appears in Clause 2, it must also appear in Clause 1. Consequently, have two cases:
-    //   - The argument is also ungrounded in Clause 1 - handled by another check
-    //   - The argument is grounded in Clause 1 => the argument was grounded in the
-    //     first clause somewhere along the line by an aggregator-body - not allowed!
-    std::set<Own<Argument>> newlyGroundedArguments;
-    auto originalGrounded = getGroundedTerms(tu, *originalClause);
-    for (auto&& pair : getGroundedTerms(tu, *aggregatorlessClause)) {
-        if (!pair.second && originalGrounded[identicalSubnodeMap[pair.first]]) {
-            result.push_back(pair.first->getSrcLoc());
-        }
-
-        // Otherwise, it can now be considered grounded
-        newlyGroundedArguments.insert(souffle::clone(pair.first));
-    }
-
-    // All previously grounded are still grounded
-    for (const Own<Argument>& arg : groundedArguments) {
-        newlyGroundedArguments.insert(souffle::clone(arg));
-    }
-
-    // Everything on this level is fine, check subaggregators of each literal
-    for (const Literal* lit : literals) {
-        visitDepthFirst(*lit, [&](const Aggregator& aggr) {
-            // Check recursively if an invalid witness is used
-            for (auto&& argloc : usesInvalidWitness(tu, aggr.getBodyLiterals(), newlyGroundedArguments)) {
-                result.push_back(argloc);
+    // Find the witnesses of the original aggregate.
+    // If we can find occurrences of the witness in
+    // this masked version of the aggregate subclause,
+    // AND the aggregate is a sum / count / mean (we know this because
+    // of the early exit for a min/max aggregate)
+    // then we have an invalid witness and we'll add the source location
+    // of the variable to the invalidWitnessLocations vector.
+    auto witnesses = analysis::getWitnessVariables(tu, clause, aggregate);
+    for (const auto& witness : witnesses) {
+        visitDepthFirst(*aggregateSubclause, [&](const Variable& var) {
+            if (var.getName() == witness) {
+                invalidWitnessLocations.push_back(var.getSrcLoc());
             }
         });
     }
-
-    return result;
+    return invalidWitnessLocations;
 }
 
 void SemanticCheckerImpl::checkWitnessProblem() {
-    // Visit each clause to check if an invalid aggregator witness is used
+    // Check whether there is the use of a witness in
+    // an aggregate where it doesn't make sense to use it, i.e.
+    // count, sum, mean
     visitDepthFirst(program, [&](const Clause& clause) {
-        // Body literals of the clause to check
-        std::vector<Literal*> bodyLiterals = clause.getBodyLiterals();
-
-        // Add in all head variables as new ungrounded body literals
-        auto headVariables = mk<Atom>("*");
-        visitDepthFirst(*clause.getHead(),
-                [&](const ast::Variable& var) { headVariables->addArgument(souffle::clone(&var)); });
-        auto headNegation = mk<Negation>(std::move(headVariables));
-        bodyLiterals.push_back(headNegation.get());
-
-        // Perform the check
-        std::set<Own<Argument>> groundedArguments;
-        for (auto&& invalidArgument : usesInvalidWitness(tu, bodyLiterals, groundedArguments)) {
-            report.addError(
-                    "Witness problem: argument grounded by an aggregator's inner scope is used ungrounded in "
-                    "outer scope",
-                    invalidArgument);
-        }
+        visitDepthFirst(clause, [&](const Aggregator& agg) {
+            for (auto&& invalidArgument : usesInvalidWitness(tu, clause, agg)) {
+                report.addError(
+                        "Witness problem: argument grounded by an aggregator's inner scope is used "
+                        "ungrounded in "
+                        "outer scope in a count/sum/mean aggregate",
+                        invalidArgument);
+            }
+        });
     });
 }
 

@@ -301,11 +301,11 @@ void Engine::generateIR() {
     const ram::Program& program = tUnit.getProgram();
     if (subroutine.empty()) {
         for (const auto& sub : program.getSubroutines()) {
-            subroutine.push_back(generator.generateTree(*sub.second, program));
+            subroutine.push_back(generator.generateTree(*sub.second));
         }
     }
     if (main == nullptr) {
-        main = generator.generateTree(program.getMain(), program);
+        main = generator.generateTree(program.getMain());
     }
 }
 
@@ -1200,8 +1200,8 @@ RamDomain Engine::evalExistenceCheck(
     constexpr size_t Arity = Rel::Arity;
     size_t viewPos = shadow.getViewId();
 
-    if (profileEnabled && !cur.getRelation().isTemp()) {
-        reads[cur.getRelation().getName()]++;
+    if (profileEnabled && !shadow.isTemp()) {
+        reads[shadow.getRelationName()]++;
     }
 
     const auto& superInfo = shadow.getSuperInst();

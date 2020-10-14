@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ram/Relation.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <map>
 #include <vector>
@@ -29,7 +30,6 @@ class Node;
 namespace souffle::ram {
 class Operation;
 class Condition;
-class RelationReference;
 class Statement;
 }  // namespace souffle::ram
 
@@ -70,7 +70,7 @@ private:
     Own<ast::Clause> getReorderedClause(const ast::Clause& clause, const int version) const;
 
     void indexValues(const ast::Node* curNode, const std::vector<ast::Argument*>& curNodeArgs,
-            std::map<const ast::Node*, int>& nodeLevel, ram::RelationReference* relation);
+            std::map<const ast::Node*, int>& nodeLevel, const ram::Relation* relation);
 
     void createValueIndex(const ast::Clause& clause);
 };
