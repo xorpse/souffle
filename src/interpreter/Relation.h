@@ -19,6 +19,7 @@
 #include "interpreter/Index.h"
 #include "ram/analysis/Index.h"
 #include "souffle/RamTypes.h"
+#include "souffle/SouffleInterface.h"
 #include <cstddef>
 #include <cstdint>
 #include <deque>
@@ -39,9 +40,11 @@ namespace souffle::interpreter {
  * execution.
  */
 struct RelationWrapper {
+    using arity_type = souffle::Relation::arity_type;
+
 public:
-    RelationWrapper(size_t arity, size_t auxiliaryArity, std::string relName)
-            : arity(arity), auxiliaryArity(auxiliaryArity), relName(std::move(relName)) {}
+    RelationWrapper(arity_type arity, arity_type auxiliaryArity, std::string relName)
+            : relName(std::move(relName)), arity(arity), auxiliaryArity(auxiliaryArity) {}
 
     virtual ~RelationWrapper() = default;
 
@@ -113,11 +116,11 @@ public:
         return relName;
     }
 
-    size_t getArity() const {
+    arity_type getArity() const {
         return arity;
     }
 
-    size_t getAuxiliaryArity() const {
+    arity_type getAuxiliaryArity() const {
         return auxiliaryArity;
     }
 
@@ -138,14 +141,10 @@ public:
     virtual IndexViewPtr createView(const size_t&) const = 0;
 
 protected:
-    // Arity of the relation
-    size_t arity;
-
-    // Number of height parameters of relation
-    size_t auxiliaryArity;
-
-    // Relation name
     std::string relName;
+
+    arity_type arity;
+    arity_type auxiliaryArity;
 };
 
 /**

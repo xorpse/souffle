@@ -40,6 +40,9 @@ class tuple;
  * Object-oriented wrapper class for Souffle's templatized relations.
  */
 class Relation {
+public:
+    using arity_type = size_t;
+
 protected:
     /**
      * Abstract iterator class.
@@ -177,7 +180,7 @@ public:
          *
          * @param arg An iterator_base class pointer
          */
-        iterator(iterator_base* arg) : iter(arg) {}
+        iterator(Own<iterator_base> it) : iter(std::move(it)) {}
 
         /**
          * Destructor.
@@ -221,6 +224,20 @@ public:
         iterator& operator++() {
             ++(*iter);
             return *this;
+        }
+
+        /**
+         * Overload the "++" operator.
+         *
+         * Copies the iterator, increments itself, and returns the (pre-increment) copy.
+         * WARNING: Expensive due to copy! Included for API compatibility.
+         *
+         * @return Pre-increment copy of `this`.
+         */
+        iterator operator++(int) {
+            auto cpy = *this;
+            ++(*this);
+            return cpy;
         }
 
         /**
@@ -333,18 +350,31 @@ public:
      * Return the arity of a relation.
      * For example for a tuple (1 2) the arity is 2 and for a tuple (1 2 3) the arity is 3.
      *
-     * @return Arity of a relation (size_t)
+     * @return Arity of a relation (`arity_type`)
      */
-    virtual size_t getArity() const = 0;
+    virtual arity_type getArity() const = 0;
 
     /**
      * Return the number of auxiliary attributes. Auxiliary attributes
      * are used for provenance and and other alternative evaluation
      * strategies. They are stored as the last attributes of a tuple.
      *
-     * @return Number of auxiliary attributes of a relation (size_t)
+     * @return Number of auxiliary attributes of a relation (`arity_type`)
      */
-    virtual size_t getAuxiliaryArity() const = 0;
+    virtual arity_type getAuxiliaryArity() const = 0;
+
+    /**
+     * Return the number of non-auxiliary attributes.
+     * Auxiliary attributes are used for provenance and and other alternative
+     * evaluation strategies.
+     * They are stored as the last attributes of a tuple.
+     *
+     * @return Number of non-auxiliary attributes of a relation (`arity_type`)
+     */
+    arity_type getPrimaryArity() const {
+        assert(getAuxiliaryArity() <= getArity());
+        return getArity() - getAuxiliaryArity();
+    }
 
     /**
      * Get the symbol table of a relation.
@@ -374,7 +404,7 @@ public:
         }
 
         std::string signature = "<" + std::string(getAttrType(0));
-        for (size_t i = 1; i < getArity(); i++) {
+        for (arity_type i = 1; i < getArity(); i++) {
             signature += "," + std::string(getAttrType(i));
         }
         signature += ">";
@@ -474,7 +504,7 @@ public:
      *
      * @return the number of elements in the tuple (size_t).
      */
-    size_t size() const {
+    Relation::arity_type size() const {
         return array.size();
     }
 
@@ -694,21 +724,21 @@ protected:
      * otherwise will add to internalRelations. (a relation could be both input and output at the same time.)
      *
      * @param name the name of the relation (std::string)
-     * @param rel a pointer to the relation (std::string)
+     * @param rel a reference to the relation
      * @param isInput a bool argument, true if the relation is a input relation, else false (bool)
      * @param isOnput a bool argument, true if the relation is a ouput relation, else false (bool)
      */
-    void addRelation(const std::string& name, Relation* rel, bool isInput, bool isOutput) {
-        relationMap[name] = rel;
-        allRelations.push_back(rel);
+    void addRelation(const std::string& name, Relation& rel, bool isInput, bool isOutput) {
+        relationMap[name] = &rel;
+        allRelations.push_back(&rel);
         if (isInput) {
-            inputRelations.push_back(rel);
+            inputRelations.push_back(&rel);
         }
         if (isOutput) {
-            outputRelations.push_back(rel);
+            outputRelations.push_back(&rel);
         }
         if (!isInput && !isOutput) {
-            internalRelations.push_back(rel);
+            internalRelations.push_back(&rel);
         }
     }
 

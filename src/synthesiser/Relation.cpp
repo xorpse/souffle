@@ -9,6 +9,7 @@
 #include "synthesiser/Relation.h"
 #include "RelationTag.h"
 #include "ram/analysis/Index.h"
+#include "souffle/SouffleInterface.h"
 #include "souffle/utility/StreamUtil.h"
 #include <algorithm>
 #include <cassert>
@@ -193,6 +194,7 @@ void DirectRelation::generateTypeStruct(std::ostream& out) {
 
     // struct definition
     out << "struct " << getTypeName() << " {\n";
+    out << "static constexpr Relation::arity_type Arity = " << arity << ";\n";
 
     // stored tuple type
     out << "using t_tuple = Tuple<RamDomain, " << arity << ">;\n";
@@ -562,6 +564,7 @@ void IndirectRelation::generateTypeStruct(std::ostream& out) {
 
     // struct definition
     out << "struct " << getTypeName() << " {\n";
+    out << "static constexpr Relation::arity_type Arity = " << arity << ";\n";
 
     // stored tuple type
     out << "using t_tuple = Tuple<RamDomain, " << arity << ">;\n";
@@ -905,6 +908,7 @@ void BrieRelation::generateTypeStruct(std::ostream& out) {
 
     // struct definition
     out << "struct " << getTypeName() << " {\n";
+    out << "static constexpr Relation::arity_type Arity = " << arity << ";\n";
 
     // define trie structures
     for (size_t i = 0; i < inds.size(); i++) {
@@ -1150,15 +1154,17 @@ std::string EqrelRelation::getTypeName() {
 
 /** Generate type struct of a eqrel relation */
 void EqrelRelation::generateTypeStruct(std::ostream& out) {
+    constexpr souffle::Relation::arity_type arity = 2;
     const auto& inds = getIndices();
     size_t numIndexes = inds.size();
     std::map<MinIndexSelection::LexOrder, int> indexToNumMap;
 
     // struct definition
     out << "struct " << getTypeName() << " {\n";
+    out << "static constexpr Relation::arity_type Arity = " << arity << ";\n";
 
     // eqrel is only for binary relations
-    out << "using t_tuple = Tuple<RamDomain, 2>;\n";
+    out << "using t_tuple = Tuple<RamDomain, " << arity << ">;\n";
     out << "using t_ind_" << masterIndex << " = EquivalenceRelation<t_tuple>;\n";
     out << "t_ind_" << masterIndex << " ind_" << masterIndex << ";\n";
 
@@ -1259,7 +1265,6 @@ void EqrelRelation::generateTypeStruct(std::ostream& out) {
     out << "}\n";
 
     // lowerUpperRange methods, one for each of the 4 possible search patterns
-    size_t arity = 2;
     for (int i = 1; i < 4; i++) {
         SearchSignature s(arity);
         // if the bit is set then set it in the search signature
