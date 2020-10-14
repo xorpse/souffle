@@ -1,19 +1,19 @@
-// clang-format off
 #pragma once
 
 #if __cplusplus >= 202000L
 
-#include <span> // use std lib impl
+#include <span>  // use std lib impl
 
 namespace souffle {
-    constexpr auto dynamic_extent = std::dynamic_extent;
+constexpr auto dynamic_extent = std::dynamic_extent;
 
-    template<typename A, size_t E = std::dynamic_extent>
-    using span = std::span<A, E>;
-}
+template <typename A, size_t E = std::dynamic_extent>
+using span = std::span<A, E>;
+}  // namespace souffle
 
 #else
 
+// clang-format off
 /*
 This is an implementation of C++20's std::span
 http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf
@@ -626,11 +626,13 @@ public:
 
 #endif // TCB_SPAN_HPP_INCLUDED
 
-namespace souffle {
-    constexpr auto dynamic_extent = tcb::dynamic_extent;
-
-    template<typename A, size_t E = tcb::dynamic_extent>
-    using span = tcb::span<A, E>;
-}
 // clang-format on
+
+namespace souffle {
+constexpr auto dynamic_extent = tcb::dynamic_extent;
+
+template <typename A, size_t E = tcb::dynamic_extent>
+using span = tcb::span<A, E>;
+}  // namespace souffle
+
 #endif
