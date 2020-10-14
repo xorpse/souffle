@@ -2026,7 +2026,7 @@ public:
     }
 
     iterator find(const_entry_span_type entry, op_context& ctxt) const {
-        auto range = getBoundaries<Dim>(entry, ctxt);
+        auto range = impl().template getBoundaries<Dim>(entry, ctxt);
         return range.empty() ? range.end() : range.begin();
     }
 
