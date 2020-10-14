@@ -21,6 +21,7 @@
 #include <functional>
 #include <iostream>
 #include <system_error>
+#include "souffle/utility/span.h"
 
 namespace souffle {
 
@@ -93,6 +94,9 @@ struct Tuple {
         }
         return out << tuple.data[arity - 1] << "]";
     }
+
+    operator span<Domain, _arity>() { return {data}; }
+    operator span<const Domain, _arity>() { return {data}; }
 };
 
 /**
@@ -160,6 +164,9 @@ struct Tuple<Domain, 0> {
         }
         return out << tuple.data[arity - 1] << "]";
     }
+
+    operator span<Domain, 0>() { return {}; }
+    operator span<const Domain, 0>() { return {}; }
 };
 }  // end of namespace souffle
 

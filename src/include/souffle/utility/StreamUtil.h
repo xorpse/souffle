@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "souffle/utility/ContainerUtil.h"
+#include "souffle/utility/span.h"
 
 // -------------------------------------------------------------------------------
 //                           General Print Utilities
@@ -206,6 +207,15 @@ std::enable_if_t<JoinShouldDeref<T>, detail::joined_sequence<Iter, detail::print
 namespace std {
 
 /**
+ * Enables the generic printing of `array`s assuming their element types
+ * are printable.
+ */
+template <typename T, size_t E>
+ostream& operator<<(ostream& out, const array<T, E>& v) {
+    return out << "[" << souffle::join(v) << "]";
+}
+
+/**
  * Introduces support for printing pairs as long as their components can be printed.
  */
 template <typename A, typename B>
@@ -219,6 +229,15 @@ ostream& operator<<(ostream& out, const pair<A, B>& p) {
  */
 template <typename T, typename A>
 ostream& operator<<(ostream& out, const vector<T, A>& v) {
+    return out << "[" << souffle::join(v) << "]";
+}
+
+/**
+ * Enables the generic printing of `span`s assuming their element types
+ * are printable.
+ */
+template <typename T, size_t E>
+ostream& operator<<(ostream& out, const souffle::span<T, E>& v) {
     return out << "[" << souffle::join(v) << "]";
 }
 
