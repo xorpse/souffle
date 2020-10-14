@@ -117,6 +117,7 @@ namespace souffle::synthesiser {
 using json11::Json;
 using ram::analysis::IndexAnalysis;
 using namespace ram;
+using namespace stream_write_qualified_char_as_number;
 
 /** Lookup frequency counter */
 unsigned Synthesiser::lookupFreqIdx(const std::string& txt) {

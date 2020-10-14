@@ -21,6 +21,7 @@
 
 namespace souffle::synthesiser {
 
+using namespace stream_write_qualified_char_as_number;
 using namespace ram;
 using ram::analysis::MinIndexSelection;
 using ram::analysis::SearchSignature;

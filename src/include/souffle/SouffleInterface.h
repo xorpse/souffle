@@ -41,7 +41,8 @@ class tuple;
  */
 class Relation {
 public:
-    using arity_type = size_t;
+    // you have bigger fish to fry if you have > 255 attributes
+    using arity_type = uint8_t;
 
 protected:
     /**

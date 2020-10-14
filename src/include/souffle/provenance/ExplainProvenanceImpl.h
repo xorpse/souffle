@@ -43,7 +43,11 @@
 
 namespace souffle {
 
+using namespace stream_write_qualified_char_as_number;
+
 class ExplainProvenanceImpl : public ExplainProvenance {
+    using arity_type = Relation::arity_type;
+
 public:
     ExplainProvenanceImpl(SouffleProgram& prog) : ExplainProvenance(prog) {
         setup();
@@ -522,7 +526,7 @@ public:
             }
 
             std::vector<RamDomain> currentTuple;
-            for (size_t i = 0; i < rel->getArity() - rel->getAuxiliaryArity(); i++) {
+            for (arity_type i = 0; i < rel->getPrimaryArity(); i++) {
                 RamDomain n;
                 if (*rel->getAttrType(i) == 's') {
                     std::string s;
@@ -616,10 +620,8 @@ public:
                 return;
             }
             // arity error
-            if (relation->getArity() - relation->getAuxiliaryArity() != rel.second.size()) {
-                std::cout << "<" + rel.first << "> has arity of "
-                          << std::to_string(relation->getArity() - relation->getAuxiliaryArity())
-                          << std::endl;
+            if (relation->getPrimaryArity() != rel.second.size()) {
+                std::cout << "<" + rel.first << "> has arity of " << relation->getPrimaryArity() << std::endl;
                 return;
             }
 
@@ -741,7 +743,7 @@ private:
             bool match = true;
             std::vector<RamDomain> currentTuple;
 
-            for (size_t i = 0; i < rel->getArity() - rel->getAuxiliaryArity(); i++) {
+            for (arity_type i = 0; i < rel->getPrimaryArity(); i++) {
                 RamDomain n;
                 if (*rel->getAttrType(i) == 's') {
                     std::string s;
