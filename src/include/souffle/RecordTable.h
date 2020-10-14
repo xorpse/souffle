@@ -59,7 +59,7 @@ public:
 
     /** @brief converts record to a record reference */
     // TODO (b-scholz): replace vector<RamDomain> with something more memory-frugal
-    RamDomain pack(const std::vector<RamDomain>& vector) {
+    RamDomain pack(std::vector<RamDomain> vector) {
         RamDomain index;
 #pragma omp critical(record_pack)
         {
@@ -69,7 +69,7 @@ public:
             } else {
 #pragma omp critical(record_unpack)
                 {
-                    indexToRecord.push_back(vector);
+                    indexToRecord.push_back(std::move(vector));
                     index = static_cast<RamDomain>(indexToRecord.size()) - 1;
                     recordToIndex[vector] = index;
 
