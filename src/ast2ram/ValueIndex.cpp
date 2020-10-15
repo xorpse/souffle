@@ -35,9 +35,8 @@ void ValueIndex::addVarReference(const ast::Variable& var, const Location& l) {
     locs.insert(l);
 }
 
-void ValueIndex::addVarReference(
-        const ast::Variable& var, int ident, int pos, Own<ram::RelationReference> rel) {
-    addVarReference(var, Location({ident, pos, std::move(rel)}));
+void ValueIndex::addVarReference(const ast::Variable& var, int ident, int pos, std::string rel) {
+    addVarReference(var, Location({ident, pos, rel}));
 }
 
 bool ValueIndex::isDefined(const ast::Variable& var) const {
@@ -77,9 +76,8 @@ void ValueIndex::setRecordDefinition(const ast::RecordInit& init, const Location
     record_definitions.insert({&init, l});
 }
 
-void ValueIndex::setRecordDefinition(
-        const ast::RecordInit& init, int ident, int pos, Own<ram::RelationReference> rel) {
-    setRecordDefinition(init, Location({ident, pos, std::move(rel)}));
+void ValueIndex::setRecordDefinition(const ast::RecordInit& init, int ident, int pos, std::string rel) {
+    setRecordDefinition(init, Location({ident, pos, rel}));
 }
 
 const Location& ValueIndex::getDefinitionPoint(const ast::RecordInit& init) const {

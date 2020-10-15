@@ -1,0 +1,28 @@
+Error: Subset type S1List can't be derived from record type List in file type_system15.dl at line 15
+.type S1List <: List
+^--------------------
+Error: Ambiguous record in file type_system15.dl at line 20
+RecordSubtypes([1, [1, nil]], [2, nil], [3, nil]).
+------------------------------^--------------------
+Error: Nil constant used as a non-record in file type_system15.dl at line 20
+RecordSubtypes([1, [1, nil]], [2, nil], [3, nil]).
+----------------------------------^----------------
+Error: Ambiguous record in file type_system15.dl at line 20
+RecordSubtypes([1, [1, nil]], [2, nil], [3, nil]).
+----------------------------------------^----------
+Error: Nil constant used as a non-record in file type_system15.dl at line 20
+RecordSubtypes([1, [1, nil]], [2, nil], [3, nil]).
+--------------------------------------------^------
+Error: Ambiguous record in file type_system15.dl at line 21
+RecordSubtypes([x, z], [y, z], z) :- RecordSubtypes([x, _], [y, _], z).
+-----------------------^------------------------------------------------
+Error: Unable to deduce type for variable y in file type_system15.dl at line 21
+RecordSubtypes([x, z], [y, z], z) :- RecordSubtypes([x, _], [y, _], z).
+------------------------^-----------------------------------------------
+Error: Ambiguous record in file type_system15.dl at line 21
+RecordSubtypes([x, z], [y, z], z) :- RecordSubtypes([x, _], [y, _], z).
+------------------------------------------------------------^-----------
+Error: Unable to deduce type for variable y in file type_system15.dl at line 21
+RecordSubtypes([x, z], [y, z], z) :- RecordSubtypes([x, _], [y, _], z).
+-------------------------------------------------------------^----------
+9 errors generated, evaluation aborted

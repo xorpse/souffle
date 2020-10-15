@@ -101,8 +101,11 @@ protected:
         return TupleOperation::equal(node) && op == other.op && equal_targets(args, other.args);
     }
 
+    /* Arguments */
     VecOwn<Expression> args;
-    NestedIntrinsicOp op;
+
+    /* Operator */
+    const NestedIntrinsicOp op;
 };
 
 }  // namespace souffle::ram

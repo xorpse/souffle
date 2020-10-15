@@ -17,6 +17,7 @@
 #include "ram/Program.h"
 #include "ram/TranslationUnit.h"
 #include "ram/analysis/Index.h"
+#include "ram/analysis/Relation.h"
 #include "ram/transform/Transformer.h"
 #include <string>
 
@@ -82,10 +83,12 @@ public:
 protected:
     bool transform(TranslationUnit& translationUnit) override {
         idxAnalysis = translationUnit.getAnalysis<analysis::IndexAnalysis>();
+        relAnalysis = translationUnit.getAnalysis<analysis::RelationAnalysis>();
         return transformIndexToFilter(translationUnit.getProgram());
     }
 
     analysis::IndexAnalysis* idxAnalysis;
+    analysis::RelationAnalysis* relAnalysis;
 };
 
 }  // namespace souffle::ram::transform

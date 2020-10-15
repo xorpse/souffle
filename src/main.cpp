@@ -29,6 +29,7 @@
 #include "ast/transform/ExecutionPlanChecker.h"
 #include "ast/transform/Fixpoint.h"
 #include "ast/transform/FoldAnonymousRecords.h"
+#include "ast/transform/GroundWitnesses.h"
 #include "ast/transform/GroundedTermsChecker.h"
 #include "ast/transform/IOAttributes.h"
 #include "ast/transform/IODefaults.h"
@@ -56,6 +57,7 @@
 #include "ast/transform/ResolveAliases.h"
 #include "ast/transform/ResolveAnonymousRecordAliases.h"
 #include "ast/transform/SemanticChecker.h"
+#include "ast/transform/SimplifyAggregateTargetExpression.h"
 #include "ast/transform/UniqueAggregationVariables.h"
 #include "ast2ram/AstToRamTranslator.h"
 #include "config.h"
@@ -479,12 +481,15 @@ int main(int argc, char** argv) {
     auto pipeline = mk<ast::transform::PipelineTransformer>(mk<ast::transform::ComponentChecker>(),
             mk<ast::transform::ComponentInstantiationTransformer>(),
             mk<ast::transform::IODefaultsTransformer>(),
+            mk<ast::transform::SimplifyAggregateTargetExpressionTransformer>(),
             mk<ast::transform::UniqueAggregationVariablesTransformer>(),
             mk<ast::transform::FixpointTransformer>(mk<ast::transform::PipelineTransformer>(
                     mk<ast::transform::ResolveAnonymousRecordAliasesTransformer>(),
                     mk<ast::transform::FoldAnonymousRecords>())),
             mk<ast::transform::PolymorphicObjectsTransformer>(), mk<ast::transform::SemanticChecker>(),
-            mk<ast::transform::ADTtoRecordsTransformer>(), mk<ast::transform::NormaliseRangesTransformer>(),
+            mk<ast::transform::ADTtoRecordsTransformer>(), mk<ast::transform::GroundWitnessesTransformer>(),
+            mk<ast::transform::UniqueAggregationVariablesTransformer>(),
+            mk<ast::transform::NormaliseRangesTransformer>(),
             mk<ast::transform::MaterializeSingletonAggregationTransformer>(),
             mk<ast::transform::FixpointTransformer>(
                     mk<ast::transform::MaterializeAggregationQueriesTransformer>()),
