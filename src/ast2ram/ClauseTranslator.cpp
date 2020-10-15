@@ -475,18 +475,14 @@ void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
     });
 
     // add range-introductions
-    for (const auto* lit : clause.getBodyLiterals()) {
-        if (const auto* constr = dynamic_cast<const ast::BinaryConstraint*>(lit)) {
-            if (constr->getOperator() != BinaryConstraintOp::EQ) continue;
-            const auto* lhs = dynamic_cast<const ast::Variable*>(constr->getLHS());
-            const auto* rhs = dynamic_cast<const ast::IntrinsicFunctor*>(constr->getRHS());
-            if (lhs == nullptr || rhs == nullptr || !ast::analysis::FunctorAnalysis::isMultiResult(*rhs)) {
-                continue;
-            }
-            int rangeLoc = level++;
-            valueIndex->addVarReference(*lhs, valueIndex->getGeneratorLoc(*rhs));
-        }
-    }
+    visitDepthFirst(clause, [&](const ast::BinaryConstraint& bc) {
+        if (bc.getOperator() != BinaryConstraintOp::EQ) return;
+        const auto* lhs = dynamic_cast<const ast::Variable*>(bc.getLHS());
+        const auto* rhs = dynamic_cast<const ast::IntrinsicFunctor*>(bc.getRHS());
+        if (lhs == nullptr || rhs == nullptr) return;
+        if (!ast::analysis::FunctorAnalysis::isMultiResult(*rhs)) return;
+        valueIndex->addVarReference(*lhs, valueIndex->getGeneratorLoc(*rhs));
+    });
 }
 
 }  // namespace souffle::ast2ram
