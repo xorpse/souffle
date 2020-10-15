@@ -142,8 +142,8 @@ souffle_sources = \
         ast/transform/MinimiseProgram.h                    \
         ast/transform/NameUnnamedVariables.cpp             \
         ast/transform/NameUnnamedVariables.h               \
-        ast/transform/NormaliseRanges.cpp                  \
-        ast/transform/NormaliseRanges.h                    \
+        ast/transform/NormaliseMultiResultFunctors.cpp     \
+        ast/transform/NormaliseMultiResultFunctors.h       \
         ast/transform/Null.h                               \
         ast/transform/PartitionBodyLiterals.cpp            \
         ast/transform/PartitionBodyLiterals.h              \

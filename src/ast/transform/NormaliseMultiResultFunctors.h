@@ -8,9 +8,9 @@
 
 /************************************************************************
  *
- * @file NormaliseRanges.h
+ * @file NormaliseMultiResultFunctors.h
  *
- * Transform pass to normalise all appearances of ranges.
+ * Transform pass to normalise all appearances of multi-result functors.
  *
  ***********************************************************************/
 
@@ -21,17 +21,17 @@
 namespace souffle::ast::transform {
 
 /** Uniquely names all appearances of ranges */
-class NormaliseRangesTransformer : public Transformer {
+class NormaliseMultiResultFunctorsTransformer : public Transformer {
 public:
     std::string getName() const override {
-        return "NormaliseRangesTransformer";
+        return "NormaliseMultiResultFunctorsTransformer";
     }
 
 private:
     bool transform(TranslationUnit& translationUnit) override;
 
-    NormaliseRangesTransformer* clone() const override {
-        return new NormaliseRangesTransformer();
+    NormaliseMultiResultFunctorsTransformer* clone() const override {
+        return new NormaliseMultiResultFunctorsTransformer();
     }
 };
 

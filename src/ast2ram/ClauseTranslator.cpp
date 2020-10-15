@@ -474,7 +474,7 @@ void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
         }
     });
 
-    // add range-introductions
+    // add multi-result functor introductions
     visitDepthFirst(clause, [&](const ast::BinaryConstraint& bc) {
         if (bc.getOperator() != BinaryConstraintOp::EQ) return;
         const auto* lhs = dynamic_cast<const ast::Variable*>(bc.getLHS());
