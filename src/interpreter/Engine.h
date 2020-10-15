@@ -55,7 +55,7 @@ public:
     Engine(ram::TranslationUnit& tUnit)
             : profileEnabled(Global::config().has("profile")),
               numOfThreads(std::stoi(Global::config().get("jobs"))), tUnit(tUnit),
-              isa(tUnit.getAnalysis<ram::analysis::IndexAnalysis>()), generator(isa) {
+              isa(tUnit.getAnalysis<ram::analysis::IndexAnalysis>()), generator(tUnit.getProgram(), isa) {
 #ifdef _OPENMP
         if (numOfThreads > 0) {
             omp_set_num_threads(numOfThreads);

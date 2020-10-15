@@ -71,7 +71,7 @@ jobs:
       create:
         name: bionic_clang
         paths: .
-    script: docker exec souf /bin/sh -c "export CXX=g++ && .travis/init_test.sh '--enable-swig'"
+    script: docker exec souf /bin/sh -c "export CXX=clang++ && .travis/init_test.sh '--enable-swig'"
 
 # MSVC souffle-interface
   - stage: Testing
@@ -122,27 +122,27 @@ jobs:
 # Testing stage for Evaluation tests without OpenMP (,-c)
   - stage: Testing
     <<: *osxclang
-    name: "OSX clang fast evaluation tests without OMP"
+    name: "OSX clang evaluation tests without OMP"
     before_script: ".travis/init_test.sh --enable-swig"
     env:
-    - SOUFFLE_CATEGORY=Swig,FastEvaluation SOUFFLE_CONFS=",-c"
+    - SOUFFLE_CATEGORY=Swig,Evaluation SOUFFLE_CONFS=",-c"
 
 # Testing stage for Evaluation tests (-j8,-c -j8)
   - stage: Testing
-    name: "Linux gcc fast evaluation tests"
+    name: "Linux gcc evaluation tests"
     <<: *docker
     workspaces:
       use: bionic_gcc
     env:
-    - SOUFFLE_CATEGORY=Swig,FastEvaluation SOUFFLE_CONFS="-j8,-c -j8"
+    - SOUFFLE_CATEGORY=Swig,Evaluation SOUFFLE_CONFS="-j8,-c -j8"
     script: docker exec -e SOUFFLE_CATEGORY -e SOUFFLE_CONFS souf /bin/sh -c ".travis/run_test.sh"
   - stage: Testing
-    name: "Linux clang fast evaluation tests"
+    name: "Linux clang evaluation tests"
     <<: *docker
     workspaces:
       use: bionic_clang
     env:
-    - SOUFFLE_CATEGORY=Swig,FastEvaluation SOUFFLE_CONFS="-j8,-c -j8"
+    - SOUFFLE_CATEGORY=Swig,Evaluation SOUFFLE_CONFS="-j8,-c -j8"
     script: docker exec -e SOUFFLE_CATEGORY -e SOUFFLE_CONFS souf /bin/sh -c ".travis/run_test.sh"
 
 # Testing stage with 64bit RamDomains (-j8,-c -j8)
@@ -165,12 +165,12 @@ jobs:
     script:
       - docker exec -e SOUFFLE_CATEGORY -e SOUFFLE_CONFS souf /bin/sh -c ".travis/run_test.sh"
   - stage: Testing
-    name: "Linux gcc 64-bit fast evaluation tests"
+    name: "Linux gcc 64-bit evaluation tests"
     <<: *docker
     workspaces:
       use: bionic_gcc_64
     env:
-    - SOUFFLE_CATEGORY=FastEvaluation SOUFFLE_CONFS="-j8,-c -j8"
+    - SOUFFLE_CATEGORY=Evaluation SOUFFLE_CONFS="-j8,-c -j8"
     script:
       - docker exec -e SOUFFLE_CATEGORY -e SOUFFLE_CONFS souf /bin/sh -c ".travis/run_test.sh"
 

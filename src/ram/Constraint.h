@@ -94,7 +94,7 @@ protected:
     }
 
     /** Operator */
-    BinaryConstraintOp op;
+    const BinaryConstraintOp op;
 
     /** Left-hand side of constraint*/
     Own<Expression> lhs;

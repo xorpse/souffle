@@ -63,11 +63,11 @@ protected:
     }
 
 protected:
-    /** logging statement */
+    /** Logging statement */
     Own<Statement> statement;
 
-    /** logging message */
-    std::string message;
+    /** Logging message */
+    const std::string message;
 };
 
 }  // namespace souffle::ram

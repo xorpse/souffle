@@ -69,7 +69,7 @@ protected:
     }
 
 protected:
-    /** ordered list of RAM statements */
+    /** Ordered list of RAM statements */
     VecOwn<Statement> statements;
 };
 
