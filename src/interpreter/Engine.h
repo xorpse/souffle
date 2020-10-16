@@ -130,7 +130,7 @@ private:
     // -- Defines template for specialized interpreter operation -- */
 private:
     template <typename Rel>
-    RamDomain evalExistenceCheck(const ram::ExistenceCheck& cur, const ExistenceCheck& shadow, Context& ctxt);
+    RamDomain evalExistenceCheck(const ExistenceCheck& shadow, Context& ctxt);
 
     template <typename Rel>
     RamDomain evalProvenanceExistenceCheck(const ProvenanceExistenceCheck& shadow, Context& ctxt);

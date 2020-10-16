@@ -761,9 +761,9 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
         FOR_EACH(RELATION_SIZE)
 #undef RELATION_SIZE
 
-#define EXISTENCE_CHECK(Structure, Arity, ...)                 \
-    CASE(ExistenceCheck, Structure, Arity)                     \
-        return evalExistenceCheck<RelType>(cur, shadow, ctxt); \
+#define EXISTENCE_CHECK(Structure, Arity, ...)            \
+    CASE(ExistenceCheck, Structure, Arity)                \
+        return evalExistenceCheck<RelType>(shadow, ctxt); \
     ESAC(ExistenceCheck)
 
         FOR_EACH(EXISTENCE_CHECK)
@@ -1195,8 +1195,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 }
 
 template <typename Rel>
-RamDomain Engine::evalExistenceCheck(
-        const ram::ExistenceCheck& cur, const ExistenceCheck& shadow, Context& ctxt) {
+RamDomain Engine::evalExistenceCheck(const ExistenceCheck& shadow, Context& ctxt) {
     constexpr size_t Arity = Rel::Arity;
     size_t viewPos = shadow.getViewId();
 

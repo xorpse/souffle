@@ -28,6 +28,7 @@
 #include "ast/Relation.h"
 #include "ast/TranslationUnit.h"
 #include "ast/Variable.h"
+#include "ast/analysis/Functor.h"
 #include "ast/utility/NodeMapper.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
@@ -212,6 +213,13 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
     // tests whether something is a record
     auto isRec = [&](const Argument& arg) { return isA<RecordInit>(&arg); };
 
+    // tests whether something is a multi-result functor
+    auto isMultiResultFunctor = [&](const Argument& arg) {
+        const auto* inf = dynamic_cast<const IntrinsicFunctor*>(&arg);
+        if (inf == nullptr) return false;
+        return analysis::FunctorAnalysis::isMultiResult(*inf);
+    };
+
     // tests whether a value `a` occurs in a term `b`
     auto occurs = [](const Argument& a, const Argument& b) {
         bool res = false;
@@ -318,20 +326,25 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
         const auto& v = static_cast<const ast::Variable&>(lhs);
         const Argument& t = rhs;
 
-        // #6:  v occurs in t   => skip
+        // #6:  t is a multi-result functor => skip
+        if (isMultiResultFunctor(t)) {
+            continue;
+        }
+
+        // #7:  v occurs in t   => skip
         if (occurs(v, t)) {
             continue;
         }
 
         assert(!occurs(v, t));
 
-        // #7:  t is a record   => add mapping
+        // #8:  t is a record   => add mapping
         if (isRec(t)) {
             newMapping(v.getName(), &t);
             continue;
         }
 
-        // #8:  v is already grounded   => skip
+        // #9:  v is already grounded   => skip
         auto pos = baseGroundedVariables.find(v.getName());
         if (pos != baseGroundedVariables.end()) {
             continue;
