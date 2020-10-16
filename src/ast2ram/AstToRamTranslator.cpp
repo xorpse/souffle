@@ -59,6 +59,7 @@
 #include "ast2ram/Location.h"
 #include "ast2ram/ProvenanceClauseTranslator.h"
 #include "ast2ram/ValueIndex.h"
+#include "ast2ram/ValueTranslator.h"
 #include "parser/SrcLocation.h"
 #include "ram/AutoIncrement.h"
 #include "ram/Call.h"
@@ -220,94 +221,7 @@ std::string AstToRamTranslator::getNewRelationName(const ast::Relation* rel) {
 
 Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg, const ValueIndex& index) {
     if (arg == nullptr) return nullptr;
-
-    class ValueTranslator : public ast::Visitor<Own<ram::Expression>> {
-        AstToRamTranslator& translator;
-        const ValueIndex& index;
-
-    public:
-        ValueTranslator(AstToRamTranslator& translator, const ValueIndex& index)
-                : translator(translator), index(index) {}
-
-        Own<ram::Expression> visitVariable(const ast::Variable& var) override {
-            assert(index.isDefined(var) && "variable not grounded");
-            return makeRamTupleElement(index.getDefinitionPoint(var));
-        }
-
-        Own<ram::Expression> visitUnnamedVariable(const ast::UnnamedVariable&) override {
-            return mk<ram::UndefValue>();
-        }
-
-        Own<ram::Expression> visitNumericConstant(const ast::NumericConstant& c) override {
-            assert(c.getType().has_value() && "At this points all constants should have type.");
-
-            switch (*c.getType()) {
-                case ast::NumericConstant::Type::Int:
-                    return mk<ram::SignedConstant>(RamSignedFromString(c.getConstant(), nullptr, 0));
-                case ast::NumericConstant::Type::Uint:
-                    return mk<ram::UnsignedConstant>(RamUnsignedFromString(c.getConstant(), nullptr, 0));
-                case ast::NumericConstant::Type::Float:
-                    return mk<ram::FloatConstant>(RamFloatFromString(c.getConstant()));
-            }
-
-            fatal("unexpected numeric constant type");
-        }
-
-        Own<ram::Expression> visitStringConstant(const ast::StringConstant& c) override {
-            return mk<ram::SignedConstant>(translator.getSymbolTable().lookup(c.getConstant()));
-        }
-
-        Own<ram::Expression> visitNilConstant(const ast::NilConstant&) override {
-            return mk<ram::SignedConstant>(0);
-        }
-
-        Own<ram::Expression> visitIntrinsicFunctor(const ast::IntrinsicFunctor& inf) override {
-            VecOwn<ram::Expression> values;
-            for (const auto& cur : inf.getArguments()) {
-                values.push_back(translator.translateValue(cur, index));
-            }
-
-            if (ast::analysis::FunctorAnalysis::isMultiResult(inf)) {
-                return translator.makeRamTupleElement(index.getGeneratorLoc(inf));
-            } else {
-                return mk<ram::IntrinsicOperator>(inf.getFunctionOp().value(), std::move(values));
-            }
-        }
-
-        Own<ram::Expression> visitUserDefinedFunctor(const ast::UserDefinedFunctor& udf) override {
-            VecOwn<ram::Expression> values;
-            for (const auto& cur : udf.getArguments()) {
-                values.push_back(translator.translateValue(cur, index));
-            }
-            auto returnType = translator.functorAnalysis->getReturnType(&udf);
-            auto argTypes = translator.functorAnalysis->getArgTypes(udf);
-            return mk<ram::UserDefinedOperator>(udf.getName(), argTypes, returnType,
-                    translator.functorAnalysis->isStateful(&udf), std::move(values));
-        }
-
-        Own<ram::Expression> visitCounter(const ast::Counter&) override {
-            return mk<ram::AutoIncrement>();
-        }
-
-        Own<ram::Expression> visitRecordInit(const ast::RecordInit& init) override {
-            VecOwn<ram::Expression> values;
-            for (const auto& cur : init.getArguments()) {
-                values.push_back(translator.translateValue(cur, index));
-            }
-            return mk<ram::PackRecord>(std::move(values));
-        }
-
-        Own<ram::Expression> visitAggregator(const ast::Aggregator& agg) override {
-            // here we look up the location the aggregation result gets bound
-            return translator.makeRamTupleElement(index.getGeneratorLoc(agg));
-        }
-
-        Own<ram::Expression> visitSubroutineArgument(const ast::SubroutineArgument& subArg) override {
-            return mk<ram::SubroutineArgument>(subArg.getNumber());
-        }
-    };
-
-    return ValueTranslator(*this, index)(*arg);
+    return ValueTranslator(*this, index, getSymbolTable())(*arg);
 }
 
 SymbolTable& AstToRamTranslator::getSymbolTable() {
