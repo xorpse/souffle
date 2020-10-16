@@ -507,7 +507,8 @@ public:
      * @return the number of elements in the tuple (size_t).
      */
     Relation::arity_type size() const {
-        return array.size();
+        assert(array.size() <= std::numeric_limits<Relation::arity_type>::max());
+        return Relation::arity_type(array.size());
     }
 
     /**
