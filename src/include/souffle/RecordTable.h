@@ -92,7 +92,7 @@ public:
         for (size_t i = 0; i < arity; i++) {
             tmp[i] = tuple[i];
         }
-        return pack(tmp);
+        return pack(std::move(tmp));
     }
 
     /** @brief convert record reference to a record pointer */
