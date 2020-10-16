@@ -624,7 +624,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
         void visitDebugInfo(const DebugInfo& dbg, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
-            out << "SignalHandler::instance()->setMsg(R\"_(";
+            out << "signalHandler->setMsg(R\"_(";
             out << dbg.getMessage();
             out << ")_\");\n";
 
@@ -671,7 +671,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             visitTupleOperation(pscan, out);
 
             out << "}\n";
-            out << "} catch(std::exception &e) { SignalHandler::instance()->error(e.what());}\n";
+            out << "} catch(std::exception &e) { signalHandler->error(e.what());}\n";
             out << "}\n";
 
             PRINT_END_COMMENT(out);
@@ -752,7 +752,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "break;\n";
             out << "}\n";
             out << "}\n";
-            out << "} catch(std::exception &e) { SignalHandler::instance()->error(e.what());}\n";
+            out << "} catch(std::exception &e) { signalHandler->error(e.what());}\n";
             out << "}\n";
 
             PRINT_END_COMMENT(out);
@@ -818,7 +818,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             visitTupleOperation(piscan, out);
 
             out << "}\n";
-            out << "} catch(std::exception &e) { SignalHandler::instance()->error(e.what());}\n";
+            out << "} catch(std::exception &e) { signalHandler->error(e.what());}\n";
             out << "}\n";
 
             PRINT_END_COMMENT(out);
@@ -898,7 +898,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "break;\n";
             out << "}\n";
             out << "}\n";
-            out << "} catch(std::exception &e) { SignalHandler::instance()->error(e.what());}\n";
+            out << "} catch(std::exception &e) { signalHandler->error(e.what());}\n";
             out << "}\n";
 
             PRINT_END_COMMENT(out);
@@ -2492,32 +2492,38 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     os << "~" << classname << "() {\n";
     os << "}\n";
 
-    os << "private:\n";
     // issue state variables for the evaluation
-    os << "std::string inputDirectory;\n";
-    os << "std::string outputDirectory;\n";
-    os << "bool performIO;\n";
-    os << "std::atomic<RamDomain> ctr{};\n\n";
-    os << "std::atomic<size_t> iter{};\n";
+    //
+    // Improve compile time by storing the signal handler in one loc instead of
+    // emitting thousands of `SignalHandler::instance()`. The volume of calls
+    // makes GVN and register alloc very expensive, even if the call is inlined.
+    os << R"_(
+private:
+std::string             inputDirectory;
+std::string             outputDirectory;
+SignalHandler*          signalHandler {SignalHandler::instance()};
+std::atomic<RamDomain>  ctr {};
+std::atomic<size_t>     iter {};
+bool                    performIO = false;
 
-    os << "void runFunction(std::string inputDirectoryArg = \"\", "
-          "std::string outputDirectoryArg = \"\", bool performIOArg = false) "
-          "{\n";
-
-    os << "this->inputDirectory = inputDirectoryArg;\n";
-    os << "this->outputDirectory = outputDirectoryArg;\n";
-    os << "this->performIO = performIOArg;\n";
-
-    os << "SignalHandler::instance()->set();\n";
-    if (Global::config().has("verbose")) {
-        os << "SignalHandler::instance()->enableLogging();\n";
-    }
+void runFunction(std::string  inputDirectoryArg   = "",
+                 std::string  outputDirectoryArg  = "",
+                 bool         performIOArg        = false) {
+    this->inputDirectory  = std::move(inputDirectoryArg);
+    this->outputDirectory = std::move(outputDirectoryArg);
+    this->performIO       = performIOArg;
 
     // set default threads (in embedded mode)
     // if this is not set, and omp is used, the default omp setting of number of cores is used.
-    os << "#if defined(_OPENMP)\n";
-    os << "if (getNumThreads() > 0) {omp_set_num_threads(getNumThreads());}\n";
-    os << "#endif\n\n";
+#if defined(_OPENMP)
+    if (0 < getNumThreads()) { omp_set_num_threads(getNumThreads()); }
+#endif
+
+    signalHandler->set();
+)_";
+    if (Global::config().has("verbose")) {
+        os << "signalHandler->enableLogging();\n";
+    }
 
     // add actual program body
     os << "// -- query evaluation --\n";
@@ -2559,7 +2565,7 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
         }
     }
 
-    os << "SignalHandler::instance()->reset();\n";
+    os << "signalHandler->reset();\n";
 
     os << "}\n";  // end of runFunction() method
 
