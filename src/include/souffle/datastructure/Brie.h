@@ -2538,12 +2538,14 @@ struct TrieTypes<1u> {
     public:
         iterator_core() = default;  // default end-iterator constructor
 
-        iterator_core(store_iter store_iter, entry_span_type entry) : iter(std::move(store_iter)) {
+        iterator_core(store_iter store_iter, entry_span_type entry)
+                : iter(std::move(store_iter))  // NOLINT : mistaken warning -`store_iter` is not const-qual
+        {
             entry[0] = *iter;
         }
 
         void setIterator(store_iter store_iter) {
-            iter = std::move(store_iter);
+            iter = std::move(store_iter);  // NOLINT : mistaken warning - `store_iter` is not const-qual
         }
 
         store_iter& getIterator() {
