@@ -59,9 +59,18 @@ namespace souffle {
 template <unsigned Dim>
 class Trie;
 
-namespace detail {
+namespace detail::brie {
 
 using tcb::make_span;
+
+template <typename A>
+struct forward_non_output_iterator_traits {
+    using value_type = A;
+    using difference_type = ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag;
+    using pointer = const value_type*;
+    using reference = const value_type&;
+};
 
 template <typename A, size_t arity>
 auto copy(span<A, arity> s) {
@@ -116,10 +125,6 @@ struct default_merge {
         return (a != def()) ? a : b;
     }
 };
-
-}  // end namespace detail
-
-namespace detail {
 
 /**
  * Iterator type for `souffle::SparseArray`.
@@ -275,12 +280,14 @@ private:
     value_type value;
 };
 
-}  // namespace detail
+}  // namespace detail::brie
+
+using namespace detail::brie;
 
 /**
  * A sparse array simulates an array associating to every element
  * of uint32_t an element of a generic type T. Any non-defined element
- * will be default-initialized utilizing the detail::default_factory
+ * will be default-initialized utilizing the detail::brie::default_factory
  * functor.
  *
  * Internally the array is organized as a balanced tree. The leaf
@@ -304,11 +311,10 @@ private:
  *              trie implementation to create a clone of each sub-tree instead
  *              of preserving the original pointer.
  */
-template <typename T, unsigned BITS = 6, typename merge_op = detail::default_merge<T>,
-        typename copy_op = detail::identity<T>>
+template <typename T, unsigned BITS = 6, typename merge_op = default_merge<T>, typename copy_op = identity<T>>
 class SparseArray {
     template <typename A>
-    friend class detail::SparseArrayIter;
+    friend class detail::brie::SparseArrayIter;
 
     using this_t = SparseArray<T, BITS, merge_op, copy_op>;
     using key_type = uint64_t;
@@ -926,10 +932,10 @@ public:
      */
     value_type lookup(index_type i, op_context& ctxt) const {
         // check whether it is empty
-        if (!unsynced.root) return souffle::detail::default_factory<value_type>()();
+        if (!unsynced.root) return default_factory<value_type>()();
 
         // check boundaries
-        if (!inBoundaries(i)) return souffle::detail::default_factory<value_type>()();
+        if (!inBoundaries(i)) return default_factory<value_type>()();
 
         // check context
         if (ctxt.lastNode && ctxt.lastIndex == (i & ~INDEX_MASK)) {
@@ -1063,7 +1069,7 @@ public:
     //                           Iterator
     // ---------------------------------------------------------------------
 
-    using iterator = detail::SparseArrayIter<this_t>;
+    using iterator = SparseArrayIter<this_t>;
 
     /**
      * Obtains an iterator referencing the first non-default element or end in
@@ -1479,7 +1485,7 @@ private:
     }
 };
 
-namespace detail {
+namespace detail::brie {
 
 /**
  * Iterator type for `souffle::SparseArray`. It enumerates the indices set to 1.
@@ -1594,7 +1600,7 @@ private:
     }
 };
 
-}  // namespace detail
+}  // namespace detail::brie
 
 /**
  * A sparse bit-map is a bit map virtually assigning a bit value to every value if the
@@ -1606,7 +1612,7 @@ private:
 template <unsigned BITS = 4>
 class SparseBitMap {
     template <typename A>
-    friend class detail::SparseBitMapIter;
+    friend class detail::brie::SparseBitMapIter;
 
     using this_t = SparseBitMap<BITS>;
 
@@ -1777,7 +1783,7 @@ public:
     //                           Iterator
     // ---------------------------------------------------------------------
 
-    using iterator = detail::SparseBitMapIter<this_t>;
+    using iterator = SparseBitMapIter<this_t>;
 
     /**
      * Obtains an iterator pointing to the first index set to 1. If there
@@ -1890,7 +1896,7 @@ public:
 //                              TRIE
 // ---------------------------------------------------------------------
 
-namespace detail {
+namespace detail::brie {
 
 /**
  * An iterator over the stored entries.
@@ -2365,7 +2371,7 @@ struct fix_lower_bound {
         // attempt to fix the rest
         if (!fix_lower_bound<Dim - 1>()(cur->second->getStore(), iter.getNestedView(), tail(entry))) {
             // if it does not work, since there are no matching elements in this branch, go to next
-            auto sub = detail::copy(entry);
+            auto sub = copy(entry);
             sub[0] += 1;
             for (size_t i = 1; i < Dim; ++i)
                 sub[i] = 0;
@@ -2416,7 +2422,7 @@ struct fix_upper_bound {
         // attempt to fix the rest
         if (!fix_upper_bound<Dim - 1>()(cur->second->getStore(), iter.getNestedView(), tail(entry))) {
             // if it does not work, since there are no matching elements in this branch, go to next
-            auto sub = detail::copy(entry);
+            auto sub = copy(entry);
             sub[0] += 1;
             for (size_t i = 1; i < Dim; ++i)
                 sub[i] = 0;
@@ -2622,18 +2628,18 @@ struct TrieTypes<1u> {
     using iterator = TrieIterator<entry_type, iterator_core>;
 };
 
-}  // namespace detail
+}  // namespace detail::brie
 
 // use an inner class so `TrieN` is fully defined before the recursion, allowing us to use
 // `op_context` in `TrieBase`
 template <unsigned Dim>
-class Trie : public detail::TrieBase<Dim, Trie<Dim>> {
+class Trie : public TrieBase<Dim, Trie<Dim>> {
     template <unsigned N>
     friend class Trie;
 
     // a shortcut for the common base class type
-    using base = detail::TrieBase<Dim, Trie<Dim>>;
-    using types = detail::TrieTypes<Dim>;
+    using base = TrieBase<Dim, Trie<Dim>>;
+    using types = TrieTypes<Dim>;
     using nested_trie_type = typename types::nested_trie_type;
     using store_type = typename types::store_type;
 
@@ -2716,7 +2722,7 @@ public:
         // check context
         if (ctxt.lastNested && ctxt.lastQuery == tuple[0]) {
             base::hint_stats.inserts.addHit();
-            return ctxt.lastNested->insert(detail::tail(tuple), ctxt.nestedCtxt);
+            return ctxt.lastNested->insert(tail(tuple), ctxt.nestedCtxt);
         }
 
         base::hint_stats.inserts.addMiss();
@@ -2748,14 +2754,14 @@ public:
         }
 
         // conduct recursive step
-        return nextPtr->insert(detail::tail(tuple), ctxt.nestedCtxt);
+        return nextPtr->insert(tail(tuple), ctxt.nestedCtxt);
     }
 
     bool contains(const_entry_span_type tuple, op_context& ctxt) const {
         // check context
         if (ctxt.lastNested && ctxt.lastQuery == tuple[0]) {
             base::hint_stats.contains.addHit();
-            return ctxt.lastNested->contains(detail::tail(tuple), ctxt.nestedCtxt);
+            return ctxt.lastNested->contains(tail(tuple), ctxt.nestedCtxt);
         }
 
         base::hint_stats.contains.addMiss();
@@ -2771,7 +2777,7 @@ public:
         }
 
         // conduct recursive step
-        return next && next->contains(detail::tail(tuple), ctxt.nestedCtxt);
+        return next && next->contains(tail(tuple), ctxt.nestedCtxt);
     }
 
     /**
@@ -2811,7 +2817,7 @@ public:
         iterator end{};
 
         // adapt them level by level
-        auto found = detail::fix_binding<levels, 0, Dim>()(store, begin, end, entry);
+        auto found = fix_binding<levels, 0, Dim>()(store, begin, end, entry);
         if (!found) return make_range(iterator(), iterator());
 
         // update context
@@ -2837,7 +2843,7 @@ public:
         iterator res;
 
         // adapt it level by level
-        bool found = detail::fix_lower_bound<Dim>()(store, res, entry);
+        bool found = fix_lower_bound<Dim>()(store, res, entry);
 
         // use the result
         return found ? res : end();
@@ -2856,7 +2862,7 @@ public:
         iterator res;
 
         // adapt it level by level
-        bool found = detail::fix_upper_bound<Dim>()(store, res, entry);
+        bool found = fix_upper_bound<Dim>()(store, res, entry);
 
         // use the result
         return found ? res : end();
@@ -2902,9 +2908,9 @@ public:
  * sparse bit maps.
  */
 template <>
-class Trie<1u> : public detail::TrieBase<1u, Trie<1u>> {
-    using base = detail::TrieBase<1u, Trie<1u>>;
-    using types = detail::TrieTypes<1u>;
+class Trie<1u> : public TrieBase<1u, Trie<1u>> {
+    using base = TrieBase<1u, Trie<1u>>;
+    using types = TrieTypes<1u>;
     using store_type = typename types::store_type;
 
     using base::store;
@@ -3040,33 +3046,21 @@ public:
     }
 };
 
-namespace detail {
-template <typename A>
-struct forward_non_output_iterator_traits {
-    using value_type = A;
-    using difference_type = ptrdiff_t;
-    using iterator_category = std::forward_iterator_tag;
-    using pointer = const value_type*;
-    using reference = const value_type&;
-};
-}  // namespace detail
-
 }  // end namespace souffle
 
 namespace std {
 
-template <typename A>
-struct iterator_traits<souffle::detail::SparseArrayIter<A>>
-        : ::souffle::detail::forward_non_output_iterator_traits<
-                  typename souffle::detail::SparseArrayIter<A>::value_type> {};
+using namespace ::souffle::detail::brie;
 
 template <typename A>
-struct iterator_traits<souffle::detail::SparseBitMapIter<A>>
-        : ::souffle::detail::forward_non_output_iterator_traits<
-                  typename souffle::detail::SparseBitMapIter<A>::value_type> {};
+struct iterator_traits<SparseArrayIter<A>>
+        : forward_non_output_iterator_traits<typename SparseArrayIter<A>::value_type> {};
+
+template <typename A>
+struct iterator_traits<SparseBitMapIter<A>>
+        : forward_non_output_iterator_traits<typename SparseBitMapIter<A>::value_type> {};
 
 template <typename A, typename IterCore>
-struct iterator_traits<souffle::detail::TrieIterator<A, IterCore>>
-        : ::souffle::detail::forward_non_output_iterator_traits<A> {};
+struct iterator_traits<TrieIterator<A, IterCore>> : forward_non_output_iterator_traits<A> {};
 
 }  // namespace std
