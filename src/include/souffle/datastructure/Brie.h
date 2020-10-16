@@ -62,6 +62,9 @@ class Trie;
 
 namespace detail::brie {
 
+// FIXME: These data structs should be parameterised/made agonistic `RamDomain`.
+using brie_element_type = RamDomain;
+
 using tcb::make_span;
 
 template <typename A>
@@ -202,7 +205,7 @@ struct SparseArrayIter {
         int level = 1;
 
         // get current index on this level
-        x = SparseArray::getIndex(static_cast<RamDomain>(value.first), level);
+        x = SparseArray::getIndex(brie_element_type(value.first), level);
         x++;
 
         while (level > 0 && node) {
@@ -228,7 +231,7 @@ struct SparseArrayIter {
                 level++;
 
                 // get current index on this level
-                x = SparseArray::getIndex(static_cast<RamDomain>(value.first), level);
+                x = SparseArray::getIndex(brie_element_type(value.first), level);
                 x++;  // go one step further
             }
         }
@@ -831,7 +834,7 @@ private:
         unsigned level = info.levels;
         while (level != 0) {
             // get X coordinate
-            auto x = getIndex(static_cast<RamDomain>(i), level);
+            auto x = getIndex(brie_element_type(i), level);
 
             // decrease level counter
             --level;
@@ -948,7 +951,7 @@ public:
         unsigned level = unsynced.levels;
         while (level != 0) {
             // get X coordinate
-            auto x = getIndex(static_cast<RamDomain>(i), level);
+            auto x = getIndex(brie_element_type(i), level);
 
             // decrease level counter
             --level;
@@ -957,7 +960,7 @@ public:
             Node* next = node->cell[x].ptr;
 
             // check next step
-            if (!next) return souffle::detail::default_factory<value_type>()();
+            if (!next) return default_factory<value_type>()();
 
             // continue one level below
             node = next;
@@ -1039,7 +1042,7 @@ public:
         Node** node = &unsynced.root;
         while (level > other.unsynced.levels) {
             // get X coordinate
-            auto x = getIndex(static_cast<RamDomain>(other.unsynced.offset), level);
+            auto x = getIndex(brie_element_type(other.unsynced.offset), level);
 
             // decrease level counter
             --level;
@@ -1194,7 +1197,7 @@ public:
         unsigned level = unsynced.levels;
         while (true) {
             // get X coordinate
-            auto x = getIndex(static_cast<RamDomain>(i), level);
+            auto x = getIndex(brie_element_type(i), level);
 
             // check next node
             Node* next = node->cell[x].ptr;
@@ -1401,7 +1404,7 @@ private:
         node->parent = nullptr;
 
         // insert existing root as child
-        auto x = getIndex(static_cast<RamDomain>(unsynced.offset), unsynced.levels + 1);
+        auto x = getIndex(brie_element_type(unsynced.offset), unsynced.levels + 1);
         node->cell[x].ptr = unsynced.root;
 
         // swap the root
@@ -1428,7 +1431,7 @@ private:
         newRoot->parent = nullptr;
 
         // insert existing root as child
-        auto x = getIndex(static_cast<RamDomain>(info.offset), info.levels + 1);
+        auto x = getIndex(brie_element_type(info.offset), info.levels + 1);
         newRoot->cell[x].ptr = info.root;
 
         // exchange the root in the info struct
@@ -1472,7 +1475,7 @@ private:
      * Obtains the index within the arrays of cells of a given index on a given
      * level of the internally maintained tree.
      */
-    static index_type getIndex(RamDomain a, unsigned level) {
+    static index_type getIndex(brie_element_type a, unsigned level) {
         return (a & (INDEX_MASK << (level * BIT_PER_STEP))) >> (level * BIT_PER_STEP);
     }
 
@@ -2348,7 +2351,7 @@ struct fix_lower_bound {
     bool operator()(const SparseBitMap<bits>& store, iterator&& iter, const_entry_span_type entry) const {
         auto cur = store.lower_bound(entry[0]);
         if (cur == store.end()) return false;
-        assert(entry[0] <= RamDomain(*cur));
+        assert(entry[0] <= brie_element_type(*cur));
 
         iter.iter_core.setIterator(cur);
         iter.value[0] = *cur;
@@ -2359,10 +2362,10 @@ struct fix_lower_bound {
     bool operator()(const Store& store, iterator&& iter, const_entry_span_type entry) const {
         auto cur = store.lowerBound(entry[0]);  // search in current level
         if (cur == store.end()) return false;   // if no lower boundary is found, be done
-        assert(RamDomain(cur->first) >= entry[0]);
+        assert(brie_element_type(cur->first) >= entry[0]);
 
         // if the lower bound is higher than the requested value, go to first in subtree
-        if (RamDomain(cur->first) > entry[0]) {
+        if (brie_element_type(cur->first) > entry[0]) {
             iter.iter_core.setIterator(cur);
             iter.value[0] = cur->first;
             fix_first_nested<Dim - 1>()(cur->second->getStore(), iter.getNestedView());
@@ -2399,7 +2402,7 @@ struct fix_upper_bound {
     bool operator()(const SparseBitMap<bits>& store, iterator&& iter, const_entry_span_type entry) const {
         auto cur = store.upper_bound(entry[0]);
         if (cur == store.end()) return false;
-        assert(entry[0] <= RamDomain(*cur));
+        assert(entry[0] <= brie_element_type(*cur));
 
         iter.iter_core.setIterator(cur);
         iter.value[0] = *cur;
@@ -2410,10 +2413,10 @@ struct fix_upper_bound {
     bool operator()(const Store& store, iterator&& iter, const_entry_span_type entry) const {
         auto cur = store.lowerBound(entry[0]);  // search in current level
         if (cur == store.end()) return false;   // if no upper boundary is found, be done
-        assert(RamDomain(cur->first) >= entry[0]);
+        assert(brie_element_type(cur->first) >= entry[0]);
 
         // if the lower bound is higher than the requested value, go to first in subtree
-        if (RamDomain(cur->first) > entry[0]) {
+        if (brie_element_type(cur->first) > entry[0]) {
             iter.iter_core.setIterator(cur);
             iter.value[0] = cur->first;
             fix_first_nested<Dim - 1>()(cur->second->getStore(), iter.getNestedView());
@@ -2437,13 +2440,11 @@ struct fix_upper_bound {
     }
 };
 
-using element_type = RamDomain;
-
 template <unsigned Dim>
 struct TrieTypes {
-    using entry_type = std::array<element_type, Dim>;
-    using entry_span_type = span<element_type, Dim>;
-    using const_entry_span_type = span<const element_type, Dim>;
+    using entry_type = std::array<brie_element_type, Dim>;
+    using entry_span_type = span<brie_element_type, Dim>;
+    using const_entry_span_type = span<const brie_element_type, Dim>;
 
     // the type of the nested tries (1 dimension less)
     using nested_trie_type = Trie<Dim - 1>;
@@ -2547,7 +2548,7 @@ struct TrieTypes {
 
         // for insert and contain
         local_ctxt local{};
-        RamDomain lastQuery{};
+        brie_element_type lastQuery{};
         nested_trie_type* lastNested{nullptr};
         nested_ctxt nestedCtxt{};
 
@@ -2560,9 +2561,9 @@ struct TrieTypes {
 
 template <>
 struct TrieTypes<1u> {
-    using entry_type = std::array<element_type, 1>;
-    using entry_span_type = span<element_type, 1>;
-    using const_entry_span_type = span<const element_type, 1>;
+    using entry_type = std::array<brie_element_type, 1>;
+    using entry_span_type = span<brie_element_type, 1>;
+    using const_entry_span_type = span<const brie_element_type, 1>;
 
     // the map type utilized internally
     using store_type = SparseBitMap<>;
