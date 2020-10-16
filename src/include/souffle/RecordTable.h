@@ -69,12 +69,10 @@ public:
             } else {
 #pragma omp critical(record_unpack)
                 {
-                    indexToRecord.push_back(std::move(vector));
-                    index = static_cast<RamDomain>(indexToRecord.size()) - 1;
+                    assert(indexToRecord.size() <= std::numeric_limits<RamUnsigned>::max());
+                    index = ramBitCast(RamUnsigned(indexToRecord.size()));
                     recordToIndex[vector] = index;
-
-                    // assert that new index is smaller than the range
-                    assert(index != std::numeric_limits<RamDomain>::max());
+                    indexToRecord.push_back(std::move(vector));
                 }
             }
         }
