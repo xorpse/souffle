@@ -70,7 +70,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
         }
 
         // create a fact statement
-        return mk<ram::Query>(mk<ram::Project>(translator.translateRelation(head), std::move(values)));
+        return mk<ram::Query>(mk<ram::Project>(translator.getConcreteRelationName(head), std::move(values)));
     }
 
     // the rest should be rules
@@ -186,8 +186,8 @@ Own<ram::Statement> ClauseTranslator::translateClause(
             auto expr = translator.translateValue(agg->getTargetExpression(), *valueIndex);
 
             // add Ram-Aggregation layer
-            op = mk<ram::Aggregate>(std::move(op), agg->getOperator(), translator.translateRelation(atom),
-                    expr ? std::move(expr) : mk<ram::UndefValue>(),
+            op = mk<ram::Aggregate>(std::move(op), agg->getOperator(),
+                    translator.getConcreteRelationName(atom), expr ? std::move(expr) : mk<ram::UndefValue>(),
                     aggCond ? std::move(aggCond) : mk<ram::True>(), level);
         } else if (const auto* func = dynamic_cast<const ast::IntrinsicFunctor*>(cur)) {
             VecOwn<ram::Expression> args;
@@ -235,14 +235,14 @@ Own<ram::Statement> ClauseTranslator::translateClause(
 
             // add check for emptiness for an atom
             op = mk<ram::Filter>(
-                    mk<ram::Negation>(mk<ram::EmptinessCheck>(translator.translateRelation(atom))),
+                    mk<ram::Negation>(mk<ram::EmptinessCheck>(translator.getConcreteRelationName(atom))),
                     std::move(op));
 
             // add a scan level
             if (atom->getArity() != 0 && !isAllArgsUnnamed) {
                 if (head->getArity() == 0) {
-                    op = mk<ram::Break>(
-                            mk<ram::Negation>(mk<ram::EmptinessCheck>(translator.translateRelation(head))),
+                    op = mk<ram::Break>(mk<ram::Negation>(mk<ram::EmptinessCheck>(
+                                                translator.getConcreteRelationName(head))),
                             std::move(op));
                 }
                 if (Global::config().has("profile")) {
@@ -256,9 +256,10 @@ Own<ram::Statement> ClauseTranslator::translateClause(
                     ss << stringify(toString(*atom)) << ';';
                     ss << stringify(toString(originalClause)) << ';';
                     ss << level << ';';
-                    op = mk<ram::Scan>(translator.translateRelation(atom), level, std::move(op), ss.str());
+                    op = mk<ram::Scan>(
+                            translator.getConcreteRelationName(atom), level, std::move(op), ss.str());
                 } else {
-                    op = mk<ram::Scan>(translator.translateRelation(atom), level, std::move(op));
+                    op = mk<ram::Scan>(translator.getConcreteRelationName(atom), level, std::move(op));
                 }
             }
 
@@ -293,11 +294,12 @@ Own<ram::Operation> ClauseTranslator::createOperation(const ast::Clause& clause)
         values.push_back(translator.translateValue(arg, *valueIndex));
     }
 
-    Own<ram::Operation> project = mk<ram::Project>(translator.translateRelation(head), std::move(values));
+    Own<ram::Operation> project =
+            mk<ram::Project>(translator.getConcreteRelationName(head), std::move(values));
 
     if (head->getArity() == 0) {
         project = mk<ram::Filter>(
-                mk<ram::EmptinessCheck>(translator.translateRelation(head)), std::move(project));
+                mk<ram::EmptinessCheck>(translator.getConcreteRelationName(head)), std::move(project));
     }
 
     // build up insertion call
@@ -310,7 +312,7 @@ Own<ram::Condition> ClauseTranslator::createCondition(const ast::Clause& origina
     // add stopping criteria for nullary relations
     // (if it contains already the null tuple, don't re-compute)
     if (head->getArity() == 0) {
-        return mk<ram::EmptinessCheck>(translator.translateRelation(head));
+        return mk<ram::EmptinessCheck>(translator.getConcreteRelationName(head));
     }
     return nullptr;
 }
@@ -425,7 +427,7 @@ void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
 
         // index each value in the atom
         indexValues(atom, atom->getArguments(), nodeLevel,
-                translator.lookupRelation(translator.translateRelation(atom)));
+                translator.lookupRelation(translator.getConcreteRelationName(atom)));
     }
 
     // add aggregation functions
@@ -460,7 +462,7 @@ void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
                     for (auto* arg : atom->getArguments()) {
                         if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
                             valueIndex->addVarReference(
-                                    *var, *aggLoc, (int)pos, translator.translateRelation(atom));
+                                    *var, *aggLoc, (int)pos, translator.getConcreteRelationName(atom));
                         }
                         ++pos;
                     }

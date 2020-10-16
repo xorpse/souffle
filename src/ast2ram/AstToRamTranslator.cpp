@@ -201,21 +201,21 @@ std::vector<std::map<std::string, std::string>> AstToRamTranslator::getOutputDir
     return outputDirectives;
 }
 
-std::string AstToRamTranslator::translateRelation(const ast::Atom* atom) {
+std::string AstToRamTranslator::getConcreteRelationName(const ast::Atom* atom) {
     return getRelationName(atom->getQualifiedName());
 }
 
-std::string AstToRamTranslator::translateRelation(
+std::string AstToRamTranslator::getConcreteRelationName(
         const ast::Relation* rel, const std::string relationNamePrefix) {
     return relationNamePrefix + getRelationName(rel->getQualifiedName());
 }
 
 std::string AstToRamTranslator::translateDeltaRelation(const ast::Relation* rel) {
-    return translateRelation(rel, "@delta_");
+    return getConcreteRelationName(rel, "@delta_");
 }
 
 std::string AstToRamTranslator::translateNewRelation(const ast::Relation* rel) {
-    return translateRelation(rel, "@new_");
+    return getConcreteRelationName(rel, "@new_");
 }
 
 Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg, const ValueIndex& index) {
@@ -360,8 +360,8 @@ Own<ram::Condition> AstToRamTranslator::translateConstraint(
                     values.push_back(translator.translateValue(args[arity + height], index));
                 }
             }
-            return mk<ram::Negation>(
-                    mk<ram::ProvenanceExistenceCheck>(translator.translateRelation(atom), std::move(values)));
+            return mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(
+                    translator.getConcreteRelationName(atom), std::move(values)));
         }
 
         /** for negations */
@@ -373,7 +373,7 @@ Own<ram::Condition> AstToRamTranslator::translateConstraint(
 
             if (arity == 0) {
                 // for a nullary, negation is a simple emptiness check
-                return mk<ram::EmptinessCheck>(translator.translateRelation(atom));
+                return mk<ram::EmptinessCheck>(translator.getConcreteRelationName(atom));
             }
 
             // else, we construct the atom and create a negation
@@ -386,7 +386,7 @@ Own<ram::Condition> AstToRamTranslator::translateConstraint(
                 values.push_back(mk<ram::UndefValue>());
             }
             return mk<ram::Negation>(
-                    mk<ram::ExistenceCheck>(translator.translateRelation(atom), std::move(values)));
+                    mk<ram::ExistenceCheck>(translator.getConcreteRelationName(atom), std::move(values)));
         }
     };
     return ConstraintTranslator(*this, index)(*lit);
@@ -431,7 +431,7 @@ Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(
     /* start with an empty sequence */
     VecOwn<ram::Statement> res;
 
-    std::string relName = translateRelation(&rel);
+    std::string relName = getConcreteRelationName(&rel);
 
     /* iterate over all clauses that belong to the relation */
     for (ast::Clause* clause : relDetail->getClauses(rel.getQualifiedName())) {
@@ -559,7 +559,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
     for (const ast::Relation* rel : scc) {
         /* create update statements for fixpoint (even iteration) */
         Own<ram::Statement> updateRelTable =
-                mk<ram::Sequence>(genMerge(rel, translateRelation(rel), translateNewRelation(rel)),
+                mk<ram::Sequence>(genMerge(rel, getConcreteRelationName(rel), translateNewRelation(rel)),
                         mk<ram::Swap>(translateDeltaRelation(rel), translateNewRelation(rel)),
                         mk<ram::Clear>(translateNewRelation(rel)));
 
@@ -577,7 +577,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
         /* Generate code for non-recursive part of relation */
         /* Generate merge operation for temp tables */
         appendStmt(preamble, translateNonRecursiveRelation(*rel, recursiveClauses));
-        appendStmt(preamble, genMerge(rel, translateDeltaRelation(rel), translateRelation(rel)));
+        appendStmt(preamble, genMerge(rel, translateDeltaRelation(rel), getConcreteRelationName(rel)));
 
         /* Add update operations of relations to parallel statements */
         appendStmt(updateTable, std::move(updateRelTable));
@@ -711,9 +711,9 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
     for (const ast::Relation* rel : scc) {
         addCondition(exitCond, mk<ram::EmptinessCheck>(translateNewRelation(rel)));
         if (ioType->isLimitSize(rel)) {
-            Own<ram::Condition> limit =
-                    mk<ram::Constraint>(BinaryConstraintOp::GE, mk<ram::RelationSize>(translateRelation(rel)),
-                            mk<ram::SignedConstant>(ioType->getLimitSize(rel)));
+            Own<ram::Condition> limit = mk<ram::Constraint>(BinaryConstraintOp::GE,
+                    mk<ram::RelationSize>(getConcreteRelationName(rel)),
+                    mk<ram::SignedConstant>(ioType->getLimitSize(rel)));
             appendStmt(exitStmts, mk<ram::Exit>(std::move(limit)));
         }
     }
@@ -900,7 +900,7 @@ Own<ram::Statement> AstToRamTranslator::makeNegationSubproofSubroutine(const ast
         if (auto atom = dynamic_cast<ast::Atom*>(lit)) {
             size_t auxiliaryArity = auxArityAnalysis->getArity(atom);
 
-            auto relName = translateRelation(atom);
+            auto relName = getConcreteRelationName(atom);
             // construct a query
             VecOwn<ram::Expression> query;
 
@@ -944,7 +944,7 @@ Own<ram::Statement> AstToRamTranslator::makeNegationSubproofSubroutine(const ast
             auto atom = neg->getAtom();
 
             size_t auxiliaryArity = auxArityAnalysis->getArity(atom);
-            auto relName = translateRelation(atom);
+            auto relName = getConcreteRelationName(atom);
             // construct a query
             VecOwn<ram::Expression> query;
 
@@ -1040,12 +1040,12 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     // a function to load relations
     const auto& makeRamLoad = [&](VecOwn<ram::Statement>& current, const ast::Relation* relation) {
         for (auto directives : getInputDirectives(relation)) {
-            Own<ram::Statement> statement = mk<ram::IO>(translateRelation(relation), directives);
+            Own<ram::Statement> statement = mk<ram::IO>(getConcreteRelationName(relation), directives);
             if (Global::config().has("profile")) {
                 const std::string logTimerStatement = LogStatement::tRelationLoadTime(
                         toString(relation->getQualifiedName()), relation->getSrcLoc());
                 statement = mk<ram::LogRelationTimer>(
-                        std::move(statement), logTimerStatement, translateRelation(relation));
+                        std::move(statement), logTimerStatement, getConcreteRelationName(relation));
             }
             appendStmt(current, std::move(statement));
         }
@@ -1054,12 +1054,12 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     // a function to store relations
     const auto& makeRamStore = [&](VecOwn<ram::Statement>& current, const ast::Relation* relation) {
         for (auto directives : getOutputDirectives(relation)) {
-            Own<ram::Statement> statement = mk<ram::IO>(translateRelation(relation), directives);
+            Own<ram::Statement> statement = mk<ram::IO>(getConcreteRelationName(relation), directives);
             if (Global::config().has("profile")) {
                 const std::string logTimerStatement = LogStatement::tRelationSaveTime(
                         toString(relation->getQualifiedName()), relation->getSrcLoc());
                 statement = mk<ram::LogRelationTimer>(
-                        std::move(statement), logTimerStatement, translateRelation(relation));
+                        std::move(statement), logTimerStatement, getConcreteRelationName(relation));
             }
             appendStmt(current, std::move(statement));
         }
@@ -1067,7 +1067,7 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
 
     // a function to drop relations
     const auto& makeRamClear = [&](VecOwn<ram::Statement>& current, const ast::Relation* relation) {
-        appendStmt(current, mk<ram::Clear>(translateRelation(relation)));
+        appendStmt(current, mk<ram::Clear>(getConcreteRelationName(relation)));
     };
 
     // create all Ram relations in ramRels

@@ -91,11 +91,11 @@ public:
     /** translate an AST argument to a RAM value */
     Own<ram::Expression> translateValue(const ast::Argument* arg, const ValueIndex& index);
 
-    /** a utility to translate atoms to relations */
-    std::string translateRelation(const ast::Atom* atom);
+    /** Get the corresponding concretised RAM relation name for the atom */
+    std::string getConcreteRelationName(const ast::Atom* atom);
 
-    /** translate an AST relation to a RAM relation */
-    std::string translateRelation(const ast::Relation* rel, const std::string relationNamePrefix = "");
+    /** Get the corresponding concretised RAM relation name for the relation */
+    std::string getConcreteRelationName(const ast::Relation* rel, const std::string relationNamePrefix = "");
 
     /** determine the auxiliary for relations */
     size_t getEvaluationArity(const ast::Atom* atom) const;
