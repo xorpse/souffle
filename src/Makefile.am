@@ -381,7 +381,6 @@ soufflepublic_HEADERS = \
         include/souffle/BinaryConstraintOps.h              \
         include/souffle/CompiledOptions.h                  \
         include/souffle/CompiledSouffle.h                  \
-        include/souffle/CompiledTuple.h                    \
         include/souffle/RamTypes.h                         \
         include/souffle/RecordTable.h                      \
         include/souffle/SignalHandler.h                    \

@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "souffle/CompiledTuple.h"
 #include "souffle/RamTypes.h"
+#include "souffle/utility/span.h"
 #include <cassert>
 #include <cstddef>
 #include <limits>
@@ -112,7 +112,7 @@ public:
     virtual ~RecordTable() = default;
 
     /** @brief convert record to record reference */
-    RamDomain pack(RamDomain* tuple, size_t arity) {
+    RamDomain pack(const RamDomain* tuple, size_t arity) {
         return lookupArity(arity).pack(tuple);
     }
     /** @brief convert record reference to a record */
@@ -145,8 +145,14 @@ private:
 
 /** @brief helper to convert tuple to record reference for the synthesiser */
 template <std::size_t Arity>
-inline RamDomain pack(RecordTable& recordTab, Tuple<RamDomain, Arity> tuple) {
-    return recordTab.pack(static_cast<RamDomain*>(tuple.data), Arity);
+RamDomain pack(RecordTable& recordTab, Tuple<RamDomain, Arity> const& tuple) {
+    return recordTab.pack(tuple.data(), Arity);
+}
+
+/** @brief helper to convert tuple to record reference for the synthesiser */
+template <std::size_t Arity>
+RamDomain pack(RecordTable& recordTab, span<const RamDomain, Arity> tuple) {
+    return recordTab.pack(tuple.data(), Arity);
 }
 
 }  // namespace souffle
