@@ -35,6 +35,7 @@
 #include <atomic>
 #include <bitset>
 #include <cassert>
+#include <climits>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
@@ -1631,8 +1632,8 @@ class SparseBitMap {
     using atomic_value_t = typename data_store_t::atomic_value_type;
 
     // some constants for manipulating stored values
-    static constexpr short BITS_PER_ENTRY = sizeof(value_t) * 8;
-    static constexpr short LEAF_INDEX_WIDTH = static_cast<short>(__builtin_ctz(BITS_PER_ENTRY));
+    static constexpr size_t BITS_PER_ENTRY = sizeof(value_t) * CHAR_BIT;
+    static constexpr size_t LEAF_INDEX_WIDTH = __builtin_ctz(BITS_PER_ENTRY);
     static constexpr uint64_t LEAF_INDEX_MASK = BITS_PER_ENTRY - 1;
 
     static uint64_t toMask(const value_t& value) {
