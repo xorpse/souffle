@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include "ram/Relation.h"
 #include "souffle/RamTypes.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <cassert>
