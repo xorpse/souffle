@@ -64,9 +64,6 @@ namespace souffle::ast2ram {
 struct Location;
 class ValueIndex;
 
-/**
- * Main class for the AST->RAM translator
- */
 class AstToRamTranslator {
 public:
     AstToRamTranslator();

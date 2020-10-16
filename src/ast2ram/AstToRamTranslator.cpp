@@ -219,9 +219,7 @@ std::string AstToRamTranslator::getNewRelationName(const ast::Relation* rel) {
 }
 
 Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg, const ValueIndex& index) {
-    if (arg == nullptr) {
-        return nullptr;
-    }
+    if (arg == nullptr) return nullptr;
 
     class ValueTranslator : public ast::Visitor<Own<ram::Expression>> {
         AstToRamTranslator& translator;
@@ -616,15 +614,13 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
                 }
 
                 // modify the processed rule to use delta relation and write to new relation
-                Own<ast::Clause> r1(cl->clone());
+                auto r1 = souffle::clone(cl);
                 r1->getHead()->setQualifiedName(getNewRelationName(rel));
                 ast::getBodyLiterals<ast::Atom>(*r1)[j]->setQualifiedName(getDeltaRelationName(atomRelation));
                 if (Global::config().has("provenance")) {
                     r1->addToBody(mk<ast::ProvenanceNegation>(souffle::clone(cl->getHead())));
-                } else {
-                    if (r1->getHead()->getArity() > 0) {
-                        r1->addToBody(mk<ast::Negation>(souffle::clone(cl->getHead())));
-                    }
+                } else if (r1->getHead()->getArity() > 0) {
+                    r1->addToBody(mk<ast::Negation>(souffle::clone(cl->getHead())));
                 }
 
                 // replace wildcards with variables (reduces indices when wildcards are used in recursive
@@ -679,7 +675,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
         }
 
         // if there was no rule, continue
-        if (loopRelSeq.size() == 0) {
+        if (loopRelSeq.empty()) {
             continue;
         }
 
@@ -1197,6 +1193,7 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
     program = &tu.getProgram();
 
     translateProgram(tu);
+
     SymbolTable& symTab = getSymbolTable();
     ErrorReport& errReport = tu.getErrorReport();
     DebugReport& debugReport = tu.getDebugReport();
@@ -1204,20 +1201,22 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
     for (auto& cur : ramRels) {
         rels.push_back(std::move(cur.second));
     }
+
     if (ramMain == nullptr) {
         ramMain = mk<ram::Sequence>();
     }
     auto ramProg = mk<ram::Program>(std::move(rels), std::move(ramMain), std::move(ramSubs));
+
+    // add the translated program to the debug report
     if (!Global::config().get("debug-report").empty()) {
-        if (ramProg) {
-            auto ram_end = std::chrono::high_resolution_clock::now();
-            std::string runtimeStr =
-                    "(" + std::to_string(std::chrono::duration<double>(ram_end - ram_start).count()) + "s)";
-            std::stringstream ramProgStr;
-            ramProgStr << *ramProg;
-            debugReport.addSection("ram-program", "RAM Program " + runtimeStr, ramProgStr.str());
-        }
+        auto ram_end = std::chrono::high_resolution_clock::now();
+        std::string runtimeStr =
+                "(" + std::to_string(std::chrono::duration<double>(ram_end - ram_start).count()) + "s)";
+        std::stringstream ramProgStr;
+        ramProgStr << *ramProg;
+        debugReport.addSection("ram-program", "RAM Program " + runtimeStr, ramProgStr.str());
     }
+
     return mk<ram::TranslationUnit>(std::move(ramProg), std::move(symTab), errReport, debugReport);
 }
 
