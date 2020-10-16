@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include "souffle/CompiledTuple.h"
 #include "souffle/RamTypes.h"
 #include "souffle/utility/CacheUtil.h"
 #include "souffle/utility/ContainerUtil.h"
@@ -120,6 +119,164 @@ struct default_merge {
 
 }  // end namespace detail
 
+namespace detail {
+
+/**
+ * Iterator type for `souffle::SparseArray`.
+ */
+template <typename SparseArray>
+struct SparseArrayIter {
+    using Node = typename SparseArray::Node;
+    using index_type = typename SparseArray::index_type;
+    using array_value_type = typename SparseArray::value_type;
+
+    using value_type = std::pair<index_type, array_value_type>;
+
+    SparseArrayIter() = default;  // default constructor -- creating an end-iterator
+    SparseArrayIter(const SparseArrayIter&) = default;
+    SparseArrayIter& operator=(const SparseArrayIter&) = default;
+
+    SparseArrayIter(const Node* node, value_type value) : node(node), value(std::move(value)) {}
+
+    SparseArrayIter(const Node* first, index_type firstOffset) : node(first), value(firstOffset, 0) {
+        // if the start is the end => we are done
+        if (!first) return;
+
+        // load the value
+        if (first->cell[0].value == array_value_type()) {
+            ++(*this);  // walk to first element
+        } else {
+            value.second = first->cell[0].value;
+        }
+    }
+
+    // the equality operator as required by the iterator concept
+    bool operator==(const SparseArrayIter& other) const {
+        // only equivalent if pointing to the end
+        return (node == nullptr && other.node == nullptr) ||
+               (node == other.node && value.first == other.value.first);
+    }
+
+    // the not-equality operator as required by the iterator concept
+    bool operator!=(const SparseArrayIter& other) const {
+        return !(*this == other);
+    }
+
+    // the deref operator as required by the iterator concept
+    const value_type& operator*() const {
+        return value;
+    }
+
+    // support for the pointer operator
+    const value_type* operator->() const {
+        return &value;
+    }
+
+    // the increment operator as required by the iterator concept
+    SparseArrayIter& operator++() {
+        assert(!isEnd());
+        // get current offset
+        index_type x = value.first & SparseArray::INDEX_MASK;
+
+        // go to next non-empty value in current node
+        do {
+            x++;
+        } while (x < SparseArray::NUM_CELLS && node->cell[x].value == array_value_type());
+
+        // check whether one has been found
+        if (x < SparseArray::NUM_CELLS) {
+            // update value and be done
+            value.first = (value.first & ~SparseArray::INDEX_MASK) | x;
+            value.second = node->cell[x].value;
+            return *this;  // done
+        }
+
+        // go to parent
+        node = node->parent;
+        int level = 1;
+
+        // get current index on this level
+        x = SparseArray::getIndex(static_cast<RamDomain>(value.first), level);
+        x++;
+
+        while (level > 0 && node) {
+            // search for next child
+            while (x < SparseArray::NUM_CELLS) {
+                if (node->cell[x].ptr != nullptr) {
+                    break;
+                }
+                x++;
+            }
+
+            // pick next step
+            if (x < SparseArray::NUM_CELLS) {
+                // going down
+                node = node->cell[x].ptr;
+                value.first &= SparseArray::getLevelMask(level + 1);
+                value.first |= x << (SparseArray::BIT_PER_STEP * level);
+                level--;
+                x = 0;
+            } else {
+                // going up
+                node = node->parent;
+                level++;
+
+                // get current index on this level
+                x = SparseArray::getIndex(static_cast<RamDomain>(value.first), level);
+                x++;  // go one step further
+            }
+        }
+
+        // check whether it is the end of range
+        if (node == nullptr) {
+            return *this;
+        }
+
+        // search the first value in this node
+        x = 0;
+        while (node->cell[x].value == array_value_type()) {
+            x++;
+        }
+
+        // update value
+        value.first |= x;
+        value.second = node->cell[x].value;
+
+        // done
+        return *this;
+    }
+
+    SparseArrayIter operator++(int) {
+        auto cpy = *this;
+        ++(*this);
+        return cpy;
+    }
+
+    // True if this iterator is passed the last element.
+    bool isEnd() const {
+        return node == nullptr;
+    }
+
+    // enables this iterator core to be printed (for debugging)
+    void print(std::ostream& out) const {
+        out << "SparseArrayIter(" << node << " @ " << value << ")";
+    }
+
+    friend std::ostream& operator<<(std::ostream& out, const SparseArrayIter& iter) {
+        iter.print(out);
+        return out;
+    }
+
+private:
+    // a pointer to the leaf node currently processed or null (end)
+    const Node* node{};
+
+    // the value currently pointed to
+    value_type value;
+};
+
+}  // namespace detail
+
 /**
  * A sparse array simulates an array associating to every element
  * of uint32_t an element of a generic type T. Any non-defined element
@@ -150,6 +307,10 @@ struct default_merge {
 template <typename T, unsigned BITS = 6, typename merge_op = detail::default_merge<T>,
         typename copy_op = detail::identity<T>>
 class SparseArray {
+    template <typename A>
+    friend class detail::SparseArrayIter;
+
+    using this_t = SparseArray<T, BITS, merge_op, copy_op>;
     using key_type = uint64_t;
 
     // some internal constants
@@ -902,152 +1063,7 @@ public:
     //                           Iterator
     // ---------------------------------------------------------------------
 
-    /**
-     * The iterator type to be utilized to iterate over the non-default elements of this array.
-     */
-    class iterator {
-        using pair_type = std::pair<index_type, value_type>;
-
-        // a pointer to the leaf node currently processed or null (end)
-        const Node* node;
-
-        // the value currently pointed to
-        pair_type value;
-
-    public:
-        // default constructor -- creating an end-iterator
-        iterator() : node(nullptr) {}
-
-        iterator(const Node* node, pair_type value) : node(node), value(std::move(value)) {}
-
-        iterator(const Node* first, index_type firstOffset) : node(first), value(firstOffset, 0) {
-            // if the start is the end => we are done
-            if (!first) return;
-
-            // load the value
-            if (first->cell[0].value == value_type()) {
-                ++(*this);  // walk to first element
-            } else {
-                value.second = first->cell[0].value;
-            }
-        }
-
-        // a copy constructor
-        iterator(const iterator& other) = default;
-
-        // an assignment operator
-        iterator& operator=(const iterator& other) = default;
-
-        // the equality operator as required by the iterator concept
-        bool operator==(const iterator& other) const {
-            // only equivalent if pointing to the end
-            return (node == nullptr && other.node == nullptr) ||
-                   (node == other.node && value.first == other.value.first);
-        }
-
-        // the not-equality operator as required by the iterator concept
-        bool operator!=(const iterator& other) const {
-            return !(*this == other);
-        }
-
-        // the deref operator as required by the iterator concept
-        const pair_type& operator*() const {
-            return value;
-        }
-
-        // support for the pointer operator
-        const pair_type* operator->() const {
-            return &value;
-        }
-
-        // the increment operator as required by the iterator concept
-        iterator& operator++() {
-            // get current offset
-            index_type x = value.first & INDEX_MASK;
-
-            // go to next non-empty value in current node
-            do {
-                x++;
-            } while (x < NUM_CELLS && node->cell[x].value == value_type());
-
-            // check whether one has been found
-            if (x < NUM_CELLS) {
-                // update value and be done
-                value.first = (value.first & ~INDEX_MASK) | x;
-                value.second = node->cell[x].value;
-                return *this;  // done
-            }
-
-            // go to parent
-            node = node->parent;
-            int level = 1;
-
-            // get current index on this level
-            x = getIndex(static_cast<RamDomain>(value.first), level);
-            x++;
-
-            while (level > 0 && node) {
-                // search for next child
-                while (x < NUM_CELLS) {
-                    if (node->cell[x].ptr != nullptr) {
-                        break;
-                    }
-                    x++;
-                }
-
-                // pick next step
-                if (x < NUM_CELLS) {
-                    // going down
-                    node = node->cell[x].ptr;
-                    value.first &= getLevelMask(level + 1);
-                    value.first |= x << (BIT_PER_STEP * level);
-                    level--;
-                    x = 0;
-                } else {
-                    // going up
-                    node = node->parent;
-                    level++;
-
-                    // get current index on this level
-                    x = getIndex(static_cast<RamDomain>(value.first), level);
-                    x++;  // go one step further
-                }
-            }
-
-            // check whether it is the end of range
-            if (node == nullptr) {
-                return *this;
-            }
-
-            // search the first value in this node
-            x = 0;
-            while (node->cell[x].value == value_type()) {
-                x++;
-            }
-
-            // update value
-            value.first |= x;
-            value.second = node->cell[x].value;
-
-            // done
-            return *this;
-        }
-
-        // True if this iterator is passed the last element.
-        bool isEnd() const {
-            return node == nullptr;
-        }
-
-        // enables this iterator core to be printed (for debugging)
-        void print(std::ostream& out) const {
-            out << "SparseArrayIter(" << node << " @ " << value << ")";
-        }
-
-        friend std::ostream& operator<<(std::ostream& out, const iterator& iter) {
-            iter.print(out);
-            return out;
-        }
-    };
+    using iterator = detail::SparseArrayIter<this_t>;
 
     /**
      * Obtains an iterator referencing the first non-default element or end in
@@ -1463,6 +1479,123 @@ private:
     }
 };
 
+namespace detail {
+
+/**
+ * Iterator type for `souffle::SparseArray`. It enumerates the indices set to 1.
+ */
+template <typename SparseBitMap>
+class SparseBitMapIter {
+    using value_t = typename SparseBitMap::value_t;
+    using value_type = typename SparseBitMap::index_type;
+    using data_store_t = typename SparseBitMap::data_store_t;
+    using nested_iterator = typename data_store_t::iterator;
+
+    // the iterator through the underlying sparse data structure
+    nested_iterator iter;
+
+    // the currently consumed mask
+    uint64_t mask = 0;
+
+    // the value currently pointed to
+    value_type value{};
+
+public:
+    SparseBitMapIter() = default;  // default constructor -- creating an end-iterator
+    SparseBitMapIter(const SparseBitMapIter&) = default;
+    SparseBitMapIter& operator=(const SparseBitMapIter&) = default;
+
+    SparseBitMapIter(const nested_iterator& iter)
+            : iter(iter), mask(SparseBitMap::toMask(iter->second)),
+              value(iter->first << SparseBitMap::LEAF_INDEX_WIDTH) {
+        moveToNextInMask();
+    }
+
+    SparseBitMapIter(const nested_iterator& iter, uint64_t m, value_type value)
+            : iter(iter), mask(m), value(value) {}
+
+    // the equality operator as required by the iterator concept
+    bool operator==(const SparseBitMapIter& other) const {
+        // only equivalent if pointing to the end
+        return iter == other.iter && mask == other.mask;
+    }
+
+    // the not-equality operator as required by the iterator concept
+    bool operator!=(const SparseBitMapIter& other) const {
+        return !(*this == other);
+    }
+
+    // the deref operator as required by the iterator concept
+    const value_type& operator*() const {
+        return value;
+    }
+
+    // support for the pointer operator
+    const value_type* operator->() const {
+        return &value;
+    }
+
+    // the increment operator as required by the iterator concept
+    SparseBitMapIter& operator++() {
+        // progress in current mask
+        if (moveToNextInMask()) return *this;
+
+        // go to next entry
+        ++iter;
+
+        // update value
+        if (!iter.isEnd()) {
+            value = iter->first << SparseBitMap::LEAF_INDEX_WIDTH;
+            mask = SparseBitMap::toMask(iter->second);
+            moveToNextInMask();
+        }
+
+        // done
+        return *this;
+    }
+
+    SparseBitMapIter operator++(int) {
+        auto cpy = *this;
+        ++(*this);
+        return cpy;
+    }
+
+    bool isEnd() const {
+        return iter.isEnd();
+    }
+
+    void print(std::ostream& out) const {
+        out << "SparseBitMapIter(" << iter << " -> " << std::bitset<64>(mask) << " @ " << value << ")";
+    }
+
+    // enables this iterator core to be printed (for debugging)
+    friend std::ostream& operator<<(std::ostream& out, const SparseBitMapIter& iter) {
+        iter.print(out);
+        return out;
+    }
+
+private:
+    bool moveToNextInMask() {
+        // check if there is something left
+        if (mask == 0) return false;
+
+        // get position of leading 1
+        auto pos = __builtin_ctzll(mask);
+
+        // consume this bit
+        mask &= ~(1llu << pos);
+
+        // update value
+        value &= ~SparseBitMap::LEAF_INDEX_MASK;
+        value |= pos;
+
+        // done
+        return true;
+    }
+};
+
+}  // namespace detail
+
 /**
  * A sparse bit-map is a bit map virtually assigning a bit value to every value if the
  * uint32_t domain. However, only 1-bits are stored utilizing a nested sparse array
@@ -1472,6 +1605,11 @@ private:
  */
 template <unsigned BITS = 4>
 class SparseBitMap {
+    template <typename A>
+    friend class detail::SparseBitMapIter;
+
+    using this_t = SparseBitMap<BITS>;
+
     // the element type stored in the nested sparse array
     using value_t = uint64_t;
 
@@ -1490,6 +1628,11 @@ class SparseBitMap {
     static constexpr short BITS_PER_ENTRY = sizeof(value_t) * 8;
     static constexpr short LEAF_INDEX_WIDTH = static_cast<short>(__builtin_ctz(BITS_PER_ENTRY));
     static constexpr uint64_t LEAF_INDEX_MASK = BITS_PER_ENTRY - 1;
+
+    static uint64_t toMask(const value_t& value) {
+        static_assert(sizeof(value_t) == sizeof(uint64_t), "Fixed for 64-bit compiler.");
+        return reinterpret_cast<const uint64_t&>(value);
+    }
 
 public:
     // the type to address individual entries
@@ -1634,117 +1777,7 @@ public:
     //                           Iterator
     // ---------------------------------------------------------------------
 
-    /**
-     * An iterator iterating over all indices set to 1.
-     */
-    class iterator : public std::iterator<std::forward_iterator_tag, index_type> {
-        using nested_iterator = typename data_store_t::iterator;
-
-        // the iterator through the underlying sparse data structure
-        nested_iterator iter;
-
-        // the currently consumed mask
-        uint64_t mask = 0;
-
-        // the value currently pointed to
-        index_type value{};
-
-    public:
-        // default constructor -- creating an end-iterator
-        iterator() = default;
-
-        iterator(const nested_iterator& iter)
-                : iter(iter), mask(toMask(iter->second)), value(iter->first << LEAF_INDEX_WIDTH) {
-            moveToNextInMask();
-        }
-
-        iterator(const nested_iterator& iter, uint64_t m, index_type value)
-                : iter(iter), mask(m), value(value) {}
-
-        // a copy constructor
-        iterator(const iterator& other) = default;
-
-        // an assignment operator
-        iterator& operator=(const iterator& other) = default;
-
-        // the equality operator as required by the iterator concept
-        bool operator==(const iterator& other) const {
-            // only equivalent if pointing to the end
-            return iter == other.iter && mask == other.mask;
-        }
-
-        // the not-equality operator as required by the iterator concept
-        bool operator!=(const iterator& other) const {
-            return !(*this == other);
-        }
-
-        // the deref operator as required by the iterator concept
-        const index_type& operator*() const {
-            return value;
-        }
-
-        // support for the pointer operator
-        const index_type* operator->() const {
-            return &value;
-        }
-
-        // the increment operator as required by the iterator concept
-        iterator& operator++() {
-            // progress in current mask
-            if (moveToNextInMask()) return *this;
-
-            // go to next entry
-            ++iter;
-
-            // update value
-            if (!iter.isEnd()) {
-                value = iter->first << LEAF_INDEX_WIDTH;
-                mask = toMask(iter->second);
-                moveToNextInMask();
-            }
-
-            // done
-            return *this;
-        }
-
-        bool isEnd() const {
-            return iter.isEnd();
-        }
-
-        void print(std::ostream& out) const {
-            out << "SparseBitMapIter(" << iter << " -> " << std::bitset<64>(mask) << " @ " << value << ")";
-        }
-
-        // enables this iterator core to be printed (for debugging)
-        friend std::ostream& operator<<(std::ostream& out, const iterator& iter) {
-            iter.print(out);
-            return out;
-        }
-
-        static uint64_t toMask(const value_t& value) {
-            static_assert(sizeof(value_t) == sizeof(uint64_t), "Fixed for 64-bit compiler.");
-            return reinterpret_cast<const uint64_t&>(value);
-        }
-
-    private:
-        bool moveToNextInMask() {
-            // check if there is something left
-            if (mask == 0) return false;
-
-            // get position of leading 1
-            auto pos = __builtin_ctzll(mask);
-
-            // consume this bit
-            mask &= ~(1llu << pos);
-
-            // update value
-            value &= ~LEAF_INDEX_MASK;
-            value |= pos;
-
-            // done
-            return true;
-        }
-    };
+    using iterator = detail::SparseBitMapIter<this_t>;
 
     /**
      * Obtains an iterator pointing to the first index set to 1. If there
@@ -1783,7 +1816,7 @@ public:
         if (it.isEnd()) return end();
 
         // check bit-set part
-        uint64_t mask = iterator::toMask(it->second);
+        uint64_t mask = toMask(it->second);
         if (!(mask & (1llu << (i & LEAF_INDEX_MASK)))) return end();
 
         // OK, it is there => create iterator
@@ -1800,7 +1833,7 @@ public:
         if (it.isEnd()) return end();
 
         // check bit-set part
-        uint64_t mask = iterator::toMask(it->second);
+        uint64_t mask = toMask(it->second);
 
         // if there is no bit remaining in this mask, check next mask.
         if (!(mask & ((~uint64_t(0)) << (i & LEAF_INDEX_MASK)))) {
@@ -1867,7 +1900,7 @@ namespace detail {
  * core -- one for each nested trie level.
  */
 template <typename Value, typename IterCore>
-class TrieIterator : public std::iterator<std::forward_iterator_tag, Value> {
+class TrieIterator {
     template <unsigned Len, unsigned Pos, unsigned Dimensions>
     friend struct fix_binding;
 
@@ -1924,20 +1957,23 @@ public:
         return !(*this == other);
     }
 
-    // the deref operator as required by the iterator concept
     const Value& operator*() const {
         return value;
     }
 
-    // support for the pointer operator
     const Value* operator->() const {
         return &value;
     }
 
-    // the increment operator as required by the iterator concept
     TrieIterator& operator++() {
         iter_core.inc(value);
         return *this;
+    }
+
+    TrieIterator operator++(int) {
+        auto cpy = *this;
+        ++(*this);
+        return cpy;
     }
 
     // enables this iterator to be printed (for debugging)
@@ -3004,4 +3040,33 @@ public:
     }
 };
 
+namespace detail {
+template <typename A>
+struct forward_non_output_iterator_traits {
+    using value_type = A;
+    using difference_type = ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag;
+    using pointer = const value_type*;
+    using reference = const value_type&;
+};
+}  // namespace detail
+
 }  // end namespace souffle
+
+namespace std {
+
+template <typename A>
+struct iterator_traits<souffle::detail::SparseArrayIter<A>>
+        : ::souffle::detail::forward_non_output_iterator_traits<
+                  typename souffle::detail::SparseArrayIter<A>::value_type> {};
+
+template <typename A>
+struct iterator_traits<souffle::detail::SparseBitMapIter<A>>
+        : ::souffle::detail::forward_non_output_iterator_traits<
+                  typename souffle::detail::SparseBitMapIter<A>::value_type> {};
+
+template <typename A, typename IterCore>
+struct iterator_traits<souffle::detail::TrieIterator<A, IterCore>>
+        : ::souffle::detail::forward_non_output_iterator_traits<A> {};
+
+}  // namespace std
