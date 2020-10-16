@@ -221,7 +221,7 @@ std::string AstToRamTranslator::getNewRelationName(const ast::Relation* rel) {
 
 Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg, const ValueIndex& index) {
     if (arg == nullptr) return nullptr;
-    return ValueTranslator(*this, index, getSymbolTable())(*arg);
+    return ValueTranslator::translate(*this, index, getSymbolTable(), *arg);
 }
 
 SymbolTable& AstToRamTranslator::getSymbolTable() {

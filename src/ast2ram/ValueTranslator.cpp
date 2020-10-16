@@ -37,6 +37,11 @@
 
 namespace souffle::ast2ram {
 
+Own<ram::Expression> ValueTranslator::translate(AstToRamTranslator& translator, const ValueIndex& index,
+        SymbolTable& symTab, const ast::Argument& arg) {
+    return ValueTranslator(translator, index, symTab)(arg);
+}
+
 Own<ram::Expression> ValueTranslator::visitVariable(const ast::Variable& var) {
     assert(index.isDefined(var) && "variable not grounded");
     return translator.makeRamTupleElement(index.getDefinitionPoint(var));

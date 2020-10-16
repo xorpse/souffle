@@ -48,6 +48,9 @@ public:
     ValueTranslator(AstToRamTranslator& translator, const ValueIndex& index, SymbolTable& symTab)
             : translator(translator), index(index), symTab(symTab) {}
 
+    static Own<ram::Expression> translate(AstToRamTranslator& translator, const ValueIndex& index,
+            SymbolTable& symTab, const ast::Argument& arg);
+
     Own<ram::Expression> visitVariable(const ast::Variable& var) override;
     Own<ram::Expression> visitUnnamedVariable(const ast::UnnamedVariable& var) override;
     Own<ram::Expression> visitNumericConstant(const ast::NumericConstant& c) override;
