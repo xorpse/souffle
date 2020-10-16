@@ -164,11 +164,11 @@ private:
     // TODO (b-scholz): revisit / refactor so that only one directive is translated
     std::vector<std::map<std::string, std::string>> getOutputDirectives(const ast::Relation* rel);
 
-    /** translate a temporary `delta` relation to a RAM relation for semi-naive evaluation */
-    std::string translateDeltaRelation(const ast::Relation* rel);
+    /** Get the corresponding RAM delta relation name for the relation */
+    std::string getDeltaRelationName(const ast::Relation* rel);
 
-    /** translate a temporary `new` relation to a RAM relation for semi-naive evaluation */
-    std::string translateNewRelation(const ast::Relation* rel);
+    /** Get the corresponding RAM 'new' relation name for the relation */
+    std::string getNewRelationName(const ast::Relation* rel);
 
     /** Return a symbol table **/
     SymbolTable& getSymbolTable();

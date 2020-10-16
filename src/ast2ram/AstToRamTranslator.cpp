@@ -210,11 +210,11 @@ std::string AstToRamTranslator::getConcreteRelationName(
     return relationNamePrefix + getRelationName(rel->getQualifiedName());
 }
 
-std::string AstToRamTranslator::translateDeltaRelation(const ast::Relation* rel) {
+std::string AstToRamTranslator::getDeltaRelationName(const ast::Relation* rel) {
     return getConcreteRelationName(rel, "@delta_");
 }
 
-std::string AstToRamTranslator::translateNewRelation(const ast::Relation* rel) {
+std::string AstToRamTranslator::getNewRelationName(const ast::Relation* rel) {
     return getConcreteRelationName(rel, "@new_");
 }
 
@@ -559,25 +559,25 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
     for (const ast::Relation* rel : scc) {
         /* create update statements for fixpoint (even iteration) */
         Own<ram::Statement> updateRelTable =
-                mk<ram::Sequence>(genMerge(rel, getConcreteRelationName(rel), translateNewRelation(rel)),
-                        mk<ram::Swap>(translateDeltaRelation(rel), translateNewRelation(rel)),
-                        mk<ram::Clear>(translateNewRelation(rel)));
+                mk<ram::Sequence>(genMerge(rel, getConcreteRelationName(rel), getNewRelationName(rel)),
+                        mk<ram::Swap>(getDeltaRelationName(rel), getNewRelationName(rel)),
+                        mk<ram::Clear>(getNewRelationName(rel)));
 
         /* measure update time for each relation */
         if (Global::config().has("profile")) {
             updateRelTable = mk<ram::LogRelationTimer>(std::move(updateRelTable),
                     LogStatement::cRecursiveRelation(toString(rel->getQualifiedName()), rel->getSrcLoc()),
-                    translateNewRelation(rel));
+                    getNewRelationName(rel));
         }
 
         /* drop temporary tables after recursion */
-        appendStmt(postamble, mk<ram::Clear>(translateDeltaRelation(rel)));
-        appendStmt(postamble, mk<ram::Clear>(translateNewRelation(rel)));
+        appendStmt(postamble, mk<ram::Clear>(getDeltaRelationName(rel)));
+        appendStmt(postamble, mk<ram::Clear>(getNewRelationName(rel)));
 
         /* Generate code for non-recursive part of relation */
         /* Generate merge operation for temp tables */
         appendStmt(preamble, translateNonRecursiveRelation(*rel, recursiveClauses));
-        appendStmt(preamble, genMerge(rel, translateDeltaRelation(rel), getConcreteRelationName(rel)));
+        appendStmt(preamble, genMerge(rel, getDeltaRelationName(rel), getConcreteRelationName(rel)));
 
         /* Add update operations of relations to parallel statements */
         appendStmt(updateTable, std::move(updateRelTable));
@@ -617,9 +617,8 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
 
                 // modify the processed rule to use delta relation and write to new relation
                 Own<ast::Clause> r1(cl->clone());
-                r1->getHead()->setQualifiedName(translateNewRelation(rel));
-                ast::getBodyLiterals<ast::Atom>(*r1)[j]->setQualifiedName(
-                        translateDeltaRelation(atomRelation));
+                r1->getHead()->setQualifiedName(getNewRelationName(rel));
+                ast::getBodyLiterals<ast::Atom>(*r1)[j]->setQualifiedName(getDeltaRelationName(atomRelation));
                 if (Global::config().has("provenance")) {
                     r1->addToBody(mk<ast::ProvenanceNegation>(souffle::clone(cl->getHead())));
                 } else {
@@ -636,7 +635,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
                 for (size_t k = j + 1; k < atoms.size(); k++) {
                     if (isInSameSCC(getAtomRelation(atoms[k], program))) {
                         auto cur = souffle::clone(ast::getBodyLiterals<ast::Atom>(*r1)[k]);
-                        cur->setQualifiedName(translateDeltaRelation(getAtomRelation(atoms[k], program)));
+                        cur->setQualifiedName(getDeltaRelationName(getAtomRelation(atoms[k], program)));
                         r1->addToBody(mk<ast::Negation>(std::move(cur)));
                     }
                 }
@@ -653,7 +652,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
                     const std::string logSizeStatement =
                             LogStatement::nRecursiveRule(relationName, version, srcLocation, clauseText);
                     rule = mk<ram::LogRelationTimer>(
-                            std::move(rule), logTimerStatement, translateNewRelation(rel));
+                            std::move(rule), logTimerStatement, getNewRelationName(rel));
                 }
 
                 // add debug info
@@ -691,7 +690,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
             const std::string logTimerStatement = LogStatement::tRecursiveRelation(relationName, srcLocation);
             const std::string logSizeStatement = LogStatement::nRecursiveRelation(relationName, srcLocation);
             auto newStmt = mk<ram::LogRelationTimer>(
-                    mk<ram::Sequence>(std::move(loopRelSeq)), logTimerStatement, translateNewRelation(rel));
+                    mk<ram::Sequence>(std::move(loopRelSeq)), logTimerStatement, getNewRelationName(rel));
             loopRelSeq.clear();
             appendStmt(loopRelSeq, std::move(newStmt));
         }
@@ -709,7 +708,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
     Own<ram::Condition> exitCond;
     VecOwn<ram::Statement> exitStmts;
     for (const ast::Relation* rel : scc) {
-        addCondition(exitCond, mk<ram::EmptinessCheck>(translateNewRelation(rel)));
+        addCondition(exitCond, mk<ram::EmptinessCheck>(getNewRelationName(rel)));
         if (ioType->isLimitSize(rel)) {
             Own<ram::Condition> limit = mk<ram::Constraint>(BinaryConstraintOp::GE,
                     mk<ram::RelationSize>(getConcreteRelationName(rel)),
