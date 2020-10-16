@@ -59,8 +59,9 @@ bool NormaliseMultiResultFunctorsTransformer::transform(TranslationUnit& transla
         clause->apply(update);
         for (auto& [name, func] : update.getFunctorNames()) {
             changed = true;
-            clause->addToBody(
-                    mk<BinaryConstraint>(BinaryConstraintOp::EQ, mk<Variable>(name), std::move(func)));
+            auto eqOp = (func->getFunctionOp() == FunctorOp::FRANGE) ? BinaryConstraintOp::FEQ
+                                                                     : BinaryConstraintOp::EQ;
+            clause->addToBody(mk<BinaryConstraint>(eqOp, mk<Variable>(name), std::move(func)));
         }
     }
     return changed;

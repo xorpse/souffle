@@ -476,7 +476,7 @@ void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
 
     // add multi-result functor introductions
     visitDepthFirst(clause, [&](const ast::BinaryConstraint& bc) {
-        if (bc.getOperator() != BinaryConstraintOp::EQ) return;
+        if (bc.getOperator() != BinaryConstraintOp::EQ && bc.getOperator() != BinaryConstraintOp::FEQ) return;
         const auto* lhs = dynamic_cast<const ast::Variable*>(bc.getLHS());
         const auto* rhs = dynamic_cast<const ast::IntrinsicFunctor*>(bc.getRHS());
         if (lhs == nullptr || rhs == nullptr) return;
