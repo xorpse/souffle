@@ -10,13 +10,10 @@
  *
  * @file ValueTranslator.h
  *
- * Value translator.
- *
  ***********************************************************************/
 
 #pragma once
 
-#include "ast/NumericConstant.h"
 #include "ast/UnnamedVariable.h"
 #include "ast/Variable.h"
 #include "ast/analysis/Functor.h"
@@ -36,7 +33,6 @@
 #include "ram/Expression.h"
 #include "ram/Extend.h"
 #include "ram/Filter.h"
-#include "ram/FloatConstant.h"
 #include "ram/IO.h"
 #include "ram/IntrinsicOperator.h"
 #include "ram/LogRelationTimer.h"
@@ -61,10 +57,14 @@
 #include "ram/Swap.h"
 #include "ram/TranslationUnit.h"
 #include "ram/TupleElement.h"
-#include "ram/UndefValue.h"
-#include "ram/UnsignedConstant.h"
 #include "ram/UserDefinedOperator.h"
 #include "ram/utility/Utils.h"
+
+namespace souffle::ast {
+class Variable;
+class UnnamedVariable;
+class NumericConstant;
+}  // namespace souffle::ast
 
 namespace souffle::ast2ram {
 
@@ -73,30 +73,11 @@ public:
     ValueTranslator(AstToRamTranslator& translator, const ValueIndex& index, SymbolTable& symTab)
             : translator(translator), index(index), symTab(symTab) {}
 
-    Own<ram::Expression> visitVariable(const ast::Variable& var) override {
-        assert(index.isDefined(var) && "variable not grounded");
-        return translator.makeRamTupleElement(index.getDefinitionPoint(var));
-    }
+    Own<ram::Expression> visitVariable(const ast::Variable& var) override;
 
-    Own<ram::Expression> visitUnnamedVariable(const ast::UnnamedVariable&) override {
-        return mk<ram::UndefValue>();
-    }
+    Own<ram::Expression> visitUnnamedVariable(const ast::UnnamedVariable&) override;
 
-    Own<ram::Expression> visitNumericConstant(const ast::NumericConstant& c) override {
-        assert(c.getType().has_value() && "At this points all constants should have type.");
-
-        switch (*c.getType()) {
-            case ast::NumericConstant::Type::Int:
-                return mk<ram::SignedConstant>(RamSignedFromString(c.getConstant(), nullptr, 0));
-            case ast::NumericConstant::Type::Uint:
-                return mk<ram::UnsignedConstant>(RamUnsignedFromString(c.getConstant(), nullptr, 0));
-            case ast::NumericConstant::Type::Float:
-                return mk<ram::FloatConstant>(RamFloatFromString(c.getConstant()));
-        }
-
-        fatal("unexpected numeric constant type");
-    }
-
+    Own<ram::Expression> visitNumericConstant(const ast::NumericConstant& c);
     Own<ram::Expression> visitStringConstant(const ast::StringConstant& c) override {
         return mk<ram::SignedConstant>(symTab.lookup(c.getConstant()));
     }
