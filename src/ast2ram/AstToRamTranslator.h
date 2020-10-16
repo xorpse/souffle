@@ -47,6 +47,7 @@ class IOTypeAnalysis;
 class AuxiliaryArityAnalysis;
 class FunctorAnalysis;
 class RecursiveClausesAnalysis;
+class RelationDetailCacheAnalysis;
 class TypeEnvironment;
 }  // namespace souffle::ast::analysis
 
@@ -129,6 +130,9 @@ private:
 
     /** Auxiliary Arity Analysis */
     const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
+
+    /** Relation detail cache analysis */
+    const ast::analysis::RelationDetailCacheAnalysis* relDetail = nullptr;
 
     /** SIPS metric for reordering */
     Own<ast::SipsMetric> sips;

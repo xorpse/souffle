@@ -46,6 +46,7 @@
 #include "ast/analysis/Functor.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/RecursiveClauses.h"
+#include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/RelationSchedule.h"
 #include "ast/analysis/SCCGraph.h"
 #include "ast/analysis/TopologicallySortedSCCGraph.h"
@@ -108,6 +109,7 @@
 #include "souffle/TypeAttribute.h"
 #include "souffle/utility/FunctionalUtil.h"
 #include "souffle/utility/MiscUtil.h"
+#include "souffle/utility/StringUtil.h"
 #include <algorithm>
 #include <cassert>
 #include <chrono>
@@ -136,19 +138,18 @@ Own<ram::TupleElement> AstToRamTranslator::makeRamTupleElement(const Location& l
 }
 
 size_t AstToRamTranslator::getEvaluationArity(const ast::Atom* atom) const {
-    if (atom->getQualifiedName().toString().find("@delta_") == 0) {
-        const ast::QualifiedName& originalRel =
-                ast::QualifiedName(atom->getQualifiedName().toString().substr(7));
-        return auxArityAnalysis->getArity(getRelation(*program, originalRel));
-    } else if (atom->getQualifiedName().toString().find("@new_") == 0) {
-        const ast::QualifiedName& originalRel =
-                ast::QualifiedName(atom->getQualifiedName().toString().substr(5));
-        return auxArityAnalysis->getArity(getRelation(*program, originalRel));
-    } else if (atom->getQualifiedName().toString().find("@info_") == 0) {
-        return 0;
-    } else {
-        return auxArityAnalysis->getArity(atom);
+    std::string relName = atom->getQualifiedName().toString();
+    if (isPrefix("@info_", relName)) return 0;
+
+    // Get the original relation name
+    if (isPrefix("@delta_", relName)) {
+        relName = stripPrefix("@delta_", relName);
+    } else if (isPrefix("@new_", relName)) {
+        relName = stripPrefix("@new_", relName);
     }
+
+    const auto* originalRelation = relDetail->getRelation(ast::QualifiedName(relName));
+    return auxArityAnalysis->getArity(originalRelation);
 }
 
 std::vector<std::map<std::string, std::string>> AstToRamTranslator::getInputDirectives(
@@ -433,7 +434,7 @@ Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(
     std::string relName = translateRelation(&rel);
 
     /* iterate over all clauses that belong to the relation */
-    for (ast::Clause* clause : getClauses(*program, rel)) {
+    for (ast::Clause* clause : relDetail->getClauses(rel.getQualifiedName())) {
         // skip recursive rules
         if (recursiveClauses->recursive(clause)) {
             continue;
@@ -596,7 +597,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
         VecOwn<ram::Statement> loopRelSeq;
 
         /* Find clauses for relation rel */
-        for (const auto& cl : getClauses(*program, *rel)) {
+        for (const auto& cl : relDetail->getClauses(rel->getQualifiedName())) {
             // skip non-recursive clauses
             if (!recursiveClauses->recursive(cl)) {
                 continue;
@@ -1024,6 +1025,7 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
             translationUnit.getAnalysis<ast::analysis::RelationScheduleAnalysis>()->schedule();
     auxArityAnalysis = translationUnit.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
     functorAnalysis = translationUnit.getAnalysis<ast::analysis::FunctorAnalysis>();
+    relDetail = translationUnit.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
 
     // determine the sips to use
     std::string sipsChosen = "all-bound";
