@@ -182,7 +182,7 @@ public:
          *
          * @param arg An iterator_base class pointer
          */
-        iterator(Own<iterator_base> it) : iter(std::move(it)) {}
+        iterator(std::unique_ptr<iterator_base> it) : iter(std::move(it)) {}
 
         /**
          * Destructor.
