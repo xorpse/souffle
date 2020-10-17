@@ -55,9 +55,8 @@ bool ADTtoRecordsTransformer::transform(TranslationUnit& tu) {
             auto& adt = *as<BranchInit>(node);
 
             auto& type = sumTypesBranches.unsafeGetType(adt.getConstructor());
-            assert(isA<analysis::AlgebraicDataType>(type));
 
-            auto& branches = as<analysis::AlgebraicDataType>(type)->getBranches();
+            auto& branches = type.getBranches();
 
             // Find branch ID.
             analysis::AlgebraicDataType::Branch searchDummy{adt.getConstructor(), {}};
@@ -70,29 +69,33 @@ bool ADTtoRecordsTransformer::transform(TranslationUnit& tu) {
             // Branch id corresponds to the position in lexicographical ordering.
             auto branchID = std::distance(std::begin(branches), iterToBranch);
 
-            // Collect branch arguments
-            VecOwn<Argument> branchArguments;
-            for (auto* arg : adt.getArguments()) {
-                branchArguments.emplace_back(arg->clone());
-            }
-
-            // Branch is stored either as [branch_id, [arguments]]
-            // or [branch_id, argument] in case of a single argument.
-            auto branchArgs = [&]() -> Own<ast::Argument> {
-                if (branchArguments.size() != 1) {
-                    return mk<Argument, RecordInit>(std::move(branchArguments));
-                } else {
-                    return std::move(branchArguments.at(0));
+            if (isADTEnum(type)) {
+                return mk<NumericConstant>(branchID);
+            } else {
+                // Collect branch arguments
+                VecOwn<Argument> branchArguments;
+                for (auto* arg : adt.getArguments()) {
+                    branchArguments.emplace_back(arg->clone());
                 }
-            }();
 
-            // Arguments for the resulting record [branch_id, branch_args].
-            VecOwn<Argument> finalRecordArgs;
+                // Branch is stored either as [branch_id, [arguments]]
+                // or [branch_id, argument] in case of a single argument.
+                auto branchArgs = [&]() -> Own<ast::Argument> {
+                    if (branchArguments.size() != 1) {
+                        return mk<Argument, RecordInit>(std::move(branchArguments));
+                    } else {
+                        return std::move(branchArguments.at(0));
+                    }
+                }();
 
-            finalRecordArgs.push_back(mk<Argument, NumericConstant>(branchID));
-            finalRecordArgs.push_back(std::move(branchArgs));
+                // Arguments for the resulting record [branch_id, branch_args].
+                VecOwn<Argument> finalRecordArgs;
 
-            return mk<RecordInit>(std::move(finalRecordArgs), adt.getSrcLoc());
+                finalRecordArgs.push_back(mk<Argument, NumericConstant>(branchID));
+                finalRecordArgs.push_back(std::move(branchArgs));
+
+                return mk<RecordInit>(std::move(finalRecordArgs), adt.getSrcLoc());
+            }
         }
     };
 
