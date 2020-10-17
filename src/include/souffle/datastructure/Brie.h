@@ -62,7 +62,7 @@ class Trie;
 
 namespace detail::brie {
 
-// FIXME: These data structs should be parameterised/made agonistic `RamDomain`.
+// FIXME: These data structs should be parameterised/made agnoistic `RamDomain`.
 using brie_element_type = RamDomain;
 
 using tcb::make_span;
