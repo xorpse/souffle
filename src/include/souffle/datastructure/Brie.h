@@ -268,7 +268,9 @@ struct SparseArrayIter {
 
     // enables this iterator core to be printed (for debugging)
     void print(std::ostream& out) const {
-        out << "SparseArrayIter(" << node << " @ " << value << ")";
+        // `StreamUtil.h` defines an overload for `pair`, but we can't rely on it b/c
+        // it's disabled if `__EMBEDDED__` is defined.
+        out << "SparseArrayIter(" << node << " @ (" << value.first << ", " << value.second << "))";
     }
 
     friend std::ostream& operator<<(std::ostream& out, const SparseArrayIter& iter) {
@@ -2795,7 +2797,7 @@ public:
     template <unsigned levels>
     range<iterator> getBoundaries(const_entry_span_type entry, op_context& ctxt) const {
         // if nothing is bound => just use begin and end
-        if (levels == 0) return make_range(begin(), end());
+        if constexpr (levels == 0) return make_range(begin(), end());
 
         // check context
         if (ctxt.lastBoundaryLevels == levels) {
