@@ -45,6 +45,7 @@
 #include <utility>
 #include <vector>
 
+// TODO: replace intrinsics w/ std lib functions?
 #ifdef _WIN32
 /**
  * When compiling for windows, redefine the gcc builtins which are used to
@@ -3068,3 +3069,8 @@ template <typename A, typename IterCore>
 struct iterator_traits<TrieIterator<A, IterCore>> : forward_non_output_iterator_traits<A> {};
 
 }  // namespace std
+
+#ifdef _WIN32
+#undef __sync_synchronize
+#undef __sync_bool_compare_and_swap
+#endif
