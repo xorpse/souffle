@@ -548,4 +548,9 @@ bool haveCommonSupertype(const Type& a, const Type& b);
  */
 bool areEquivalentTypes(const Type& a, const Type& b);
 
+/**
+ * Determine if ADT is enumerations (are all constructors empty)
+ */
+bool isADTEnum(const AlgebraicDataType& type);
+
 }  // namespace souffle::ast::analysis

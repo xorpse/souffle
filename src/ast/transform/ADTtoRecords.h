@@ -12,9 +12,10 @@
  *
  * Defines the desugaring of ADTs to records.
  *
- * Each record has one of two possible forms:
+ * Each record has one of three possible forms:
  * - [branch_id, argument]    if a branch takes a single argument.
- * - [branch_id, [arguments]] otherwise
+ * - [branch_id, [arguments]] if a branch takes multiple arguments
+ * - branch_id                if a branch is part of enumeration (all constructor take no arguments)
  *
  * Branch ID is given by a lexicographical ordering of branches within an ADT.
  *

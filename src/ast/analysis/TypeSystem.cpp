@@ -368,4 +368,8 @@ bool areEquivalentTypes(const Type& a, const Type& b) {
     return isSubtypeOf(a, b) && isSubtypeOf(b, a);
 }
 
+bool isADTEnum(const AlgebraicDataType& type) {
+    return all_of(type.getBranches(), [](auto& branch) { return branch.types.empty(); });
+}
+
 }  // namespace souffle::ast::analysis
