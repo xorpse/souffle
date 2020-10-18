@@ -2111,20 +2111,16 @@ public:
     }
 
 // declare a initialiser-list compatible overload for a given function
-#define BRIE_OVERLOAD_INIT_LIST(fn, constness)                                             \
-    auto fn(const_entry_span_type entry) constness {                                       \
-        op_context ctxt;                                                                   \
-        return impl().fn(entry, ctxt);                                                     \
-    }                                                                                      \
-    auto fn(const entry_type& entry, op_context& ctxt) constness {                         \
-        return impl().fn(const_entry_span_type(entry), ctxt);                              \
-    }                                                                                      \
-    auto fn(const entry_type& entry) constness {                                           \
-        return impl().fn(const_entry_span_type(entry));                                    \
-    }                                                                                      \
-    template <typename... Values, typename = std::enable_if_t<(isRamType<Values> && ...)>> \
-    auto fn(Values... values) constness {                                                  \
-        return impl().fn(entry_type{ramBitCast(values)...});                               \
+#define BRIE_OVERLOAD_INIT_LIST(fn, constness)                     \
+    auto fn(const_entry_span_type entry) constness {               \
+        op_context ctxt;                                           \
+        return impl().fn(entry, ctxt);                             \
+    }                                                              \
+    auto fn(const entry_type& entry, op_context& ctxt) constness { \
+        return impl().fn(const_entry_span_type(entry), ctxt);      \
+    }                                                              \
+    auto fn(const entry_type& entry) constness {                   \
+        return impl().fn(const_entry_span_type(entry));            \
     }
 
     BRIE_OVERLOAD_INIT_LIST(insert, )
