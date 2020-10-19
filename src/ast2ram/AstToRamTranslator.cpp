@@ -226,7 +226,8 @@ SymbolTable& AstToRamTranslator::getSymbolTable() {
 
 Own<ram::Condition> AstToRamTranslator::translateConstraint(
         const ast::Literal* lit, const ValueIndex& index) {
-    return ConstraintTranslator(*this, index)(*lit);
+    assert(lit != nullptr && "literal should be defined");
+    return ConstraintTranslator::translate(*this, index, *lit);
 }
 
 RamDomain AstToRamTranslator::getConstantRamRepresentation(const ast::Constant& constant) {

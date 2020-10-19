@@ -38,6 +38,8 @@ public:
     ConstraintTranslator(AstToRamTranslator& translator, const ValueIndex& index)
             : translator(translator), index(index) {}
 
+    static Own<ram::Condition> translate(AstToRamTranslator& translator, const ValueIndex& index, const ast::Literal& lit);
+
     /** -- Visitors -- */
     Own<ram::Condition> visitAtom(const ast::Atom&) override;
     Own<ram::Condition> visitBinaryConstraint(const ast::BinaryConstraint& binRel) override;

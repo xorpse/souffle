@@ -28,6 +28,11 @@
 
 namespace souffle::ast2ram {
 
+Own<ram::Condition> ConstraintTranslator::translate(
+        AstToRamTranslator& translator, const ValueIndex& index, const ast::Literal& lit) {
+    return ConstraintTranslator(translator, index)(lit);
+}
+
 Own<ram::Condition> ConstraintTranslator::visitAtom(const ast::Atom&) {
     return nullptr;  // covered already within the scan/lookup generation step
 }
