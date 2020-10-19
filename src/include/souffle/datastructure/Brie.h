@@ -2584,7 +2584,7 @@ struct TrieTypes<1u> {
         iterator_core(store_iter store_iter, entry_span_type entry)
                 : iter(std::move(store_iter))  // NOLINT : mistaken warning -`store_iter` is not const-qual
         {
-            entry[0] = *iter;
+            entry[0] = brie_element_type(*iter);
         }
 
         void setIterator(store_iter store_iter) {
@@ -2603,7 +2603,7 @@ struct TrieTypes<1u> {
             if (iter.isEnd()) return false;
 
             // otherwise update entry value
-            entry[0] = *iter;
+            entry[0] = brie_element_type(*iter);
             return true;
         }
 
