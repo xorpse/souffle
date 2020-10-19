@@ -82,7 +82,6 @@
 #include "ram/Parallel.h"
 #include "ram/Program.h"
 #include "ram/Project.h"
-#include "ram/ProvenanceExistenceCheck.h"
 #include "ram/Query.h"
 #include "ram/Relation.h"
 #include "ram/RelationSize.h"
