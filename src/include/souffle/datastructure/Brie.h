@@ -321,7 +321,7 @@ using namespace detail::brie;
 template <typename T, unsigned BITS = 6, typename merge_op = default_merge<T>, typename copy_op = identity<T>>
 class SparseArray {
     template <typename A>
-    friend class detail::brie::SparseArrayIter;
+    friend struct detail::brie::SparseArrayIter;
 
     using this_t = SparseArray<T, BITS, merge_op, copy_op>;
     using key_type = uint64_t;
