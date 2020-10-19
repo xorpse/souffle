@@ -24,7 +24,6 @@
 #include "ast/Clause.h"
 #include "ast/Constant.h"
 #include "ast/Constraint.h"
-#include "ast/Counter.h"
 #include "ast/Directive.h"
 #include "ast/Functor.h"
 #include "ast/Literal.h"
