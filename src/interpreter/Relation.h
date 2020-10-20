@@ -167,7 +167,7 @@ public:
      */
     static Tuple constructTuple(const RamDomain* data) {
         Tuple tuple{};
-        memcpy(tuple.data, data, Arity * sizeof(RamDomain));
+        std::copy_n(data, Arity, tuple.begin());
         return tuple;
     }
 

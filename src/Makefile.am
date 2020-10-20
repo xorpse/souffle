@@ -381,7 +381,6 @@ soufflepublic_HEADERS = \
         include/souffle/BinaryConstraintOps.h              \
         include/souffle/CompiledOptions.h                  \
         include/souffle/CompiledSouffle.h                  \
-        include/souffle/CompiledTuple.h                    \
         include/souffle/RamTypes.h                         \
         include/souffle/RecordTable.h                      \
         include/souffle/SignalHandler.h                    \
@@ -474,6 +473,7 @@ souffleutility_HEADERS = \
         include/souffle/utility/StreamUtil.h               \
         include/souffle/utility/StringUtil.h               \
         include/souffle/utility/json11.h                   \
+        include/souffle/utility/span.h                     \
         include/souffle/utility/tinyformat.h
 
 # files to clean
@@ -490,4 +490,3 @@ $(builddir)/parser/scanner.cc: $(srcdir)/parser/scanner.ll
 # driver depends on the generated header
 $(builddir)/parser/parser.cc $(builddir)/parser/stack.hh $(builddir)/parser/scanner.cc \
     $(builddir)/main.cpp $(builddir)/parser/ParserDriver.cpp: $(builddir)/parser/parser.hh
-
