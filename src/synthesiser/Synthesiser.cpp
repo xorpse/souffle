@@ -1133,16 +1133,15 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "}\n";
             PRINT_END_COMMENT(out);
         }
+
         bool isGuaranteedToBeMinimum(const IndexAggregate& aggregate) {
             auto identifier = aggregate.getTupleId();
             auto keys = isa->getSearchSignature(&aggregate);
-            const TupleElement* tupleElem = dynamic_cast<const TupleElement*>(&aggregate.getExpression());
-            if (tupleElem && tupleElem->getTupleId() == identifier &&
-                    keys[tupleElem->getElement()] != ram::analysis::AttributeConstraint::None) {
-                return true;
-            }
-            return false;
+            const auto* tupleElem = dynamic_cast<const TupleElement*>(&aggregate.getExpression());
+            return tupleElem && tupleElem->getTupleId() == identifier &&
+                   keys[tupleElem->getElement()] != ram::analysis::AttributeConstraint::None;
         }
+
         void visitIndexAggregate(const IndexAggregate& aggregate, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             // get some properties
