@@ -1137,9 +1137,12 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         bool isGuaranteedToBeMinimum(const IndexAggregate& aggregate) {
             auto identifier = aggregate.getTupleId();
             auto keys = isa->getSearchSignature(&aggregate);
+            RelationRepresentation repr = synthesiser.lookup(aggregate.getRelation())->getRepresentation();
+
             const auto* tupleElem = dynamic_cast<const TupleElement*>(&aggregate.getExpression());
             return tupleElem && tupleElem->getTupleId() == identifier &&
-                   keys[tupleElem->getElement()] != ram::analysis::AttributeConstraint::None;
+                   keys[tupleElem->getElement()] != ram::analysis::AttributeConstraint::None &&
+                   (repr == RelationRepresentation::BTREE || repr == RelationRepresentation::DEFAULT);
         }
 
         void visitIndexAggregate(const IndexAggregate& aggregate, std::ostream& out) override {
