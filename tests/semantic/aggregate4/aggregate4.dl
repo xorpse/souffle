@@ -24,16 +24,12 @@ next2(X,Z):- A(_,X), Z = min Y:{ A(_,Y), Y > X}.
 // make sure predicates are added out of order
 set("even",8).
 set("even",10).
-
 set("odd",5).
 set("odd",7).
 set("odd",9).
-
-
 set("even",2).
 set("even",4).
 set("even",6).
-
 set("odd",1).
 set("odd",3).
 
@@ -49,7 +45,16 @@ next_in_set(Set,Elem,Elem2):- set(Set,Elem),
 
 .decl brie_set(Set:symbol,Elem:number) brie
 
-brie_set(Set,Elem):- set(Set,Elem).
+brie_set("even",8).
+brie_set("even",10).
+brie_set("odd",5).
+brie_set("odd",7).
+brie_set("odd",9).
+brie_set("even",2).
+brie_set("even",4).
+brie_set("even",6).
+brie_set("odd",1).
+brie_set("odd",3).
 
 .decl next_in_brie_set(Set:symbol,Elem:number,Elem2:number)
 .output next_in_brie_set
@@ -60,7 +65,16 @@ next_in_brie_set(Set,Elem,Elem2):- brie_set(Set,Elem),
 // test unsigned
 .decl uset(Set:symbol,Elem:unsigned)
 
-uset(Set,as(Elem,unsigned)):- set(Set,Elem).
+uset("even",8).
+uset("even",10).
+uset("odd",5).
+uset("odd",7).
+uset("odd",9).
+uset("even",2).
+uset("even",4).
+uset("even",6).
+uset("odd",1).
+uset("odd",3).
 
 .decl next_in_uset(Set:symbol,Elem:unsigned,Elem2:unsigned)
 .output next_in_uset
