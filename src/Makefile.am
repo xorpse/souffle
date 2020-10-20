@@ -182,6 +182,8 @@ souffle_sources = \
         ast/transform/SimplifyAggregateTargetExpression.h  \
         ast/transform/Transformer.cpp                      \
         ast/transform/Transformer.h                        \
+        ast/transform/TypeChecker.cpp                      \
+        ast/transform/TypeChecker.h                        \
         ast/transform/UniqueAggregationVariables.cpp       \
         ast/transform/UniqueAggregationVariables.h         \
         ast/transform/While.h                              \
