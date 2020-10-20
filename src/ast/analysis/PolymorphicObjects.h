@@ -28,22 +28,31 @@ namespace souffle::ast {
 class Aggregator;
 class BinaryConstraint;
 class IntrinsicFunctor;
+class TranslationUnit;
 }  // namespace souffle::ast
 
 namespace souffle::ast::analysis {
 
-class PolymorphicObjectsAnalysis : Analysis {
+class PolymorphicObjectsAnalysis : public Analysis {
 public:
-    FunctorOp getFunctionOp(const IntrinsicFunctor*) const;
-    NumericConstant::Type getType(const NumericConstant*) const;
-    BinaryConstraintOp getOperator(const BinaryConstraint*) const;
-    AggregateOp getOperator(const Aggregator*) const;
+    static constexpr const char* name = "polymorphic-objects";
+
+    PolymorphicObjectsAnalysis() : Analysis(name) {}
+
+    void run(const TranslationUnit& translationUnit) override;
+
+    void print(std::ostream& os) const override;
+
+    FunctorOp getFunctionOp(const IntrinsicFunctor* inf) const;
+    NumericConstant::Type getType(const NumericConstant* nc) const;
+    BinaryConstraintOp getOperator(const BinaryConstraint* bc) const;
+    AggregateOp getOperator(const Aggregator* aggr) const;
 
 private:
-    std::map<const IntrinsicFunctor*, FunctorOp> functorType;
-    std::map<const NumericConstant*, NumericConstant::Type> constantType;
-    std::map<const BinaryConstraint*, BinaryConstraintOp> constraintType;
-    std::map<const Aggregator*, AggregateOp> aggregatorType;
+    std::map<const IntrinsicFunctor*, FunctorOp> functorType{};
+    std::map<const NumericConstant*, NumericConstant::Type> constantType{};
+    std::map<const BinaryConstraint*, BinaryConstraintOp> constraintType{};
+    std::map<const Aggregator*, AggregateOp> aggregatorType{};
 };
 
 }  // namespace souffle::ast::analysis

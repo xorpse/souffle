@@ -32,6 +32,7 @@
 #include "ast/TranslationUnit.h"
 #include "ast/UnnamedVariable.h"
 #include "ast/analysis/IOType.h"
+#include "ast/analysis/PolymorphicObjects.h"
 #include "ast/analysis/PrecedenceGraph.h"
 #include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/SCCGraph.h"
@@ -89,6 +90,7 @@ std::set<QualifiedName> MagicSetTransformer::getTriviallyIgnoredRelations(const 
 std::set<QualifiedName> MagicSetTransformer::getWeaklyIgnoredRelations(const TranslationUnit& tu) {
     const auto& program = tu.getProgram();
     const auto& precedenceGraph = tu.getAnalysis<analysis::PrecedenceGraphAnalysis>()->graph();
+    const auto& polyAnalysis = *tu.getAnalysis<analysis::PolymorphicObjectsAnalysis>();
     std::set<QualifiedName> weaklyIgnoredRelations;
 
     // - Any relations not specified to magic-set
@@ -147,7 +149,7 @@ std::set<QualifiedName> MagicSetTransformer::getWeaklyIgnoredRelations(const Tra
             {FunctorOp::MOD, FunctorOp::FDIV, FunctorOp::DIV, FunctorOp::UMOD});
     for (const auto* clause : program.getClauses()) {
         visitDepthFirst(*clause, [&](const IntrinsicFunctor& functor) {
-            if (contains(orderDepFuncOps, functor.getFunctionOp().value())) {
+            if (contains(orderDepFuncOps, polyAnalysis.getFunctionOp(&functor))) {
                 weaklyIgnoredRelations.insert(clause->getHead()->getQualifiedName());
             }
         });

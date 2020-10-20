@@ -20,6 +20,10 @@
 
 namespace souffle::ast::analysis {
 
+void PolymorphicObjectsAnalysis::run(const TranslationUnit& /* translationUnit */) {}
+
+void PolymorphicObjectsAnalysis::print(std::ostream& /* os */) const {}
+
 FunctorOp PolymorphicObjectsAnalysis::getFunctionOp(const IntrinsicFunctor* inf) const {
     const auto& op = inf->getFunctionOp();
     if (op) return op.value();
