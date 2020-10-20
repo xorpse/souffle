@@ -65,6 +65,8 @@ next_in_brie_set(Set,Elem,Elem2):- brie_set(Set,Elem),
 // test unsigned
 .decl uset(Set:symbol,Elem:unsigned)
 
+uset("even",0xFFFFFFFF).
+uset("even",0xFFFFFF00).
 uset("even",8).
 uset("even",10).
 uset("odd",5).
