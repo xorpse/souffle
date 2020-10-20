@@ -16,7 +16,6 @@
 #pragma once
 
 #include "Global.h"
-#include "souffle/CompiledTuple.h"
 #include "souffle/RamTypes.h"
 #include "souffle/datastructure/BTree.h"
 #include "souffle/datastructure/Brie.h"
@@ -56,7 +55,7 @@ namespace souffle::interpreter {
     func(Provenance, 27, __VA_ARGS__)  \
     func(Provenance, 28, __VA_ARGS__)  \
     func(Provenance, 29, __VA_ARGS__)  \
-    func(Provenance, 30, __VA_ARGS__)  
+    func(Provenance, 30, __VA_ARGS__)
 
 
 #define FOR_EACH_BTREE(func, ...)\
@@ -80,7 +79,7 @@ namespace souffle::interpreter {
     func(Btree, 17, __VA_ARGS__) \
     func(Btree, 18, __VA_ARGS__) \
     func(Btree, 19, __VA_ARGS__) \
-    func(Btree, 20, __VA_ARGS__) 
+    func(Btree, 20, __VA_ARGS__)
 
 // Brie is disabled for now.
 #define FOR_EACH_BRIE(func, ...)
@@ -107,7 +106,7 @@ namespace souffle::interpreter {
     /* func(Brie, 20, __VA_ARGS__)   */
 
 #define FOR_EACH_EQREL(func, ...)\
-    func(Eqrel, 2, __VA_ARGS__) 
+    func(Eqrel, 2, __VA_ARGS__)
 
 #define FOR_EACH(func, ...)                 \
     FOR_EACH_BTREE(func, __VA_ARGS__)       \

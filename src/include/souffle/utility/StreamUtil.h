@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "souffle/utility/ContainerUtil.h"
+#include "souffle/utility/span.h"
 
 // -------------------------------------------------------------------------------
 //                           General Print Utilities
@@ -205,14 +206,14 @@ constexpr bool JoinShouldDeref = IsPtrLike<A>::value && !std::is_same_v<A, char 
  * For use cases see the test case {util_test.cpp}.
  */
 template <typename Container, typename Iter = typename Container::const_iterator,
-        typename T = typename Iter::value_type>
+        typename T = typename std::iterator_traits<Iter>::value_type>
 std::enable_if_t<!JoinShouldDeref<T>, detail::joined_sequence<Iter, detail::print<id<T>>>> join(
         const Container& c, const std::string& sep = ",") {
     return join(c.begin(), c.end(), sep, detail::print<id<T>>());
 }
 
 template <typename Container, typename Iter = typename Container::const_iterator,
-        typename T = typename Iter::value_type>
+        typename T = typename std::iterator_traits<Iter>::value_type>
 std::enable_if_t<JoinShouldDeref<T>, detail::joined_sequence<Iter, detail::print<deref<T>>>> join(
         const Container& c, const std::string& sep = ",") {
     return join(c.begin(), c.end(), sep, detail::print<deref<T>>());
@@ -223,6 +224,15 @@ std::enable_if_t<JoinShouldDeref<T>, detail::joined_sequence<Iter, detail::print
 #ifndef __EMBEDDED_SOUFFLE__
 
 namespace std {
+
+/**
+ * Enables the generic printing of `array`s assuming their element types
+ * are printable.
+ */
+template <typename T, size_t E>
+ostream& operator<<(ostream& out, const array<T, E>& v) {
+    return out << "[" << souffle::join(v) << "]";
+}
 
 /**
  * Introduces support for printing pairs as long as their components can be printed.
@@ -238,6 +248,15 @@ ostream& operator<<(ostream& out, const pair<A, B>& p) {
  */
 template <typename T, typename A>
 ostream& operator<<(ostream& out, const vector<T, A>& v) {
+    return out << "[" << souffle::join(v) << "]";
+}
+
+/**
+ * Enables the generic printing of `span`s assuming their element types
+ * are printable.
+ */
+template <typename T, size_t E>
+ostream& operator<<(ostream& out, const souffle::span<T, E>& v) {
     return out << "[" << souffle::join(v) << "]";
 }
 

@@ -350,10 +350,14 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
     ();            \
     }
 
+#define TUPLE_COPY_FROM(dst, src)     \
+    assert(dst.size() == src.size()); \
+    std::copy_n(src.begin(), dst.size(), dst.begin())
+
 #define CAL_SEARCH_BOUND(superInfo, low, high)                          \
     /** Unbounded and Constant */                                       \
-    memcpy(low, superInfo.first.data(), sizeof(low));                   \
-    memcpy(high, superInfo.second.data(), sizeof(high));                \
+    TUPLE_COPY_FROM(low, superInfo.first);                              \
+    TUPLE_COPY_FROM(high, superInfo.second);                            \
     /* TupleElement */                                                  \
     for (const auto& tupleElement : superInfo.tupleFirst) {             \
         low[tupleElement[0]] = ctxt[tupleElement[1]][tupleElement[2]];  \
@@ -577,7 +581,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
         CASE(NestedIntrinsicOperator)
             auto numArgs = cur.getArguments().size();
             auto runNested = [&](auto&& tuple) {
-                ctxt[cur.getTupleId()] = tuple.data;
+                ctxt[cur.getTupleId()] = tuple.data();
                 execute(shadow.getChild(numArgs), ctxt);
             };
 
@@ -1207,7 +1211,7 @@ RamDomain Engine::evalExistenceCheck(const ExistenceCheck& shadow, Context& ctxt
     // for total we use the exists test
     if (shadow.isTotalSearch()) {
         souffle::Tuple<RamDomain, Arity> tuple;
-        memcpy(tuple.data, superInfo.first.data(), sizeof(tuple));
+        TUPLE_COPY_FROM(tuple, superInfo.first);
         /* TupleElement */
         for (const auto& tupleElement : superInfo.tupleFirst) {
             tuple[tupleElement[0]] = ctxt[tupleElement[1]][tupleElement[2]];
@@ -1222,8 +1226,8 @@ RamDomain Engine::evalExistenceCheck(const ExistenceCheck& shadow, Context& ctxt
     // for partial we search for lower and upper boundaries
     souffle::Tuple<RamDomain, Arity> low;
     souffle::Tuple<RamDomain, Arity> high;
-    memcpy(low.data, superInfo.first.data(), sizeof(low));
-    memcpy(high.data, superInfo.second.data(), sizeof(high));
+    TUPLE_COPY_FROM(low, superInfo.first);
+    TUPLE_COPY_FROM(high, superInfo.second);
 
     /* TupleElement */
     for (const auto& tupleElement : superInfo.tupleFirst) {
@@ -1248,8 +1252,8 @@ RamDomain Engine::evalProvenanceExistenceCheck(const ProvenanceExistenceCheck& s
     // for partial we search for lower and upper boundaries
     souffle::Tuple<RamDomain, Arity> low;
     souffle::Tuple<RamDomain, Arity> high;
-    memcpy(low.data, superInfo.first.data(), sizeof(low));
-    memcpy(high.data, superInfo.second.data(), sizeof(high));
+    TUPLE_COPY_FROM(low, superInfo.first);
+    TUPLE_COPY_FROM(high, superInfo.second);
 
     /* TupleElement */
     for (const auto& tupleElement : superInfo.tupleFirst) {
@@ -1287,7 +1291,7 @@ RamDomain Engine::evalProvenanceExistenceCheck(const ProvenanceExistenceCheck& s
 template <typename Rel>
 RamDomain Engine::evalScan(const Rel& rel, const ram::Scan& cur, const Scan& shadow, Context& ctxt) {
     for (const auto& tuple : rel.scan()) {
-        ctxt[cur.getTupleId()] = tuple.data;
+        ctxt[cur.getTupleId()] = tuple.data();
         if (!execute(shadow.getNestedOperation(), ctxt)) {
             break;
         }
@@ -1310,7 +1314,7 @@ RamDomain Engine::evalParallelScan(
         }
         pfor(auto it = pStream.begin(); it < pStream.end(); it++) {
             for (const auto& tuple : *it) {
-                newCtxt[cur.getTupleId()] = tuple.data;
+                newCtxt[cur.getTupleId()] = tuple.data();
                 if (!execute(shadow.getNestedOperation(), newCtxt)) {
                     break;
                 }
@@ -1327,13 +1331,13 @@ RamDomain Engine::evalIndexScan(const ram::IndexScan& cur, const IndexScan& shad
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> low;
     souffle::Tuple<RamDomain, Arity> high;
-    CAL_SEARCH_BOUND(superInfo, low.data, high.data);
+    CAL_SEARCH_BOUND(superInfo, low, high);
 
     size_t viewId = shadow.getViewId();
     auto view = Rel::castView(ctxt.getView(viewId));
     // conduct range query
     for (const auto& tuple : view->range(low, high)) {
-        ctxt[cur.getTupleId()] = tuple.data;
+        ctxt[cur.getTupleId()] = tuple.data();
         if (!execute(shadow.getNestedOperation(), ctxt)) {
             break;
         }
@@ -1351,7 +1355,7 @@ RamDomain Engine::evalParallelIndexScan(
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> low;
     souffle::Tuple<RamDomain, Arity> high;
-    CAL_SEARCH_BOUND(superInfo, low.data, high.data);
+    CAL_SEARCH_BOUND(superInfo, low, high);
 
     size_t indexPos = shadow.getViewId();
     auto pStream = rel.partitionRange(indexPos, low, high, numOfThreads);
@@ -1363,7 +1367,7 @@ RamDomain Engine::evalParallelIndexScan(
         }
         pfor(auto it = pStream.begin(); it < pStream.end(); it++) {
             for (const auto& tuple : *it) {
-                newCtxt[cur.getTupleId()] = tuple.data;
+                newCtxt[cur.getTupleId()] = tuple.data();
                 if (!execute(shadow.getNestedOperation(), newCtxt)) {
                     break;
                 }
@@ -1377,7 +1381,7 @@ template <typename Rel>
 RamDomain Engine::evalChoice(const Rel& rel, const ram::Choice& cur, const Choice& shadow, Context& ctxt) {
     // use simple iterator
     for (const auto& tuple : rel.scan()) {
-        ctxt[cur.getTupleId()] = tuple.data;
+        ctxt[cur.getTupleId()] = tuple.data();
         if (execute(shadow.getCondition(), ctxt)) {
             execute(shadow.getNestedOperation(), ctxt);
             break;
@@ -1400,7 +1404,7 @@ RamDomain Engine::evalParallelChoice(
         }
         pfor(auto it = pStream.begin(); it < pStream.end(); it++) {
             for (const auto& tuple : *it) {
-                newCtxt[cur.getTupleId()] = tuple.data;
+                newCtxt[cur.getTupleId()] = tuple.data();
                 if (execute(shadow.getCondition(), newCtxt)) {
                     execute(shadow.getNestedOperation(), newCtxt);
                     break;
@@ -1417,13 +1421,13 @@ RamDomain Engine::evalIndexChoice(const ram::IndexChoice& cur, const IndexChoice
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> low;
     souffle::Tuple<RamDomain, Arity> high;
-    CAL_SEARCH_BOUND(superInfo, low.data, high.data);
+    CAL_SEARCH_BOUND(superInfo, low, high);
 
     size_t viewId = shadow.getViewId();
     auto view = Rel::castView(ctxt.getView(viewId));
 
     for (const auto& tuple : view->range(low, high)) {
-        ctxt[cur.getTupleId()] = tuple.data;
+        ctxt[cur.getTupleId()] = tuple.data();
         if (execute(shadow.getCondition(), ctxt)) {
             execute(shadow.getNestedOperation(), ctxt);
             break;
@@ -1444,7 +1448,7 @@ RamDomain Engine::evalParallelIndexChoice(const Rel& rel, const ram::ParallelInd
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> low;
     souffle::Tuple<RamDomain, Arity> high;
-    CAL_SEARCH_BOUND(superInfo, low.data, high.data);
+    CAL_SEARCH_BOUND(superInfo, low, high);
 
     size_t indexPos = shadow.getViewId();
     auto pStream = rel.partitionRange(indexPos, low, high, numOfThreads);
@@ -1456,7 +1460,7 @@ RamDomain Engine::evalParallelIndexChoice(const Rel& rel, const ram::ParallelInd
         }
         pfor(auto it = pStream.begin(); it < pStream.end(); it++) {
             for (const auto& tuple : *it) {
-                newCtxt[cur.getTupleId()] = tuple.data;
+                newCtxt[cur.getTupleId()] = tuple.data();
                 if (execute(shadow.getCondition(), newCtxt)) {
                     execute(shadow.getNestedOperation(), newCtxt);
                     break;
@@ -1513,7 +1517,7 @@ RamDomain Engine::evalAggregate(const Aggregate& aggregate, const Node& filter, 
     }
 
     for (const auto& tuple : ranges) {
-        ctxt[aggregate.getTupleId()] = tuple.data;
+        ctxt[aggregate.getTupleId()] = tuple.data();
 
         if (!execute(&filter, ctxt)) {
             continue;
@@ -1572,7 +1576,7 @@ RamDomain Engine::evalAggregate(const Aggregate& aggregate, const Node& filter, 
     // write result to environment
     souffle::Tuple<RamDomain, 1> tuple;
     tuple[0] = res;
-    ctxt[aggregate.getTupleId()] = tuple.data;
+    ctxt[aggregate.getTupleId()] = tuple.data();
 
     if (!shouldRunNested) {
         return true;
@@ -1612,7 +1616,7 @@ RamDomain Engine::evalParallelIndexAggregate(
     // get lower and upper boundaries for iteration
     souffle::Tuple<RamDomain, Arity> low;
     souffle::Tuple<RamDomain, Arity> high;
-    CAL_SEARCH_BOUND(superInfo, low.data, high.data);
+    CAL_SEARCH_BOUND(superInfo, low, high);
 
     size_t viewId = shadow.getViewId();
     auto view = Rel::castView(newCtxt.getView(viewId));
@@ -1629,7 +1633,7 @@ RamDomain Engine::evalIndexAggregate(
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> low;
     souffle::Tuple<RamDomain, Arity> high;
-    CAL_SEARCH_BOUND(superInfo, low.data, high.data)
+    CAL_SEARCH_BOUND(superInfo, low, high);
 
     size_t viewId = shadow.getViewId();
     auto view = Rel::castView(ctxt.getView(viewId));
@@ -1643,7 +1647,8 @@ RamDomain Engine::evalProject(Rel& rel, const Project& shadow, Context& ctxt) {
     constexpr size_t Arity = Rel::Arity;
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> tuple;
-    memcpy(tuple.data, superInfo.first.data(), (Arity * sizeof(RamDomain)));
+    TUPLE_COPY_FROM(tuple, superInfo.first);
+
     /* TupleElement */
     for (const auto& tupleElement : superInfo.tupleFirst) {
         tuple[tupleElement[0]] = ctxt[tupleElement[1]][tupleElement[2]];
