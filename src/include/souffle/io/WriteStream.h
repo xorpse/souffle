@@ -72,7 +72,8 @@ protected:
 
     template <typename Tuple>
     void writeNext(const Tuple tuple) {
-        writeNextTuple(tuple.data);
+        using tcb::make_span;
+        writeNextTuple(make_span(tuple).data());
     }
 
     void outputRecord(std::ostream& destination, const RamDomain value, const std::string& name) {
