@@ -21,8 +21,10 @@ next2(X,Z):- A(_,X), Z = min Y:{ A(_,Y), Y > X}.
 
 .decl set(Set:symbol,Elem:number)
 
-set("odd",1).
-set("odd",3).
+// make sure predicates are added out of order
+set("even",8).
+set("even",10).
+
 set("odd",5).
 set("odd",7).
 set("odd",9).
@@ -31,8 +33,10 @@ set("odd",9).
 set("even",2).
 set("even",4).
 set("even",6).
-set("even",8).
-set("even",10).
+
+set("odd",1).
+set("odd",3).
+
 
 .decl next_in_set(Set:symbol,Elem:number,Elem2:number)
 .output next_in_set
