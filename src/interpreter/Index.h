@@ -16,7 +16,6 @@
 #pragma once
 
 #include "interpreter/Util.h"
-#include "souffle/CompiledTuple.h"
 #include "souffle/RamTypes.h"
 #include "souffle/datastructure/EquivalenceRelation.h"
 #include "souffle/datastructure/UnionFind.h"
