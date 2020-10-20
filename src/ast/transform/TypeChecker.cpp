@@ -36,8 +36,8 @@
 #include "ast/utility/Visitor.h"
 #include "souffle/utility/StringUtil.h"
 #include <map>
-#include <string>
 #include <sstream>
+#include <string>
 #include <utility>
 #include <vector>
 namespace souffle::ast::transform {
