@@ -13,5 +13,31 @@
  ***********************************************************************/
 
 #include "ast/analysis/PolymorphicObjects.h"
+#include "ast/Aggregator.h"
+#include "ast/BinaryConstraint.h"
+#include "ast/IntrinsicFunctor.h"
+#include "ast/NumericConstant.h"
 
-namespace souffle::ast::analysis {}
+namespace souffle::ast::analysis {
+
+FunctorOp PolymorphicObjectsAnalysis::getFunctionOp(const IntrinsicFunctor* inf) const {
+    const auto& op = inf->getFunctionOp();
+    if (op) return op.value();
+    return FunctorOp::ORD;
+}
+
+NumericConstant::Type PolymorphicObjectsAnalysis::getType(const NumericConstant* nc) const {
+    const auto& op = nc->getType();
+    if (op) return op.value();
+    return NumericConstant::Type::Int;
+}
+
+BinaryConstraintOp PolymorphicObjectsAnalysis::getOperator(const BinaryConstraint* bc) const {
+    return bc->getOperator();
+}
+
+AggregateOp PolymorphicObjectsAnalysis::getOperator(const Aggregator* aggr) const {
+    return aggr->getOperator();
+}
+
+}  // namespace souffle::ast::analysis
