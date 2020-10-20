@@ -41,4 +41,29 @@ set("odd",3).
 .decl next_in_set(Set:symbol,Elem:number,Elem2:number)
 .output next_in_set
 
-next_in_set(Set,Elem,Elem2):- set(Set,Elem), Elem2 = min E:{ set(Set,E), E > Elem}.
+next_in_set(Set,Elem,Elem2):- set(Set,Elem),
+                              Elem2 = min E:{ set(Set,E), E > Elem }.
+
+
+// test brie
+
+.decl brie_set(Set:symbol,Elem:number) brie
+
+brie_set(Set,Elem):- set(Set,Elem).
+
+.decl next_in_brie_set(Set:symbol,Elem:number,Elem2:number)
+.output next_in_brie_set
+
+next_in_brie_set(Set,Elem,Elem2):- brie_set(Set,Elem),
+                                   Elem2 = min E:{ brie_set(Set,E), E > Elem }.
+
+// test unsigned
+.decl uset(Set:symbol,Elem:unsigned)
+
+uset(Set,as(Elem,unsigned)):- set(Set,Elem).
+
+.decl next_in_uset(Set:symbol,Elem:unsigned,Elem2:unsigned)
+.output next_in_uset
+
+next_in_uset(Set,Elem,Elem2):- uset(Set,Elem),
+                               Elem2 = min E:{ uset(Set,E), E > Elem }.
