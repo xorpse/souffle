@@ -24,23 +24,23 @@ void PolymorphicObjectsAnalysis::run(const TranslationUnit& /* translationUnit *
 
 void PolymorphicObjectsAnalysis::print(std::ostream& /* os */) const {}
 
-FunctorOp PolymorphicObjectsAnalysis::getFunctionOp(const IntrinsicFunctor* inf) const {
+FunctorOp PolymorphicObjectsAnalysis::getOverloadedFunctionOp(const IntrinsicFunctor* inf) const {
     const auto& op = inf->getFunctionOp();
     if (op) return op.value();
     return FunctorOp::ORD;
 }
 
-NumericConstant::Type PolymorphicObjectsAnalysis::getType(const NumericConstant* nc) const {
+NumericConstant::Type PolymorphicObjectsAnalysis::getOverloadedType(const NumericConstant* nc) const {
     const auto& op = nc->getType();
     if (op) return op.value();
     return NumericConstant::Type::Int;
 }
 
-BinaryConstraintOp PolymorphicObjectsAnalysis::getOperator(const BinaryConstraint* bc) const {
+BinaryConstraintOp PolymorphicObjectsAnalysis::getOverloadedOperator(const BinaryConstraint* bc) const {
     return bc->getOperator();
 }
 
-AggregateOp PolymorphicObjectsAnalysis::getOperator(const Aggregator* aggr) const {
+AggregateOp PolymorphicObjectsAnalysis::getOverloadedOperator(const Aggregator* aggr) const {
     return aggr->getOperator();
 }
 

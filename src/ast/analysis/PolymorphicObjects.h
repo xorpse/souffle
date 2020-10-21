@@ -43,10 +43,10 @@ public:
 
     void print(std::ostream& os) const override;
 
-    FunctorOp getFunctionOp(const IntrinsicFunctor* inf) const;
-    NumericConstant::Type getType(const NumericConstant* nc) const;
-    BinaryConstraintOp getOperator(const BinaryConstraint* bc) const;
-    AggregateOp getOperator(const Aggregator* aggr) const;
+    FunctorOp getOverloadedFunctionOp(const IntrinsicFunctor* inf) const;
+    NumericConstant::Type getOverloadedType(const NumericConstant* nc) const;
+    BinaryConstraintOp getOverloadedOperator(const BinaryConstraint* bc) const;
+    AggregateOp getOverloadedOperator(const Aggregator* aggr) const;
 
 private:
     std::map<const IntrinsicFunctor*, FunctorOp> functorType{};
