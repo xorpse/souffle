@@ -19,7 +19,6 @@
 #include "ast/BinaryConstraint.h"
 #include "ast/IntrinsicFunctor.h"
 #include "ast/Node.h"
-#include "ast/NumericConstant.h"
 #include "ast/Program.h"
 #include "ast/TranslationUnit.h"
 #include "ast/analysis/Type.h"
@@ -66,29 +65,6 @@ bool PolymorphicObjectsTransformer::transform(TranslationUnit& translationUnit) 
             // It's possible that at this stage we get an undeclared clause.
             // In this case types can't be assigned to it, and the procedure getTypes can fail
             try {
-                // Handle numeric constant
-                if (auto* numericConstant = dynamic_cast<NumericConstant*>(node.get())) {
-                    // Check if there is no value yet.
-                    if (!numericConstant->getType().has_value()) {
-                        TypeSet types = typeAnalysis.getTypes(numericConstant);
-
-                        auto hasOfKind = [&](TypeAttribute kind) -> bool {
-                            return any_of(
-                                    types, [&](const analysis::Type& type) { return isOfKind(type, kind); });
-                        };
-                        if (hasOfKind(TypeAttribute::Signed)) {
-                            numericConstant->setType(NumericConstant::Type::Int);
-                            changed = true;
-                        } else if (hasOfKind(TypeAttribute::Unsigned)) {
-                            numericConstant->setType(NumericConstant::Type::Uint);
-                            changed = true;
-                        } else if (hasOfKind(TypeAttribute::Float)) {
-                            numericConstant->setType(NumericConstant::Type::Float);
-                            changed = true;
-                        }
-                    }
-                }
-
                 // Handle functor
                 if (auto* functor = dynamic_cast<IntrinsicFunctor*>(node.get())) {
                     if (functor->getFunctionOp().has_value()) {
