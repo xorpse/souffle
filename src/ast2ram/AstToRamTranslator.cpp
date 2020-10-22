@@ -226,10 +226,12 @@ Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg
     class ValueTranslator : public ast::Visitor<Own<ram::Expression>> {
         AstToRamTranslator& translator;
         const ValueIndex& index;
+        const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis;
 
     public:
-        ValueTranslator(AstToRamTranslator& translator, const ValueIndex& index)
-                : translator(translator), index(index) {}
+        ValueTranslator(AstToRamTranslator& translator, const ValueIndex& index,
+                const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis)
+                : translator(translator), index(index), polyAnalysis(polyAnalysis) {}
 
         Own<ram::Expression> visitVariable(const ast::Variable& var) override {
             if (!index.isDefined(var)) fatal("variable `%s` is not grounded", var);
@@ -309,7 +311,7 @@ Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg
         }
     };
 
-    return ValueTranslator(*this, index)(*arg);
+    return ValueTranslator(*this, index, polyAnalysis)(*arg);
 }
 
 SymbolTable& AstToRamTranslator::getSymbolTable() {
