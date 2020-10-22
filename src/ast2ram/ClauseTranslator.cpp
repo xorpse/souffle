@@ -23,6 +23,7 @@
 #include "ast/RecordInit.h"
 #include "ast/UnnamedVariable.h"
 #include "ast/analysis/Functor.h"
+#include "ast/analysis/PolymorphicObjects.h"
 #include "ast/transform/ReorderLiterals.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
@@ -328,9 +329,12 @@ Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
 
     for (auto* a : args) {
         if (auto* c = dynamic_cast<const ast::Constant*>(a)) {
+            const auto* polyAnalysis = translator.getPolymorphicObjectsAnalysis();
             auto* const c_num = dynamic_cast<const ast::NumericConstant*>(c);
-            assert((!c_num || c_num->getType()) && "numeric constant wasn't bound to a type");
-            op = mkFilter(c_num && *c_num->getType() == ast::NumericConstant::Type::Float,
+            assert((!c_num || !polyAnalysis->hasInvalidType(c_num)) &&
+                    "numeric constant wasn't bound to a type");
+            op = mkFilter(
+                    c_num && polyAnalysis->getOverloadedType(c_num) == ast::NumericConstant::Type::Float,
                     translator.translateConstant(*c));
         } else if (auto* func = dynamic_cast<const ast::Functor*>(a)) {
             if (constrainByFunctors) {
