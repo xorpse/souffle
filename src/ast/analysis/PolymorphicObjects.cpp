@@ -19,6 +19,7 @@
 #include "ast/NumericConstant.h"
 #include "ast/TranslationUnit.h"
 #include "ast/utility/Visitor.h"
+#include "souffle/utility/ContainerUtil.h"
 
 namespace souffle::ast::analysis {
 
@@ -45,7 +46,7 @@ void PolymorphicObjectsAnalysis::run(const TranslationUnit& translationUnit) {
         } else if (hasOfKind(TypeAttribute::Float)) {
             constantType[&numericConstant] = NumericConstant::Type::Float;
         } else {
-            assert(false && "could not deduce type of numeric constant");
+            invalidConstants.insert(&numericConstant);
         }
     });
 }
@@ -59,7 +60,12 @@ FunctorOp PolymorphicObjectsAnalysis::getOverloadedFunctionOp(const IntrinsicFun
 }
 
 NumericConstant::Type PolymorphicObjectsAnalysis::getOverloadedType(const NumericConstant* nc) const {
+    assert(!hasInvalidType(nc) && contains(constantType, nc));
     return constantType.at(nc);
+}
+
+bool PolymorphicObjectsAnalysis::hasInvalidType(const NumericConstant* nc) const {
+    return contains(invalidConstants, nc);
 }
 
 BinaryConstraintOp PolymorphicObjectsAnalysis::getOverloadedOperator(const BinaryConstraint* bc) const {

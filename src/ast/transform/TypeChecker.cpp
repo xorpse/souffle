@@ -29,6 +29,7 @@
 #include "ast/Functor.h"
 #include "ast/IntrinsicFunctor.h"
 #include "ast/analysis/Functor.h"
+#include "ast/analysis/PolymorphicObjects.h"
 #include "ast/analysis/Type.h"
 #include "ast/analysis/TypeEnvironment.h"
 #include "ast/analysis/TypeSystem.h"
@@ -81,6 +82,7 @@ private:
     const TypeAnalysis& typeAnalysis = *tu.getAnalysis<TypeAnalysis>();
     const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>()->getTypeEnvironment();
     const FunctorAnalysis& functorAnalysis = *tu.getAnalysis<FunctorAnalysis>();
+    const PolymorphicObjectsAnalysis& polyAnalysis = *tu.getAnalysis<PolymorphicObjectsAnalysis>();
     const Program& program = tu.getProgram();
 
     std::unordered_set<const Atom*> negatedAtoms;
@@ -368,12 +370,12 @@ void TypeCheckerImpl::visitNumericConstant(const NumericConstant& constant) {
     TypeSet types = typeAnalysis.getTypes(&constant);
 
     // No type could be assigned.
-    if (!constant.getType().has_value()) {
+    if (polyAnalysis.hasInvalidType(&constant)) {
         report.addError("Ambiguous constant (unable to deduce type)", constant.getSrcLoc());
         return;
     }
 
-    switch (*constant.getType()) {
+    switch (polyAnalysis.getOverloadedType(&constant)) {
         case NumericConstant::Type::Int:
             if (!isOfKind(types, TypeAttribute::Signed)) {
                 report.addError("Number constant (type mismatch)", constant.getSrcLoc());

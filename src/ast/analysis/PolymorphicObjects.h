@@ -17,6 +17,7 @@
 #include "ast/NumericConstant.h"
 #include "ast/analysis/Analysis.h"
 #include <map>
+#include <set>
 
 namespace souffle {
 enum class AggregateOp;
@@ -43,6 +44,7 @@ public:
 
     void print(std::ostream& os) const override;
 
+    bool hasInvalidType(const NumericConstant* nc) const;
     FunctorOp getOverloadedFunctionOp(const IntrinsicFunctor* inf) const;
     NumericConstant::Type getOverloadedType(const NumericConstant* nc) const;
     BinaryConstraintOp getOverloadedOperator(const BinaryConstraint* bc) const;
@@ -53,6 +55,7 @@ private:
     std::map<const NumericConstant*, NumericConstant::Type> constantType{};
     std::map<const BinaryConstraint*, BinaryConstraintOp> constraintType{};
     std::map<const Aggregator*, AggregateOp> aggregatorType{};
+    std::set<const NumericConstant*> invalidConstants;
 };
 
 }  // namespace souffle::ast::analysis
