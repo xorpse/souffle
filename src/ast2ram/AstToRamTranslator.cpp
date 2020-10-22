@@ -45,6 +45,7 @@
 #include "ast/analysis/AuxArity.h"
 #include "ast/analysis/Functor.h"
 #include "ast/analysis/IOType.h"
+#include "ast/analysis/PolymorphicObjects.h"
 #include "ast/analysis/RecursiveClauses.h"
 #include "ast/analysis/RelationSchedule.h"
 #include "ast/analysis/SCCGraph.h"
@@ -1024,6 +1025,7 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
             translationUnit.getAnalysis<ast::analysis::RelationScheduleAnalysis>()->schedule();
     auxArityAnalysis = translationUnit.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
     functorAnalysis = translationUnit.getAnalysis<ast::analysis::FunctorAnalysis>();
+    polyAnalysis = translationUnit.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
 
     // determine the sips to use
     std::string sipsChosen = "all-bound";
