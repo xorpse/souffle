@@ -62,6 +62,10 @@ public:
         return fixedType;
     }
 
+    bool hasFixedType() const {
+        return getFixedType().has_value();
+    }
+
     void setType(Type newType) {
         fixedType = newType;
     }

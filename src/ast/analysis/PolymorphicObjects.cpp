@@ -28,7 +28,7 @@ void PolymorphicObjectsAnalysis::run(const TranslationUnit& translationUnit) {
 
     visitDepthFirst(program, [&](const NumericConstant& numericConstant) {
         // Constant has a fixed type
-        if (numericConstant.getType().has_value()) {
+        if (numericConstant.hasFixedType()) {
             constantType[&numericConstant] = numericConstant.getType().value();
             return;
         }
