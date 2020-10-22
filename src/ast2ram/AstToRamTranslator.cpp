@@ -244,7 +244,7 @@ Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg
 
         Own<ram::Expression> visitNumericConstant(const ast::NumericConstant& c) override {
             assert(!polyAnalysis->hasInvalidType(&c) && "constant should have valid type");
-            switch (polyAnalysis->getOverloadedType(&c)) {
+            switch (polyAnalysis->getInferredType(&c)) {
                 case ast::NumericConstant::Type::Int:
                     return mk<ram::SignedConstant>(RamSignedFromString(c.getConstant(), nullptr, 0));
                 case ast::NumericConstant::Type::Uint:
@@ -400,7 +400,7 @@ RamDomain AstToRamTranslator::getConstantRamRepresentation(const ast::Constant& 
         return 0;
     } else if (auto* numConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
         assert(!polyAnalysis->hasInvalidType(numConstant) && "constant should have valid type");
-        switch (polyAnalysis->getOverloadedType(numConstant)) {
+        switch (polyAnalysis->getInferredType(numConstant)) {
             case ast::NumericConstant::Type::Int:
                 return RamSignedFromString(numConstant->getConstant(), nullptr, 0);
             case ast::NumericConstant::Type::Uint:
@@ -416,7 +416,7 @@ Own<ram::Expression> AstToRamTranslator::translateConstant(ast::Constant const& 
     auto const rawConstant = getConstantRamRepresentation(c);
 
     if (auto* const c_num = dynamic_cast<const ast::NumericConstant*>(&c)) {
-        switch (polyAnalysis->getOverloadedType(c_num)) {
+        switch (polyAnalysis->getInferredType(c_num)) {
             case ast::NumericConstant::Type::Int: return mk<ram::SignedConstant>(rawConstant);
             case ast::NumericConstant::Type::Uint: return mk<ram::UnsignedConstant>(rawConstant);
             case ast::NumericConstant::Type::Float: return mk<ram::FloatConstant>(rawConstant);

@@ -117,7 +117,7 @@ void normaliseInlinedHeads(TranslationUnit& tu) {
                     auto* const c_num = dynamic_cast<const NumericConstant*>(constant);
                     assert((!c_num || !polyAnalysis.hasInvalidType(c_num)) &&
                             "numeric constant wasn't bound to a type");
-                    auto opEq = c_num && polyAnalysis.getOverloadedType(c_num) == NumericConstant::Type::Float
+                    auto opEq = c_num && polyAnalysis.getInferredType(c_num) == NumericConstant::Type::Float
                                         ? BinaryConstraintOp::FEQ
                                         : BinaryConstraintOp::EQ;
 

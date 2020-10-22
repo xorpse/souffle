@@ -334,7 +334,7 @@ Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
             assert((!c_num || !polyAnalysis->hasInvalidType(c_num)) &&
                     "numeric constant wasn't bound to a type");
             op = mkFilter(
-                    c_num && polyAnalysis->getOverloadedType(c_num) == ast::NumericConstant::Type::Float,
+                    c_num && polyAnalysis->getInferredType(c_num) == ast::NumericConstant::Type::Float,
                     translator.translateConstant(*c));
         } else if (auto* func = dynamic_cast<const ast::Functor*>(a)) {
             if (constrainByFunctors) {

@@ -375,7 +375,7 @@ void TypeCheckerImpl::visitNumericConstant(const NumericConstant& constant) {
         return;
     }
 
-    switch (polyAnalysis.getOverloadedType(&constant)) {
+    switch (polyAnalysis.getInferredType(&constant)) {
         case NumericConstant::Type::Int:
             if (!isOfKind(types, TypeAttribute::Signed)) {
                 report.addError("Number constant (type mismatch)", constant.getSrcLoc());

@@ -44,10 +44,17 @@ public:
 
     void print(std::ostream& os) const override;
 
+    // Numeric constants
     bool hasInvalidType(const NumericConstant* nc) const;
+    NumericConstant::Type getInferredType(const NumericConstant* nc) const;
+
+    // Functors
     FunctorOp getOverloadedFunctionOp(const IntrinsicFunctor* inf) const;
-    NumericConstant::Type getOverloadedType(const NumericConstant* nc) const;
+
+    // Binary constraints
     BinaryConstraintOp getOverloadedOperator(const BinaryConstraint* bc) const;
+
+    // Aggregators
     AggregateOp getOverloadedOperator(const Aggregator* aggr) const;
 
 private:

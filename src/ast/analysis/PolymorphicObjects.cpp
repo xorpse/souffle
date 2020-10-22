@@ -59,7 +59,7 @@ FunctorOp PolymorphicObjectsAnalysis::getOverloadedFunctionOp(const IntrinsicFun
     return FunctorOp::ORD;
 }
 
-NumericConstant::Type PolymorphicObjectsAnalysis::getOverloadedType(const NumericConstant* nc) const {
+NumericConstant::Type PolymorphicObjectsAnalysis::getInferredType(const NumericConstant* nc) const {
     assert(!hasInvalidType(nc) && contains(constantType, nc));
     return constantType.at(nc);
 }
