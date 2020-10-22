@@ -17,10 +17,38 @@
 #include "ast/BinaryConstraint.h"
 #include "ast/IntrinsicFunctor.h"
 #include "ast/NumericConstant.h"
+#include "ast/TranslationUnit.h"
+#include "ast/utility/Visitor.h"
 
 namespace souffle::ast::analysis {
 
-void PolymorphicObjectsAnalysis::run(const TranslationUnit& /* translationUnit */) {}
+void PolymorphicObjectsAnalysis::run(const TranslationUnit& translationUnit) {
+    const auto& program = translationUnit.getProgram();
+    const auto& typeAnalysis = *translationUnit.getAnalysis<analysis::TypeAnalysis>();
+
+    visitDepthFirst(program, [&](const NumericConstant& numericConstant) {
+        // Constant has a fixed type
+        if (numericConstant.getType().has_value()) {
+            constantType[&numericConstant] = numericConstant.getType().value();
+            return;
+        }
+
+        // Otherwise, type should be inferred
+        TypeSet types = typeAnalysis.getTypes(&numericConstant);
+        auto hasOfKind = [&](TypeAttribute kind) -> bool {
+            return any_of(types, [&](const analysis::Type& type) { return isOfKind(type, kind); });
+        };
+        if (hasOfKind(TypeAttribute::Signed)) {
+            constantType[&numericConstant] = NumericConstant::Type::Int;
+        } else if (hasOfKind(TypeAttribute::Unsigned)) {
+            constantType[&numericConstant] = NumericConstant::Type::Uint;
+        } else if (hasOfKind(TypeAttribute::Float)) {
+            constantType[&numericConstant] = NumericConstant::Type::Float;
+        } else {
+            assert(false && "could not deduce type of numeric constant");
+        }
+    });
+}
 
 void PolymorphicObjectsAnalysis::print(std::ostream& /* os */) const {}
 
@@ -31,9 +59,7 @@ FunctorOp PolymorphicObjectsAnalysis::getOverloadedFunctionOp(const IntrinsicFun
 }
 
 NumericConstant::Type PolymorphicObjectsAnalysis::getOverloadedType(const NumericConstant* nc) const {
-    const auto& op = nc->getType();
-    if (op) return op.value();
-    return NumericConstant::Type::Int;
+    return constantType.at(nc);
 }
 
 BinaryConstraintOp PolymorphicObjectsAnalysis::getOverloadedOperator(const BinaryConstraint* bc) const {
