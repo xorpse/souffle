@@ -62,10 +62,6 @@ public:
         return getFixedType().has_value();
     }
 
-    void setType(Type newType) {
-        fixedType = newType;
-    }
-
 protected:
     bool equal(const Node& node) const override {
         const auto& other = static_cast<const NumericConstant&>(node);
