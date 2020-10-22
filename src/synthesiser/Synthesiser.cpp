@@ -1133,6 +1133,18 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "}\n";
             PRINT_END_COMMENT(out);
         }
+
+        bool isGuaranteedToBeMinimum(const IndexAggregate& aggregate) {
+            auto identifier = aggregate.getTupleId();
+            auto keys = isa->getSearchSignature(&aggregate);
+            RelationRepresentation repr = synthesiser.lookup(aggregate.getRelation())->getRepresentation();
+
+            const auto* tupleElem = dynamic_cast<const TupleElement*>(&aggregate.getExpression());
+            return tupleElem && tupleElem->getTupleId() == identifier &&
+                   keys[tupleElem->getElement()] != ram::analysis::AttributeConstraint::None &&
+                   (repr == RelationRepresentation::BTREE || repr == RelationRepresentation::DEFAULT);
+        }
+
         void visitIndexAggregate(const IndexAggregate& aggregate, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             // get some properties
@@ -1235,6 +1247,9 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                     out << "res0 = std::min(res0,ramBitCast<" << type << ">(";
                     visit(aggregate.getExpression(), out);
                     out << "));\n";
+                    if (isGuaranteedToBeMinimum(aggregate)) {
+                        out << "break;\n";
+                    }
                     break;
                 case AggregateOp::FMAX:
                 case AggregateOp::UMAX:
