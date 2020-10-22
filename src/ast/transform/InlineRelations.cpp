@@ -40,6 +40,7 @@
 #include "ast/UnnamedVariable.h"
 #include "ast/UserDefinedFunctor.h"
 #include "ast/Variable.h"
+#include "ast/analysis/PolymorphicObjects.h"
 #include "ast/utility/NodeMapper.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
@@ -83,7 +84,9 @@ NullableVector<std::vector<Literal*>> getInlinedLiteral(Program&, Literal*);
 /**
  * Replace constants in the head of inlined clauses with (constrained) variables.
  */
-void normaliseInlinedHeads(Program& program) {
+void normaliseInlinedHeads(TranslationUnit& tu) {
+    Program& program = tu.getProgram();
+    const auto& polyAnalysis = *tu.getAnalysis<analysis::PolymorphicObjectsAnalysis>();
     static int newVarCount = 0;
 
     // Go through the clauses of all inlined relations
@@ -112,8 +115,9 @@ void normaliseInlinedHeads(Program& program) {
                     clauseHead->addArgument(mk<ast::Variable>(newVar.str()));
 
                     auto* const c_num = dynamic_cast<const NumericConstant*>(constant);
-                    assert((!c_num || c_num->getType()) && "numeric constant wasn't bound to a type");
-                    auto opEq = c_num && *c_num->getType() == NumericConstant::Type::Float
+                    assert((!c_num || !polyAnalysis.hasInvalidType(c_num)) &&
+                            "numeric constant wasn't bound to a type");
+                    auto opEq = c_num && polyAnalysis.getOverloadedType(c_num) == NumericConstant::Type::Float
                                         ? BinaryConstraintOp::FEQ
                                         : BinaryConstraintOp::EQ;
 
@@ -995,7 +999,7 @@ bool InlineRelationsTransformer::transform(TranslationUnit& translationUnit) {
 
     // Replace constants in the head of inlined clauses with (constrained) variables.
     // This is done to simplify atom unification, particularly when negations are involved.
-    normaliseInlinedHeads(program);
+    normaliseInlinedHeads(translationUnit);
 
     // Remove underscores in inlined atoms in the program to avoid issues during atom unification
     nameInlinedUnderscores(program);
