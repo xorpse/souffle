@@ -323,10 +323,12 @@ Own<ram::Condition> AstToRamTranslator::translateConstraint(
     class ConstraintTranslator : public ast::Visitor<Own<ram::Condition>> {
         AstToRamTranslator& translator;
         const ValueIndex& index;
+        const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis;
 
     public:
-        ConstraintTranslator(AstToRamTranslator& translator, const ValueIndex& index)
-                : translator(translator), index(index) {}
+        ConstraintTranslator(AstToRamTranslator& translator, const ValueIndex& index,
+                const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis)
+                : translator(translator), index(index), polyAnalysis(polyAnalysis) {}
 
         /** for atoms */
         Own<ram::Condition> visitAtom(const ast::Atom&) override {
@@ -337,7 +339,8 @@ Own<ram::Condition> AstToRamTranslator::translateConstraint(
         Own<ram::Condition> visitBinaryConstraint(const ast::BinaryConstraint& binRel) override {
             auto valLHS = translator.translateValue(binRel.getLHS(), index);
             auto valRHS = translator.translateValue(binRel.getRHS(), index);
-            return mk<ram::Constraint>(binRel.getOperator(), std::move(valLHS), std::move(valRHS));
+            return mk<ram::Constraint>(
+                    polyAnalysis->getOverloadedOperator(&binRel), std::move(valLHS), std::move(valRHS));
         }
 
         /** for provenance negation */
@@ -390,7 +393,7 @@ Own<ram::Condition> AstToRamTranslator::translateConstraint(
                     mk<ram::ExistenceCheck>(translator.translateRelation(atom), std::move(values)));
         }
     };
-    return ConstraintTranslator(*this, index)(*lit);
+    return ConstraintTranslator(*this, index, polyAnalysis)(*lit);
 }
 
 RamDomain AstToRamTranslator::getConstantRamRepresentation(const ast::Constant& constant) {

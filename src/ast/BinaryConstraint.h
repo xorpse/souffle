@@ -59,12 +59,12 @@ public:
     }
 
     /** Return binary operator */
-    BinaryConstraintOp getOperator() const {
+    BinaryConstraintOp getBaseOperator() const {
         return operation;
     }
 
     /** Set binary operator */
-    void setOperator(BinaryConstraintOp op) {
+    void setBaseOperator(BinaryConstraintOp op) {
         operation = op;
     }
 
@@ -92,7 +92,7 @@ protected:
         return operation == other.operation && equal_ptr(lhs, other.lhs) && equal_ptr(rhs, other.rhs);
     }
 
-    /** Constraint operator */
+    /** Constraint (base) operator */
     BinaryConstraintOp operation;
 
     /** Left-hand side argument of binary constraint */

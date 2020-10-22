@@ -76,7 +76,7 @@ void NormalisedClause::addClauseBodyLiteral(const std::string& scopeID, const Li
     } else if (const auto* neg = dynamic_cast<const Negation*>(lit)) {
         addClauseAtom("@min:neg", scopeID, neg->getAtom());
     } else if (const auto* bc = dynamic_cast<const BinaryConstraint*>(lit)) {
-        QualifiedName name(toBinaryConstraintSymbol(bc->getOperator()));
+        QualifiedName name(toBinaryConstraintSymbol(bc->getBaseOperator()));
         name.prepend("@min:operator");
         std::vector<std::string> vars;
         vars.push_back(scopeID);

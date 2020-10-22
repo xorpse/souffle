@@ -84,9 +84,7 @@ NullableVector<std::vector<Literal*>> getInlinedLiteral(Program&, Literal*);
 /**
  * Replace constants in the head of inlined clauses with (constrained) variables.
  */
-void normaliseInlinedHeads(TranslationUnit& tu) {
-    Program& program = tu.getProgram();
-    const auto& polyAnalysis = *tu.getAnalysis<analysis::PolymorphicObjectsAnalysis>();
+void normaliseInlinedHeads(Program& program) {
     static int newVarCount = 0;
 
     // Go through the clauses of all inlined relations
@@ -114,16 +112,9 @@ void normaliseInlinedHeads(TranslationUnit& tu) {
                     newVar << "<new_var_" << newVarCount++ << ">";
                     clauseHead->addArgument(mk<ast::Variable>(newVar.str()));
 
-                    auto* const c_num = dynamic_cast<const NumericConstant*>(constant);
-                    assert((!c_num || !polyAnalysis.hasInvalidType(c_num)) &&
-                            "numeric constant wasn't bound to a type");
-                    auto opEq = c_num && polyAnalysis.getInferredType(c_num) == NumericConstant::Type::Float
-                                        ? BinaryConstraintOp::FEQ
-                                        : BinaryConstraintOp::EQ;
-
                     // Add a body constraint to set the variable's value to be the original constant
-                    newClause->addToBody(mk<BinaryConstraint>(
-                            opEq, mk<ast::Variable>(newVar.str()), souffle::clone(constant)));
+                    newClause->addToBody(mk<BinaryConstraint>(BinaryConstraintOp::EQ,
+                            mk<ast::Variable>(newVar.str()), souffle::clone(constant)));
                 } else {
                     // Already a variable
                     clauseHead->addArgument(souffle::clone(arg));
@@ -863,7 +854,7 @@ NullableVector<std::vector<Literal*>> getInlinedLiteral(Program& program, Litera
         if (lhsVersions.isValid()) {
             changed = true;
             for (Argument* newLhs : lhsVersions.getVector()) {
-                Literal* newLit = new BinaryConstraint(constraint->getOperator(), Own<Argument>(newLhs),
+                Literal* newLit = new BinaryConstraint(constraint->getBaseOperator(), Own<Argument>(newLhs),
                         souffle::clone(constraint->getRHS()));
                 versions.push_back(newLit);
             }
@@ -872,7 +863,7 @@ NullableVector<std::vector<Literal*>> getInlinedLiteral(Program& program, Litera
             if (rhsVersions.isValid()) {
                 changed = true;
                 for (Argument* newRhs : rhsVersions.getVector()) {
-                    Literal* newLit = new BinaryConstraint(constraint->getOperator(),
+                    Literal* newLit = new BinaryConstraint(constraint->getBaseOperator(),
                             souffle::clone(constraint->getLHS()), Own<Argument>(newRhs));
                     versions.push_back(newLit);
                 }
@@ -999,7 +990,7 @@ bool InlineRelationsTransformer::transform(TranslationUnit& translationUnit) {
 
     // Replace constants in the head of inlined clauses with (constrained) variables.
     // This is done to simplify atom unification, particularly when negations are involved.
-    normaliseInlinedHeads(translationUnit);
+    normaliseInlinedHeads(program);
 
     // Remove underscores in inlined atoms in the program to avoid issues during atom unification
     nameInlinedUnderscores(program);

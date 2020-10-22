@@ -584,7 +584,7 @@ bool NormaliseDatabaseTransformer::normaliseArguments(TranslationUnit& translati
         // Apply to each body literal that isn't already a `<var> = <arg>` constraint
         for (Literal* lit : clause->getBodyLiterals()) {
             if (auto* bc = dynamic_cast<BinaryConstraint*>(lit)) {
-                if (bc->getOperator() == BinaryConstraintOp::EQ && isA<ast::Variable>(bc->getLHS())) {
+                if (isEqConstraint(bc->getBaseOperator()) && isA<ast::Variable>(bc->getLHS())) {
                     continue;
                 }
             }
@@ -1083,7 +1083,7 @@ void MagicSetCoreTransformer::addRelevantVariables(
     while (!fixpointReached) {
         fixpointReached = true;
         for (const auto* eqConstraint : eqConstraints) {
-            assert(eqConstraint->getOperator() == BinaryConstraintOp::EQ && "expected only eq constraints");
+            assert(isEqConstraint(eqConstraint->getBaseOperator()) && "expected only eq constraints");
             fixpointReached &= addLocallyRelevantVariables(eqConstraint->getLHS(), eqConstraint->getRHS());
             fixpointReached &= addLocallyRelevantVariables(eqConstraint->getRHS(), eqConstraint->getLHS());
         }
@@ -1129,7 +1129,7 @@ std::vector<const BinaryConstraint*> MagicSetCoreTransformer::getBindingEquality
     std::vector<const BinaryConstraint*> equalityConstraints;
     for (const auto* lit : clause->getBodyLiterals()) {
         const auto* bc = dynamic_cast<const BinaryConstraint*>(lit);
-        if (bc == nullptr || bc->getOperator() != BinaryConstraintOp::EQ) continue;
+        if (bc == nullptr || !isEqConstraint(bc->getBaseOperator())) continue;
         if (isA<ast::Variable>(bc->getLHS()) || isA<Constant>(bc->getRHS())) {
             bool containsAggrs = false;
             visitDepthFirst(*bc, [&](const Aggregator& /* aggr */) { containsAggrs = true; });

@@ -292,7 +292,7 @@ void negateConstraintInPlace(Constraint& constraint) {
     if (auto* bcstr = dynamic_cast<BooleanConstraint*>(&constraint)) {
         bcstr->set(!bcstr->isTrue());
     } else if (auto* cstr = dynamic_cast<BinaryConstraint*>(&constraint)) {
-        cstr->setOperator(souffle::negatedConstraintOp(cstr->getOperator()));
+        cstr->setBaseOperator(souffle::negatedConstraintOp(cstr->getBaseOperator()));
     } else {
         fatal("Unknown ast-constraint type");
     }

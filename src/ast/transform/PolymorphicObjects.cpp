@@ -91,30 +91,6 @@ bool PolymorphicObjectsTransformer::transform(TranslationUnit& translationUnit) 
                         }
                     }
                 }
-
-                // Handle binary constraint
-                if (auto* binaryConstraint = dynamic_cast<BinaryConstraint*>(node.get())) {
-                    if (isOverloaded(binaryConstraint->getOperator())) {
-                        // Get arguments
-                        auto* leftArg = binaryConstraint->getLHS();
-                        auto* rightArg = binaryConstraint->getRHS();
-                        auto oldOp = binaryConstraint->getOperator();
-
-                        // Both args must be of the same type
-                        if (isFloat(leftArg) && isFloat(rightArg)) {
-                            binaryConstraint->setOperator(convertOverloadedConstraint(
-                                    binaryConstraint->getOperator(), TypeAttribute::Float));
-                        } else if (isUnsigned(leftArg) && isUnsigned(rightArg)) {
-                            binaryConstraint->setOperator(convertOverloadedConstraint(
-                                    binaryConstraint->getOperator(), TypeAttribute::Unsigned));
-                        } else if (isSymbol(leftArg) && isSymbol(rightArg)) {
-                            binaryConstraint->setOperator(convertOverloadedConstraint(
-                                    binaryConstraint->getOperator(), TypeAttribute::Symbol));
-                        }
-
-                        changed |= binaryConstraint->getOperator() != oldOp;
-                    }
-                }
             } catch (std::out_of_range&) {
                 // No types to convert in undeclared clauses
             }
