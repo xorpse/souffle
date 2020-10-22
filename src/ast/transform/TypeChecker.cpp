@@ -38,6 +38,7 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 namespace souffle::ast::transform {
@@ -82,8 +83,15 @@ private:
     const FunctorAnalysis& functorAnalysis = *tu.getAnalysis<FunctorAnalysis>();
     const Program& program = tu.getProgram();
 
+    std::unordered_set<const Atom*> negatedAtoms;
+
+    /** Collect negated atoms */
+    void visitNegation(const Negation& neg) override;
+
+    /* Type checks */
+    /** Check if declared types of the relation match deduced types. */
     void visitAtom(const Atom& atom) override;
-    void visitVariable(const ast::Variable& var) override;
+    void visitVariable(const Variable& var) override;
     void visitStringConstant(const StringConstant& constant) override;
     void visitNumericConstant(const NumericConstant& constant) override;
     void visitNilConstant(const NilConstant& constant) override;
@@ -284,14 +292,20 @@ void TypeCheckerImpl::visitAtom(const Atom& atom) {
 
     for (size_t i = 0; i < attributes.size(); ++i) {
         auto& typeName = attributes[i]->getTypeName();
-        if (typeEnv.isType(typeName)) {
-            auto argTypes = typeAnalysis.getTypes(arguments[i]);
-            auto& attributeType = typeEnv.getType(typeName);
+        if (!typeEnv.isType(typeName)) {
+            continue;
+        }
 
-            if (argTypes.isAll() || argTypes.empty()) {
-                continue;  // This will be reported later.
-            }
+        auto argTypes = typeAnalysis.getTypes(arguments[i]);
+        auto& attributeType = typeEnv.getType(typeName);
 
+        if (argTypes.isAll() || argTypes.empty()) {
+            continue;  // This will be reported later.
+        }
+
+        // We consider two cases: negated and not negated atoms.
+        // Negated atom have to agree in kind, non-negated atom need to follow source/sink rules.
+        if (negatedAtoms.count(&atom) == 0) {
             // Attribute and argument type agree if, argument type is a subtype of declared type
             // or is of the appropriate constant type or the (constant) record type.
             bool validAttribute = all_of(argTypes, [&attributeType](const analysis::Type& type) {
@@ -300,6 +314,7 @@ void TypeCheckerImpl::visitAtom(const Atom& atom) {
                 if (isA<ConstantType>(type)) return true;
                 return isA<analysis::RecordType>(type) && !isA<analysis::SubsetType>(type);
             });
+
             if (!validAttribute && !Global::config().has("legacy")) {
                 auto primaryDiagnostic =
                         DiagnosticMessage("Atom's argument type is not a subtype of its declared type",
@@ -309,6 +324,26 @@ void TypeCheckerImpl::visitAtom(const Atom& atom) {
                         DiagnosticMessage(tfm::format("The argument's declared type is %s", typeName),
                                 attributes[i]->getSrcLoc());
 
+                report.addDiagnostic(Diagnostic(Diagnostic::Type::ERROR, std::move(primaryDiagnostic),
+                        {std::move(declaredTypeInfo)}));
+            }
+        } else {  // negation case.
+            // Declared attribute and deduced type agree if:
+            // They are the same type, or
+            // They are derived from the same constant type.
+            bool validAttribute = all_of(argTypes, [&](const analysis::Type& type) {
+                return type == attributeType || any_of(typeEnv.getConstantTypes(), [&](auto& constantType) {
+                    return isSubtypeOf(attributeType, constantType) && isSubtypeOf(type, constantType);
+                });
+            });
+
+            if (!validAttribute) {
+                auto primaryDiagnostic =
+                        DiagnosticMessage("The kind of atom's argument doesn't match the declared type kind",
+                                arguments[i]->getSrcLoc());
+                auto declaredTypeInfo =
+                        DiagnosticMessage(tfm::format("The argument's declared type is %s", typeName),
+                                attributes[i]->getSrcLoc());
                 report.addDiagnostic(Diagnostic(Diagnostic::Type::ERROR, std::move(primaryDiagnostic),
                         {std::move(declaredTypeInfo)}));
             }
@@ -562,6 +597,10 @@ void TypeCheckerImpl::visitAggregator(const Aggregator& aggregator) {
     if (!isOfKind(aggregatorType, opType)) {
         report.addError("Couldn't assign types to the aggregator", aggregator.getSrcLoc());
     }
+}
+
+void TypeCheckerImpl::visitNegation(const Negation& neg) {
+    negatedAtoms.insert(neg.getAtom());
 }
 
 }  // namespace souffle::ast::transform
