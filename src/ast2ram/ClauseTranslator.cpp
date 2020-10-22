@@ -187,8 +187,9 @@ Own<ram::Statement> ClauseTranslator::translateClause(
             auto expr = translator.translateValue(agg->getTargetExpression(), *valueIndex);
 
             // add Ram-Aggregation layer
-            op = mk<ram::Aggregate>(std::move(op), agg->getOverloadedOperator(), translator.translateRelation(atom),
-                    expr ? std::move(expr) : mk<ram::UndefValue>(),
+            const auto* polyAnalysis = translator.getPolymorphicObjectsAnalysis();
+            op = mk<ram::Aggregate>(std::move(op), polyAnalysis->getOverloadedOperator(agg),
+                    translator.translateRelation(atom), expr ? std::move(expr) : mk<ram::UndefValue>(),
                     aggCond ? std::move(aggCond) : mk<ram::True>(), level);
         } else if (const auto* func = dynamic_cast<const ast::IntrinsicFunctor*>(cur)) {
             VecOwn<ram::Expression> args;

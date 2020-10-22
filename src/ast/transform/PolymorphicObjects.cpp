@@ -13,8 +13,6 @@
  ***********************************************************************/
 
 #include "ast/transform/PolymorphicObjects.h"
-#include "AggregateOp.h"
-#include "ast/Aggregator.h"
 #include "ast/Argument.h"
 #include "ast/BinaryConstraint.h"
 #include "ast/IntrinsicFunctor.h"
@@ -115,23 +113,6 @@ bool PolymorphicObjectsTransformer::transform(TranslationUnit& translationUnit) 
                         }
 
                         changed |= binaryConstraint->getOperator() != oldOp;
-                    }
-                }
-
-                if (auto* aggregator = dynamic_cast<Aggregator*>(node.get())) {
-                    if (isOverloadedAggregator(aggregator->getBaseOperator())) {
-                        auto* targetExpression = aggregator->getTargetExpression();
-                        auto oldOp = aggregator->getBaseOperator();
-
-                        if (isFloat(targetExpression)) {
-                            aggregator->setOverloadedOperator(convertOverloadedAggregator(
-                                    aggregator->getBaseOperator(), TypeAttribute::Float));
-                        } else if (isUnsigned(targetExpression)) {
-                            aggregator->setOverloadedOperator(convertOverloadedAggregator(
-                                    aggregator->getBaseOperator(), TypeAttribute::Unsigned));
-                        }
-
-                        changed |= aggregator->getOverloadedOperator() != oldOp;
                     }
                 }
             } catch (std::out_of_range&) {

@@ -588,7 +588,7 @@ void TypeCheckerImpl::visitBinaryConstraint(const BinaryConstraint& constraint) 
 }
 
 void TypeCheckerImpl::visitAggregator(const Aggregator& aggregator) {
-    auto op = aggregator.getOverloadedOperator();
+    auto op = polyAnalysis.getOverloadedOperator(&aggregator);
 
     auto aggregatorType = typeAnalysis.getTypes(&aggregator);
 

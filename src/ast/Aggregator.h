@@ -47,20 +47,12 @@ class Aggregator : public Argument {
 public:
     Aggregator(AggregateOp baseOperator, Own<Argument> expr = nullptr, VecOwn<Literal> body = {},
             SrcLocation loc = {})
-            : Argument(std::move(loc)), baseOperator(baseOperator), overloadedOperator(baseOperator),
-              targetExpression(std::move(expr)), body(std::move(body)) {}
+            : Argument(std::move(loc)), baseOperator(baseOperator), targetExpression(std::move(expr)),
+              body(std::move(body)) {}
 
     /** Return the (base type) operator of the aggregator */
     AggregateOp getBaseOperator() const {
         return baseOperator;
-    }
-
-    AggregateOp getOverloadedOperator() const {
-        return overloadedOperator;
-    }
-
-    void setOverloadedOperator(AggregateOp op) {
-        overloadedOperator = op;
     }
 
     /** Return target expression */
@@ -105,7 +97,7 @@ public:
 
 protected:
     void print(std::ostream& os) const override {
-        os << overloadedOperator;
+        os << baseOperator;
         if (targetExpression) {
             os << " " << *targetExpression;
         }
@@ -114,14 +106,13 @@ protected:
 
     bool equal(const Node& node) const override {
         const auto& other = static_cast<const Aggregator&>(node);
-        return baseOperator == other.baseOperator && overloadedOperator == other.overloadedOperator &&
-               equal_ptr(targetExpression, other.targetExpression) && equal_targets(body, other.body);
+        return baseOperator == other.baseOperator && equal_ptr(targetExpression, other.targetExpression) &&
+               equal_targets(body, other.body);
     }
 
 private:
-    /** Aggregate operator */
+    /** Aggregate (base type) operator */
     AggregateOp baseOperator;
-    AggregateOp overloadedOperator;
 
     /** Aggregate expression */
     Own<Argument> targetExpression;
