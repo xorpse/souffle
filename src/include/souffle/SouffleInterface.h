@@ -745,6 +745,12 @@ protected:
         }
     }
 
+    [[deprecated("pass `rel` by reference; `rel` may not be null"), maybe_unused]] void addRelation(
+            const std::string& name, Relation* rel, bool isInput, bool isOutput) {
+        assert(rel && "`rel` may not be null");
+        addRelation(name, *rel, isInput, isOutput);
+    }
+
 public:
     /**
      * Destructor.
