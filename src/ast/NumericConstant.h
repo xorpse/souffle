@@ -54,10 +54,6 @@ public:
         return copy;
     }
 
-    const std::optional<Type>& getType() const {
-        return getFixedType();
-    }
-
     const std::optional<Type>& getFixedType() const {
         return fixedType;
     }

@@ -615,8 +615,8 @@ private:
         TypeSet possibleTypes;
 
         // Check if the type is given.
-        if (constant.getType().has_value()) {
-            switch (*constant.getType()) {
+        if (constant.hasFixedType()) {
+            switch (constant.getFixedType().value()) {
                 // Insert a type, but only after checking that parsing is possible.
                 case NumericConstant::Type::Int:
                     if (canBeParsedAsRamSigned(constant.getConstant())) {
@@ -634,8 +634,8 @@ private:
                     }
                     break;
             }
-            // Else: all numeric types that can be parsed are valid.
         } else {
+            // Else: all numeric types that can be parsed are valid.
             if (canBeParsedAsRamSigned(constant.getConstant())) {
                 possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Signed));
             }
