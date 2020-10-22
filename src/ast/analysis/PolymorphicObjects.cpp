@@ -27,6 +27,7 @@ void PolymorphicObjectsAnalysis::run(const TranslationUnit& translationUnit) {
     typeAnalysis = translationUnit.getAnalysis<analysis::TypeAnalysis>();
     const auto& program = translationUnit.getProgram();
 
+    // Utility lambdas to determine if all args are of the same type.
     auto isFloat = [&](const Argument* argument) {
         return isOfKind(typeAnalysis->getTypes(argument), TypeAttribute::Float);
     };

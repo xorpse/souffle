@@ -14,7 +14,6 @@
 
 #include "ast/transform/PolymorphicObjects.h"
 #include "ast/Argument.h"
-#include "ast/BinaryConstraint.h"
 #include "ast/IntrinsicFunctor.h"
 #include "ast/Node.h"
 #include "ast/Program.h"
@@ -23,7 +22,6 @@
 #include "ast/analysis/TypeSystem.h"
 #include "ast/utility/NodeMapper.h"
 #include "ast/utility/Utils.h"
-#include "souffle/BinaryConstraintOps.h"
 #include "souffle/TypeAttribute.h"
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/FunctionalUtil.h"
@@ -46,17 +44,6 @@ bool PolymorphicObjectsTransformer::transform(TranslationUnit& translationUnit) 
                 : typeAnalysis(typeAnalysis), report(report) {}
 
         Own<Node> operator()(Own<Node> node) const override {
-            // Utility lambdas to determine if all args are of the same type.
-            auto isFloat = [&](const Argument* argument) {
-                return isOfKind(typeAnalysis.getTypes(argument), TypeAttribute::Float);
-            };
-            auto isUnsigned = [&](const Argument* argument) {
-                return isOfKind(typeAnalysis.getTypes(argument), TypeAttribute::Unsigned);
-            };
-            auto isSymbol = [&](const Argument* argument) {
-                return isOfKind(typeAnalysis.getTypes(argument), TypeAttribute::Symbol);
-            };
-
             // rewrite sub-expressions first
             node->apply(*this);
 
