@@ -784,9 +784,9 @@ private:
     }
 
     void visitAggregator(const Aggregator& agg) override {
-        if (agg.getOperator() == AggregateOp::COUNT) {
+        if (agg.getBaseOperator() == AggregateOp::COUNT) {
             addConstraint(isSubtypeOf(getVar(agg), typeEnv.getConstantType(TypeAttribute::Signed)));
-        } else if (agg.getOperator() == AggregateOp::MEAN) {
+        } else if (agg.getBaseOperator() == AggregateOp::MEAN) {
             addConstraint(isSubtypeOf(getVar(agg), typeEnv.getConstantType(TypeAttribute::Float)));
         } else {
             addConstraint(hasSuperTypeInSet(getVar(agg), typeEnv.getConstantNumericTypes()));

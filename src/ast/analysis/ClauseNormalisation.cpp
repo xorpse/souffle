@@ -130,7 +130,7 @@ std::string NormalisedClause::normaliseArgument(const Argument* arg) {
         std::vector<std::string> aggrTypeSignatureComponents;
 
         // - the operator is fixed and cannot be changed
-        aggrTypeSignature << ":" << aggr->getOperator();
+        aggrTypeSignature << ":" << aggr->getBaseOperator();
 
         // - the scope can be remapped as a variable
         aggrTypeSignatureComponents.push_back(scopeID.str());

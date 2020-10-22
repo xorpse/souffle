@@ -539,10 +539,10 @@ bool NormaliseDatabaseTransformer::normaliseArguments(TranslationUnit& translati
 
                 // Update the node to reflect normalised aggregator
                 node = aggr->getTargetExpression() != nullptr
-                               ? mk<Aggregator>(aggr->getOperator(),
+                               ? mk<Aggregator>(aggr->getBaseOperator(),
                                          souffle::clone(aggr->getTargetExpression()),
                                          std::move(newBodyLiterals))
-                               : mk<Aggregator>(aggr->getOperator(), nullptr, std::move(newBodyLiterals));
+                               : mk<Aggregator>(aggr->getBaseOperator(), nullptr, std::move(newBodyLiterals));
             } else {
                 // Otherwise, just normalise children as usual.
                 node->apply(*this);

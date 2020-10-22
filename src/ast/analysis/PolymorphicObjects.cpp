@@ -48,7 +48,7 @@ BinaryConstraintOp PolymorphicObjectsAnalysis::getOverloadedOperator(const Binar
 }
 
 AggregateOp PolymorphicObjectsAnalysis::getOverloadedOperator(const Aggregator* aggr) const {
-    return aggr->getOperator();
+    return aggr->getOverloadedOperator();
 }
 
 }  // namespace souffle::ast::analysis

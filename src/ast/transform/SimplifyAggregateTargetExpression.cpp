@@ -112,7 +112,7 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
 
                     // set up a new aggregate to replace this one
                     auto newAggregate = mk<Aggregator>(
-                            aggregate->getOperator(), std::move(newTargetExpression), std::move(newBody));
+                            aggregate->getBaseOperator(), std::move(newTargetExpression), std::move(newBody));
                     changed = true;
                     return newAggregate;
                 }

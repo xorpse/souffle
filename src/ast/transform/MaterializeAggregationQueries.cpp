@@ -284,7 +284,7 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
             for (const auto& lit : agg.getBodyLiterals()) {
                 aggClause->addToBody(souffle::clone(lit));
             }
-            if (agg.getOperator() == AggregateOp::COUNT) {
+            if (agg.getBaseOperator() == AggregateOp::COUNT) {
                 instantiateUnnamedVariables(*aggClause);
             }
             // pull in any necessary grounding atoms

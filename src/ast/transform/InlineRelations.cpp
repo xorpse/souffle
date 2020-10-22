@@ -553,7 +553,7 @@ NullableVector<Argument*> getInlinedArgument(Program& program, const Argument* a
 
                 // Create a new aggregator per version of the target expression
                 for (Argument* newArg : argumentVersions.getVector()) {
-                    auto* newAggr = new Aggregator(aggr->getOperator(), Own<Argument>(newArg));
+                    auto* newAggr = new Aggregator(aggr->getBaseOperator(), Own<Argument>(newArg));
                     VecOwn<Literal> newBody;
                     for (Literal* lit : aggr->getBodyLiterals()) {
                         newBody.push_back(souffle::clone(lit));
@@ -577,7 +577,7 @@ NullableVector<Argument*> getInlinedArgument(Program& program, const Argument* a
                     // Literal can be inlined!
                     changed = true;
 
-                    AggregateOp op = aggr->getOperator();
+                    AggregateOp op = aggr->getBaseOperator();
 
                     // Create an aggregator (with the same operation) for each possible body
                     std::vector<Aggregator*> aggrVersions;
@@ -586,7 +586,7 @@ NullableVector<Argument*> getInlinedArgument(Program& program, const Argument* a
                         if (aggr->getTargetExpression() != nullptr) {
                             target = souffle::clone(aggr->getTargetExpression());
                         }
-                        auto* newAggr = new Aggregator(aggr->getOperator(), std::move(target));
+                        auto* newAggr = new Aggregator(aggr->getBaseOperator(), std::move(target));
 
                         VecOwn<Literal> newBody;
                         // Add in everything except the current literal being replaced

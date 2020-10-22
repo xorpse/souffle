@@ -45,17 +45,22 @@ namespace souffle::ast {
  */
 class Aggregator : public Argument {
 public:
-    Aggregator(AggregateOp fun, Own<Argument> expr = nullptr, VecOwn<Literal> body = {}, SrcLocation loc = {})
-            : Argument(std::move(loc)), fun(fun), targetExpression(std::move(expr)), body(std::move(body)) {}
+    Aggregator(AggregateOp baseOperator, Own<Argument> expr = nullptr, VecOwn<Literal> body = {},
+            SrcLocation loc = {})
+            : Argument(std::move(loc)), baseOperator(baseOperator), overloadedOperator(baseOperator),
+              targetExpression(std::move(expr)), body(std::move(body)) {}
 
-    /** Return aggregate operator */
-    AggregateOp getOperator() const {
-        return fun;
+    /** Return the (base type) operator of the aggregator */
+    AggregateOp getBaseOperator() const {
+        return baseOperator;
     }
 
-    /** Set aggregate operator */
-    void setOperator(AggregateOp op) {
-        fun = op;
+    AggregateOp getOverloadedOperator() const {
+        return overloadedOperator;
+    }
+
+    void setOverloadedOperator(AggregateOp op) {
+        overloadedOperator = op;
     }
 
     /** Return target expression */
@@ -85,7 +90,8 @@ public:
     }
 
     Aggregator* clone() const override {
-        return new Aggregator(fun, souffle::clone(targetExpression), souffle::clone(body), getSrcLoc());
+        return new Aggregator(
+                baseOperator, souffle::clone(targetExpression), souffle::clone(body), getSrcLoc());
     }
 
     void apply(const NodeMapper& map) override {
@@ -99,7 +105,7 @@ public:
 
 protected:
     void print(std::ostream& os) const override {
-        os << fun;
+        os << overloadedOperator;
         if (targetExpression) {
             os << " " << *targetExpression;
         }
@@ -108,13 +114,14 @@ protected:
 
     bool equal(const Node& node) const override {
         const auto& other = static_cast<const Aggregator&>(node);
-        return fun == other.fun && equal_ptr(targetExpression, other.targetExpression) &&
-               equal_targets(body, other.body);
+        return baseOperator == other.baseOperator && overloadedOperator == other.overloadedOperator &&
+               equal_ptr(targetExpression, other.targetExpression) && equal_targets(body, other.body);
     }
 
 private:
     /** Aggregate operator */
-    AggregateOp fun;
+    AggregateOp baseOperator;
+    AggregateOp overloadedOperator;
 
     /** Aggregate expression */
     Own<Argument> targetExpression;

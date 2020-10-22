@@ -119,19 +119,19 @@ bool PolymorphicObjectsTransformer::transform(TranslationUnit& translationUnit) 
                 }
 
                 if (auto* aggregator = dynamic_cast<Aggregator*>(node.get())) {
-                    if (isOverloadedAggregator(aggregator->getOperator())) {
+                    if (isOverloadedAggregator(aggregator->getBaseOperator())) {
                         auto* targetExpression = aggregator->getTargetExpression();
-                        auto oldOp = aggregator->getOperator();
+                        auto oldOp = aggregator->getBaseOperator();
 
                         if (isFloat(targetExpression)) {
-                            aggregator->setOperator(convertOverloadedAggregator(
-                                    aggregator->getOperator(), TypeAttribute::Float));
+                            aggregator->setOverloadedOperator(convertOverloadedAggregator(
+                                    aggregator->getBaseOperator(), TypeAttribute::Float));
                         } else if (isUnsigned(targetExpression)) {
-                            aggregator->setOperator(convertOverloadedAggregator(
-                                    aggregator->getOperator(), TypeAttribute::Unsigned));
+                            aggregator->setOverloadedOperator(convertOverloadedAggregator(
+                                    aggregator->getBaseOperator(), TypeAttribute::Unsigned));
                         }
 
-                        changed |= aggregator->getOperator() != oldOp;
+                        changed |= aggregator->getOverloadedOperator() != oldOp;
                     }
                 }
             } catch (std::out_of_range&) {
