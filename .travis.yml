@@ -183,11 +183,14 @@ jobs:
     workspaces:
       use: focal_gcc
     script: docker exec souf /bin/sh -c ".travis/test_make_install.sh"
-  # Make the linux deb packages and if successful upload to github releases and bintray
+  # Make the bionic deb packages and if successful upload to github releases and bintray
   # All PRs go to bintray unstable, tagged releases to bintray stable
   - stage: Packaging
     name: "Debian amd64 package"
     <<: *docker
+    before_script:
+      - docker pull souffle/ubuntu:bionic-base
+      - docker run -d -t --name souf -w /souffle --mount src="$(pwd)",target=/souffle,type=bind souffle/ubuntu:bionic-base /bin/sh
     script:
       - docker exec souf /bin/sh -c ".travis/linux/install_debian_deps.sh"
       - docker exec souf /bin/sh -c ".travis/linux/make_debian_package.sh"
