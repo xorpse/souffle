@@ -687,15 +687,15 @@ private:
             // The type of the user-defined function might not be set at this stage.
             // If so then add overloads as alternatives
             if (!intrFun->getFunctionOp())
-                addConstraint(satisfiesOverload(typeEnv, functorBuiltIn(intrFun->getFunction()), functorVar,
-                        argVars, isInfixFunctorOp(intrFun->getFunction())));
+                addConstraint(satisfiesOverload(typeEnv, functorBuiltIn(intrFun->getBaseFunctionOp()),
+                        functorVar, argVars, isInfixFunctorOp(intrFun->getBaseFunctionOp())));
 
             // In polymorphic case
             // We only require arguments to share a base type with a return type.
             // (instead of, for example, requiring them to be of the same type)
             // This approach is related to old type semantics
             // See #1296 and tests/semantic/type_system4
-            if (isInfixFunctorOp(intrFun->getFunction())) {
+            if (isInfixFunctorOp(intrFun->getBaseFunctionOp())) {
                 for (auto&& var : argVars)
                     addConstraint(subtypesOfTheSameBaseType(var, functorVar));
 
@@ -906,7 +906,7 @@ IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& func) con
 
     IntrinsicFunctors functorInfos = func.getFunctionOp().has_value()
                                              ? functorBuiltIn(func.getFunctionOp().value())
-                                             : functorBuiltIn(func.getFunction());
+                                             : functorBuiltIn(func.getBaseFunctionOp());
     auto candidates = filterNot(functorInfos, [&](const IntrinsicFunctorInfo& x) -> bool {
         if (!x.variadic && argTys.size() != x.params.size()) return true;  // arity mismatch?
         for (size_t i = 0; i < argTys.size(); ++i)

@@ -648,7 +648,7 @@ NullableVector<Argument*> getInlinedArgument(Program& program, const Argument* a
                         ++j;
                     }
                     if (const auto* intrFunc = dynamic_cast<const IntrinsicFunctor*>(arg)) {
-                        auto* newFunctor = new IntrinsicFunctor(intrFunc->getFunction(), std::move(argsCopy));
+                        auto* newFunctor = new IntrinsicFunctor(intrFunc->getBaseFunctionOp(), std::move(argsCopy));
                         newFunctor->setSrcLoc(functor->getSrcLoc());
                         versions.push_back(newFunctor);
                     } else if (const auto* userFunc = dynamic_cast<const UserDefinedFunctor*>(arg)) {
