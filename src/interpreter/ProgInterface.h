@@ -64,12 +64,12 @@ public:
 
     /** Iterator to first tuple */
     iterator begin() const override {
-        return RelInterface::iterator(new RelInterface::iterator_base(id, this, relation.begin()));
+        return RelInterface::iterator(mk<RelInterface::iterator_base>(id, this, relation.begin()));
     }
 
     /** Iterator to last tuple */
     iterator end() const override {
-        return RelInterface::iterator(new RelInterface::iterator_base(id, this, relation.end()));
+        return RelInterface::iterator(mk<RelInterface::iterator_base>(id, this, relation.end()));
     }
 
     /** Get name */
@@ -78,12 +78,12 @@ public:
     }
 
     /** Get arity */
-    size_t getArity() const override {
+    arity_type getArity() const override {
         return relation.getArity();
     }
 
     /** Get arity */
-    size_t getAuxiliaryArity() const override {
+    arity_type getAuxiliaryArity() const override {
         return relation.getAuxiliaryArity();
     }
 
@@ -247,7 +247,7 @@ public:
                     }
                 }
             });
-            addRelation(rel.getName(), interface, input, output);
+            addRelation(rel.getName(), *interface, input, output);
             id++;
         }
     }

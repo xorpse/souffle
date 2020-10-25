@@ -34,6 +34,25 @@
 
 namespace souffle {
 
+// Usage:       `using namespace stream_write_qualified_char_as_number;`
+//              NB: `using` must appear in the same namespace as the `<<` callers.
+//                  Putting the `using` in a parent namespace will have no effect.
+// Motivation:  Octet sized numeric types are often defined as aliases of a qualified
+//              `char`. e.g. `using uint8_t = unsigned char'`
+//              `std::ostream` has an overload which converts qualified `char`s to plain `char`.
+//              You don't usually want to print a `uint8_t` as an ASCII character.
+//
+// NOTE:        `char`, `signed char`, and `unsigned char` are distinct types.
+namespace stream_write_qualified_char_as_number {
+inline std::ostream& operator<<(std::ostream& os, signed char c) {
+    return os << int(c);
+}
+
+inline std::ostream& operator<<(std::ostream& os, unsigned char c) {
+    return os << unsigned(c);
+}
+}  // namespace stream_write_qualified_char_as_number
+
 template <typename A>
 struct IsPtrLike : std::is_pointer<A> {};
 template <typename A>
