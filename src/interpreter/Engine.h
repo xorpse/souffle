@@ -100,35 +100,7 @@ private:
     /** @brief Return the relation map. */
     VecOwn<RelationHandle>& getRelationMap();
 
-    /** If profile is enable in this program */
-    const bool profileEnabled;
-    /** subroutines */
-    VecOwn<Node> subroutine;
-    /** main program */
-    Own<Node> main;
-    /** Number of threads enabled for this program */
-    size_t numOfThreads;
-    /** Profile counter */
-    std::atomic<RamDomain> counter{0};
-    /** Loop iteration counter */
-    size_t iteration = 0;
-    /** Profile for rule frequencies */
-    std::map<std::string, std::deque<std::atomic<size_t>>> frequencies;
-    /** Profile for relation reads */
-    std::map<std::string, std::atomic<size_t>> reads;
-    /** DLL */
-    std::vector<void*> dll;
-    /** Program */
-    ram::TranslationUnit& tUnit;
-    /** IndexAnalysis */
-    ram::analysis::IndexAnalysis* isa;
-    /** Interpreter program generator */
-    NodeGenerator generator;
-    /** Record Table*/
-    RecordTable recordTable;
-
     // -- Defines template for specialized interpreter operation -- */
-private:
     template <typename Rel>
     RamDomain evalExistenceCheck(const ExistenceCheck& shadow, Context& ctxt);
 
@@ -180,6 +152,33 @@ private:
 
     template <typename Rel>
     RamDomain evalProject(Rel& rel, const Project& shadow, Context& ctxt);
+
+    /** If profile is enable in this program */
+    const bool profileEnabled;
+    /** subroutines */
+    VecOwn<Node> subroutine;
+    /** main program */
+    Own<Node> main;
+    /** Number of threads enabled for this program */
+    size_t numOfThreads;
+    /** Profile counter */
+    std::atomic<RamDomain> counter{0};
+    /** Loop iteration counter */
+    size_t iteration = 0;
+    /** Profile for rule frequencies */
+    std::map<std::string, std::deque<std::atomic<size_t>>> frequencies;
+    /** Profile for relation reads */
+    std::map<std::string, std::atomic<size_t>> reads;
+    /** DLL */
+    std::vector<void*> dll;
+    /** Program */
+    ram::TranslationUnit& tUnit;
+    /** IndexAnalysis */
+    ram::analysis::IndexAnalysis* isa;
+    /** Interpreter program generator */
+    NodeGenerator generator;
+    /** Record Table*/
+    RecordTable recordTable;
 };
 
 }  // namespace souffle::interpreter
