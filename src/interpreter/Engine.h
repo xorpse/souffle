@@ -50,18 +50,11 @@ class ProgInterface;
 class Engine {
     using RelationHandle = Own<RelationWrapper>;
     friend ProgInterface;
+    friend NodeGenerator;
 
 public:
-    Engine(ram::TranslationUnit& tUnit)
-            : profileEnabled(Global::config().has("profile")),
-              numOfThreads(std::stoi(Global::config().get("jobs"))), tUnit(tUnit),
-              isa(tUnit.getAnalysis<ram::analysis::IndexAnalysis>()), generator(tUnit.getProgram(), isa) {
-#ifdef _OPENMP
-        if (numOfThreads > 0) {
-            omp_set_num_threads(numOfThreads);
-        }
-#endif
-    }
+    Engine(ram::TranslationUnit& tUnit);
+
     /** @brief Execute the main program */
     void executeMain();
     /** @brief Execute the subroutine program */
@@ -99,6 +92,8 @@ private:
     int incCounter();
     /** @brief Return the relation map. */
     VecOwn<RelationHandle>& getRelationMap();
+    /** @brief Create and add relation into the runtime environment.  */
+    void createRelation(const ram::Relation& id, const size_t idx);
 
     // -- Defines template for specialized interpreter operation -- */
     template <typename Rel>
@@ -155,6 +150,8 @@ private:
 
     /** If profile is enable in this program */
     const bool profileEnabled;
+    /** If running a provenance program */
+    const bool isProvenance;
     /** subroutines */
     VecOwn<Node> subroutine;
     /** main program */
@@ -175,10 +172,10 @@ private:
     ram::TranslationUnit& tUnit;
     /** IndexAnalysis */
     ram::analysis::IndexAnalysis* isa;
-    /** Interpreter program generator */
-    NodeGenerator generator;
     /** Record Table*/
     RecordTable recordTable;
+    /** Symbol table for relations */
+    VecOwn<RelationHandle> relations;
 };
 
 }  // namespace souffle::interpreter

@@ -18,7 +18,6 @@
 #include "FunctorOps.h"
 #include "Global.h"
 #include "interpreter/Context.h"
-#include "interpreter/Generator.h"
 #include "interpreter/Index.h"
 #include "interpreter/Node.h"
 #include "interpreter/Relation.h"
@@ -139,8 +138,19 @@ namespace {
 constexpr RamDomain RAM_BIT_SHIFT_MASK = RAM_DOMAIN_SIZE - 1;
 }
 
+Engine::Engine(ram::TranslationUnit& tUnit)
+        : profileEnabled(Global::config().has("profile")), isProvenance(Global::config().has("provenance")),
+          numOfThreads(std::stoi(Global::config().get("jobs"))), tUnit(tUnit),
+          isa(tUnit.getAnalysis<ram::analysis::IndexAnalysis>()) {
+#ifdef _OPENMP
+    if (numOfThreads > 0) {
+        omp_set_num_threads(numOfThreads);
+    }
+#endif
+}
+
 Engine::RelationHandle& Engine::getRelationHandle(const size_t idx) {
-    return generator.getRelationHandle(idx);
+    return *relations[idx];
 }
 
 void Engine::swapRelation(const size_t ramRel1, const size_t ramRel2) {
@@ -177,7 +187,26 @@ void* Engine::getMethodHandle(const std::string& method) {
 }
 
 VecOwn<Engine::RelationHandle>& Engine::getRelationMap() {
-    return generator.getRelations();
+    return relations;
+}
+
+void Engine::createRelation(const ram::Relation& id, const size_t idx) {
+    if (relations.size() < idx + 1) {
+        relations.resize(idx + 1);
+    }
+
+    RelationHandle res;
+    const auto& orderSet = isa->getIndexes(id.getName());
+    if (id.getRepresentation() == RelationRepresentation::EQREL) {
+        res = createEqrelRelation(id, orderSet);
+    } else {
+        if (isProvenance) {
+            res = createProvenanceRelation(id, orderSet);
+        } else {
+            res = createBTreeRelation(id, orderSet);
+        }
+    }
+    relations[idx] = mk<RelationHandle>(std::move(res));
 }
 
 const std::vector<void*>& Engine::loadDLL() {
@@ -299,6 +328,7 @@ void Engine::executeMain() {
 
 void Engine::generateIR() {
     const ram::Program& program = tUnit.getProgram();
+    NodeGenerator generator(*this);
     if (subroutine.empty()) {
         for (const auto& sub : program.getSubroutines()) {
             subroutine.push_back(generator.generateTree(*sub.second));
