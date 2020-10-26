@@ -18,10 +18,10 @@
 
 #include "Global.h"
 #include "interpreter/Context.h"
+#include "interpreter/Generator.h"
 #include "interpreter/Index.h"
 #include "interpreter/Node.h"
 #include "interpreter/Relation.h"
-#include "interpreter/Generator.h"
 #include "ram/TranslationUnit.h"
 #include "ram/analysis/Index.h"
 #include "souffle/RamTypes.h"
