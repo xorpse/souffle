@@ -33,17 +33,6 @@ namespace souffle::interpreter {
 class Context {
     using ViewPtr = Own<ViewWrapper>;
 
-    /** @brief Run-time value */
-    std::vector<const RamDomain*> data;
-    /** @brief Subroutine return value */
-    std::vector<RamDomain>* returnValues = nullptr;
-    /** @brief Subroutine arguments */
-    const std::vector<RamDomain>* args = nullptr;
-    /** @bref Allocated data */
-    VecOwn<RamDomain[]> allocatedDataContainer;
-    /** @brief Views */
-    VecOwn<ViewWrapper> views;
-
 public:
     Context(size_t size = 0) : data(size) {}
 
@@ -119,6 +108,18 @@ public:
         assert(id < views.size());
         return views[id].get();
     }
+
+private:
+    /** @brief Run-time value */
+    std::vector<const RamDomain*> data;
+    /** @brief Subroutine return value */
+    std::vector<RamDomain>* returnValues = nullptr;
+    /** @brief Subroutine arguments */
+    const std::vector<RamDomain>* args = nullptr;
+    /** @bref Allocated data */
+    VecOwn<RamDomain[]> allocatedDataContainer;
+    /** @brief Views */
+    VecOwn<ViewWrapper> views;
 };
 
 }  // namespace souffle::interpreter
