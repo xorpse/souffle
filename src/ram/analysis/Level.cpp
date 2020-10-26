@@ -242,7 +242,7 @@ int LevelAnalysis::getLevel(const Node* node) const {
 
         // fd existence check
         int visitFDExistenceCheck(const FDExistenceCheck& exists) override {
-            int level = -1;
+            int level = INT32_MAX;
             for (const auto& cur : exists.getValues()) {
                 level = std::max(level, visit(cur));
             }
