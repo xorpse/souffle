@@ -62,7 +62,6 @@
 #include "ast2ram/AstToRamTranslator.h"
 #include "config.h"
 #include "interpreter/Engine.h"
-#include "interpreter/Generator.h"
 #include "interpreter/ProgInterface.h"
 #include "parser/ParserDriver.h"
 #include "ram/Node.h"

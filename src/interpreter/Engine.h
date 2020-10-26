@@ -21,6 +21,7 @@
 #include "interpreter/Index.h"
 #include "interpreter/Node.h"
 #include "interpreter/Relation.h"
+#include "interpreter/Generator.h"
 #include "ram/Aggregate.h"
 #include "ram/AutoIncrement.h"
 #include "ram/Break.h"
@@ -93,7 +94,6 @@
 namespace souffle::interpreter {
 
 class ProgInterface;
-class NodeGenerator;
 
 /**
  * @class Engine
@@ -228,8 +228,6 @@ private:
     RecordTable recordTable;
     /** Symbol table for relations */
     VecOwn<RelationHandle> relations;
-    /** Interpreter program generator */
-    Own<NodeGenerator> generator;
 };
 
 }  // namespace souffle::interpreter

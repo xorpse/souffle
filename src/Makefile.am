@@ -209,6 +209,7 @@ souffle_sources = \
         interpreter/Engine.cpp                             \
         interpreter/Engine.h                               \
         interpreter/Generator.h                            \
+        interpreter/Generator.cpp                          \
         interpreter/BrieIndex.cpp                          \
         interpreter/BTreeIndex.cpp                         \
         interpreter/EqrelIndex.cpp                         \

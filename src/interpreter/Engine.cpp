@@ -18,7 +18,6 @@
 #include "FunctorOps.h"
 #include "Global.h"
 #include "interpreter/Context.h"
-#include "interpreter/Generator.h"
 #include "interpreter/Index.h"
 #include "interpreter/Node.h"
 #include "interpreter/Relation.h"
@@ -89,7 +88,7 @@ constexpr RamDomain RAM_BIT_SHIFT_MASK = RAM_DOMAIN_SIZE - 1;
 Engine::Engine(ram::TranslationUnit& tUnit)
         : profileEnabled(Global::config().has("profile")), isProvenance(Global::config().has("provenance")),
           numOfThreads(std::stoi(Global::config().get("jobs"))), tUnit(tUnit),
-          isa(tUnit.getAnalysis<ram::analysis::IndexAnalysis>()), generator(mk<NodeGenerator>(*this)) {
+          isa(tUnit.getAnalysis<ram::analysis::IndexAnalysis>()) {
 #ifdef _OPENMP
     if (numOfThreads > 0) {
         omp_set_num_threads(numOfThreads);
@@ -276,13 +275,14 @@ void Engine::executeMain() {
 
 void Engine::generateIR() {
     const ram::Program& program = tUnit.getProgram();
+    NodeGenerator generator(*this);
     if (subroutine.empty()) {
         for (const auto& sub : program.getSubroutines()) {
-            subroutine.push_back(generator->generateTree(*sub.second));
+            subroutine.push_back(generator.generateTree(*sub.second));
         }
     }
     if (main == nullptr) {
-        main = generator->generateTree(program.getMain());
+        main = generator.generateTree(program.getMain());
     }
 }
 
