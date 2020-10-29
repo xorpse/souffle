@@ -25,7 +25,7 @@ namespace souffle::ast::analysis {
 
 void FunctorAnalysis::run(const TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
-    const TypeAnalysis& typeAnalysis = *translationUnit.getAnalysis<TypeAnalysis>();
+    typeAnalysis = translationUnit.getAnalysis<TypeAnalysis>();
 
     visitDepthFirst(
             program, [&](const FunctorDeclaration& fdecl) { udfDeclaration[fdecl.getName()] = &fdecl; });
@@ -33,7 +33,7 @@ void FunctorAnalysis::run(const TranslationUnit& translationUnit) {
     visitDepthFirst(program, [&](const IntrinsicFunctor& functor) {
         // any valid candidate will do. pick the first.
         try {
-            auto candidates = validOverloads(typeAnalysis, functor);
+            auto candidates = validOverloads(*typeAnalysis, functor);
             if (!candidates.empty()) {
                 functorInfo[functor.getFunction()] = &candidates.front().get();
             }
