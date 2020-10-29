@@ -568,7 +568,7 @@ private:
     const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>()->getTypeEnvironment();
     const Program& program = tu.getProgram();
     const SumTypeBranchesAnalysis& sumTypesBranches = *tu.getAnalysis<SumTypeBranchesAnalysis>();
-    const FunctorAnalysis& functorAnalysis = *tu.getAnalysis<FunctorAnalysis>();
+    const TypeAnalysis& typeAnalysis = *tu.getAnalysis<TypeAnalysis>();
 
     // Sinks = {head} ∪ {negated atoms}
     std::set<const Atom*> sinks;
@@ -688,7 +688,7 @@ private:
 
         // add a constraint for the return type of the functor
         try {
-            TypeAttribute returnType = functorAnalysis.getReturnType(&fun);
+            TypeAttribute returnType = typeAnalysis.getFunctorReturnType(&fun);
             addConstraint(isSubtypeOf(functorVar, typeEnv.getConstantType(returnType)));
         } catch (...) {
             // missing function information
@@ -701,7 +701,7 @@ private:
         // Add constraints on arguments
         auto arguments = fun.getArguments();
         for (size_t i = 0; i < arguments.size(); ++i) {
-            TypeAttribute argType = functorAnalysis.getArgType(&fun, i);
+            TypeAttribute argType = typeAnalysis.getFunctorArgType(&fun, i);
             addConstraint(isSubtypeOf(getVar(arguments[i]), typeEnv.getConstantType(argType)));
         }
     }
@@ -825,14 +825,19 @@ void TypeAnalysis::print(std::ostream& os) const {
 }
 
 TypeAttribute TypeAnalysis::getFunctorReturnType(const Functor* functor) const {
-    if (const auto* udf = as<UserDefinedFunctor>(functor)) {
+    if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
+        return functorInfo.at(intrinsic->getFunction())->result;
+    } else if (const auto* udf = as<UserDefinedFunctor>(functor)) {
         return udfDeclaration.at(udf->getName())->getReturnType();
     }
     fatal("Missing functor type.");
 }
 
 TypeAttribute TypeAnalysis::getFunctorArgType(const Functor* functor, const size_t idx) const {
-    if (auto* udf = as<UserDefinedFunctor>(functor)) {
+    if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
+        auto* info = functorInfo.at(intrinsic->getFunction());
+        return info->params.at(info->variadic ? 0 : idx);
+    } else if (auto* udf = as<UserDefinedFunctor>(functor)) {
         return udfDeclaration.at(udf->getName())->getArgsTypes().at(idx);
     }
     fatal("Missing functor type.");
@@ -849,6 +854,9 @@ bool TypeAnalysis::isStatefulFunctor(const UserDefinedFunctor* udf) const {
 bool TypeAnalysis::isMultiResultFunctor(const Functor& functor) {
     if (isA<UserDefinedFunctor>(functor)) {
         return false;
+    } else if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
+        auto op = intrinsic->getFunctionOp();
+        return op && functorBuiltIn(*op).front().get().multipleResults;
     }
     fatal("Missing functor type.");
 }
@@ -875,6 +883,18 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
     // Analyse functor types
     visitDepthFirst(
             program, [&](const FunctorDeclaration& fdecl) { udfDeclaration[fdecl.getName()] = &fdecl; });
+
+    visitDepthFirst(program, [&](const IntrinsicFunctor& functor) {
+        // any valid candidate will do. pick the first.
+        try {
+            auto candidates = validOverloads(*this, functor);
+            if (!candidates.empty()) {
+                functorInfo[functor.getFunction()] = &candidates.front().get();
+            }
+        } catch (...) {
+            // type analysis in validOverloads failed.
+        }
+    });
 }
 
 }  // namespace souffle::ast::analysis

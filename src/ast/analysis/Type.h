@@ -20,6 +20,7 @@
 #include "ast/Clause.h"
 #include "ast/analysis/Analysis.h"
 #include "ast/analysis/TypeSystem.h"
+#include "FunctorOps.h"
 #include <memory>
 #include <sstream>
 #include <string>
@@ -80,7 +81,7 @@ private:
     std::stringstream analysisLogs;
 
     std::map<std::string, const FunctorDeclaration*> udfDeclaration;
-    // std::map<std::string, const IntrinsicFunctorInfo*> functorInfo;
+    std::map<std::string, const IntrinsicFunctorInfo*> functorInfo;
 };
 
 }  // namespace souffle::ast::analysis
