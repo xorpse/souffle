@@ -25,6 +25,12 @@
 #include <string>
 #include <vector>
 
+namespace souffle::ast {
+class Functor;
+class FunctorDeclaration;
+class UserDefinedFunctor;
+}  // namespace souffle::ast
+
 namespace souffle::ast::analysis {
 
 class TypeAnalysis : public Analysis {
@@ -57,10 +63,24 @@ public:
     static std::map<const Argument*, TypeSet> analyseTypes(
             const TranslationUnit&, const Clause&, std::ostream* /*logs*/ = nullptr);
 
+    /** Functor-related */
+    TypeAttribute getFunctorReturnType(const Functor* functor) const;
+
+    TypeAttribute getFunctorArgType(const Functor* functor, const size_t idx) const;
+
+    const std::vector<TypeAttribute>& getFunctorArgTypes(const UserDefinedFunctor& udf) const;
+
+    bool isStatefulFunctor(const UserDefinedFunctor* udf) const;
+
+    static bool isMultiResultFunctor(const Functor& functor);
+
 private:
     std::map<const Argument*, TypeSet> argumentTypes;
     VecOwn<Clause> annotatedClauses;
     std::stringstream analysisLogs;
+
+    std::map<std::string, const FunctorDeclaration*> udfDeclaration;
+    // std::map<std::string, const IntrinsicFunctorInfo*> functorInfo;
 };
 
 }  // namespace souffle::ast::analysis

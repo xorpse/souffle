@@ -41,6 +41,7 @@
 #include "ast/TranslationUnit.h"
 #include "ast/TypeCast.h"
 #include "ast/UnnamedVariable.h"
+#include "ast/UserDefinedFunctor.h"
 #include "ast/Variable.h"
 #include "ast/analysis/Constraint.h"
 #include "ast/analysis/Functor.h"
@@ -823,6 +824,35 @@ void TypeAnalysis::print(std::ostream& os) const {
     }
 }
 
+TypeAttribute TypeAnalysis::getFunctorReturnType(const Functor* functor) const {
+    if (const auto* udf = as<UserDefinedFunctor>(functor)) {
+        return udfDeclaration.at(udf->getName())->getReturnType();
+    }
+    fatal("Missing functor type.");
+}
+
+TypeAttribute TypeAnalysis::getFunctorArgType(const Functor* functor, const size_t idx) const {
+    if (auto* udf = as<UserDefinedFunctor>(functor)) {
+        return udfDeclaration.at(udf->getName())->getArgsTypes().at(idx);
+    }
+    fatal("Missing functor type.");
+}
+
+const std::vector<TypeAttribute>& TypeAnalysis::getFunctorArgTypes(const UserDefinedFunctor& udf) const {
+    return udfDeclaration.at(udf.getName())->getArgsTypes();
+}
+
+bool TypeAnalysis::isStatefulFunctor(const UserDefinedFunctor* udf) const {
+    return udfDeclaration.at(udf->getName())->isStateful();
+}
+
+bool TypeAnalysis::isMultiResultFunctor(const Functor& functor) {
+    if (isA<UserDefinedFunctor>(functor)) {
+        return false;
+    }
+    fatal("Missing functor type.");
+}
+
 void TypeAnalysis::run(const TranslationUnit& translationUnit) {
     // Check if debugging information is being generated
     std::ostream* debugStream = nullptr;
@@ -841,6 +871,10 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
             annotatedClauses.emplace_back(createAnnotatedClause(clause, clauseArgumentTypes));
         }
     }
+
+    // Analyse functor types
+    visitDepthFirst(
+            program, [&](const FunctorDeclaration& fdecl) { udfDeclaration[fdecl.getName()] = &fdecl; });
 }
 
 }  // namespace souffle::ast::analysis
