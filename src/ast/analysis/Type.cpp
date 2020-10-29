@@ -861,6 +861,41 @@ bool TypeAnalysis::isMultiResultFunctor(const Functor& functor) {
     fatal("Missing functor type.");
 }
 
+IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& func) const {
+    auto typeAttrs = [&](const Argument* arg) -> std::set<TypeAttribute> {
+        auto&& types = getTypes(arg);
+        if (types.isAll())
+            return {TypeAttribute::Signed, TypeAttribute::Unsigned, TypeAttribute::Float,
+                    TypeAttribute::Symbol, TypeAttribute::Record};
+
+        std::set<TypeAttribute> tyAttrs;
+        for (auto&& ty : types)
+            tyAttrs.insert(getTypeAttribute(ty));
+        return tyAttrs;
+    };
+    auto retTys = typeAttrs(&func);
+    auto argTys = map(func.getArguments(), typeAttrs);
+
+    auto candidates =
+            filterNot(functorBuiltIn(func.getFunction()), [&](const IntrinsicFunctorInfo& x) -> bool {
+                if (!x.variadic && argTys.size() != x.params.size()) return true;  // arity mismatch?
+
+                for (size_t i = 0; i < argTys.size(); ++i)
+                    if (!contains(argTys[i], x.params[x.variadic ? 0 : i])) return true;
+
+                return !contains(retTys, x.result);
+            });
+
+    std::sort(candidates.begin(), candidates.end(),
+            [&](const IntrinsicFunctorInfo& a, const IntrinsicFunctorInfo& b) {
+                if (a.result != b.result) return a.result < b.result;
+                if (a.variadic != b.variadic) return a.variadic < b.variadic;
+                return std::lexicographical_compare(
+                        a.params.begin(), a.params.end(), b.params.begin(), b.params.end());
+            });
+    return candidates;
+}
+
 void TypeAnalysis::run(const TranslationUnit& translationUnit) {
     // Check if debugging information is being generated
     std::ostream* debugStream = nullptr;
@@ -886,13 +921,9 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
 
     visitDepthFirst(program, [&](const IntrinsicFunctor& functor) {
         // any valid candidate will do. pick the first.
-        try {
-            auto candidates = validOverloads(*this, functor);
-            if (!candidates.empty()) {
-                functorInfo[functor.getFunction()] = &candidates.front().get();
-            }
-        } catch (...) {
-            // type analysis in validOverloads failed.
+        auto candidates = validOverloads(functor);
+        if (!candidates.empty()) {
+            functorInfo[functor.getFunction()] = &candidates.front().get();
         }
     });
 }

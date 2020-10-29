@@ -29,6 +29,7 @@
 namespace souffle::ast {
 class Functor;
 class FunctorDeclaration;
+class IntrinsicFunctor;
 class UserDefinedFunctor;
 }  // namespace souffle::ast
 
@@ -74,6 +75,8 @@ public:
     bool isStatefulFunctor(const UserDefinedFunctor* udf) const;
 
     static bool isMultiResultFunctor(const Functor& functor);
+
+    IntrinsicFunctors validOverloads(const ast::IntrinsicFunctor& func) const;
 
 private:
     std::map<const Argument*, TypeSet> argumentTypes;
