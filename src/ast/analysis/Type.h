@@ -16,11 +16,11 @@
 
 #pragma once
 
+#include "FunctorOps.h"
 #include "ast/Argument.h"
 #include "ast/Clause.h"
 #include "ast/analysis/Analysis.h"
 #include "ast/analysis/TypeSystem.h"
-#include "FunctorOps.h"
 #include <memory>
 #include <sstream>
 #include <string>
