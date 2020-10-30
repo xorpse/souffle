@@ -76,8 +76,7 @@ public:
 
     static bool isMultiResultFunctor(const Functor& functor);
 
-    IntrinsicFunctors validOverloads(const ast::IntrinsicFunctor& func, IntrinsicFunctors functorInfos) const;
-
+    IntrinsicFunctors validOverloads(const ast::IntrinsicFunctor& func) const;
     bool hasProcessedFunctor(const Functor* functor) const;
     bool isInvalidFunctor(const IntrinsicFunctor* func) const;
 

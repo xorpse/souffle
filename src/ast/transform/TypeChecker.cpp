@@ -469,16 +469,13 @@ void TypeCheckerImpl::visitTypeCast(const ast::TypeCast& cast) {
 }
 
 void TypeCheckerImpl::visitIntrinsicFunctor(const IntrinsicFunctor& fun) {
-    if (!fun.getFunctionOp()) {  // no info => no overload found during inference
+    if (!fun.getFunctionOp() || typeAnalysis.isInvalidFunctor(&fun)) {
         auto args = fun.getArguments();
         if (!isValidFunctorOpArity(fun.getFunction(), args.size())) {
             report.addError("invalid overload (arity mismatch)", fun.getSrcLoc());
             return;
         }
-
-        assert(validOverloads(typeAnalysis, fun).empty() && "polymorphic transformation wasn't applied?");
-        report.addError("no valid overloads", fun.getSrcLoc());
-    } else if (typeAnalysis.isInvalidFunctor(&fun)) {
+        assert(typeAnalysis.validOverloads(fun).empty() && "unexpected type analysis result");
         report.addError("no valid overloads", fun.getSrcLoc());
     }
 }

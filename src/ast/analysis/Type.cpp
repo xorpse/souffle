@@ -860,8 +860,7 @@ bool TypeAnalysis::isMultiResultFunctor(const Functor& functor) {
     fatal("Missing functor type.");
 }
 
-IntrinsicFunctors TypeAnalysis::validOverloads(
-        const IntrinsicFunctor& func, IntrinsicFunctors functorInfos) const {
+IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& func) const {
     auto typeAttrs = [&](const Argument* arg) -> std::set<TypeAttribute> {
         auto&& types = getTypes(arg);
         if (types.isAll())
@@ -876,6 +875,9 @@ IntrinsicFunctors TypeAnalysis::validOverloads(
     auto retTys = typeAttrs(&func);
     auto argTys = map(func.getArguments(), typeAttrs);
 
+    IntrinsicFunctors functorInfos = func.getFunctionOp().has_value()
+                                             ? functorBuiltIn(func.getFunctionOp().value())
+                                             : functorBuiltIn(func.getFunction());
     auto candidates = filterNot(functorInfos, [&](const IntrinsicFunctorInfo& x) -> bool {
         if (!x.variadic && argTys.size() != x.params.size()) return true;  // arity mismatch?
         for (size_t i = 0; i < argTys.size(); ++i)
@@ -932,9 +934,7 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
                 program, [&](const FunctorDeclaration& fdecl) { udfDeclaration[fdecl.getName()] = &fdecl; });
 
         visitDepthFirst(program, [&](const IntrinsicFunctor& functor) {
-            auto candidates = validOverloads(functor,
-                    functor.getFunctionOp().has_value() ? functorBuiltIn(functor.getFunctionOp().value())
-                                                        : functorBuiltIn(functor.getFunction()));
+            auto candidates = validOverloads(functor);
             if (candidates.empty()) {
                 if (contains(invalidFunctors, &functor)) return;
                 invalidFunctors.insert(&functor);
