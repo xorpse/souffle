@@ -936,7 +936,9 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
                     functor.getFunctionOp().has_value() ? functorBuiltIn(functor.getFunctionOp().value())
                                                         : functorBuiltIn(functor.getFunction()));
             if (candidates.empty()) {
+                if (contains(invalidFunctors, &functor)) return;
                 invalidFunctors.insert(&functor);
+                changed = true;
                 return;
             }
 
