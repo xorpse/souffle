@@ -84,7 +84,7 @@ private:
     std::stringstream analysisLogs;
 
     std::map<std::string, const FunctorDeclaration*> udfDeclaration;
-    std::map<std::string, const IntrinsicFunctorInfo*> functorInfo;
+    std::map<const IntrinsicFunctor*, const IntrinsicFunctorInfo*> functorInfo;
 };
 
 }  // namespace souffle::ast::analysis

@@ -686,23 +686,23 @@ private:
             if (!intrFun->getFunctionOp()) return;
         }
 
-        // add a constraint for the return type of the functor
+        // Quit constraint adding if type info is not available
         try {
+            // add a constraint for the return type of the functor
             TypeAttribute returnType = typeAnalysis.getFunctorReturnType(&fun);
             addConstraint(isSubtypeOf(functorVar, typeEnv.getConstantType(returnType)));
+            // Special case. Ord returns the ram representation of any object.
+            if (intrFun && intrFun->getFunctionOp().value() == FunctorOp::ORD) return;
+
+            // Add constraints on arguments
+            auto arguments = fun.getArguments();
+            for (size_t i = 0; i < arguments.size(); ++i) {
+                TypeAttribute argType = typeAnalysis.getFunctorArgType(&fun, i);
+                addConstraint(isSubtypeOf(getVar(arguments[i]), typeEnv.getConstantType(argType)));
+            }
         } catch (...) {
             // missing function information
             return;
-        }
-
-        // Special case. Ord returns the ram representation of any object.
-        if (intrFun && intrFun->getFunctionOp().value() == FunctorOp::ORD) return;
-
-        // Add constraints on arguments
-        auto arguments = fun.getArguments();
-        for (size_t i = 0; i < arguments.size(); ++i) {
-            TypeAttribute argType = typeAnalysis.getFunctorArgType(&fun, i);
-            addConstraint(isSubtypeOf(getVar(arguments[i]), typeEnv.getConstantType(argType)));
         }
     }
 
@@ -826,7 +826,7 @@ void TypeAnalysis::print(std::ostream& os) const {
 
 TypeAttribute TypeAnalysis::getFunctorReturnType(const Functor* functor) const {
     if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
-        return functorInfo.at(intrinsic->getFunction())->result;
+        return functorInfo.at(intrinsic)->result;
     } else if (const auto* udf = as<UserDefinedFunctor>(functor)) {
         return udfDeclaration.at(udf->getName())->getReturnType();
     }
@@ -835,7 +835,7 @@ TypeAttribute TypeAnalysis::getFunctorReturnType(const Functor* functor) const {
 
 TypeAttribute TypeAnalysis::getFunctorArgType(const Functor* functor, const size_t idx) const {
     if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
-        auto* info = functorInfo.at(intrinsic->getFunction());
+        auto* info = functorInfo.at(intrinsic);
         return info->params.at(info->variadic ? 0 : idx);
     } else if (auto* udf = as<UserDefinedFunctor>(functor)) {
         return udfDeclaration.at(udf->getName())->getArgsTypes().at(idx);
@@ -903,29 +903,43 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
         debugStream = &analysisLogs;
     }
 
-    // Analyse types, clause by clause.
-    const Program& program = translationUnit.getProgram();
-    for (const Clause* clause : program.getClauses()) {
-        auto clauseArgumentTypes = analyseTypes(translationUnit, *clause, debugStream);
-        argumentTypes.insert(clauseArgumentTypes.begin(), clauseArgumentTypes.end());
+    bool changed = true;
+    while (changed) {
+        changed = false;
+        // Analyse types, clause by clause.
+        const Program& program = translationUnit.getProgram();
+        for (const Clause* clause : program.getClauses()) {
+            auto clauseArgumentTypes = analyseTypes(translationUnit, *clause, debugStream);
+            argumentTypes.insert(clauseArgumentTypes.begin(), clauseArgumentTypes.end());
 
-        if (debugStream != nullptr) {
-            // Store an annotated clause for printing purposes
-            annotatedClauses.emplace_back(createAnnotatedClause(clause, clauseArgumentTypes));
+            if (debugStream != nullptr) {
+                // Store an annotated clause for printing purposes
+                annotatedClauses.emplace_back(createAnnotatedClause(clause, clauseArgumentTypes));
+            }
         }
+
+        // Analyse functor types
+        visitDepthFirst(
+                program, [&](const FunctorDeclaration& fdecl) { udfDeclaration[fdecl.getName()] = &fdecl; });
+
+        visitDepthFirst(program, [&](const IntrinsicFunctor& functor) {
+            const IntrinsicFunctorInfo* curInfo = nullptr;
+            if (!functor.getFunctionOp()) {
+                if (contains(functorInfo, &functor)) return;
+                auto candidates = validOverloads(functor);
+                if (candidates.empty()) return;
+                curInfo = &candidates.front().get();
+            } else {
+                IntrinsicFunctors validValues = functorBuiltIn(functor.getFunctionOp().value());
+                assert(!validValues.empty() && "functor op should be valid");
+                curInfo = &validValues[0].get();
+            }
+
+            if (contains(functorInfo, &functor) && functorInfo.at(&functor) == curInfo) return;
+            functorInfo[&functor] = curInfo;
+            changed = true;
+        });
     }
-
-    // Analyse functor types
-    visitDepthFirst(
-            program, [&](const FunctorDeclaration& fdecl) { udfDeclaration[fdecl.getName()] = &fdecl; });
-
-    visitDepthFirst(program, [&](const IntrinsicFunctor& functor) {
-        // any valid candidate will do. pick the first.
-        auto candidates = validOverloads(functor);
-        if (!candidates.empty()) {
-            functorInfo[functor.getFunction()] = &candidates.front().get();
-        }
-    });
 }
 
 }  // namespace souffle::ast::analysis
