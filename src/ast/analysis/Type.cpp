@@ -860,7 +860,8 @@ bool TypeAnalysis::isMultiResultFunctor(const Functor& functor) {
     fatal("Missing functor type.");
 }
 
-IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& func) const {
+IntrinsicFunctors TypeAnalysis::validOverloads(
+        const IntrinsicFunctor& func, IntrinsicFunctors functorInfos) const {
     auto typeAttrs = [&](const Argument* arg) -> std::set<TypeAttribute> {
         auto&& types = getTypes(arg);
         if (types.isAll())
@@ -875,15 +876,12 @@ IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& func) con
     auto retTys = typeAttrs(&func);
     auto argTys = map(func.getArguments(), typeAttrs);
 
-    auto candidates =
-            filterNot(functorBuiltIn(func.getFunction()), [&](const IntrinsicFunctorInfo& x) -> bool {
-                if (!x.variadic && argTys.size() != x.params.size()) return true;  // arity mismatch?
-
-                for (size_t i = 0; i < argTys.size(); ++i)
-                    if (!contains(argTys[i], x.params[x.variadic ? 0 : i])) return true;
-
-                return !contains(retTys, x.result);
-            });
+    auto candidates = filterNot(functorInfos, [&](const IntrinsicFunctorInfo& x) -> bool {
+        if (!x.variadic && argTys.size() != x.params.size()) return true;  // arity mismatch?
+        for (size_t i = 0; i < argTys.size(); ++i)
+            if (!contains(argTys[i], x.params[x.variadic ? 0 : i])) return true;
+        return !contains(retTys, x.result);
+    });
 
     std::sort(candidates.begin(), candidates.end(),
             [&](const IntrinsicFunctorInfo& a, const IntrinsicFunctorInfo& b) {
@@ -933,24 +931,13 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
             const IntrinsicFunctorInfo* curInfo = nullptr;
             if (!functor.getFunctionOp()) {
                 if (contains(functorInfo, &functor)) return;
-                auto candidates = validOverloads(functor);
+                auto candidates = validOverloads(functor, functorBuiltIn(functor.getFunction()));
                 if (candidates.empty()) return;
                 curInfo = &candidates.front().get();
             } else {
-                IntrinsicFunctors validValues = filterNot(functorBuiltIn(functor.getFunctionOp().value()),
-                        [&](const IntrinsicFunctorInfo& x) -> bool {
-                            if (!x.variadic && functor.getArguments().size() != x.params.size()) return true;
-                            return false;
-                        });
-                std::sort(validValues.begin(), validValues.end(),
-                        [&](const IntrinsicFunctorInfo& a, const IntrinsicFunctorInfo& b) {
-                            if (a.result != b.result) return a.result < b.result;
-                            if (a.variadic != b.variadic) return a.variadic < b.variadic;
-                            return std::lexicographical_compare(
-                                    a.params.begin(), a.params.end(), b.params.begin(), b.params.end());
-                        });
-                assert(!validValues.empty() && "functor op should be valid");
-                curInfo = &validValues[0].get();
+                auto candidates = validOverloads(functor, functorBuiltIn(functor.getFunctionOp().value()));
+                assert(!candidates.empty() && "functor op should be valid");
+                curInfo = &candidates.front().get();
             }
 
             if (contains(functorInfo, &functor) && functorInfo.at(&functor) == curInfo) return;
