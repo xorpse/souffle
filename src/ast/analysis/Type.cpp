@@ -901,6 +901,10 @@ bool TypeAnalysis::hasProcessedFunctor(const Functor* functor) const {
     fatal("Missing functor type.");
 }
 
+bool TypeAnalysis::isInvalidFunctor(const IntrinsicFunctor* func) const {
+    return contains(invalidFunctors, func);
+}
+
 void TypeAnalysis::run(const TranslationUnit& translationUnit) {
     // Check if debugging information is being generated
     std::ostream* debugStream = nullptr;
@@ -928,18 +932,19 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
                 program, [&](const FunctorDeclaration& fdecl) { udfDeclaration[fdecl.getName()] = &fdecl; });
 
         visitDepthFirst(program, [&](const IntrinsicFunctor& functor) {
-            const IntrinsicFunctorInfo* curInfo = nullptr;
-            if (!functor.getFunctionOp()) {
-                if (contains(functorInfo, &functor)) return;
-                auto candidates = validOverloads(functor, functorBuiltIn(functor.getFunction()));
-                if (candidates.empty()) return;
-                curInfo = &candidates.front().get();
-            } else {
-                auto candidates = validOverloads(functor, functorBuiltIn(functor.getFunctionOp().value()));
-                assert(!candidates.empty() && "functor op should be valid");
-                curInfo = &candidates.front().get();
+            auto candidates = validOverloads(functor,
+                    functor.getFunctionOp().has_value() ? functorBuiltIn(functor.getFunctionOp().value())
+                                                        : functorBuiltIn(functor.getFunction()));
+            if (candidates.empty()) {
+                invalidFunctors.insert(&functor);
+                return;
             }
 
+            if (contains(invalidFunctors, &functor)) {
+                invalidFunctors.erase(&functor);
+            }
+
+            const auto* curInfo = &candidates.front().get();
             if (contains(functorInfo, &functor) && functorInfo.at(&functor) == curInfo) return;
             functorInfo[&functor] = curInfo;
             changed = true;

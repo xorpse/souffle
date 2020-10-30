@@ -478,6 +478,8 @@ void TypeCheckerImpl::visitIntrinsicFunctor(const IntrinsicFunctor& fun) {
 
         assert(validOverloads(typeAnalysis, fun).empty() && "polymorphic transformation wasn't applied?");
         report.addError("no valid overloads", fun.getSrcLoc());
+    } else if (typeAnalysis.isInvalidFunctor(&fun)) {
+        report.addError("no valid overloads", fun.getSrcLoc());
     }
 }
 

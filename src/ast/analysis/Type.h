@@ -79,6 +79,7 @@ public:
     IntrinsicFunctors validOverloads(const ast::IntrinsicFunctor& func, IntrinsicFunctors functorInfos) const;
 
     bool hasProcessedFunctor(const Functor* functor) const;
+    bool isInvalidFunctor(const IntrinsicFunctor* func) const;
 
 private:
     std::map<const Argument*, TypeSet> argumentTypes;
@@ -87,6 +88,7 @@ private:
 
     std::map<std::string, const FunctorDeclaration*> udfDeclaration;
     std::map<const IntrinsicFunctor*, const IntrinsicFunctorInfo*> functorInfo;
+    std::set<const IntrinsicFunctor*> invalidFunctors;
 };
 
 }  // namespace souffle::ast::analysis
