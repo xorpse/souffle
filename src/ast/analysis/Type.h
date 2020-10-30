@@ -78,6 +78,8 @@ public:
 
     IntrinsicFunctors validOverloads(const ast::IntrinsicFunctor& func) const;
 
+    bool hasProcessedFunctor(const Functor* functor) const;
+
 private:
     std::map<const Argument*, TypeSet> argumentTypes;
     VecOwn<Clause> annotatedClauses;

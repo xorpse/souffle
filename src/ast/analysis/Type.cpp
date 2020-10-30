@@ -686,23 +686,20 @@ private:
             if (!intrFun->getFunctionOp()) return;
         }
 
-        // Quit constraint adding if type info is not available
-        try {
-            // add a constraint for the return type of the functor
-            TypeAttribute returnType = typeAnalysis.getFunctorReturnType(&fun);
-            addConstraint(isSubtypeOf(functorVar, typeEnv.getConstantType(returnType)));
-            // Special case. Ord returns the ram representation of any object.
-            if (intrFun && intrFun->getFunctionOp().value() == FunctorOp::ORD) return;
+        // Skip constraint adding if type info is not available
+        if (!typeAnalysis.hasProcessedFunctor(&fun)) return;
 
-            // Add constraints on arguments
-            auto arguments = fun.getArguments();
-            for (size_t i = 0; i < arguments.size(); ++i) {
-                TypeAttribute argType = typeAnalysis.getFunctorArgType(&fun, i);
-                addConstraint(isSubtypeOf(getVar(arguments[i]), typeEnv.getConstantType(argType)));
-            }
-        } catch (...) {
-            // missing function information
-            return;
+        // add a constraint for the return type of the functor
+        TypeAttribute returnType = typeAnalysis.getFunctorReturnType(&fun);
+        addConstraint(isSubtypeOf(functorVar, typeEnv.getConstantType(returnType)));
+        // Special case. Ord returns the ram representation of any object.
+        if (intrFun && intrFun->getFunctionOp().value() == FunctorOp::ORD) return;
+
+        // Add constraints on arguments
+        auto arguments = fun.getArguments();
+        for (size_t i = 0; i < arguments.size(); ++i) {
+            TypeAttribute argType = typeAnalysis.getFunctorArgType(&fun, i);
+            addConstraint(isSubtypeOf(getVar(arguments[i]), typeEnv.getConstantType(argType)));
         }
     }
 
@@ -825,6 +822,7 @@ void TypeAnalysis::print(std::ostream& os) const {
 }
 
 TypeAttribute TypeAnalysis::getFunctorReturnType(const Functor* functor) const {
+    assert(hasProcessedFunctor(functor) && "functor not yet processed");
     if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
         return functorInfo.at(intrinsic)->result;
     } else if (const auto* udf = as<UserDefinedFunctor>(functor)) {
@@ -834,6 +832,7 @@ TypeAttribute TypeAnalysis::getFunctorReturnType(const Functor* functor) const {
 }
 
 TypeAttribute TypeAnalysis::getFunctorArgType(const Functor* functor, const size_t idx) const {
+    assert(hasProcessedFunctor(functor) && "functor not yet processed");
     if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
         auto* info = functorInfo.at(intrinsic);
         return info->params.at(info->variadic ? 0 : idx);
@@ -895,6 +894,14 @@ IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& func) con
             });
     return candidates;
 }
+bool TypeAnalysis::hasProcessedFunctor(const Functor* functor) const {
+    if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
+        return contains(functorInfo, intrinsic);
+    } else if (const auto* udf = as<UserDefinedFunctor>(functor)) {
+        return contains(udfDeclaration, udf->getName());
+    }
+    fatal("Missing functor type.");
+}
 
 void TypeAnalysis::run(const TranslationUnit& translationUnit) {
     // Check if debugging information is being generated
@@ -930,7 +937,18 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
                 if (candidates.empty()) return;
                 curInfo = &candidates.front().get();
             } else {
-                IntrinsicFunctors validValues = functorBuiltIn(functor.getFunctionOp().value());
+                IntrinsicFunctors validValues = filterNot(functorBuiltIn(functor.getFunctionOp().value()),
+                        [&](const IntrinsicFunctorInfo& x) -> bool {
+                            if (!x.variadic && functor.getArguments().size() != x.params.size()) return true;
+                            return false;
+                        });
+                std::sort(validValues.begin(), validValues.end(),
+                        [&](const IntrinsicFunctorInfo& a, const IntrinsicFunctorInfo& b) {
+                            if (a.result != b.result) return a.result < b.result;
+                            if (a.variadic != b.variadic) return a.variadic < b.variadic;
+                            return std::lexicographical_compare(
+                                    a.params.begin(), a.params.end(), b.params.begin(), b.params.end());
+                        });
                 assert(!validValues.empty() && "functor op should be valid");
                 curInfo = &validValues[0].get();
             }
