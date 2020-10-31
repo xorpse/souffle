@@ -862,12 +862,18 @@ bool TypeAnalysis::isMultiResultFunctor(const Functor& functor) {
 
 IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& func) const {
     auto typeAttrs = [&](const Argument* arg) -> std::set<TypeAttribute> {
+        std::set<TypeAttribute> tyAttrs;
+        if (const auto* inf = dynamic_cast<const IntrinsicFunctor*>(arg)) {
+            if (hasProcessedFunctor(inf)) {
+                tyAttrs.insert(getFunctorReturnType(inf));
+                return tyAttrs;
+            }
+        }
         auto&& types = getTypes(arg);
         if (types.isAll())
             return {TypeAttribute::Signed, TypeAttribute::Unsigned, TypeAttribute::Float,
                     TypeAttribute::Symbol, TypeAttribute::Record};
 
-        std::set<TypeAttribute> tyAttrs;
         for (auto&& ty : types)
             tyAttrs.insert(getTypeAttribute(ty));
         return tyAttrs;
