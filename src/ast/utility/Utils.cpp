@@ -298,41 +298,6 @@ void negateConstraintInPlace(Constraint& constraint) {
     }
 }
 
-IntrinsicFunctors validOverloads(const analysis::TypeAnalysis& typing, const ast::IntrinsicFunctor& func) {
-    auto typeAttrs = [&](const Argument* arg) -> std::set<TypeAttribute> {
-        auto&& types = typing.getTypes(arg);
-        if (types.isAll())
-            return {TypeAttribute::Signed, TypeAttribute::Unsigned, TypeAttribute::Float,
-                    TypeAttribute::Symbol, TypeAttribute::Record};
-
-        std::set<TypeAttribute> tyAttrs;
-        for (auto&& ty : types)
-            tyAttrs.insert(getTypeAttribute(ty));
-        return tyAttrs;
-    };
-    auto retTys = typeAttrs(&func);
-    auto argTys = map(func.getArguments(), typeAttrs);
-
-    auto candidates =
-            filterNot(functorBuiltIn(func.getFunction()), [&](const IntrinsicFunctorInfo& x) -> bool {
-                if (!x.variadic && argTys.size() != x.params.size()) return true;  // arity mismatch?
-
-                for (size_t i = 0; i < argTys.size(); ++i)
-                    if (!contains(argTys[i], x.params[x.variadic ? 0 : i])) return true;
-
-                return !contains(retTys, x.result);
-            });
-
-    std::sort(candidates.begin(), candidates.end(),
-            [&](const IntrinsicFunctorInfo& a, const IntrinsicFunctorInfo& b) {
-                if (a.result != b.result) return a.result < b.result;
-                if (a.variadic != b.variadic) return a.variadic < b.variadic;
-                return std::lexicographical_compare(
-                        a.params.begin(), a.params.end(), b.params.begin(), b.params.end());
-            });
-    return candidates;
-}
-
 bool renameAtoms(Node& node, const std::map<QualifiedName, QualifiedName>& oldToNew) {
     struct rename_atoms : public NodeMapper {
         mutable bool changed{false};

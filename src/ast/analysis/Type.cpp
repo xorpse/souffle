@@ -894,6 +894,7 @@ IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& func) con
             });
     return candidates;
 }
+
 bool TypeAnalysis::hasProcessedFunctor(const Functor* functor) const {
     if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
         return contains(functorInfo, intrinsic);
