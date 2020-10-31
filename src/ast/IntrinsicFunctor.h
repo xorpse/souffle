@@ -71,6 +71,10 @@ public:
         this->op = op;
     }
 
+    void clearFunctionOp() {
+        this->op = std::nullopt;
+    }
+
     IntrinsicFunctor* clone() const override {
         return new IntrinsicFunctor(function, op, souffle::clone(args), getSrcLoc());
     }

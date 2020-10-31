@@ -90,13 +90,31 @@ bool PolymorphicObjectsTransformer::transform(TranslationUnit& translationUnit) 
                 }
 
                 // Handle functor
-                auto* functor = as<IntrinsicFunctor>(node);
-                if (functor && !functor->getFunctionOp()) {
-                    // any valid candidate will do. pick the first.
-                    auto candidates = validOverloads(typeAnalysis, *functor);
-                    if (!candidates.empty()) {
-                        functor->setFunctionOp(candidates.front().get().op);
-                        changed = true;
+                if (auto* functor = dynamic_cast<IntrinsicFunctor*>(node.get())) {
+                    if (functor->getFunctionOp().has_value()) {
+                        if (typeAnalysis.isInvalidFunctor(functor)) {
+                            functor->clearFunctionOp();
+                            changed = true;
+                        } else {
+                            auto candidates = typeAnalysis.validOverloads(*functor);
+                            if (!candidates.empty()) {
+                                const auto& repr = candidates.front().get();
+                                if (repr.op != functor->getFunctionOp().value()) {
+                                    functor->setFunctionOp(repr.op);
+                                    changed = true;
+                                }
+                            } else {
+                                functor->clearFunctionOp();
+                                changed = true;
+                            }
+                        }
+                    } else {
+                        auto candidates = typeAnalysis.validOverloads(*functor);
+                        if (!candidates.empty()) {
+                            const auto& repr = candidates.front().get();
+                            functor->setFunctionOp(repr.op);
+                            changed = true;
+                        }
                     }
                 }
 
