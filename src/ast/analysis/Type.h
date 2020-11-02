@@ -82,6 +82,7 @@ public:
      */
     NumericConstant::Type getPolymorphicNumericConstantType(const NumericConstant* nc) const;
     bool hasInvalidPolymorphicNumericConstantType(const NumericConstant* nc) const;
+    const std::map<const NumericConstant*, NumericConstant::Type>& getNumericConstantTypes() const;
 
 private:
     std::map<const Argument*, TypeSet> argumentTypes;

@@ -634,6 +634,25 @@ private:
                     }
                     break;
             }
+        } else if (contains(typeAnalysis.getNumericConstantTypes(), &constant)) {
+            switch (typeAnalysis.getNumericConstantTypes().at(&constant)) {
+                // Insert a type, but only after checking that parsing is possible.
+                case NumericConstant::Type::Int:
+                    if (canBeParsedAsRamSigned(constant.getConstant())) {
+                        possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Signed));
+                    }
+                    break;
+                case NumericConstant::Type::Uint:
+                    if (canBeParsedAsRamUnsigned(constant.getConstant())) {
+                        possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Unsigned));
+                    }
+                    break;
+                case NumericConstant::Type::Float:
+                    if (canBeParsedAsRamFloat(constant.getConstant())) {
+                        possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Float));
+                    }
+                    break;
+            }
         } else {
             // Else: all numeric types that can be parsed are valid.
             if (canBeParsedAsRamSigned(constant.getConstant())) {
@@ -850,6 +869,10 @@ bool TypeAnalysis::isStatefulFunctor(const UserDefinedFunctor* udf) const {
     return udfDeclaration.at(udf->getName())->isStateful();
 }
 
+const std::map<const NumericConstant*, NumericConstant::Type>& TypeAnalysis::getNumericConstantTypes() const {
+    return numericConstantType;
+}
+
 bool TypeAnalysis::isMultiResultFunctor(const Functor& functor) {
     if (isA<UserDefinedFunctor>(functor)) {
         return false;
@@ -939,6 +962,7 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
     bool changed = true;
     while (changed) {
         changed = false;
+        argumentTypes.clear();
 
         // Analyse general argument types, clause by clause.
         for (const Clause* clause : program.getClauses()) {
