@@ -61,9 +61,7 @@ public:
 
 private:
     const TypeAnalysis* typeAnalysis = nullptr;
-
     std::map<const IntrinsicFunctor*, FunctorOp> functorType{};
-    std::map<const BinaryConstraint*, BinaryConstraintOp> constraintType{};
 };
 
 }  // namespace souffle::ast::analysis

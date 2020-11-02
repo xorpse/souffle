@@ -25,39 +25,6 @@ namespace souffle::ast::analysis {
 
 void PolymorphicObjectsAnalysis::run(const TranslationUnit& translationUnit) {
     typeAnalysis = translationUnit.getAnalysis<analysis::TypeAnalysis>();
-    const auto& program = translationUnit.getProgram();
-
-    // Utility lambdas to determine if all args are of the same type.
-    auto isFloat = [&](const Argument* argument) {
-        return isOfKind(typeAnalysis->getTypes(argument), TypeAttribute::Float);
-    };
-    auto isUnsigned = [&](const Argument* argument) {
-        return isOfKind(typeAnalysis->getTypes(argument), TypeAttribute::Unsigned);
-    };
-    auto isSymbol = [&](const Argument* argument) {
-        return isOfKind(typeAnalysis->getTypes(argument), TypeAttribute::Symbol);
-    };
-
-    // Handle binary constraints
-    visitDepthFirst(program, [&](const BinaryConstraint& binaryConstraint) {
-        if (isOverloaded(binaryConstraint.getBaseOperator())) {
-            // Get arguments
-            auto* leftArg = binaryConstraint.getLHS();
-            auto* rightArg = binaryConstraint.getRHS();
-
-            // Both args must be of the same type
-            if (isFloat(leftArg) && isFloat(rightArg)) {
-                constraintType[&binaryConstraint] =
-                        convertOverloadedConstraint(binaryConstraint.getBaseOperator(), TypeAttribute::Float);
-            } else if (isUnsigned(leftArg) && isUnsigned(rightArg)) {
-                constraintType[&binaryConstraint] = convertOverloadedConstraint(
-                        binaryConstraint.getBaseOperator(), TypeAttribute::Unsigned);
-            } else if (isSymbol(leftArg) && isSymbol(rightArg)) {
-                constraintType[&binaryConstraint] = convertOverloadedConstraint(
-                        binaryConstraint.getBaseOperator(), TypeAttribute::Symbol);
-            }
-        }
-    });
 }
 
 void PolymorphicObjectsAnalysis::print(std::ostream& /* os */) const {}
@@ -77,7 +44,7 @@ bool PolymorphicObjectsAnalysis::hasInvalidType(const NumericConstant* nc) const
 }
 
 BinaryConstraintOp PolymorphicObjectsAnalysis::getOverloadedOperator(const BinaryConstraint* bc) const {
-    return constraintType.at(bc);
+    return typeAnalysis->getPolymorphicOperator(bc);
 }
 
 AggregateOp PolymorphicObjectsAnalysis::getOverloadedOperator(const Aggregator* aggr) const {

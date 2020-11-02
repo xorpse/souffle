@@ -20,6 +20,7 @@
 #include "FunctorOps.h"
 #include "ast/Aggregator.h"
 #include "ast/Argument.h"
+#include "ast/BinaryConstraint.h"
 #include "ast/Clause.h"
 #include "ast/NumericConstant.h"
 #include "ast/analysis/Analysis.h"
@@ -86,6 +87,7 @@ public:
     bool hasInvalidPolymorphicNumericConstantType(const NumericConstant* nc) const;
     const std::map<const NumericConstant*, NumericConstant::Type>& getNumericConstantTypes() const;
     AggregateOp getPolymorphicOperator(const Aggregator* aggr) const;
+    BinaryConstraintOp getPolymorphicOperator(const BinaryConstraint* bc) const;
 
 private:
     std::map<const Argument*, TypeSet> argumentTypes;
@@ -101,6 +103,7 @@ private:
     std::map<const NumericConstant*, NumericConstant::Type> numericConstantType;
     std::set<const NumericConstant*> invalidConstants;
     std::map<const Aggregator*, AggregateOp> aggregatorType;
+    std::map<const BinaryConstraint*, BinaryConstraintOp> constraintType;
 };
 
 }  // namespace souffle::ast::analysis

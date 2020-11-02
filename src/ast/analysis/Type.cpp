@@ -946,6 +946,11 @@ bool TypeAnalysis::hasInvalidPolymorphicNumericConstantType(const NumericConstan
     return contains(invalidConstants, nc);
 }
 
+BinaryConstraintOp TypeAnalysis::getPolymorphicOperator(const BinaryConstraint* bc) const {
+    assert(contains(constraintType, bc) && "binary constraint operator not set");
+    return constraintType.at(bc);
+}
+
 AggregateOp TypeAnalysis::getPolymorphicOperator(const Aggregator* aggr) const {
     assert(contains(aggregatorType, aggr) && "aggregator does not have a set type");
     return aggregatorType.at(aggr);
@@ -957,6 +962,17 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
     if (Global::config().has("debug-report") || Global::config().has("show", "type-analysis")) {
         debugStream = &analysisLogs;
     }
+
+    // Utility lambdas to determine if all args are of the same type.
+    auto isFloat = [&](const Argument* argument) {
+        return isOfKind(getTypes(argument), TypeAttribute::Float);
+    };
+    auto isUnsigned = [&](const Argument* argument) {
+        return isOfKind(getTypes(argument), TypeAttribute::Unsigned);
+    };
+    auto isSymbol = [&](const Argument* argument) {
+        return isOfKind(getTypes(argument), TypeAttribute::Symbol);
+    };
 
     // Analyse user-defined functor types
     const Program& program = translationUnit.getProgram();
@@ -1037,12 +1053,6 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
         });
 
         // Deduce aggregator polymorphism
-        auto isFloat = [&](const Argument* argument) {
-            return isOfKind(getTypes(argument), TypeAttribute::Float);
-        };
-        auto isUnsigned = [&](const Argument* argument) {
-            return isOfKind(getTypes(argument), TypeAttribute::Unsigned);
-        };
         auto setAggregatorType = [&](const Aggregator& aggr, TypeAttribute attr) {
             auto overloadedType = convertOverloadedAggregator(aggr.getBaseOperator(), attr);
             if (contains(aggregatorType, &aggr) && aggregatorType.at(&aggr) == overloadedType) return;
@@ -1067,6 +1077,40 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
                 }
                 changed = true;
                 aggregatorType[&aggregator] = aggregator.getBaseOperator();
+            }
+        });
+
+        // Deduce binary-constraint polymorphism
+        auto setConstraintType = [&](const BinaryConstraint& bc, TypeAttribute attr) {
+            auto overloadedType = convertOverloadedConstraint(bc.getBaseOperator(), attr);
+            if (contains(constraintType, &bc) && constraintType.at(&bc) == overloadedType) return;
+            changed = true;
+            constraintType[&bc] = overloadedType;
+        };
+        visitDepthFirst(program, [&](const BinaryConstraint& binaryConstraint) {
+            if (isOverloaded(binaryConstraint.getBaseOperator())) {
+                // Get arguments
+                auto* leftArg = binaryConstraint.getLHS();
+                auto* rightArg = binaryConstraint.getRHS();
+
+                // Both args must be of the same type
+                if (isFloat(leftArg) && isFloat(rightArg)) {
+                    setConstraintType(binaryConstraint, TypeAttribute::Float);
+                } else if (isUnsigned(leftArg) && isUnsigned(rightArg)) {
+                    setConstraintType(binaryConstraint, TypeAttribute::Unsigned);
+                } else if (isSymbol(leftArg) && isSymbol(rightArg)) {
+                    setConstraintType(binaryConstraint, TypeAttribute::Symbol);
+                } else {
+                    setConstraintType(binaryConstraint, TypeAttribute::Signed);
+                }
+            } else {
+                if (contains(constraintType, &binaryConstraint)) {
+                    assert(constraintType.at(&binaryConstraint) == binaryConstraint.getBaseOperator() &&
+                            "unexpected constraint type");
+                    return;
+                }
+                changed = true;
+                constraintType[&binaryConstraint] = binaryConstraint.getBaseOperator();
             }
         });
     }
