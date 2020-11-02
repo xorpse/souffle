@@ -947,6 +947,7 @@ bool TypeAnalysis::hasInvalidPolymorphicNumericConstantType(const NumericConstan
 }
 
 AggregateOp TypeAnalysis::getPolymorphicOperator(const Aggregator* aggr) const {
+    assert(contains(aggregatorType, aggr) && "aggregator does not have a set type");
     return aggregatorType.at(aggr);
 }
 
@@ -1042,9 +1043,6 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
         auto isUnsigned = [&](const Argument* argument) {
             return isOfKind(getTypes(argument), TypeAttribute::Unsigned);
         };
-        auto isSigned = [&](const Argument* argument) {
-            return isOfKind(getTypes(argument), TypeAttribute::Signed);
-        };
         auto setAggregatorType = [&](const Aggregator& aggr, TypeAttribute attr) {
             auto overloadedType = convertOverloadedAggregator(aggr.getBaseOperator(), attr);
             if (contains(aggregatorType, &aggr) && aggregatorType.at(&aggr) == overloadedType) return;
@@ -1058,9 +1056,17 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
                     setAggregatorType(aggregator, TypeAttribute::Float);
                 } else if (isUnsigned(targetExpression)) {
                     setAggregatorType(aggregator, TypeAttribute::Unsigned);
-                } else if (isSigned(targetExpression)) {
+                } else {
                     setAggregatorType(aggregator, TypeAttribute::Signed);
                 }
+            } else {
+                if (contains(aggregatorType, &aggregator)) {
+                    assert(aggregatorType.at(&aggregator) == aggregator.getBaseOperator() &&
+                            "unexpected aggr type");
+                    return;
+                }
+                changed = true;
+                aggregatorType[&aggregator] = aggregator.getBaseOperator();
             }
         });
     }

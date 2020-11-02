@@ -1032,6 +1032,9 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     visitDepthFirst(*program, [&](const ast::NumericConstant& nc) {
         const_cast<ast::NumericConstant&>(nc).setFinalType(polyAnalysis->getInferredType(&nc));
     });
+    visitDepthFirst(*program, [&](const ast::Aggregator& aggr) {
+        const_cast<ast::Aggregator&>(aggr).setFinalType(polyAnalysis->getOverloadedOperator(&aggr));
+    });
 
     // determine the sips to use
     std::string sipsChosen = "all-bound";
