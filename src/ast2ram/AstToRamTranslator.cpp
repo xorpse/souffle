@@ -339,8 +339,7 @@ Own<ram::Condition> AstToRamTranslator::translateConstraint(
         Own<ram::Condition> visitBinaryConstraint(const ast::BinaryConstraint& binRel) override {
             auto valLHS = translator.translateValue(binRel.getLHS(), index);
             auto valRHS = translator.translateValue(binRel.getRHS(), index);
-            return mk<ram::Constraint>(
-                    polyAnalysis->getOverloadedOperator(&binRel), std::move(valLHS), std::move(valRHS));
+            return mk<ram::Constraint>(binRel.getFinalType().value(), std::move(valLHS), std::move(valRHS));
         }
 
         /** for provenance negation */
@@ -1037,6 +1036,9 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     });
     visitDepthFirst(*program, [&](const ast::Aggregator& aggr) {
         const_cast<ast::Aggregator&>(aggr).setFinalType(polyAnalysis->getOverloadedOperator(&aggr));
+    });
+    visitDepthFirst(*program, [&](const ast::BinaryConstraint& bc) {
+        const_cast<ast::BinaryConstraint&>(bc).setFinalType(polyAnalysis->getOverloadedOperator(&bc));
     });
 
     // determine the sips to use
