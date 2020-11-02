@@ -19,6 +19,7 @@
 #include "FunctorOps.h"
 #include "ast/Argument.h"
 #include "ast/Clause.h"
+#include "ast/NumericConstant.h"
 #include "ast/analysis/Analysis.h"
 #include "ast/analysis/TypeSystem.h"
 #include <memory>
@@ -76,6 +77,12 @@ public:
     bool isStatefulFunctor(const UserDefinedFunctor* udf) const;
     static bool isMultiResultFunctor(const Functor& functor);
 
+    /**
+     * Polymorphism-related methods
+     */
+    NumericConstant::Type getPolymorphicNumericConstantType(const NumericConstant* nc) const;
+    bool hasInvalidPolymorphicNumericConstantType(const NumericConstant* nc) const;
+
 private:
     std::map<const Argument*, TypeSet> argumentTypes;
     VecOwn<Clause> annotatedClauses;
@@ -85,6 +92,10 @@ private:
     std::map<std::string, const FunctorDeclaration*> udfDeclaration;
     std::map<const IntrinsicFunctor*, const IntrinsicFunctorInfo*> functorInfo;
     std::set<const IntrinsicFunctor*> invalidFunctors;
+
+    // Polymorphic objects analysis
+    std::map<const NumericConstant*, NumericConstant::Type> numericConstantType;
+    std::set<const NumericConstant*> invalidConstants;
 };
 
 }  // namespace souffle::ast::analysis

@@ -34,6 +34,8 @@ class TranslationUnit;
 
 namespace souffle::ast::analysis {
 
+class TypeAnalysis;
+
 class PolymorphicObjectsAnalysis : public Analysis {
 public:
     static constexpr const char* name = "polymorphic-objects";
@@ -58,11 +60,11 @@ public:
     AggregateOp getOverloadedOperator(const Aggregator* aggr) const;
 
 private:
+    const TypeAnalysis* typeAnalysis = nullptr;
+
     std::map<const IntrinsicFunctor*, FunctorOp> functorType{};
-    std::map<const NumericConstant*, NumericConstant::Type> constantType{};
     std::map<const BinaryConstraint*, BinaryConstraintOp> constraintType{};
     std::map<const Aggregator*, AggregateOp> aggregatorType{};
-    std::set<const NumericConstant*> invalidConstants;
 };
 
 }  // namespace souffle::ast::analysis

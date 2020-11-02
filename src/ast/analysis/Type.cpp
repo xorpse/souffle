@@ -914,6 +914,15 @@ bool TypeAnalysis::isInvalidFunctor(const IntrinsicFunctor* func) const {
     return contains(invalidFunctors, func);
 }
 
+NumericConstant::Type TypeAnalysis::getPolymorphicNumericConstantType(const NumericConstant* nc) const {
+    assert(!hasInvalidPolymorphicNumericConstantType(nc) && contains(numericConstantType, nc));
+    return numericConstantType.at(nc);
+}
+
+bool TypeAnalysis::hasInvalidPolymorphicNumericConstantType(const NumericConstant* nc) const {
+    return contains(invalidConstants, nc);
+}
+
 void TypeAnalysis::run(const TranslationUnit& translationUnit) {
     // Check if debugging information is being generated
     std::ostream* debugStream = nullptr;
@@ -963,6 +972,39 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
             if (contains(functorInfo, &functor) && functorInfo.at(&functor) == curInfo) return;
             functorInfo[&functor] = curInfo;
             changed = true;
+        });
+
+        // Deduce numeric-constant polymorphism
+        auto setNumericConstantType = [&](const NumericConstant& nc, NumericConstant::Type ncType) {
+            if (contains(numericConstantType, &nc) && numericConstantType.at(&nc) == ncType) return;
+            changed = true;
+            numericConstantType[&nc] = ncType;
+        };
+
+        visitDepthFirst(program, [&](const NumericConstant& numericConstant) {
+            // Constant has a fixed type
+            if (numericConstant.hasFixedType()) {
+                setNumericConstantType(numericConstant, numericConstant.getFixedType().value());
+                return;
+            }
+
+            // Otherwise, type should be inferred
+            TypeSet types = getTypes(&numericConstant);
+            auto hasOfKind = [&](TypeAttribute kind) -> bool {
+                return any_of(types, [&](const analysis::Type& type) { return isOfKind(type, kind); });
+            };
+            if (hasOfKind(TypeAttribute::Signed)) {
+                setNumericConstantType(numericConstant, NumericConstant::Type::Int);
+            } else if (hasOfKind(TypeAttribute::Unsigned)) {
+                setNumericConstantType(numericConstant, NumericConstant::Type::Uint);
+            } else if (hasOfKind(TypeAttribute::Float)) {
+                setNumericConstantType(numericConstant, NumericConstant::Type::Float);
+            } else {
+                if (!contains(invalidConstants, &numericConstant)) {
+                    invalidConstants.insert(&numericConstant);
+                    changed = true;
+                }
+            }
         });
     }
 }
