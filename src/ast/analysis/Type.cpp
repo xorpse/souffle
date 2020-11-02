@@ -921,15 +921,17 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
         debugStream = &analysisLogs;
     }
 
-    // Analyse functor types
+    // Analyse user-defined functor types
     const Program& program = translationUnit.getProgram();
     visitDepthFirst(
             program, [&](const FunctorDeclaration& fdecl) { udfDeclaration[fdecl.getName()] = &fdecl; });
 
+    // Rest of the analysis done until fixpoint reached
     bool changed = true;
     while (changed) {
         changed = false;
-        // Analyse types, clause by clause.
+
+        // Analyse general argument types, clause by clause.
         for (const Clause* clause : program.getClauses()) {
             auto clauseArgumentTypes = analyseTypes(translationUnit, *clause, debugStream);
             argumentTypes.insert(clauseArgumentTypes.begin(), clauseArgumentTypes.end());
@@ -940,6 +942,7 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
             }
         }
 
+        // Analyse intrinsic-functor types
         visitDepthFirst(program, [&](const IntrinsicFunctor& functor) {
             auto candidates = validOverloads(functor);
             if (candidates.empty()) {
