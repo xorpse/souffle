@@ -16,7 +16,9 @@
 
 #pragma once
 
+#include "AggregateOp.h"
 #include "FunctorOps.h"
+#include "ast/Aggregator.h"
 #include "ast/Argument.h"
 #include "ast/Clause.h"
 #include "ast/NumericConstant.h"
@@ -83,6 +85,7 @@ public:
     NumericConstant::Type getPolymorphicNumericConstantType(const NumericConstant* nc) const;
     bool hasInvalidPolymorphicNumericConstantType(const NumericConstant* nc) const;
     const std::map<const NumericConstant*, NumericConstant::Type>& getNumericConstantTypes() const;
+    AggregateOp getPolymorphicOperator(const Aggregator* aggr) const;
 
 private:
     std::map<const Argument*, TypeSet> argumentTypes;
@@ -97,6 +100,7 @@ private:
     // Polymorphic objects analysis
     std::map<const NumericConstant*, NumericConstant::Type> numericConstantType;
     std::set<const NumericConstant*> invalidConstants;
+    std::map<const Aggregator*, AggregateOp> aggregatorType;
 };
 
 }  // namespace souffle::ast::analysis

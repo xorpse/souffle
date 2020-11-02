@@ -946,6 +946,10 @@ bool TypeAnalysis::hasInvalidPolymorphicNumericConstantType(const NumericConstan
     return contains(invalidConstants, nc);
 }
 
+AggregateOp TypeAnalysis::getPolymorphicOperator(const Aggregator* aggr) const {
+    return aggregatorType.at(aggr);
+}
+
 void TypeAnalysis::run(const TranslationUnit& translationUnit) {
     // Check if debugging information is being generated
     std::ostream* debugStream = nullptr;
@@ -1027,6 +1031,35 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
                 if (!contains(invalidConstants, &numericConstant)) {
                     invalidConstants.insert(&numericConstant);
                     changed = true;
+                }
+            }
+        });
+
+        // Deduce aggregator polymorphism
+        auto isFloat = [&](const Argument* argument) {
+            return isOfKind(getTypes(argument), TypeAttribute::Float);
+        };
+        auto isUnsigned = [&](const Argument* argument) {
+            return isOfKind(getTypes(argument), TypeAttribute::Unsigned);
+        };
+        auto isSigned = [&](const Argument* argument) {
+            return isOfKind(getTypes(argument), TypeAttribute::Signed);
+        };
+        auto setAggregatorType = [&](const Aggregator& aggr, TypeAttribute attr) {
+            auto overloadedType = convertOverloadedAggregator(aggr.getBaseOperator(), attr);
+            if (contains(aggregatorType, &aggr) && aggregatorType.at(&aggr) == overloadedType) return;
+            changed = true;
+            aggregatorType[&aggr] = overloadedType;
+        };
+        visitDepthFirst(program, [&](const Aggregator& aggregator) {
+            if (isOverloadedAggregator(aggregator.getBaseOperator())) {
+                auto* targetExpression = aggregator.getTargetExpression();
+                if (isFloat(targetExpression)) {
+                    setAggregatorType(aggregator, TypeAttribute::Float);
+                } else if (isUnsigned(targetExpression)) {
+                    setAggregatorType(aggregator, TypeAttribute::Unsigned);
+                } else if (isSigned(targetExpression)) {
+                    setAggregatorType(aggregator, TypeAttribute::Signed);
                 }
             }
         });

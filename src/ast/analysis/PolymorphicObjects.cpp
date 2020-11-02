@@ -25,55 +25,6 @@ namespace souffle::ast::analysis {
 
 void PolymorphicObjectsAnalysis::run(const TranslationUnit& translationUnit) {
     typeAnalysis = translationUnit.getAnalysis<analysis::TypeAnalysis>();
-    const auto& program = translationUnit.getProgram();
-
-    auto isFloat = [&](const Argument* argument) {
-        return isOfKind(typeAnalysis->getTypes(argument), TypeAttribute::Float);
-    };
-    auto isUnsigned = [&](const Argument* argument) {
-        return isOfKind(typeAnalysis->getTypes(argument), TypeAttribute::Unsigned);
-    };
-    auto isSymbol = [&](const Argument* argument) {
-        return isOfKind(typeAnalysis->getTypes(argument), TypeAttribute::Symbol);
-    };
-
-    // Handle numeric constants
-    visitDepthFirst(program, [&](const NumericConstant& numericConstant) {
-        // Constant has a fixed type
-        if (numericConstant.hasFixedType()) {
-            constantType[&numericConstant] = numericConstant.getFixedType().value();
-            return;
-        }
-
-        // Otherwise, type should be inferred
-        TypeSet types = typeAnalysis->getTypes(&numericConstant);
-        auto hasOfKind = [&](TypeAttribute kind) -> bool {
-            return any_of(types, [&](const analysis::Type& type) { return isOfKind(type, kind); });
-        };
-        if (hasOfKind(TypeAttribute::Signed)) {
-            constantType[&numericConstant] = NumericConstant::Type::Int;
-        } else if (hasOfKind(TypeAttribute::Unsigned)) {
-            constantType[&numericConstant] = NumericConstant::Type::Uint;
-        } else if (hasOfKind(TypeAttribute::Float)) {
-            constantType[&numericConstant] = NumericConstant::Type::Float;
-        } else {
-            invalidConstants.insert(&numericConstant);
-        }
-    });
-
-    // Handle aggregators
-    visitDepthFirst(program, [&](const Aggregator& aggregator) {
-        if (isOverloadedAggregator(aggregator.getBaseOperator())) {
-            auto* targetExpression = aggregator.getTargetExpression();
-            if (isFloat(targetExpression)) {
-                aggregatorType[&aggregator] =
-                        convertOverloadedAggregator(aggregator.getBaseOperator(), TypeAttribute::Float);
-            } else if (isUnsigned(targetExpression)) {
-                aggregatorType[&aggregator] =
-                        convertOverloadedAggregator(aggregator.getBaseOperator(), TypeAttribute::Unsigned);
-            }
-        }
-    });
 }
 
 void PolymorphicObjectsAnalysis::print(std::ostream& /* os */) const {}
@@ -97,7 +48,7 @@ BinaryConstraintOp PolymorphicObjectsAnalysis::getOverloadedOperator(const Binar
 }
 
 AggregateOp PolymorphicObjectsAnalysis::getOverloadedOperator(const Aggregator* aggr) const {
-    return aggregatorType.at(aggr);
+    return typeAnalysis->getPolymorphicOperator(aggr);
 }
 
 }  // namespace souffle::ast::analysis

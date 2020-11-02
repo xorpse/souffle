@@ -64,7 +64,6 @@ private:
 
     std::map<const IntrinsicFunctor*, FunctorOp> functorType{};
     std::map<const BinaryConstraint*, BinaryConstraintOp> constraintType{};
-    std::map<const Aggregator*, AggregateOp> aggregatorType{};
 };
 
 }  // namespace souffle::ast::analysis
