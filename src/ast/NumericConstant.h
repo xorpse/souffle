@@ -20,6 +20,7 @@
 #include "ast/Node.h"
 #include "parser/SrcLocation.h"
 #include "souffle/RamTypes.h"
+#include <cassert>
 #include <optional>
 #include <string>
 #include <utility>
@@ -51,6 +52,9 @@ public:
     NumericConstant* clone() const override {
         auto* copy = new NumericConstant(getConstant(), getFixedType());
         copy->setSrcLoc(getSrcLoc());
+        if (finalTranslatorType.has_value()) {
+            copy->setFinalType(finalTranslatorType.value());
+        }
         return copy;
     }
 
@@ -62,6 +66,14 @@ public:
         return getFixedType().has_value();
     }
 
+    void setFinalType(Type newType) {
+        finalTranslatorType = newType;
+    }
+
+    std::optional<Type> getFinalType() const {
+        return finalTranslatorType;
+    }
+
 protected:
     bool equal(const Node& node) const override {
         const auto& other = static_cast<const NumericConstant&>(node);
@@ -70,6 +82,9 @@ protected:
 
 private:
     std::optional<Type> fixedType;
+
+    // TODO (azreika): remove after refactoring translator
+    std::optional<Type> finalTranslatorType;
 };
 
 }  // namespace souffle::ast

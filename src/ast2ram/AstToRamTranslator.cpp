@@ -244,7 +244,7 @@ Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg
 
         Own<ram::Expression> visitNumericConstant(const ast::NumericConstant& c) override {
             assert(!polyAnalysis->hasInvalidType(&c) && "constant should have valid type");
-            switch (polyAnalysis->getInferredType(&c)) {
+            switch (c.getFinalType().value()) {
                 case ast::NumericConstant::Type::Int:
                     return mk<ram::SignedConstant>(RamSignedFromString(c.getConstant(), nullptr, 0));
                 case ast::NumericConstant::Type::Uint:
@@ -400,7 +400,7 @@ RamDomain AstToRamTranslator::getConstantRamRepresentation(const ast::Constant& 
         return 0;
     } else if (auto* numConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
         assert(!polyAnalysis->hasInvalidType(numConstant) && "constant should have valid type");
-        switch (polyAnalysis->getInferredType(numConstant)) {
+        switch (numConstant->getFinalType().value()) {
             case ast::NumericConstant::Type::Int:
                 return RamSignedFromString(numConstant->getConstant(), nullptr, 0);
             case ast::NumericConstant::Type::Uint:
@@ -416,7 +416,7 @@ Own<ram::Expression> AstToRamTranslator::translateConstant(ast::Constant const& 
     auto const rawConstant = getConstantRamRepresentation(c);
 
     if (auto* const c_num = dynamic_cast<const ast::NumericConstant*>(&c)) {
-        switch (polyAnalysis->getInferredType(c_num)) {
+        switch (c_num->getFinalType().value()) {
             case ast::NumericConstant::Type::Int: return mk<ram::SignedConstant>(rawConstant);
             case ast::NumericConstant::Type::Uint: return mk<ram::UnsignedConstant>(rawConstant);
             case ast::NumericConstant::Type::Float: return mk<ram::FloatConstant>(rawConstant);
@@ -1027,6 +1027,11 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     auxArityAnalysis = translationUnit.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
     functorAnalysis = translationUnit.getAnalysis<ast::analysis::FunctorAnalysis>();
     polyAnalysis = translationUnit.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
+
+    // set up the final fixed types
+    visitDepthFirst(*program, [&](const ast::NumericConstant& nc) {
+        const_cast<ast::NumericConstant&>(nc).setFinalType(polyAnalysis->getInferredType(&nc));
+    });
 
     // determine the sips to use
     std::string sipsChosen = "all-bound";
