@@ -539,7 +539,7 @@ void TypeCheckerImpl::visitUserDefinedFunctor(const UserDefinedFunctor& fun) {
 }
 
 void TypeCheckerImpl::visitBinaryConstraint(const BinaryConstraint& constraint) {
-    auto op = constraint.getBaseOperator();
+    auto op = polyAnalysis.getOverloadedOperator(&constraint);
     auto left = constraint.getLHS();
     auto right = constraint.getRHS();
     auto opTypesAttrs = getBinaryConstraintTypes(op);
