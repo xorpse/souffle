@@ -904,7 +904,7 @@ IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& func) con
 bool TypeAnalysis::hasProcessedFunctor(const Functor* functor) const {
     if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
         return contains(functorInfo, intrinsic);
-    } else if (const auto* udf = as<UserDefinedFunctor>(functor)) {
+    } else if (auto* udf = as<UserDefinedFunctor>(functor)) {
         return contains(udfDeclaration, udf->getName());
     }
     fatal("Missing functor type.");
@@ -921,11 +921,15 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
         debugStream = &analysisLogs;
     }
 
+    // Analyse functor types
+    const Program& program = translationUnit.getProgram();
+    visitDepthFirst(
+            program, [&](const FunctorDeclaration& fdecl) { udfDeclaration[fdecl.getName()] = &fdecl; });
+
     bool changed = true;
     while (changed) {
         changed = false;
         // Analyse types, clause by clause.
-        const Program& program = translationUnit.getProgram();
         for (const Clause* clause : program.getClauses()) {
             auto clauseArgumentTypes = analyseTypes(translationUnit, *clause, debugStream);
             argumentTypes.insert(clauseArgumentTypes.begin(), clauseArgumentTypes.end());
@@ -935,10 +939,6 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
                 annotatedClauses.emplace_back(createAnnotatedClause(clause, clauseArgumentTypes));
             }
         }
-
-        // Analyse functor types
-        visitDepthFirst(
-                program, [&](const FunctorDeclaration& fdecl) { udfDeclaration[fdecl.getName()] = &fdecl; });
 
         visitDepthFirst(program, [&](const IntrinsicFunctor& functor) {
             auto candidates = validOverloads(functor);
