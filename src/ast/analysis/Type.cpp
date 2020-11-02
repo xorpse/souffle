@@ -943,6 +943,7 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
         visitDepthFirst(program, [&](const IntrinsicFunctor& functor) {
             auto candidates = validOverloads(functor);
             if (candidates.empty()) {
+                // No valid overloads - mark it as an invalid functor
                 if (contains(invalidFunctors, &functor)) return;
                 invalidFunctors.insert(&functor);
                 changed = true;
@@ -950,9 +951,11 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
             }
 
             if (contains(invalidFunctors, &functor)) {
+                // No longer invalid
                 invalidFunctors.erase(&functor);
             }
 
+            // Update to the canonic representation if different
             const auto* curInfo = &candidates.front().get();
             if (contains(functorInfo, &functor) && functorInfo.at(&functor) == curInfo) return;
             functorInfo[&functor] = curInfo;

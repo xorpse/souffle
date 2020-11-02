@@ -57,34 +57,31 @@ public:
      * a set of potential types. If the set associated to an argument is empty,
      * no consistent typing can be found and the rule can not be properly typed.
      *
-     * @param env a typing environment describing the set of available types
-     * @param clause the clause to be typed
-     * @param program the program
-     * @return a map mapping each contained argument to a a set of types
+     * @return a map mapping each contained argument to a set of types
      */
     static std::map<const Argument*, TypeSet> analyseTypes(
-            const TranslationUnit&, const Clause&, std::ostream* /*logs*/ = nullptr);
+            const TranslationUnit& tu, const Clause& clause, std::ostream* logs = nullptr);
 
-    /** Functor-related */
+    /**
+     * Functor-related methods
+     */
+    bool hasProcessedFunctor(const Functor* functor) const;
+    bool isInvalidFunctor(const IntrinsicFunctor* func) const;
+    IntrinsicFunctors validOverloads(const ast::IntrinsicFunctor& func) const;
+
     TypeAttribute getFunctorReturnType(const Functor* functor) const;
-
     TypeAttribute getFunctorArgType(const Functor* functor, const size_t idx) const;
-
     const std::vector<TypeAttribute>& getFunctorArgTypes(const UserDefinedFunctor& udf) const;
 
     bool isStatefulFunctor(const UserDefinedFunctor* udf) const;
-
     static bool isMultiResultFunctor(const Functor& functor);
-
-    IntrinsicFunctors validOverloads(const ast::IntrinsicFunctor& func) const;
-    bool hasProcessedFunctor(const Functor* functor) const;
-    bool isInvalidFunctor(const IntrinsicFunctor* func) const;
 
 private:
     std::map<const Argument*, TypeSet> argumentTypes;
     VecOwn<Clause> annotatedClauses;
     std::stringstream analysisLogs;
 
+    // Functor analysis
     std::map<std::string, const FunctorDeclaration*> udfDeclaration;
     std::map<const IntrinsicFunctor*, const IntrinsicFunctorInfo*> functorInfo;
     std::set<const IntrinsicFunctor*> invalidFunctors;
