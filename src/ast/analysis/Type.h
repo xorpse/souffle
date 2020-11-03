@@ -88,6 +88,8 @@ public:
     const std::map<const NumericConstant*, NumericConstant::Type>& getNumericConstantTypes() const;
     AggregateOp getPolymorphicOperator(const Aggregator* aggr) const;
     BinaryConstraintOp getPolymorphicOperator(const BinaryConstraint* bc) const;
+    FunctorOp getPolymorphicOperator(const IntrinsicFunctor* inf) const;
+    bool hasInvalidPolymorphicOperator(const IntrinsicFunctor* inf) const;
 
 private:
     std::map<const Argument*, TypeSet> argumentTypes;
@@ -104,6 +106,7 @@ private:
     std::set<const NumericConstant*> invalidConstants;
     std::map<const Aggregator*, AggregateOp> aggregatorType;
     std::map<const BinaryConstraint*, BinaryConstraintOp> constraintType;
+    std::map<const IntrinsicFunctor*, FunctorOp> functorType;
 };
 
 }  // namespace souffle::ast::analysis

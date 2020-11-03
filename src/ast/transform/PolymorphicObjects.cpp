@@ -52,28 +52,16 @@ bool PolymorphicObjectsTransformer::transform(TranslationUnit& translationUnit) 
             try {
                 // Handle functor
                 if (auto* functor = dynamic_cast<IntrinsicFunctor*>(node.get())) {
-                    if (functor->getFunctionOp().has_value()) {
-                        if (typeAnalysis.isInvalidFunctor(functor)) {
-                            functor->clearFunctionOp();
+                    if (typeAnalysis.hasInvalidPolymorphicOperator(functor)) {
+                        if (functor->getFunctionOp().has_value()) {
                             changed = true;
-                        } else {
-                            auto candidates = typeAnalysis.validOverloads(*functor);
-                            if (!candidates.empty()) {
-                                const auto& repr = candidates.front().get();
-                                if (repr.op != functor->getFunctionOp().value()) {
-                                    functor->setFunctionOp(repr.op);
-                                    changed = true;
-                                }
-                            } else {
-                                functor->clearFunctionOp();
-                                changed = true;
-                            }
+                            functor->clearFunctionOp();
                         }
                     } else {
-                        auto candidates = typeAnalysis.validOverloads(*functor);
-                        if (!candidates.empty()) {
-                            const auto& repr = candidates.front().get();
-                            functor->setFunctionOp(repr.op);
+                        auto overloadedOp = typeAnalysis.getPolymorphicOperator(functor);
+                        if (!functor->getFunctionOp().has_value() ||
+                                functor->getFunctionOp().value() != overloadedOp) {
+                            functor->setFunctionOp(overloadedOp);
                             changed = true;
                         }
                     }

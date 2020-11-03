@@ -956,6 +956,15 @@ AggregateOp TypeAnalysis::getPolymorphicOperator(const Aggregator* aggr) const {
     return aggregatorType.at(aggr);
 }
 
+bool TypeAnalysis::hasInvalidPolymorphicOperator(const IntrinsicFunctor* inf) const {
+    return contains(invalidFunctors, inf);
+}
+
+FunctorOp TypeAnalysis::getPolymorphicOperator(const IntrinsicFunctor* inf) const {
+    assert(!hasInvalidPolymorphicOperator(inf) && contains(functorType, inf));
+    return functorType.at(inf);
+}
+
 void TypeAnalysis::run(const TranslationUnit& translationUnit) {
     // Check if debugging information is being generated
     std::ostream* debugStream = nullptr;
@@ -1016,6 +1025,7 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
             const auto* curInfo = &candidates.front().get();
             if (contains(functorInfo, &functor) && functorInfo.at(&functor) == curInfo) return;
             functorInfo[&functor] = curInfo;
+            functorType[&functor] = curInfo->op;
             changed = true;
         });
 
