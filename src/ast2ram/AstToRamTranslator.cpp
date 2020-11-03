@@ -273,7 +273,7 @@ Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg
             if (ast::analysis::FunctorAnalysis::isMultiResult(inf)) {
                 return translator.makeRamTupleElement(index.getGeneratorLoc(inf));
             } else {
-                return mk<ram::IntrinsicOperator>(inf.getFunctionOp().value(), std::move(values));
+                return mk<ram::IntrinsicOperator>(inf.getFinalType().value(), std::move(values));
             }
         }
 
@@ -1039,6 +1039,9 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     });
     visitDepthFirst(*program, [&](const ast::BinaryConstraint& bc) {
         const_cast<ast::BinaryConstraint&>(bc).setFinalType(polyAnalysis->getOverloadedOperator(&bc));
+    });
+    visitDepthFirst(*program, [&](const ast::IntrinsicFunctor& inf) {
+        const_cast<ast::IntrinsicFunctor&>(inf).setFinalType(polyAnalysis->getOverloadedFunctionOp(&inf));
     });
 
     // determine the sips to use

@@ -197,7 +197,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
             }
 
             auto func_op = [&]() -> ram::NestedIntrinsicOp {
-                switch (func->getFunctionOp().value()) {
+                switch (func->getFinalType().value()) {
                     case FunctorOp::RANGE: return ram::NestedIntrinsicOp::RANGE;
                     case FunctorOp::URANGE: return ram::NestedIntrinsicOp::URANGE;
                     case FunctorOp::FRANGE: return ram::NestedIntrinsicOp::FRANGE;
