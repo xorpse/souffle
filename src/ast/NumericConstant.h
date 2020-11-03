@@ -62,10 +62,6 @@ public:
         return fixedType;
     }
 
-    bool hasFixedType() const {
-        return getFixedType().has_value();
-    }
-
     void setFinalType(Type newType) {
         finalTranslatorType = newType;
     }

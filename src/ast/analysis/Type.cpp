@@ -615,7 +615,7 @@ private:
         TypeSet possibleTypes;
 
         // Check if the type is given.
-        if (constant.hasFixedType()) {
+        if (constant.getFixedType().has_value()) {
             switch (constant.getFixedType().value()) {
                 // Insert a type, but only after checking that parsing is possible.
                 case NumericConstant::Type::Int:
@@ -1050,7 +1050,7 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
 
         visitDepthFirst(program, [&](const NumericConstant& numericConstant) {
             // Constant has a fixed type
-            if (numericConstant.hasFixedType()) {
+            if (numericConstant.getFixedType().has_value()) {
                 setNumericConstantType(numericConstant, numericConstant.getFixedType().value());
                 return;
             }
