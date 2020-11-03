@@ -89,7 +89,6 @@ public:
     AggregateOp getPolymorphicOperator(const Aggregator* aggr) const;
     BinaryConstraintOp getPolymorphicOperator(const BinaryConstraint* bc) const;
     FunctorOp getPolymorphicOperator(const IntrinsicFunctor* inf) const;
-    bool hasInvalidPolymorphicOperator(const IntrinsicFunctor* inf) const;
 
 private:
     std::map<const Argument*, TypeSet> argumentTypes;

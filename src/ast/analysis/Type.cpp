@@ -957,10 +957,6 @@ AggregateOp TypeAnalysis::getPolymorphicOperator(const Aggregator* aggr) const {
     return aggregatorType.at(aggr);
 }
 
-bool TypeAnalysis::hasInvalidPolymorphicOperator(const IntrinsicFunctor* inf) const {
-    return contains(invalidFunctors, inf);
-}
-
 FunctorOp TypeAnalysis::getPolymorphicOperator(const IntrinsicFunctor* inf) const {
     assert(!isInvalidFunctor(inf) && contains(functorType, inf));
     return functorType.at(inf);
