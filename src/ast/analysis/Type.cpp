@@ -686,7 +686,7 @@ private:
             auto argVars = map(intrFun->getArguments(), [&](auto&& x) { return getVar(x); });
             // The type of the user-defined function might not be set at this stage.
             // If so then add overloads as alternatives
-            if (!intrFun->getFunctionOp())
+            if (typeAnalysis.isInvalidFunctor(intrFun))
                 addConstraint(satisfiesOverload(typeEnv, functorBuiltIn(intrFun->getBaseFunctionOp()),
                         functorVar, argVars, isInfixFunctorOp(intrFun->getBaseFunctionOp())));
 
@@ -702,7 +702,7 @@ private:
                 return;
             }
 
-            if (!intrFun->getFunctionOp()) return;
+            if (typeAnalysis.isInvalidFunctor(intrFun)) return;
         }
 
         // Skip constraint adding if type info is not available
@@ -712,7 +712,7 @@ private:
         TypeAttribute returnType = typeAnalysis.getFunctorReturnType(&fun);
         addConstraint(isSubtypeOf(functorVar, typeEnv.getConstantType(returnType)));
         // Special case. Ord returns the ram representation of any object.
-        if (intrFun && intrFun->getFunctionOp().value() == FunctorOp::ORD) return;
+        if (intrFun && typeAnalysis.getPolymorphicOperator(intrFun) == FunctorOp::ORD) return;
 
         // Add constraints on arguments
         auto arguments = fun.getArguments();
@@ -877,8 +877,9 @@ bool TypeAnalysis::isMultiResultFunctor(const Functor& functor) {
     if (isA<UserDefinedFunctor>(functor)) {
         return false;
     } else if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
-        auto op = intrinsic->getFunctionOp();
-        return op && functorBuiltIn(*op).front().get().multipleResults;
+        auto candidates = functorBuiltIn(intrinsic->getBaseFunctionOp());
+        assert(!candidates.empty() && "at least one op should match");
+        return candidates[0].get().multipleResults;
     }
     fatal("Missing functor type.");
 }
@@ -904,8 +905,8 @@ IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& func) con
     auto retTys = typeAttrs(&func);
     auto argTys = map(func.getArguments(), typeAttrs);
 
-    IntrinsicFunctors functorInfos = func.getFunctionOp().has_value()
-                                             ? functorBuiltIn(func.getFunctionOp().value())
+    IntrinsicFunctors functorInfos = contains(functorType, &func)
+                                             ? functorBuiltIn(getPolymorphicOperator(&func))
                                              : functorBuiltIn(func.getBaseFunctionOp());
     auto candidates = filterNot(functorInfos, [&](const IntrinsicFunctorInfo& x) -> bool {
         if (!x.variadic && argTys.size() != x.params.size()) return true;  // arity mismatch?
@@ -961,7 +962,7 @@ bool TypeAnalysis::hasInvalidPolymorphicOperator(const IntrinsicFunctor* inf) co
 }
 
 FunctorOp TypeAnalysis::getPolymorphicOperator(const IntrinsicFunctor* inf) const {
-    assert(!hasInvalidPolymorphicOperator(inf) && contains(functorType, inf));
+    assert(!isInvalidFunctor(inf) && contains(functorType, inf));
     return functorType.at(inf);
 }
 
@@ -1010,6 +1011,11 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
             auto candidates = validOverloads(functor);
             if (candidates.empty()) {
                 // No valid overloads - mark it as an invalid functor
+                if (contains(functorType, &functor)) {
+                    functorInfo.erase(&functor);
+                    functorType.erase(&functor);
+                    changed = true;
+                }
                 if (contains(invalidFunctors, &functor)) return;
                 invalidFunctors.insert(&functor);
                 changed = true;
@@ -1019,9 +1025,11 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
             if (contains(invalidFunctors, &functor)) {
                 // No longer invalid
                 invalidFunctors.erase(&functor);
+                changed = true;
             }
 
             // Update to the canonic representation if different
+            assert(!contains(invalidFunctors, &functor));
             const auto* curInfo = &candidates.front().get();
             if (contains(functorInfo, &functor) && functorInfo.at(&functor) == curInfo) return;
             functorInfo[&functor] = curInfo;
@@ -1031,6 +1039,10 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
 
         // Deduce numeric-constant polymorphism
         auto setNumericConstantType = [&](const NumericConstant& nc, NumericConstant::Type ncType) {
+            if (contains(invalidConstants, &nc)) {
+                changed = true;
+                invalidConstants.erase(&nc);
+            }
             if (contains(numericConstantType, &nc) && numericConstantType.at(&nc) == ncType) return;
             changed = true;
             numericConstantType[&nc] = ncType;
@@ -1057,6 +1069,10 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
             } else {
                 if (!contains(invalidConstants, &numericConstant)) {
                     invalidConstants.insert(&numericConstant);
+                    changed = true;
+                }
+                if (contains(numericConstantType, &numericConstant)) {
+                    numericConstantType.erase(&numericConstant);
                     changed = true;
                 }
             }

@@ -61,22 +61,8 @@ public:
         function = std::move(functor);
     }
 
-    /** Get function information */
-    std::optional<FunctorOp> getFunctionOp() const {
-        return op;
-    }
-
-    /** Set function information */
-    void setFunctionOp(FunctorOp op) {
-        this->op = op;
-    }
-
-    void clearFunctionOp() {
-        this->op = std::nullopt;
-    }
-
     IntrinsicFunctor* clone() const override {
-        auto* copy = new IntrinsicFunctor(function, op, souffle::clone(args), getSrcLoc());
+        auto* copy = new IntrinsicFunctor(function, souffle::clone(args), getSrcLoc());
         if (finalTranslatorType.has_value()) {
             copy->setFinalType(finalTranslatorType.value());
         }
@@ -92,10 +78,6 @@ public:
     }
 
 protected:
-    IntrinsicFunctor(
-            std::string function, std::optional<FunctorOp> op, VecOwn<Argument> args, SrcLocation loc = {})
-            : Functor(std::move(args), std::move(loc)), function(std::move(function)), op(op) {}
-
     void print(std::ostream& os) const override {
         if (isInfixFunctorOp(function)) {
             os << "(" << join(args, function) << ")";
@@ -112,14 +94,11 @@ protected:
 
     bool equal(const Node& node) const override {
         const auto& other = static_cast<const IntrinsicFunctor&>(node);
-        return function == other.function && op == other.op && Functor::equal(node);
+        return function == other.function && Functor::equal(node);
     }
 
     /** Function */
     std::string function;
-
-    /** Functor Op */
-    std::optional<FunctorOp> op;
 
     // TODO (azreika): remove after refactoring translator
     std::optional<FunctorOp> finalTranslatorType;

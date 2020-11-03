@@ -30,9 +30,7 @@ void PolymorphicObjectsAnalysis::run(const TranslationUnit& translationUnit) {
 void PolymorphicObjectsAnalysis::print(std::ostream& /* os */) const {}
 
 FunctorOp PolymorphicObjectsAnalysis::getOverloadedFunctionOp(const IntrinsicFunctor* inf) const {
-    const auto& op = inf->getFunctionOp();
-    if (op) return op.value();
-    return FunctorOp::ORD;
+    return typeAnalysis->getPolymorphicOperator(inf);
 }
 
 NumericConstant::Type PolymorphicObjectsAnalysis::getInferredType(const NumericConstant* nc) const {

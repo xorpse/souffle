@@ -44,32 +44,7 @@ bool PolymorphicObjectsTransformer::transform(TranslationUnit& translationUnit) 
                 : typeAnalysis(typeAnalysis), report(report) {}
 
         Own<Node> operator()(Own<Node> node) const override {
-            // rewrite sub-expressions first
             node->apply(*this);
-
-            // It's possible that at this stage we get an undeclared clause.
-            // In this case types can't be assigned to it, and the procedure getTypes can fail
-            try {
-                // Handle functor
-                if (auto* functor = dynamic_cast<IntrinsicFunctor*>(node.get())) {
-                    if (typeAnalysis.hasInvalidPolymorphicOperator(functor)) {
-                        if (functor->getFunctionOp().has_value()) {
-                            changed = true;
-                            functor->clearFunctionOp();
-                        }
-                    } else {
-                        auto overloadedOp = typeAnalysis.getPolymorphicOperator(functor);
-                        if (!functor->getFunctionOp().has_value() ||
-                                functor->getFunctionOp().value() != overloadedOp) {
-                            functor->setFunctionOp(overloadedOp);
-                            changed = true;
-                        }
-                    }
-                }
-            } catch (std::out_of_range&) {
-                // No types to convert in undeclared clauses
-            }
-
             return node;
         }
     };
