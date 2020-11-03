@@ -150,8 +150,6 @@ souffle_sources = \
         ast/transform/PartitionBodyLiterals.cpp            \
         ast/transform/PartitionBodyLiterals.h              \
         ast/transform/Pipeline.h                           \
-        ast/transform/PolymorphicObjects.cpp               \
-        ast/transform/PolymorphicObjects.h                 \
         ast/transform/PragmaChecker.cpp                    \
         ast/transform/PragmaChecker.h                      \
         ast/transform/Provenance.cpp                       \

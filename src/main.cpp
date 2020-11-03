@@ -42,7 +42,6 @@
 #include "ast/transform/NormaliseMultiResultFunctors.h"
 #include "ast/transform/PartitionBodyLiterals.h"
 #include "ast/transform/Pipeline.h"
-#include "ast/transform/PolymorphicObjects.h"
 #include "ast/transform/PragmaChecker.h"
 #include "ast/transform/Provenance.h"
 #include "ast/transform/ReduceExistentials.h"
@@ -471,13 +470,10 @@ int main(int argc, char** argv) {
             mk<ast::transform::PipelineTransformer>(mk<ast::transform::NameUnnamedVariablesTransformer>(),
                     mk<ast::transform::PartitionBodyLiteralsTransformer>(),
                     mk<ast::transform::ReplaceSingletonVariablesTransformer>());
-    auto polyFixpoint =
-            mk<ast::transform::FixpointTransformer>(mk<ast::transform::PolymorphicObjectsTransformer>());
 
     // Provenance pipeline
-    auto provenancePipeline = mk<ast::transform::ConditionalTransformer>(Global::config().has("provenance"),
-            mk<ast::transform::PipelineTransformer>(
-                    mk<ast::transform::ProvenanceTransformer>(), souffle::clone(polyFixpoint)));
+    auto provenancePipeline = mk<ast::transform::ConditionalTransformer>(
+            Global::config().has("provenance"), mk<ast::transform::ProvenanceTransformer>());
 
     // Main pipeline
     auto pipeline = mk<ast::transform::PipelineTransformer>(mk<ast::transform::ComponentChecker>(),
@@ -488,7 +484,7 @@ int main(int argc, char** argv) {
             mk<ast::transform::FixpointTransformer>(mk<ast::transform::PipelineTransformer>(
                     mk<ast::transform::ResolveAnonymousRecordAliasesTransformer>(),
                     mk<ast::transform::FoldAnonymousRecords>())),
-            souffle::clone(polyFixpoint), mk<ast::transform::SemanticChecker>(),
+            mk<ast::transform::SemanticChecker>(),
             mk<ast::transform::ADTtoRecordsTransformer>(), mk<ast::transform::GroundWitnessesTransformer>(),
             mk<ast::transform::UniqueAggregationVariablesTransformer>(),
             mk<ast::transform::NormaliseMultiResultFunctorsTransformer>(),
@@ -498,7 +494,7 @@ int main(int argc, char** argv) {
             mk<ast::transform::ResolveAliasesTransformer>(), mk<ast::transform::RemoveTypecastsTransformer>(),
             mk<ast::transform::RemoveBooleanConstraintsTransformer>(),
             mk<ast::transform::ResolveAliasesTransformer>(), mk<ast::transform::MinimiseProgramTransformer>(),
-            mk<ast::transform::InlineRelationsTransformer>(), souffle::clone(polyFixpoint),
+            mk<ast::transform::InlineRelationsTransformer>(),
             mk<ast::transform::GroundedTermsChecker>(), mk<ast::transform::ResolveAliasesTransformer>(),
             mk<ast::transform::RemoveRedundantRelationsTransformer>(),
             mk<ast::transform::RemoveRelationCopiesTransformer>(),
@@ -512,7 +508,7 @@ int main(int argc, char** argv) {
             std::move(magicPipeline), mk<ast::transform::ReorderLiteralsTransformer>(),
             mk<ast::transform::RemoveRedundantSumsTransformer>(),
             mk<ast::transform::RemoveEmptyRelationsTransformer>(),
-            mk<ast::transform::AddNullariesToAtomlessAggregatesTransformer>(), souffle::clone(polyFixpoint),
+            mk<ast::transform::AddNullariesToAtomlessAggregatesTransformer>(),
             mk<ast::transform::ReorderLiteralsTransformer>(), mk<ast::transform::ExecutionPlanChecker>(),
             std::move(provenancePipeline), mk<ast::transform::IOAttributesTransformer>());
 
