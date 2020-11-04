@@ -106,7 +106,6 @@ private:
     std::set<const NumericConstant*> invalidConstants;
     std::map<const Aggregator*, AggregateOp> aggregatorType;
     std::map<const BinaryConstraint*, BinaryConstraintOp> constraintType;
-    std::map<const IntrinsicFunctor*, FunctorOp> functorType;
 };
 
 }  // namespace souffle::ast::analysis

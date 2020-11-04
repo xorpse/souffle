@@ -905,7 +905,7 @@ IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& func) con
     auto retTys = typeAttrs(&func);
     auto argTys = map(func.getArguments(), typeAttrs);
 
-    IntrinsicFunctors functorInfos = contains(functorType, &func)
+    IntrinsicFunctors functorInfos = contains(functorInfo, &func)
                                              ? functorBuiltIn(getPolymorphicOperator(&func))
                                              : functorBuiltIn(func.getBaseFunctionOp());
     auto candidates = filterNot(functorInfos, [&](const IntrinsicFunctorInfo& x) -> bool {
@@ -967,8 +967,8 @@ bool TypeAnalysis::hasValidType(const Functor* functor) const {
 }
 
 FunctorOp TypeAnalysis::getPolymorphicOperator(const IntrinsicFunctor* inf) const {
-    assert(!isInvalidFunctor(inf) && contains(functorType, inf));
-    return functorType.at(inf);
+    assert(!isInvalidFunctor(inf) && contains(functorInfo, inf));
+    return functorInfo.at(inf)->op;
 }
 
 void TypeAnalysis::run(const TranslationUnit& translationUnit) {
@@ -1016,9 +1016,8 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
             auto candidates = validOverloads(functor);
             if (candidates.empty()) {
                 // No valid overloads - mark it as an invalid functor
-                if (contains(functorType, &functor)) {
+                if (contains(functorInfo, &functor)) {
                     functorInfo.erase(&functor);
-                    functorType.erase(&functor);
                     changed = true;
                 }
                 if (contains(invalidFunctors, &functor)) return;
@@ -1038,7 +1037,6 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
             const auto* curInfo = &candidates.front().get();
             if (contains(functorInfo, &functor) && functorInfo.at(&functor) == curInfo) return;
             functorInfo[&functor] = curInfo;
-            functorType[&functor] = curInfo->op;
             changed = true;
         });
 
