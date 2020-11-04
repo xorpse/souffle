@@ -958,23 +958,163 @@ FunctorOp TypeAnalysis::getPolymorphicOperator(const IntrinsicFunctor* inf) cons
     return functorInfo.at(inf)->op;
 }
 
+bool TypeAnalysis::analyseIntrinsicFunctors(const TranslationUnit& translationUnit) {
+    bool changed = false;
+    const auto& program = translationUnit.getProgram();
+    visitDepthFirst(program, [&](const IntrinsicFunctor& functor) {
+        auto candidates = validOverloads(functor);
+        if (candidates.empty()) {
+            // No valid overloads - mark it as an invalid functor
+            if (contains(functorInfo, &functor)) {
+                functorInfo.erase(&functor);
+                changed = true;
+            }
+            return;
+        }
+
+        // Update to the canonic representation if different
+        const auto* curInfo = &candidates.front().get();
+        if (contains(functorInfo, &functor) && functorInfo.at(&functor) == curInfo) return;
+        functorInfo[&functor] = curInfo;
+        changed = true;
+    });
+    return changed;
+}
+
+bool TypeAnalysis::analyseNumericConstants(const TranslationUnit& translationUnit) {
+    bool changed = false;
+    const auto& program = translationUnit.getProgram();
+
+    auto setNumericConstantType = [&](const NumericConstant& nc, NumericConstant::Type ncType) {
+        if (contains(numericConstantType, &nc) && numericConstantType.at(&nc) == ncType) return;
+        changed = true;
+        numericConstantType[&nc] = ncType;
+    };
+
+    visitDepthFirst(program, [&](const NumericConstant& numericConstant) {
+        // Constant has a fixed type
+        if (numericConstant.getFixedType().has_value()) {
+            setNumericConstantType(numericConstant, numericConstant.getFixedType().value());
+            return;
+        }
+
+        // Otherwise, type should be inferred
+        TypeSet types = getTypes(&numericConstant);
+        auto hasOfKind = [&](TypeAttribute kind) -> bool {
+            return any_of(types, [&](const analysis::Type& type) { return isOfKind(type, kind); });
+        };
+        if (hasOfKind(TypeAttribute::Signed)) {
+            setNumericConstantType(numericConstant, NumericConstant::Type::Int);
+        } else if (hasOfKind(TypeAttribute::Unsigned)) {
+            setNumericConstantType(numericConstant, NumericConstant::Type::Uint);
+        } else if (hasOfKind(TypeAttribute::Float)) {
+            setNumericConstantType(numericConstant, NumericConstant::Type::Float);
+        } else {
+            // Type information no longer valid
+            if (contains(numericConstantType, &numericConstant)) {
+                numericConstantType.erase(&numericConstant);
+                changed = true;
+            }
+        }
+    });
+
+    return changed;
+}
+
+bool TypeAnalysis::analyseAggregators(const TranslationUnit& translationUnit) {
+    bool changed = false;
+    const auto& program = translationUnit.getProgram();
+
+    auto setAggregatorType = [&](const Aggregator& aggr, TypeAttribute attr) {
+        auto overloadedType = convertOverloadedAggregator(aggr.getBaseOperator(), attr);
+        if (contains(aggregatorType, &aggr) && aggregatorType.at(&aggr) == overloadedType) return;
+        changed = true;
+        aggregatorType[&aggr] = overloadedType;
+    };
+
+    visitDepthFirst(program, [&](const Aggregator& aggregator) {
+        if (isOverloadedAggregator(aggregator.getBaseOperator())) {
+            auto* targetExpression = aggregator.getTargetExpression();
+            if (isFloat(targetExpression)) {
+                setAggregatorType(aggregator, TypeAttribute::Float);
+            } else if (isUnsigned(targetExpression)) {
+                setAggregatorType(aggregator, TypeAttribute::Unsigned);
+            } else {
+                setAggregatorType(aggregator, TypeAttribute::Signed);
+            }
+        } else {
+            if (contains(aggregatorType, &aggregator)) {
+                assert(aggregatorType.at(&aggregator) == aggregator.getBaseOperator() &&
+                        "unexpected aggr type");
+                return;
+            }
+            changed = true;
+            aggregatorType[&aggregator] = aggregator.getBaseOperator();
+        }
+    });
+
+    return changed;
+}
+
+bool TypeAnalysis::analyseBinaryConstraints(const TranslationUnit& translationUnit) {
+    bool changed = false;
+    const auto& program = translationUnit.getProgram();
+
+    auto setConstraintType = [&](const BinaryConstraint& bc, TypeAttribute attr) {
+        auto overloadedType = convertOverloadedConstraint(bc.getBaseOperator(), attr);
+        if (contains(constraintType, &bc) && constraintType.at(&bc) == overloadedType) return;
+        changed = true;
+        constraintType[&bc] = overloadedType;
+    };
+
+    visitDepthFirst(program, [&](const BinaryConstraint& binaryConstraint) {
+        if (isOverloaded(binaryConstraint.getBaseOperator())) {
+            // Get arguments
+            auto* leftArg = binaryConstraint.getLHS();
+            auto* rightArg = binaryConstraint.getRHS();
+
+            // Both args must be of the same type
+            if (isFloat(leftArg) && isFloat(rightArg)) {
+                setConstraintType(binaryConstraint, TypeAttribute::Float);
+            } else if (isUnsigned(leftArg) && isUnsigned(rightArg)) {
+                setConstraintType(binaryConstraint, TypeAttribute::Unsigned);
+            } else if (isSymbol(leftArg) && isSymbol(rightArg)) {
+                setConstraintType(binaryConstraint, TypeAttribute::Symbol);
+            } else {
+                setConstraintType(binaryConstraint, TypeAttribute::Signed);
+            }
+        } else {
+            if (contains(constraintType, &binaryConstraint)) {
+                assert(constraintType.at(&binaryConstraint) == binaryConstraint.getBaseOperator() &&
+                        "unexpected constraint type");
+                return;
+            }
+            changed = true;
+            constraintType[&binaryConstraint] = binaryConstraint.getBaseOperator();
+        }
+    });
+
+    return changed;
+}
+
+bool TypeAnalysis::isFloat(const Argument* argument) const {
+    return isOfKind(getTypes(argument), TypeAttribute::Float);
+}
+
+bool TypeAnalysis::isUnsigned(const Argument* argument) const {
+    return isOfKind(getTypes(argument), TypeAttribute::Unsigned);
+}
+
+bool TypeAnalysis::isSymbol(const Argument* argument) const {
+    return isOfKind(getTypes(argument), TypeAttribute::Unsigned);
+}
+
 void TypeAnalysis::run(const TranslationUnit& translationUnit) {
     // Check if debugging information is being generated
     std::ostream* debugStream = nullptr;
     if (Global::config().has("debug-report") || Global::config().has("show", "type-analysis")) {
         debugStream = &analysisLogs;
     }
-
-    // Utility lambdas to determine if all args are of the same type.
-    auto isFloat = [&](const Argument* argument) {
-        return isOfKind(getTypes(argument), TypeAttribute::Float);
-    };
-    auto isUnsigned = [&](const Argument* argument) {
-        return isOfKind(getTypes(argument), TypeAttribute::Unsigned);
-    };
-    auto isSymbol = [&](const Argument* argument) {
-        return isOfKind(getTypes(argument), TypeAttribute::Symbol);
-    };
 
     // Analyse user-defined functor types
     const Program& program = translationUnit.getProgram();
@@ -999,119 +1139,16 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
         }
 
         // Analyse intrinsic-functor types
-        visitDepthFirst(program, [&](const IntrinsicFunctor& functor) {
-            auto candidates = validOverloads(functor);
-            if (candidates.empty()) {
-                // No valid overloads - mark it as an invalid functor
-                if (contains(functorInfo, &functor)) {
-                    functorInfo.erase(&functor);
-                    changed = true;
-                }
-                return;
-            }
-
-            // Update to the canonic representation if different
-            const auto* curInfo = &candidates.front().get();
-            if (contains(functorInfo, &functor) && functorInfo.at(&functor) == curInfo) return;
-            functorInfo[&functor] = curInfo;
-            changed = true;
-        });
+        changed |= analyseIntrinsicFunctors(translationUnit);
 
         // Deduce numeric-constant polymorphism
-        auto setNumericConstantType = [&](const NumericConstant& nc, NumericConstant::Type ncType) {
-            if (contains(numericConstantType, &nc) && numericConstantType.at(&nc) == ncType) return;
-            changed = true;
-            numericConstantType[&nc] = ncType;
-        };
-
-        visitDepthFirst(program, [&](const NumericConstant& numericConstant) {
-            // Constant has a fixed type
-            if (numericConstant.getFixedType().has_value()) {
-                setNumericConstantType(numericConstant, numericConstant.getFixedType().value());
-                return;
-            }
-
-            // Otherwise, type should be inferred
-            TypeSet types = getTypes(&numericConstant);
-            auto hasOfKind = [&](TypeAttribute kind) -> bool {
-                return any_of(types, [&](const analysis::Type& type) { return isOfKind(type, kind); });
-            };
-            if (hasOfKind(TypeAttribute::Signed)) {
-                setNumericConstantType(numericConstant, NumericConstant::Type::Int);
-            } else if (hasOfKind(TypeAttribute::Unsigned)) {
-                setNumericConstantType(numericConstant, NumericConstant::Type::Uint);
-            } else if (hasOfKind(TypeAttribute::Float)) {
-                setNumericConstantType(numericConstant, NumericConstant::Type::Float);
-            } else {
-                // Type information no longer valid
-                if (contains(numericConstantType, &numericConstant)) {
-                    numericConstantType.erase(&numericConstant);
-                    changed = true;
-                }
-            }
-        });
+        changed |= analyseNumericConstants(translationUnit);
 
         // Deduce aggregator polymorphism
-        auto setAggregatorType = [&](const Aggregator& aggr, TypeAttribute attr) {
-            auto overloadedType = convertOverloadedAggregator(aggr.getBaseOperator(), attr);
-            if (contains(aggregatorType, &aggr) && aggregatorType.at(&aggr) == overloadedType) return;
-            changed = true;
-            aggregatorType[&aggr] = overloadedType;
-        };
-        visitDepthFirst(program, [&](const Aggregator& aggregator) {
-            if (isOverloadedAggregator(aggregator.getBaseOperator())) {
-                auto* targetExpression = aggregator.getTargetExpression();
-                if (isFloat(targetExpression)) {
-                    setAggregatorType(aggregator, TypeAttribute::Float);
-                } else if (isUnsigned(targetExpression)) {
-                    setAggregatorType(aggregator, TypeAttribute::Unsigned);
-                } else {
-                    setAggregatorType(aggregator, TypeAttribute::Signed);
-                }
-            } else {
-                if (contains(aggregatorType, &aggregator)) {
-                    assert(aggregatorType.at(&aggregator) == aggregator.getBaseOperator() &&
-                            "unexpected aggr type");
-                    return;
-                }
-                changed = true;
-                aggregatorType[&aggregator] = aggregator.getBaseOperator();
-            }
-        });
+        changed |= analyseAggregators(translationUnit);
 
         // Deduce binary-constraint polymorphism
-        auto setConstraintType = [&](const BinaryConstraint& bc, TypeAttribute attr) {
-            auto overloadedType = convertOverloadedConstraint(bc.getBaseOperator(), attr);
-            if (contains(constraintType, &bc) && constraintType.at(&bc) == overloadedType) return;
-            changed = true;
-            constraintType[&bc] = overloadedType;
-        };
-        visitDepthFirst(program, [&](const BinaryConstraint& binaryConstraint) {
-            if (isOverloaded(binaryConstraint.getBaseOperator())) {
-                // Get arguments
-                auto* leftArg = binaryConstraint.getLHS();
-                auto* rightArg = binaryConstraint.getRHS();
-
-                // Both args must be of the same type
-                if (isFloat(leftArg) && isFloat(rightArg)) {
-                    setConstraintType(binaryConstraint, TypeAttribute::Float);
-                } else if (isUnsigned(leftArg) && isUnsigned(rightArg)) {
-                    setConstraintType(binaryConstraint, TypeAttribute::Unsigned);
-                } else if (isSymbol(leftArg) && isSymbol(rightArg)) {
-                    setConstraintType(binaryConstraint, TypeAttribute::Symbol);
-                } else {
-                    setConstraintType(binaryConstraint, TypeAttribute::Signed);
-                }
-            } else {
-                if (contains(constraintType, &binaryConstraint)) {
-                    assert(constraintType.at(&binaryConstraint) == binaryConstraint.getBaseOperator() &&
-                            "unexpected constraint type");
-                    return;
-                }
-                changed = true;
-                constraintType[&binaryConstraint] = binaryConstraint.getBaseOperator();
-            }
-        });
+        changed |= analyseBinaryConstraints(translationUnit);
     }
 }
 

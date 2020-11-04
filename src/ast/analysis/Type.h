@@ -96,6 +96,15 @@ private:
     std::map<const NumericConstant*, NumericConstant::Type> numericConstantType;
     std::map<const Aggregator*, AggregateOp> aggregatorType;
     std::map<const BinaryConstraint*, BinaryConstraintOp> constraintType;
+
+    bool analyseIntrinsicFunctors(const TranslationUnit& translationUnit);
+    bool analyseNumericConstants(const TranslationUnit& translationUnit);
+    bool analyseAggregators(const TranslationUnit& translationUnit);
+    bool analyseBinaryConstraints(const TranslationUnit& translationUnit);
+
+    bool isFloat(const Argument* argument) const;
+    bool isUnsigned(const Argument* argument) const;
+    bool isSymbol(const Argument* argument) const;
 };
 
 }  // namespace souffle::ast::analysis
