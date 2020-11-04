@@ -102,9 +102,6 @@ private:
     std::map<const NumericConstant*, NumericConstant::Type> numericConstantType;
     std::map<const Aggregator*, AggregateOp> aggregatorType;
     std::map<const BinaryConstraint*, BinaryConstraintOp> constraintType;
-
-    // Invalidly typed arguments
-    std::set<const IntrinsicFunctor*> invalidFunctors;
 };
 
 }  // namespace souffle::ast::analysis

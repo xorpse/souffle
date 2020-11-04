@@ -935,7 +935,7 @@ bool TypeAnalysis::hasProcessedFunctor(const Functor* functor) const {
 }
 
 bool TypeAnalysis::isInvalidFunctor(const IntrinsicFunctor* func) const {
-    return contains(invalidFunctors, func);
+    return !contains(functorInfo, func);
 }
 
 NumericConstant::Type TypeAnalysis::getPolymorphicNumericConstantType(const NumericConstant* nc) const {
@@ -1020,20 +1020,10 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
                     functorInfo.erase(&functor);
                     changed = true;
                 }
-                if (contains(invalidFunctors, &functor)) return;
-                invalidFunctors.insert(&functor);
-                changed = true;
                 return;
             }
 
-            if (contains(invalidFunctors, &functor)) {
-                // No longer invalid
-                invalidFunctors.erase(&functor);
-                changed = true;
-            }
-
             // Update to the canonic representation if different
-            assert(!contains(invalidFunctors, &functor));
             const auto* curInfo = &candidates.front().get();
             if (contains(functorInfo, &functor) && functorInfo.at(&functor) == curInfo) return;
             functorInfo[&functor] = curInfo;
