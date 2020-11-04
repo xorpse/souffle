@@ -944,7 +944,7 @@ NumericConstant::Type TypeAnalysis::getPolymorphicNumericConstantType(const Nume
 }
 
 bool TypeAnalysis::hasInvalidPolymorphicNumericConstantType(const NumericConstant* nc) const {
-    return contains(invalidConstants, nc);
+    return !contains(numericConstantType, nc);
 }
 
 BinaryConstraintOp TypeAnalysis::getPolymorphicOperator(const BinaryConstraint* bc) const {
@@ -1042,10 +1042,6 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
 
         // Deduce numeric-constant polymorphism
         auto setNumericConstantType = [&](const NumericConstant& nc, NumericConstant::Type ncType) {
-            if (contains(invalidConstants, &nc)) {
-                changed = true;
-                invalidConstants.erase(&nc);
-            }
             if (contains(numericConstantType, &nc) && numericConstantType.at(&nc) == ncType) return;
             changed = true;
             numericConstantType[&nc] = ncType;
@@ -1070,10 +1066,7 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
             } else if (hasOfKind(TypeAttribute::Float)) {
                 setNumericConstantType(numericConstant, NumericConstant::Type::Float);
             } else {
-                if (!contains(invalidConstants, &numericConstant)) {
-                    invalidConstants.insert(&numericConstant);
-                    changed = true;
-                }
+                // Type information no longer valid
                 if (contains(numericConstantType, &numericConstant)) {
                     numericConstantType.erase(&numericConstant);
                     changed = true;

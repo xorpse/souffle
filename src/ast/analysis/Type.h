@@ -96,16 +96,15 @@ private:
     VecOwn<Clause> annotatedClauses;
     std::stringstream analysisLogs;
 
-    // Functor analysis
-    std::map<std::string, const FunctorDeclaration*> udfDeclaration;
-    std::map<const IntrinsicFunctor*, const IntrinsicFunctorInfo*> functorInfo;
-    std::set<const IntrinsicFunctor*> invalidFunctors;
-
     // Polymorphic objects analysis
+    std::map<const IntrinsicFunctor*, const IntrinsicFunctorInfo*> functorInfo;
+    std::map<std::string, const FunctorDeclaration*> udfDeclaration;
     std::map<const NumericConstant*, NumericConstant::Type> numericConstantType;
-    std::set<const NumericConstant*> invalidConstants;
     std::map<const Aggregator*, AggregateOp> aggregatorType;
     std::map<const BinaryConstraint*, BinaryConstraintOp> constraintType;
+
+    // Invalidly typed arguments
+    std::set<const IntrinsicFunctor*> invalidFunctors;
 };
 
 }  // namespace souffle::ast::analysis
