@@ -329,9 +329,8 @@ Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
 
     for (auto* a : args) {
         if (auto* c = dynamic_cast<const ast::Constant*>(a)) {
-            const auto* polyAnalysis = translator.getPolymorphicObjectsAnalysis();
             auto* const c_num = dynamic_cast<const ast::NumericConstant*>(c);
-            assert((!c_num || !polyAnalysis->hasInvalidType(c_num)) &&
+            assert((!c_num || c_num->getFinalType().has_value()) &&
                     "numeric constant wasn't bound to a type");
             op = mkFilter(c_num && c_num->getFinalType().value() == ast::NumericConstant::Type::Float,
                     translator.translateConstant(*c));

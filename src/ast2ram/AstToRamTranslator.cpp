@@ -243,7 +243,7 @@ Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg
         }
 
         Own<ram::Expression> visitNumericConstant(const ast::NumericConstant& c) override {
-            assert(!polyAnalysis->hasInvalidType(&c) && "constant should have valid type");
+            assert(c.getFinalType().has_value() && "constant should have valid type");
             switch (c.getFinalType().value()) {
                 case ast::NumericConstant::Type::Int:
                     return mk<ram::SignedConstant>(RamSignedFromString(c.getConstant(), nullptr, 0));
@@ -401,7 +401,7 @@ RamDomain AstToRamTranslator::getConstantRamRepresentation(const ast::Constant& 
     } else if (isA<ast::NilConstant>(&constant)) {
         return 0;
     } else if (auto* numConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
-        assert(!polyAnalysis->hasInvalidType(numConstant) && "constant should have valid type");
+        assert(numConstant->getFinalType().has_value() && "constant should have valid type");
         switch (numConstant->getFinalType().value()) {
             case ast::NumericConstant::Type::Int:
                 return RamSignedFromString(numConstant->getConstant(), nullptr, 0);
