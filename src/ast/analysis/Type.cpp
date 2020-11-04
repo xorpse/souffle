@@ -686,7 +686,7 @@ private:
             auto argVars = map(intrFun->getArguments(), [&](auto&& x) { return getVar(x); });
             // The type of the user-defined function might not be set at this stage.
             // If so then add overloads as alternatives
-            if (typeAnalysis.isInvalidFunctor(intrFun))
+            if (!typeAnalysis.hasValidTypeInfo(intrFun))
                 addConstraint(satisfiesOverload(typeEnv, functorBuiltIn(intrFun->getBaseFunctionOp()),
                         functorVar, argVars, isInfixFunctorOp(intrFun->getBaseFunctionOp())));
 
@@ -702,7 +702,7 @@ private:
                 return;
             }
 
-            if (typeAnalysis.isInvalidFunctor(intrFun)) return;
+            if (!typeAnalysis.hasValidTypeInfo(intrFun)) return;
         }
 
         // Skip constraint adding if type info is not available
@@ -929,10 +929,6 @@ bool TypeAnalysis::hasProcessedFunctor(const Functor* functor) const {
     return hasValidTypeInfo(functor);
 }
 
-bool TypeAnalysis::isInvalidFunctor(const IntrinsicFunctor* func) const {
-    return !contains(functorInfo, func);
-}
-
 bool TypeAnalysis::hasValidTypeInfo(const Argument* argument) const {
     if (auto* inf = as<IntrinsicFunctor>(argument)) {
         return contains(functorInfo, inf);
@@ -966,7 +962,7 @@ AggregateOp TypeAnalysis::getPolymorphicOperator(const Aggregator* aggr) const {
 }
 
 FunctorOp TypeAnalysis::getPolymorphicOperator(const IntrinsicFunctor* inf) const {
-    assert(!isInvalidFunctor(inf) && contains(functorInfo, inf));
+    assert(hasValidTypeInfo(inf) && "functor does not have a deduced type");
     return functorInfo.at(inf)->op;
 }
 

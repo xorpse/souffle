@@ -471,7 +471,7 @@ void TypeCheckerImpl::visitTypeCast(const ast::TypeCast& cast) {
 }
 
 void TypeCheckerImpl::visitIntrinsicFunctor(const IntrinsicFunctor& fun) {
-    if (typeAnalysis.isInvalidFunctor(&fun)) {
+    if (!typeAnalysis.hasValidTypeInfo(&fun)) {
         auto args = fun.getArguments();
         if (!isValidFunctorOpArity(fun.getBaseFunctionOp(), args.size())) {
             report.addError("invalid overload (arity mismatch)", fun.getSrcLoc());
