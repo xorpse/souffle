@@ -926,16 +926,24 @@ IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& func) con
 }
 
 bool TypeAnalysis::hasProcessedFunctor(const Functor* functor) const {
-    if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
-        return contains(functorInfo, intrinsic);
-    } else if (auto* udf = as<UserDefinedFunctor>(functor)) {
-        return contains(udfDeclaration, udf->getName());
-    }
-    fatal("Missing functor type.");
+    return hasValidTypeInfo(functor);
 }
 
 bool TypeAnalysis::isInvalidFunctor(const IntrinsicFunctor* func) const {
     return !contains(functorInfo, func);
+}
+
+bool TypeAnalysis::hasValidTypeInfo(const Argument* argument) const {
+    if (auto* inf = as<IntrinsicFunctor>(argument)) {
+        return contains(functorInfo, inf);
+    } else if (auto* udf = as<UserDefinedFunctor>(argument)) {
+        return contains(udfDeclaration, udf->getName());
+    } else if (auto* nc = as<NumericConstant>(argument)) {
+        return contains(numericConstantType, nc);
+    } else if (auto* aggr = as<Aggregator>(argument)) {
+        return contains(aggregatorType, aggr);
+    }
+    return true;
 }
 
 NumericConstant::Type TypeAnalysis::getPolymorphicNumericConstantType(const NumericConstant* nc) const {
@@ -944,7 +952,7 @@ NumericConstant::Type TypeAnalysis::getPolymorphicNumericConstantType(const Nume
 }
 
 bool TypeAnalysis::hasInvalidPolymorphicNumericConstantType(const NumericConstant* nc) const {
-    return !contains(numericConstantType, nc);
+    return !hasValidTypeInfo(nc);
 }
 
 BinaryConstraintOp TypeAnalysis::getPolymorphicOperator(const BinaryConstraint* bc) const {

@@ -64,6 +64,9 @@ public:
     static std::map<const Argument*, TypeSet> analyseTypes(
             const TranslationUnit& tu, const Clause& clause, std::ostream* logs = nullptr);
 
+    // Checks whether an argument has been assigned a valid type
+    bool hasValidTypeInfo(const Argument* argument) const;
+
     /** -- Functor-related methods -- */
     bool hasProcessedFunctor(const Functor* functor) const;
     bool isInvalidFunctor(const IntrinsicFunctor* func) const;
