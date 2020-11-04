@@ -706,7 +706,7 @@ private:
         }
 
         // Skip constraint adding if type info is not available
-        if (!typeAnalysis.hasProcessedFunctor(&fun)) return;
+        if (!typeAnalysis.hasValidTypeInfo(&fun)) return;
 
         // add a constraint for the return type of the functor
         TypeAttribute returnType = typeAnalysis.getFunctorReturnType(&fun);
@@ -841,7 +841,7 @@ void TypeAnalysis::print(std::ostream& os) const {
 }
 
 TypeAttribute TypeAnalysis::getFunctorReturnType(const Functor* functor) const {
-    assert(hasProcessedFunctor(functor) && "functor not yet processed");
+    assert(hasValidTypeInfo(functor) && "functor not yet processed");
     if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
         return functorInfo.at(intrinsic)->result;
     } else if (const auto* udf = as<UserDefinedFunctor>(functor)) {
@@ -851,7 +851,7 @@ TypeAttribute TypeAnalysis::getFunctorReturnType(const Functor* functor) const {
 }
 
 TypeAttribute TypeAnalysis::getFunctorArgType(const Functor* functor, const size_t idx) const {
-    assert(hasProcessedFunctor(functor) && "functor not yet processed");
+    assert(hasValidTypeInfo(functor) && "functor not yet processed");
     if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
         auto* info = functorInfo.at(intrinsic);
         return info->params.at(info->variadic ? 0 : idx);
@@ -888,7 +888,7 @@ IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& func) con
     auto typeAttrs = [&](const Argument* arg) -> std::set<TypeAttribute> {
         std::set<TypeAttribute> tyAttrs;
         if (const auto* inf = dynamic_cast<const IntrinsicFunctor*>(arg)) {
-            if (hasProcessedFunctor(inf)) {
+            if (hasValidTypeInfo(inf)) {
                 tyAttrs.insert(getFunctorReturnType(inf));
                 return tyAttrs;
             }
@@ -923,10 +923,6 @@ IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& func) con
                         a.params.begin(), a.params.end(), b.params.begin(), b.params.end());
             });
     return candidates;
-}
-
-bool TypeAnalysis::hasProcessedFunctor(const Functor* functor) const {
-    return hasValidTypeInfo(functor);
 }
 
 bool TypeAnalysis::hasValidTypeInfo(const Argument* argument) const {

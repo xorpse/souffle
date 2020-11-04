@@ -68,7 +68,6 @@ public:
     bool hasValidTypeInfo(const Argument* argument) const;
 
     /** -- Functor-related methods -- */
-    bool hasProcessedFunctor(const Functor* functor) const;
     IntrinsicFunctors validOverloads(const ast::IntrinsicFunctor& func) const;
 
     TypeAttribute getFunctorReturnType(const Functor* functor) const;
