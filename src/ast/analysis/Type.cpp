@@ -957,6 +957,15 @@ AggregateOp TypeAnalysis::getPolymorphicOperator(const Aggregator* aggr) const {
     return aggregatorType.at(aggr);
 }
 
+bool TypeAnalysis::hasValidType(const Functor* functor) const {
+    if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
+        return contains(functorInfo, intrinsic);
+    } else if (auto* udf = as<UserDefinedFunctor>(functor)) {
+        return contains(udfDeclaration, udf->getName());
+    }
+    fatal("Unhandled functor type.");
+}
+
 FunctorOp TypeAnalysis::getPolymorphicOperator(const IntrinsicFunctor* inf) const {
     assert(!isInvalidFunctor(inf) && contains(functorType, inf));
     return functorType.at(inf);

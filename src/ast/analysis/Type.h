@@ -49,9 +49,7 @@ public:
 
     void print(std::ostream& os) const override;
 
-    /**
-     * Get the computed types for the given argument.
-     */
+    /** Get the computed types for the given argument. */
     TypeSet const& getTypes(const Argument* argument) const {
         return argumentTypes.at(argument);
     }
@@ -66,9 +64,11 @@ public:
     static std::map<const Argument*, TypeSet> analyseTypes(
             const TranslationUnit& tu, const Clause& clause, std::ostream* logs = nullptr);
 
-    /**
-     * Functor-related methods
-     */
+    /** -- Functor-related methods -- */
+
+    // Check if a valid type has been deduced for the given functor
+    bool hasValidType(const Functor* functor) const;
+
     bool hasProcessedFunctor(const Functor* functor) const;
     bool isInvalidFunctor(const IntrinsicFunctor* func) const;
     IntrinsicFunctors validOverloads(const ast::IntrinsicFunctor& func) const;
@@ -91,6 +91,7 @@ public:
     FunctorOp getPolymorphicOperator(const IntrinsicFunctor* inf) const;
 
 private:
+    // General type analysis
     std::map<const Argument*, TypeSet> argumentTypes;
     VecOwn<Clause> annotatedClauses;
     std::stringstream analysisLogs;
