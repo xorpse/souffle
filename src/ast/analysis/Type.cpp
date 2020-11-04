@@ -939,7 +939,7 @@ bool TypeAnalysis::isInvalidFunctor(const IntrinsicFunctor* func) const {
 }
 
 NumericConstant::Type TypeAnalysis::getPolymorphicNumericConstantType(const NumericConstant* nc) const {
-    assert(!hasInvalidPolymorphicNumericConstantType(nc) && contains(numericConstantType, nc));
+    assert(contains(numericConstantType, nc) && "type does not exist");
     return numericConstantType.at(nc);
 }
 
@@ -955,15 +955,6 @@ BinaryConstraintOp TypeAnalysis::getPolymorphicOperator(const BinaryConstraint* 
 AggregateOp TypeAnalysis::getPolymorphicOperator(const Aggregator* aggr) const {
     assert(contains(aggregatorType, aggr) && "aggregator does not have a set type");
     return aggregatorType.at(aggr);
-}
-
-bool TypeAnalysis::hasValidType(const Functor* functor) const {
-    if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
-        return contains(functorInfo, intrinsic);
-    } else if (auto* udf = as<UserDefinedFunctor>(functor)) {
-        return contains(udfDeclaration, udf->getName());
-    }
-    fatal("Unhandled functor type.");
 }
 
 FunctorOp TypeAnalysis::getPolymorphicOperator(const IntrinsicFunctor* inf) const {

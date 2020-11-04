@@ -65,10 +65,6 @@ public:
             const TranslationUnit& tu, const Clause& clause, std::ostream* logs = nullptr);
 
     /** -- Functor-related methods -- */
-
-    // Check if a valid type has been deduced for the given functor
-    bool hasValidType(const Functor* functor) const;
-
     bool hasProcessedFunctor(const Functor* functor) const;
     bool isInvalidFunctor(const IntrinsicFunctor* func) const;
     IntrinsicFunctors validOverloads(const ast::IntrinsicFunctor& func) const;
@@ -80,9 +76,7 @@ public:
     bool isStatefulFunctor(const UserDefinedFunctor* udf) const;
     static bool isMultiResultFunctor(const Functor& functor);
 
-    /**
-     * Polymorphism-related methods
-     */
+    /** -- Polymorphism-related methods -- */
     NumericConstant::Type getPolymorphicNumericConstantType(const NumericConstant* nc) const;
     bool hasInvalidPolymorphicNumericConstantType(const NumericConstant* nc) const;
     const std::map<const NumericConstant*, NumericConstant::Type>& getNumericConstantTypes() const;
