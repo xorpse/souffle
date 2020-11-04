@@ -69,7 +69,6 @@ public:
 
     /** -- Functor-related methods -- */
     bool hasProcessedFunctor(const Functor* functor) const;
-    bool isInvalidFunctor(const IntrinsicFunctor* func) const;
     IntrinsicFunctors validOverloads(const ast::IntrinsicFunctor& func) const;
 
     TypeAttribute getFunctorReturnType(const Functor* functor) const;
@@ -81,7 +80,6 @@ public:
 
     /** -- Polymorphism-related methods -- */
     NumericConstant::Type getPolymorphicNumericConstantType(const NumericConstant* nc) const;
-    bool hasInvalidPolymorphicNumericConstantType(const NumericConstant* nc) const;
     const std::map<const NumericConstant*, NumericConstant::Type>& getNumericConstantTypes() const;
     AggregateOp getPolymorphicOperator(const Aggregator* aggr) const;
     BinaryConstraintOp getPolymorphicOperator(const BinaryConstraint* bc) const;

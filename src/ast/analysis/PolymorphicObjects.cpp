@@ -38,7 +38,7 @@ NumericConstant::Type PolymorphicObjectsAnalysis::getInferredType(const NumericC
 }
 
 bool PolymorphicObjectsAnalysis::hasInvalidType(const NumericConstant* nc) const {
-    return typeAnalysis->hasInvalidPolymorphicNumericConstantType(nc);
+    return !typeAnalysis->hasValidTypeInfo(nc);
 }
 
 BinaryConstraintOp PolymorphicObjectsAnalysis::getOverloadedOperator(const BinaryConstraint* bc) const {

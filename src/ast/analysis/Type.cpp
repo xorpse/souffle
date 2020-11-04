@@ -943,12 +943,8 @@ bool TypeAnalysis::hasValidTypeInfo(const Argument* argument) const {
 }
 
 NumericConstant::Type TypeAnalysis::getPolymorphicNumericConstantType(const NumericConstant* nc) const {
-    assert(contains(numericConstantType, nc) && "type does not exist");
+    assert(hasValidTypeInfo(nc) && "numeric constant type not set");
     return numericConstantType.at(nc);
-}
-
-bool TypeAnalysis::hasInvalidPolymorphicNumericConstantType(const NumericConstant* nc) const {
-    return !hasValidTypeInfo(nc);
 }
 
 BinaryConstraintOp TypeAnalysis::getPolymorphicOperator(const BinaryConstraint* bc) const {
@@ -957,12 +953,12 @@ BinaryConstraintOp TypeAnalysis::getPolymorphicOperator(const BinaryConstraint* 
 }
 
 AggregateOp TypeAnalysis::getPolymorphicOperator(const Aggregator* aggr) const {
-    assert(contains(aggregatorType, aggr) && "aggregator does not have a set type");
+    assert(contains(aggregatorType, aggr) && "aggregator operator not set");
     return aggregatorType.at(aggr);
 }
 
 FunctorOp TypeAnalysis::getPolymorphicOperator(const IntrinsicFunctor* inf) const {
-    assert(hasValidTypeInfo(inf) && "functor does not have a deduced type");
+    assert(hasValidTypeInfo(inf) && "functor type not set");
     return functorInfo.at(inf)->op;
 }
 
