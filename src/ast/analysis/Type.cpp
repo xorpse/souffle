@@ -969,7 +969,7 @@ BinaryConstraintOp TypeAnalysis::getPolymorphicOperator(const BinaryConstraint* 
 }
 
 AggregateOp TypeAnalysis::getPolymorphicOperator(const Aggregator* agg) const {
-    assert(contains(aggregatorType, agg) && "aggregator operator not set");
+    assert(hasValidTypeInfo(agg) && "aggregator operator not set");
     return aggregatorType.at(agg);
 }
 
