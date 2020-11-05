@@ -68,7 +68,7 @@ public:
     bool hasValidTypeInfo(const Argument* argument) const;
 
     /** -- Functor-related methods -- */
-    IntrinsicFunctors validOverloads(const ast::IntrinsicFunctor& func) const;
+    IntrinsicFunctors validOverloads(const ast::IntrinsicFunctor& inf) const;
 
     TypeAttribute getFunctorReturnType(const Functor* functor) const;
     TypeAttribute getFunctorArgType(const Functor* functor, const size_t idx) const;
@@ -80,7 +80,7 @@ public:
     /** -- Polymorphism-related methods -- */
     NumericConstant::Type getPolymorphicNumericConstantType(const NumericConstant* nc) const;
     const std::map<const NumericConstant*, NumericConstant::Type>& getNumericConstantTypes() const;
-    AggregateOp getPolymorphicOperator(const Aggregator* aggr) const;
+    AggregateOp getPolymorphicOperator(const Aggregator* agg) const;
     BinaryConstraintOp getPolymorphicOperator(const BinaryConstraint* bc) const;
     FunctorOp getPolymorphicOperator(const IntrinsicFunctor* inf) const;
 

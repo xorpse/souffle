@@ -884,7 +884,7 @@ bool TypeAnalysis::isMultiResultFunctor(const Functor& functor) {
     fatal("Missing functor type.");
 }
 
-IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& func) const {
+IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& inf) const {
     auto typeAttrs = [&](const Argument* arg) -> std::set<TypeAttribute> {
         std::set<TypeAttribute> tyAttrs;
         if (const auto* inf = dynamic_cast<const IntrinsicFunctor*>(arg)) {
@@ -902,12 +902,12 @@ IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& func) con
             tyAttrs.insert(getTypeAttribute(ty));
         return tyAttrs;
     };
-    auto retTys = typeAttrs(&func);
-    auto argTys = map(func.getArguments(), typeAttrs);
+    auto retTys = typeAttrs(&inf);
+    auto argTys = map(inf.getArguments(), typeAttrs);
 
-    IntrinsicFunctors functorInfos = contains(functorInfo, &func)
-                                             ? functorBuiltIn(getPolymorphicOperator(&func))
-                                             : functorBuiltIn(func.getBaseFunctionOp());
+    IntrinsicFunctors functorInfos = contains(functorInfo, &inf)
+                                             ? functorBuiltIn(getPolymorphicOperator(&inf))
+                                             : functorBuiltIn(inf.getBaseFunctionOp());
     auto candidates = filterNot(functorInfos, [&](const IntrinsicFunctorInfo& x) -> bool {
         if (!x.variadic && argTys.size() != x.params.size()) return true;  // arity mismatch?
         for (size_t i = 0; i < argTys.size(); ++i)
@@ -932,8 +932,8 @@ bool TypeAnalysis::hasValidTypeInfo(const Argument* argument) const {
         return contains(udfDeclaration, udf->getName());
     } else if (auto* nc = as<NumericConstant>(argument)) {
         return contains(numericConstantType, nc);
-    } else if (auto* aggr = as<Aggregator>(argument)) {
-        return contains(aggregatorType, aggr);
+    } else if (auto* agg = as<Aggregator>(argument)) {
+        return contains(aggregatorType, agg);
     }
     return true;
 }
@@ -948,9 +948,9 @@ BinaryConstraintOp TypeAnalysis::getPolymorphicOperator(const BinaryConstraint* 
     return constraintType.at(bc);
 }
 
-AggregateOp TypeAnalysis::getPolymorphicOperator(const Aggregator* aggr) const {
-    assert(contains(aggregatorType, aggr) && "aggregator operator not set");
-    return aggregatorType.at(aggr);
+AggregateOp TypeAnalysis::getPolymorphicOperator(const Aggregator* agg) const {
+    assert(contains(aggregatorType, agg) && "aggregator operator not set");
+    return aggregatorType.at(agg);
 }
 
 FunctorOp TypeAnalysis::getPolymorphicOperator(const IntrinsicFunctor* inf) const {
@@ -1025,31 +1025,30 @@ bool TypeAnalysis::analyseAggregators(const TranslationUnit& translationUnit) {
     bool changed = false;
     const auto& program = translationUnit.getProgram();
 
-    auto setAggregatorType = [&](const Aggregator& aggr, TypeAttribute attr) {
-        auto overloadedType = convertOverloadedAggregator(aggr.getBaseOperator(), attr);
-        if (contains(aggregatorType, &aggr) && aggregatorType.at(&aggr) == overloadedType) return;
+    auto setAggregatorType = [&](const Aggregator& agg, TypeAttribute attr) {
+        auto overloadedType = convertOverloadedAggregator(agg.getBaseOperator(), attr);
+        if (contains(aggregatorType, &agg) && aggregatorType.at(&agg) == overloadedType) return;
         changed = true;
-        aggregatorType[&aggr] = overloadedType;
+        aggregatorType[&agg] = overloadedType;
     };
 
-    visitDepthFirst(program, [&](const Aggregator& aggregator) {
-        if (isOverloadedAggregator(aggregator.getBaseOperator())) {
-            auto* targetExpression = aggregator.getTargetExpression();
+    visitDepthFirst(program, [&](const Aggregator& agg) {
+        if (isOverloadedAggregator(agg.getBaseOperator())) {
+            auto* targetExpression = agg.getTargetExpression();
             if (isFloat(targetExpression)) {
-                setAggregatorType(aggregator, TypeAttribute::Float);
+                setAggregatorType(agg, TypeAttribute::Float);
             } else if (isUnsigned(targetExpression)) {
-                setAggregatorType(aggregator, TypeAttribute::Unsigned);
+                setAggregatorType(agg, TypeAttribute::Unsigned);
             } else {
-                setAggregatorType(aggregator, TypeAttribute::Signed);
+                setAggregatorType(agg, TypeAttribute::Signed);
             }
         } else {
-            if (contains(aggregatorType, &aggregator)) {
-                assert(aggregatorType.at(&aggregator) == aggregator.getBaseOperator() &&
-                        "unexpected aggr type");
+            if (contains(aggregatorType, &agg)) {
+                assert(aggregatorType.at(&agg) == agg.getBaseOperator() && "unexpected aggregator type");
                 return;
             }
             changed = true;
-            aggregatorType[&aggregator] = aggregator.getBaseOperator();
+            aggregatorType[&agg] = agg.getBaseOperator();
         }
     });
 

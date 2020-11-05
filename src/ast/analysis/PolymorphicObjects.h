@@ -57,7 +57,7 @@ public:
     BinaryConstraintOp getOverloadedOperator(const BinaryConstraint* bc) const;
 
     // Aggregators
-    AggregateOp getOverloadedOperator(const Aggregator* aggr) const;
+    AggregateOp getOverloadedOperator(const Aggregator* agg) const;
 
 private:
     const TypeAnalysis* typeAnalysis = nullptr;
