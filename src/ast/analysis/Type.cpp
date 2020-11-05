@@ -906,7 +906,7 @@ std::set<TypeAttribute> TypeAnalysis::getTypeAttributes(const Argument* arg) con
     return typeAttributes;
 }
 
-IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& inf) const {
+IntrinsicFunctors TypeAnalysis::getValidIntrinsicFunctorOverloads(const IntrinsicFunctor& inf) const {
     // Get the info of all possible functors which can be used here
     IntrinsicFunctors functorInfos = contains(functorInfo, &inf) ? functorBuiltIn(functorInfo.at(&inf)->op)
                                                                  : functorBuiltIn(inf.getBaseFunctionOp());
@@ -982,7 +982,7 @@ bool TypeAnalysis::analyseIntrinsicFunctors(const TranslationUnit& translationUn
     bool changed = false;
     const auto& program = translationUnit.getProgram();
     visitDepthFirst(program, [&](const IntrinsicFunctor& functor) {
-        auto candidates = validOverloads(functor);
+        auto candidates = getValidIntrinsicFunctorOverloads(functor);
         if (candidates.empty()) {
             // No valid overloads - mark it as an invalid functor
             if (contains(functorInfo, &functor)) {

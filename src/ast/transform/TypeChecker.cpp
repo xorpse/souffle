@@ -477,7 +477,8 @@ void TypeCheckerImpl::visitIntrinsicFunctor(const IntrinsicFunctor& fun) {
             report.addError("invalid overload (arity mismatch)", fun.getSrcLoc());
             return;
         }
-        assert(typeAnalysis.validOverloads(fun).empty() && "unexpected type analysis result");
+        assert(typeAnalysis.getValidIntrinsicFunctorOverloads(fun).empty() &&
+                "unexpected type analysis result");
         report.addError("no valid overloads", fun.getSrcLoc());
     }
 }
