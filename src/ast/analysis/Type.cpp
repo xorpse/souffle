@@ -884,26 +884,31 @@ bool TypeAnalysis::isMultiResultFunctor(const Functor& functor) {
     fatal("Missing functor type.");
 }
 
-IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& inf) const {
-    auto typeAttrs = [&](const Argument* arg) -> std::set<TypeAttribute> {
-        std::set<TypeAttribute> tyAttrs;
-        if (const auto* inf = dynamic_cast<const IntrinsicFunctor*>(arg)) {
-            if (hasValidTypeInfo(inf)) {
-                tyAttrs.insert(getFunctorReturnType(inf));
-                return tyAttrs;
-            }
-        }
-        auto&& types = getTypes(arg);
-        if (types.isAll())
-            return {TypeAttribute::Signed, TypeAttribute::Unsigned, TypeAttribute::Float,
-                    TypeAttribute::Symbol, TypeAttribute::Record};
+std::set<TypeAttribute> TypeAnalysis::getTypeAttributes(const Argument* arg) const {
+    std::set<TypeAttribute> typeAttributes;
 
-        for (auto&& ty : types)
-            tyAttrs.insert(getTypeAttribute(ty));
-        return tyAttrs;
-    };
-    auto retTys = typeAttrs(&inf);
-    auto argTys = map(inf.getArguments(), typeAttrs);
+    if (const auto* inf = dynamic_cast<const IntrinsicFunctor*>(arg)) {
+        // intrinsic functor type is its return type if its set
+        if (hasValidTypeInfo(inf)) {
+            typeAttributes.insert(getFunctorReturnType(inf));
+            return typeAttributes;
+        }
+    }
+
+    const auto& types = getTypes(arg);
+    if (types.isAll()) {
+        return {TypeAttribute::Signed, TypeAttribute::Unsigned, TypeAttribute::Float, TypeAttribute::Symbol,
+                TypeAttribute::Record};
+    }
+    for (const auto& type : types) {
+        typeAttributes.insert(getTypeAttribute(type));
+    }
+    return typeAttributes;
+}
+
+IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& inf) const {
+    auto retTys = getTypeAttributes(&inf);
+    auto argTys = map(inf.getArguments(), [&](const Argument* arg) { return getTypeAttributes(arg); });
 
     IntrinsicFunctors functorInfos = contains(functorInfo, &inf)
                                              ? functorBuiltIn(getPolymorphicOperator(&inf))

@@ -26,6 +26,7 @@
 #include "ast/analysis/Analysis.h"
 #include "ast/analysis/TypeSystem.h"
 #include <memory>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -67,9 +68,10 @@ public:
     // Checks whether an argument has been assigned a valid type
     bool hasValidTypeInfo(const Argument* argument) const;
 
+    std::set<TypeAttribute> getTypeAttributes(const Argument* arg) const;
+
     /** -- Functor-related methods -- */
     IntrinsicFunctors validOverloads(const ast::IntrinsicFunctor& inf) const;
-
     TypeAttribute getFunctorReturnType(const Functor* functor) const;
     TypeAttribute getFunctorArgType(const Functor* functor, const size_t idx) const;
     const std::vector<TypeAttribute>& getFunctorArgTypes(const UserDefinedFunctor& udf) const;
