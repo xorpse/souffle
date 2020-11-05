@@ -1064,7 +1064,8 @@ bool TypeAnalysis::analyseAggregators(const TranslationUnit& translationUnit) {
             }
         } else {
             if (contains(aggregatorType, &agg)) {
-                assert(aggregatorType.at(&agg) == agg.getBaseOperator() && "unexpected aggregator type");
+                assert(aggregatorType.at(&agg) == agg.getBaseOperator() &&
+                        "non-overloaded aggr types should always be the base operator");
                 return;
             }
             changed = true;
