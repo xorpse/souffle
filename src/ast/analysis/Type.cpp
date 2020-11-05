@@ -1106,7 +1106,7 @@ bool TypeAnalysis::isUnsigned(const Argument* argument) const {
 }
 
 bool TypeAnalysis::isSymbol(const Argument* argument) const {
-    return isOfKind(getTypes(argument), TypeAttribute::Unsigned);
+    return isOfKind(getTypes(argument), TypeAttribute::Symbol);
 }
 
 void TypeAnalysis::run(const TranslationUnit& translationUnit) {
