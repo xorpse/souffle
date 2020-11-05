@@ -907,26 +907,41 @@ std::set<TypeAttribute> TypeAnalysis::getTypeAttributes(const Argument* arg) con
 }
 
 IntrinsicFunctors TypeAnalysis::validOverloads(const IntrinsicFunctor& inf) const {
-    auto retTys = getTypeAttributes(&inf);
-    auto argTys = map(inf.getArguments(), [&](const Argument* arg) { return getTypeAttributes(arg); });
+    // Get the info of all possible functors which can be used here
+    IntrinsicFunctors functorInfos = contains(functorInfo, &inf) ? functorBuiltIn(functorInfo.at(&inf)->op)
+                                                                 : functorBuiltIn(inf.getBaseFunctionOp());
 
-    IntrinsicFunctors functorInfos = contains(functorInfo, &inf)
-                                             ? functorBuiltIn(getPolymorphicOperator(&inf))
-                                             : functorBuiltIn(inf.getBaseFunctionOp());
-    auto candidates = filterNot(functorInfos, [&](const IntrinsicFunctorInfo& x) -> bool {
-        if (!x.variadic && argTys.size() != x.params.size()) return true;  // arity mismatch?
-        for (size_t i = 0; i < argTys.size(); ++i)
-            if (!contains(argTys[i], x.params[x.variadic ? 0 : i])) return true;
-        return !contains(retTys, x.result);
-    });
+    // Filter out the ones which don't fit in with the current knowledge
+    auto returnTypes = getTypeAttributes(&inf);
+    auto argTypes = map(inf.getArguments(), [&](const Argument* arg) { return getTypeAttributes(arg); });
+    auto isValidOverload = [&](const IntrinsicFunctorInfo& candidate) {
+        // Check for arity mismatch
+        if (!candidate.variadic && argTypes.size() != candidate.params.size()) {
+            return false;
+        }
 
-    std::sort(candidates.begin(), candidates.end(),
-            [&](const IntrinsicFunctorInfo& a, const IntrinsicFunctorInfo& b) {
-                if (a.result != b.result) return a.result < b.result;
-                if (a.variadic != b.variadic) return a.variadic < b.variadic;
-                return std::lexicographical_compare(
-                        a.params.begin(), a.params.end(), b.params.begin(), b.params.end());
-            });
+        // Check that argument types match
+        for (size_t i = 0; i < argTypes.size(); ++i) {
+            const auto& expectedType = candidate.params[candidate.variadic ? 0 : i];
+            if (!contains(argTypes[i], expectedType)) {
+                return false;
+            }
+        }
+
+        // Check that the return type matches
+        return contains(returnTypes, candidate.result);
+    };
+    auto candidates = filter(functorInfos, isValidOverload);
+
+    // Sort them in a standardised way (so order is deterministic)
+    auto comparator = [&](const IntrinsicFunctorInfo& a, const IntrinsicFunctorInfo& b) {
+        if (a.result != b.result) return a.result < b.result;
+        if (a.variadic != b.variadic) return a.variadic < b.variadic;
+        return std::lexicographical_compare(
+                a.params.begin(), a.params.end(), b.params.begin(), b.params.end());
+    };
+    std::sort(candidates.begin(), candidates.end(), comparator);
+
     return candidates;
 }
 
