@@ -83,7 +83,11 @@ public:
 
 protected:
     void print(std::ostream& os) const override {
-        os << *lhs << " " << operation << " " << *rhs;
+        if (isInfixFunctorOp(operation)) {
+            os << *lhs << " " << operation << " " << *rhs;
+        } else {
+            os << operation << "(" << *lhs << ", " << *rhs << ")";
+        }
     }
 
     bool equal(const Node& node) const override {
