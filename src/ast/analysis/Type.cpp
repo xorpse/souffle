@@ -893,6 +893,11 @@ std::set<TypeAttribute> TypeAnalysis::getTypeAttributes(const Argument* arg) con
             typeAttributes.insert(getFunctorReturnType(inf));
             return typeAttributes;
         }
+    } else if (const auto* udf = dynamic_cast<const UserDefinedFunctor*>(arg)) {
+        if (hasValidTypeInfo(udf)) {
+            typeAttributes.insert(getFunctorReturnType(udf));
+            return typeAttributes;
+        }
     }
 
     const auto& types = getTypes(arg);
