@@ -264,6 +264,10 @@ Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg
             return mk<ram::SignedConstant>(0);
         }
 
+        Own<ram::Expression> visitTypeCast(const ast::TypeCast& typeCast) override {
+            return translator.translateValue(typeCast.getValue(), index);
+        }
+
         Own<ram::Expression> visitIntrinsicFunctor(const ast::IntrinsicFunctor& inf) override {
             VecOwn<ram::Expression> values;
             for (const auto& cur : inf.getArguments()) {

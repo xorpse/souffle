@@ -166,8 +166,6 @@ souffle_sources = \
         ast/transform/RemoveRedundantSums.h                \
         ast/transform/RemoveRelationCopies.cpp             \
         ast/transform/RemoveRelationCopies.h               \
-        ast/transform/RemoveTypecasts.cpp                  \
-        ast/transform/RemoveTypecasts.h                    \
         ast/transform/ReorderLiterals.cpp                  \
         ast/transform/ReorderLiterals.h                    \
         ast/transform/ReplaceSingletonVariables.cpp        \

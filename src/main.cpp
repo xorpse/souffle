@@ -50,7 +50,6 @@
 #include "ast/transform/RemoveRedundantRelations.h"
 #include "ast/transform/RemoveRedundantSums.h"
 #include "ast/transform/RemoveRelationCopies.h"
-#include "ast/transform/RemoveTypecasts.h"
 #include "ast/transform/ReorderLiterals.h"
 #include "ast/transform/ReplaceSingletonVariables.h"
 #include "ast/transform/ResolveAliases.h"
@@ -491,7 +490,7 @@ int main(int argc, char** argv) {
             mk<ast::transform::MaterializeSingletonAggregationTransformer>(),
             mk<ast::transform::FixpointTransformer>(
                     mk<ast::transform::MaterializeAggregationQueriesTransformer>()),
-            mk<ast::transform::ResolveAliasesTransformer>(), mk<ast::transform::RemoveTypecastsTransformer>(),
+            mk<ast::transform::ResolveAliasesTransformer>(),
             mk<ast::transform::RemoveBooleanConstraintsTransformer>(),
             mk<ast::transform::ResolveAliasesTransformer>(), mk<ast::transform::MinimiseProgramTransformer>(),
             mk<ast::transform::InlineRelationsTransformer>(), mk<ast::transform::GroundedTermsChecker>(),
