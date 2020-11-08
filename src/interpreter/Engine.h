@@ -50,18 +50,11 @@ class ProgInterface;
 class Engine {
     using RelationHandle = Own<RelationWrapper>;
     friend ProgInterface;
+    friend NodeGenerator;
 
 public:
-    Engine(ram::TranslationUnit& tUnit)
-            : profileEnabled(Global::config().has("profile")),
-              numOfThreads(std::stoi(Global::config().get("jobs"))), tUnit(tUnit),
-              isa(tUnit.getAnalysis<ram::analysis::IndexAnalysis>()), generator(isa) {
-#ifdef _OPENMP
-        if (numOfThreads > 0) {
-            omp_set_num_threads(numOfThreads);
-        }
-#endif
-    }
+    Engine(ram::TranslationUnit& tUnit);
+
     /** @brief Execute the main program */
     void executeMain();
     /** @brief Execute the subroutine program */
@@ -99,38 +92,12 @@ private:
     int incCounter();
     /** @brief Return the relation map. */
     VecOwn<RelationHandle>& getRelationMap();
-
-    /** If profile is enable in this program */
-    const bool profileEnabled;
-    /** subroutines */
-    VecOwn<Node> subroutine;
-    /** main program */
-    Own<Node> main;
-    /** Number of threads enabled for this program */
-    size_t numOfThreads;
-    /** Profile counter */
-    std::atomic<RamDomain> counter{0};
-    /** Loop iteration counter */
-    size_t iteration = 0;
-    /** Profile for rule frequencies */
-    std::map<std::string, std::deque<std::atomic<size_t>>> frequencies;
-    /** Profile for relation reads */
-    std::map<std::string, std::atomic<size_t>> reads;
-    /** DLL */
-    std::vector<void*> dll;
-    /** Program */
-    ram::TranslationUnit& tUnit;
-    /** IndexAnalysis */
-    ram::analysis::IndexAnalysis* isa;
-    /** Interpreter program generator */
-    NodeGenerator generator;
-    /** Record Table*/
-    RecordTable recordTable;
+    /** @brief Create and add relation into the runtime environment.  */
+    void createRelation(const ram::Relation& id, const size_t idx);
 
     // -- Defines template for specialized interpreter operation -- */
-private:
     template <typename Rel>
-    RamDomain evalExistenceCheck(const ram::ExistenceCheck& cur, const ExistenceCheck& shadow, Context& ctxt);
+    RamDomain evalExistenceCheck(const ExistenceCheck& shadow, Context& ctxt);
 
     template <typename Rel>
     RamDomain evalProvenanceExistenceCheck(const ProvenanceExistenceCheck& shadow, Context& ctxt);
@@ -183,6 +150,35 @@ private:
 
     template <typename Rel>
     RamDomain evalProject(Rel& rel, const Project& shadow, Context& ctxt);
+
+    /** If profile is enable in this program */
+    const bool profileEnabled;
+    /** If running a provenance program */
+    const bool isProvenance;
+    /** subroutines */
+    VecOwn<Node> subroutine;
+    /** main program */
+    Own<Node> main;
+    /** Number of threads enabled for this program */
+    size_t numOfThreads;
+    /** Profile counter */
+    std::atomic<RamDomain> counter{0};
+    /** Loop iteration counter */
+    size_t iteration = 0;
+    /** Profile for rule frequencies */
+    std::map<std::string, std::deque<std::atomic<size_t>>> frequencies;
+    /** Profile for relation reads */
+    std::map<std::string, std::atomic<size_t>> reads;
+    /** DLL */
+    std::vector<void*> dll;
+    /** Program */
+    ram::TranslationUnit& tUnit;
+    /** IndexAnalysis */
+    ram::analysis::IndexAnalysis* isa;
+    /** Record Table*/
+    RecordTable recordTable;
+    /** Symbol table for relations */
+    VecOwn<RelationHandle> relations;
 };
 
 }  // namespace souffle::interpreter

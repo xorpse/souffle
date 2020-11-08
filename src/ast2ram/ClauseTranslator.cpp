@@ -447,15 +447,15 @@ Own<ast::Clause> ClauseTranslator::getReorderedClause(const ast::Clause& clause,
 }
 
 void ClauseTranslator::indexValues(const ast::Node* curNode, const std::vector<ast::Argument*>& curNodeArgs,
-        std::map<const ast::Node*, int>& nodeLevel, ram::RelationReference* relation) {
+        std::map<const ast::Node*, int>& nodeLevel, const ram::Relation* relation) {
     for (size_t pos = 0; pos < curNodeArgs.size(); ++pos) {
         // get argument
         auto& arg = curNodeArgs[pos];
 
         // check for variable references
         if (auto var = dynamic_cast<const ast::Variable*>(arg)) {
-            if (pos < relation->get()->getArity()) {
-                valueIndex->addVarReference(*var, nodeLevel[curNode], pos, souffle::clone(relation));
+            if (pos < relation->getArity()) {
+                valueIndex->addVarReference(*var, nodeLevel[curNode], pos, relation->getName());
             } else {
                 valueIndex->addVarReference(*var, nodeLevel[curNode], pos);
             }
@@ -487,7 +487,8 @@ void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
         op_nesting.push_back(atom);
 
         // index each value in the atom
-        indexValues(atom, atom->getArguments(), nodeLevel, translator.translateRelation(atom).get());
+        indexValues(atom, atom->getArguments(), nodeLevel,
+                translator.lookupRelation(translator.translateRelation(atom)));
     }
 
     // add aggregation functions
@@ -534,6 +535,16 @@ void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
         if (func && ast::analysis::FunctorAnalysis::isMultiResult(*func)) {
             addGenerator();
         }
+    });
+
+    // add multi-result functor introductions
+    visitDepthFirst(clause, [&](const ast::BinaryConstraint& bc) {
+        if (bc.getOperator() != BinaryConstraintOp::EQ && bc.getOperator() != BinaryConstraintOp::FEQ) return;
+        const auto* lhs = dynamic_cast<const ast::Variable*>(bc.getLHS());
+        const auto* rhs = dynamic_cast<const ast::IntrinsicFunctor*>(bc.getRHS());
+        if (lhs == nullptr || rhs == nullptr) return;
+        if (!ast::analysis::FunctorAnalysis::isMultiResult(*rhs)) return;
+        valueIndex->addVarReference(*lhs, valueIndex->getGeneratorLoc(*rhs));
     });
 }
 

@@ -34,6 +34,8 @@ int ComplexityAnalysis::getComplexity(const Node* node) const {
     // visitor
     class ValueComplexityVisitor : public Visitor<int> {
     public:
+        ValueComplexityVisitor(RelationAnalysis* relAnalysis) : ra(relAnalysis) {}
+
         // conjunction
         int visitConjunction(const Conjunction& conj) override {
             return visit(conj.getLHS()) + visit(conj.getRHS());
@@ -62,17 +64,20 @@ int ComplexityAnalysis::getComplexity(const Node* node) const {
         // emptiness check
         int visitEmptinessCheck(const EmptinessCheck& emptiness) override {
             // emptiness check for nullary relations is for free; others have weight one
-            return (emptiness.getRelation().getArity() > 0) ? 1 : 0;
+            return (ra->lookup(emptiness.getRelation()).getArity() > 0) ? 1 : 0;
         }
 
         // default rule
         int visitNode(const Node&) override {
             return 0;
         }
+
+    protected:
+        RelationAnalysis* ra{nullptr};
     };
 
     assert((isA<Expression>(node) || isA<Condition>(node)) && "not an expression/condition/operation");
-    return ValueComplexityVisitor().visit(node);
+    return ValueComplexityVisitor(ra).visit(node);
 }
 
 }  // namespace souffle::ram::analysis

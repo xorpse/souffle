@@ -143,7 +143,6 @@ struct Visitor : public ram_visitor_tag {
 
         // Relation
         FORWARD(Relation);
-        FORWARD(RelationReference);
 
         // Expressions
         FORWARD(TupleElement);
@@ -313,7 +312,6 @@ protected:
 
     // -- relation
     LINK(Relation, Node);
-    LINK(RelationReference, Node);
 
 #undef LINK
 

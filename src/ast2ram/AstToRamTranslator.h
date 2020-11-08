@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ram/Relation.h"
 #include "souffle/RamTypes.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <cassert>
@@ -53,7 +54,6 @@ namespace souffle::ram {
 class Condition;
 class Expression;
 class Relation;
-class RelationReference;
 class Statement;
 class TranslationUnit;
 class TupleElement;
@@ -95,11 +95,10 @@ public:
     Own<ram::Expression> translateValue(const ast::Argument* arg, const ValueIndex& index);
 
     /** a utility to translate atoms to relations */
-    Own<ram::RelationReference> translateRelation(const ast::Atom* atom);
+    std::string translateRelation(const ast::Atom* atom);
 
     /** translate an AST relation to a RAM relation */
-    Own<ram::RelationReference> translateRelation(
-            const ast::Relation* rel, const std::string relationNamePrefix = "");
+    std::string translateRelation(const ast::Relation* rel, const std::string relationNamePrefix = "");
 
     /** determine the auxiliary for relations */
     size_t getEvaluationArity(const ast::Atom* atom) const;
@@ -112,6 +111,12 @@ public:
 
     /** translate RAM code for a constant value */
     Own<ram::Expression> translateConstant(ast::Constant const& c);
+
+    const ram::Relation* lookupRelation(const std::string& name) const {
+        auto it = ramRels.find(name);
+        assert(it != ramRels.end() && "relation not found");
+        return (*it).second.get();
+    }
 
 private:
     /** AST program */
@@ -159,14 +164,11 @@ private:
     // TODO (b-scholz): revisit / refactor so that only one directive is translated
     std::vector<std::map<std::string, std::string>> getOutputDirectives(const ast::Relation* rel);
 
-    /** create a reference to a RAM relation */
-    Own<ram::RelationReference> createRelationReference(const std::string name);
-
     /** translate a temporary `delta` relation to a RAM relation for semi-naive evaluation */
-    Own<ram::RelationReference> translateDeltaRelation(const ast::Relation* rel);
+    std::string translateDeltaRelation(const ast::Relation* rel);
 
     /** translate a temporary `new` relation to a RAM relation for semi-naive evaluation */
-    Own<ram::RelationReference> translateNewRelation(const ast::Relation* rel);
+    std::string translateNewRelation(const ast::Relation* rel);
 
     /** Return a symbol table **/
     SymbolTable& getSymbolTable();

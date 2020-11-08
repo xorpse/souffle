@@ -65,6 +65,8 @@ souffle_sources = \
         ast/UnnamedVariable.h                              \
         ast/UserDefinedFunctor.h                           \
         ast/Variable.h                                     \
+        ast/analysis/Aggregate.cpp                         \
+        ast/analysis/Aggregate.h                           \
         ast/analysis/Analysis.h                            \
         ast/analysis/AuxArity.cpp                          \
         ast/analysis/AuxArity.h                            \
@@ -122,6 +124,8 @@ souffle_sources = \
         ast/transform/FoldAnonymousRecords.h               \
         ast/transform/GroundedTermsChecker.cpp             \
         ast/transform/GroundedTermsChecker.h               \
+        ast/transform/GroundWitnesses.cpp                  \
+        ast/transform/GroundWitnesses.h                    \
         ast/transform/IOAttributes.h                       \
         ast/transform/IODefaults.h                         \
         ast/transform/InlineRelations.cpp                  \
@@ -138,6 +142,8 @@ souffle_sources = \
         ast/transform/MinimiseProgram.h                    \
         ast/transform/NameUnnamedVariables.cpp             \
         ast/transform/NameUnnamedVariables.h               \
+        ast/transform/NormaliseMultiResultFunctors.cpp     \
+        ast/transform/NormaliseMultiResultFunctors.h       \
         ast/transform/Null.h                               \
         ast/transform/PartitionBodyLiterals.cpp            \
         ast/transform/PartitionBodyLiterals.h              \
@@ -172,8 +178,12 @@ souffle_sources = \
         ast/transform/ResolveAnonymousRecordAliases.h      \
         ast/transform/SemanticChecker.cpp                  \
         ast/transform/SemanticChecker.h                    \
+        ast/transform/SimplifyAggregateTargetExpression.cpp\
+        ast/transform/SimplifyAggregateTargetExpression.h  \
         ast/transform/Transformer.cpp                      \
         ast/transform/Transformer.h                        \
+        ast/transform/TypeChecker.cpp                      \
+        ast/transform/TypeChecker.h                        \
         ast/transform/UniqueAggregationVariables.cpp       \
         ast/transform/UniqueAggregationVariables.h         \
         ast/transform/While.h                              \
@@ -199,6 +209,7 @@ souffle_sources = \
         interpreter/Engine.cpp                             \
         interpreter/Engine.h                               \
         interpreter/Generator.h                            \
+        interpreter/Generator.cpp                          \
         interpreter/BrieIndex.cpp                          \
         interpreter/BTreeIndex.cpp                         \
         interpreter/EqrelIndex.cpp                         \
@@ -301,6 +312,8 @@ souffle_sources = \
         ram/analysis/Index.h                               \
         ram/analysis/Level.cpp                             \
         ram/analysis/Level.h                               \
+        ram/analysis/Relation.cpp                          \
+        ram/analysis/Relation.h                            \
         ram/transform/ChoiceConversion.cpp                 \
         ram/transform/ChoiceConversion.h                   \
         ram/transform/CollapseFilters.cpp                  \
@@ -371,7 +384,6 @@ soufflepublic_HEADERS = \
         include/souffle/BinaryConstraintOps.h              \
         include/souffle/CompiledOptions.h                  \
         include/souffle/CompiledSouffle.h                  \
-        include/souffle/CompiledTuple.h                    \
         include/souffle/RamTypes.h                         \
         include/souffle/RecordTable.h                      \
         include/souffle/SignalHandler.h                    \
@@ -464,6 +476,7 @@ souffleutility_HEADERS = \
         include/souffle/utility/StreamUtil.h               \
         include/souffle/utility/StringUtil.h               \
         include/souffle/utility/json11.h                   \
+        include/souffle/utility/span.h                     \
         include/souffle/utility/tinyformat.h
 
 # files to clean
@@ -480,4 +493,3 @@ $(builddir)/parser/scanner.cc: $(srcdir)/parser/scanner.ll
 # driver depends on the generated header
 $(builddir)/parser/parser.cc $(builddir)/parser/stack.hh $(builddir)/parser/scanner.cc \
     $(builddir)/main.cpp $(builddir)/parser/ParserDriver.cpp: $(builddir)/parser/parser.hh
-

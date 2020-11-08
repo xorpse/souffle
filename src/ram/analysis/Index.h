@@ -24,6 +24,7 @@
 #include "ram/Relation.h"
 #include "ram/TranslationUnit.h"
 #include "ram/analysis/Analysis.h"
+#include "ram/analysis/Relation.h"
 #include "souffle/utility/MiscUtil.h"
 #include <algorithm>
 #include <cassert>
@@ -299,6 +300,31 @@ public:
      */
     AttributeSet getAttributesToDischarge(const SearchSignature& s, const Relation& rel);
 
+    void print(std::ostream& os) {
+        /* Print searches */
+        os << "\tNumber of Searches: " << getSearches().size() << "\n";
+
+        /* print searches */
+        for (auto& search : getSearches()) {
+            os << "\t\t";
+            os << search;
+            os << "\n";
+        }
+
+        /* print chains */
+        for (auto& chain : getAllChains()) {
+            os << join(chain, "-->") << "\n";
+        }
+        os << "\n";
+
+        os << "\tNumber of Indexes: " << getAllOrders().size() << "\n";
+        for (auto& order : getAllOrders()) {
+            os << "\t\t";
+            os << join(order, "<") << "\n";
+            os << "\n";
+        }
+    }
+
 protected:
     SignatureIndexMap signatureToIndexA;  // mapping of a SearchSignature on A to its unique index
     SignatureIndexMap signatureToIndexB;  // mapping of a SearchSignature on B to its unique index
@@ -387,20 +413,13 @@ protected:
  */
 class IndexAnalysis : public Analysis {
 public:
-    IndexAnalysis(const char* id) : Analysis(id) {}
+    IndexAnalysis(const char* id) : Analysis(id), relAnalysis(nullptr) {}
 
     static constexpr const char* name = "index-analysis";
 
     void run(const TranslationUnit& translationUnit) override;
 
     void print(std::ostream& os) const override;
-
-    /**
-     * @Brief get the minimal index cover for a relation
-     * @param relation
-     * @result set of indexes of the minimal index cover
-     */
-    MinIndexSelection& getIndexes(const Relation& rel);
 
     /**
      * @Brief get the minimal index cover for a relation
@@ -454,10 +473,13 @@ public:
     bool isTotalSignature(const AbstractExistenceCheck* existCheck) const;
 
 private:
+    /** relation analysis for looking up relations by name */
+    RelationAnalysis* relAnalysis;
+
     /**
      * minimal index cover for relations, i.e., maps a relation to a set of indexes
      */
-    std::map<const Relation*, MinIndexSelection> minIndexCover;
+    std::map<std::string, MinIndexSelection> minIndexCover;
 };
 
 }  // namespace souffle::ram::analysis

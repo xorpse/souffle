@@ -64,12 +64,12 @@ public:
 
     /** Iterator to first tuple */
     iterator begin() const override {
-        return RelInterface::iterator(new RelInterface::iterator_base(id, this, relation.begin()));
+        return RelInterface::iterator(mk<RelInterface::iterator_base>(id, this, relation.begin()));
     }
 
     /** Iterator to last tuple */
     iterator end() const override {
-        return RelInterface::iterator(new RelInterface::iterator_base(id, this, relation.end()));
+        return RelInterface::iterator(mk<RelInterface::iterator_base>(id, this, relation.end()));
     }
 
     /** Get name */
@@ -78,12 +78,12 @@ public:
     }
 
     /** Get arity */
-    size_t getArity() const override {
+    arity_type getArity() const override {
         return relation.getArity();
     }
 
     /** Get arity */
-    size_t getAuxiliaryArity() const override {
+    arity_type getAuxiliaryArity() const override {
         return relation.getAuxiliaryArity();
     }
 
@@ -208,8 +208,8 @@ private:
 class ProgInterface : public SouffleProgram {
 public:
     explicit ProgInterface(Engine& interp)
-            : prog(interp.getTranslationUnit().getProgram()), exec(interp),
-              symTable(interp.getTranslationUnit().getSymbolTable()) {
+            : prog(interp.getTranslationUnit().getProgram()), exec(interp), symTable(interp.getSymbolTable()),
+              recordTable(interp.getRecordTable()) {
         uint32_t id = 0;
 
         // Retrieve AST Relations and store them in a map
@@ -236,7 +236,7 @@ public:
             bool input = false;
             bool output = false;
             visitDepthFirst(prog, [&](const ram::IO& io) {
-                if (io.getRelation() == rel) {
+                if (map[io.getRelation()] == &rel) {
                     const std::string& op = io.get("operation");
                     if (op == "input") {
                         input = true;
@@ -247,7 +247,7 @@ public:
                     }
                 }
             });
-            addRelation(rel.getName(), interface, input, output);
+            addRelation(rel.getName(), *interface, input, output);
             id++;
         }
     }
@@ -286,10 +286,15 @@ public:
         return symTable;
     }
 
+    RecordTable& getRecordTable() override {
+        return recordTable;
+    }
+
 private:
     const ram::Program& prog;
     Engine& exec;
     SymbolTable& symTable;
+    RecordTable& recordTable;
     std::vector<RelInterface*> interfaces;
 };
 

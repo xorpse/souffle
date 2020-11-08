@@ -84,7 +84,12 @@ protected:
         if (isInfixFunctorOp(function)) {
             os << "(" << join(args, function) << ")";
         } else {
-            os << function;
+            // Negation is handled differently to all other functors so we need a special case.
+            if (function == FUNCTOR_INTRINSIC_PREFIX_NEGATE_NAME) {
+                os << "-";
+            } else {
+                os << function;
+            }
             os << "(" << join(args) << ")";
         }
     }
