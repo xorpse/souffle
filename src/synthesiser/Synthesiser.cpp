@@ -1868,14 +1868,14 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         void visitFDExistenceCheck(const FDExistenceCheck& exists, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             // get some details
-            const auto& rel = exists.getRelation();
+            const auto* rel = synthesiser.lookup(exists.getRelation());
             auto relName = synthesiser.getRelationName(rel);
-            auto ctxName = "READ_OP_CONTEXT(" + synthesiser.getOpContextName(rel) + ")";
-            auto arity = rel.getArity();
+            auto ctxName = "READ_OP_CONTEXT(" + synthesiser.getOpContextName(*rel) + ")";
+            auto arity = rel->getArity();
             assert(arity > 0 && "AstToRamTranslator failed");
             std::string after;
-            if (Global::config().has("profile") && !exists.getRelation().isTemp()) {
-                out << R"_((reads[)_" << synthesiser.lookupReadIdx(rel.getName()) << R"_(]++,)_";
+            if (Global::config().has("profile") && !synthesiser.lookup(exists.getRelation())->isTemp()) {
+                out << R"_((reads[)_" << synthesiser.lookupReadIdx(rel->getName()) << R"_(]++,)_";
                 after = ")";
             }
 
@@ -1891,7 +1891,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             auto rangePatternLower = exists.getValues();
             auto rangePatternUpper = exists.getValues();
 
-            auto rangeBounds = getPaddedRangeBounds(rel, rangePatternLower, rangePatternUpper);
+            auto rangeBounds = getPaddedRangeBounds(*rel, rangePatternLower, rangePatternUpper);
             // else we conduct a range query
             out << "!" << relName << "->"
                 << "lowerUpperRange";

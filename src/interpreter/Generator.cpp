@@ -157,6 +157,21 @@ NodePtr NodeGenerator::visitProvenanceExistenceCheck(const ram::ProvenanceExiste
             encodeView(&provExists), std::move(superOp));
 }
 
+NodePtr NodeGenerator::visitFDExistenceCheck(const ram::FDExistenceCheck& fdExists) {
+    SuperInstruction superOp = getExistenceSuperInstInfo(fdExists);
+    // Check if the search signature is a total signature
+    bool isTotal = true;
+    for (const auto& cur : fdExists.getValues()) {
+        if (isUndefValue(cur)) {
+            isTotal = false;
+        }
+    }
+    auto ramRelation = lookup(fdExists.getRelation());
+    NodeType type = constructNodeType("FDExistenceCheck", ramRelation);
+    return mk<FDExistenceCheck>(type, &fdExists, isTotal, encodeView(&fdExists), std::move(superOp),
+            ramRelation.isTemp(), ramRelation.getName());
+}
+
 NodePtr NodeGenerator::visitConstraint(const ram::Constraint& relOp) {
     return mk<Constraint>(I_Constraint, &relOp, visit(relOp.getLHS()), visit(relOp.getRHS()));
 }
@@ -633,6 +648,8 @@ SuperInstruction NodeGenerator::getExistenceSuperInstInfo(const ram::AbstractExi
         indexId = encodeIndexPos(*dynamic_cast<const ram::ExistenceCheck*>(&abstractExist));
     } else if (isA<ram::ProvenanceExistenceCheck>(&abstractExist)) {
         indexId = encodeIndexPos(*dynamic_cast<const ram::ProvenanceExistenceCheck*>(&abstractExist));
+    } else if (isA<ram::FDExistenceCheck>(&abstractExist)) {
+        indexId = encodeIndexPos(*dynamic_cast<const ram::FDExistenceCheck*>(&abstractExist));
     } else {
         fatal("Unrecognized ram::AbstractExistenceCheck.");
     }

@@ -156,6 +156,8 @@ public:
 
     NodePtr visitProvenanceExistenceCheck(const ram::ProvenanceExistenceCheck& provExists) override;
 
+    NodePtr visitFDExistenceCheck(const ram::FDExistenceCheck& fdExists) override;
+
     NodePtr visitConstraint(const ram::Constraint& relOp) override;
 
     NodePtr visitNestedOperation(const ram::NestedOperation& nested) override;

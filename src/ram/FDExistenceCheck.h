@@ -43,15 +43,15 @@ namespace souffle::ram {
  */
 class FDExistenceCheck : public AbstractExistenceCheck {
 public:
-    FDExistenceCheck(Own<RelationReference> relRef, VecOwn<Expression> vals)
-            : AbstractExistenceCheck(std::move(relRef), std::move(vals)) {}
+    FDExistenceCheck(std::string rel, VecOwn<Expression> vals)
+            : AbstractExistenceCheck(rel, std::move(vals)) {}
 
     FDExistenceCheck* clone() const override {
         VecOwn<Expression> newValues;
         for (auto& cur : values) {
             newValues.emplace_back(cur->clone());
         }
-        return new FDExistenceCheck(souffle::clone(relationRef), std::move(newValues));
+        return new FDExistenceCheck(relation, std::move(newValues));
     }
 
 protected:

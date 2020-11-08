@@ -655,7 +655,8 @@ SearchSignature IndexAnalysis::getSearchSignature(const ExistenceCheck* existChe
 }
 
 SearchSignature IndexAnalysis::getSearchSignature(const FDExistenceCheck* existCheck) const {
-    return searchSignature(existCheck->getRelation().getArity(), existCheck->getValues());
+    const Relation* rel = &relAnalysis->lookup(existCheck->getRelation());
+    return searchSignature(rel->getArity(), existCheck->getValues());
 }
 
 SearchSignature IndexAnalysis::getSearchSignature(const Relation* ramRel) const {
