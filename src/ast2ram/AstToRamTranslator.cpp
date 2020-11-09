@@ -21,6 +21,7 @@
 #include "ast/Argument.h"
 #include "ast/Atom.h"
 #include "ast/BinaryConstraint.h"
+#include "ast/BranchInit.h"
 #include "ast/Clause.h"
 #include "ast/Constant.h"
 #include "ast/Constraint.h"
@@ -33,6 +34,7 @@
 #include "ast/NilConstant.h"
 #include "ast/Node.h"
 #include "ast/NumericConstant.h"
+#include "ast/Program.h"
 #include "ast/QualifiedName.h"
 #include "ast/RecordInit.h"
 #include "ast/Relation.h"
@@ -49,8 +51,11 @@
 #include "ast/analysis/RecursiveClauses.h"
 #include "ast/analysis/RelationSchedule.h"
 #include "ast/analysis/SCCGraph.h"
+#include "ast/analysis/SumTypeBranches.h"
 #include "ast/analysis/TopologicallySortedSCCGraph.h"
 #include "ast/analysis/TypeEnvironment.h"
+#include "ast/analysis/TypeSystem.h"
+#include "ast/transform/Transformer.h"
 #include "ast/utility/NodeMapper.h"
 #include "ast/utility/SipsMetric.h"
 #include "ast/utility/Utils.h"
@@ -107,17 +112,21 @@
 #include "souffle/BinaryConstraintOps.h"
 #include "souffle/SymbolTable.h"
 #include "souffle/TypeAttribute.h"
+#include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/FunctionalUtil.h"
 #include "souffle/utility/MiscUtil.h"
 #include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <cstddef>
+#include <iterator>
 #include <map>
 #include <memory>
 #include <optional>
 #include <set>
 #include <sstream>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace souffle::ast2ram {
@@ -1018,6 +1027,79 @@ Own<ram::Statement> AstToRamTranslator::makeNegationSubproofSubroutine(const ast
     }
 
     return mk<ram::Sequence>(std::move(searchSequence));
+}
+
+bool AstToRamTranslator::removeADTs(const ast::TranslationUnit& translationUnit) {
+    ast::Program& program = translationUnit.getProgram();
+    struct ADTsFuneral : public ast::NodeMapper {
+        mutable bool changed{false};
+        const ast::TranslationUnit& tu;
+        const ast::analysis::SumTypeBranchesAnalysis& sumTypesBranches =
+                *tu.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>();
+
+        ADTsFuneral(const ast::TranslationUnit& tu) : tu(tu) {}
+
+        Own<ast::Node> operator()(Own<ast::Node> node) const override {
+            // Rewrite sub-expressions first
+            node->apply(*this);
+
+            if (!isA<ast::BranchInit>(node)) {
+                return node;
+            }
+
+            changed = true;
+            auto& adt = *as<ast::BranchInit>(node);
+            auto& type = sumTypesBranches.unsafeGetType(adt.getConstructor());
+            auto& branches = type.getBranches();
+
+            // Find branch ID.
+            ast::analysis::AlgebraicDataType::Branch searchDummy{adt.getConstructor(), {}};
+            auto iterToBranch = std::lower_bound(branches.begin(), branches.end(), searchDummy,
+                    [](const ast::analysis::AlgebraicDataType::Branch& left,
+                            const ast::analysis::AlgebraicDataType::Branch& right) {
+                        return left.name < right.name;
+                    });
+
+            // Branch id corresponds to the position in lexicographical ordering.
+            auto branchID = std::distance(std::begin(branches), iterToBranch);
+
+            if (isADTEnum(type)) {
+                auto branchTag = mk<ast::NumericConstant>(branchID);
+                branchTag->setFinalType(ast::NumericConstant::Type::Int);
+                return branchTag;
+            } else {
+                // Collect branch arguments
+                VecOwn<ast::Argument> branchArguments;
+                for (auto* arg : adt.getArguments()) {
+                    branchArguments.emplace_back(arg->clone());
+                }
+
+                // Branch is stored either as [branch_id, [arguments]]
+                // or [branch_id, argument] in case of a single argument.
+                auto branchArgs = [&]() -> Own<ast::Argument> {
+                    if (branchArguments.size() != 1) {
+                        return mk<ast::Argument, ast::RecordInit>(std::move(branchArguments));
+                    } else {
+                        return std::move(branchArguments.at(0));
+                    }
+                }();
+
+                // Arguments for the resulting record [branch_id, branch_args].
+                VecOwn<ast::Argument> finalRecordArgs;
+
+                auto branchTag = mk<ast::NumericConstant>(branchID);
+                branchTag->setFinalType(ast::NumericConstant::Type::Int);
+                finalRecordArgs.push_back(std::move(branchTag));
+                finalRecordArgs.push_back(std::move(branchArgs));
+
+                return mk<ast::RecordInit>(std::move(finalRecordArgs), adt.getSrcLoc());
+            }
+        }
+    };
+
+    ADTsFuneral mapper(translationUnit);
+    program.apply(mapper);
+    return mapper.changed;
 }
 
 /** translates the given datalog program into an equivalent RAM program  */

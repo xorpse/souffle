@@ -153,6 +153,9 @@ private:
     /** translate AST to RAM Program */
     void translateProgram(const ast::TranslationUnit& translationUnit);
 
+    /** replace ADTs with special records */
+    static bool removeADTs(const ast::TranslationUnit& translationUnit);
+
     /**
      * assigns names to unnamed variables such that enclosing
      * constructs may be cloned without losing the variable-identity

@@ -71,7 +71,7 @@ public:
     std::set<TypeAttribute> getTypeAttributes(const Argument* arg) const;
 
     /** -- Functor-related methods -- */
-    IntrinsicFunctors getValidIntrinsicFunctorOverloads(const ast::IntrinsicFunctor& inf) const;
+    IntrinsicFunctors getValidIntrinsicFunctorOverloads(const IntrinsicFunctor& inf) const;
     TypeAttribute getFunctorReturnType(const Functor* functor) const;
     TypeAttribute getFunctorArgType(const Functor* functor, const size_t idx) const;
     const std::vector<TypeAttribute>& getFunctorArgTypes(const UserDefinedFunctor& udf) const;
