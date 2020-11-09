@@ -1030,14 +1030,12 @@ Own<ram::Statement> AstToRamTranslator::makeNegationSubproofSubroutine(const ast
 }
 
 bool AstToRamTranslator::removeADTs(const ast::TranslationUnit& translationUnit) {
-    ast::Program& program = translationUnit.getProgram();
     struct ADTsFuneral : public ast::NodeMapper {
         mutable bool changed{false};
-        const ast::TranslationUnit& tu;
-        const ast::analysis::SumTypeBranchesAnalysis& sumTypesBranches =
-                *tu.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>();
+        const ast::analysis::SumTypeBranchesAnalysis& sumTypesBranches;
 
-        ADTsFuneral(const ast::TranslationUnit& tu) : tu(tu) {}
+        ADTsFuneral(const ast::TranslationUnit& tu)
+                : sumTypesBranches(*tu.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>()) {}
 
         Own<ast::Node> operator()(Own<ast::Node> node) const override {
             // Rewrite sub-expressions first
@@ -1098,7 +1096,7 @@ bool AstToRamTranslator::removeADTs(const ast::TranslationUnit& translationUnit)
     };
 
     ADTsFuneral mapper(translationUnit);
-    program.apply(mapper);
+    translationUnit.getProgram().apply(mapper);
     return mapper.changed;
 }
 

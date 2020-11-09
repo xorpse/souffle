@@ -51,7 +51,7 @@
 #include <utility>
 
 namespace souffle::ast::transform {
-typedef MagicSetTransformer::NormaliseDatabaseTransformer NormaliseDatabaseTransformer;
+using NormaliseDatabaseTransformer = MagicSetTransformer::NormaliseDatabaseTransformer;
 using LabelDatabaseTransformer = MagicSetTransformer::LabelDatabaseTransformer;
 using AdornDatabaseTransformer = MagicSetTransformer::AdornDatabaseTransformer;
 using MagicSetCoreTransformer = MagicSetTransformer::MagicSetCoreTransformer;
