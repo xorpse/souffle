@@ -702,17 +702,23 @@ private:
                 return;
             }
 
-            if (!typeAnalysis.hasValidTypeInfo(intrFun)) return;
+            if (!typeAnalysis.hasValidTypeInfo(intrFun)) {
+                return;
+            }
         }
 
         // Skip constraint adding if type info is not available
-        if (!typeAnalysis.hasValidTypeInfo(&fun)) return;
+        if (!typeAnalysis.hasValidTypeInfo(&fun)) {
+            return;
+        }
 
         // add a constraint for the return type of the functor
         TypeAttribute returnType = typeAnalysis.getFunctorReturnType(&fun);
         addConstraint(isSubtypeOf(functorVar, typeEnv.getConstantType(returnType)));
         // Special case. Ord returns the ram representation of any object.
-        if (intrFun && typeAnalysis.getPolymorphicOperator(intrFun) == FunctorOp::ORD) return;
+        if (intrFun && typeAnalysis.getPolymorphicOperator(intrFun) == FunctorOp::ORD) {
+            return;
+        }
 
         // Add constraints on arguments
         auto arguments = fun.getArguments();
@@ -999,7 +1005,9 @@ bool TypeAnalysis::analyseIntrinsicFunctors(const TranslationUnit& translationUn
 
         // Update to the canonic representation if different
         const auto* curInfo = &candidates.front().get();
-        if (contains(functorInfo, &functor) && functorInfo.at(&functor) == curInfo) return;
+        if (contains(functorInfo, &functor) && functorInfo.at(&functor) == curInfo) {
+            return;
+        }
         functorInfo[&functor] = curInfo;
         changed = true;
     });
@@ -1011,7 +1019,9 @@ bool TypeAnalysis::analyseNumericConstants(const TranslationUnit& translationUni
     const auto& program = translationUnit.getProgram();
 
     auto setNumericConstantType = [&](const NumericConstant& nc, NumericConstant::Type ncType) {
-        if (contains(numericConstantType, &nc) && numericConstantType.at(&nc) == ncType) return;
+        if (contains(numericConstantType, &nc) && numericConstantType.at(&nc) == ncType) {
+            return;
+        }
         changed = true;
         numericConstantType[&nc] = ncType;
     };
@@ -1052,7 +1062,9 @@ bool TypeAnalysis::analyseAggregators(const TranslationUnit& translationUnit) {
 
     auto setAggregatorType = [&](const Aggregator& agg, TypeAttribute attr) {
         auto overloadedType = convertOverloadedAggregator(agg.getBaseOperator(), attr);
-        if (contains(aggregatorType, &agg) && aggregatorType.at(&agg) == overloadedType) return;
+        if (contains(aggregatorType, &agg) && aggregatorType.at(&agg) == overloadedType) {
+            return;
+        }
         changed = true;
         aggregatorType[&agg] = overloadedType;
     };
@@ -1087,7 +1099,9 @@ bool TypeAnalysis::analyseBinaryConstraints(const TranslationUnit& translationUn
 
     auto setConstraintType = [&](const BinaryConstraint& bc, TypeAttribute attr) {
         auto overloadedType = convertOverloadedConstraint(bc.getBaseOperator(), attr);
-        if (contains(constraintType, &bc) && constraintType.at(&bc) == overloadedType) return;
+        if (contains(constraintType, &bc) && constraintType.at(&bc) == overloadedType) {
+            return;
+        }
         changed = true;
         constraintType[&bc] = overloadedType;
     };
