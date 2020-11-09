@@ -21,7 +21,6 @@
 #include "ast/analysis/PrecedenceGraph.h"
 #include "ast/analysis/SCCGraph.h"
 #include "ast/analysis/Type.h"
-#include "ast/transform/ADTtoRecords.h"
 #include "ast/transform/AddNullariesToAtomlessAggregates.h"
 #include "ast/transform/ComponentChecker.h"
 #include "ast/transform/ComponentInstantiation.h"
@@ -483,8 +482,7 @@ int main(int argc, char** argv) {
             mk<ast::transform::FixpointTransformer>(mk<ast::transform::PipelineTransformer>(
                     mk<ast::transform::ResolveAnonymousRecordAliasesTransformer>(),
                     mk<ast::transform::FoldAnonymousRecords>())),
-            mk<ast::transform::SemanticChecker>(), mk<ast::transform::ADTtoRecordsTransformer>(),
-            mk<ast::transform::GroundWitnessesTransformer>(),
+            mk<ast::transform::SemanticChecker>(), mk<ast::transform::GroundWitnessesTransformer>(),
             mk<ast::transform::UniqueAggregationVariablesTransformer>(),
             mk<ast::transform::NormaliseMultiResultFunctorsTransformer>(),
             mk<ast::transform::MaterializeSingletonAggregationTransformer>(),

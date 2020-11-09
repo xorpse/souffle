@@ -1137,6 +1137,9 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     }
     sips = ast::SipsMetric::create(sipsChosen, translationUnit);
 
+    // replace ADTs with record representatives
+    removeADTs(translationUnit);
+
     // handle the case of an empty SCC graph
     if (sccGraph.getNumberOfSCCs() == 0) return;
 
