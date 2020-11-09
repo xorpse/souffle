@@ -413,6 +413,21 @@ inline bool isOrderedBinaryConstraintOp(const BinaryConstraintOp op) {
 }
 
 /**
+ * Determines whether a functor should be written using infix notation (e.g. `a + b + c`)
+ * or prefix notation (e.g. `+(a,b,c)`)
+ */
+inline bool isInfixFunctorOp(const BinaryConstraintOp op) {
+    switch (op) {
+        case BinaryConstraintOp::MATCH:
+        case BinaryConstraintOp::NOT_MATCH:
+        case BinaryConstraintOp::CONTAINS:
+        case BinaryConstraintOp::NOT_CONTAINS: return false;
+
+        default: return true;
+    }
+}
+
+/**
  * Get type binary constraint operates on.
  **/
 inline std::vector<TypeAttribute> getBinaryConstraintTypes(const BinaryConstraintOp op) {

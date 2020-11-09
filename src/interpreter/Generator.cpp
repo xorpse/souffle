@@ -379,20 +379,14 @@ NodePtr NodeGenerator::visitCall(const ram::Call& call) {
 NodePtr NodeGenerator::visitLogRelationTimer(const ram::LogRelationTimer& timer) {
     size_t relId = encodeRelation(timer.getRelation());
     auto rel = getRelationHandle(relId);
-    NodePtrVec children;
-    children.push_back(visit(timer.getStatement()));
     return mk<LogRelationTimer>(I_LogRelationTimer, &timer, visit(timer.getStatement()), rel);
 }
 
 NodePtr NodeGenerator::visitLogTimer(const ram::LogTimer& timer) {
-    NodePtrVec children;
-    children.push_back(visit(timer.getStatement()));
     return mk<LogTimer>(I_LogTimer, &timer, visit(timer.getStatement()));
 }
 
 NodePtr NodeGenerator::visitDebugInfo(const ram::DebugInfo& dbg) {
-    NodePtrVec children;
-    children.push_back(visit(dbg.getStatement()));
     return mk<DebugInfo>(I_DebugInfo, &dbg, visit(dbg.getStatement()));
 }
 
