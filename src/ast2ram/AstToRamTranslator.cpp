@@ -350,6 +350,7 @@ Own<ram::Condition> AstToRamTranslator::translateConstraint(
 
         /** for binary relations */
         Own<ram::Condition> visitBinaryConstraint(const ast::BinaryConstraint& binRel) override {
+            assert(binRel.getFinalType().has_value() && "binary constraint has unset type");
             auto valLHS = translator.translateValue(binRel.getLHS(), index);
             auto valRHS = translator.translateValue(binRel.getRHS(), index);
             return mk<ram::Constraint>(binRel.getFinalType().value(), std::move(valLHS), std::move(valRHS));
@@ -783,16 +784,22 @@ Own<ram::Statement> AstToRamTranslator::makeSubproofSubroutine(const ast::Clause
 
         if (auto var = dynamic_cast<ast::Variable*>(arg)) {
             // FIXME: float equiv (`FEQ`)
-            intermediateClause->addToBody(mk<ast::BinaryConstraint>(
-                    BinaryConstraintOp::EQ, souffle::clone(var), mk<ast::SubroutineArgument>(i)));
+            auto constraint = mk<ast::BinaryConstraint>(
+                    BinaryConstraintOp::EQ, souffle::clone(var), mk<ast::SubroutineArgument>(i));
+            constraint->setFinalType(BinaryConstraintOp::EQ);
+            intermediateClause->addToBody(std::move(constraint));
         } else if (auto func = dynamic_cast<ast::Functor*>(arg)) {
             TypeAttribute returnType = functorAnalysis->getReturnType(func);
             auto opEq = returnType == TypeAttribute::Float ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ;
-            intermediateClause->addToBody(
-                    mk<ast::BinaryConstraint>(opEq, souffle::clone(func), mk<ast::SubroutineArgument>(i)));
+            auto constraint =
+                    mk<ast::BinaryConstraint>(opEq, souffle::clone(func), mk<ast::SubroutineArgument>(i));
+            constraint->setFinalType(opEq);
+            intermediateClause->addToBody(std::move(constraint));
         } else if (auto rec = dynamic_cast<ast::RecordInit*>(arg)) {
-            intermediateClause->addToBody(mk<ast::BinaryConstraint>(
-                    BinaryConstraintOp::EQ, souffle::clone(rec), mk<ast::SubroutineArgument>(i)));
+            auto constraint = mk<ast::BinaryConstraint>(
+                    BinaryConstraintOp::EQ, souffle::clone(rec), mk<ast::SubroutineArgument>(i));
+            constraint->setFinalType(BinaryConstraintOp::EQ);
+            intermediateClause->addToBody(std::move(constraint));
         }
     }
 
