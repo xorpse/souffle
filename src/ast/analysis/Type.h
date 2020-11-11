@@ -18,13 +18,10 @@
 
 #include "AggregateOp.h"
 #include "FunctorOps.h"
-#include "ast/Aggregator.h"
-#include "ast/Argument.h"
-#include "ast/BinaryConstraint.h"
-#include "ast/Clause.h"
 #include "ast/NumericConstant.h"
 #include "ast/analysis/Analysis.h"
 #include "ast/analysis/TypeSystem.h"
+#include "souffle/BinaryConstraintOps.h"
 #include <memory>
 #include <set>
 #include <sstream>
@@ -32,9 +29,14 @@
 #include <vector>
 
 namespace souffle::ast {
+class Argument;
+class Aggregator;
+class BinaryConstraint;
+class Clause;
 class Functor;
 class FunctorDeclaration;
 class IntrinsicFunctor;
+class NumericConstant;
 class UserDefinedFunctor;
 }  // namespace souffle::ast
 

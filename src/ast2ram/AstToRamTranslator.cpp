@@ -1133,6 +1133,7 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     polyAnalysis = translationUnit.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
 
     // set up the final fixed types
+    // TODO (azreika): should be removed once the translator is refactored to avoid cloning
     visitDepthFirst(*program, [&](const ast::NumericConstant& nc) {
         const_cast<ast::NumericConstant&>(nc).setFinalType(polyAnalysis->getInferredType(&nc));
     });

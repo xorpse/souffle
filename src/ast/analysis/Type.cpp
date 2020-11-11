@@ -20,31 +20,20 @@
 #include "FunctorOps.h"
 #include "Global.h"
 #include "ast/Aggregator.h"
-#include "ast/Argument.h"
 #include "ast/Atom.h"
-#include "ast/Attribute.h"
 #include "ast/BinaryConstraint.h"
 #include "ast/BranchInit.h"
 #include "ast/Clause.h"
-#include "ast/Constant.h"
-#include "ast/Counter.h"
-#include "ast/Functor.h"
 #include "ast/IntrinsicFunctor.h"
 #include "ast/Negation.h"
-#include "ast/Node.h"
 #include "ast/NumericConstant.h"
-#include "ast/Program.h"
-#include "ast/QualifiedName.h"
 #include "ast/RecordInit.h"
 #include "ast/Relation.h"
-#include "ast/StringConstant.h"
 #include "ast/TranslationUnit.h"
 #include "ast/TypeCast.h"
-#include "ast/UnnamedVariable.h"
 #include "ast/UserDefinedFunctor.h"
 #include "ast/Variable.h"
 #include "ast/analysis/Constraint.h"
-#include "ast/analysis/Functor.h"
 #include "ast/analysis/SumTypeBranches.h"
 #include "ast/analysis/TypeEnvironment.h"
 #include "ast/analysis/TypeSystem.h"
@@ -64,7 +53,6 @@
 #include <optional>
 #include <set>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -770,22 +758,18 @@ private:
         addConstraint(isSubtypeOf(getVar(adt), *correspondingType));
 
         // Constraints on arguments
-        try {
-            auto branchTypes = as<AlgebraicDataType>(correspondingType)->getBranchTypes(adt.getConstructor());
-            auto branchArgs = adt.getArguments();
+        auto branchTypes = as<AlgebraicDataType>(correspondingType)->getBranchTypes(adt.getConstructor());
+        auto branchArgs = adt.getArguments();
 
-            if (branchTypes.size() != branchArgs.size()) {
-                // handled by semantic checker later.
-                throw std::invalid_argument("Invalid arity");
-            }
+        if (branchTypes.size() != branchArgs.size()) {
+            // invalid program - handled by semantic checker later.
+            return;
+        }
 
-            // Add constraints for each of the branch arguments.
-            for (size_t i = 0; i < branchArgs.size(); ++i) {
-                auto argVar = getVar(branchArgs[i]);
-                addConstraint(isSubtypeOf(argVar, *branchTypes[i]));
-            }
-        } catch (...) {
-            return;  // Invalid program.
+        // Add constraints for each of the branch arguments.
+        for (size_t i = 0; i < branchArgs.size(); ++i) {
+            auto argVar = getVar(branchArgs[i]);
+            addConstraint(isSubtypeOf(argVar, *branchTypes[i]));
         }
     }
 
