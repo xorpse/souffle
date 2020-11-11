@@ -847,7 +847,7 @@ void TypeAnalysis::print(std::ostream& os) const {
 }
 
 TypeAttribute TypeAnalysis::getFunctorReturnType(const Functor* functor) const {
-    assert(hasValidTypeInfo(functor) && "functor not yet processed");
+    assert(hasValidTypeInfo(functor) && "type of functor not processed");
     if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
         return functorInfo.at(intrinsic)->result;
     } else if (const auto* udf = as<UserDefinedFunctor>(functor)) {
@@ -857,7 +857,7 @@ TypeAttribute TypeAnalysis::getFunctorReturnType(const Functor* functor) const {
 }
 
 TypeAttribute TypeAnalysis::getFunctorArgType(const Functor* functor, const size_t idx) const {
-    assert(hasValidTypeInfo(functor) && "functor not yet processed");
+    assert(hasValidTypeInfo(functor) && "type of functor not processed");
     if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
         auto* info = functorInfo.at(intrinsic);
         return info->params.at(info->variadic ? 0 : idx);

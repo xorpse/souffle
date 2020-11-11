@@ -286,7 +286,7 @@ Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg
             if (ast::analysis::FunctorAnalysis::isMultiResult(inf)) {
                 return translator.makeRamTupleElement(index.getGeneratorLoc(inf));
             } else {
-                return mk<ram::IntrinsicOperator>(inf.getFinalType().value(), std::move(values));
+                return mk<ram::IntrinsicOperator>(inf.getFinalOpType().value(), std::move(values));
             }
         }
 
@@ -789,7 +789,16 @@ Own<ram::Statement> AstToRamTranslator::makeSubproofSubroutine(const ast::Clause
             constraint->setFinalType(BinaryConstraintOp::EQ);
             intermediateClause->addToBody(std::move(constraint));
         } else if (auto func = dynamic_cast<ast::Functor*>(arg)) {
-            TypeAttribute returnType = functorAnalysis->getReturnType(func);
+            TypeAttribute returnType;
+            if (auto* inf = dynamic_cast<ast::IntrinsicFunctor*>(func)) {
+                assert(inf->getFinalReturnType().has_value() && "functor has missing return type");
+                returnType = inf->getFinalReturnType().value();
+            } else if (auto* udf = dynamic_cast<ast::UserDefinedFunctor*>(func)) {
+                assert(udf->getFinalReturnType().has_value() && "functor has missing return type");
+                returnType = udf->getFinalReturnType().value();
+            } else {
+                assert(false && "unexpected functor type");
+            }
             auto opEq = returnType == TypeAttribute::Float ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ;
             auto constraint =
                     mk<ast::BinaryConstraint>(opEq, souffle::clone(func), mk<ast::SubroutineArgument>(i));
@@ -1134,7 +1143,11 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
         const_cast<ast::BinaryConstraint&>(bc).setFinalType(polyAnalysis->getOverloadedOperator(&bc));
     });
     visitDepthFirst(*program, [&](const ast::IntrinsicFunctor& inf) {
-        const_cast<ast::IntrinsicFunctor&>(inf).setFinalType(polyAnalysis->getOverloadedFunctionOp(&inf));
+        const_cast<ast::IntrinsicFunctor&>(inf).setFinalOpType(polyAnalysis->getOverloadedFunctionOp(&inf));
+        const_cast<ast::IntrinsicFunctor&>(inf).setFinalReturnType(functorAnalysis->getReturnType(&inf));
+    });
+    visitDepthFirst(*program, [&](const ast::UserDefinedFunctor& udf) {
+        const_cast<ast::UserDefinedFunctor&>(udf).setFinalReturnType(functorAnalysis->getReturnType(&udf));
     });
 
     // determine the sips to use
