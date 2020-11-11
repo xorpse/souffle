@@ -29,6 +29,7 @@
 #include "souffle/RamTypes.h"
 #include "souffle/utility/CacheUtil.h"
 #include "souffle/utility/ContainerUtil.h"
+#include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include "souffle/utility/span.h"
 #include <algorithm>
