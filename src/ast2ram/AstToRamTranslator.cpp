@@ -813,8 +813,10 @@ Own<ram::Statement> AstToRamTranslator::makeSubproofSubroutine(const ast::Clause
             auto arity = atom->getArity();
             auto atomArgs = atom->getArguments();
             // arity - 1 is the level number in body atoms
-            intermediateClause->addToBody(mk<ast::BinaryConstraint>(BinaryConstraintOp::LT,
-                    souffle::clone(atomArgs[arity - 1]), mk<ast::SubroutineArgument>(levelIndex)));
+            auto constraint = mk<ast::BinaryConstraint>(BinaryConstraintOp::LT,
+                    souffle::clone(atomArgs[arity - 1]), mk<ast::SubroutineArgument>(levelIndex));
+            constraint->setFinalType(BinaryConstraintOp::LT);
+            intermediateClause->addToBody(std::move(constraint));
         }
     }
     return ProvenanceClauseTranslator(*this).translateClause(*intermediateClause, clause);
