@@ -93,11 +93,15 @@ private:
     // Sinks = {head} ∪ {negated atoms}
     std::set<const Atom*> sinks;
 
-    void collectConstraints(const Clause& clause) override {
-        sinks.insert(clause.getHead());
-        visitDepthFirstPreOrder(clause, *this);
-    }
+    /**
+     * Utility function.
+     * Iterate over atoms valid pairs of (argument, type-attribute) and apply procedure `map` for its
+     * side-effects.
+     */
+    void iterateOverAtom(const Atom& atom, std::function<void(const Argument&, const Type&)> map);
 
+    /** Visitors */
+    void collectConstraints(const Clause& clause) override;
     void visitSink(const Atom& atom);
     void visitAtom(const Atom& atom) override;
     void visitNegation(const Negation& cur) override;
@@ -110,32 +114,6 @@ private:
     void visitRecordInit(const RecordInit& record) override;
     void visitBranchInit(const BranchInit& adt) override;
     void visitAggregator(const Aggregator& agg) override;
-
-    /**
-     * Utility function.
-     * Iterate over atoms valid pairs of (argument, type-attribute) and apply procedure `map` for its
-     * side-effects.
-     */
-    void iterateOverAtom(const Atom& atom, std::function<void(const Argument&, const Type&)> map) {
-        // get relation
-        auto rel = getAtomRelation(&atom, &program);
-        if (rel == nullptr) {
-            return;  // error in input program
-        }
-
-        auto atts = rel->getAttributes();
-        auto args = atom.getArguments();
-        if (atts.size() != args.size()) {
-            return;  // error in input program
-        }
-
-        for (size_t i = 0; i < atts.size(); i++) {
-            const auto& typeName = atts[i]->getTypeName();
-            if (typeEnv.isType(typeName)) {
-                map(*args[i], typeEnv.getType(typeName));
-            }
-        }
-    }
 };
 
 }  // namespace souffle::ast::analysis

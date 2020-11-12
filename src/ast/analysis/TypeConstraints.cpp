@@ -605,4 +605,31 @@ void TypeConstraintsAnalysis::visitAggregator(const Aggregator& agg) {
     }
 }
 
+void TypeConstraintsAnalysis::iterateOverAtom(
+        const Atom& atom, std::function<void(const Argument&, const Type&)> map) {
+    // get relation
+    auto rel = getAtomRelation(&atom, &program);
+    if (rel == nullptr) {
+        return;  // error in input program
+    }
+
+    auto atts = rel->getAttributes();
+    auto args = atom.getArguments();
+    if (atts.size() != args.size()) {
+        return;  // error in input program
+    }
+
+    for (size_t i = 0; i < atts.size(); i++) {
+        const auto& typeName = atts[i]->getTypeName();
+        if (typeEnv.isType(typeName)) {
+            map(*args[i], typeEnv.getType(typeName));
+        }
+    }
+}
+
+void TypeConstraintsAnalysis::collectConstraints(const Clause& clause) {
+    sinks.insert(clause.getHead());
+    visitDepthFirstPreOrder(clause, *this);
+}
+
 }  // namespace souffle::ast::analysis
