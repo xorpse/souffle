@@ -270,8 +270,7 @@ Own<ram::Expression> AstToRamTranslator::translateConstant(ast::Constant const& 
 }
 
 /** generate RAM code for a non-recursive relation */
-Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(
-        const ast::Relation& rel, const ast::analysis::RecursiveClausesAnalysis* recursiveClauses) {
+Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(const ast::Relation& rel) {
     /* start with an empty sequence */
     VecOwn<ram::Statement> res;
 
@@ -372,8 +371,8 @@ std::string AstToRamTranslator::getRelationName(const ast::QualifiedName& id) {
 }
 
 /** generate RAM code for recursive relations in a strongly-connected component */
-Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::set<const ast::Relation*>& scc,
-        const ast::analysis::RecursiveClausesAnalysis* recursiveClauses) {
+Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
+        const std::set<const ast::Relation*>& scc) {
     // initialize sections
     VecOwn<ram::Statement> preamble;
     VecOwn<ram::Statement> updateTable;
@@ -420,7 +419,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
 
         /* Generate code for non-recursive part of relation */
         /* Generate merge operation for temp tables */
-        appendStmt(preamble, translateNonRecursiveRelation(*rel, recursiveClauses));
+        appendStmt(preamble, translateNonRecursiveRelation(*rel));
         appendStmt(preamble, genMerge(rel, getDeltaRelationName(rel), getConcreteRelationName(rel)));
 
         /* Add update operations of relations to parallel statements */
@@ -947,11 +946,11 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     // keep track of relevant analyses
     ioType = translationUnit.getAnalysis<ast::analysis::IOTypeAnalysis>();
     typeEnv = &translationUnit.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
-    const auto* recursiveClauses = translationUnit.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
     const auto& sccGraph = *translationUnit.getAnalysis<ast::analysis::SCCGraphAnalysis>();
     const auto& sccOrder = *translationUnit.getAnalysis<ast::analysis::TopologicallySortedSCCGraphAnalysis>();
     const auto& expirySchedule =
             translationUnit.getAnalysis<ast::analysis::RelationScheduleAnalysis>()->schedule();
+    recursiveClauses = translationUnit.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
     auxArityAnalysis = translationUnit.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
     functorAnalysis = translationUnit.getAnalysis<ast::analysis::FunctorAnalysis>();
     relDetail = translationUnit.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
@@ -1084,9 +1083,8 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
 
         // compute the relations themselves
         Own<ram::Statement> bodyStatement =
-                (!isRecursive) ? translateNonRecursiveRelation(
-                                         *((const ast::Relation*)*allInterns.begin()), recursiveClauses)
-                               : translateRecursiveRelation(allInterns, recursiveClauses);
+                (!isRecursive) ? translateNonRecursiveRelation(*((const ast::Relation*)*allInterns.begin()))
+                               : translateRecursiveRelation(allInterns);
         appendStmt(current, std::move(bodyStatement));
 
         // store all internal output relations to the output dir with a .csv extension

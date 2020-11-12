@@ -126,16 +126,19 @@ private:
     /** IO Type */
     const ast::analysis::IOTypeAnalysis* ioType = nullptr;
 
-    /** Functors' analysis */
+    /** Functor analysis */
     const ast::analysis::FunctorAnalysis* functorAnalysis = nullptr;
 
-    /** Auxiliary Arity Analysis */
+    /** Recursive clauses analysis */
+    const ast::analysis::RecursiveClausesAnalysis* recursiveClauses = nullptr;
+
+    /** Auxiliary arity analysis */
     const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
 
     /** Relation detail cache analysis */
     const ast::analysis::RelationDetailCacheAnalysis* relDetail = nullptr;
 
-    /** Polymorphic Objects Analysis */
+    /** Polymorphic objects analysis */
     const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
 
     /** SIPS metric for reordering */
@@ -183,17 +186,11 @@ private:
     /** Get ram representation of constant */
     RamDomain getConstantRamRepresentation(const ast::Constant& constant);
 
-    /**
-     * translate RAM code for the non-recursive clauses of the given relation.
-     *
-     * @return a corresponding statement or null if there are no non-recursive clauses.
-     */
-    Own<ram::Statement> translateNonRecursiveRelation(
-            const ast::Relation& rel, const ast::analysis::RecursiveClausesAnalysis* recursiveClauses);
+    /** translate RAM code for the non-recursive clauses of the given relation */
+    Own<ram::Statement> translateNonRecursiveRelation(const ast::Relation& rel);
 
     /** translate RAM code for recursive relations in a strongly-connected component */
-    Own<ram::Statement> translateRecursiveRelation(const std::set<const ast::Relation*>& scc,
-            const ast::analysis::RecursiveClausesAnalysis* recursiveClauses);
+    Own<ram::Statement> translateRecursiveRelation(const std::set<const ast::Relation*>& scc);
 
     /** translate RAM code for subroutine to get subproofs */
     Own<ram::Statement> makeSubproofSubroutine(const ast::Clause& clause);
