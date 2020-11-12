@@ -51,8 +51,8 @@ public:
     IntrinsicFunctor(std::string op, VecOwn<Argument> args, SrcLocation loc = {})
             : Functor(std::move(args), std::move(loc)), function(std::move(op)) {}
 
-    /** Get function */
-    const std::string& getFunction() const {
+    /** Get (base type) function */
+    const std::string& getBaseFunctionOp() const {
         return function;
     }
 
@@ -61,25 +61,34 @@ public:
         function = std::move(functor);
     }
 
-    /** Get function information */
-    std::optional<FunctorOp> getFunctionOp() const {
-        return op;
-    }
-
-    /** Set function information */
-    void setFunctionOp(FunctorOp op) {
-        this->op = op;
-    }
-
     IntrinsicFunctor* clone() const override {
-        return new IntrinsicFunctor(function, op, souffle::clone(args), getSrcLoc());
+        auto* copy = new IntrinsicFunctor(function, souffle::clone(args), getSrcLoc());
+        if (finalTranslatorOpType.has_value()) {
+            copy->setFinalOpType(finalTranslatorOpType.value());
+        }
+        if (finalTranslatorReturnType.has_value()) {
+            copy->setFinalReturnType(finalTranslatorReturnType.value());
+        }
+        return copy;
+    }
+
+    void setFinalOpType(FunctorOp newType) {
+        finalTranslatorOpType = newType;
+    }
+
+    void setFinalReturnType(TypeAttribute newType) {
+        finalTranslatorReturnType = newType;
+    }
+
+    std::optional<FunctorOp> getFinalOpType() const {
+        return finalTranslatorOpType;
+    }
+
+    std::optional<TypeAttribute> getFinalReturnType() const {
+        return finalTranslatorReturnType;
     }
 
 protected:
-    IntrinsicFunctor(
-            std::string function, std::optional<FunctorOp> op, VecOwn<Argument> args, SrcLocation loc = {})
-            : Functor(std::move(args), std::move(loc)), function(std::move(function)), op(op) {}
-
     void print(std::ostream& os) const override {
         if (isInfixFunctorOp(function)) {
             os << "(" << join(args, function) << ")";
@@ -96,14 +105,15 @@ protected:
 
     bool equal(const Node& node) const override {
         const auto& other = static_cast<const IntrinsicFunctor&>(node);
-        return function == other.function && op == other.op && Functor::equal(node);
+        return function == other.function && Functor::equal(node);
     }
 
     /** Function */
     std::string function;
 
-    /** Functor Op */
-    std::optional<FunctorOp> op;
+    // TODO (azreika): remove after refactoring translator
+    std::optional<FunctorOp> finalTranslatorOpType;
+    std::optional<TypeAttribute> finalTranslatorReturnType;
 };
 
 }  // namespace souffle::ast

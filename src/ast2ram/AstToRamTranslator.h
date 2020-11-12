@@ -45,6 +45,7 @@ namespace souffle::ast::analysis {
 class IOTypeAnalysis;
 class AuxiliaryArityAnalysis;
 class FunctorAnalysis;
+class PolymorphicObjectsAnalysis;
 class RecursiveClausesAnalysis;
 class RelationDetailCacheAnalysis;
 class TypeEnvironment;
@@ -75,6 +76,10 @@ public:
 
     const ast::analysis::FunctorAnalysis* getFunctorAnalysis() const {
         return functorAnalysis;
+    }
+
+    const ast::analysis::PolymorphicObjectsAnalysis* getPolymorphicObjectsAnalysis() const {
+        return polyAnalysis;
     }
 
     const ast::SipsMetric* getSipsMetric() const {
@@ -130,6 +135,9 @@ private:
     /** Relation detail cache analysis */
     const ast::analysis::RelationDetailCacheAnalysis* relDetail = nullptr;
 
+    /** Polymorphic Objects Analysis */
+    const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
+
     /** SIPS metric for reordering */
     Own<ast::SipsMetric> sips;
 
@@ -144,6 +152,9 @@ private:
 
     /** translate AST to RAM Program */
     void translateProgram(const ast::TranslationUnit& translationUnit);
+
+    /** replace ADTs with special records */
+    static bool removeADTs(const ast::TranslationUnit& translationUnit);
 
     /**
      * assigns names to unnamed variables such that enclosing

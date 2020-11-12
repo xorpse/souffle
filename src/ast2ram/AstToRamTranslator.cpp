@@ -21,6 +21,7 @@
 #include "ast/Argument.h"
 #include "ast/Atom.h"
 #include "ast/BinaryConstraint.h"
+#include "ast/BranchInit.h"
 #include "ast/Clause.h"
 #include "ast/Constant.h"
 #include "ast/Constraint.h"
@@ -31,6 +32,7 @@
 #include "ast/NilConstant.h"
 #include "ast/Node.h"
 #include "ast/NumericConstant.h"
+#include "ast/Program.h"
 #include "ast/QualifiedName.h"
 #include "ast/RecordInit.h"
 #include "ast/Relation.h"
@@ -42,12 +44,16 @@
 #include "ast/analysis/AuxArity.h"
 #include "ast/analysis/Functor.h"
 #include "ast/analysis/IOType.h"
+#include "ast/analysis/PolymorphicObjects.h"
 #include "ast/analysis/RecursiveClauses.h"
 #include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/RelationSchedule.h"
 #include "ast/analysis/SCCGraph.h"
+#include "ast/analysis/SumTypeBranches.h"
 #include "ast/analysis/TopologicallySortedSCCGraph.h"
 #include "ast/analysis/TypeEnvironment.h"
+#include "ast/analysis/TypeSystem.h"
+#include "ast/transform/Transformer.h"
 #include "ast/utility/NodeMapper.h"
 #include "ast/utility/SipsMetric.h"
 #include "ast/utility/Utils.h"
@@ -101,6 +107,7 @@
 #include "souffle/BinaryConstraintOps.h"
 #include "souffle/SymbolTable.h"
 #include "souffle/TypeAttribute.h"
+#include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/FunctionalUtil.h"
 #include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StringUtil.h"
@@ -108,11 +115,14 @@
 #include <cassert>
 #include <chrono>
 #include <cstddef>
+#include <iterator>
 #include <map>
 #include <memory>
 #include <optional>
 #include <set>
 #include <sstream>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace souffle::ast2ram {
@@ -234,8 +244,8 @@ RamDomain AstToRamTranslator::getConstantRamRepresentation(const ast::Constant& 
     } else if (isA<ast::NilConstant>(&constant)) {
         return 0;
     } else if (auto* numConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
-        assert(numConstant->getType().has_value());
-        switch (*numConstant->getType()) {
+        assert(numConstant->getFinalType().has_value() && "constant should have valid type");
+        switch (numConstant->getFinalType().value()) {
             case ast::NumericConstant::Type::Int:
                 return RamSignedFromString(numConstant->getConstant(), nullptr, 0);
             case ast::NumericConstant::Type::Uint:
@@ -251,7 +261,7 @@ Own<ram::Expression> AstToRamTranslator::translateConstant(ast::Constant const& 
     auto const rawConstant = getConstantRamRepresentation(c);
 
     if (auto* const c_num = dynamic_cast<const ast::NumericConstant*>(&c)) {
-        switch (*c_num->getType()) {
+        switch (c_num->getFinalType().value()) {
             case ast::NumericConstant::Type::Int: return mk<ram::SignedConstant>(rawConstant);
             case ast::NumericConstant::Type::Uint: return mk<ram::UnsignedConstant>(rawConstant);
             case ast::NumericConstant::Type::Float: return mk<ram::FloatConstant>(rawConstant);
@@ -600,16 +610,31 @@ Own<ram::Statement> AstToRamTranslator::makeSubproofSubroutine(const ast::Clause
 
         if (auto var = dynamic_cast<ast::Variable*>(arg)) {
             // FIXME: float equiv (`FEQ`)
-            intermediateClause->addToBody(mk<ast::BinaryConstraint>(
-                    BinaryConstraintOp::EQ, souffle::clone(var), mk<ast::SubroutineArgument>(i)));
+            auto constraint = mk<ast::BinaryConstraint>(
+                    BinaryConstraintOp::EQ, souffle::clone(var), mk<ast::SubroutineArgument>(i));
+            constraint->setFinalType(BinaryConstraintOp::EQ);
+            intermediateClause->addToBody(std::move(constraint));
         } else if (auto func = dynamic_cast<ast::Functor*>(arg)) {
-            TypeAttribute returnType = functorAnalysis->getReturnType(func);
+            TypeAttribute returnType;
+            if (auto* inf = dynamic_cast<ast::IntrinsicFunctor*>(func)) {
+                assert(inf->getFinalReturnType().has_value() && "functor has missing return type");
+                returnType = inf->getFinalReturnType().value();
+            } else if (auto* udf = dynamic_cast<ast::UserDefinedFunctor*>(func)) {
+                assert(udf->getFinalReturnType().has_value() && "functor has missing return type");
+                returnType = udf->getFinalReturnType().value();
+            } else {
+                assert(false && "unexpected functor type");
+            }
             auto opEq = returnType == TypeAttribute::Float ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ;
-            intermediateClause->addToBody(
-                    mk<ast::BinaryConstraint>(opEq, souffle::clone(func), mk<ast::SubroutineArgument>(i)));
+            auto constraint =
+                    mk<ast::BinaryConstraint>(opEq, souffle::clone(func), mk<ast::SubroutineArgument>(i));
+            constraint->setFinalType(opEq);
+            intermediateClause->addToBody(std::move(constraint));
         } else if (auto rec = dynamic_cast<ast::RecordInit*>(arg)) {
-            intermediateClause->addToBody(mk<ast::BinaryConstraint>(
-                    BinaryConstraintOp::EQ, souffle::clone(rec), mk<ast::SubroutineArgument>(i)));
+            auto constraint = mk<ast::BinaryConstraint>(
+                    BinaryConstraintOp::EQ, souffle::clone(rec), mk<ast::SubroutineArgument>(i));
+            constraint->setFinalType(BinaryConstraintOp::EQ);
+            intermediateClause->addToBody(std::move(constraint));
         }
     }
 
@@ -623,8 +648,10 @@ Own<ram::Statement> AstToRamTranslator::makeSubproofSubroutine(const ast::Clause
             auto arity = atom->getArity();
             auto atomArgs = atom->getArguments();
             // arity - 1 is the level number in body atoms
-            intermediateClause->addToBody(mk<ast::BinaryConstraint>(BinaryConstraintOp::LT,
-                    souffle::clone(atomArgs[arity - 1]), mk<ast::SubroutineArgument>(levelIndex)));
+            auto constraint = mk<ast::BinaryConstraint>(BinaryConstraintOp::LT,
+                    souffle::clone(atomArgs[arity - 1]), mk<ast::SubroutineArgument>(levelIndex));
+            constraint->setFinalType(BinaryConstraintOp::LT);
+            intermediateClause->addToBody(std::move(constraint));
         }
     }
     return ProvenanceClauseTranslator(*this).translateClause(*intermediateClause, clause);
@@ -846,6 +873,77 @@ Own<ram::Statement> AstToRamTranslator::makeNegationSubproofSubroutine(const ast
     return mk<ram::Sequence>(std::move(searchSequence));
 }
 
+bool AstToRamTranslator::removeADTs(const ast::TranslationUnit& translationUnit) {
+    struct ADTsFuneral : public ast::NodeMapper {
+        mutable bool changed{false};
+        const ast::analysis::SumTypeBranchesAnalysis& sumTypesBranches;
+
+        ADTsFuneral(const ast::TranslationUnit& tu)
+                : sumTypesBranches(*tu.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>()) {}
+
+        Own<ast::Node> operator()(Own<ast::Node> node) const override {
+            // Rewrite sub-expressions first
+            node->apply(*this);
+
+            if (!isA<ast::BranchInit>(node)) {
+                return node;
+            }
+
+            changed = true;
+            auto& adt = *as<ast::BranchInit>(node);
+            auto& type = sumTypesBranches.unsafeGetType(adt.getConstructor());
+            auto& branches = type.getBranches();
+
+            // Find branch ID.
+            ast::analysis::AlgebraicDataType::Branch searchDummy{adt.getConstructor(), {}};
+            auto iterToBranch = std::lower_bound(branches.begin(), branches.end(), searchDummy,
+                    [](const ast::analysis::AlgebraicDataType::Branch& left,
+                            const ast::analysis::AlgebraicDataType::Branch& right) {
+                        return left.name < right.name;
+                    });
+
+            // Branch id corresponds to the position in lexicographical ordering.
+            auto branchID = std::distance(std::begin(branches), iterToBranch);
+
+            if (isADTEnum(type)) {
+                auto branchTag = mk<ast::NumericConstant>(branchID);
+                branchTag->setFinalType(ast::NumericConstant::Type::Int);
+                return branchTag;
+            } else {
+                // Collect branch arguments
+                VecOwn<ast::Argument> branchArguments;
+                for (auto* arg : adt.getArguments()) {
+                    branchArguments.emplace_back(arg->clone());
+                }
+
+                // Branch is stored either as [branch_id, [arguments]]
+                // or [branch_id, argument] in case of a single argument.
+                auto branchArgs = [&]() -> Own<ast::Argument> {
+                    if (branchArguments.size() != 1) {
+                        return mk<ast::Argument, ast::RecordInit>(std::move(branchArguments));
+                    } else {
+                        return std::move(branchArguments.at(0));
+                    }
+                }();
+
+                // Arguments for the resulting record [branch_id, branch_args].
+                VecOwn<ast::Argument> finalRecordArgs;
+
+                auto branchTag = mk<ast::NumericConstant>(branchID);
+                branchTag->setFinalType(ast::NumericConstant::Type::Int);
+                finalRecordArgs.push_back(std::move(branchTag));
+                finalRecordArgs.push_back(std::move(branchArgs));
+
+                return mk<ast::RecordInit>(std::move(finalRecordArgs), adt.getSrcLoc());
+            }
+        }
+    };
+
+    ADTsFuneral mapper(translationUnit);
+    translationUnit.getProgram().apply(mapper);
+    return mapper.changed;
+}
+
 /** translates the given datalog program into an equivalent RAM program  */
 void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {
     // keep track of relevant analyses
@@ -859,6 +957,26 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     auxArityAnalysis = translationUnit.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
     functorAnalysis = translationUnit.getAnalysis<ast::analysis::FunctorAnalysis>();
     relDetail = translationUnit.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
+    polyAnalysis = translationUnit.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
+
+    // set up the final fixed types
+    // TODO (azreika): should be removed once the translator is refactored to avoid cloning
+    visitDepthFirst(*program, [&](const ast::NumericConstant& nc) {
+        const_cast<ast::NumericConstant&>(nc).setFinalType(polyAnalysis->getInferredType(&nc));
+    });
+    visitDepthFirst(*program, [&](const ast::Aggregator& aggr) {
+        const_cast<ast::Aggregator&>(aggr).setFinalType(polyAnalysis->getOverloadedOperator(&aggr));
+    });
+    visitDepthFirst(*program, [&](const ast::BinaryConstraint& bc) {
+        const_cast<ast::BinaryConstraint&>(bc).setFinalType(polyAnalysis->getOverloadedOperator(&bc));
+    });
+    visitDepthFirst(*program, [&](const ast::IntrinsicFunctor& inf) {
+        const_cast<ast::IntrinsicFunctor&>(inf).setFinalOpType(polyAnalysis->getOverloadedFunctionOp(&inf));
+        const_cast<ast::IntrinsicFunctor&>(inf).setFinalReturnType(functorAnalysis->getReturnType(&inf));
+    });
+    visitDepthFirst(*program, [&](const ast::UserDefinedFunctor& udf) {
+        const_cast<ast::UserDefinedFunctor&>(udf).setFinalReturnType(functorAnalysis->getReturnType(&udf));
+    });
 
     // determine the sips to use
     std::string sipsChosen = "all-bound";
@@ -866,6 +984,9 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
         sipsChosen = Global::config().get("RamSIPS");
     }
     sips = ast::SipsMetric::create(sipsChosen, translationUnit);
+
+    // replace ADTs with record representatives
+    removeADTs(translationUnit);
 
     // handle the case of an empty SCC graph
     if (sccGraph.getNumberOfSCCs() == 0) return;

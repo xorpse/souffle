@@ -82,6 +82,8 @@ souffle_sources = \
         ast/analysis/Ground.h                              \
         ast/analysis/IOType.cpp                            \
         ast/analysis/IOType.h                              \
+        ast/analysis/PolymorphicObjects.cpp                \
+        ast/analysis/PolymorphicObjects.h                  \
         ast/analysis/PrecedenceGraph.cpp                   \
         ast/analysis/PrecedenceGraph.h                     \
         ast/analysis/ProfileUse.cpp                        \
@@ -102,12 +104,12 @@ souffle_sources = \
         ast/analysis/TopologicallySortedSCCGraph.h         \
         ast/analysis/Type.cpp                              \
         ast/analysis/Type.h                                \
+        ast/analysis/TypeConstraints.h                     \
+        ast/analysis/TypeConstraints.cpp                   \
         ast/analysis/TypeSystem.cpp                        \
         ast/analysis/TypeSystem.h                          \
         ast/analysis/TypeEnvironment.cpp                   \
         ast/analysis/TypeEnvironment.h                     \
-        ast/transform/ADTtoRecords.cpp                     \
-        ast/transform/ADTtoRecords.h                       \
         ast/transform/AddNullariesToAtomlessAggregates.cpp \
         ast/transform/AddNullariesToAtomlessAggregates.h   \
         ast/transform/ComponentChecker.cpp                 \
@@ -142,12 +144,12 @@ souffle_sources = \
         ast/transform/MinimiseProgram.h                    \
         ast/transform/NameUnnamedVariables.cpp             \
         ast/transform/NameUnnamedVariables.h               \
+        ast/transform/NormaliseMultiResultFunctors.cpp     \
+        ast/transform/NormaliseMultiResultFunctors.h       \
         ast/transform/Null.h                               \
         ast/transform/PartitionBodyLiterals.cpp            \
         ast/transform/PartitionBodyLiterals.h              \
         ast/transform/Pipeline.h                           \
-        ast/transform/PolymorphicObjects.cpp               \
-        ast/transform/PolymorphicObjects.h                 \
         ast/transform/PragmaChecker.cpp                    \
         ast/transform/PragmaChecker.h                      \
         ast/transform/Provenance.cpp                       \
@@ -164,8 +166,6 @@ souffle_sources = \
         ast/transform/RemoveRedundantSums.h                \
         ast/transform/RemoveRelationCopies.cpp             \
         ast/transform/RemoveRelationCopies.h               \
-        ast/transform/RemoveTypecasts.cpp                  \
-        ast/transform/RemoveTypecasts.h                    \
         ast/transform/ReorderLiterals.cpp                  \
         ast/transform/ReorderLiterals.h                    \
         ast/transform/ReplaceSingletonVariables.cpp        \
@@ -180,6 +180,8 @@ souffle_sources = \
         ast/transform/SimplifyAggregateTargetExpression.h  \
         ast/transform/Transformer.cpp                      \
         ast/transform/Transformer.h                        \
+        ast/transform/TypeChecker.cpp                      \
+        ast/transform/TypeChecker.h                        \
         ast/transform/UniqueAggregationVariables.cpp       \
         ast/transform/UniqueAggregationVariables.h         \
         ast/transform/While.h                              \
@@ -209,6 +211,7 @@ souffle_sources = \
         interpreter/Engine.cpp                             \
         interpreter/Engine.h                               \
         interpreter/Generator.h                            \
+        interpreter/Generator.cpp                          \
         interpreter/BrieIndex.cpp                          \
         interpreter/BTreeIndex.cpp                         \
         interpreter/EqrelIndex.cpp                         \
@@ -383,7 +386,6 @@ soufflepublic_HEADERS = \
         include/souffle/BinaryConstraintOps.h              \
         include/souffle/CompiledOptions.h                  \
         include/souffle/CompiledSouffle.h                  \
-        include/souffle/CompiledTuple.h                    \
         include/souffle/RamTypes.h                         \
         include/souffle/RecordTable.h                      \
         include/souffle/SignalHandler.h                    \
@@ -476,6 +478,7 @@ souffleutility_HEADERS = \
         include/souffle/utility/StreamUtil.h               \
         include/souffle/utility/StringUtil.h               \
         include/souffle/utility/json11.h                   \
+        include/souffle/utility/span.h                     \
         include/souffle/utility/tinyformat.h
 
 # files to clean
@@ -492,4 +495,3 @@ $(builddir)/parser/scanner.cc: $(srcdir)/parser/scanner.ll
 # driver depends on the generated header
 $(builddir)/parser/parser.cc $(builddir)/parser/stack.hh $(builddir)/parser/scanner.cc \
     $(builddir)/main.cpp $(builddir)/parser/ParserDriver.cpp: $(builddir)/parser/parser.hh
-

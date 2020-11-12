@@ -21,7 +21,6 @@
 #include "ast/analysis/PrecedenceGraph.h"
 #include "ast/analysis/SCCGraph.h"
 #include "ast/analysis/Type.h"
-#include "ast/transform/ADTtoRecords.h"
 #include "ast/transform/AddNullariesToAtomlessAggregates.h"
 #include "ast/transform/ComponentChecker.h"
 #include "ast/transform/ComponentInstantiation.h"
@@ -39,9 +38,9 @@
 #include "ast/transform/MaterializeSingletonAggregation.h"
 #include "ast/transform/MinimiseProgram.h"
 #include "ast/transform/NameUnnamedVariables.h"
+#include "ast/transform/NormaliseMultiResultFunctors.h"
 #include "ast/transform/PartitionBodyLiterals.h"
 #include "ast/transform/Pipeline.h"
-#include "ast/transform/PolymorphicObjects.h"
 #include "ast/transform/PragmaChecker.h"
 #include "ast/transform/Provenance.h"
 #include "ast/transform/ReduceExistentials.h"
@@ -50,7 +49,6 @@
 #include "ast/transform/RemoveRedundantRelations.h"
 #include "ast/transform/RemoveRedundantSums.h"
 #include "ast/transform/RemoveRelationCopies.h"
-#include "ast/transform/RemoveTypecasts.h"
 #include "ast/transform/ReorderLiterals.h"
 #include "ast/transform/ReplaceSingletonVariables.h"
 #include "ast/transform/ResolveAliases.h"
@@ -472,9 +470,8 @@ int main(int argc, char** argv) {
                     mk<ast::transform::ReplaceSingletonVariablesTransformer>());
 
     // Provenance pipeline
-    auto provenancePipeline = mk<ast::transform::ConditionalTransformer>(Global::config().has("provenance"),
-            mk<ast::transform::PipelineTransformer>(mk<ast::transform::ProvenanceTransformer>(),
-                    mk<ast::transform::PolymorphicObjectsTransformer>()));
+    auto provenancePipeline = mk<ast::transform::ConditionalTransformer>(
+            Global::config().has("provenance"), mk<ast::transform::ProvenanceTransformer>());
 
     // Main pipeline
     auto pipeline = mk<ast::transform::PipelineTransformer>(mk<ast::transform::ComponentChecker>(),
@@ -485,17 +482,16 @@ int main(int argc, char** argv) {
             mk<ast::transform::FixpointTransformer>(mk<ast::transform::PipelineTransformer>(
                     mk<ast::transform::ResolveAnonymousRecordAliasesTransformer>(),
                     mk<ast::transform::FoldAnonymousRecords>())),
-            mk<ast::transform::PolymorphicObjectsTransformer>(), mk<ast::transform::SemanticChecker>(),
-            mk<ast::transform::ADTtoRecordsTransformer>(), mk<ast::transform::GroundWitnessesTransformer>(),
+            mk<ast::transform::SemanticChecker>(), mk<ast::transform::GroundWitnessesTransformer>(),
             mk<ast::transform::UniqueAggregationVariablesTransformer>(),
+            mk<ast::transform::NormaliseMultiResultFunctorsTransformer>(),
             mk<ast::transform::MaterializeSingletonAggregationTransformer>(),
             mk<ast::transform::FixpointTransformer>(
                     mk<ast::transform::MaterializeAggregationQueriesTransformer>()),
-            mk<ast::transform::ResolveAliasesTransformer>(), mk<ast::transform::RemoveTypecastsTransformer>(),
+            mk<ast::transform::ResolveAliasesTransformer>(),
             mk<ast::transform::RemoveBooleanConstraintsTransformer>(),
             mk<ast::transform::ResolveAliasesTransformer>(), mk<ast::transform::MinimiseProgramTransformer>(),
-            mk<ast::transform::InlineRelationsTransformer>(),
-            mk<ast::transform::PolymorphicObjectsTransformer>(), mk<ast::transform::GroundedTermsChecker>(),
+            mk<ast::transform::InlineRelationsTransformer>(), mk<ast::transform::GroundedTermsChecker>(),
             mk<ast::transform::ResolveAliasesTransformer>(),
             mk<ast::transform::RemoveRedundantRelationsTransformer>(),
             mk<ast::transform::RemoveRelationCopiesTransformer>(),
@@ -510,7 +506,6 @@ int main(int argc, char** argv) {
             mk<ast::transform::RemoveRedundantSumsTransformer>(),
             mk<ast::transform::RemoveEmptyRelationsTransformer>(),
             mk<ast::transform::AddNullariesToAtomlessAggregatesTransformer>(),
-            mk<ast::transform::PolymorphicObjectsTransformer>(),
             mk<ast::transform::ReorderLiteralsTransformer>(), mk<ast::transform::ExecutionPlanChecker>(),
             std::move(provenancePipeline), mk<ast::transform::IOAttributesTransformer>());
 

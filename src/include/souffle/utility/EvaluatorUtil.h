@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include "souffle/CompiledTuple.h"
 #include "souffle/RamTypes.h"
 #include "souffle/utility/StringUtil.h"
 #include "souffle/utility/tinyformat.h"

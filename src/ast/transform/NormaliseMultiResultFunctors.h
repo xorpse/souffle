@@ -8,38 +8,31 @@
 
 /************************************************************************
  *
- * @file ADTtoRecords.h
+ * @file NormaliseMultiResultFunctors.h
  *
- * Defines the desugaring of ADTs to records.
- *
- * Each record has one of two possible forms:
- * - [branch_id, argument]    if a branch takes a single argument.
- * - [branch_id, [arguments]] otherwise
- *
- * Branch ID is given by a lexicographical ordering of branches within an ADT.
+ * Transform pass to normalise all appearances of multi-result functors.
  *
  ***********************************************************************/
 
 #pragma once
 
-#include "ast/TranslationUnit.h"
 #include "ast/transform/Transformer.h"
-#include <string>
 
 namespace souffle::ast::transform {
 
-class ADTtoRecordsTransformer : public Transformer {
+/** Uniquely names all appearances of ranges */
+class NormaliseMultiResultFunctorsTransformer : public Transformer {
 public:
     std::string getName() const override {
-        return "ADTtoRecords";
-    }
-
-    ADTtoRecordsTransformer* clone() const override {
-        return new ADTtoRecordsTransformer();
+        return "NormaliseMultiResultFunctorsTransformer";
     }
 
 private:
     bool transform(TranslationUnit& translationUnit) override;
+
+    NormaliseMultiResultFunctorsTransformer* clone() const override {
+        return new NormaliseMultiResultFunctorsTransformer();
+    }
 };
 
 }  // namespace souffle::ast::transform

@@ -43,17 +43,19 @@ Own<ram::Expression> ValueTranslator::translate(AstToRamTranslator& translator, 
 }
 
 Own<ram::Expression> ValueTranslator::visitVariable(const ast::Variable& var) {
-    assert(index.isDefined(var) && "variable not grounded");
+    if (!index.isDefined(var)) {
+        fatal("variable `%s` is not grounded", var);
+    }
     return translator.makeRamTupleElement(index.getDefinitionPoint(var));
 }
 
 Own<ram::Expression> ValueTranslator::visitUnnamedVariable(const ast::UnnamedVariable&) {
     return mk<ram::UndefValue>();
 }
-Own<ram::Expression> ValueTranslator::visitNumericConstant(const ast::NumericConstant& c) {
-    assert(c.getType().has_value() && "At this points all constants should have type.");
 
-    switch (*c.getType()) {
+Own<ram::Expression> ValueTranslator::visitNumericConstant(const ast::NumericConstant& c) {
+    assert(c.getFinalType().has_value() && "constant should have valid type");
+    switch (c.getFinalType().value()) {
         case ast::NumericConstant::Type::Int:
             return mk<ram::SignedConstant>(RamSignedFromString(c.getConstant(), nullptr, 0));
         case ast::NumericConstant::Type::Uint:
@@ -73,6 +75,10 @@ Own<ram::Expression> ValueTranslator::visitNilConstant(const ast::NilConstant&) 
     return mk<ram::SignedConstant>(0);
 }
 
+Own<ram::Expression> ValueTranslator::visitTypeCast(const ast::TypeCast& typeCast) {
+    return translator.translateValue(typeCast.getValue(), index);
+}
+
 Own<ram::Expression> ValueTranslator::visitIntrinsicFunctor(const ast::IntrinsicFunctor& inf) {
     VecOwn<ram::Expression> values;
     for (const auto& cur : inf.getArguments()) {
@@ -82,7 +88,7 @@ Own<ram::Expression> ValueTranslator::visitIntrinsicFunctor(const ast::Intrinsic
     if (ast::analysis::FunctorAnalysis::isMultiResult(inf)) {
         return translator.makeRamTupleElement(index.getGeneratorLoc(inf));
     } else {
-        return mk<ram::IntrinsicOperator>(inf.getFunctionOp().value(), std::move(values));
+        return mk<ram::IntrinsicOperator>(inf.getFinalOpType().value(), std::move(values));
     }
 }
 

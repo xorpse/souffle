@@ -38,9 +38,10 @@ Own<ram::Condition> ConstraintTranslator::visitAtom(const ast::Atom&) {
 }
 
 Own<ram::Condition> ConstraintTranslator::visitBinaryConstraint(const ast::BinaryConstraint& binRel) {
+    assert(binRel.getFinalType().has_value() && "binary constraint has unset type");
     auto valLHS = translator.translateValue(binRel.getLHS(), index);
     auto valRHS = translator.translateValue(binRel.getRHS(), index);
-    return mk<ram::Constraint>(binRel.getOperator(), std::move(valLHS), std::move(valRHS));
+    return mk<ram::Constraint>(binRel.getFinalType().value(), std::move(valLHS), std::move(valRHS));
 }
 
 Own<ram::Condition> ConstraintTranslator::visitProvenanceNegation(const ast::ProvenanceNegation& neg) {

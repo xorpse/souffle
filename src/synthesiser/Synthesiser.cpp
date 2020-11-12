@@ -117,6 +117,7 @@ namespace souffle::synthesiser {
 using json11::Json;
 using ram::analysis::IndexAnalysis;
 using namespace ram;
+using namespace stream_write_qualified_char_as_number;
 
 /** Lookup frequency counter */
 unsigned Synthesiser::lookupFreqIdx(const std::string& txt) {
@@ -624,7 +625,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
         void visitDebugInfo(const DebugInfo& dbg, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
-            out << "SignalHandler::instance()->setMsg(R\"_(";
+            out << "signalHandler->setMsg(R\"_(";
             out << dbg.getMessage();
             out << ")_\");\n";
 
@@ -671,7 +672,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             visitTupleOperation(pscan, out);
 
             out << "}\n";
-            out << "} catch(std::exception &e) { SignalHandler::instance()->error(e.what());}\n";
+            out << "} catch(std::exception &e) { signalHandler->error(e.what());}\n";
             out << "}\n";
 
             PRINT_END_COMMENT(out);
@@ -752,7 +753,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "break;\n";
             out << "}\n";
             out << "}\n";
-            out << "} catch(std::exception &e) { SignalHandler::instance()->error(e.what());}\n";
+            out << "} catch(std::exception &e) { signalHandler->error(e.what());}\n";
             out << "}\n";
 
             PRINT_END_COMMENT(out);
@@ -818,7 +819,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             visitTupleOperation(piscan, out);
 
             out << "}\n";
-            out << "} catch(std::exception &e) { SignalHandler::instance()->error(e.what());}\n";
+            out << "} catch(std::exception &e) { signalHandler->error(e.what());}\n";
             out << "}\n";
 
             PRINT_END_COMMENT(out);
@@ -898,7 +899,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "break;\n";
             out << "}\n";
             out << "}\n";
-            out << "} catch(std::exception &e) { SignalHandler::instance()->error(e.what());}\n";
+            out << "} catch(std::exception &e) { signalHandler->error(e.what());}\n";
             out << "}\n";
 
             PRINT_END_COMMENT(out);
@@ -1133,6 +1134,18 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "}\n";
             PRINT_END_COMMENT(out);
         }
+
+        bool isGuaranteedToBeMinimum(const IndexAggregate& aggregate) {
+            auto identifier = aggregate.getTupleId();
+            auto keys = isa->getSearchSignature(&aggregate);
+            RelationRepresentation repr = synthesiser.lookup(aggregate.getRelation())->getRepresentation();
+
+            const auto* tupleElem = dynamic_cast<const TupleElement*>(&aggregate.getExpression());
+            return tupleElem && tupleElem->getTupleId() == identifier &&
+                   keys[tupleElem->getElement()] != ram::analysis::AttributeConstraint::None &&
+                   (repr == RelationRepresentation::BTREE || repr == RelationRepresentation::DEFAULT);
+        }
+
         void visitIndexAggregate(const IndexAggregate& aggregate, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             // get some properties
@@ -1235,6 +1248,9 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                     out << "res0 = std::min(res0,ramBitCast<" << type << ">(";
                     visit(aggregate.getExpression(), out);
                     out << "));\n";
+                    if (isGuaranteedToBeMinimum(aggregate)) {
+                        out << "break;\n";
+                    }
                     break;
                 case AggregateOp::FMAX:
                 case AggregateOp::UMAX:
@@ -2386,8 +2402,19 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     }
 
     // print relation definitions
-    std::string initCons;     // initialization of constructor
-    std::string registerRel;  // registration of relations
+    std::stringstream initCons;     // initialization of constructor
+    std::stringstream registerRel;  // registration of relations
+    auto initConsSep = [&, empty = true]() mutable -> std::stringstream& {
+        initCons << (empty ? "\n: " : "\n, ");
+        empty = false;
+        return initCons;
+    };
+
+    // `pf` must be a ctor param (see below)
+    if (Global::config().has("profile")) {
+        initConsSep() << "profiling_fname(std::move(pf))";
+    }
+
     int relCtr = 0;
     std::set<std::string> storeRelations;
     std::set<std::string> loadRelations;
@@ -2410,8 +2437,6 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
 
     for (auto rel : prog.getRelations()) {
         // get some table details
-        int arity = rel->getArity();
-        int auxiliaryArity = rel->getAuxiliaryArity();
         const std::string& datalogName = rel->getName();
         const std::string& cppName = getRelationName(*rel);
 
@@ -2425,44 +2450,22 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
 
         os << "Own<" << type << "> " << cppName << " = mk<" << type << ">();\n";
         if (!rel->isTemp()) {
-            os << "souffle::RelationWrapper<";
-            os << relCtr++ << ",";
-            os << type << ",";
-            os << "Tuple<RamDomain," << arity << ">,";
-            os << arity << ",";
-            os << auxiliaryArity;
-            os << "> wrapper_" << cppName << ";\n";
+            tfm::format(os, "souffle::RelationWrapper<%s> wrapper_%s;\n", type, cppName);
 
-            // construct types
-            std::string tupleType = "std::array<const char *," + std::to_string(arity) + ">{{";
-            std::string tupleName = "std::array<const char *," + std::to_string(arity) + ">{{";
+            auto strLitAry = [](auto&& xs) {
+                std::stringstream ss;
+                ss << "std::array<const char *," << xs.size() << ">{{"
+                   << join(xs, ",", [](auto&& os, auto&& x) { os << '"' << x << '"'; }) << "}}";
+                return ss.str();
+            };
 
-            if (rel->getArity() != 0u) {
-                const auto& attrib = rel->getAttributeNames();
-                const auto& attribType = rel->getAttributeTypes();
-                tupleType += "\"" + attribType[0] + "\"";
+            auto foundIn = [&](auto&& set) { return contains(set, rel->getName()) ? "true" : "false"; };
 
-                for (int i = 1; i < arity; i++) {
-                    tupleType += ",\"" + attribType[i] + "\"";
-                }
-                tupleName += "\"" + attrib[0] + "\"";
-                for (int i = 1; i < arity; i++) {
-                    tupleName += ",\"" + attrib[i] + "\"";
-                }
-            }
-            tupleType += "}}";
-            tupleName += "}}";
-
-            if (!initCons.empty()) {
-                initCons += ",\n";
-            }
-            initCons += "\nwrapper_" + cppName + "(" + "*" + cppName + ",symTable,\"" + datalogName + "\"," +
-                        tupleType + "," + tupleName + ")";
-            registerRel += "addRelation(\"" + datalogName + "\",&wrapper_" + cppName + ",";
-            registerRel += (loadRelations.count(rel->getName()) > 0) ? "true" : "false";
-            registerRel += ",";
-            registerRel += (storeRelations.count(rel->getName()) > 0) ? "true" : "false";
-            registerRel += ");\n";
+            tfm::format(initConsSep(), "wrapper_%s(%s, *%s, *this, \"%s\", %s, %s, %s)", cppName, relCtr++,
+                    cppName, datalogName, strLitAry(rel->getAttributeTypes()),
+                    strLitAry(rel->getAttributeNames()), rel->getAuxiliaryArity());
+            tfm::format(registerRel, "addRelation(\"%s\", wrapper_%s, %s, %s);\n", datalogName, cppName,
+                    foundIn(loadRelations), foundIn(storeRelations));
         }
     }
     os << "public:\n";
@@ -2470,54 +2473,51 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     // -- constructor --
 
     os << classname;
-    if (Global::config().has("profile")) {
-        os << "(std::string pf=\"profile.log\") : profiling_fname(pf)";
-        if (!initCons.empty()) {
-            os << ",\n" << initCons;
-        }
-    } else {
-        os << "()";
-        if (!initCons.empty()) {
-            os << " : " << initCons;
-        }
-    }
+    os << (Global::config().has("profile") ? "(std::string pf=\"profile.log\")" : "()");
+    os << initCons.str() << '\n';
     os << "{\n";
     if (Global::config().has("profile")) {
         os << "ProfileEventSingleton::instance().setOutputFile(profiling_fname);\n";
     }
-    os << registerRel;
+    os << registerRel.str();
     os << "}\n";
     // -- destructor --
 
     os << "~" << classname << "() {\n";
     os << "}\n";
 
-    os << "private:\n";
     // issue state variables for the evaluation
-    os << "std::string inputDirectory;\n";
-    os << "std::string outputDirectory;\n";
-    os << "bool performIO;\n";
-    os << "std::atomic<RamDomain> ctr{};\n\n";
-    os << "std::atomic<size_t> iter{};\n";
+    //
+    // Improve compile time by storing the signal handler in one loc instead of
+    // emitting thousands of `SignalHandler::instance()`. The volume of calls
+    // makes GVN and register alloc very expensive, even if the call is inlined.
+    os << R"_(
+private:
+std::string             inputDirectory;
+std::string             outputDirectory;
+SignalHandler*          signalHandler {SignalHandler::instance()};
+std::atomic<RamDomain>  ctr {};
+std::atomic<size_t>     iter {};
+bool                    performIO = false;
 
-    os << "void runFunction(std::string inputDirectoryArg = \"\", "
-          "std::string outputDirectoryArg = \"\", bool performIOArg = false) "
-          "{\n";
-
-    os << "this->inputDirectory = inputDirectoryArg;\n";
-    os << "this->outputDirectory = outputDirectoryArg;\n";
-    os << "this->performIO = performIOArg;\n";
-
-    os << "SignalHandler::instance()->set();\n";
-    if (Global::config().has("verbose")) {
-        os << "SignalHandler::instance()->enableLogging();\n";
-    }
+void runFunction(std::string  inputDirectoryArg   = "",
+                 std::string  outputDirectoryArg  = "",
+                 bool         performIOArg        = false) {
+    this->inputDirectory  = std::move(inputDirectoryArg);
+    this->outputDirectory = std::move(outputDirectoryArg);
+    this->performIO       = performIOArg;
 
     // set default threads (in embedded mode)
     // if this is not set, and omp is used, the default omp setting of number of cores is used.
-    os << "#if defined(_OPENMP)\n";
-    os << "if (getNumThreads() > 0) {omp_set_num_threads(getNumThreads());}\n";
-    os << "#endif\n\n";
+#if defined(_OPENMP)
+    if (0 < getNumThreads()) { omp_set_num_threads(getNumThreads()); }
+#endif
+
+    signalHandler->set();
+)_";
+    if (Global::config().has("verbose")) {
+        os << "signalHandler->enableLogging();\n";
+    }
 
     // add actual program body
     os << "// -- query evaluation --\n";
@@ -2559,7 +2559,7 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
         }
     }
 
-    os << "SignalHandler::instance()->reset();\n";
+    os << "signalHandler->reset();\n";
 
     os << "}\n";  // end of runFunction() method
 

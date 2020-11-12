@@ -173,7 +173,7 @@ Own<Relation> makeInfoRelation(
 
         if (auto con = dynamic_cast<BinaryConstraint*>(lit)) {
             // for a constraint, add the constraint symbol and LHS and RHS
-            std::string constraintDescription = toBinaryConstraintSymbol(con->getOperator());
+            std::string constraintDescription = toBinaryConstraintSymbol(con->getBaseOperator());
 
             constraintDescription.append("," + getArgInfo(con->getLHS()));
             constraintDescription.append("," + getArgInfo(con->getRHS()));
