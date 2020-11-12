@@ -1013,6 +1013,40 @@ void AstToRamTranslator::makeRamClear(VecOwn<ram::Statement>& curStmts, const as
     appendStmt(curStmts, mk<ram::Clear>(getConcreteRelationName(relation)));
 }
 
+void AstToRamTranslator::createRamRelation(size_t scc) {
+    const auto& isRecursive = sccGraph->isRecursive(scc);
+    const auto& allInterns = sccGraph->getInternalRelations(scc);
+    for (const auto& rel : allInterns) {
+        std::string name = rel->getQualifiedName().toString();
+        auto arity = rel->getArity();
+        auto auxiliaryArity = auxArityAnalysis->getArity(rel);
+        auto representation = rel->getRepresentation();
+        const auto& attributes = rel->getAttributes();
+
+        std::vector<std::string> attributeNames;
+        std::vector<std::string> attributeTypeQualifiers;
+        for (size_t i = 0; i < rel->getArity(); ++i) {
+            attributeNames.push_back(attributes[i]->getName());
+            if (typeEnv != nullptr) {
+                attributeTypeQualifiers.push_back(
+                        getTypeQualifier(typeEnv->getType(attributes[i]->getTypeName())));
+            }
+        }
+        ramRels[name] = mk<ram::Relation>(
+                name, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
+
+        // recursive relations also require @delta and @new variants, with the same signature
+        if (isRecursive) {
+            std::string deltaName = "@delta_" + name;
+            std::string newName = "@new_" + name;
+            ramRels[deltaName] = mk<ram::Relation>(deltaName, arity, auxiliaryArity, attributeNames,
+                    attributeTypeQualifiers, representation);
+            ramRels[newName] = mk<ram::Relation>(
+                    newName, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
+        }
+    }
+}
+
 /** translates the given datalog program into an equivalent RAM program  */
 void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {
     // keep track of relevant analyses
@@ -1061,37 +1095,7 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
 
     // create all Ram relations in ramRels
     for (const auto& scc : sccOrder.order()) {
-        const auto& isRecursive = sccGraph->isRecursive(scc);
-        const auto& allInterns = sccGraph->getInternalRelations(scc);
-        for (const auto& rel : allInterns) {
-            std::string name = rel->getQualifiedName().toString();
-            auto arity = rel->getArity();
-            auto auxiliaryArity = auxArityAnalysis->getArity(rel);
-            auto representation = rel->getRepresentation();
-            const auto& attributes = rel->getAttributes();
-
-            std::vector<std::string> attributeNames;
-            std::vector<std::string> attributeTypeQualifiers;
-            for (size_t i = 0; i < rel->getArity(); ++i) {
-                attributeNames.push_back(attributes[i]->getName());
-                if (typeEnv != nullptr) {
-                    attributeTypeQualifiers.push_back(
-                            getTypeQualifier(typeEnv->getType(attributes[i]->getTypeName())));
-                }
-            }
-            ramRels[name] = mk<ram::Relation>(
-                    name, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
-
-            // recursive relations also require @delta and @new variants, with the same signature
-            if (isRecursive) {
-                std::string deltaName = "@delta_" + name;
-                std::string newName = "@new_" + name;
-                ramRels[deltaName] = mk<ram::Relation>(deltaName, arity, auxiliaryArity, attributeNames,
-                        attributeTypeQualifiers, representation);
-                ramRels[newName] = mk<ram::Relation>(newName, arity, auxiliaryArity, attributeNames,
-                        attributeTypeQualifiers, representation);
-            }
-        }
+        createRamRelation(scc);
     }
 
     // maintain the index of the SCC within the topological order

@@ -185,6 +185,9 @@ private:
     /** translate RAM code for a given SCC */
     Own<ram::Sequence> translateSCC(size_t scc, size_t idx);
 
+    /** create RAM relations for a given SCC */
+    void createRamRelation(size_t scc);
+
     /** translate RAM code for the non-recursive clauses of the given relation */
     Own<ram::Statement> translateNonRecursiveRelation(const ast::Relation& rel);
 
