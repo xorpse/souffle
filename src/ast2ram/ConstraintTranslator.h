@@ -15,7 +15,6 @@
 #pragma once
 
 #include "ast/utility/Visitor.h"
-#include "ast2ram/AstToRamTranslator.h"
 #include "souffle/utility/ContainerUtil.h"
 
 namespace souffle::ast {
@@ -27,10 +26,6 @@ class ProvenanceNegation;
 
 namespace souffle::ram {
 class Condition;
-}
-
-namespace souffle::ast::analysis {
-class PolymorphicObjectsAnalysis;
 }
 
 namespace souffle::ast2ram {
@@ -55,8 +50,6 @@ public:
 private:
     AstToRamTranslator& translator;
     const ValueIndex& index;
-    const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis =
-            translator.getPolymorphicObjectsAnalysis();
 };
 
 }  // namespace souffle::ast2ram

@@ -15,7 +15,6 @@
 #pragma once
 
 #include "ast/utility/Visitor.h"
-#include "ast2ram/AstToRamTranslator.h"
 
 namespace souffle {
 class SymbolTable;
@@ -34,10 +33,6 @@ class UnnamedVariable;
 class UserDefinedFunctor;
 class Variable;
 }  // namespace souffle::ast
-
-namespace souffle::ast::analysis {
-class PolymorphicObjectsAnalysis;
-}
 
 namespace souffle::ram {
 class Expression;
@@ -74,8 +69,6 @@ private:
     AstToRamTranslator& translator;
     const ValueIndex& index;
     SymbolTable& symTab;
-    const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis =
-            translator.getPolymorphicObjectsAnalysis();
 };
 
 }  // namespace souffle::ast2ram
