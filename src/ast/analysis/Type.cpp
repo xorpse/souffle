@@ -59,8 +59,7 @@
 
 namespace souffle::ast::analysis {
 
-/* Return a new clause with type-annotated variables */
-Own<Clause> createAnnotatedClause(
+Own<Clause> TypeAnalysis::createAnnotatedClause(
         const Clause* clause, const std::map<const Argument*, TypeSet> argumentTypes) {
     // Annotates each variable with its type based on a given type analysis result
     struct TypeAnnotator : public NodeMapper {
