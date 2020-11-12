@@ -123,22 +123,12 @@ private:
     /** Type environment */
     const ast::analysis::TypeEnvironment* typeEnv = nullptr;
 
-    /** IO Type */
+    /** Analyses needed */
     const ast::analysis::IOTypeAnalysis* ioType = nullptr;
-
-    /** Functor analysis */
     const ast::analysis::FunctorAnalysis* functorAnalysis = nullptr;
-
-    /** Recursive clauses analysis */
     const ast::analysis::RecursiveClausesAnalysis* recursiveClauses = nullptr;
-
-    /** Auxiliary arity analysis */
     const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
-
-    /** Relation detail cache analysis */
     const ast::analysis::RelationDetailCacheAnalysis* relDetail = nullptr;
-
-    /** Polymorphic objects analysis */
     const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
 
     /** SIPS metric for reordering */
@@ -168,17 +158,17 @@ private:
     /** converts the given relation identifier into a relation name */
     static std::string getRelationName(const ast::QualifiedName& id);
 
-    // TODO (b-scholz): revisit / refactor so that only one directive is translated
-    std::vector<std::map<std::string, std::string>> getInputDirectives(const ast::Relation* rel);
-
-    // TODO (b-scholz): revisit / refactor so that only one directive is translated
-    std::vector<std::map<std::string, std::string>> getOutputDirectives(const ast::Relation* rel);
-
     /** Get the corresponding RAM delta relation name for the relation */
     std::string getDeltaRelationName(const ast::Relation* rel);
 
     /** Get the corresponding RAM 'new' relation name for the relation */
     std::string getNewRelationName(const ast::Relation* rel);
+
+    // TODO (b-scholz): revisit / refactor so that only one directive is translated
+    std::vector<std::map<std::string, std::string>> getInputDirectives(const ast::Relation* rel);
+
+    // TODO (b-scholz): revisit / refactor so that only one directive is translated
+    std::vector<std::map<std::string, std::string>> getOutputDirectives(const ast::Relation* rel);
 
     /** Return a symbol table **/
     SymbolTable& getSymbolTable();
