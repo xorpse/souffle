@@ -64,7 +64,6 @@
 #include "ast2ram/ProvenanceClauseTranslator.h"
 #include "ast2ram/ValueIndex.h"
 #include "ast2ram/ValueTranslator.h"
-#include "parser/SrcLocation.h"
 #include "ram/Call.h"
 #include "ram/Clear.h"
 #include "ram/Condition.h"
@@ -259,15 +258,14 @@ RamDomain AstToRamTranslator::getConstantRamRepresentation(const ast::Constant& 
 
 Own<ram::Expression> AstToRamTranslator::translateConstant(ast::Constant const& c) {
     auto const rawConstant = getConstantRamRepresentation(c);
-
     if (auto* const c_num = dynamic_cast<const ast::NumericConstant*>(&c)) {
         switch (c_num->getFinalType().value()) {
             case ast::NumericConstant::Type::Int: return mk<ram::SignedConstant>(rawConstant);
             case ast::NumericConstant::Type::Uint: return mk<ram::UnsignedConstant>(rawConstant);
             case ast::NumericConstant::Type::Float: return mk<ram::FloatConstant>(rawConstant);
         }
+        fatal("unaccounted-for constant");
     }
-
     return mk<ram::SignedConstant>(rawConstant);
 }
 
@@ -292,7 +290,7 @@ Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(
         // add logging
         if (Global::config().has("profile")) {
             const std::string& relationName = toString(rel.getQualifiedName());
-            const SrcLocation& srcLocation = clause->getSrcLoc();
+            const auto& srcLocation = clause->getSrcLoc();
             const std::string clauseText = stringify(toString(*clause));
             const std::string logTimerStatement =
                     LogStatement::tNonrecursiveRule(relationName, srcLocation, clauseText);
@@ -314,7 +312,7 @@ Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(
     // add logging for entire relation
     if (Global::config().has("profile")) {
         const std::string& relationName = toString(rel.getQualifiedName());
-        const SrcLocation& srcLocation = rel.getSrcLoc();
+        const auto& srcLocation = rel.getSrcLoc();
         const std::string logSizeStatement = LogStatement::nNonrecursiveRelation(relationName, srcLocation);
 
         // add timer if we did any work
@@ -489,7 +487,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
                 /* add logging */
                 if (Global::config().has("profile")) {
                     const std::string& relationName = toString(rel->getQualifiedName());
-                    const SrcLocation& srcLocation = cl->getSrcLoc();
+                    const auto& srcLocation = cl->getSrcLoc();
                     const std::string clauseText = stringify(toString(*cl));
                     const std::string logTimerStatement =
                             LogStatement::tRecursiveRule(relationName, version, srcLocation, clauseText);
@@ -530,7 +528,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(const std::se
         // label all versions
         if (Global::config().has("profile")) {
             const std::string& relationName = toString(rel->getQualifiedName());
-            const SrcLocation& srcLocation = rel->getSrcLoc();
+            const auto& srcLocation = rel->getSrcLoc();
             const std::string logTimerStatement = LogStatement::tRecursiveRelation(relationName, srcLocation);
             const std::string logSizeStatement = LogStatement::nRecursiveRelation(relationName, srcLocation);
             auto newStmt = mk<ram::LogRelationTimer>(
