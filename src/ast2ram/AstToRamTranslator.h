@@ -48,6 +48,8 @@ class FunctorAnalysis;
 class PolymorphicObjectsAnalysis;
 class RecursiveClausesAnalysis;
 class RelationDetailCacheAnalysis;
+class RelationScheduleAnalysis;
+class SCCGraphAnalysis;
 class TypeEnvironment;
 }  // namespace souffle::ast::analysis
 
@@ -55,6 +57,7 @@ namespace souffle::ram {
 class Condition;
 class Expression;
 class Relation;
+class Sequence;
 class Statement;
 class TranslationUnit;
 class TupleElement;
@@ -127,6 +130,8 @@ private:
     /** Analyses needed */
     const ast::analysis::IOTypeAnalysis* ioType = nullptr;
     const ast::analysis::FunctorAnalysis* functorAnalysis = nullptr;
+    const ast::analysis::RelationScheduleAnalysis* relationSchedule = nullptr;
+    const ast::analysis::SCCGraphAnalysis* sccGraph = nullptr;
     const ast::analysis::RecursiveClausesAnalysis* recursiveClauses = nullptr;
     const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
     const ast::analysis::RelationDetailCacheAnalysis* relDetail = nullptr;
@@ -177,6 +182,9 @@ private:
     /** Get ram representation of constant */
     RamDomain getConstantRamRepresentation(const ast::Constant& constant);
 
+    /** translate RAM code for a given SCC */
+    Own<ram::Sequence> translateSCC(size_t scc, size_t idx);
+
     /** translate RAM code for the non-recursive clauses of the given relation */
     Own<ram::Statement> translateNonRecursiveRelation(const ast::Relation& rel);
 
@@ -188,6 +196,15 @@ private:
 
     /** translate RAM code for subroutine to get subproofs for non-existence of a tuple */
     Own<ram::Statement> makeNegationSubproofSubroutine(const ast::Clause& clause);
+
+    /** add a statement to store a relation */
+    void makeRamClear(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation);
+
+    /** add a statement to drop a relation */
+    void makeRamStore(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation);
+
+    /** add a statement to load a relation */
+    void makeRamLoad(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation);
 };
 
 }  // namespace souffle::ast2ram

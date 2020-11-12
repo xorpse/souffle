@@ -370,6 +370,48 @@ std::string AstToRamTranslator::getRelationName(const ast::QualifiedName& id) {
     return toString(join(id.getQualifiers(), "."));
 }
 
+Own<ram::Sequence> AstToRamTranslator::translateSCC(size_t scc, size_t idx) {
+    // make a new ram statement for the current SCC
+    VecOwn<ram::Statement> current;
+
+    // find out if the current SCC is recursive
+    const auto& isRecursive = sccGraph->isRecursive(scc);
+
+    // make variables for particular sets of relations contained within the current SCC, and,
+    // predecessors and successor SCCs thereof
+    const auto& allInterns = sccGraph->getInternalRelations(scc);
+    const auto& internIns = sccGraph->getInternalInputRelations(scc);
+    const auto& internOuts = sccGraph->getInternalOutputRelations(scc);
+
+    // make a variable for all relations that are expired at the current SCC
+    const auto& internExps = relationSchedule->schedule().at(idx).expired();
+
+    // load all internal input relations from the facts dir with a .facts extension
+    for (const auto& relation : internIns) {
+        makeRamLoad(current, relation);
+    }
+
+    // compute the relations themselves
+    Own<ram::Statement> bodyStatement =
+            (!isRecursive) ? translateNonRecursiveRelation(*((const ast::Relation*)*allInterns.begin()))
+                           : translateRecursiveRelation(allInterns);
+    appendStmt(current, std::move(bodyStatement));
+
+    // store all internal output relations to the output dir with a .csv extension
+    for (const auto& relation : internOuts) {
+        makeRamStore(current, relation);
+    }
+
+    // if provenance is disabled, drop all relations expired as per the topological order
+    if (!Global::config().has("provenance")) {
+        for (const auto& relation : internExps) {
+            makeRamClear(current, relation);
+        }
+    }
+
+    return mk<ram::Sequence>(std::move(current));
+}
+
 /** generate RAM code for recursive relations in a strongly-connected component */
 Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
         const std::set<const ast::Relation*>& scc) {
@@ -941,15 +983,44 @@ bool AstToRamTranslator::removeADTs(const ast::TranslationUnit& translationUnit)
     return mapper.changed;
 }
 
+void AstToRamTranslator::makeRamLoad(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation) {
+    for (auto directives : getInputDirectives(relation)) {
+        Own<ram::Statement> statement = mk<ram::IO>(getConcreteRelationName(relation), directives);
+        if (Global::config().has("profile")) {
+            const std::string logTimerStatement = LogStatement::tRelationLoadTime(
+                    toString(relation->getQualifiedName()), relation->getSrcLoc());
+            statement = mk<ram::LogRelationTimer>(
+                    std::move(statement), logTimerStatement, getConcreteRelationName(relation));
+        }
+        appendStmt(curStmts, std::move(statement));
+    }
+}
+
+void AstToRamTranslator::makeRamStore(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation) {
+    for (auto directives : getOutputDirectives(relation)) {
+        Own<ram::Statement> statement = mk<ram::IO>(getConcreteRelationName(relation), directives);
+        if (Global::config().has("profile")) {
+            const std::string logTimerStatement = LogStatement::tRelationSaveTime(
+                    toString(relation->getQualifiedName()), relation->getSrcLoc());
+            statement = mk<ram::LogRelationTimer>(
+                    std::move(statement), logTimerStatement, getConcreteRelationName(relation));
+        }
+        appendStmt(curStmts, std::move(statement));
+    }
+}
+
+void AstToRamTranslator::makeRamClear(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation) {
+    appendStmt(curStmts, mk<ram::Clear>(getConcreteRelationName(relation)));
+}
+
 /** translates the given datalog program into an equivalent RAM program  */
 void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {
     // keep track of relevant analyses
     ioType = translationUnit.getAnalysis<ast::analysis::IOTypeAnalysis>();
     typeEnv = &translationUnit.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
-    const auto& sccGraph = *translationUnit.getAnalysis<ast::analysis::SCCGraphAnalysis>();
     const auto& sccOrder = *translationUnit.getAnalysis<ast::analysis::TopologicallySortedSCCGraphAnalysis>();
-    const auto& expirySchedule =
-            translationUnit.getAnalysis<ast::analysis::RelationScheduleAnalysis>()->schedule();
+    relationSchedule = translationUnit.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
+    sccGraph = translationUnit.getAnalysis<ast::analysis::SCCGraphAnalysis>();
     recursiveClauses = translationUnit.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
     auxArityAnalysis = translationUnit.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
     functorAnalysis = translationUnit.getAnalysis<ast::analysis::FunctorAnalysis>();
@@ -986,45 +1057,12 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     removeADTs(translationUnit);
 
     // handle the case of an empty SCC graph
-    if (sccGraph.getNumberOfSCCs() == 0) return;
-
-    // a function to load relations
-    const auto& makeRamLoad = [&](VecOwn<ram::Statement>& current, const ast::Relation* relation) {
-        for (auto directives : getInputDirectives(relation)) {
-            Own<ram::Statement> statement = mk<ram::IO>(getConcreteRelationName(relation), directives);
-            if (Global::config().has("profile")) {
-                const std::string logTimerStatement = LogStatement::tRelationLoadTime(
-                        toString(relation->getQualifiedName()), relation->getSrcLoc());
-                statement = mk<ram::LogRelationTimer>(
-                        std::move(statement), logTimerStatement, getConcreteRelationName(relation));
-            }
-            appendStmt(current, std::move(statement));
-        }
-    };
-
-    // a function to store relations
-    const auto& makeRamStore = [&](VecOwn<ram::Statement>& current, const ast::Relation* relation) {
-        for (auto directives : getOutputDirectives(relation)) {
-            Own<ram::Statement> statement = mk<ram::IO>(getConcreteRelationName(relation), directives);
-            if (Global::config().has("profile")) {
-                const std::string logTimerStatement = LogStatement::tRelationSaveTime(
-                        toString(relation->getQualifiedName()), relation->getSrcLoc());
-                statement = mk<ram::LogRelationTimer>(
-                        std::move(statement), logTimerStatement, getConcreteRelationName(relation));
-            }
-            appendStmt(current, std::move(statement));
-        }
-    };
-
-    // a function to drop relations
-    const auto& makeRamClear = [&](VecOwn<ram::Statement>& current, const ast::Relation* relation) {
-        appendStmt(current, mk<ram::Clear>(getConcreteRelationName(relation)));
-    };
+    if (sccGraph->getNumberOfSCCs() == 0) return;
 
     // create all Ram relations in ramRels
     for (const auto& scc : sccOrder.order()) {
-        const auto& isRecursive = sccGraph.isRecursive(scc);
-        const auto& allInterns = sccGraph.getInternalRelations(scc);
+        const auto& isRecursive = sccGraph->isRecursive(scc);
+        const auto& allInterns = sccGraph->getInternalRelations(scc);
         for (const auto& rel : allInterns) {
             std::string name = rel->getQualifiedName().toString();
             auto arity = rel->getArity();
@@ -1061,46 +1099,8 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
 
     // iterate over each SCC according to the topological order
     for (const auto& scc : sccOrder.order()) {
-        // make a new ram statement for the current SCC
-        VecOwn<ram::Statement> current;
-
-        // find out if the current SCC is recursive
-        const auto& isRecursive = sccGraph.isRecursive(scc);
-
-        // make variables for particular sets of relations contained within the current SCC, and,
-        // predecessors and successor SCCs thereof
-        const auto& allInterns = sccGraph.getInternalRelations(scc);
-        const auto& internIns = sccGraph.getInternalInputRelations(scc);
-        const auto& internOuts = sccGraph.getInternalOutputRelations(scc);
-
-        // make a variable for all relations that are expired at the current SCC
-        const auto& internExps = expirySchedule.at(indexOfScc).expired();
-
-        // load all internal input relations from the facts dir with a .facts extension
-        for (const auto& relation : internIns) {
-            makeRamLoad(current, relation);
-        }
-
-        // compute the relations themselves
-        Own<ram::Statement> bodyStatement =
-                (!isRecursive) ? translateNonRecursiveRelation(*((const ast::Relation*)*allInterns.begin()))
-                               : translateRecursiveRelation(allInterns);
-        appendStmt(current, std::move(bodyStatement));
-
-        // store all internal output relations to the output dir with a .csv extension
-        for (const auto& relation : internOuts) {
-            makeRamStore(current, relation);
-        }
-
-        // if provenance is disabled, drop all relations expired as per the topological order
-        if (!Global::config().has("provenance")) {
-            for (const auto& relation : internExps) {
-                makeRamClear(current, relation);
-            }
-        }
-
         // create subroutine for this stratum
-        ramSubs["stratum_" + std::to_string(indexOfScc)] = mk<ram::Sequence>(std::move(current));
+        ramSubs["stratum_" + std::to_string(indexOfScc)] = translateSCC(scc, indexOfScc);
         indexOfScc++;
     }
 
