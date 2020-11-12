@@ -104,6 +104,8 @@ souffle_sources = \
         ast/analysis/TopologicallySortedSCCGraph.h         \
         ast/analysis/Type.cpp                              \
         ast/analysis/Type.h                                \
+        ast/analysis/TypeConstraints.h                     \
+        ast/analysis/TypeConstraints.cpp                   \
         ast/analysis/TypeSystem.cpp                        \
         ast/analysis/TypeSystem.h                          \
         ast/analysis/TypeEnvironment.cpp                   \
