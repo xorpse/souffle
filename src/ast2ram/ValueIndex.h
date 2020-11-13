@@ -39,28 +39,24 @@ public:
     ~ValueIndex();
 
     // -- variables --
-
     const std::map<std::string, std::set<Location>>& getVariableReferences() const {
         return varReferencePoints;
     }
-
     void addVarReference(const ast::Variable& var, const Location& l);
     void addVarReference(const ast::Variable& var, int ident, int pos, std::string rel = "");
     bool isDefined(const ast::Variable& var) const;
     const Location& getDefinitionPoint(const ast::Variable& var) const;
 
     // -- records --
-
-    void setRecordDefinition(const ast::RecordInit& init, const Location& l);
     void setRecordDefinition(const ast::RecordInit& init, int ident, int pos, std::string rel = "");
     const Location& getDefinitionPoint(const ast::RecordInit& init) const;
 
     // -- generators (aggregates & some functors) --
     void setGeneratorLoc(const ast::Argument& arg, const Location& loc);
     const Location& getGeneratorLoc(const ast::Argument& arg) const;
+    bool isGenerator(const int level) const;
 
     // -- others --
-    bool isGenerator(const int level) const;
     bool isSomethingDefinedOn(int level) const;
     void print(std::ostream& out) const;
 

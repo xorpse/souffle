@@ -40,13 +40,15 @@ void ValueIndex::addVarReference(const ast::Variable& var, int ident, int pos, s
 }
 
 bool ValueIndex::isDefined(const ast::Variable& var) const {
+    return contains(varReferencePoints, var.getName());
     return varReferencePoints.find(var.getName()) != varReferencePoints.end();
 }
 
 const Location& ValueIndex::getDefinitionPoint(const ast::Variable& var) const {
-    auto pos = varReferencePoints.find(var.getName());
-    assert(pos != varReferencePoints.end() && "Undefined variable referenced!");
-    return *pos->second.begin();
+    assert(isDefined(var) && "undefined variable reference");
+    const auto& referencePoints = varReferencePoints.at(var.getName());
+    assert(!referencePoints.empty() && "at least one reference point should exist");
+    return *referencePoints.begin();
 }
 
 void ValueIndex::setGeneratorLoc(const ast::Argument& arg, const Location& loc) {
@@ -72,12 +74,8 @@ const Location& ValueIndex::getGeneratorLoc(const ast::Argument& arg) const {
     fatal("arg `%s` has no generator location", arg);
 }
 
-void ValueIndex::setRecordDefinition(const ast::RecordInit& init, const Location& l) {
-    recordDefinitionPoints.insert({&init, l});
-}
-
 void ValueIndex::setRecordDefinition(const ast::RecordInit& init, int ident, int pos, std::string rel) {
-    setRecordDefinition(init, Location({ident, pos, rel}));
+    recordDefinitionPoints.insert({&init, Location({ident, pos, rel})});
 }
 
 const Location& ValueIndex::getDefinitionPoint(const ast::RecordInit& init) const {
