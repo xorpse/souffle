@@ -18,7 +18,6 @@
 
 #include "souffle/RamTypes.h"
 #include "souffle/utility/ContainerUtil.h"
-#include <cassert>
 #include <map>
 #include <set>
 #include <string>
@@ -101,11 +100,7 @@ public:
     /** create a RAM element access node */
     static Own<ram::TupleElement> makeRamTupleElement(const Location& loc);
 
-    const ram::Relation* lookupRelation(const std::string& name) const {
-        auto it = ramRelations.find(name);
-        assert(it != ramRelations.end() && "relation not found");
-        return (*it).second.get();
-    }
+    const ram::Relation* lookupRelation(const std::string& name) const;
 
 protected:
     /** AST program */

@@ -729,6 +729,12 @@ void AstToRamTranslator::createRamRelation(size_t scc) {
     }
 }
 
+const ram::Relation* AstToRamTranslator::lookupRelation(const std::string& name) const {
+    auto it = ramRelations.find(name);
+    assert(it != ramRelations.end() && "relation not found");
+    return (*it).second.get();
+}
+
 /** translates the given datalog program into an equivalent RAM program  */
 void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {
     // keep track of relevant analyses
