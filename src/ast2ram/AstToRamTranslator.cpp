@@ -714,16 +714,16 @@ void AstToRamTranslator::createRamRelation(size_t scc) {
                         getTypeQualifier(typeEnv->getType(attributes[i]->getTypeName())));
             }
         }
-        ramRels[name] = mk<ram::Relation>(
+        ramRelations[name] = mk<ram::Relation>(
                 name, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
 
         // recursive relations also require @delta and @new variants, with the same signature
         if (isRecursive) {
             std::string deltaName = "@delta_" + name;
             std::string newName = "@new_" + name;
-            ramRels[deltaName] = mk<ram::Relation>(deltaName, arity, auxiliaryArity, attributeNames,
+            ramRelations[deltaName] = mk<ram::Relation>(deltaName, arity, auxiliaryArity, attributeNames,
                     attributeTypeQualifiers, representation);
-            ramRels[newName] = mk<ram::Relation>(
+            ramRelations[newName] = mk<ram::Relation>(
                     newName, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
         }
     }
@@ -767,7 +767,7 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     if (Global::config().has("RamSIPS")) {
         sipsChosen = Global::config().get("RamSIPS");
     }
-    sips = ast::SipsMetric::create(sipsChosen, translationUnit);
+    sipsMetric = ast::SipsMetric::create(sipsChosen, translationUnit);
 
     // replace ADTs with record representatives
     removeADTs(translationUnit);
@@ -775,7 +775,7 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     // handle the case of an empty SCC graph
     if (sccGraph->getNumberOfSCCs() == 0) return;
 
-    // create all Ram relations in ramRels
+    // create all Ram relations in ramRelations
     for (const auto& scc : sccOrder.order()) {
         createRamRelation(scc);
     }
@@ -784,7 +784,7 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     size_t indexOfScc = 0;
     for (const auto& scc : sccOrder.order()) {
         // create subroutine for this stratum
-        ramSubs["stratum_" + std::to_string(indexOfScc)] = translateSCC(scc, indexOfScc);
+        ramSubroutines["stratum_" + std::to_string(indexOfScc)] = translateSCC(scc, indexOfScc);
         indexOfScc++;
     }
 
@@ -815,14 +815,14 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
     ErrorReport& errReport = tu.getErrorReport();
     DebugReport& debugReport = tu.getDebugReport();
     VecOwn<ram::Relation> rels;
-    for (auto& cur : ramRels) {
+    for (auto& cur : ramRelations) {
         rels.push_back(std::move(cur.second));
     }
 
     if (ramMain == nullptr) {
         ramMain = mk<ram::Sequence>();
     }
-    auto ramProg = mk<ram::Program>(std::move(rels), std::move(ramMain), std::move(ramSubs));
+    auto ramProg = mk<ram::Program>(std::move(rels), std::move(ramMain), std::move(ramSubroutines));
 
     // add the translated program to the debug report
     if (!Global::config().get("debug-report").empty()) {

@@ -86,14 +86,14 @@ public:
     }
 
     const ast::SipsMetric* getSipsMetric() const {
-        return sips.get();
+        return sipsMetric.get();
     }
 
-    /** translates AST to translation unit */
+    /** AST->RAM translation methods */
     Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
-
-    /** translate an AST argument to a RAM value */
     Own<ram::Expression> translateValue(const ast::Argument* arg, const ValueIndex& index);
+    Own<ram::Condition> translateConstraint(const ast::Literal* arg, const ValueIndex& index);
+    Own<ram::Expression> translateConstant(const ast::Constant& c);
 
     /** determine the auxiliary for relations */
     size_t getEvaluationArity(const ast::Atom* atom) const;
@@ -101,15 +101,9 @@ public:
     /** create a RAM element access node */
     static Own<ram::TupleElement> makeRamTupleElement(const Location& loc);
 
-    /** translate an AST constraint to a RAM condition */
-    Own<ram::Condition> translateConstraint(const ast::Literal* arg, const ValueIndex& index);
-
-    /** translate RAM code for a constant value */
-    Own<ram::Expression> translateConstant(ast::Constant const& c);
-
     const ram::Relation* lookupRelation(const std::string& name) const {
-        auto it = ramRels.find(name);
-        assert(it != ramRels.end() && "relation not found");
+        auto it = ramRelations.find(name);
+        assert(it != ramRelations.end() && "relation not found");
         return (*it).second.get();
     }
 
@@ -120,46 +114,32 @@ protected:
     /** RAM program */
     Own<ram::Statement> ramMain;
 
-    /** Subroutines */
-    std::map<std::string, Own<ram::Statement>> ramSubs;
-
-    /** RAM relations */
-    std::map<std::string, Own<ram::Relation>> ramRels;
-
-    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
-
-    /**
-     * assigns names to unnamed variables such that enclosing
-     * constructs may be cloned without losing the variable-identity
-     */
-    virtual void addNegation(ast::Clause& clause, const ast::Atom* atom);
-
-    void nameUnnamedVariables(ast::Clause* clause);
-
-    void appendStmt(VecOwn<ram::Statement>& stmtList, Own<ram::Statement> stmt);
-
-    /** translate AST to RAM Program */
-    virtual void translateProgram(const ast::TranslationUnit& translationUnit);
-
-    virtual void clearExpiredRelations(
-            VecOwn<ram::Statement>& stmts, const std::set<const ast::Relation*>& expiredRelations);
-
-private:
-    /** Type environment */
-    const ast::analysis::TypeEnvironment* typeEnv = nullptr;
+    std::map<std::string, Own<ram::Statement>> ramSubroutines;
+    std::map<std::string, Own<ram::Relation>> ramRelations;
+    Own<ast::SipsMetric> sipsMetric;
 
     /** Analyses needed */
+    const ast::analysis::TypeEnvironment* typeEnv = nullptr;
     const ast::analysis::IOTypeAnalysis* ioType = nullptr;
     const ast::analysis::FunctorAnalysis* functorAnalysis = nullptr;
+    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
     const ast::analysis::RelationScheduleAnalysis* relationSchedule = nullptr;
     const ast::analysis::SCCGraphAnalysis* sccGraph = nullptr;
     const ast::analysis::RecursiveClausesAnalysis* recursiveClauses = nullptr;
     const ast::analysis::RelationDetailCacheAnalysis* relDetail = nullptr;
     const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
 
-    /** SIPS metric for reordering */
-    Own<ast::SipsMetric> sips;
+    /** Translate AST to RAM Program */
+    virtual void translateProgram(const ast::TranslationUnit& translationUnit);
 
+    void nameUnnamedVariables(ast::Clause* clause);
+    void appendStmt(VecOwn<ram::Statement>& stmtList, Own<ram::Statement> stmt);
+    Own<ram::Sequence> translateSCC(size_t scc, size_t idx);
+    virtual void addNegation(ast::Clause& clause, const ast::Atom* atom);
+    virtual void clearExpiredRelations(
+            VecOwn<ram::Statement>& stmts, const std::set<const ast::Relation*>& expiredRelations);
+
+private:
     /** replace ADTs with special records */
     static bool removeADTs(const ast::TranslationUnit& translationUnit);
 
@@ -174,9 +154,6 @@ private:
 
     /** Get ram representation of constant */
     RamDomain getConstantRamRepresentation(const ast::Constant& constant);
-
-    /** translate RAM code for a given SCC */
-    Own<ram::Sequence> translateSCC(size_t scc, size_t idx);
 
     /** create RAM relations for a given SCC */
     void createRamRelation(size_t scc);
