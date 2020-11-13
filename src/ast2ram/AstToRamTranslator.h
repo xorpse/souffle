@@ -183,7 +183,7 @@ private:
     RamDomain getConstantRamRepresentation(const ast::Constant& constant);
 
     /** translate RAM code for a given SCC */
-    Own<ram::Sequence> translateSCC(size_t scc, size_t idx);
+    VecOwn<ram::Statement> translateSCC(size_t scc, size_t idx);
 
     /** create RAM relations for a given SCC */
     void createRamRelation(size_t scc);
@@ -199,6 +199,8 @@ private:
 
     /** translate RAM code for subroutine to get subproofs for non-existence of a tuple */
     Own<ram::Statement> makeNegationSubproofSubroutine(const ast::Clause& clause);
+
+    static void addNegation(ast::Clause& clause, const ast::Atom* atom);
 
     /** add a statement to store a relation */
     void makeRamClear(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation);

@@ -370,7 +370,7 @@ std::string AstToRamTranslator::getRelationName(const ast::QualifiedName& id) {
     return toString(join(id.getQualifiers(), "."));
 }
 
-Own<ram::Sequence> AstToRamTranslator::translateSCC(size_t scc, size_t idx) {
+VecOwn<ram::Statement> AstToRamTranslator::translateSCC(size_t scc, size_t idx) {
     // make a new ram statement for the current SCC
     VecOwn<ram::Statement> current;
 
@@ -409,7 +409,15 @@ Own<ram::Sequence> AstToRamTranslator::translateSCC(size_t scc, size_t idx) {
         }
     }
 
-    return mk<ram::Sequence>(std::move(current));
+    return current;
+}
+
+void AstToRamTranslator::addNegation(ast::Clause& clause, const ast::Atom* atom) {
+    if (Global::config().has("provenance")) {
+        clause.addToBody(mk<ast::ProvenanceNegation>(souffle::clone(atom)));
+    } else if (clause.getHead()->getArity() > 0) {
+        clause.addToBody(mk<ast::Negation>(souffle::clone(atom)));
+    }
 }
 
 /** generate RAM code for recursive relations in a strongly-connected component */
@@ -504,11 +512,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
                 auto r1 = souffle::clone(cl);
                 r1->getHead()->setQualifiedName(getNewRelationName(rel));
                 ast::getBodyLiterals<ast::Atom>(*r1)[j]->setQualifiedName(getDeltaRelationName(atomRelation));
-                if (Global::config().has("provenance")) {
-                    r1->addToBody(mk<ast::ProvenanceNegation>(souffle::clone(cl->getHead())));
-                } else if (r1->getHead()->getArity() > 0) {
-                    r1->addToBody(mk<ast::Negation>(souffle::clone(cl->getHead())));
-                }
+                addNegation(*r1, cl->getHead());
 
                 // replace wildcards with variables (reduces indices when wildcards are used in recursive
                 // atoms)
@@ -1087,7 +1091,8 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     size_t indexOfScc = 0;
     for (const auto& scc : sccOrder.order()) {
         // create subroutine for this stratum
-        ramSubs["stratum_" + std::to_string(indexOfScc)] = translateSCC(scc, indexOfScc);
+        auto sccStatements = translateSCC(scc, indexOfScc);
+        ramSubs["stratum_" + std::to_string(indexOfScc)] = mk<ram::Sequence>(std::move(sccStatements));
         indexOfScc++;
     }
 
