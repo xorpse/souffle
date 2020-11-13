@@ -38,72 +38,42 @@ public:
     ValueIndex();
     ~ValueIndex();
 
-    /**
-     * The type mapping variables (referenced by their names) to the
-     * locations where they are used.
-     */
-    using variable_reference_map = std::map<std::string, std::set<Location>>;
-
-    /**
-     * The type mapping record init expressions to their definition points,
-     * hence the point where they get grounded/bound.
-     */
-    using record_definition_map = std::map<const ast::RecordInit*, Location>;
-
-    /**
-     * A map from generative `ast::Argument`s to storage locations. Note,
-     * since in this case ast::Argument are indexed by their values (not their
-     * address) no standard map can be utilized.
-     * (By-value indexing induces an ad-hoc form of CSE.)
-     */
-    using generator_location_map = std::vector<std::pair<const ast::Argument*, Location>>;
-
     // -- variables --
 
-    const variable_reference_map& getVariableReferences() const {
-        return var_references;
+    const std::map<std::string, std::set<Location>>& getVariableReferences() const {
+        return varReferencePoints;
     }
 
     void addVarReference(const ast::Variable& var, const Location& l);
-
     void addVarReference(const ast::Variable& var, int ident, int pos, std::string rel = "");
-
     bool isDefined(const ast::Variable& var) const;
-
     const Location& getDefinitionPoint(const ast::Variable& var) const;
 
     // -- records --
 
-    // - definition -
-
     void setRecordDefinition(const ast::RecordInit& init, const Location& l);
-
     void setRecordDefinition(const ast::RecordInit& init, int ident, int pos, std::string rel = "");
-
     const Location& getDefinitionPoint(const ast::RecordInit& init) const;
 
     // -- generators (aggregates & some functors) --
     void setGeneratorLoc(const ast::Argument& arg, const Location& loc);
-
     const Location& getGeneratorLoc(const ast::Argument& arg) const;
 
     // -- others --
-
     bool isGenerator(const int level) const;
-
     bool isSomethingDefinedOn(int level) const;
-
     void print(std::ostream& out) const;
 
 private:
-    /** The index of variable accesses */
-    variable_reference_map var_references;
+    // Map from variable name to use-points
+    std::map<std::string, std::set<Location>> varReferencePoints;
 
-    /** The index of record definition points */
-    record_definition_map record_definitions;
+    // Map from record inits to definition point (i.e. bounding point)
+    std::map<const ast::RecordInit*, Location> recordDefinitionPoints;
 
-    /** The level of a nested ram operation that is handling a generator operation */
-    generator_location_map arg_generator_locations;
+    // Map from generative arguments to definition point
+    // Arguments indexed by value, not address, so std::map can't be used
+    std::vector<std::pair<const ast::Argument*, Location>> generatorDefinitionPoints;
 };
 
 }  // namespace souffle::ast2ram
