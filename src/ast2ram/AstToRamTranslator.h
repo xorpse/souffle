@@ -107,8 +107,6 @@ protected:
     /** AST program */
     const ast::Program* program = nullptr;
 
-    std::map<std::string, Own<ram::Statement>> ramSubroutines;
-    std::map<std::string, Own<ram::Relation>> ramRelations;
     Own<ast::SipsMetric> sipsMetric;
 
     /** Analyses needed */
@@ -129,7 +127,12 @@ protected:
     virtual void clearExpiredRelations(
             VecOwn<ram::Statement>& stmts, const std::set<const ast::Relation*>& expiredRelations);
 
+    void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
+
 private:
+    std::map<std::string, Own<ram::Statement>> ramSubroutines;
+    std::map<std::string, Own<ram::Relation>> ramRelations;
+
     /** replace ADTs with special records */
     static bool removeADTs(const ast::TranslationUnit& translationUnit);
 

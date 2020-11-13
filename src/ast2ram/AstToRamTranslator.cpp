@@ -754,6 +754,11 @@ void AstToRamTranslator::finaliseAstTypes() {
     });
 }
 
+void AstToRamTranslator::addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine) {
+    assert(!contains(ramSubroutines, subroutineID) && "subroutine ID should not already exist");
+    ramSubroutines[subroutineID] = std::move(subroutine);
+}
+
 Own<ram::Sequence> AstToRamTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {
     // keep track of relevant analyses
     ioType = translationUnit.getAnalysis<ast::analysis::IOTypeAnalysis>();
@@ -782,7 +787,7 @@ Own<ram::Sequence> AstToRamTranslator::translateProgram(const ast::TranslationUn
     // handle the case of an empty SCC graph
     if (sccGraph->getNumberOfSCCs() == 0) return mk<ram::Sequence>();
 
-    // create all RAM relations in ramRelations
+    // create all RAM relations
     const auto& sccOrdering =
             translationUnit.getAnalysis<ast::analysis::TopologicallySortedSCCGraphAnalysis>()->order();
     for (const auto& scc : sccOrdering) {
@@ -791,7 +796,9 @@ Own<ram::Sequence> AstToRamTranslator::translateProgram(const ast::TranslationUn
 
     // create subroutine for each SCC according to topological order
     for (size_t i = 0; i < sccOrdering.size(); i++) {
-        ramSubroutines["stratum_" + toString(i)] = translateSCC(sccOrdering.at(i), i);
+        auto sccCode = translateSCC(sccOrdering.at(i), i);
+        std::string stratumID = "stratum_" + toString(i);
+        addRamSubroutine(stratumID, std::move(sccCode));
     }
 
     // invoke all strata

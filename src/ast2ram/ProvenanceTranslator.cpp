@@ -69,11 +69,11 @@ void ProvenanceTranslator::addProvenanceClauseSubroutines(const ast::Program* pr
 
         std::string subroutineLabel =
                 relName.str() + "_" + std::to_string(getClauseNum(program, &clause)) + "_subproof";
-        ramSubroutines[subroutineLabel] = makeSubproofSubroutine(clause);
+        addRamSubroutine(subroutineLabel, makeSubproofSubroutine(clause));
 
         std::string negationSubroutineLabel =
                 relName.str() + "_" + std::to_string(getClauseNum(program, &clause)) + "_negation_subproof";
-        ramSubroutines[negationSubroutineLabel] = makeNegationSubproofSubroutine(clause);
+        addRamSubroutine(negationSubroutineLabel, makeNegationSubproofSubroutine(clause));
     });
 }
 
