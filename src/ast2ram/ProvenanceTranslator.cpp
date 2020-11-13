@@ -37,12 +37,14 @@
 
 namespace souffle::ast2ram {
 
-void ProvenanceTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {
+Own<ram::Sequence> ProvenanceTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {
     // do the regular translation
-    AstToRamTranslator::translateProgram(translationUnit);
+    auto ramProgram = AstToRamTranslator::translateProgram(translationUnit);
 
     // add subroutines for each clause
     addProvenanceClauseSubroutines(program);
+
+    return ramProgram;
 }
 
 void ProvenanceTranslator::clearExpiredRelations(

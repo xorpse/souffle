@@ -754,7 +754,7 @@ void AstToRamTranslator::finaliseAstTypes() {
     });
 }
 
-void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {
+Own<ram::Sequence> AstToRamTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {
     // keep track of relevant analyses
     ioType = translationUnit.getAnalysis<ast::analysis::IOTypeAnalysis>();
     typeEnv = &translationUnit.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
@@ -780,7 +780,7 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     removeADTs(translationUnit);
 
     // handle the case of an empty SCC graph
-    if (sccGraph->getNumberOfSCCs() == 0) return;
+    if (sccGraph->getNumberOfSCCs() == 0) return mk<ram::Sequence>();
 
     // create all RAM relations in ramRelations
     const auto& sccOrdering =
@@ -808,14 +808,14 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     }
 
     // done for main prog
-    ramMain = mk<ram::Sequence>(std::move(res));
+    return mk<ram::Sequence>(std::move(res));
 }
 
 Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit& tu) {
     auto ram_start = std::chrono::high_resolution_clock::now();
     program = &tu.getProgram();
 
-    translateProgram(tu);
+    auto ramMain = translateProgram(tu);
 
     SymbolTable& symTab = getSymbolTable();
     ErrorReport& errReport = tu.getErrorReport();
@@ -825,9 +825,6 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
         rels.push_back(std::move(cur.second));
     }
 
-    if (ramMain == nullptr) {
-        ramMain = mk<ram::Sequence>();
-    }
     auto ramProg = mk<ram::Program>(std::move(rels), std::move(ramMain), std::move(ramSubroutines));
 
     // add the translated program to the debug report

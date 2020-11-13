@@ -24,7 +24,7 @@ public:
     ~ProvenanceTranslator() = default;
 
 protected:
-    void translateProgram(const ast::TranslationUnit& translationUnit) override;
+    Own<ram::Sequence> translateProgram(const ast::TranslationUnit& translationUnit) override;
     void addNegation(ast::Clause& clause, const ast::Atom* atom) override;
     void clearExpiredRelations(
             VecOwn<ram::Statement>& stmts, const std::set<const ast::Relation*>& expiredRelations) override;

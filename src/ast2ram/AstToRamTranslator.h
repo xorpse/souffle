@@ -93,7 +93,7 @@ public:
     Own<ram::Expression> translateValue(const ast::Argument* arg, const ValueIndex& index);
     Own<ram::Condition> translateConstraint(const ast::Literal* arg, const ValueIndex& index);
     Own<ram::Expression> translateConstant(const ast::Constant& c);
-    virtual void translateProgram(const ast::TranslationUnit& translationUnit);
+    virtual Own<ram::Sequence> translateProgram(const ast::TranslationUnit& translationUnit);
 
     /** determine the auxiliary for relations */
     size_t getEvaluationArity(const ast::Atom* atom) const;
@@ -106,9 +106,6 @@ public:
 protected:
     /** AST program */
     const ast::Program* program = nullptr;
-
-    /** RAM program */
-    Own<ram::Statement> ramMain;
 
     std::map<std::string, Own<ram::Statement>> ramSubroutines;
     std::map<std::string, Own<ram::Relation>> ramRelations;
