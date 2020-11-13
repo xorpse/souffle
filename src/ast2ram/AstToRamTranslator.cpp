@@ -1012,6 +1012,26 @@ void AstToRamTranslator::createRamRelation(size_t scc) {
     }
 }
 
+void AstToRamTranslator::addProvenanceClauseSubroutines(const ast::Program* program) {
+    visitDepthFirst(*program, [&](const ast::Clause& clause) {
+        std::stringstream relName;
+        relName << clause.getHead()->getQualifiedName();
+
+        // do not add subroutines for info relations or facts
+        if (relName.str().find("@info") != std::string::npos || clause.getBodyLiterals().empty()) {
+            return;
+        }
+
+        std::string subroutineLabel =
+                relName.str() + "_" + std::to_string(getClauseNum(program, &clause)) + "_subproof";
+        ramSubs[subroutineLabel] = makeSubproofSubroutine(clause);
+
+        std::string negationSubroutineLabel =
+                relName.str() + "_" + std::to_string(getClauseNum(program, &clause)) + "_negation_subproof";
+        ramSubs[negationSubroutineLabel] = makeNegationSubproofSubroutine(clause);
+    });
+}
+
 /** translates the given datalog program into an equivalent RAM program  */
 void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {
     // keep track of relevant analyses
@@ -1063,10 +1083,8 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
         createRamRelation(scc);
     }
 
-    // maintain the index of the SCC within the topological order
-    size_t indexOfScc = 0;
-
     // iterate over each SCC according to the topological order
+    size_t indexOfScc = 0;
     for (const auto& scc : sccOrder.order()) {
         // create subroutine for this stratum
         ramSubs["stratum_" + std::to_string(indexOfScc)] = translateSCC(scc, indexOfScc);
@@ -1091,24 +1109,7 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
 
     // add subroutines for each clause
     if (Global::config().has("provenance")) {
-        visitDepthFirst(*program, [&](const ast::Clause& clause) {
-            std::stringstream relName;
-            relName << clause.getHead()->getQualifiedName();
-
-            // do not add subroutines for info relations or facts
-            if (relName.str().find("@info") != std::string::npos || clause.getBodyLiterals().empty()) {
-                return;
-            }
-
-            std::string subroutineLabel =
-                    relName.str() + "_" + std::to_string(getClauseNum(program, &clause)) + "_subproof";
-            ramSubs[subroutineLabel] = makeSubproofSubroutine(clause);
-
-            std::string negationSubroutineLabel = relName.str() + "_" +
-                                                  std::to_string(getClauseNum(program, &clause)) +
-                                                  "_negation_subproof";
-            ramSubs[negationSubroutineLabel] = makeNegationSubproofSubroutine(clause);
-        });
+        addProvenanceClauseSubroutines(program);
     }
 }
 

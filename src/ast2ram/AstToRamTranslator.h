@@ -208,6 +208,9 @@ private:
 
     /** add a statement to load a relation */
     void makeRamLoad(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation);
+
+    /** add provenance clause subroutines */
+    void addProvenanceClauseSubroutines(const ast::Program* program);
 };
 
 }  // namespace souffle::ast2ram
