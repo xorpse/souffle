@@ -341,7 +341,7 @@ void AstToRamTranslator::nameUnnamedVariables(ast::Clause* clause) {
     }
 }
 
-VecOwn<ram::Statement> AstToRamTranslator::translateSCC(size_t scc, size_t idx) {
+Own<ram::Sequence> AstToRamTranslator::translateSCC(size_t scc, size_t idx) {
     // make a new ram statement for the current SCC
     VecOwn<ram::Statement> current;
 
@@ -370,9 +370,10 @@ VecOwn<ram::Statement> AstToRamTranslator::translateSCC(size_t scc, size_t idx) 
         makeRamStore(current, relation);
     }
 
+    // clear expired relations
     clearExpiredRelations(current, relationSchedule->schedule().at(idx).expired());
 
-    return current;
+    return mk<ram::Sequence>(std::move(current));
 }
 
 void AstToRamTranslator::clearExpiredRelations(
@@ -783,8 +784,7 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     size_t indexOfScc = 0;
     for (const auto& scc : sccOrder.order()) {
         // create subroutine for this stratum
-        auto sccStatements = translateSCC(scc, indexOfScc);
-        ramSubs["stratum_" + std::to_string(indexOfScc)] = mk<ram::Sequence>(std::move(sccStatements));
+        ramSubs["stratum_" + std::to_string(indexOfScc)] = translateSCC(scc, indexOfScc);
         indexOfScc++;
     }
 

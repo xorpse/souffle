@@ -176,7 +176,7 @@ private:
     RamDomain getConstantRamRepresentation(const ast::Constant& constant);
 
     /** translate RAM code for a given SCC */
-    VecOwn<ram::Statement> translateSCC(size_t scc, size_t idx);
+    Own<ram::Sequence> translateSCC(size_t scc, size_t idx);
 
     /** create RAM relations for a given SCC */
     void createRamRelation(size_t scc);
