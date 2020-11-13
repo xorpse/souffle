@@ -120,25 +120,9 @@ public:
         return (*it).second.get();
     }
 
-private:
+protected:
     /** AST program */
     const ast::Program* program = nullptr;
-
-    /** Type environment */
-    const ast::analysis::TypeEnvironment* typeEnv = nullptr;
-
-    /** Analyses needed */
-    const ast::analysis::IOTypeAnalysis* ioType = nullptr;
-    const ast::analysis::FunctorAnalysis* functorAnalysis = nullptr;
-    const ast::analysis::RelationScheduleAnalysis* relationSchedule = nullptr;
-    const ast::analysis::SCCGraphAnalysis* sccGraph = nullptr;
-    const ast::analysis::RecursiveClausesAnalysis* recursiveClauses = nullptr;
-    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
-    const ast::analysis::RelationDetailCacheAnalysis* relDetail = nullptr;
-    const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
-
-    /** SIPS metric for reordering */
-    Own<ast::SipsMetric> sips;
 
     /** RAM program */
     Own<ram::Statement> ramMain;
@@ -149,17 +133,39 @@ private:
     /** RAM relations */
     std::map<std::string, Own<ram::Relation>> ramRels;
 
-    /** translate AST to RAM Program */
-    void translateProgram(const ast::TranslationUnit& translationUnit);
-
-    /** replace ADTs with special records */
-    static bool removeADTs(const ast::TranslationUnit& translationUnit);
+    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
 
     /**
      * assigns names to unnamed variables such that enclosing
      * constructs may be cloned without losing the variable-identity
      */
+    virtual void addNegation(ast::Clause& clause, const ast::Atom* atom);
+
     void nameUnnamedVariables(ast::Clause* clause);
+
+    void appendStmt(VecOwn<ram::Statement>& stmtList, Own<ram::Statement> stmt);
+
+    /** translate AST to RAM Program */
+    virtual void translateProgram(const ast::TranslationUnit& translationUnit);
+
+private:
+    /** Type environment */
+    const ast::analysis::TypeEnvironment* typeEnv = nullptr;
+
+    /** Analyses needed */
+    const ast::analysis::IOTypeAnalysis* ioType = nullptr;
+    const ast::analysis::FunctorAnalysis* functorAnalysis = nullptr;
+    const ast::analysis::RelationScheduleAnalysis* relationSchedule = nullptr;
+    const ast::analysis::SCCGraphAnalysis* sccGraph = nullptr;
+    const ast::analysis::RecursiveClausesAnalysis* recursiveClauses = nullptr;
+    const ast::analysis::RelationDetailCacheAnalysis* relDetail = nullptr;
+    const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
+
+    /** SIPS metric for reordering */
+    Own<ast::SipsMetric> sips;
+
+    /** replace ADTs with special records */
+    static bool removeADTs(const ast::TranslationUnit& translationUnit);
 
     /** converts the given relation identifier into a relation name */
     static std::string getRelationName(const ast::QualifiedName& id);
@@ -194,14 +200,6 @@ private:
     /** translate RAM code for recursive relations in a strongly-connected component */
     Own<ram::Statement> translateRecursiveRelation(const std::set<const ast::Relation*>& scc);
 
-    /** translate RAM code for subroutine to get subproofs */
-    Own<ram::Statement> makeSubproofSubroutine(const ast::Clause& clause);
-
-    /** translate RAM code for subroutine to get subproofs for non-existence of a tuple */
-    Own<ram::Statement> makeNegationSubproofSubroutine(const ast::Clause& clause);
-
-    static void addNegation(ast::Clause& clause, const ast::Atom* atom);
-
     /** add a statement to store a relation */
     void makeRamClear(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation);
 
@@ -210,9 +208,6 @@ private:
 
     /** add a statement to load a relation */
     void makeRamLoad(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation);
-
-    /** add provenance clause subroutines */
-    void addProvenanceClauseSubroutines(const ast::Program* program);
 };
 
 }  // namespace souffle::ast2ram
