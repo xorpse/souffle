@@ -786,6 +786,48 @@ Own<ram::Statement> AstToRamTranslator::makeNegationSubproofSubroutine(const ast
         }
     };
 
+    auto makeRamAtomExistenceCheck = [&](ast::Atom* atom) {
+        auto relName = getConcreteRelationName(atom);
+        size_t auxiliaryArity = auxArityAnalysis->getArity(atom);
+
+        // translate variables to subroutine arguments
+        VariablesToArguments varsToArgs(uniqueVariables);
+        atom->apply(varsToArgs);
+
+        // construct a query
+        VecOwn<ram::Expression> query;
+        auto atomArgs = atom->getArguments();
+
+        // add each value (subroutine argument) to the search query
+        for (size_t i = 0; i < atom->getArity() - auxiliaryArity; i++) {
+            auto arg = atomArgs[i];
+            query.push_back(translateValue(arg, ValueIndex()));
+        }
+
+        // fill up query with nullptrs for the provenance columns
+        for (size_t i = 0; i < auxiliaryArity; i++) {
+            query.push_back(mk<ram::UndefValue>());
+        }
+
+        // ensure the length of query tuple is correct
+        assert(query.size() == atom->getArity() && "wrong query tuple size");
+
+        // create existence checks to check if the tuple exists or not
+        return mk<ram::ExistenceCheck>(relName, std::move(query));
+    };
+
+    auto makeRamReturnTrue = [&]() {
+        VecOwn<ram::Expression> returnTrue;
+        returnTrue.push_back(mk<ram::SignedConstant>(1));
+        return mk<ram::SubroutineReturn>(std::move(returnTrue));
+    };
+
+    auto makeRamReturnFalse = [&]() {
+        VecOwn<ram::Expression> returnFalse;
+        returnFalse.push_back(mk<ram::SignedConstant>(0));
+        return mk<ram::SubroutineReturn>(std::move(returnFalse));
+    };
+
     // the structure of this subroutine is a sequence where each nested statement is a search in each
     // relation
     VecOwn<ram::Statement> searchSequence;
@@ -797,93 +839,24 @@ Own<ram::Statement> AstToRamTranslator::makeNegationSubproofSubroutine(const ast
     size_t litNumber = 0;
     for (const auto& lit : newClause->getBodyLiterals()) {
         if (auto atom = dynamic_cast<ast::Atom*>(lit)) {
-            size_t auxiliaryArity = auxArityAnalysis->getArity(atom);
-
-            auto relName = getConcreteRelationName(atom);
-            // construct a query
-            VecOwn<ram::Expression> query;
-
-            // translate variables to subroutine arguments
-            VariablesToArguments varsToArgs(uniqueVariables);
-            atom->apply(varsToArgs);
-
-            auto atomArgs = atom->getArguments();
-            // add each value (subroutine argument) to the search query
-            for (size_t i = 0; i < atom->getArity() - auxiliaryArity; i++) {
-                auto arg = atomArgs[i];
-                query.push_back(translateValue(arg, ValueIndex()));
-            }
-
-            // fill up query with nullptrs for the provenance columns
-            for (size_t i = 0; i < auxiliaryArity; i++) {
-                query.push_back(mk<ram::UndefValue>());
-            }
-
-            // ensure the length of query tuple is correct
-            assert(query.size() == atom->getArity() && "wrong query tuple size");
-
-            // create existence checks to check if the tuple exists or not
-            auto existenceCheck = mk<ram::ExistenceCheck>(relName, std::move(query));
+            auto existenceCheck = makeRamAtomExistenceCheck(atom);
             auto negativeExistenceCheck = mk<ram::Negation>(souffle::clone(existenceCheck));
 
-            // return true if the tuple exists
-            VecOwn<ram::Expression> returnTrue;
-            returnTrue.push_back(mk<ram::SignedConstant>(1));
-
-            // return false if the tuple exists
-            VecOwn<ram::Expression> returnFalse;
-            returnFalse.push_back(mk<ram::SignedConstant>(0));
-
             // create a ram::Query to return true/false
-            appendStmt(searchSequence, mk<ram::Query>(mk<ram::Filter>(std::move(existenceCheck),
-                                               mk<ram::SubroutineReturn>(std::move(returnTrue)))));
-            appendStmt(searchSequence, mk<ram::Query>(mk<ram::Filter>(std::move(negativeExistenceCheck),
-                                               mk<ram::SubroutineReturn>(std::move(returnFalse)))));
+            appendStmt(searchSequence,
+                    mk<ram::Query>(mk<ram::Filter>(std::move(existenceCheck), makeRamReturnTrue())));
+            appendStmt(searchSequence,
+                    mk<ram::Query>(mk<ram::Filter>(std::move(negativeExistenceCheck), makeRamReturnFalse())));
         } else if (auto neg = dynamic_cast<ast::Negation*>(lit)) {
             auto atom = neg->getAtom();
-
-            size_t auxiliaryArity = auxArityAnalysis->getArity(atom);
-            auto relName = getConcreteRelationName(atom);
-            // construct a query
-            VecOwn<ram::Expression> query;
-
-            // translate variables to subroutine arguments
-            VariablesToArguments varsToArgs(uniqueVariables);
-            atom->apply(varsToArgs);
-
-            auto atomArgs = atom->getArguments();
-            // add each value (subroutine argument) to the search query
-            for (size_t i = 0; i < atom->getArity() - auxiliaryArity; i++) {
-                auto arg = atomArgs[i];
-                query.push_back(translateValue(arg, ValueIndex()));
-            }
-
-            // fill up query with nullptrs for the provenance columns
-            for (size_t i = 0; i < auxiliaryArity; i++) {
-                query.push_back(mk<ram::UndefValue>());
-            }
-
-            // ensure the length of query tuple is correct
-            assert(query.size() == atom->getArity() && "wrong query tuple size");
-
-            // create existence checks to check if the tuple exists or not
-            auto existenceCheck = mk<ram::ExistenceCheck>(relName, std::move(query));
+            auto existenceCheck = makeRamAtomExistenceCheck(atom);
             auto negativeExistenceCheck = mk<ram::Negation>(souffle::clone(existenceCheck));
 
-            // return true if the tuple exists
-            VecOwn<ram::Expression> returnTrue;
-            returnTrue.push_back(mk<ram::SignedConstant>(1));
-
-            // return false if the tuple exists
-            VecOwn<ram::Expression> returnFalse;
-            returnFalse.push_back(mk<ram::SignedConstant>(0));
-
             // create a ram::Query to return true/false
-            appendStmt(searchSequence, mk<ram::Query>(mk<ram::Filter>(std::move(existenceCheck),
-                                               mk<ram::SubroutineReturn>(std::move(returnFalse)))));
-            appendStmt(searchSequence, mk<ram::Query>(mk<ram::Filter>(std::move(negativeExistenceCheck),
-                                               mk<ram::SubroutineReturn>(std::move(returnTrue)))));
-
+            appendStmt(searchSequence,
+                    mk<ram::Query>(mk<ram::Filter>(std::move(existenceCheck), makeRamReturnFalse())));
+            appendStmt(searchSequence,
+                    mk<ram::Query>(mk<ram::Filter>(std::move(negativeExistenceCheck), makeRamReturnTrue())));
         } else if (auto con = dynamic_cast<ast::Constraint*>(lit)) {
             VariablesToArguments varsToArgs(uniqueVariables);
             con->apply(varsToArgs);
@@ -892,18 +865,10 @@ Own<ram::Statement> AstToRamTranslator::makeNegationSubproofSubroutine(const ast
             auto condition = translateConstraint(con, ValueIndex());
             auto negativeCondition = mk<ram::Negation>(souffle::clone(condition));
 
-            // create a return true value
-            VecOwn<ram::Expression> returnTrue;
-            returnTrue.push_back(mk<ram::SignedConstant>(1));
-
-            // create a return false value
-            VecOwn<ram::Expression> returnFalse;
-            returnFalse.push_back(mk<ram::SignedConstant>(0));
-
-            appendStmt(searchSequence, mk<ram::Query>(mk<ram::Filter>(std::move(condition),
-                                               mk<ram::SubroutineReturn>(std::move(returnTrue)))));
-            appendStmt(searchSequence, mk<ram::Query>(mk<ram::Filter>(std::move(negativeCondition),
-                                               mk<ram::SubroutineReturn>(std::move(returnFalse)))));
+            appendStmt(searchSequence,
+                    mk<ram::Query>(mk<ram::Filter>(std::move(condition), makeRamReturnTrue())));
+            appendStmt(searchSequence,
+                    mk<ram::Query>(mk<ram::Filter>(std::move(negativeCondition), makeRamReturnFalse())));
         }
 
         litNumber++;
