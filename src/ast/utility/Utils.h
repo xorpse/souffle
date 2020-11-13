@@ -40,6 +40,7 @@ class TranslationUnit;
 class Type;
 class Variable;
 class RecordInit;
+
 namespace analysis {
 class TypeAnalysis;
 }

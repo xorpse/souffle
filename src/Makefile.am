@@ -205,6 +205,8 @@ souffle_sources = \
         ast2ram/ProvenanceClauseTranslator.h               \
         ast2ram/ProvenanceTranslator.cpp                   \
         ast2ram/ProvenanceTranslator.h                     \
+        ast2ram/utility/Utils.cpp                          \
+        ast2ram/utility/Utils.h                            \
         ast2ram/ValueIndex.cpp                             \
         ast2ram/ValueIndex.h                               \
         ast2ram/ValueTranslator.cpp                        \

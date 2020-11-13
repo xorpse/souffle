@@ -95,13 +95,6 @@ public:
     /** translate an AST argument to a RAM value */
     Own<ram::Expression> translateValue(const ast::Argument* arg, const ValueIndex& index);
 
-    /** Get the corresponding concretised RAM relation name for the atom */
-    static std::string getConcreteRelationName(const ast::Atom* atom);
-
-    /** Get the corresponding concretised RAM relation name for the relation */
-    static std::string getConcreteRelationName(
-            const ast::Relation* rel, const std::string relationNamePrefix = "");
-
     /** determine the auxiliary for relations */
     size_t getEvaluationArity(const ast::Atom* atom) const;
 
@@ -169,15 +162,6 @@ private:
 
     /** replace ADTs with special records */
     static bool removeADTs(const ast::TranslationUnit& translationUnit);
-
-    /** converts the given relation identifier into a relation name */
-    static std::string getRelationName(const ast::QualifiedName& id);
-
-    /** Get the corresponding RAM delta relation name for the relation */
-    static std::string getDeltaRelationName(const ast::Relation* rel);
-
-    /** Get the corresponding RAM 'new' relation name for the relation */
-    static std::string getNewRelationName(const ast::Relation* rel);
 
     // TODO (b-scholz): revisit / refactor so that only one directive is translated
     std::vector<std::map<std::string, std::string>> getInputDirectives(const ast::Relation* rel);

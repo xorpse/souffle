@@ -23,6 +23,7 @@
 #include "ast/utility/Visitor.h"
 #include "ast2ram/ProvenanceClauseTranslator.h"
 #include "ast2ram/ValueIndex.h"
+#include "ast2ram/utility/Utils.h"
 #include "ram/ExistenceCheck.h"
 #include "ram/Filter.h"
 #include "ram/Negation.h"

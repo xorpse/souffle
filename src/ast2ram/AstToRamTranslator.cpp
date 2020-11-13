@@ -60,6 +60,7 @@
 #include "ast2ram/Location.h"
 #include "ast2ram/ValueIndex.h"
 #include "ast2ram/ValueTranslator.h"
+#include "ast2ram/utility/Utils.h"
 #include "ram/Call.h"
 #include "ram/Clear.h"
 #include "ram/Condition.h"
@@ -194,23 +195,6 @@ std::vector<std::map<std::string, std::string>> AstToRamTranslator::getOutputDir
     }
 
     return outputDirectives;
-}
-
-std::string AstToRamTranslator::getConcreteRelationName(const ast::Atom* atom) {
-    return getRelationName(atom->getQualifiedName());
-}
-
-std::string AstToRamTranslator::getConcreteRelationName(
-        const ast::Relation* rel, const std::string relationNamePrefix) {
-    return relationNamePrefix + getRelationName(rel->getQualifiedName());
-}
-
-std::string AstToRamTranslator::getDeltaRelationName(const ast::Relation* rel) {
-    return getConcreteRelationName(rel, "@delta_");
-}
-
-std::string AstToRamTranslator::getNewRelationName(const ast::Relation* rel) {
-    return getConcreteRelationName(rel, "@new_");
 }
 
 Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg, const ValueIndex& index) {
@@ -355,11 +339,6 @@ void AstToRamTranslator::nameUnnamedVariables(ast::Clause* clause) {
     for (auto& atom : ast::getBodyLiterals<ast::Atom>(*clause)) {
         atom->apply(init);
     }
-}
-
-/** converts the given relation identifier into a relation name */
-std::string AstToRamTranslator::getRelationName(const ast::QualifiedName& id) {
-    return toString(join(id.getQualifiers(), "."));
 }
 
 VecOwn<ram::Statement> AstToRamTranslator::translateSCC(size_t scc, size_t idx) {
