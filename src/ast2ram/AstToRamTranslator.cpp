@@ -602,22 +602,23 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
 
     /* construct fixpoint loop  */
     VecOwn<ram::Statement> res;
-    if (preamble.size() > 0) {
+    if (!preamble.empty()) {
         appendStmt(res, mk<ram::Sequence>(std::move(preamble)));
     }
-    if (!loop->getStatements().empty() && exitCond && updateTable.size() > 0) {
-        appendStmt(res,
-                mk<ram::Loop>(mk<ram::Sequence>(std::move(loop), mk<ram::Exit>(std::move(exitCond)),
-                        mk<ram::Sequence>(std::move(exitStmts)), mk<ram::Sequence>(std::move(updateTable)))));
+    if (!loop->getStatements().empty() && exitCond && !updateTable.empty()) {
+        auto ramExitCondition = mk<ram::Exit>(std::move(exitCond));
+        auto ramExitSequence = mk<ram::Sequence>(std::move(exitStmts));
+        auto ramUpdateSequence = mk<ram::Sequence>(std::move(updateTable));
+        auto ramLoopSequence = mk<ram::Loop>(mk<ram::Sequence>(std::move(loop), std::move(ramExitCondition),
+                std::move(ramExitSequence), std::move(ramUpdateSequence)));
+        appendStmt(res, std::move(ramLoopSequence));
     }
-    if (postamble.size() > 0) {
+    if (!postamble.empty()) {
         appendStmt(res, mk<ram::Sequence>(std::move(postamble)));
     }
-    if (res.size() > 0) {
-        return mk<ram::Sequence>(std::move(res));
-    }
 
-    fatal("Not Implemented");
+    assert(!res.empty() && "not implemented");
+    return mk<ram::Sequence>(std::move(res));
 }
 
 /** make a subroutine to search for subproofs */
@@ -724,11 +725,10 @@ Own<ram::Statement> AstToRamTranslator::makeNegationSubproofSubroutine(const ast
         clauseReplacedAggregates->addToBody(souffle::clone(bodyLit));
     }
 
-    int aggNumber = 0;
     struct AggregatesToVariables : public ast::NodeMapper {
-        int& aggNumber;
+        mutable int aggNumber{0};
 
-        AggregatesToVariables(int& aggNumber) : aggNumber(aggNumber) {}
+        AggregatesToVariables() = default;
 
         Own<ast::Node> operator()(Own<ast::Node> node) const override {
             if (dynamic_cast<ast::Aggregator*>(node.get()) != nullptr) {
@@ -740,7 +740,7 @@ Own<ram::Statement> AstToRamTranslator::makeNegationSubproofSubroutine(const ast
         }
     };
 
-    AggregatesToVariables aggToVar(aggNumber);
+    AggregatesToVariables aggToVar;
     clauseReplacedAggregates->apply(aggToVar);
 
     // build a vector of unique variables
