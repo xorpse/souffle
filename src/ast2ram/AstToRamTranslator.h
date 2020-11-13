@@ -148,6 +148,9 @@ protected:
     /** translate AST to RAM Program */
     virtual void translateProgram(const ast::TranslationUnit& translationUnit);
 
+    virtual void clearExpiredRelations(
+            VecOwn<ram::Statement>& stmts, const std::set<const ast::Relation*>& expiredRelations);
+
 private:
     /** Type environment */
     const ast::analysis::TypeEnvironment* typeEnv = nullptr;

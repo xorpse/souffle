@@ -391,14 +391,16 @@ VecOwn<ram::Statement> AstToRamTranslator::translateSCC(size_t scc, size_t idx) 
         makeRamStore(current, relation);
     }
 
-    if (!Global::config().has("provenance")) {
-        const auto& internExps = relationSchedule->schedule().at(idx).expired();
-        for (const auto& relation : internExps) {
-            makeRamClear(current, relation);
-        }
-    }
+    clearExpiredRelations(current, relationSchedule->schedule().at(idx).expired());
 
     return current;
+}
+
+void AstToRamTranslator::clearExpiredRelations(
+        VecOwn<ram::Statement>& stmts, const std::set<const ast::Relation*>& expiredRelations) {
+    for (const auto& relation : expiredRelations) {
+        makeRamClear(stmts, relation);
+    }
 }
 
 void AstToRamTranslator::addNegation(ast::Clause& clause, const ast::Atom* atom) {

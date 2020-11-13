@@ -44,6 +44,12 @@ void ProvenanceTranslator::translateProgram(const ast::TranslationUnit& translat
     addProvenanceClauseSubroutines(program);
 }
 
+void ProvenanceTranslator::clearExpiredRelations(
+        VecOwn<ram::Statement>& /* stmts */, const std::set<const ast::Relation*>& /* expiredRelations */) {
+    // relations should be preserved if provenance is enabled
+    return;
+}
+
 void ProvenanceTranslator::addNegation(ast::Clause& clause, const ast::Atom* atom) {
     clause.addToBody(mk<ast::ProvenanceNegation>(souffle::clone(atom)));
 }

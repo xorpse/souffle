@@ -26,6 +26,9 @@ public:
 protected:
     void translateProgram(const ast::TranslationUnit& translationUnit) override;
     void addNegation(ast::Clause& clause, const ast::Atom* atom) override;
+    void clearExpiredRelations(
+            VecOwn<ram::Statement>& stmts, const std::set<const ast::Relation*>& expiredRelations) override;
+
 private:
     /** translate RAM code for subroutine to get subproofs */
     Own<ram::Statement> makeSubproofSubroutine(const ast::Clause& clause);
