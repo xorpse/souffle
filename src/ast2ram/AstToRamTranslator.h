@@ -93,6 +93,7 @@ public:
     Own<ram::Expression> translateValue(const ast::Argument* arg, const ValueIndex& index);
     Own<ram::Condition> translateConstraint(const ast::Literal* arg, const ValueIndex& index);
     Own<ram::Expression> translateConstant(const ast::Constant& c);
+    virtual void translateProgram(const ast::TranslationUnit& translationUnit);
 
     /** determine the auxiliary for relations */
     size_t getEvaluationArity(const ast::Atom* atom) const;
@@ -123,9 +124,6 @@ protected:
     const ast::analysis::RecursiveClausesAnalysis* recursiveClauses = nullptr;
     const ast::analysis::RelationDetailCacheAnalysis* relDetail = nullptr;
     const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
-
-    /** Translate AST to RAM Program */
-    virtual void translateProgram(const ast::TranslationUnit& translationUnit);
 
     void nameUnnamedVariables(ast::Clause* clause);
     void appendStmt(VecOwn<ram::Statement>& stmtList, Own<ram::Statement> stmt);
@@ -167,6 +165,10 @@ private:
 
     /** add a statement to load a relation */
     void makeRamLoad(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation);
+
+    /** finalise the types of polymorphic objects */
+    // TODO (azreika): should be removed once the translator is refactored to avoid cloning
+    void finaliseAstTypes();
 };
 
 }  // namespace souffle::ast2ram

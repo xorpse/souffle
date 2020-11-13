@@ -735,22 +735,7 @@ const ram::Relation* AstToRamTranslator::lookupRelation(const std::string& name)
     return (*it).second.get();
 }
 
-/** translates the given datalog program into an equivalent RAM program  */
-void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {
-    // keep track of relevant analyses
-    ioType = translationUnit.getAnalysis<ast::analysis::IOTypeAnalysis>();
-    typeEnv = &translationUnit.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
-    const auto& sccOrder = *translationUnit.getAnalysis<ast::analysis::TopologicallySortedSCCGraphAnalysis>();
-    relationSchedule = translationUnit.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
-    sccGraph = translationUnit.getAnalysis<ast::analysis::SCCGraphAnalysis>();
-    recursiveClauses = translationUnit.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
-    auxArityAnalysis = translationUnit.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
-    functorAnalysis = translationUnit.getAnalysis<ast::analysis::FunctorAnalysis>();
-    relDetail = translationUnit.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
-    polyAnalysis = translationUnit.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
-
-    // set up the final fixed types
-    // TODO (azreika): should be removed once the translator is refactored to avoid cloning
+void AstToRamTranslator::finaliseAstTypes() {
     visitDepthFirst(*program, [&](const ast::NumericConstant& nc) {
         const_cast<ast::NumericConstant&>(nc).setFinalType(polyAnalysis->getInferredType(&nc));
     });
@@ -767,6 +752,22 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     visitDepthFirst(*program, [&](const ast::UserDefinedFunctor& udf) {
         const_cast<ast::UserDefinedFunctor&>(udf).setFinalReturnType(functorAnalysis->getReturnType(&udf));
     });
+}
+
+void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {
+    // keep track of relevant analyses
+    ioType = translationUnit.getAnalysis<ast::analysis::IOTypeAnalysis>();
+    typeEnv = &translationUnit.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
+    relationSchedule = translationUnit.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
+    sccGraph = translationUnit.getAnalysis<ast::analysis::SCCGraphAnalysis>();
+    recursiveClauses = translationUnit.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
+    auxArityAnalysis = translationUnit.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
+    functorAnalysis = translationUnit.getAnalysis<ast::analysis::FunctorAnalysis>();
+    relDetail = translationUnit.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
+    polyAnalysis = translationUnit.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
+
+    // finalise polymorphic types in the AST
+    finaliseAstTypes();
 
     // determine the sips to use
     std::string sipsChosen = "all-bound";
@@ -781,23 +782,22 @@ void AstToRamTranslator::translateProgram(const ast::TranslationUnit& translatio
     // handle the case of an empty SCC graph
     if (sccGraph->getNumberOfSCCs() == 0) return;
 
-    // create all Ram relations in ramRelations
-    for (const auto& scc : sccOrder.order()) {
+    // create all RAM relations in ramRelations
+    const auto& sccOrdering =
+            translationUnit.getAnalysis<ast::analysis::TopologicallySortedSCCGraphAnalysis>()->order();
+    for (const auto& scc : sccOrdering) {
         createRamRelation(scc);
     }
 
-    // iterate over each SCC according to the topological order
-    size_t indexOfScc = 0;
-    for (const auto& scc : sccOrder.order()) {
-        // create subroutine for this stratum
-        ramSubroutines["stratum_" + std::to_string(indexOfScc)] = translateSCC(scc, indexOfScc);
-        indexOfScc++;
+    // create subroutine for each SCC according to topological order
+    for (size_t i = 0; i < sccOrdering.size(); i++) {
+        ramSubroutines["stratum_" + toString(i)] = translateSCC(sccOrdering.at(i), i);
     }
 
     // invoke all strata
     VecOwn<ram::Statement> res;
-    for (size_t i = 0; i < indexOfScc; i++) {
-        appendStmt(res, mk<ram::Call>("stratum_" + std::to_string(i)));
+    for (size_t i = 0; i < sccOrdering.size(); i++) {
+        appendStmt(res, mk<ram::Call>("stratum_" + toString(i)));
     }
 
     // add main timer if profiling
