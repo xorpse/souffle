@@ -248,7 +248,7 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
     // I) extract equations
     std::vector<Equation> equations;
     visitDepthFirst(clause, [&](const BinaryConstraint& constraint) {
-        if (isEqConstraint(constraint.getOperator())) {
+        if (isEqConstraint(constraint.getBaseOperator())) {
             equations.push_back(Equation(constraint.getLHS(), constraint.getRHS()));
         }
     });
@@ -365,7 +365,7 @@ Own<Clause> ResolveAliasesTransformer::removeTrivialEquality(const Clause& claus
     for (Literal* literal : clause.getBodyLiterals()) {
         if (auto* constraint = dynamic_cast<BinaryConstraint*>(literal)) {
             // TODO: don't filter out `FEQ` constraints, since `x = x` can fail when `x` is a NaN
-            if (isEqConstraint(constraint->getOperator())) {
+            if (isEqConstraint(constraint->getBaseOperator())) {
                 if (*constraint->getLHS() == *constraint->getRHS()) {
                     continue;  // skip this one
                 }

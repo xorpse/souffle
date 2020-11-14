@@ -82,6 +82,8 @@ souffle_sources = \
         ast/analysis/Ground.h                              \
         ast/analysis/IOType.cpp                            \
         ast/analysis/IOType.h                              \
+        ast/analysis/PolymorphicObjects.cpp                \
+        ast/analysis/PolymorphicObjects.h                  \
         ast/analysis/PrecedenceGraph.cpp                   \
         ast/analysis/PrecedenceGraph.h                     \
         ast/analysis/ProfileUse.cpp                        \
@@ -106,8 +108,6 @@ souffle_sources = \
         ast/analysis/TypeSystem.h                          \
         ast/analysis/TypeEnvironment.cpp                   \
         ast/analysis/TypeEnvironment.h                     \
-        ast/transform/ADTtoRecords.cpp                     \
-        ast/transform/ADTtoRecords.h                       \
         ast/transform/AddNullariesToAtomlessAggregates.cpp \
         ast/transform/AddNullariesToAtomlessAggregates.h   \
         ast/transform/ComponentChecker.cpp                 \
@@ -148,8 +148,6 @@ souffle_sources = \
         ast/transform/PartitionBodyLiterals.cpp            \
         ast/transform/PartitionBodyLiterals.h              \
         ast/transform/Pipeline.h                           \
-        ast/transform/PolymorphicObjects.cpp               \
-        ast/transform/PolymorphicObjects.h                 \
         ast/transform/PragmaChecker.cpp                    \
         ast/transform/PragmaChecker.h                      \
         ast/transform/Provenance.cpp                       \
@@ -166,8 +164,6 @@ souffle_sources = \
         ast/transform/RemoveRedundantSums.h                \
         ast/transform/RemoveRelationCopies.cpp             \
         ast/transform/RemoveRelationCopies.h               \
-        ast/transform/RemoveTypecasts.cpp                  \
-        ast/transform/RemoveTypecasts.h                    \
         ast/transform/ReorderLiterals.cpp                  \
         ast/transform/ReorderLiterals.h                    \
         ast/transform/ReplaceSingletonVariables.cpp        \

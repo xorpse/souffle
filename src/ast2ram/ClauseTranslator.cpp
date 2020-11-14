@@ -23,6 +23,7 @@
 #include "ast/RecordInit.h"
 #include "ast/UnnamedVariable.h"
 #include "ast/analysis/Functor.h"
+#include "ast/analysis/PolymorphicObjects.h"
 #include "ast/transform/ReorderLiterals.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
@@ -186,8 +187,8 @@ Own<ram::Statement> ClauseTranslator::translateClause(
             auto expr = translator.translateValue(agg->getTargetExpression(), *valueIndex);
 
             // add Ram-Aggregation layer
-            op = mk<ram::Aggregate>(std::move(op), agg->getOperator(), translator.translateRelation(atom),
-                    expr ? std::move(expr) : mk<ram::UndefValue>(),
+            op = mk<ram::Aggregate>(std::move(op), agg->getFinalType().value(),
+                    translator.translateRelation(atom), expr ? std::move(expr) : mk<ram::UndefValue>(),
                     aggCond ? std::move(aggCond) : mk<ram::True>(), level);
         } else if (const auto* func = dynamic_cast<const ast::IntrinsicFunctor*>(cur)) {
             VecOwn<ram::Expression> args;
@@ -196,7 +197,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
             }
 
             auto func_op = [&]() -> ram::NestedIntrinsicOp {
-                switch (func->getFunctionOp().value()) {
+                switch (func->getFinalOpType().value()) {
                     case FunctorOp::RANGE: return ram::NestedIntrinsicOp::RANGE;
                     case FunctorOp::URANGE: return ram::NestedIntrinsicOp::URANGE;
                     case FunctorOp::FRANGE: return ram::NestedIntrinsicOp::FRANGE;
@@ -329,8 +330,9 @@ Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
     for (auto* a : args) {
         if (auto* c = dynamic_cast<const ast::Constant*>(a)) {
             auto* const c_num = dynamic_cast<const ast::NumericConstant*>(c);
-            assert((!c_num || c_num->getType()) && "numeric constant wasn't bound to a type");
-            op = mkFilter(c_num && *c_num->getType() == ast::NumericConstant::Type::Float,
+            assert((!c_num || c_num->getFinalType().has_value()) &&
+                    "numeric constant wasn't bound to a type");
+            op = mkFilter(c_num && c_num->getFinalType().value() == ast::NumericConstant::Type::Float,
                     translator.translateConstant(*c));
         } else if (auto* func = dynamic_cast<const ast::Functor*>(a)) {
             if (constrainByFunctors) {
@@ -476,7 +478,7 @@ void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
 
     // add multi-result functor introductions
     visitDepthFirst(clause, [&](const ast::BinaryConstraint& bc) {
-        if (bc.getOperator() != BinaryConstraintOp::EQ && bc.getOperator() != BinaryConstraintOp::FEQ) return;
+        if (!isEqConstraint(bc.getBaseOperator())) return;
         const auto* lhs = dynamic_cast<const ast::Variable*>(bc.getLHS());
         const auto* rhs = dynamic_cast<const ast::IntrinsicFunctor*>(bc.getRHS());
         if (lhs == nullptr || rhs == nullptr) return;

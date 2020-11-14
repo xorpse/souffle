@@ -27,6 +27,7 @@
 #include <cassert>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -59,17 +60,21 @@ public:
     }
 
     /** Return binary operator */
-    BinaryConstraintOp getOperator() const {
+    BinaryConstraintOp getBaseOperator() const {
         return operation;
     }
 
     /** Set binary operator */
-    void setOperator(BinaryConstraintOp op) {
+    void setBaseOperator(BinaryConstraintOp op) {
         operation = op;
     }
 
     BinaryConstraint* clone() const override {
-        return new BinaryConstraint(operation, souffle::clone(lhs), souffle::clone(rhs), getSrcLoc());
+        auto* copy = new BinaryConstraint(operation, souffle::clone(lhs), souffle::clone(rhs), getSrcLoc());
+        if (finalTranslatorType.has_value()) {
+            copy->setFinalType(finalTranslatorType.value());
+        }
+        return copy;
     }
 
     void apply(const NodeMapper& map) override {
@@ -79,6 +84,14 @@ public:
 
     std::vector<const Node*> getChildNodes() const override {
         return {lhs.get(), rhs.get()};
+    }
+
+    void setFinalType(BinaryConstraintOp newType) {
+        finalTranslatorType = newType;
+    }
+
+    std::optional<BinaryConstraintOp> getFinalType() const {
+        return finalTranslatorType;
     }
 
 protected:
@@ -96,7 +109,7 @@ protected:
         return operation == other.operation && equal_ptr(lhs, other.lhs) && equal_ptr(rhs, other.rhs);
     }
 
-    /** Constraint operator */
+    /** Constraint (base) operator */
     BinaryConstraintOp operation;
 
     /** Left-hand side argument of binary constraint */
@@ -104,6 +117,9 @@ protected:
 
     /** Right-hand side argument of binary constraint */
     Own<Argument> rhs;
+
+    // TODO (azreika): remove after refactoring translator
+    std::optional<BinaryConstraintOp> finalTranslatorType;
 };
 
 }  // namespace souffle::ast

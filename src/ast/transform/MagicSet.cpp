@@ -32,6 +32,7 @@
 #include "ast/TranslationUnit.h"
 #include "ast/UnnamedVariable.h"
 #include "ast/analysis/IOType.h"
+#include "ast/analysis/PolymorphicObjects.h"
 #include "ast/analysis/PrecedenceGraph.h"
 #include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/SCCGraph.h"
@@ -50,7 +51,7 @@
 #include <utility>
 
 namespace souffle::ast::transform {
-typedef MagicSetTransformer::NormaliseDatabaseTransformer NormaliseDatabaseTransformer;
+using NormaliseDatabaseTransformer = MagicSetTransformer::NormaliseDatabaseTransformer;
 using LabelDatabaseTransformer = MagicSetTransformer::LabelDatabaseTransformer;
 using AdornDatabaseTransformer = MagicSetTransformer::AdornDatabaseTransformer;
 using MagicSetCoreTransformer = MagicSetTransformer::MagicSetCoreTransformer;
@@ -89,6 +90,7 @@ std::set<QualifiedName> MagicSetTransformer::getTriviallyIgnoredRelations(const 
 std::set<QualifiedName> MagicSetTransformer::getWeaklyIgnoredRelations(const TranslationUnit& tu) {
     const auto& program = tu.getProgram();
     const auto& precedenceGraph = tu.getAnalysis<analysis::PrecedenceGraphAnalysis>()->graph();
+    const auto& polyAnalysis = *tu.getAnalysis<analysis::PolymorphicObjectsAnalysis>();
     std::set<QualifiedName> weaklyIgnoredRelations;
 
     // - Any relations not specified to magic-set
@@ -136,7 +138,7 @@ std::set<QualifiedName> MagicSetTransformer::getWeaklyIgnoredRelations(const Tra
                     BinaryConstraintOp::FGE, BinaryConstraintOp::FLT, BinaryConstraintOp::FGT});
     for (const auto* clause : program.getClauses()) {
         visitDepthFirst(*clause, [&](const BinaryConstraint& bc) {
-            if (contains(floatOps, bc.getOperator())) {
+            if (contains(floatOps, polyAnalysis.getOverloadedOperator(&bc))) {
                 weaklyIgnoredRelations.insert(clause->getHead()->getQualifiedName());
             }
         });
@@ -147,7 +149,7 @@ std::set<QualifiedName> MagicSetTransformer::getWeaklyIgnoredRelations(const Tra
             {FunctorOp::MOD, FunctorOp::FDIV, FunctorOp::DIV, FunctorOp::UMOD});
     for (const auto* clause : program.getClauses()) {
         visitDepthFirst(*clause, [&](const IntrinsicFunctor& functor) {
-            if (contains(orderDepFuncOps, functor.getFunctionOp().value())) {
+            if (contains(orderDepFuncOps, polyAnalysis.getOverloadedFunctionOp(&functor))) {
                 weaklyIgnoredRelations.insert(clause->getHead()->getQualifiedName());
             }
         });
@@ -537,10 +539,10 @@ bool NormaliseDatabaseTransformer::normaliseArguments(TranslationUnit& translati
 
                 // Update the node to reflect normalised aggregator
                 node = aggr->getTargetExpression() != nullptr
-                               ? mk<Aggregator>(aggr->getOperator(),
+                               ? mk<Aggregator>(aggr->getBaseOperator(),
                                          souffle::clone(aggr->getTargetExpression()),
                                          std::move(newBodyLiterals))
-                               : mk<Aggregator>(aggr->getOperator(), nullptr, std::move(newBodyLiterals));
+                               : mk<Aggregator>(aggr->getBaseOperator(), nullptr, std::move(newBodyLiterals));
             } else {
                 // Otherwise, just normalise children as usual.
                 node->apply(*this);
@@ -582,7 +584,7 @@ bool NormaliseDatabaseTransformer::normaliseArguments(TranslationUnit& translati
         // Apply to each body literal that isn't already a `<var> = <arg>` constraint
         for (Literal* lit : clause->getBodyLiterals()) {
             if (auto* bc = dynamic_cast<BinaryConstraint*>(lit)) {
-                if (bc->getOperator() == BinaryConstraintOp::EQ && isA<ast::Variable>(bc->getLHS())) {
+                if (isEqConstraint(bc->getBaseOperator()) && isA<ast::Variable>(bc->getLHS())) {
                     continue;
                 }
             }
@@ -1081,7 +1083,7 @@ void MagicSetCoreTransformer::addRelevantVariables(
     while (!fixpointReached) {
         fixpointReached = true;
         for (const auto* eqConstraint : eqConstraints) {
-            assert(eqConstraint->getOperator() == BinaryConstraintOp::EQ && "expected only eq constraints");
+            assert(isEqConstraint(eqConstraint->getBaseOperator()) && "expected only eq constraints");
             fixpointReached &= addLocallyRelevantVariables(eqConstraint->getLHS(), eqConstraint->getRHS());
             fixpointReached &= addLocallyRelevantVariables(eqConstraint->getRHS(), eqConstraint->getLHS());
         }
@@ -1127,7 +1129,7 @@ std::vector<const BinaryConstraint*> MagicSetCoreTransformer::getBindingEquality
     std::vector<const BinaryConstraint*> equalityConstraints;
     for (const auto* lit : clause->getBodyLiterals()) {
         const auto* bc = dynamic_cast<const BinaryConstraint*>(lit);
-        if (bc == nullptr || bc->getOperator() != BinaryConstraintOp::EQ) continue;
+        if (bc == nullptr || !isEqConstraint(bc->getBaseOperator())) continue;
         if (isA<ast::Variable>(bc->getLHS()) || isA<Constant>(bc->getRHS())) {
             bool containsAggrs = false;
             visitDepthFirst(*bc, [&](const Aggregator& /* aggr */) { containsAggrs = true; });
