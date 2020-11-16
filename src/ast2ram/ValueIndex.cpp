@@ -41,7 +41,6 @@ void ValueIndex::addVarReference(const ast::Variable& var, int ident, int pos, s
 
 bool ValueIndex::isDefined(const ast::Variable& var) const {
     return contains(varReferencePoints, var.getName());
-    return varReferencePoints.find(var.getName()) != varReferencePoints.end();
 }
 
 const Location& ValueIndex::getDefinitionPoint(const ast::Variable& var) const {
