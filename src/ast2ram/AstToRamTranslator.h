@@ -130,6 +130,7 @@ protected:
 private:
     std::map<std::string, Own<ram::Statement>> ramSubroutines;
     std::map<std::string, Own<ram::Relation>> ramRelations;
+    Own<SymbolTable> symbolTable;
 
     /** replace ADTs with special records */
     static bool removeADTs(const ast::TranslationUnit& translationUnit);
@@ -137,9 +138,6 @@ private:
     // TODO (b-scholz): revisit / refactor so that only one directive is translated
     std::vector<std::map<std::string, std::string>> getInputDirectives(const ast::Relation* rel);
     std::vector<std::map<std::string, std::string>> getOutputDirectives(const ast::Relation* rel);
-
-    /** Return a symbol table **/
-    SymbolTable& getSymbolTable() const;
 
     /** Get ram representation of constant */
     RamDomain getConstantRamRepresentation(const ast::Constant& constant);

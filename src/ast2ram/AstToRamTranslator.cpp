@@ -193,14 +193,10 @@ std::vector<std::map<std::string, std::string>> AstToRamTranslator::getOutputDir
     return outputDirectives;
 }
 
-Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg, const ValueIndex& index) const {
+Own<ram::Expression> AstToRamTranslator::translateValue(
+        const ast::Argument* arg, const ValueIndex& index) const {
     if (arg == nullptr) return nullptr;
-    return ValueTranslator::translate(*this, index, getSymbolTable(), *arg);
-}
-
-SymbolTable& AstToRamTranslator::getSymbolTable() const {
-    static SymbolTable symbolTable;
-    return symbolTable;
+    return ValueTranslator::translate(*this, index, *symbolTable, *arg);
 }
 
 Own<ram::Condition> AstToRamTranslator::translateConstraint(
@@ -211,7 +207,7 @@ Own<ram::Condition> AstToRamTranslator::translateConstraint(
 
 RamDomain AstToRamTranslator::getConstantRamRepresentation(const ast::Constant& constant) {
     if (auto strConstant = dynamic_cast<const ast::StringConstant*>(&constant)) {
-        return getSymbolTable().lookup(strConstant->getConstant());
+        return symbolTable->lookup(strConstant->getConstant());
     } else if (isA<ast::NilConstant>(&constant)) {
         return 0;
     } else if (auto* numConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
@@ -823,10 +819,10 @@ Own<ram::Sequence> AstToRamTranslator::translateProgram(const ast::TranslationUn
 Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit& tu) {
     auto ram_start = std::chrono::high_resolution_clock::now();
     program = &tu.getProgram();
+    symbolTable = mk<SymbolTable>();
 
     auto ramMain = translateProgram(tu);
 
-    SymbolTable& symTab = getSymbolTable();
     ErrorReport& errReport = tu.getErrorReport();
     DebugReport& debugReport = tu.getDebugReport();
     VecOwn<ram::Relation> rels;
@@ -846,7 +842,7 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
         debugReport.addSection("ram-program", "RAM Program " + runtimeStr, ramProgStr.str());
     }
 
-    return mk<ram::TranslationUnit>(std::move(ramProg), std::move(symTab), errReport, debugReport);
+    return mk<ram::TranslationUnit>(std::move(ramProg), *symbolTable, errReport, debugReport);
 }
 
 }  // namespace souffle::ast2ram
