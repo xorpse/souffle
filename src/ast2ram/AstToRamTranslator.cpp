@@ -699,7 +699,7 @@ void AstToRamTranslator::createRamRelation(size_t scc) {
     const auto& isRecursive = sccGraph->isRecursive(scc);
     const auto& allInterns = sccGraph->getInternalRelations(scc);
     for (const auto& rel : allInterns) {
-        std::string name = rel->getQualifiedName().toString();
+        std::string name = getRelationName(rel->getQualifiedName());
         auto arity = rel->getArity();
         auto auxiliaryArity = auxArityAnalysis->getArity(rel);
         auto representation = rel->getRepresentation();
@@ -714,25 +714,30 @@ void AstToRamTranslator::createRamRelation(size_t scc) {
                         getTypeQualifier(typeEnv->getType(attributes[i]->getTypeName())));
             }
         }
-        ramRelations[name] = mk<ram::Relation>(
+        auto ramRelation = mk<ram::Relation>(
                 name, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
+        addRamRelation(name, std::move(ramRelation));
 
         // recursive relations also require @delta and @new variants, with the same signature
         if (isRecursive) {
-            std::string deltaName = "@delta_" + name;
-            std::string newName = "@new_" + name;
-            ramRelations[deltaName] = mk<ram::Relation>(deltaName, arity, auxiliaryArity, attributeNames,
+            // add delta relation
+            std::string deltaName = getDeltaRelationName(rel);
+            auto deltaRelation = mk<ram::Relation>(deltaName, arity, auxiliaryArity, attributeNames,
                     attributeTypeQualifiers, representation);
-            ramRelations[newName] = mk<ram::Relation>(
+            addRamRelation(deltaName, std::move(deltaRelation));
+
+            // add new relation
+            std::string newName = getNewRelationName(rel);
+            auto newRelation = mk<ram::Relation>(
                     newName, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
+            addRamRelation(newName, std::move(newRelation));
         }
     }
 }
 
 const ram::Relation* AstToRamTranslator::lookupRelation(const std::string& name) const {
-    auto it = ramRelations.find(name);
-    assert(it != ramRelations.end() && "relation not found");
-    return (*it).second.get();
+    assert(contains(ramRelations, name) && "relation not found");
+    return ramRelations.at(name).get();
 }
 
 void AstToRamTranslator::finaliseAstTypes() {
@@ -757,6 +762,11 @@ void AstToRamTranslator::finaliseAstTypes() {
 void AstToRamTranslator::addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine) {
     assert(!contains(ramSubroutines, subroutineID) && "subroutine ID should not already exist");
     ramSubroutines[subroutineID] = std::move(subroutine);
+}
+
+void AstToRamTranslator::addRamRelation(std::string relationName, Own<ram::Relation> ramRelation) {
+    assert(!contains(ramRelations, relationName) && "ram relation should not already exist");
+    ramRelations[relationName] = std::move(ramRelation);
 }
 
 Own<ram::Sequence> AstToRamTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {
@@ -835,7 +845,7 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
     auto ramProg = mk<ram::Program>(std::move(rels), std::move(ramMain), std::move(ramSubroutines));
 
     // add the translated program to the debug report
-    if (!Global::config().get("debug-report").empty()) {
+    if (Global::config().has("debug-report")) {
         auto ram_end = std::chrono::high_resolution_clock::now();
         std::string runtimeStr =
                 "(" + std::to_string(std::chrono::duration<double>(ram_end - ram_start).count()) + "s)";

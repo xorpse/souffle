@@ -128,6 +128,7 @@ protected:
             VecOwn<ram::Statement>& stmts, const std::set<const ast::Relation*>& expiredRelations);
 
     void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
+    void addRamRelation(std::string relationName, Own<ram::Relation> ramRelation);
 
 private:
     std::map<std::string, Own<ram::Statement>> ramSubroutines;
