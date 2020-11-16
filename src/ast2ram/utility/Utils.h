@@ -27,6 +27,7 @@ class Relation;
 
 namespace souffle::ram {
 class Clear;
+class Statement;
 class TupleElement;
 }  // namespace souffle::ram
 
@@ -49,10 +50,13 @@ std::string getDeltaRelationName(const ast::Relation* rel);
 /** Get the corresponding RAM 'new' relation name for the relation */
 std::string getNewRelationName(const ast::Relation* rel);
 
-/** create a RAM element access node */
+/** Append statement to a list of statements */
+void appendStmt(VecOwn<ram::Statement>& stmtList, Own<ram::Statement> stmt);
+
+/** Create a RAM element access node */
 Own<ram::TupleElement> makeRamTupleElement(const Location& loc);
 
-/** add a statement to store a relation */
+/** Add a statement to store a relation */
 Own<ram::Clear> makeRamClear(const ast::Relation* relation);
 
 }  // namespace souffle::ast2ram

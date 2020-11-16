@@ -118,7 +118,6 @@ protected:
     const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
 
     void nameUnnamedVariables(ast::Clause* clause);
-    void appendStmt(VecOwn<ram::Statement>& stmtList, Own<ram::Statement> stmt);
     Own<ram::Sequence> translateSCC(size_t scc, size_t idx);
     virtual void addNegation(ast::Clause& clause, const ast::Atom* atom);
     virtual void clearExpiredRelations(

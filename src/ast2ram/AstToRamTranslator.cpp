@@ -122,11 +122,14 @@ namespace souffle::ast2ram {
 AstToRamTranslator::AstToRamTranslator() = default;
 AstToRamTranslator::~AstToRamTranslator() = default;
 
-/** append statement to a list of statements */
-void AstToRamTranslator::appendStmt(VecOwn<ram::Statement>& stmtList, Own<ram::Statement> stmt) {
-    if (stmt) {
-        stmtList.push_back(std::move(stmt));
-    }
+void AstToRamTranslator::addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine) {
+    assert(!contains(ramSubroutines, subroutineID) && "subroutine ID should not already exist");
+    ramSubroutines[subroutineID] = std::move(subroutine);
+}
+
+void AstToRamTranslator::addRamRelation(std::string relationName, Own<ram::Relation> ramRelation) {
+    assert(!contains(ramRelations, relationName) && "ram relation should not already exist");
+    ramRelations[relationName] = std::move(ramRelation);
 }
 
 size_t AstToRamTranslator::getEvaluationArity(const ast::Atom* atom) const {
@@ -745,16 +748,6 @@ void AstToRamTranslator::finaliseAstTypes() {
     visitDepthFirst(*program, [&](const ast::UserDefinedFunctor& udf) {
         const_cast<ast::UserDefinedFunctor&>(udf).setFinalReturnType(functorAnalysis->getReturnType(&udf));
     });
-}
-
-void AstToRamTranslator::addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine) {
-    assert(!contains(ramSubroutines, subroutineID) && "subroutine ID should not already exist");
-    ramSubroutines[subroutineID] = std::move(subroutine);
-}
-
-void AstToRamTranslator::addRamRelation(std::string relationName, Own<ram::Relation> ramRelation) {
-    assert(!contains(ramRelations, relationName) && "ram relation should not already exist");
-    ramRelations[relationName] = std::move(ramRelation);
 }
 
 Own<ram::Sequence> AstToRamTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {

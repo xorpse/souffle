@@ -24,6 +24,7 @@
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/StringUtil.h"
 #include <string>
+#include <vector>
 
 namespace souffle::ast2ram {
 
@@ -45,6 +46,12 @@ std::string getNewRelationName(const ast::Relation* rel) {
 
 std::string getRelationName(const ast::QualifiedName& id) {
     return toString(join(id.getQualifiers(), "."));
+}
+
+void appendStmt(VecOwn<ram::Statement>& stmtList, Own<ram::Statement> stmt) {
+    if (stmt) {
+        stmtList.push_back(std::move(stmt));
+    }
 }
 
 Own<ram::TupleElement> makeRamTupleElement(const Location& loc) {
