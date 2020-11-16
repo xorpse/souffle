@@ -26,8 +26,9 @@ class Relation;
 }  // namespace souffle::ast
 
 namespace souffle::ram {
+class Clear;
 class TupleElement;
-}
+}  // namespace souffle::ram
 
 namespace souffle::ast2ram {
 
@@ -50,5 +51,8 @@ std::string getNewRelationName(const ast::Relation* rel);
 
 /** create a RAM element access node */
 Own<ram::TupleElement> makeRamTupleElement(const Location& loc);
+
+/** add a statement to store a relation */
+Own<ram::Clear> makeRamClear(const ast::Relation* relation);
 
 }  // namespace souffle::ast2ram

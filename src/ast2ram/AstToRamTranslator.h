@@ -136,8 +136,6 @@ private:
 
     // TODO (b-scholz): revisit / refactor so that only one directive is translated
     std::vector<std::map<std::string, std::string>> getInputDirectives(const ast::Relation* rel);
-
-    // TODO (b-scholz): revisit / refactor so that only one directive is translated
     std::vector<std::map<std::string, std::string>> getOutputDirectives(const ast::Relation* rel);
 
     /** Return a symbol table **/
@@ -154,9 +152,6 @@ private:
 
     /** translate RAM code for recursive relations in a strongly-connected component */
     Own<ram::Statement> translateRecursiveRelation(const std::set<const ast::Relation*>& scc);
-
-    /** add a statement to store a relation */
-    void makeRamClear(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation);
 
     /** add a statement to drop a relation */
     void makeRamStore(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation);

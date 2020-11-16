@@ -19,6 +19,7 @@
 #include "ast/QualifiedName.h"
 #include "ast/Relation.h"
 #include "ast2ram/Location.h"
+#include "ram/Clear.h"
 #include "ram/TupleElement.h"
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/StringUtil.h"
@@ -48,6 +49,10 @@ std::string getRelationName(const ast::QualifiedName& id) {
 
 Own<ram::TupleElement> makeRamTupleElement(const Location& loc) {
     return mk<ram::TupleElement>(loc.identifier, loc.element);
+}
+
+Own<ram::Clear> makeRamClear(const ast::Relation* relation) {
+    return mk<ram::Clear>(getConcreteRelationName(relation));
 }
 
 }  // namespace souffle::ast2ram

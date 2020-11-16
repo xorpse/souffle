@@ -375,7 +375,7 @@ Own<ram::Sequence> AstToRamTranslator::translateSCC(size_t scc, size_t idx) {
 void AstToRamTranslator::clearExpiredRelations(
         VecOwn<ram::Statement>& stmts, const std::set<const ast::Relation*>& expiredRelations) {
     for (const auto& relation : expiredRelations) {
-        makeRamClear(stmts, relation);
+        appendStmt(stmts, makeRamClear(relation));
     }
 }
 
@@ -685,10 +685,6 @@ void AstToRamTranslator::makeRamStore(VecOwn<ram::Statement>& curStmts, const as
         }
         appendStmt(curStmts, std::move(statement));
     }
-}
-
-void AstToRamTranslator::makeRamClear(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation) {
-    appendStmt(curStmts, mk<ram::Clear>(getConcreteRelationName(relation)));
 }
 
 void AstToRamTranslator::createRamRelation(size_t scc) {
