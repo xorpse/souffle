@@ -82,10 +82,10 @@ std::vector<Clause*> getClauses(const Program& program, const Relation& rel) {
     return getClauses(program, rel.getQualifiedName());
 }
 
-std::vector<Directive*> getDirectives(const Program& program, const QualifiedName& relationName) {
+std::vector<Directive*> getDirectives(const Program& program, const QualifiedName& name) {
     std::vector<Directive*> directives;
     for (Directive* dir : program.getDirectives()) {
-        if (dir->getQualifiedName() == relationName) {
+        if (dir->getQualifiedName() == name) {
             directives.push_back(dir);
         }
     }
