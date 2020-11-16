@@ -21,6 +21,7 @@
 #include "ast/analysis/Functor.h"
 #include "ast2ram/AstToRamTranslator.h"
 #include "ast2ram/ValueIndex.h"
+#include "ast2ram/utility/Utils.h"
 #include "ram/AutoIncrement.h"
 #include "ram/FloatConstant.h"
 #include "ram/IntrinsicOperator.h"
@@ -46,7 +47,7 @@ Own<ram::Expression> ValueTranslator::visitVariable(const ast::Variable& var) {
     if (!index.isDefined(var)) {
         fatal("variable `%s` is not grounded", var);
     }
-    return translator.makeRamTupleElement(index.getDefinitionPoint(var));
+    return makeRamTupleElement(index.getDefinitionPoint(var));
 }
 
 Own<ram::Expression> ValueTranslator::visitUnnamedVariable(const ast::UnnamedVariable&) {
@@ -86,7 +87,7 @@ Own<ram::Expression> ValueTranslator::visitIntrinsicFunctor(const ast::Intrinsic
     }
 
     if (ast::analysis::FunctorAnalysis::isMultiResult(inf)) {
-        return translator.makeRamTupleElement(index.getGeneratorLoc(inf));
+        return makeRamTupleElement(index.getGeneratorLoc(inf));
     } else {
         return mk<ram::IntrinsicOperator>(inf.getFinalOpType().value(), std::move(values));
     }
@@ -117,7 +118,7 @@ Own<ram::Expression> ValueTranslator::visitRecordInit(const ast::RecordInit& ini
 
 Own<ram::Expression> ValueTranslator::visitAggregator(const ast::Aggregator& agg) {
     // here we look up the location the aggregation result gets bound
-    return translator.makeRamTupleElement(index.getGeneratorLoc(agg));
+    return makeRamTupleElement(index.getGeneratorLoc(agg));
 }
 
 Own<ram::Expression> ValueTranslator::visitSubroutineArgument(const ast::SubroutineArgument& subArg) {

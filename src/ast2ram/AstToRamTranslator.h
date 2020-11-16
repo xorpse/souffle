@@ -98,9 +98,6 @@ public:
     /** determine the auxiliary for relations */
     size_t getEvaluationArity(const ast::Atom* atom) const;
 
-    /** create a RAM element access node */
-    static Own<ram::TupleElement> makeRamTupleElement(const Location& loc);
-
     const ram::Relation* lookupRelation(const std::string& name) const;
 
 protected:

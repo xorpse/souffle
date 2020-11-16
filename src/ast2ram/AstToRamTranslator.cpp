@@ -129,10 +129,6 @@ void AstToRamTranslator::appendStmt(VecOwn<ram::Statement>& stmtList, Own<ram::S
     }
 }
 
-Own<ram::TupleElement> AstToRamTranslator::makeRamTupleElement(const Location& loc) {
-    return mk<ram::TupleElement>(loc.identifier, loc.element);
-}
-
 size_t AstToRamTranslator::getEvaluationArity(const ast::Atom* atom) const {
     std::string relName = atom->getQualifiedName().toString();
     if (isPrefix("@info_", relName)) return 0;

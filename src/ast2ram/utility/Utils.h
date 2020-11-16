@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "souffle/utility/ContainerUtil.h"
 #include <string>
 
 namespace souffle::ast {
@@ -24,7 +25,13 @@ class QualifiedName;
 class Relation;
 }  // namespace souffle::ast
 
+namespace souffle::ram {
+class TupleElement;
+}
+
 namespace souffle::ast2ram {
+
+struct Location;
 
 /** Get the corresponding concretised RAM relation name for the atom */
 std::string getConcreteRelationName(const ast::Atom* atom);
@@ -40,5 +47,8 @@ std::string getDeltaRelationName(const ast::Relation* rel);
 
 /** Get the corresponding RAM 'new' relation name for the relation */
 std::string getNewRelationName(const ast::Relation* rel);
+
+/** create a RAM element access node */
+Own<ram::TupleElement> makeRamTupleElement(const Location& loc);
 
 }  // namespace souffle::ast2ram

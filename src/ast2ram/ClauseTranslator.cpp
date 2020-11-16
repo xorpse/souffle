@@ -92,9 +92,8 @@ Own<ram::Statement> ClauseTranslator::translateClause(
         for (const Location& loc : cur.second) {
             if (first != loc && !valueIndex->isGenerator(loc.identifier)) {
                 // FIXME: equiv' for float types (`FEQ`)
-                op = mk<ram::Filter>(
-                        mk<ram::Constraint>(BinaryConstraintOp::EQ, translator.makeRamTupleElement(first),
-                                translator.makeRamTupleElement(loc)),
+                op = mk<ram::Filter>(mk<ram::Constraint>(BinaryConstraintOp::EQ, makeRamTupleElement(first),
+                                             makeRamTupleElement(loc)),
                         std::move(op));
             }
         }
@@ -121,7 +120,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
                     // FIXME: equiv' for float types (`FEQ`)
                     op = mk<ram::Filter>(
                             mk<ram::Constraint>(BinaryConstraintOp::EQ, mk<ram::TupleElement>(curLevel, pos),
-                                    translator.makeRamTupleElement(loc)),
+                                    makeRamTupleElement(loc)),
                             std::move(op));
                 }
                 ++pos;
@@ -173,7 +172,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
                     if (auto* var = dynamic_cast<const ast::Variable*>(arg)) {
                         for (auto&& loc : valueIndex->getVariableReferences().find(var->getName())->second) {
                             if (level != loc.identifier || (int)pos != loc.element) {
-                                addAggEqCondition(translator.makeRamTupleElement(loc));
+                                addAggEqCondition(makeRamTupleElement(loc));
                                 break;
                             }
                         }
@@ -271,7 +270,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
             // add an unpack level
             const Location& loc = valueIndex->getDefinitionPoint(*rec);
             op = mk<ram::UnpackRecord>(
-                    std::move(op), level, translator.makeRamTupleElement(loc), rec->getArguments().size());
+                    std::move(op), level, makeRamTupleElement(loc), rec->getArguments().size());
         } else {
             fatal("Unsupported AST node for creation of scan-level!");
         }
