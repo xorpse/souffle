@@ -21,6 +21,7 @@
 
 namespace souffle::ast {
 class Atom;
+class Clause;
 class QualifiedName;
 class Relation;
 }  // namespace souffle::ast
@@ -52,6 +53,9 @@ std::string getNewRelationName(const ast::Relation* rel);
 
 /** Append statement to a list of statements */
 void appendStmt(VecOwn<ram::Statement>& stmtList, Own<ram::Statement> stmt);
+
+/** Assign names to unnamed variables */
+void nameUnnamedVariables(ast::Clause* clause);
 
 /** Create a RAM element access node */
 Own<ram::TupleElement> makeRamTupleElement(const Location& loc);

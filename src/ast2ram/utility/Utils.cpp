@@ -16,8 +16,12 @@
 
 #include "ast2ram/utility/Utils.h"
 #include "ast/Atom.h"
+#include "ast/Clause.h"
 #include "ast/QualifiedName.h"
 #include "ast/Relation.h"
+#include "ast/UnnamedVariable.h"
+#include "ast/Variable.h"
+#include "ast/utility/Utils.h"
 #include "ast2ram/Location.h"
 #include "ram/Clear.h"
 #include "ram/TupleElement.h"
@@ -51,6 +55,35 @@ std::string getRelationName(const ast::QualifiedName& id) {
 void appendStmt(VecOwn<ram::Statement>& stmtList, Own<ram::Statement> stmt) {
     if (stmt) {
         stmtList.push_back(std::move(stmt));
+    }
+}
+
+void nameUnnamedVariables(ast::Clause* clause) {
+    // the node mapper conducting the actual renaming
+    struct Instantiator : public ast::NodeMapper {
+        mutable int counter = 0;
+
+        Instantiator() = default;
+
+        Own<ast::Node> operator()(Own<ast::Node> node) const override {
+            // apply recursive
+            node->apply(*this);
+
+            // replace unknown variables
+            if (dynamic_cast<ast::UnnamedVariable*>(node.get()) != nullptr) {
+                auto name = " _unnamed_var" + toString(++counter);
+                return mk<ast::Variable>(name);
+            }
+
+            // otherwise nothing
+            return node;
+        }
+    };
+
+    // name all variables in the atoms
+    Instantiator init;
+    for (auto& atom : ast::getBodyLiterals<ast::Atom>(*clause)) {
+        atom->apply(init);
     }
 }
 

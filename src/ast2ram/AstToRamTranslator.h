@@ -117,7 +117,6 @@ protected:
     const ast::analysis::RelationDetailCacheAnalysis* relDetail = nullptr;
     const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
 
-    void nameUnnamedVariables(ast::Clause* clause);
     Own<ram::Sequence> translateSCC(size_t scc, size_t idx);
     virtual void addNegation(ast::Clause& clause, const ast::Atom* atom);
     virtual void clearExpiredRelations(

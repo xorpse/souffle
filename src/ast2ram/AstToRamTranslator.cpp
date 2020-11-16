@@ -303,39 +303,6 @@ Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(const ast:
     return mk<ram::Sequence>(std::move(res));
 }
 
-/**
- * A utility function assigning names to unnamed variables such that enclosing
- * constructs may be cloned without losing the variable-identity.
- */
-void AstToRamTranslator::nameUnnamedVariables(ast::Clause* clause) {
-    // the node mapper conducting the actual renaming
-    struct Instantiator : public ast::NodeMapper {
-        mutable int counter = 0;
-
-        Instantiator() = default;
-
-        Own<ast::Node> operator()(Own<ast::Node> node) const override {
-            // apply recursive
-            node->apply(*this);
-
-            // replace unknown variables
-            if (dynamic_cast<ast::UnnamedVariable*>(node.get()) != nullptr) {
-                auto name = " _unnamed_var" + toString(++counter);
-                return mk<ast::Variable>(name);
-            }
-
-            // otherwise nothing
-            return node;
-        }
-    };
-
-    // name all variables in the atoms
-    Instantiator init;
-    for (auto& atom : ast::getBodyLiterals<ast::Atom>(*clause)) {
-        atom->apply(init);
-    }
-}
-
 Own<ram::Sequence> AstToRamTranslator::translateSCC(size_t scc, size_t idx) {
     // make a new ram statement for the current SCC
     VecOwn<ram::Statement> current;
