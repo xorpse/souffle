@@ -193,12 +193,12 @@ std::vector<std::map<std::string, std::string>> AstToRamTranslator::getOutputDir
     return outputDirectives;
 }
 
-Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg, const ValueIndex& index) {
+Own<ram::Expression> AstToRamTranslator::translateValue(const ast::Argument* arg, const ValueIndex& index) const {
     if (arg == nullptr) return nullptr;
     return ValueTranslator::translate(*this, index, getSymbolTable(), *arg);
 }
 
-SymbolTable& AstToRamTranslator::getSymbolTable() {
+SymbolTable& AstToRamTranslator::getSymbolTable() const {
     static SymbolTable symbolTable;
     return symbolTable;
 }

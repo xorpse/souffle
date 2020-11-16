@@ -90,7 +90,7 @@ public:
 
     /** AST->RAM translation methods */
     Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
-    Own<ram::Expression> translateValue(const ast::Argument* arg, const ValueIndex& index);
+    Own<ram::Expression> translateValue(const ast::Argument* arg, const ValueIndex& index) const;
     Own<ram::Condition> translateConstraint(const ast::Literal* arg, const ValueIndex& index);
     Own<ram::Expression> translateConstant(const ast::Constant& c);
     virtual Own<ram::Sequence> translateProgram(const ast::TranslationUnit& translationUnit);
@@ -139,7 +139,7 @@ private:
     std::vector<std::map<std::string, std::string>> getOutputDirectives(const ast::Relation* rel);
 
     /** Return a symbol table **/
-    SymbolTable& getSymbolTable();
+    SymbolTable& getSymbolTable() const;
 
     /** Get ram representation of constant */
     RamDomain getConstantRamRepresentation(const ast::Constant& constant);

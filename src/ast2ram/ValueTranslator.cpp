@@ -38,7 +38,7 @@
 
 namespace souffle::ast2ram {
 
-Own<ram::Expression> ValueTranslator::translate(AstToRamTranslator& translator, const ValueIndex& index,
+Own<ram::Expression> ValueTranslator::translate(const AstToRamTranslator& translator, const ValueIndex& index,
         SymbolTable& symTab, const ast::Argument& arg) {
     return ValueTranslator(translator, index, symTab)(arg);
 }
