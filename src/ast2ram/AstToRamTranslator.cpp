@@ -150,20 +150,20 @@ size_t AstToRamTranslator::getEvaluationArity(const ast::Atom* atom) const {
 std::vector<std::map<std::string, std::string>> AstToRamTranslator::getInputDirectives(
         const ast::Relation* rel) {
     std::vector<std::map<std::string, std::string>> inputDirectives;
-
-    for (const auto* load : program->getDirectives()) {
-        if (load->getQualifiedName() != rel->getQualifiedName() ||
-                load->getType() != ast::DirectiveType::input) {
+    for (const auto* load : getDirectives(*program, rel->getQualifiedName())) {
+        // must be a load
+        if (load->getType() != ast::DirectiveType::input) {
             continue;
         }
 
         std::map<std::string, std::string> directives;
-        for (const auto& currentPair : load->getParameters()) {
-            directives.insert(std::make_pair(currentPair.first, unescape(currentPair.second)));
+        for (const auto& [key, value] : load->getParameters()) {
+            directives.insert(std::make_pair(key, unescape(value)));
         }
         inputDirectives.push_back(directives);
     }
 
+    // add an empty directive if none exist
     if (inputDirectives.empty()) {
         inputDirectives.emplace_back();
     }
@@ -174,21 +174,21 @@ std::vector<std::map<std::string, std::string>> AstToRamTranslator::getInputDire
 std::vector<std::map<std::string, std::string>> AstToRamTranslator::getOutputDirectives(
         const ast::Relation* rel) {
     std::vector<std::map<std::string, std::string>> outputDirectives;
-
-    for (const auto* store : program->getDirectives()) {
-        if (store->getQualifiedName() != rel->getQualifiedName() ||
-                (store->getType() != ast::DirectiveType::printsize &&
-                        store->getType() != ast::DirectiveType::output)) {
+    for (const auto* store : getDirectives(*program, rel->getQualifiedName())) {
+        // must be either printsize or output
+        if (store->getType() != ast::DirectiveType::printsize &&
+                store->getType() != ast::DirectiveType::output) {
             continue;
         }
 
         std::map<std::string, std::string> directives;
-        for (const auto& currentPair : store->getParameters()) {
-            directives.insert(std::make_pair(currentPair.first, unescape(currentPair.second)));
+        for (const auto& [key, value] : store->getParameters()) {
+            directives.insert(std::make_pair(key, unescape(value)));
         }
         outputDirectives.push_back(directives);
     }
 
+    // add an empty directive if none exist
     if (outputDirectives.empty()) {
         outputDirectives.emplace_back();
     }
