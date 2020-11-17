@@ -157,6 +157,9 @@ private:
     /** finalise the types of polymorphic objects */
     // TODO (azreika): should be removed once the translator is refactored to avoid cloning
     void finaliseAstTypes();
+
+    Own<ram::Statement> mergeRelations(
+            const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const;
 };
 
 }  // namespace souffle::ast2ram

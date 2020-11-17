@@ -347,6 +347,29 @@ void AstToRamTranslator::addNegation(ast::Clause& clause, const ast::Atom* atom)
     }
 }
 
+Own<ram::Statement> AstToRamTranslator::mergeRelations(
+        const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const {
+    VecOwn<ram::Expression> values;
+
+    // Proposition - project if not empty
+    if (rel->getArity() == 0) {
+        auto projection = mk<ram::Project>(destRelation, std::move(values));
+        return mk<ram::Query>(mk<ram::Filter>(
+                mk<ram::Negation>(mk<ram::EmptinessCheck>(srcRelation)), std::move(projection)));
+    }
+
+    // Predicate - project all values
+    for (size_t i = 0; i < rel->getArity(); i++) {
+        values.push_back(mk<ram::TupleElement>(0, i));
+    }
+    auto projection = mk<ram::Project>(destRelation, std::move(values));
+    auto stmt = mk<ram::Query>(mk<ram::Scan>(srcRelation, 0, std::move(projection)));
+    if (rel->getRepresentation() == RelationRepresentation::EQREL) {
+        return mk<ram::Sequence>(mk<ram::Extend>(destRelation, srcRelation), std::move(stmt));
+    }
+    return stmt;
+}
+
 /** generate RAM code for recursive relations in a strongly-connected component */
 Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
         const std::set<const ast::Relation*>& scc) {
@@ -355,23 +378,6 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
     VecOwn<ram::Statement> updateTable;
     VecOwn<ram::Statement> postamble;
 
-    auto genMerge = [&](const ast::Relation* rel, const std::string& destRel,
-                            const std::string& srcRel) -> Own<ram::Statement> {
-        VecOwn<ram::Expression> values;
-        if (rel->getArity() == 0) {
-            return mk<ram::Query>(mk<ram::Filter>(mk<ram::Negation>(mk<ram::EmptinessCheck>(srcRel)),
-                    mk<ram::Project>(destRel, std::move(values))));
-        }
-        for (std::size_t i = 0; i < rel->getArity(); i++) {
-            values.push_back(mk<ram::TupleElement>(0, i));
-        }
-        auto stmt = mk<ram::Query>(mk<ram::Scan>(srcRel, 0, mk<ram::Project>(destRel, std::move(values))));
-        if (rel->getRepresentation() == RelationRepresentation::EQREL) {
-            return mk<ram::Sequence>(mk<ram::Extend>(destRel, srcRel), std::move(stmt));
-        }
-        return stmt;
-    };
-
     // --- create preamble ---
 
     /* Compute non-recursive clauses for relations in scc and push
@@ -379,7 +385,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
     for (const ast::Relation* rel : scc) {
         /* create update statements for fixpoint (even iteration) */
         Own<ram::Statement> updateRelTable =
-                mk<ram::Sequence>(genMerge(rel, getConcreteRelationName(rel), getNewRelationName(rel)),
+                mk<ram::Sequence>(mergeRelations(rel, getConcreteRelationName(rel), getNewRelationName(rel)),
                         mk<ram::Swap>(getDeltaRelationName(rel), getNewRelationName(rel)),
                         mk<ram::Clear>(getNewRelationName(rel)));
 
@@ -397,7 +403,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
         /* Generate code for non-recursive part of relation */
         /* Generate merge operation for temp tables */
         appendStmt(preamble, translateNonRecursiveRelation(*rel));
-        appendStmt(preamble, genMerge(rel, getDeltaRelationName(rel), getConcreteRelationName(rel)));
+        appendStmt(preamble, mergeRelations(rel, getDeltaRelationName(rel), getConcreteRelationName(rel)));
 
         /* Add update operations of relations to parallel statements */
         appendStmt(updateTable, std::move(updateRelTable));
