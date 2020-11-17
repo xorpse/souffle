@@ -47,10 +47,10 @@ Own<ram::Sequence> ProvenanceTranslator::translateProgram(const ast::Translation
     return ramProgram;
 }
 
-void ProvenanceTranslator::clearExpiredRelations(
-        VecOwn<ram::Statement>& /* stmts */, const std::set<const ast::Relation*>& /* expiredRelations */) {
+VecOwn<ram::Statement> ProvenanceTranslator::clearExpiredRelations(
+        const std::set<const ast::Relation*>& /* expiredRelations */) const {
     // relations should be preserved if provenance is enabled
-    return;
+    return {};
 }
 
 void ProvenanceTranslator::addNegation(ast::Clause& clause, const ast::Atom* atom) {

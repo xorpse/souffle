@@ -26,8 +26,8 @@ public:
 protected:
     Own<ram::Sequence> translateProgram(const ast::TranslationUnit& translationUnit) override;
     void addNegation(ast::Clause& clause, const ast::Atom* atom) override;
-    void clearExpiredRelations(
-            VecOwn<ram::Statement>& stmts, const std::set<const ast::Relation*>& expiredRelations) override;
+    VecOwn<ram::Statement> clearExpiredRelations(
+            const std::set<const ast::Relation*>& expiredRelations) const override;
 
 private:
     /** translate RAM code for subroutine to get subproofs */

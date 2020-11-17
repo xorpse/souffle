@@ -333,16 +333,21 @@ Own<ram::Sequence> AstToRamTranslator::translateSCC(size_t scc, size_t idx) {
     }
 
     // clear expired relations
-    clearExpiredRelations(current, relationSchedule->schedule().at(idx).expired());
+    auto clearingStmts = clearExpiredRelations(relationSchedule->schedule().at(idx).expired());
+    for (auto& stmt : clearingStmts) {
+        appendStmt(current, std::move(stmt));
+    }
 
     return mk<ram::Sequence>(std::move(current));
 }
 
-void AstToRamTranslator::clearExpiredRelations(
-        VecOwn<ram::Statement>& stmts, const std::set<const ast::Relation*>& expiredRelations) {
+VecOwn<ram::Statement> AstToRamTranslator::clearExpiredRelations(
+        const std::set<const ast::Relation*>& expiredRelations) const {
+    VecOwn<ram::Statement> stmts;
     for (const auto& relation : expiredRelations) {
         appendStmt(stmts, makeRamClear(relation));
     }
+    return stmts;
 }
 
 void AstToRamTranslator::addNegation(ast::Clause& clause, const ast::Atom* atom) {

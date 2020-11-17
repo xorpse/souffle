@@ -119,8 +119,8 @@ protected:
 
     Own<ram::Sequence> translateSCC(size_t scc, size_t idx);
     virtual void addNegation(ast::Clause& clause, const ast::Atom* atom);
-    virtual void clearExpiredRelations(
-            VecOwn<ram::Statement>& stmts, const std::set<const ast::Relation*>& expiredRelations);
+    virtual VecOwn<ram::Statement> clearExpiredRelations(
+            const std::set<const ast::Relation*>& expiredRelations) const;
 
     void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
     void addRamRelation(std::string relationName, Own<ram::Relation> ramRelation);
