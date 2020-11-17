@@ -254,8 +254,9 @@ static TypeConstraint satisfiesOverload(const TypeEnvironment& typeEnv, Intrinsi
             overloads = filterNot(std::move(overloads), [&](const IntrinsicFunctorInfo& x) -> bool {
                 if (!x.variadic && args.size() != x.params.size()) return true;  // arity mismatch?
 
-                for (size_t i = 0; i < args.size(); ++i)
+                for (size_t i = 0; i < args.size(); ++i) {
                     if (!possible(x.params[x.variadic ? 0 : i], args[i])) return true;
+                }
 
                 return !possible(x.result, result);
             });
