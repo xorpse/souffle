@@ -166,6 +166,7 @@ private:
     VecOwn<ram::Statement> generateStratumPostamble(const std::set<const ast::Relation*>& scc) const;
     VecOwn<ram::Statement> generateStratumTableUpdates(const std::set<const ast::Relation*>& scc) const;
     VecOwn<ram::Statement> generateStratumMainLoop(const std::set<const ast::Relation*>& scc);
+    VecOwn<ram::Statement> generateStratumExitConditions(const std::set<const ast::Relation*>& scc) const;
 };
 
 }  // namespace souffle::ast2ram

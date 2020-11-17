@@ -524,6 +524,35 @@ VecOwn<ram::Statement> AstToRamTranslator::generateStratumMainLoop(
     return loopSeq;
 }
 
+VecOwn<ram::Statement> AstToRamTranslator::generateStratumExitConditions(
+        const std::set<const ast::Relation*>& scc) const {
+    // Helper function to add a new term to a conjunctive condition
+    auto addCondition = [&](Own<ram::Condition>& cond, Own<ram::Condition> term) {
+        cond = (cond == nullptr) ? std::move(term) : mk<ram::Conjunction>(std::move(cond), std::move(term));
+    };
+
+    VecOwn<ram::Statement> exitConditions;
+
+    // (1) if all relations in the scc are empty
+    Own<ram::Condition> emptinessCheck;
+    for (const ast::Relation* rel : scc) {
+        addCondition(emptinessCheck, mk<ram::EmptinessCheck>(getNewRelationName(rel)));
+    }
+    appendStmt(exitConditions, mk<ram::Exit>(std::move(emptinessCheck)));
+
+    // (2) if the size limit has been reached for any limitsize relations
+    for (const ast::Relation* rel : scc) {
+        if (ioType->isLimitSize(rel)) {
+            Own<ram::Condition> limit = mk<ram::Constraint>(BinaryConstraintOp::GE,
+                    mk<ram::RelationSize>(getConcreteRelationName(rel)),
+                    mk<ram::SignedConstant>(ioType->getLimitSize(rel)));
+            appendStmt(exitConditions, mk<ram::Exit>(std::move(limit)));
+        }
+    }
+
+    return exitConditions;
+}
+
 /** generate RAM code for recursive relations in a strongly-connected component */
 Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
         const std::set<const ast::Relation*>& scc) {
@@ -531,26 +560,10 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
     auto preamble = generateStratumPreamble(scc);
     auto loopSeq = generateStratumMainLoop(scc);
     auto updateTable = generateStratumTableUpdates(scc);
+    auto exitConditions = generateStratumExitConditions(scc);
     auto postamble = generateStratumPostamble(scc);
 
     // --- Combine the individual sections into the final fixpoint loop --
-    // Construct exit conditions for odd and even iteration
-    auto addCondition = [](Own<ram::Condition>& cond, Own<ram::Condition> clause) {
-        cond = ((cond) ? mk<ram::Conjunction>(std::move(cond), std::move(clause)) : std::move(clause));
-    };
-
-    Own<ram::Condition> exitCond;
-    VecOwn<ram::Statement> exitStmts;
-    for (const ast::Relation* rel : scc) {
-        addCondition(exitCond, mk<ram::EmptinessCheck>(getNewRelationName(rel)));
-        if (ioType->isLimitSize(rel)) {
-            Own<ram::Condition> limit = mk<ram::Constraint>(BinaryConstraintOp::GE,
-                    mk<ram::RelationSize>(getConcreteRelationName(rel)),
-                    mk<ram::SignedConstant>(ioType->getLimitSize(rel)));
-            appendStmt(exitStmts, mk<ram::Exit>(std::move(limit)));
-        }
-    }
-
     VecOwn<ram::Statement> res;
 
     // Add in the preamble
@@ -560,12 +573,11 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
 
     // Add in the main loop and update sections
     auto loop = mk<ram::Parallel>(std::move(loopSeq));
-    if (!loop->getStatements().empty() && exitCond && !updateTable.empty()) {
-        auto ramExitCondition = mk<ram::Exit>(std::move(exitCond));
-        auto ramExitSequence = mk<ram::Sequence>(std::move(exitStmts));
+    if (!loop->getStatements().empty() && !exitConditions.empty() && !updateTable.empty()) {
+        auto ramExitSequence = mk<ram::Sequence>(std::move(exitConditions));
         auto ramUpdateSequence = mk<ram::Sequence>(std::move(updateTable));
-        auto ramLoopSequence = mk<ram::Loop>(mk<ram::Sequence>(std::move(loop), std::move(ramExitCondition),
-                std::move(ramExitSequence), std::move(ramUpdateSequence)));
+        auto ramLoopSequence = mk<ram::Loop>(
+                mk<ram::Sequence>(std::move(loop), std::move(ramExitSequence), std::move(ramUpdateSequence)));
         appendStmt(res, std::move(ramLoopSequence));
     }
 
