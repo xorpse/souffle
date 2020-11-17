@@ -450,16 +450,9 @@ VecOwn<ram::Statement> AstToRamTranslator::createRecursiveClauseVersions(
     return loopRelSeq;
 }
 
-/** generate RAM code for recursive relations in a strongly-connected component */
-Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
+VecOwn<ram::Statement> AstToRamTranslator::generateStratumPreamble(
         const std::set<const ast::Relation*>& scc) {
-    // -- Initialise all the individual sections --
     VecOwn<ram::Statement> preamble;
-    VecOwn<ram::Statement> loopSeq;
-    VecOwn<ram::Statement> updateTable;
-    VecOwn<ram::Statement> postamble;
-
-    // Generate preamble
     for (const ast::Relation* rel : scc) {
         // Generate code for the non-recursive part of the relation */
         appendStmt(preamble, translateNonRecursiveRelation(*rel));
@@ -467,8 +460,23 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
         // Copy the result into the delta relation
         appendStmt(preamble, mergeRelations(rel, getDeltaRelationName(rel), getConcreteRelationName(rel)));
     }
+    return preamble;
+}
 
-    // Generate in-between table updates
+VecOwn<ram::Statement> AstToRamTranslator::generateStratumPostamble(
+        const std::set<const ast::Relation*>& scc) const {
+    VecOwn<ram::Statement> postamble;
+    for (const ast::Relation* rel : scc) {
+        // Drop temporary tables after recursion
+        appendStmt(postamble, mk<ram::Clear>(getDeltaRelationName(rel)));
+        appendStmt(postamble, mk<ram::Clear>(getNewRelationName(rel)));
+    }
+    return postamble;
+}
+
+VecOwn<ram::Statement> AstToRamTranslator::generateStratumTableUpdates(
+        const std::set<const ast::Relation*>& scc) const {
+    VecOwn<ram::Statement> updateTable;
     for (const ast::Relation* rel : scc) {
         // Copy @new into main relation, @delta := @new, and empty out @new
         Own<ram::Statement> updateRelTable =
@@ -485,15 +493,12 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
 
         appendStmt(updateTable, std::move(updateRelTable));
     }
+    return updateTable;
+}
 
-    // Generate postamble
-    for (const ast::Relation* rel : scc) {
-        // Drop temporary tables after recursion
-        appendStmt(postamble, mk<ram::Clear>(getDeltaRelationName(rel)));
-        appendStmt(postamble, mk<ram::Clear>(getNewRelationName(rel)));
-    }
-
-    // Generate the main loop
+VecOwn<ram::Statement> AstToRamTranslator::generateStratumMainLoop(
+        const std::set<const ast::Relation*>& scc) {
+    VecOwn<ram::Statement> loopSeq;
     for (const ast::Relation* rel : scc) {
         auto loopRelSeq = createRecursiveClauseVersions(scc, rel);
 
@@ -516,6 +521,17 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
 
         appendStmt(loopSeq, mk<ram::Sequence>(std::move(loopRelSeq)));
     }
+    return loopSeq;
+}
+
+/** generate RAM code for recursive relations in a strongly-connected component */
+Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
+        const std::set<const ast::Relation*>& scc) {
+    // -- Initialise all the individual sections --
+    auto preamble = generateStratumPreamble(scc);
+    auto loopSeq = generateStratumMainLoop(scc);
+    auto updateTable = generateStratumTableUpdates(scc);
+    auto postamble = generateStratumPostamble(scc);
 
     // --- Combine the individual sections into the final fixpoint loop --
     // Construct exit conditions for odd and even iteration
