@@ -301,8 +301,6 @@ Own<ram::Sequence> AstToRamTranslator::translateSCC(size_t scc, size_t idx) {
     // make a new ram statement for the current SCC
     VecOwn<ram::Statement> current;
 
-    // find out if the current SCC is recursive
-
     // load all internal input relations from the facts dir with a .facts extension
     const auto& sccInputRelations = sccGraph->getInternalInputRelations(scc);
     for (const auto& relation : sccInputRelations) {
