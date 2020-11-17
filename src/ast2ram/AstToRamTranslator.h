@@ -92,8 +92,8 @@ public:
     /** AST->RAM translation methods */
     Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
     Own<ram::Expression> translateValue(const ast::Argument* arg, const ValueIndex& index) const;
-    Own<ram::Condition> translateConstraint(const ast::Literal* arg, const ValueIndex& index);
-    Own<ram::Expression> translateConstant(const ast::Constant& c);
+    Own<ram::Condition> translateConstraint(const ast::Literal* arg, const ValueIndex& index) const;
+    Own<ram::Expression> translateConstant(const ast::Constant& c) const;
     virtual Own<ram::Sequence> translateProgram(const ast::TranslationUnit& translationUnit);
 
 protected:
@@ -120,13 +120,13 @@ protected:
     virtual void addNegation(ast::Clause& clause, const ast::Atom* atom) const;
     virtual VecOwn<ram::Statement> clearExpiredRelations(
             const std::set<const ast::Relation*>& expiredRelations) const;
-    RamDomain getConstantRamRepresentation(const ast::Constant& constant);
+    RamDomain getConstantRamRepresentation(const ast::Constant& constant) const;
 
     /* translate RAM code for the non-recursive clauses of the given relation */
-    Own<ram::Statement> translateNonRecursiveRelation(const ast::Relation& rel);
+    Own<ram::Statement> translateNonRecursiveRelation(const ast::Relation& rel) const;
 
     /** translate RAM code for recursive relations in a strongly-connected component */
-    Own<ram::Statement> translateRecursiveRelation(const std::set<const ast::Relation*>& scc);
+    Own<ram::Statement> translateRecursiveRelation(const std::set<const ast::Relation*>& scc) const;
 
     /** add a statement to drop a relation */
     void makeRamStore(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation);
@@ -160,12 +160,12 @@ private:
             const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const;
 
     VecOwn<ram::Statement> createRecursiveClauseVersions(
-            const std::set<const ast::Relation*>& scc, const ast::Relation* rel);
+            const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const;
 
-    Own<ram::Statement> generateStratumPreamble(const std::set<const ast::Relation*>& scc);
+    Own<ram::Statement> generateStratumPreamble(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumPostamble(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumTableUpdates(const std::set<const ast::Relation*>& scc) const;
-    Own<ram::Statement> generateStratumMainLoop(const std::set<const ast::Relation*>& scc);
+    Own<ram::Statement> generateStratumMainLoop(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumExitSequence(const std::set<const ast::Relation*>& scc) const;
 };
 

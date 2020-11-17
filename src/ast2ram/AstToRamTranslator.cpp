@@ -197,12 +197,12 @@ Own<ram::Expression> AstToRamTranslator::translateValue(
 }
 
 Own<ram::Condition> AstToRamTranslator::translateConstraint(
-        const ast::Literal* lit, const ValueIndex& index) {
+        const ast::Literal* lit, const ValueIndex& index) const {
     assert(lit != nullptr && "literal should be defined");
     return ConstraintTranslator::translate(*this, index, *lit);
 }
 
-RamDomain AstToRamTranslator::getConstantRamRepresentation(const ast::Constant& constant) {
+RamDomain AstToRamTranslator::getConstantRamRepresentation(const ast::Constant& constant) const {
     if (auto strConstant = dynamic_cast<const ast::StringConstant*>(&constant)) {
         return symbolTable->lookup(strConstant->getConstant());
     } else if (isA<ast::NilConstant>(&constant)) {
@@ -221,7 +221,7 @@ RamDomain AstToRamTranslator::getConstantRamRepresentation(const ast::Constant& 
     fatal("unaccounted-for constant");
 }
 
-Own<ram::Expression> AstToRamTranslator::translateConstant(ast::Constant const& c) {
+Own<ram::Expression> AstToRamTranslator::translateConstant(ast::Constant const& c) const {
     auto const rawConstant = getConstantRamRepresentation(c);
     if (auto* const c_num = dynamic_cast<const ast::NumericConstant*>(&c)) {
         switch (c_num->getFinalType().value()) {
@@ -235,7 +235,7 @@ Own<ram::Expression> AstToRamTranslator::translateConstant(ast::Constant const& 
 }
 
 /** generate RAM code for a non-recursive relation */
-Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(const ast::Relation& rel) {
+Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(const ast::Relation& rel) const {
     // start with an empty sequence
     VecOwn<ram::Statement> result;
 
@@ -368,7 +368,7 @@ Own<ram::Statement> AstToRamTranslator::generateRelationMerge(
 }
 
 VecOwn<ram::Statement> AstToRamTranslator::createRecursiveClauseVersions(
-        const std::set<const ast::Relation*>& scc, const ast::Relation* rel) {
+        const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const {
     assert(contains(scc, rel) && "relation should belong to scc");
     VecOwn<ram::Statement> loopRelSeq;
 
@@ -449,7 +449,8 @@ VecOwn<ram::Statement> AstToRamTranslator::createRecursiveClauseVersions(
     return loopRelSeq;
 }
 
-Own<ram::Statement> AstToRamTranslator::generateStratumPreamble(const std::set<const ast::Relation*>& scc) {
+Own<ram::Statement> AstToRamTranslator::generateStratumPreamble(
+        const std::set<const ast::Relation*>& scc) const {
     VecOwn<ram::Statement> preamble;
     for (const ast::Relation* rel : scc) {
         // Generate code for the non-recursive part of the relation */
@@ -495,7 +496,8 @@ Own<ram::Statement> AstToRamTranslator::generateStratumTableUpdates(
     return mk<ram::Sequence>(std::move(updateTable));
 }
 
-Own<ram::Statement> AstToRamTranslator::generateStratumMainLoop(const std::set<const ast::Relation*>& scc) {
+Own<ram::Statement> AstToRamTranslator::generateStratumMainLoop(
+        const std::set<const ast::Relation*>& scc) const {
     VecOwn<ram::Statement> loopSeq;
     for (const ast::Relation* rel : scc) {
         auto loopRelSeq = createRecursiveClauseVersions(scc, rel);
@@ -553,7 +555,7 @@ Own<ram::Statement> AstToRamTranslator::generateStratumExitSequence(
 
 /** generate RAM code for recursive relations in a strongly-connected component */
 Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
-        const std::set<const ast::Relation*>& scc) {
+        const std::set<const ast::Relation*>& scc) const {
     assert(!scc.empty() && "scc set should not be empty");
     VecOwn<ram::Statement> result;
 

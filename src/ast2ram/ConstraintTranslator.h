@@ -35,11 +35,11 @@ class AstToRamTranslator;
 
 class ConstraintTranslator : public ast::Visitor<Own<ram::Condition>> {
 public:
-    ConstraintTranslator(AstToRamTranslator& translator, const ValueIndex& index)
+    ConstraintTranslator(const AstToRamTranslator& translator, const ValueIndex& index)
             : translator(translator), index(index) {}
 
     static Own<ram::Condition> translate(
-            AstToRamTranslator& translator, const ValueIndex& index, const ast::Literal& lit);
+            const AstToRamTranslator& translator, const ValueIndex& index, const ast::Literal& lit);
 
     /** -- Visitors -- */
     Own<ram::Condition> visitAtom(const ast::Atom&) override;
@@ -48,7 +48,7 @@ public:
     Own<ram::Condition> visitNegation(const ast::Negation& neg) override;
 
 private:
-    AstToRamTranslator& translator;
+    const AstToRamTranslator& translator;
     const ValueIndex& index;
 };
 

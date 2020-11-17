@@ -30,7 +30,7 @@
 namespace souffle::ast2ram {
 
 Own<ram::Condition> ConstraintTranslator::translate(
-        AstToRamTranslator& translator, const ValueIndex& index, const ast::Literal& lit) {
+        const AstToRamTranslator& translator, const ValueIndex& index, const ast::Literal& lit) {
     return ConstraintTranslator(translator, index)(lit);
 }
 

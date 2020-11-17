@@ -40,13 +40,13 @@ class ValueIndex;
 
 class ClauseTranslator {
 public:
-    ClauseTranslator(AstToRamTranslator& translator) : translator(translator) {}
+    ClauseTranslator(const AstToRamTranslator& translator) : translator(translator) {}
 
     Own<ram::Statement> translateClause(
             const ast::Clause& clause, const ast::Clause& originalClause, const int version = 0);
 
 protected:
-    AstToRamTranslator& translator;
+    const AstToRamTranslator& translator;
 
     // value index to keep track of references in the loop nest
     Own<ValueIndex> valueIndex = mk<ValueIndex>();
