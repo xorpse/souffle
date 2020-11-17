@@ -347,9 +347,7 @@ Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
 }
 
 Own<ast::Clause> ClauseTranslator::getReorderedClause(const ast::Clause& clause, const int version) const {
-    const auto plan = clause.getExecutionPlan();
-
-    // check whether there is an imposed order constraint
+    const auto& plan = clause.getExecutionPlan();
     if (plan == nullptr) {
         // no plan, so reorder it according to the internal heuristic
         if (auto* reorderedClause = ast::transform::ReorderLiteralsTransformer::reorderClauseWithSips(
@@ -358,28 +356,25 @@ Own<ast::Clause> ClauseTranslator::getReorderedClause(const ast::Clause& clause,
         }
         return nullptr;
     }
+
+    // check if there's a plan for the current version
     auto orders = plan->getOrders();
-    if (orders.find(version) == orders.end()) {
+    if (!contains(orders, version)) {
         return nullptr;
     }
 
-    // get the imposed order
-    const auto& order = orders[version];
-
-    // create a copy and fix order
-    Own<ast::Clause> reorderedClause(clause.clone());
-
-    // Change order to start at zero
+    // get the imposed order, and change it to start at zero
+    const auto& order = orders.at(version);
     std::vector<unsigned int> newOrder(order->getOrder().size());
     std::transform(order->getOrder().begin(), order->getOrder().end(), newOrder.begin(),
             [](unsigned int i) -> unsigned int { return i - 1; });
 
-    // re-order atoms
+    // create a copy and fix order
+    auto reorderedClause = souffle::clone(&clause);
     reorderedClause.reset(reorderAtoms(reorderedClause.get(), newOrder));
 
-    // clear other order and fix plan
+    // clear other order to fix plan
     reorderedClause->clearExecutionPlan();
-
     return reorderedClause;
 }
 
