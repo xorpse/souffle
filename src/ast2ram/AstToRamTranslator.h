@@ -162,11 +162,11 @@ private:
     VecOwn<ram::Statement> createRecursiveClauseVersions(
             const std::set<const ast::Relation*>& scc, const ast::Relation* rel);
 
-    VecOwn<ram::Statement> generateStratumPreamble(const std::set<const ast::Relation*>& scc);
-    VecOwn<ram::Statement> generateStratumPostamble(const std::set<const ast::Relation*>& scc) const;
-    VecOwn<ram::Statement> generateStratumTableUpdates(const std::set<const ast::Relation*>& scc) const;
-    VecOwn<ram::Statement> generateStratumMainLoop(const std::set<const ast::Relation*>& scc);
-    VecOwn<ram::Statement> generateStratumExitConditions(const std::set<const ast::Relation*>& scc) const;
+    Own<ram::Sequence> generateStratumPreamble(const std::set<const ast::Relation*>& scc);
+    Own<ram::Sequence> generateStratumPostamble(const std::set<const ast::Relation*>& scc) const;
+    Own<ram::Sequence> generateStratumTableUpdates(const std::set<const ast::Relation*>& scc) const;
+    Own<ram::Sequence> generateStratumMainLoop(const std::set<const ast::Relation*>& scc);
+    Own<ram::Sequence> generateStratumExitSequence(const std::set<const ast::Relation*>& scc) const;
 };
 
 }  // namespace souffle::ast2ram

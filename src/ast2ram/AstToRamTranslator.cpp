@@ -450,8 +450,7 @@ VecOwn<ram::Statement> AstToRamTranslator::createRecursiveClauseVersions(
     return loopRelSeq;
 }
 
-VecOwn<ram::Statement> AstToRamTranslator::generateStratumPreamble(
-        const std::set<const ast::Relation*>& scc) {
+Own<ram::Sequence> AstToRamTranslator::generateStratumPreamble(const std::set<const ast::Relation*>& scc) {
     VecOwn<ram::Statement> preamble;
     for (const ast::Relation* rel : scc) {
         // Generate code for the non-recursive part of the relation */
@@ -460,10 +459,10 @@ VecOwn<ram::Statement> AstToRamTranslator::generateStratumPreamble(
         // Copy the result into the delta relation
         appendStmt(preamble, mergeRelations(rel, getDeltaRelationName(rel), getConcreteRelationName(rel)));
     }
-    return preamble;
+    return mk<ram::Sequence>(std::move(preamble));
 }
 
-VecOwn<ram::Statement> AstToRamTranslator::generateStratumPostamble(
+Own<ram::Sequence> AstToRamTranslator::generateStratumPostamble(
         const std::set<const ast::Relation*>& scc) const {
     VecOwn<ram::Statement> postamble;
     for (const ast::Relation* rel : scc) {
@@ -471,10 +470,10 @@ VecOwn<ram::Statement> AstToRamTranslator::generateStratumPostamble(
         appendStmt(postamble, mk<ram::Clear>(getDeltaRelationName(rel)));
         appendStmt(postamble, mk<ram::Clear>(getNewRelationName(rel)));
     }
-    return postamble;
+    return mk<ram::Sequence>(std::move(postamble));
 }
 
-VecOwn<ram::Statement> AstToRamTranslator::generateStratumTableUpdates(
+Own<ram::Sequence> AstToRamTranslator::generateStratumTableUpdates(
         const std::set<const ast::Relation*>& scc) const {
     VecOwn<ram::Statement> updateTable;
     for (const ast::Relation* rel : scc) {
@@ -493,11 +492,10 @@ VecOwn<ram::Statement> AstToRamTranslator::generateStratumTableUpdates(
 
         appendStmt(updateTable, std::move(updateRelTable));
     }
-    return updateTable;
+    return mk<ram::Sequence>(std::move(updateTable));
 }
 
-VecOwn<ram::Statement> AstToRamTranslator::generateStratumMainLoop(
-        const std::set<const ast::Relation*>& scc) {
+Own<ram::Sequence> AstToRamTranslator::generateStratumMainLoop(const std::set<const ast::Relation*>& scc) {
     VecOwn<ram::Statement> loopSeq;
     for (const ast::Relation* rel : scc) {
         auto loopRelSeq = createRecursiveClauseVersions(scc, rel);
@@ -521,10 +519,10 @@ VecOwn<ram::Statement> AstToRamTranslator::generateStratumMainLoop(
 
         appendStmt(loopSeq, mk<ram::Sequence>(std::move(loopRelSeq)));
     }
-    return loopSeq;
+    return mk<ram::Sequence>(std::move(loopSeq));
 }
 
-VecOwn<ram::Statement> AstToRamTranslator::generateStratumExitConditions(
+Own<ram::Sequence> AstToRamTranslator::generateStratumExitSequence(
         const std::set<const ast::Relation*>& scc) const {
     // Helper function to add a new term to a conjunctive condition
     auto addCondition = [&](Own<ram::Condition>& cond, Own<ram::Condition> term) {
@@ -550,44 +548,30 @@ VecOwn<ram::Statement> AstToRamTranslator::generateStratumExitConditions(
         }
     }
 
-    return exitConditions;
+    return mk<ram::Sequence>(std::move(exitConditions));
 }
 
 /** generate RAM code for recursive relations in a strongly-connected component */
 Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
         const std::set<const ast::Relation*>& scc) {
-    // -- Initialise all the individual sections --
-    auto preamble = generateStratumPreamble(scc);
-    auto loopSeq = generateStratumMainLoop(scc);
-    auto updateTable = generateStratumTableUpdates(scc);
-    auto exitConditions = generateStratumExitConditions(scc);
-    auto postamble = generateStratumPostamble(scc);
-
-    // --- Combine the individual sections into the final fixpoint loop --
-    VecOwn<ram::Statement> res;
+    assert(!scc.empty() && "scc set should not be empty");
+    VecOwn<ram::Statement> result;
 
     // Add in the preamble
-    if (!preamble.empty()) {
-        appendStmt(res, mk<ram::Sequence>(std::move(preamble)));
-    }
+    appendStmt(result, generateStratumPreamble(scc));
 
-    // Add in the main loop and update sections
-    auto loop = mk<ram::Parallel>(std::move(loopSeq));
-    if (!loop->getStatements().empty() && !exitConditions.empty() && !updateTable.empty()) {
-        auto ramExitSequence = mk<ram::Sequence>(std::move(exitConditions));
-        auto ramUpdateSequence = mk<ram::Sequence>(std::move(updateTable));
-        auto ramLoopSequence = mk<ram::Loop>(
-                mk<ram::Sequence>(std::move(loop), std::move(ramExitSequence), std::move(ramUpdateSequence)));
-        appendStmt(res, std::move(ramLoopSequence));
-    }
+    // Add in the main fixpoint loop
+    auto innerLoop = mk<ram::Parallel>(generateStratumMainLoop(scc));
+    auto exitSequence = generateStratumExitSequence(scc);
+    auto updateSequence = generateStratumTableUpdates(scc);
+    auto fixpointLoop = mk<ram::Loop>(
+            mk<ram::Sequence>(std::move(innerLoop), std::move(exitSequence), std::move(updateSequence)));
+    appendStmt(result, std::move(fixpointLoop));
 
     // Add in the postamble
-    if (!postamble.empty()) {
-        appendStmt(res, mk<ram::Sequence>(std::move(postamble)));
-    }
+    appendStmt(result, generateStratumPostamble(scc));
 
-    assert(!res.empty() && "not implemented");
-    return mk<ram::Sequence>(std::move(res));
+    return mk<ram::Sequence>(std::move(result));
 }
 
 bool AstToRamTranslator::removeADTs(const ast::TranslationUnit& translationUnit) {
