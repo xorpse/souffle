@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include "ram/Relation.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <map>
 #include <vector>
@@ -30,6 +29,7 @@ class Node;
 namespace souffle::ram {
 class Operation;
 class Condition;
+class Relation;
 class Statement;
 }  // namespace souffle::ram
 

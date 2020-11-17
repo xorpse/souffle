@@ -34,7 +34,6 @@ class Clause;
 class Constant;
 class Literal;
 class Program;
-class QualifiedName;
 class Relation;
 class SipsMetric;
 class TranslationUnit;
@@ -59,7 +58,6 @@ class Relation;
 class Sequence;
 class Statement;
 class TranslationUnit;
-class TupleElement;
 }  // namespace souffle::ram
 
 namespace souffle::ast2ram {
@@ -101,12 +99,12 @@ public:
     const ram::Relation* lookupRelation(const std::string& name) const;
 
 protected:
-    /** AST program */
     const ast::Program* program = nullptr;
-
     Own<ast::SipsMetric> sipsMetric;
 
-    /** Analyses needed */
+    /**
+     * Analyses needed
+     */
     const ast::analysis::TypeEnvironment* typeEnv = nullptr;
     const ast::analysis::IOTypeAnalysis* ioType = nullptr;
     const ast::analysis::FunctorAnalysis* functorAnalysis = nullptr;
@@ -117,33 +115,16 @@ protected:
     const ast::analysis::RelationDetailCacheAnalysis* relDetail = nullptr;
     const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
 
+    /**
+     * Translation methods
+     */
     Own<ram::Sequence> translateSCC(size_t scc, size_t idx);
     virtual void addNegation(ast::Clause& clause, const ast::Atom* atom);
     virtual VecOwn<ram::Statement> clearExpiredRelations(
             const std::set<const ast::Relation*>& expiredRelations) const;
-
-    void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
-    void addRamRelation(std::string relationName, Own<ram::Relation> ramRelation);
-
-private:
-    std::map<std::string, Own<ram::Statement>> ramSubroutines;
-    std::map<std::string, Own<ram::Relation>> ramRelations;
-    Own<SymbolTable> symbolTable;
-
-    /** replace ADTs with special records */
-    static bool removeADTs(const ast::TranslationUnit& translationUnit);
-
-    // TODO (b-scholz): revisit / refactor so that only one directive is translated
-    std::vector<std::map<std::string, std::string>> getInputDirectives(const ast::Relation* rel);
-    std::vector<std::map<std::string, std::string>> getOutputDirectives(const ast::Relation* rel);
-
-    /** Get ram representation of constant */
     RamDomain getConstantRamRepresentation(const ast::Constant& constant);
 
-    /** create RAM relations for a given SCC */
-    void createRamRelation(size_t scc);
-
-    /** translate RAM code for the non-recursive clauses of the given relation */
+    /* translate RAM code for the non-recursive clauses of the given relation */
     Own<ram::Statement> translateNonRecursiveRelation(const ast::Relation& rel);
 
     /** translate RAM code for recursive relations in a strongly-connected component */
@@ -154,6 +135,24 @@ private:
 
     /** add a statement to load a relation */
     void makeRamLoad(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation);
+
+    void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
+    void addRamRelation(std::string relationName, Own<ram::Relation> ramRelation);
+
+private:
+    std::map<std::string, Own<ram::Statement>> ramSubroutines;
+    std::map<std::string, Own<ram::Relation>> ramRelations;
+    Own<SymbolTable> symbolTable;
+
+    // TODO (b-scholz): revisit / refactor so that only one directive is translated
+    std::vector<std::map<std::string, std::string>> getInputDirectives(const ast::Relation* rel);
+    std::vector<std::map<std::string, std::string>> getOutputDirectives(const ast::Relation* rel);
+
+    /** create RAM relations for a given SCC */
+    void createRamRelation(size_t scc);
+
+    /** replace ADTs with special records */
+    static bool removeADTs(const ast::TranslationUnit& translationUnit);
 
     /** finalise the types of polymorphic objects */
     // TODO (azreika): should be removed once the translator is refactored to avoid cloning
