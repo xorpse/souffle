@@ -94,6 +94,10 @@ private:
     VecOwn<Clause> annotatedClauses;
     std::stringstream analysisLogs;
 
+    /* Return a new clause with type-annotated variables */
+    static Own<Clause> createAnnotatedClause(
+            const Clause* clause, const std::map<const Argument*, TypeSet> argumentTypes);
+
     // Polymorphic objects analysis
     std::map<const IntrinsicFunctor*, const IntrinsicFunctorInfo*> functorInfo;
     std::map<std::string, const FunctorDeclaration*> udfDeclaration;
