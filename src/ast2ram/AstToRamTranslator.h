@@ -86,17 +86,15 @@ public:
         return sipsMetric.get();
     }
 
+    size_t getEvaluationArity(const ast::Atom* atom) const;
+    const ram::Relation* lookupRelation(const std::string& name) const;
+
     /** AST->RAM translation methods */
     Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
     Own<ram::Expression> translateValue(const ast::Argument* arg, const ValueIndex& index) const;
     Own<ram::Condition> translateConstraint(const ast::Literal* arg, const ValueIndex& index);
     Own<ram::Expression> translateConstant(const ast::Constant& c);
     virtual Own<ram::Sequence> translateProgram(const ast::TranslationUnit& translationUnit);
-
-    /** determine the auxiliary for relations */
-    size_t getEvaluationArity(const ast::Atom* atom) const;
-
-    const ram::Relation* lookupRelation(const std::string& name) const;
 
 protected:
     const ast::Program* program = nullptr;
@@ -119,7 +117,7 @@ protected:
      * Translation methods
      */
     Own<ram::Sequence> translateSCC(size_t scc, size_t idx);
-    virtual void addNegation(ast::Clause& clause, const ast::Atom* atom);
+    virtual void addNegation(ast::Clause& clause, const ast::Atom* atom) const;
     virtual VecOwn<ram::Statement> clearExpiredRelations(
             const std::set<const ast::Relation*>& expiredRelations) const;
     RamDomain getConstantRamRepresentation(const ast::Constant& constant);
@@ -160,6 +158,9 @@ private:
 
     Own<ram::Statement> mergeRelations(
             const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const;
+
+    VecOwn<ram::Statement> createRecursiveClauseVersions(
+            const std::set<const ast::Relation*>& scc, const ast::Relation* rel);
 };
 
 }  // namespace souffle::ast2ram

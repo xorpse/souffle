@@ -25,7 +25,7 @@ public:
 
 protected:
     Own<ram::Sequence> translateProgram(const ast::TranslationUnit& translationUnit) override;
-    void addNegation(ast::Clause& clause, const ast::Atom* atom) override;
+    void addNegation(ast::Clause& clause, const ast::Atom* atom) const override;
     VecOwn<ram::Statement> clearExpiredRelations(
             const std::set<const ast::Relation*>& expiredRelations) const override;
 

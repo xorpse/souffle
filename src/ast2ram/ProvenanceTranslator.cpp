@@ -53,7 +53,7 @@ VecOwn<ram::Statement> ProvenanceTranslator::clearExpiredRelations(
     return {};
 }
 
-void ProvenanceTranslator::addNegation(ast::Clause& clause, const ast::Atom* atom) {
+void ProvenanceTranslator::addNegation(ast::Clause& clause, const ast::Atom* atom) const {
     clause.addToBody(mk<ast::ProvenanceNegation>(souffle::clone(atom)));
 }
 
