@@ -236,12 +236,12 @@ Own<ram::Expression> AstToRamTranslator::translateConstant(ast::Constant const& 
 
 /** generate RAM code for a non-recursive relation */
 Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(const ast::Relation& rel) {
-    /* start with an empty sequence */
-    VecOwn<ram::Statement> res;
+    // start with an empty sequence
+    VecOwn<ram::Statement> result;
 
     std::string relName = getConcreteRelationName(&rel);
 
-    /* iterate over all clauses that belong to the relation */
+    // iterate over all non-recursive clauses that belong to the relation
     for (ast::Clause* clause : relDetail->getClauses(rel.getQualifiedName())) {
         // skip recursive rules
         if (recursiveClauses->recursive(clause)) {
@@ -270,7 +270,7 @@ Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(const ast:
         rule = mk<ram::DebugInfo>(std::move(rule), ds.str());
 
         // add rule to result
-        appendStmt(res, std::move(rule));
+        appendStmt(result, std::move(rule));
     }
 
     // add logging for entire relation
@@ -280,21 +280,20 @@ Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(const ast:
         const std::string logSizeStatement = LogStatement::nNonrecursiveRelation(relationName, srcLocation);
 
         // add timer if we did any work
-        if (!res.empty()) {
+        if (!result.empty()) {
             const std::string logTimerStatement =
                     LogStatement::tNonrecursiveRelation(relationName, srcLocation);
-            auto newStmt =
-                    mk<ram::LogRelationTimer>(mk<ram::Sequence>(std::move(res)), logTimerStatement, relName);
-            res.clear();
-            appendStmt(res, std::move(newStmt));
+            auto newStmt = mk<ram::LogRelationTimer>(
+                    mk<ram::Sequence>(std::move(result)), logTimerStatement, relName);
+            result.clear();
+            appendStmt(result, std::move(newStmt));
         } else {
             // add table size printer
-            appendStmt(res, mk<ram::LogSize>(relName, logSizeStatement));
+            appendStmt(result, mk<ram::LogSize>(relName, logSizeStatement));
         }
     }
 
-    // done
-    return mk<ram::Sequence>(std::move(res));
+    return mk<ram::Sequence>(std::move(result));
 }
 
 Own<ram::Sequence> AstToRamTranslator::translateSCC(size_t scc, size_t idx) {
@@ -345,7 +344,7 @@ void AstToRamTranslator::addNegation(ast::Clause& clause, const ast::Atom* atom)
     }
 }
 
-Own<ram::Statement> AstToRamTranslator::mergeRelations(
+Own<ram::Statement> AstToRamTranslator::generateRelationMerge(
         const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const {
     VecOwn<ram::Expression> values;
 
@@ -450,19 +449,20 @@ VecOwn<ram::Statement> AstToRamTranslator::createRecursiveClauseVersions(
     return loopRelSeq;
 }
 
-Own<ram::Sequence> AstToRamTranslator::generateStratumPreamble(const std::set<const ast::Relation*>& scc) {
+Own<ram::Statement> AstToRamTranslator::generateStratumPreamble(const std::set<const ast::Relation*>& scc) {
     VecOwn<ram::Statement> preamble;
     for (const ast::Relation* rel : scc) {
         // Generate code for the non-recursive part of the relation */
         appendStmt(preamble, translateNonRecursiveRelation(*rel));
 
         // Copy the result into the delta relation
-        appendStmt(preamble, mergeRelations(rel, getDeltaRelationName(rel), getConcreteRelationName(rel)));
+        appendStmt(preamble,
+                generateRelationMerge(rel, getDeltaRelationName(rel), getConcreteRelationName(rel)));
     }
     return mk<ram::Sequence>(std::move(preamble));
 }
 
-Own<ram::Sequence> AstToRamTranslator::generateStratumPostamble(
+Own<ram::Statement> AstToRamTranslator::generateStratumPostamble(
         const std::set<const ast::Relation*>& scc) const {
     VecOwn<ram::Statement> postamble;
     for (const ast::Relation* rel : scc) {
@@ -473,15 +473,15 @@ Own<ram::Sequence> AstToRamTranslator::generateStratumPostamble(
     return mk<ram::Sequence>(std::move(postamble));
 }
 
-Own<ram::Sequence> AstToRamTranslator::generateStratumTableUpdates(
+Own<ram::Statement> AstToRamTranslator::generateStratumTableUpdates(
         const std::set<const ast::Relation*>& scc) const {
     VecOwn<ram::Statement> updateTable;
     for (const ast::Relation* rel : scc) {
         // Copy @new into main relation, @delta := @new, and empty out @new
-        Own<ram::Statement> updateRelTable =
-                mk<ram::Sequence>(mergeRelations(rel, getConcreteRelationName(rel), getNewRelationName(rel)),
-                        mk<ram::Swap>(getDeltaRelationName(rel), getNewRelationName(rel)),
-                        mk<ram::Clear>(getNewRelationName(rel)));
+        Own<ram::Statement> updateRelTable = mk<ram::Sequence>(
+                generateRelationMerge(rel, getConcreteRelationName(rel), getNewRelationName(rel)),
+                mk<ram::Swap>(getDeltaRelationName(rel), getNewRelationName(rel)),
+                mk<ram::Clear>(getNewRelationName(rel)));
 
         // Measure update time
         if (Global::config().has("profile")) {
@@ -495,7 +495,7 @@ Own<ram::Sequence> AstToRamTranslator::generateStratumTableUpdates(
     return mk<ram::Sequence>(std::move(updateTable));
 }
 
-Own<ram::Sequence> AstToRamTranslator::generateStratumMainLoop(const std::set<const ast::Relation*>& scc) {
+Own<ram::Statement> AstToRamTranslator::generateStratumMainLoop(const std::set<const ast::Relation*>& scc) {
     VecOwn<ram::Statement> loopSeq;
     for (const ast::Relation* rel : scc) {
         auto loopRelSeq = createRecursiveClauseVersions(scc, rel);
@@ -522,7 +522,7 @@ Own<ram::Sequence> AstToRamTranslator::generateStratumMainLoop(const std::set<co
     return mk<ram::Sequence>(std::move(loopSeq));
 }
 
-Own<ram::Sequence> AstToRamTranslator::generateStratumExitSequence(
+Own<ram::Statement> AstToRamTranslator::generateStratumExitSequence(
         const std::set<const ast::Relation*>& scc) const {
     // Helper function to add a new term to a conjunctive condition
     auto addCondition = [&](Own<ram::Condition>& cond, Own<ram::Condition> term) {
