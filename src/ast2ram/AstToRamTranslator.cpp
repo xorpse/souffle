@@ -302,27 +302,24 @@ Own<ram::Sequence> AstToRamTranslator::translateSCC(size_t scc, size_t idx) {
     VecOwn<ram::Statement> current;
 
     // find out if the current SCC is recursive
-    const auto& isRecursive = sccGraph->isRecursive(scc);
-
-    // make variables for particular sets of relations contained within the current SCC, and,
-    // predecessors and successor SCCs thereof
-    const auto& allInterns = sccGraph->getInternalRelations(scc);
-    const auto& internIns = sccGraph->getInternalInputRelations(scc);
-    const auto& internOuts = sccGraph->getInternalOutputRelations(scc);
 
     // load all internal input relations from the facts dir with a .facts extension
-    for (const auto& relation : internIns) {
+    const auto& sccInputRelations = sccGraph->getInternalInputRelations(scc);
+    for (const auto& relation : sccInputRelations) {
         makeRamLoad(current, relation);
     }
 
     // compute the relations themselves
+    const auto& isRecursive = sccGraph->isRecursive(scc);
+    const auto& sccRelations = sccGraph->getInternalRelations(scc);
     Own<ram::Statement> bodyStatement =
-            (!isRecursive) ? translateNonRecursiveRelation(*((const ast::Relation*)*allInterns.begin()))
-                           : translateRecursiveRelation(allInterns);
+            (!isRecursive) ? translateNonRecursiveRelation(*((const ast::Relation*)*sccRelations.begin()))
+                           : translateRecursiveRelation(sccRelations);
     appendStmt(current, std::move(bodyStatement));
 
     // store all internal output relations to the output dir with a .csv extension
-    for (const auto& relation : internOuts) {
+    const auto& sccOutputRelations = sccGraph->getInternalOutputRelations(scc);
+    for (const auto& relation : sccOutputRelations) {
         makeRamStore(current, relation);
     }
 
@@ -654,8 +651,8 @@ void AstToRamTranslator::makeRamStore(VecOwn<ram::Statement>& curStmts, const as
 
 void AstToRamTranslator::createRamRelation(size_t scc) {
     const auto& isRecursive = sccGraph->isRecursive(scc);
-    const auto& allInterns = sccGraph->getInternalRelations(scc);
-    for (const auto& rel : allInterns) {
+    const auto& sccRelations = sccGraph->getInternalRelations(scc);
+    for (const auto& rel : sccRelations) {
         std::string name = getRelationName(rel->getQualifiedName());
         auto arity = rel->getArity();
         auto auxiliaryArity = auxArityAnalysis->getArity(rel);
