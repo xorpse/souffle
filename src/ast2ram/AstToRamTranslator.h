@@ -115,7 +115,6 @@ protected:
     void addRamRelation(std::string relationName, Own<ram::Relation> ramRelation);
 
     // clean up
-    Own<ram::Statement> generateStratum(size_t scc, size_t idx) const;
     virtual Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const;
     RamDomain getConstantRamRepresentation(const ast::Constant& constant) const;
     Own<ram::Statement> translateRecursiveClauses(
@@ -132,6 +131,7 @@ protected:
     Own<ram::Statement> generateLoadRelation(const ast::Relation* relation) const;
 
     /** Low-level stratum translation */
+    Own<ram::Statement> generateStratum(size_t scc) const;
     Own<ram::Statement> generateStratumPreamble(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumPostamble(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumLoopBody(const std::set<const ast::Relation*>& scc) const;

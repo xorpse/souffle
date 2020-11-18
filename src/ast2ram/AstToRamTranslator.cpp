@@ -251,8 +251,8 @@ Own<ram::Statement> AstToRamTranslator::generateNonRecursiveRelation(const ast::
     return mk<ram::Sequence>(std::move(result));
 }
 
-Own<ram::Statement> AstToRamTranslator::generateStratum(size_t scc, size_t idx) const {
-    // make a new ram statement for the current SCC
+Own<ram::Statement> AstToRamTranslator::generateStratum(size_t scc) const {
+    // Make a new ram statement for the current SCC
     VecOwn<ram::Statement> current;
 
     // load all internal input relations from the facts dir with a .facts extension
@@ -261,7 +261,7 @@ Own<ram::Statement> AstToRamTranslator::generateStratum(size_t scc, size_t idx) 
         appendStmt(current, generateLoadRelation(relation));
     }
 
-    // compute the current stratum
+    // Compute the current stratum
     const auto& isRecursive = sccGraph->isRecursive(scc);
     const auto& sccRelations = sccGraph->getInternalRelations(scc);
     if (isRecursive) {
@@ -272,15 +272,11 @@ Own<ram::Statement> AstToRamTranslator::generateStratum(size_t scc, size_t idx) 
         appendStmt(current, generateNonRecursiveRelation(*relation));
     }
 
-    // store all internal output relations to the output dir with a .csv extension
+    // Store all internal output relations to the output dir with a .csv extension
     const auto& sccOutputRelations = sccGraph->getInternalOutputRelations(scc);
     for (const auto& relation : sccOutputRelations) {
         appendStmt(current, generateStoreRelation(relation));
     }
-
-    // clear expired relations
-    const auto& expiredRelations = relationSchedule->schedule().at(idx).expired();
-    appendStmt(current, generateClearExpiredRelations(expiredRelations));
 
     return mk<ram::Sequence>(std::move(current));
 }
@@ -749,9 +745,16 @@ Own<ram::Sequence> AstToRamTranslator::translateProgram(const ast::TranslationUn
 
     // Create subroutines for each SCC according to topological order
     for (size_t i = 0; i < sccOrdering.size(); i++) {
-        auto sccCode = generateStratum(sccOrdering.at(i), i);
+        // Generate the main stratum code
+        auto stratum = generateStratum(sccOrdering.at(i));
+
+        // Clear expired relations
+        const auto& expiredRelations = relationSchedule->schedule().at(i).expired();
+        stratum = mk<ram::Sequence>(std::move(stratum), generateClearExpiredRelations(expiredRelations));
+
+        // Add the subroutine
         std::string stratumID = "stratum_" + toString(i);
-        addRamSubroutine(stratumID, std::move(sccCode));
+        addRamSubroutine(stratumID, std::move(stratum));
     }
 
     // Invoke all strata
