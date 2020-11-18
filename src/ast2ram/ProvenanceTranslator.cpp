@@ -48,10 +48,10 @@ Own<ram::Sequence> ProvenanceTranslator::translateProgram(const ast::Translation
     return ramProgram;
 }
 
-VecOwn<ram::Statement> ProvenanceTranslator::clearExpiredRelations(
+Own<ram::Statement> ProvenanceTranslator::generateClearExpiredRelations(
         const std::set<const ast::Relation*>& /* expiredRelations */) const {
     // relations should be preserved if provenance is enabled
-    return {};
+    return mk<ram::Sequence>();
 }
 
 Own<ast::Clause> ProvenanceTranslator::createDeltaClause(

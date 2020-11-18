@@ -118,15 +118,15 @@ protected:
      */
     Own<ram::Sequence> translateSCC(size_t scc, size_t idx) const;
     virtual Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const;
-    virtual VecOwn<ram::Statement> clearExpiredRelations(
+    virtual Own<ram::Statement> generateClearExpiredRelations(
             const std::set<const ast::Relation*>& expiredRelations) const;
     RamDomain getConstantRamRepresentation(const ast::Constant& constant) const;
 
     /** Translate RAM code for the non-recursive clauses of the given relation */
-    Own<ram::Statement> translateNonRecursiveRelation(const ast::Relation& rel) const;
+    Own<ram::Statement> generateNonRecursiveRelation(const ast::Relation& rel) const;
 
     /** Translate RAM code for recursive relations in a strongly-connected component */
-    Own<ram::Statement> translateRecursiveRelation(const std::set<const ast::Relation*>& scc) const;
+    Own<ram::Statement> generateRecursiveStratum(const std::set<const ast::Relation*>& scc) const;
 
     void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
     void addRamRelation(std::string relationName, Own<ram::Relation> ramRelation);
@@ -156,10 +156,11 @@ private:
     /** Stratum translation */
     Own<ram::Statement> generateStratumPreamble(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumPostamble(const std::set<const ast::Relation*>& scc) const;
-    Own<ram::Statement> generateStratumTableUpdates(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumLoopBody(const std::set<const ast::Relation*>& scc) const;
+    Own<ram::Statement> generateStratumTableUpdates(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumExitSequence(const std::set<const ast::Relation*>& scc) const;
 
+    /** IO translation */
     Own<ram::Statement> generateStoreRelation(const ast::Relation* relation) const;
     Own<ram::Statement> generateLoadRelation(const ast::Relation* relation) const;
 };

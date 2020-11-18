@@ -190,7 +190,7 @@ Own<ram::Statement> AstToRamTranslator::generateClearRelation(const ast::Relatio
 }
 
 /** generate RAM code for a non-recursive relation */
-Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(const ast::Relation& rel) const {
+Own<ram::Statement> AstToRamTranslator::generateNonRecursiveRelation(const ast::Relation& rel) const {
     // start with an empty sequence
     VecOwn<ram::Statement> result;
 
@@ -261,13 +261,16 @@ Own<ram::Sequence> AstToRamTranslator::translateSCC(size_t scc, size_t idx) cons
         appendStmt(current, generateLoadRelation(relation));
     }
 
-    // compute the relations themselves
+    // compute the current stratum
     const auto& isRecursive = sccGraph->isRecursive(scc);
     const auto& sccRelations = sccGraph->getInternalRelations(scc);
-    Own<ram::Statement> bodyStatement =
-            (!isRecursive) ? translateNonRecursiveRelation(*((const ast::Relation*)*sccRelations.begin()))
-                           : translateRecursiveRelation(sccRelations);
-    appendStmt(current, std::move(bodyStatement));
+    if (isRecursive) {
+        appendStmt(current, generateRecursiveStratum(sccRelations));
+    } else {
+        assert(sccRelations.size() == 1 && "only one relation should exist in non-recursive stratum");
+        const auto* relation = *sccRelations.begin();
+        appendStmt(current, generateNonRecursiveRelation(*relation));
+    }
 
     // store all internal output relations to the output dir with a .csv extension
     const auto& sccOutputRelations = sccGraph->getInternalOutputRelations(scc);
@@ -276,21 +279,19 @@ Own<ram::Sequence> AstToRamTranslator::translateSCC(size_t scc, size_t idx) cons
     }
 
     // clear expired relations
-    auto clearingStmts = clearExpiredRelations(relationSchedule->schedule().at(idx).expired());
-    for (auto& stmt : clearingStmts) {
-        appendStmt(current, std::move(stmt));
-    }
+    const auto& expiredRelations = relationSchedule->schedule().at(idx).expired();
+    appendStmt(current, generateClearExpiredRelations(expiredRelations));
 
     return mk<ram::Sequence>(std::move(current));
 }
 
-VecOwn<ram::Statement> AstToRamTranslator::clearExpiredRelations(
+Own<ram::Statement> AstToRamTranslator::generateClearExpiredRelations(
         const std::set<const ast::Relation*>& expiredRelations) const {
     VecOwn<ram::Statement> stmts;
     for (const auto& relation : expiredRelations) {
         appendStmt(stmts, generateClearRelation(relation));
     }
-    return stmts;
+    return mk<ram::Sequence>(std::move(stmts));
 }
 
 Own<ram::Statement> AstToRamTranslator::generateMergeRelations(
@@ -421,7 +422,7 @@ Own<ram::Statement> AstToRamTranslator::generateStratumPreamble(
     VecOwn<ram::Statement> preamble;
     for (const ast::Relation* rel : scc) {
         // Generate code for the non-recursive part of the relation */
-        appendStmt(preamble, translateNonRecursiveRelation(*rel));
+        appendStmt(preamble, generateNonRecursiveRelation(*rel));
 
         // Copy the result into the delta relation
         std::string deltaRelation = getDeltaRelationName(rel->getQualifiedName());
@@ -517,7 +518,7 @@ Own<ram::Statement> AstToRamTranslator::generateStratumExitSequence(
 }
 
 /** generate RAM code for recursive relations in a strongly-connected component */
-Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
+Own<ram::Statement> AstToRamTranslator::generateRecursiveStratum(
         const std::set<const ast::Relation*>& scc) const {
     assert(!scc.empty() && "scc set should not be empty");
     VecOwn<ram::Statement> result;
