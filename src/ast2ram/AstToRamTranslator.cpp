@@ -337,7 +337,7 @@ Own<ast::Clause> AstToRamTranslator::createDeltaClause(
     return recursiveVersion;
 }
 
-VecOwn<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
+Own<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
         const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const {
     assert(contains(scc, rel) && "relation should belong to scc");
     VecOwn<ram::Statement> result;
@@ -413,7 +413,7 @@ VecOwn<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
         }
     }
 
-    return result;
+    return mk<ram::Sequence>(std::move(result));
 }
 
 Own<ram::Statement> AstToRamTranslator::generateStratumPreamble(
@@ -466,16 +466,11 @@ Own<ram::Statement> AstToRamTranslator::generateStratumTableUpdates(
     return mk<ram::Sequence>(std::move(updateTable));
 }
 
-Own<ram::Statement> AstToRamTranslator::generateStratumMainLoop(
+Own<ram::Statement> AstToRamTranslator::generateStratumLoopBody(
         const std::set<const ast::Relation*>& scc) const {
-    VecOwn<ram::Statement> loopSeq;
+    VecOwn<ram::Statement> loopBody;
     for (const ast::Relation* rel : scc) {
-        auto loopRelSeq = translateRecursiveClauses(scc, rel);
-
-        // if there were no rules, continue
-        if (loopRelSeq.empty()) {
-            continue;
-        }
+        auto relClauses = translateRecursiveClauses(scc, rel);
 
         // add profiling information
         if (Global::config().has("profile")) {
@@ -483,15 +478,13 @@ Own<ram::Statement> AstToRamTranslator::generateStratumMainLoop(
             const auto& srcLocation = rel->getSrcLoc();
             const std::string logTimerStatement = LogStatement::tRecursiveRelation(relationName, srcLocation);
             const std::string logSizeStatement = LogStatement::nRecursiveRelation(relationName, srcLocation);
-            auto newStmt = mk<ram::LogRelationTimer>(mk<ram::Sequence>(std::move(loopRelSeq)),
+            relClauses = mk<ram::LogRelationTimer>(mk<ram::Sequence>(std::move(relClauses)),
                     logTimerStatement, getNewRelationName(rel->getQualifiedName()));
-            loopRelSeq.clear();
-            appendStmt(loopRelSeq, std::move(newStmt));
         }
 
-        appendStmt(loopSeq, mk<ram::Sequence>(std::move(loopRelSeq)));
+        appendStmt(loopBody, mk<ram::Sequence>(std::move(relClauses)));
     }
-    return mk<ram::Sequence>(std::move(loopSeq));
+    return mk<ram::Sequence>(std::move(loopBody));
 }
 
 Own<ram::Statement> AstToRamTranslator::generateStratumExitSequence(
@@ -533,11 +526,11 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveRelation(
     appendStmt(result, generateStratumPreamble(scc));
 
     // Add in the main fixpoint loop
-    auto innerLoop = mk<ram::Parallel>(generateStratumMainLoop(scc));
+    auto loopBody = mk<ram::Parallel>(generateStratumLoopBody(scc));
     auto exitSequence = generateStratumExitSequence(scc);
     auto updateSequence = generateStratumTableUpdates(scc);
     auto fixpointLoop = mk<ram::Loop>(
-            mk<ram::Sequence>(std::move(innerLoop), std::move(exitSequence), std::move(updateSequence)));
+            mk<ram::Sequence>(std::move(loopBody), std::move(exitSequence), std::move(updateSequence)));
     appendStmt(result, std::move(fixpointLoop));
 
     // Add in the postamble

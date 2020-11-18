@@ -150,14 +150,14 @@ private:
     Own<ram::Statement> generateMergeRelations(
             const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const;
 
-    VecOwn<ram::Statement> translateRecursiveClauses(
+    Own<ram::Statement> translateRecursiveClauses(
             const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const;
 
     /** Stratum translation */
     Own<ram::Statement> generateStratumPreamble(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumPostamble(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumTableUpdates(const std::set<const ast::Relation*>& scc) const;
-    Own<ram::Statement> generateStratumMainLoop(const std::set<const ast::Relation*>& scc) const;
+    Own<ram::Statement> generateStratumLoopBody(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumExitSequence(const std::set<const ast::Relation*>& scc) const;
 
     Own<ram::Statement> generateStoreRelation(const ast::Relation* relation) const;
