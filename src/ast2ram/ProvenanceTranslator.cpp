@@ -78,7 +78,7 @@ void ProvenanceTranslator::addProvenanceClauseSubroutines(const ast::Program* pr
         relName << clause.getHead()->getQualifiedName();
 
         // do not add subroutines for info relations or facts
-        if (relName.str().find("@info") != std::string::npos || clause.getBodyLiterals().empty()) {
+        if (isPrefix("info", relName.str()) || clause.getBodyLiterals().empty()) {
             return;
         }
 
