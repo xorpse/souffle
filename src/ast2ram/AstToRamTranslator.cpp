@@ -142,7 +142,7 @@ size_t AstToRamTranslator::getEvaluationArity(const ast::Atom* atom) const {
 }
 
 std::vector<std::map<std::string, std::string>> AstToRamTranslator::getInputDirectives(
-        const ast::Relation* rel) {
+        const ast::Relation* rel) const {
     std::vector<std::map<std::string, std::string>> inputDirectives;
     for (const auto* load : getDirectives(*program, rel->getQualifiedName())) {
         // must be a load
@@ -166,7 +166,7 @@ std::vector<std::map<std::string, std::string>> AstToRamTranslator::getInputDire
 }
 
 std::vector<std::map<std::string, std::string>> AstToRamTranslator::getOutputDirectives(
-        const ast::Relation* rel) {
+        const ast::Relation* rel) const {
     std::vector<std::map<std::string, std::string>> outputDirectives;
     for (const auto* store : getDirectives(*program, rel->getQualifiedName())) {
         // must be either printsize or output
@@ -296,7 +296,7 @@ Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(const ast:
     return mk<ram::Sequence>(std::move(result));
 }
 
-Own<ram::Sequence> AstToRamTranslator::translateSCC(size_t scc, size_t idx) {
+Own<ram::Sequence> AstToRamTranslator::translateSCC(size_t scc, size_t idx) const {
     // make a new ram statement for the current SCC
     VecOwn<ram::Statement> current;
 
@@ -658,7 +658,7 @@ bool AstToRamTranslator::removeADTs(const ast::TranslationUnit& translationUnit)
     return mapper.changed;
 }
 
-void AstToRamTranslator::makeRamLoad(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation) {
+void AstToRamTranslator::makeRamLoad(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation) const {
     for (auto directives : getInputDirectives(relation)) {
         Own<ram::Statement> statement = mk<ram::IO>(getConcreteRelationName(relation), directives);
         if (Global::config().has("profile")) {
@@ -671,7 +671,7 @@ void AstToRamTranslator::makeRamLoad(VecOwn<ram::Statement>& curStmts, const ast
     }
 }
 
-void AstToRamTranslator::makeRamStore(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation) {
+void AstToRamTranslator::makeRamStore(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation) const {
     for (auto directives : getOutputDirectives(relation)) {
         Own<ram::Statement> statement = mk<ram::IO>(getConcreteRelationName(relation), directives);
         if (Global::config().has("profile")) {
@@ -684,7 +684,7 @@ void AstToRamTranslator::makeRamStore(VecOwn<ram::Statement>& curStmts, const as
     }
 }
 
-void AstToRamTranslator::createRamRelation(size_t scc) {
+void AstToRamTranslator::createRamRelations(size_t scc) {
     const auto& isRecursive = sccGraph->isRecursive(scc);
     const auto& sccRelations = sccGraph->getInternalRelations(scc);
     for (const auto& rel : sccRelations) {
@@ -729,21 +729,21 @@ const ram::Relation* AstToRamTranslator::lookupRelation(const std::string& name)
     return ramRelations.at(name).get();
 }
 
-void AstToRamTranslator::finaliseAstTypes() {
-    visitDepthFirst(*program, [&](const ast::NumericConstant& nc) {
+void AstToRamTranslator::finaliseAstTypes(ast::Program& program) const {
+    visitDepthFirst(program, [&](const ast::NumericConstant& nc) {
         const_cast<ast::NumericConstant&>(nc).setFinalType(polyAnalysis->getInferredType(&nc));
     });
-    visitDepthFirst(*program, [&](const ast::Aggregator& aggr) {
+    visitDepthFirst(program, [&](const ast::Aggregator& aggr) {
         const_cast<ast::Aggregator&>(aggr).setFinalType(polyAnalysis->getOverloadedOperator(&aggr));
     });
-    visitDepthFirst(*program, [&](const ast::BinaryConstraint& bc) {
+    visitDepthFirst(program, [&](const ast::BinaryConstraint& bc) {
         const_cast<ast::BinaryConstraint&>(bc).setFinalType(polyAnalysis->getOverloadedOperator(&bc));
     });
-    visitDepthFirst(*program, [&](const ast::IntrinsicFunctor& inf) {
+    visitDepthFirst(program, [&](const ast::IntrinsicFunctor& inf) {
         const_cast<ast::IntrinsicFunctor&>(inf).setFinalOpType(polyAnalysis->getOverloadedFunctionOp(&inf));
         const_cast<ast::IntrinsicFunctor&>(inf).setFinalReturnType(functorAnalysis->getReturnType(&inf));
     });
-    visitDepthFirst(*program, [&](const ast::UserDefinedFunctor& udf) {
+    visitDepthFirst(program, [&](const ast::UserDefinedFunctor& udf) {
         const_cast<ast::UserDefinedFunctor&>(udf).setFinalReturnType(functorAnalysis->getReturnType(&udf));
     });
 }
@@ -761,7 +761,7 @@ Own<ram::Sequence> AstToRamTranslator::translateProgram(const ast::TranslationUn
     polyAnalysis = translationUnit.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
 
     // finalise polymorphic types in the AST
-    finaliseAstTypes();
+    finaliseAstTypes(*program);
 
     // determine the sips to use
     std::string sipsChosen = "all-bound";
@@ -780,7 +780,7 @@ Own<ram::Sequence> AstToRamTranslator::translateProgram(const ast::TranslationUn
     const auto& sccOrdering =
             translationUnit.getAnalysis<ast::analysis::TopologicallySortedSCCGraphAnalysis>()->order();
     for (const auto& scc : sccOrdering) {
-        createRamRelation(scc);
+        createRamRelations(scc);
     }
 
     // create subroutine for each SCC according to topological order

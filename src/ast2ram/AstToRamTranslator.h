@@ -97,7 +97,7 @@ public:
     virtual Own<ram::Sequence> translateProgram(const ast::TranslationUnit& translationUnit);
 
 protected:
-    const ast::Program* program = nullptr;
+    ast::Program* program = nullptr;
     Own<ast::SipsMetric> sipsMetric;
 
     /**
@@ -116,7 +116,7 @@ protected:
     /**
      * Translation methods
      */
-    Own<ram::Sequence> translateSCC(size_t scc, size_t idx);
+    Own<ram::Sequence> translateSCC(size_t scc, size_t idx) const;
     virtual Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const;
     virtual VecOwn<ram::Statement> clearExpiredRelations(
             const std::set<const ast::Relation*>& expiredRelations) const;
@@ -129,10 +129,10 @@ protected:
     Own<ram::Statement> translateRecursiveRelation(const std::set<const ast::Relation*>& scc) const;
 
     /** add a statement to drop a relation */
-    void makeRamStore(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation);
+    void makeRamStore(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation) const;
 
     /** add a statement to load a relation */
-    void makeRamLoad(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation);
+    void makeRamLoad(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation) const;
 
     void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
     void addRamRelation(std::string relationName, Own<ram::Relation> ramRelation);
@@ -143,18 +143,18 @@ private:
     Own<SymbolTable> symbolTable;
 
     // TODO (b-scholz): revisit / refactor so that only one directive is translated
-    std::vector<std::map<std::string, std::string>> getInputDirectives(const ast::Relation* rel);
-    std::vector<std::map<std::string, std::string>> getOutputDirectives(const ast::Relation* rel);
+    std::vector<std::map<std::string, std::string>> getInputDirectives(const ast::Relation* rel) const;
+    std::vector<std::map<std::string, std::string>> getOutputDirectives(const ast::Relation* rel) const;
 
     /** create RAM relations for a given SCC */
-    void createRamRelation(size_t scc);
+    void createRamRelations(size_t scc);
 
     /** replace ADTs with special records */
     static bool removeADTs(const ast::TranslationUnit& translationUnit);
 
     /** finalise the types of polymorphic objects */
     // TODO (azreika): should be removed once the translator is refactored to avoid cloning
-    void finaliseAstTypes();
+    void finaliseAstTypes(ast::Program& program) const;
 
     Own<ram::Statement> generateRelationMerge(
             const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const;
