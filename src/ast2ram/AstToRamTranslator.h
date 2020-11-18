@@ -122,7 +122,7 @@ protected:
             const std::set<const ast::Relation*>& expiredRelations) const;
     RamDomain getConstantRamRepresentation(const ast::Constant& constant) const;
 
-    /* Translate RAM code for the non-recursive clauses of the given relation */
+    /** Translate RAM code for the non-recursive clauses of the given relation */
     Own<ram::Statement> translateNonRecursiveRelation(const ast::Relation& rel) const;
 
     /** Translate RAM code for recursive relations in a strongly-connected component */
@@ -135,10 +135,6 @@ private:
     std::map<std::string, Own<ram::Statement>> ramSubroutines;
     std::map<std::string, Own<ram::Relation>> ramRelations;
     Own<SymbolTable> symbolTable;
-
-    // TODO (b-scholz): revisit / refactor so that only one directive is translated
-    std::vector<std::map<std::string, std::string>> getInputDirectives(const ast::Relation* rel) const;
-    std::vector<std::map<std::string, std::string>> getOutputDirectives(const ast::Relation* rel) const;
 
     /** create RAM relations for a given SCC */
     void createRamRelations(size_t scc);
@@ -156,6 +152,7 @@ private:
     VecOwn<ram::Statement> translateRecursiveClauses(
             const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const;
 
+    /** Stratum translation */
     Own<ram::Statement> generateStratumPreamble(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumPostamble(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumTableUpdates(const std::set<const ast::Relation*>& scc) const;

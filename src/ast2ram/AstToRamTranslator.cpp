@@ -141,55 +141,6 @@ size_t AstToRamTranslator::getEvaluationArity(const ast::Atom* atom) const {
     return auxArityAnalysis->getArity(originalRelation);
 }
 
-std::vector<std::map<std::string, std::string>> AstToRamTranslator::getInputDirectives(
-        const ast::Relation* rel) const {
-    std::vector<std::map<std::string, std::string>> inputDirectives;
-    for (const auto* load : getDirectives(*program, rel->getQualifiedName())) {
-        // must be a load
-        if (load->getType() != ast::DirectiveType::input) {
-            continue;
-        }
-
-        std::map<std::string, std::string> directives;
-        for (const auto& [key, value] : load->getParameters()) {
-            directives.insert(std::make_pair(key, unescape(value)));
-        }
-        inputDirectives.push_back(directives);
-    }
-
-    // add an empty directive if none exist
-    if (inputDirectives.empty()) {
-        inputDirectives.emplace_back();
-    }
-
-    return inputDirectives;
-}
-
-std::vector<std::map<std::string, std::string>> AstToRamTranslator::getOutputDirectives(
-        const ast::Relation* rel) const {
-    std::vector<std::map<std::string, std::string>> outputDirectives;
-    for (const auto* store : getDirectives(*program, rel->getQualifiedName())) {
-        // must be either printsize or output
-        if (store->getType() != ast::DirectiveType::printsize &&
-                store->getType() != ast::DirectiveType::output) {
-            continue;
-        }
-
-        std::map<std::string, std::string> directives;
-        for (const auto& [key, value] : store->getParameters()) {
-            directives.insert(std::make_pair(key, unescape(value)));
-        }
-        outputDirectives.push_back(directives);
-    }
-
-    // add an empty directive if none exist
-    if (outputDirectives.empty()) {
-        outputDirectives.emplace_back();
-    }
-
-    return outputDirectives;
-}
-
 Own<ram::Expression> AstToRamTranslator::translateValue(
         const ast::Argument* arg, const ValueIndex& index) const {
     if (arg == nullptr) return nullptr;
@@ -660,34 +611,57 @@ bool AstToRamTranslator::removeADTs(const ast::TranslationUnit& translationUnit)
 
 Own<ram::Statement> AstToRamTranslator::generateLoadRelation(const ast::Relation* relation) const {
     VecOwn<ram::Statement> loadStmts;
-    for (auto directives : getInputDirectives(relation)) {
-        Own<ram::Statement> statement = mk<ram::IO>(getConcreteRelationName(relation), directives);
+    for (const auto* load : getDirectives(*program, relation->getQualifiedName())) {
+        // Must be a load
+        if (load->getType() != ast::DirectiveType::input) {
+            continue;
+        }
 
+        // Set up the corresponding directive map
+        std::map<std::string, std::string> directives;
+        for (const auto& [key, value] : load->getParameters()) {
+            directives.insert(std::make_pair(key, unescape(value)));
+        }
+
+        // Create the resultant load statement, with profile information
+        Own<ram::Statement> loadStmt = mk<ram::IO>(getConcreteRelationName(relation), directives);
         if (Global::config().has("profile")) {
             const std::string logTimerStatement = LogStatement::tRelationLoadTime(
                     toString(relation->getQualifiedName()), relation->getSrcLoc());
-            statement = mk<ram::LogRelationTimer>(
-                    std::move(statement), logTimerStatement, getConcreteRelationName(relation));
+            loadStmt = mk<ram::LogRelationTimer>(
+                    std::move(loadStmt), logTimerStatement, getConcreteRelationName(relation));
         }
 
-        appendStmt(loadStmts, std::move(statement));
+        appendStmt(loadStmts, std::move(loadStmt));
     }
     return mk<ram::Sequence>(std::move(loadStmts));
 }
 
 Own<ram::Statement> AstToRamTranslator::generateStoreRelation(const ast::Relation* relation) const {
     VecOwn<ram::Statement> storeStmts;
-    for (auto directives : getOutputDirectives(relation)) {
-        Own<ram::Statement> statement = mk<ram::IO>(getConcreteRelationName(relation), directives);
+    for (const auto* store : getDirectives(*program, relation->getQualifiedName())) {
+        // Must be a storage relation
+        if (store->getType() != ast::DirectiveType::printsize &&
+                store->getType() != ast::DirectiveType::output) {
+            continue;
+        }
 
+        // Set up the corresponding directive map
+        std::map<std::string, std::string> directives;
+        for (const auto& [key, value] : store->getParameters()) {
+            directives.insert(std::make_pair(key, unescape(value)));
+        }
+
+        // Create the resultant store statement, with profile information
+        Own<ram::Statement> storeStmt = mk<ram::IO>(getConcreteRelationName(relation), directives);
         if (Global::config().has("profile")) {
             const std::string logTimerStatement = LogStatement::tRelationSaveTime(
                     toString(relation->getQualifiedName()), relation->getSrcLoc());
-            statement = mk<ram::LogRelationTimer>(
-                    std::move(statement), logTimerStatement, getConcreteRelationName(relation));
+            storeStmt = mk<ram::LogRelationTimer>(
+                    std::move(storeStmt), logTimerStatement, getConcreteRelationName(relation));
         }
 
-        appendStmt(storeStmts, std::move(statement));
+        appendStmt(storeStmts, std::move(storeStmt));
     }
     return mk<ram::Sequence>(std::move(storeStmts));
 }
