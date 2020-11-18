@@ -749,91 +749,96 @@ void AstToRamTranslator::finaliseAstTypes(ast::Program& program) const {
 }
 
 Own<ram::Sequence> AstToRamTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {
-    // keep track of relevant analyses
-    ioType = translationUnit.getAnalysis<ast::analysis::IOTypeAnalysis>();
-    typeEnv = &translationUnit.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
-    relationSchedule = translationUnit.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
-    sccGraph = translationUnit.getAnalysis<ast::analysis::SCCGraphAnalysis>();
-    recursiveClauses = translationUnit.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
-    auxArityAnalysis = translationUnit.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
-    functorAnalysis = translationUnit.getAnalysis<ast::analysis::FunctorAnalysis>();
-    relDetail = translationUnit.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
-    polyAnalysis = translationUnit.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
-
-    // finalise polymorphic types in the AST
-    finaliseAstTypes(*program);
-
-    // determine the sips to use
-    std::string sipsChosen = "all-bound";
-    if (Global::config().has("RamSIPS")) {
-        sipsChosen = Global::config().get("RamSIPS");
+    // Check if trivial program
+    if (sccGraph->getNumberOfSCCs() == 0) {
+        return mk<ram::Sequence>();
     }
-    sipsMetric = ast::SipsMetric::create(sipsChosen, translationUnit);
 
-    // replace ADTs with record representatives
-    removeADTs(translationUnit);
-
-    // handle the case of an empty SCC graph
-    if (sccGraph->getNumberOfSCCs() == 0) return mk<ram::Sequence>();
-
-    // create all RAM relations
+    // Create all relevant RAM relations
     const auto& sccOrdering =
             translationUnit.getAnalysis<ast::analysis::TopologicallySortedSCCGraphAnalysis>()->order();
     for (const auto& scc : sccOrdering) {
         createRamRelations(scc);
     }
 
-    // create subroutine for each SCC according to topological order
+    // Create subroutines for each SCC according to topological order
     for (size_t i = 0; i < sccOrdering.size(); i++) {
         auto sccCode = translateSCC(sccOrdering.at(i), i);
         std::string stratumID = "stratum_" + toString(i);
         addRamSubroutine(stratumID, std::move(sccCode));
     }
 
-    // invoke all strata
+    // Invoke all strata
     VecOwn<ram::Statement> res;
     for (size_t i = 0; i < sccOrdering.size(); i++) {
         appendStmt(res, mk<ram::Call>("stratum_" + toString(i)));
     }
 
-    // add main timer if profiling
+    // Add main timer if profiling
     if (res.size() > 0 && Global::config().has("profile")) {
         auto newStmt = mk<ram::LogTimer>(mk<ram::Sequence>(std::move(res)), LogStatement::runtime());
         res.clear();
         appendStmt(res, std::move(newStmt));
     }
 
-    // done for main prog
+    // Program translated!
     return mk<ram::Sequence>(std::move(res));
 }
 
 Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit& tu) {
+    // Start timer
     auto ram_start = std::chrono::high_resolution_clock::now();
+
+    /* -- Set-up -- */
+    // Set up the translator
     program = &tu.getProgram();
     symbolTable = mk<SymbolTable>();
+    std::string sipsChosen = "all-bound";
+    if (Global::config().has("RamSIPS")) {
+        sipsChosen = Global::config().get("RamSIPS");
+    }
+    sipsMetric = ast::SipsMetric::create(sipsChosen, tu);
 
+    // Grab all relevant analyses
+    ioType = tu.getAnalysis<ast::analysis::IOTypeAnalysis>();
+    typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
+    relationSchedule = tu.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
+    sccGraph = tu.getAnalysis<ast::analysis::SCCGraphAnalysis>();
+    recursiveClauses = tu.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
+    auxArityAnalysis = tu.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
+    functorAnalysis = tu.getAnalysis<ast::analysis::FunctorAnalysis>();
+    relDetail = tu.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
+    polyAnalysis = tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
+
+    // Finalise polymorphic types in the AST
+    finaliseAstTypes(tu.getProgram());
+
+    // Replace ADTs with record representatives
+    removeADTs(tu);
+
+    /* -- Translation -- */
+    // Create the final RAM program
     auto ramMain = translateProgram(tu);
-
     ErrorReport& errReport = tu.getErrorReport();
     DebugReport& debugReport = tu.getDebugReport();
     VecOwn<ram::Relation> rels;
     for (auto& cur : ramRelations) {
         rels.push_back(std::move(cur.second));
     }
+    auto ramProgram = mk<ram::Program>(std::move(rels), std::move(ramMain), std::move(ramSubroutines));
 
-    auto ramProg = mk<ram::Program>(std::move(rels), std::move(ramMain), std::move(ramSubroutines));
-
-    // add the translated program to the debug report
+    // Add the translated program to the debug report
     if (Global::config().has("debug-report")) {
         auto ram_end = std::chrono::high_resolution_clock::now();
         std::string runtimeStr =
                 "(" + std::to_string(std::chrono::duration<double>(ram_end - ram_start).count()) + "s)";
-        std::stringstream ramProgStr;
-        ramProgStr << *ramProg;
-        debugReport.addSection("ram-program", "RAM Program " + runtimeStr, ramProgStr.str());
+        std::stringstream ramProgramStr;
+        ramProgramStr << *ramProgram;
+        debugReport.addSection("ram-program", "RAM Program " + runtimeStr, ramProgramStr.str());
     }
 
-    return mk<ram::TranslationUnit>(std::move(ramProg), *symbolTable, errReport, debugReport);
+    // Wrap the program into a translation unit
+    return mk<ram::TranslationUnit>(std::move(ramProgram), *symbolTable, errReport, debugReport);
 }
 
 }  // namespace souffle::ast2ram

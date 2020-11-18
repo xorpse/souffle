@@ -97,7 +97,7 @@ public:
     virtual Own<ram::Sequence> translateProgram(const ast::TranslationUnit& translationUnit);
 
 protected:
-    ast::Program* program = nullptr;
+    const ast::Program* program = nullptr;
     Own<ast::SipsMetric> sipsMetric;
 
     /**
