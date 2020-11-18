@@ -87,8 +87,4 @@ Own<ram::TupleElement> makeRamTupleElement(const Location& loc) {
     return mk<ram::TupleElement>(loc.identifier, loc.element);
 }
 
-Own<ram::Clear> makeRamClear(const ast::Relation* relation) {
-    return mk<ram::Clear>(getConcreteRelationName(relation->getQualifiedName()));
-}
-
 }  // namespace souffle::ast2ram

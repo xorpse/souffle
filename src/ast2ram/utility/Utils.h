@@ -57,7 +57,4 @@ void nameUnnamedVariables(ast::Clause* clause);
 /** Create a RAM element access node */
 Own<ram::TupleElement> makeRamTupleElement(const Location& loc);
 
-/** Add a statement to store a relation */
-Own<ram::Clear> makeRamClear(const ast::Relation* relation);
-
 }  // namespace souffle::ast2ram

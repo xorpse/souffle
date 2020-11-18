@@ -185,6 +185,10 @@ Own<ram::Expression> AstToRamTranslator::translateConstant(ast::Constant const& 
     return mk<ram::SignedConstant>(rawConstant);
 }
 
+Own<ram::Statement> AstToRamTranslator::generateClearRelation(const ast::Relation* relation) const {
+    return mk<ram::Clear>(getConcreteRelationName(relation->getQualifiedName()));
+}
+
 /** generate RAM code for a non-recursive relation */
 Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(const ast::Relation& rel) const {
     // start with an empty sequence
@@ -284,12 +288,12 @@ VecOwn<ram::Statement> AstToRamTranslator::clearExpiredRelations(
         const std::set<const ast::Relation*>& expiredRelations) const {
     VecOwn<ram::Statement> stmts;
     for (const auto& relation : expiredRelations) {
-        appendStmt(stmts, makeRamClear(relation));
+        appendStmt(stmts, generateClearRelation(relation));
     }
     return stmts;
 }
 
-Own<ram::Statement> AstToRamTranslator::generateRelationMerge(
+Own<ram::Statement> AstToRamTranslator::generateMergeRelations(
         const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const {
     VecOwn<ram::Expression> values;
 
@@ -422,7 +426,7 @@ Own<ram::Statement> AstToRamTranslator::generateStratumPreamble(
         // Copy the result into the delta relation
         std::string deltaRelation = getDeltaRelationName(rel->getQualifiedName());
         std::string mainRelation = getConcreteRelationName(rel->getQualifiedName());
-        appendStmt(preamble, generateRelationMerge(rel, deltaRelation, mainRelation));
+        appendStmt(preamble, generateMergeRelations(rel, deltaRelation, mainRelation));
     }
     return mk<ram::Sequence>(std::move(preamble));
 }
@@ -447,7 +451,7 @@ Own<ram::Statement> AstToRamTranslator::generateStratumTableUpdates(
         std::string newRelation = getNewRelationName(rel->getQualifiedName());
         std::string deltaRelation = getDeltaRelationName(rel->getQualifiedName());
         Own<ram::Statement> updateRelTable =
-                mk<ram::Sequence>(generateRelationMerge(rel, mainRelation, newRelation),
+                mk<ram::Sequence>(generateMergeRelations(rel, mainRelation, newRelation),
                         mk<ram::Swap>(deltaRelation, newRelation), mk<ram::Clear>(newRelation));
 
         // Measure update time
