@@ -117,7 +117,7 @@ protected:
      * Translation methods
      */
     Own<ram::Sequence> translateSCC(size_t scc, size_t idx);
-    virtual void addNegation(ast::Clause& clause, const ast::Atom* atom) const;
+    virtual Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const;
     virtual VecOwn<ram::Statement> clearExpiredRelations(
             const std::set<const ast::Relation*>& expiredRelations) const;
     RamDomain getConstantRamRepresentation(const ast::Constant& constant) const;
@@ -159,7 +159,7 @@ private:
     Own<ram::Statement> generateRelationMerge(
             const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const;
 
-    VecOwn<ram::Statement> createRecursiveClauseVersions(
+    VecOwn<ram::Statement> translateRecursiveClauses(
             const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const;
 
     Own<ram::Statement> generateStratumPreamble(const std::set<const ast::Relation*>& scc) const;

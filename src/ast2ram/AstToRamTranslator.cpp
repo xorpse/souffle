@@ -338,12 +338,6 @@ VecOwn<ram::Statement> AstToRamTranslator::clearExpiredRelations(
     return stmts;
 }
 
-void AstToRamTranslator::addNegation(ast::Clause& clause, const ast::Atom* atom) const {
-    if (clause.getHead()->getArity() > 0) {
-        clause.addToBody(mk<ast::Negation>(souffle::clone(atom)));
-    }
-}
-
 Own<ram::Statement> AstToRamTranslator::generateRelationMerge(
         const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const {
     VecOwn<ram::Expression> values;
@@ -367,12 +361,33 @@ Own<ram::Statement> AstToRamTranslator::generateRelationMerge(
     return stmt;
 }
 
-VecOwn<ram::Statement> AstToRamTranslator::createRecursiveClauseVersions(
+Own<ast::Clause> AstToRamTranslator::createDeltaClause(
+        const ast::Clause* original, size_t recursiveAtomIdx) const {
+    auto recursiveVersion = souffle::clone(original);
+
+    // @new :- ...
+    const auto* headRelation = relDetail->getRelation(original->getHead()->getQualifiedName());
+    recursiveVersion->getHead()->setQualifiedName(getNewRelationName(headRelation));
+
+    // ... :- ..., @delta, ...
+    auto& recursiveAtom = ast::getBodyLiterals<ast::Atom>(*recursiveVersion)[recursiveAtomIdx];
+    const auto* atomRelation = getAtomRelation(recursiveAtom, program);
+    recursiveAtom->setQualifiedName(getDeltaRelationName(atomRelation));
+
+    // ... :- ..., !head.
+    if (headRelation->getArity() > 0) {
+        recursiveVersion->addToBody(mk<ast::Negation>(souffle::clone(original->getHead())));
+    }
+
+    return recursiveVersion;
+}
+
+VecOwn<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
         const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const {
     assert(contains(scc, rel) && "relation should belong to scc");
-    VecOwn<ram::Statement> loopRelSeq;
+    VecOwn<ram::Statement> result;
 
-    /* Find clauses for relation rel */
+    // translate each recursive clasue
     for (const auto& cl : relDetail->getClauses(rel->getQualifiedName())) {
         // skip non-recursive clauses
         if (!recursiveClauses->recursive(cl)) {
@@ -382,26 +397,22 @@ VecOwn<ram::Statement> AstToRamTranslator::createRecursiveClauseVersions(
         // each recursive rule results in several operations
         int version = 0;
         const auto& atoms = ast::getBodyLiterals<ast::Atom>(*cl);
-        for (size_t j = 0; j < atoms.size(); ++j) {
-            const ast::Atom* atom = atoms[j];
-            const ast::Relation* atomRelation = getAtomRelation(atom, program);
+        for (size_t i = 0; i < atoms.size(); ++i) {
+            const auto* atom = atoms[i];
 
             // only interested in atoms within the same SCC
-            if (!contains(scc, atomRelation)) {
+            if (!contains(scc, getAtomRelation(atom, program))) {
                 continue;
             }
 
             // modify the processed rule to use delta relation and write to new relation
-            auto r1 = souffle::clone(cl);
-            r1->getHead()->setQualifiedName(getNewRelationName(rel));
-            ast::getBodyLiterals<ast::Atom>(*r1)[j]->setQualifiedName(getDeltaRelationName(atomRelation));
-            addNegation(*r1, cl->getHead());
+            auto r1 = createDeltaClause(cl, i);
 
             // replace wildcards with variables to reduce indices
             nameUnnamedVariables(r1.get());
 
             // reduce R to P ...
-            for (size_t k = j + 1; k < atoms.size(); k++) {
+            for (size_t k = i + 1; k < atoms.size(); k++) {
                 if (contains(scc, getAtomRelation(atoms[k], program))) {
                     auto cur = souffle::clone(ast::getBodyLiterals<ast::Atom>(*r1)[k]);
                     cur->setQualifiedName(getDeltaRelationName(getAtomRelation(atoms[k], program)));
@@ -430,7 +441,7 @@ VecOwn<ram::Statement> AstToRamTranslator::createRecursiveClauseVersions(
             rule = mk<ram::DebugInfo>(std::move(rule), ds.str());
 
             // add to loop body
-            appendStmt(loopRelSeq, std::move(rule));
+            appendStmt(result, std::move(rule));
 
             // increment version counter
             version++;
@@ -446,7 +457,7 @@ VecOwn<ram::Statement> AstToRamTranslator::createRecursiveClauseVersions(
         }
     }
 
-    return loopRelSeq;
+    return result;
 }
 
 Own<ram::Statement> AstToRamTranslator::generateStratumPreamble(
@@ -500,7 +511,7 @@ Own<ram::Statement> AstToRamTranslator::generateStratumMainLoop(
         const std::set<const ast::Relation*>& scc) const {
     VecOwn<ram::Statement> loopSeq;
     for (const ast::Relation* rel : scc) {
-        auto loopRelSeq = createRecursiveClauseVersions(scc, rel);
+        auto loopRelSeq = translateRecursiveClauses(scc, rel);
 
         // if there were no rules, continue
         if (loopRelSeq.empty()) {

@@ -19,6 +19,7 @@
 #include "ast/ProvenanceNegation.h"
 #include "ast/SubroutineArgument.h"
 #include "ast/analysis/AuxArity.h"
+#include "ast/analysis/RelationDetailCache.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
 #include "ast2ram/ProvenanceClauseTranslator.h"
@@ -53,8 +54,23 @@ VecOwn<ram::Statement> ProvenanceTranslator::clearExpiredRelations(
     return {};
 }
 
-void ProvenanceTranslator::addNegation(ast::Clause& clause, const ast::Atom* atom) const {
-    clause.addToBody(mk<ast::ProvenanceNegation>(souffle::clone(atom)));
+Own<ast::Clause> ProvenanceTranslator::createDeltaClause(
+        const ast::Clause* original, size_t recursiveAtomIdx) const {
+    auto recursiveVersion = souffle::clone(original);
+
+    // @new :- ...
+    const auto* headRelation = relDetail->getRelation(original->getHead()->getQualifiedName());
+    recursiveVersion->getHead()->setQualifiedName(getNewRelationName(headRelation));
+
+    // ... :- ..., @delta, ...
+    auto& recursiveAtom = ast::getBodyLiterals<ast::Atom>(*recursiveVersion)[recursiveAtomIdx];
+    const auto* atomRelation = getAtomRelation(recursiveAtom, program);
+    recursiveAtom->setQualifiedName(getDeltaRelationName(atomRelation));
+
+    // ... :- ..., !head.
+    recursiveVersion->addToBody(mk<ast::ProvenanceNegation>(souffle::clone(original->getHead())));
+
+    return recursiveVersion;
 }
 
 void ProvenanceTranslator::addProvenanceClauseSubroutines(const ast::Program* program) {

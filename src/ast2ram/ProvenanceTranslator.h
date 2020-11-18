@@ -25,7 +25,7 @@ public:
 
 protected:
     Own<ram::Sequence> translateProgram(const ast::TranslationUnit& translationUnit) override;
-    void addNegation(ast::Clause& clause, const ast::Atom* atom) const override;
+    Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const override;
     VecOwn<ram::Statement> clearExpiredRelations(
             const std::set<const ast::Relation*>& expiredRelations) const override;
 
