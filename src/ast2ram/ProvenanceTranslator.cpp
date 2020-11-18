@@ -59,13 +59,12 @@ Own<ast::Clause> ProvenanceTranslator::createDeltaClause(
     auto recursiveVersion = souffle::clone(original);
 
     // @new :- ...
-    const auto* headRelation = relDetail->getRelation(original->getHead()->getQualifiedName());
-    recursiveVersion->getHead()->setQualifiedName(getNewRelationName(headRelation->getQualifiedName()));
+    const auto* headAtom = original->getHead();
+    recursiveVersion->getHead()->setQualifiedName(getNewRelationName(headAtom->getQualifiedName()));
 
     // ... :- ..., @delta, ...
-    auto& recursiveAtom = ast::getBodyLiterals<ast::Atom>(*recursiveVersion)[recursiveAtomIdx];
-    const auto* atomRelation = getAtomRelation(recursiveAtom, program);
-    recursiveAtom->setQualifiedName(getDeltaRelationName(atomRelation->getQualifiedName()));
+    auto* recursiveAtom = ast::getBodyLiterals<ast::Atom>(*recursiveVersion).at(recursiveAtomIdx);
+    recursiveAtom->setQualifiedName(getDeltaRelationName(recursiveAtom->getQualifiedName()));
 
     // ... :- ..., !head.
     recursiveVersion->addToBody(mk<ast::ProvenanceNegation>(souffle::clone(original->getHead())));
