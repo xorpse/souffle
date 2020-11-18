@@ -114,9 +114,10 @@ protected:
     void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
     void addRamRelation(std::string relationName, Own<ram::Relation> ramRelation);
 
-    // clean up
     virtual Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const;
     RamDomain getConstantRamRepresentation(const ast::Constant& constant) const;
+
+    // clean up
     Own<ram::Statement> translateRecursiveClauses(
             const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const;
 

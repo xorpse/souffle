@@ -339,14 +339,14 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
     assert(contains(scc, rel) && "relation should belong to scc");
     VecOwn<ram::Statement> result;
 
-    // translate each recursive clasue
+    // Translate each recursive clasue
     for (const auto& cl : relDetail->getClauses(rel->getQualifiedName())) {
-        // skip non-recursive clauses
+        // Skip non-recursive clauses
         if (!recursiveClauses->recursive(cl)) {
             continue;
         }
 
-        // each recursive rule results in several operations
+        // Create each version
         int version = 0;
         const auto& atoms = ast::getBodyLiterals<ast::Atom>(*cl);
         for (size_t i = 0; i < atoms.size(); ++i) {
@@ -358,21 +358,22 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
             }
 
             // modify the processed rule to use delta relation and write to new relation
-            auto r1 = createDeltaClause(cl, i);
+            auto fixedClause = createDeltaClause(cl, i);
 
             // replace wildcards with variables to reduce indices
-            nameUnnamedVariables(r1.get());
+            nameUnnamedVariables(fixedClause.get());
 
             // reduce R to P ...
-            for (size_t k = i + 1; k < atoms.size(); k++) {
-                if (contains(scc, getAtomRelation(atoms[k], program))) {
-                    auto cur = souffle::clone(ast::getBodyLiterals<ast::Atom>(*r1)[k]);
-                    cur->setQualifiedName(getDeltaRelationName(atoms[k]->getQualifiedName()));
-                    r1->addToBody(mk<ast::Negation>(std::move(cur)));
+            for (size_t j = i + 1; j < atoms.size(); j++) {
+                const auto* atomRelation = getAtomRelation(atoms[j], program);
+                if (contains(scc, atomRelation)) {
+                    auto deltaAtom = souffle::clone(ast::getBodyLiterals<ast::Atom>(*fixedClause)[j]);
+                    deltaAtom->setQualifiedName(getDeltaRelationName(atomRelation->getQualifiedName()));
+                    fixedClause->addToBody(mk<ast::Negation>(std::move(deltaAtom)));
                 }
             }
 
-            Own<ram::Statement> rule = ClauseTranslator(*this).translateClause(*r1, *cl, version);
+            Own<ram::Statement> rule = ClauseTranslator(*this).translateClause(*fixedClause, *cl, version);
 
             // add loging
             if (Global::config().has("profile")) {
@@ -400,7 +401,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
             version++;
         }
 
-        // check that the correct number of versions have been created
+        // Check that the correct number of versions have been created
         if (cl->getExecutionPlan() != nullptr) {
             int maxVersion = -1;
             for (auto const& cur : cl->getExecutionPlan()->getOrders()) {
