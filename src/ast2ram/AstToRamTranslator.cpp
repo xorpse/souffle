@@ -303,7 +303,7 @@ Own<ram::Sequence> AstToRamTranslator::translateSCC(size_t scc, size_t idx) cons
     // load all internal input relations from the facts dir with a .facts extension
     const auto& sccInputRelations = sccGraph->getInternalInputRelations(scc);
     for (const auto& relation : sccInputRelations) {
-        makeRamLoad(current, relation);
+        appendStmt(current, generateLoadRelation(relation));
     }
 
     // compute the relations themselves
@@ -317,7 +317,7 @@ Own<ram::Sequence> AstToRamTranslator::translateSCC(size_t scc, size_t idx) cons
     // store all internal output relations to the output dir with a .csv extension
     const auto& sccOutputRelations = sccGraph->getInternalOutputRelations(scc);
     for (const auto& relation : sccOutputRelations) {
-        makeRamStore(current, relation);
+        appendStmt(current, generateStoreRelation(relation));
     }
 
     // clear expired relations
@@ -658,30 +658,38 @@ bool AstToRamTranslator::removeADTs(const ast::TranslationUnit& translationUnit)
     return mapper.changed;
 }
 
-void AstToRamTranslator::makeRamLoad(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation) const {
+Own<ram::Statement> AstToRamTranslator::generateLoadRelation(const ast::Relation* relation) const {
+    VecOwn<ram::Statement> loadStmts;
     for (auto directives : getInputDirectives(relation)) {
         Own<ram::Statement> statement = mk<ram::IO>(getConcreteRelationName(relation), directives);
+
         if (Global::config().has("profile")) {
             const std::string logTimerStatement = LogStatement::tRelationLoadTime(
                     toString(relation->getQualifiedName()), relation->getSrcLoc());
             statement = mk<ram::LogRelationTimer>(
                     std::move(statement), logTimerStatement, getConcreteRelationName(relation));
         }
-        appendStmt(curStmts, std::move(statement));
+
+        appendStmt(loadStmts, std::move(statement));
     }
+    return mk<ram::Sequence>(std::move(loadStmts));
 }
 
-void AstToRamTranslator::makeRamStore(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation) const {
+Own<ram::Statement> AstToRamTranslator::generateStoreRelation(const ast::Relation* relation) const {
+    VecOwn<ram::Statement> storeStmts;
     for (auto directives : getOutputDirectives(relation)) {
         Own<ram::Statement> statement = mk<ram::IO>(getConcreteRelationName(relation), directives);
+
         if (Global::config().has("profile")) {
             const std::string logTimerStatement = LogStatement::tRelationSaveTime(
                     toString(relation->getQualifiedName()), relation->getSrcLoc());
             statement = mk<ram::LogRelationTimer>(
                     std::move(statement), logTimerStatement, getConcreteRelationName(relation));
         }
-        appendStmt(curStmts, std::move(statement));
+
+        appendStmt(storeStmts, std::move(statement));
     }
+    return mk<ram::Sequence>(std::move(storeStmts));
 }
 
 void AstToRamTranslator::createRamRelations(size_t scc) {
@@ -703,19 +711,21 @@ void AstToRamTranslator::createRamRelations(size_t scc) {
                         getTypeQualifier(typeEnv->getType(attributes[i]->getTypeName())));
             }
         }
+
+        // Add main relation
         auto ramRelation = mk<ram::Relation>(
                 name, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
         addRamRelation(name, std::move(ramRelation));
 
-        // recursive relations also require @delta and @new variants, with the same signature
+        // Recursive relations also require @delta and @new variants, with the same signature
         if (isRecursive) {
-            // add delta relation
+            // Add delta relation
             std::string deltaName = getDeltaRelationName(rel);
             auto deltaRelation = mk<ram::Relation>(deltaName, arity, auxiliaryArity, attributeNames,
                     attributeTypeQualifiers, representation);
             addRamRelation(deltaName, std::move(deltaRelation));
 
-            // add new relation
+            // Add new relation
             std::string newName = getNewRelationName(rel);
             auto newRelation = mk<ram::Relation>(
                     newName, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);

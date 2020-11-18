@@ -122,17 +122,11 @@ protected:
             const std::set<const ast::Relation*>& expiredRelations) const;
     RamDomain getConstantRamRepresentation(const ast::Constant& constant) const;
 
-    /* translate RAM code for the non-recursive clauses of the given relation */
+    /* Translate RAM code for the non-recursive clauses of the given relation */
     Own<ram::Statement> translateNonRecursiveRelation(const ast::Relation& rel) const;
 
-    /** translate RAM code for recursive relations in a strongly-connected component */
+    /** Translate RAM code for recursive relations in a strongly-connected component */
     Own<ram::Statement> translateRecursiveRelation(const std::set<const ast::Relation*>& scc) const;
-
-    /** add a statement to drop a relation */
-    void makeRamStore(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation) const;
-
-    /** add a statement to load a relation */
-    void makeRamLoad(VecOwn<ram::Statement>& curStmts, const ast::Relation* relation) const;
 
     void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
     void addRamRelation(std::string relationName, Own<ram::Relation> ramRelation);
@@ -167,6 +161,9 @@ private:
     Own<ram::Statement> generateStratumTableUpdates(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumMainLoop(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumExitSequence(const std::set<const ast::Relation*>& scc) const;
+
+    Own<ram::Statement> generateStoreRelation(const ast::Relation* relation) const;
+    Own<ram::Statement> generateLoadRelation(const ast::Relation* relation) const;
 };
 
 }  // namespace souffle::ast2ram
