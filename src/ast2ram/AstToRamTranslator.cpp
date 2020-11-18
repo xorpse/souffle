@@ -189,7 +189,6 @@ Own<ram::Statement> AstToRamTranslator::generateClearRelation(const ast::Relatio
     return mk<ram::Clear>(getConcreteRelationName(relation->getQualifiedName()));
 }
 
-/** generate RAM code for a non-recursive relation */
 Own<ram::Statement> AstToRamTranslator::generateNonRecursiveRelation(const ast::Relation& rel) const {
     // start with an empty sequence
     VecOwn<ram::Statement> result;
