@@ -251,7 +251,7 @@ Own<ram::Statement> AstToRamTranslator::generateNonRecursiveRelation(const ast::
     return mk<ram::Sequence>(std::move(result));
 }
 
-Own<ram::Sequence> AstToRamTranslator::translateSCC(size_t scc, size_t idx) const {
+Own<ram::Statement> AstToRamTranslator::generateStratum(size_t scc, size_t idx) const {
     // make a new ram statement for the current SCC
     VecOwn<ram::Statement> current;
 
@@ -749,7 +749,7 @@ Own<ram::Sequence> AstToRamTranslator::translateProgram(const ast::TranslationUn
 
     // Create subroutines for each SCC according to topological order
     for (size_t i = 0; i < sccOrdering.size(); i++) {
-        auto sccCode = translateSCC(sccOrdering.at(i), i);
+        auto sccCode = generateStratum(sccOrdering.at(i), i);
         std::string stratumID = "stratum_" + toString(i);
         addRamSubroutine(stratumID, std::move(sccCode));
     }
@@ -761,7 +761,7 @@ Own<ram::Sequence> AstToRamTranslator::translateProgram(const ast::TranslationUn
     }
 
     // Add main timer if profiling
-    if (res.size() > 0 && Global::config().has("profile")) {
+    if (!res.empty() && Global::config().has("profile")) {
         auto newStmt = mk<ram::LogTimer>(mk<ram::Sequence>(std::move(res)), LogStatement::runtime());
         res.clear();
         appendStmt(res, std::move(newStmt));

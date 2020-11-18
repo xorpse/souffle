@@ -100,9 +100,7 @@ protected:
     const ast::Program* program = nullptr;
     Own<ast::SipsMetric> sipsMetric;
 
-    /**
-     * Analyses needed
-     */
+    /** Analyses needed */
     const ast::analysis::TypeEnvironment* typeEnv = nullptr;
     const ast::analysis::IOTypeAnalysis* ioType = nullptr;
     const ast::analysis::FunctorAnalysis* functorAnalysis = nullptr;
@@ -113,56 +111,54 @@ protected:
     const ast::analysis::RelationDetailCacheAnalysis* relDetail = nullptr;
     const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
 
-    /**
-     * Translation methods
-     */
-    Own<ram::Sequence> translateSCC(size_t scc, size_t idx) const;
-    virtual Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const;
-    virtual Own<ram::Statement> generateClearExpiredRelations(
-            const std::set<const ast::Relation*>& expiredRelations) const;
-    RamDomain getConstantRamRepresentation(const ast::Constant& constant) const;
-
-    /** Translate RAM code for the non-recursive clauses of the given relation */
-    Own<ram::Statement> generateNonRecursiveRelation(const ast::Relation& rel) const;
-
-    /** Translate RAM code for recursive relations in a strongly-connected component */
-    Own<ram::Statement> generateRecursiveStratum(const std::set<const ast::Relation*>& scc) const;
-
     void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
     void addRamRelation(std::string relationName, Own<ram::Relation> ramRelation);
 
-private:
-    std::map<std::string, Own<ram::Statement>> ramSubroutines;
-    std::map<std::string, Own<ram::Relation>> ramRelations;
-    Own<SymbolTable> symbolTable;
-
-    /** create RAM relations for a given SCC */
-    void createRamRelations(size_t scc);
-
-    /** replace ADTs with special records */
-    static bool removeADTs(const ast::TranslationUnit& translationUnit);
-
-    /** finalise the types of polymorphic objects */
-    // TODO (azreika): should be removed once the translator is refactored to avoid cloning
-    void finaliseAstTypes(ast::Program& program) const;
-
-    Own<ram::Statement> generateClearRelation(const ast::Relation* relation) const;
-    Own<ram::Statement> generateMergeRelations(
-            const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const;
-
+    // clean up
+    Own<ram::Statement> generateStratum(size_t scc, size_t idx) const;
+    virtual Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const;
+    RamDomain getConstantRamRepresentation(const ast::Constant& constant) const;
     Own<ram::Statement> translateRecursiveClauses(
             const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const;
 
-    /** Stratum translation */
+    /** -- Generation methods -- */
+
+    /** High-level relation translation */
+    Own<ram::Statement> generateNonRecursiveRelation(const ast::Relation& rel) const;
+    Own<ram::Statement> generateRecursiveStratum(const std::set<const ast::Relation*>& scc) const;
+
+    /** IO translation */
+    Own<ram::Statement> generateStoreRelation(const ast::Relation* relation) const;
+    Own<ram::Statement> generateLoadRelation(const ast::Relation* relation) const;
+
+    /** Low-level stratum translation */
     Own<ram::Statement> generateStratumPreamble(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumPostamble(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumLoopBody(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumTableUpdates(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumExitSequence(const std::set<const ast::Relation*>& scc) const;
 
-    /** IO translation */
-    Own<ram::Statement> generateStoreRelation(const ast::Relation* relation) const;
-    Own<ram::Statement> generateLoadRelation(const ast::Relation* relation) const;
+    /** Other helper generations */
+    virtual Own<ram::Statement> generateClearExpiredRelations(
+            const std::set<const ast::Relation*>& expiredRelations) const;
+    Own<ram::Statement> generateClearRelation(const ast::Relation* relation) const;
+    Own<ram::Statement> generateMergeRelations(
+            const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const;
+
+private:
+    std::map<std::string, Own<ram::Statement>> ramSubroutines;
+    std::map<std::string, Own<ram::Relation>> ramRelations;
+    Own<SymbolTable> symbolTable;
+
+    /** Create RAM relations for a given SCC */
+    void createRamRelations(size_t scc);
+
+    /** Replace ADTs with special records */
+    static bool removeADTs(const ast::TranslationUnit& translationUnit);
+
+    /** Finalise the types of polymorphic objects */
+    // TODO (azreika): should be removed once the translator is refactored to avoid cloning
+    void finaliseAstTypes(ast::Program& program) const;
 };
 
 }  // namespace souffle::ast2ram
