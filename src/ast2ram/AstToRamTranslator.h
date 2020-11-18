@@ -118,6 +118,8 @@ protected:
     RamDomain getConstantRamRepresentation(const ast::Constant& constant) const;
 
     // clean up
+    Own<ram::Statement> generateClauseVersion(const std::set<const ast::Relation*>& scc,
+            const ast::Clause* cl, size_t deltaAtomIdx, size_t version) const;
     Own<ram::Statement> translateRecursiveClauses(
             const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const;
 

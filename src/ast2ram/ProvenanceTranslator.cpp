@@ -34,6 +34,7 @@
 #include "ram/SubroutineReturn.h"
 #include "ram/UndefValue.h"
 #include "souffle/BinaryConstraintOps.h"
+#include "souffle/utility/StringUtil.h"
 #include <sstream>
 
 namespace souffle::ast2ram {
