@@ -65,8 +65,8 @@ Own<ram::Condition> ConstraintTranslator::visitProvenanceNegation(const ast::Pro
             values.push_back(translator.translateValue(args[arity + height], index));
         }
     }
-    return mk<ram::Negation>(
-            mk<ram::ProvenanceExistenceCheck>(getConcreteRelationName(atom), std::move(values)));
+    return mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(
+            getConcreteRelationName(atom->getQualifiedName()), std::move(values)));
 }
 
 Own<ram::Condition> ConstraintTranslator::visitNegation(const ast::Negation& neg) {
@@ -77,7 +77,7 @@ Own<ram::Condition> ConstraintTranslator::visitNegation(const ast::Negation& neg
 
     if (arity == 0) {
         // for a nullary, negation is a simple emptiness check
-        return mk<ram::EmptinessCheck>(getConcreteRelationName(atom));
+        return mk<ram::EmptinessCheck>(getConcreteRelationName(atom->getQualifiedName()));
     }
 
     // else, we construct the atom and create a negation
@@ -89,6 +89,7 @@ Own<ram::Condition> ConstraintTranslator::visitNegation(const ast::Negation& neg
     for (size_t i = 0; i < auxiliaryArity; i++) {
         values.push_back(mk<ram::UndefValue>());
     }
-    return mk<ram::Negation>(mk<ram::ExistenceCheck>(getConcreteRelationName(atom), std::move(values)));
+    return mk<ram::Negation>(
+            mk<ram::ExistenceCheck>(getConcreteRelationName(atom->getQualifiedName()), std::move(values)));
 }
 }  // namespace souffle::ast2ram

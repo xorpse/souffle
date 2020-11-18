@@ -32,24 +32,20 @@
 
 namespace souffle::ast2ram {
 
-std::string getConcreteRelationName(const ast::Atom* atom) {
-    return getRelationName(atom->getQualifiedName());
+std::string getConcreteRelationName(const ast::QualifiedName& name, const std::string prefix) {
+    return prefix + getRelationName(name);
 }
 
-std::string getConcreteRelationName(const ast::Relation* rel, const std::string relationNamePrefix) {
-    return relationNamePrefix + getRelationName(rel->getQualifiedName());
+std::string getDeltaRelationName(const ast::QualifiedName& name) {
+    return getConcreteRelationName(name, "@delta_");
 }
 
-std::string getDeltaRelationName(const ast::Relation* rel) {
-    return getConcreteRelationName(rel, "@delta_");
+std::string getNewRelationName(const ast::QualifiedName& name) {
+    return getConcreteRelationName(name, "@new_");
 }
 
-std::string getNewRelationName(const ast::Relation* rel) {
-    return getConcreteRelationName(rel, "@new_");
-}
-
-std::string getRelationName(const ast::QualifiedName& id) {
-    return toString(join(id.getQualifiers(), "."));
+std::string getRelationName(const ast::QualifiedName& name) {
+    return toString(join(name.getQualifiers(), "."));
 }
 
 void appendStmt(VecOwn<ram::Statement>& stmtList, Own<ram::Statement> stmt) {
@@ -92,7 +88,7 @@ Own<ram::TupleElement> makeRamTupleElement(const Location& loc) {
 }
 
 Own<ram::Clear> makeRamClear(const ast::Relation* relation) {
-    return mk<ram::Clear>(getConcreteRelationName(relation));
+    return mk<ram::Clear>(getConcreteRelationName(relation->getQualifiedName()));
 }
 
 }  // namespace souffle::ast2ram

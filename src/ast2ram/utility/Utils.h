@@ -36,20 +36,17 @@ namespace souffle::ast2ram {
 
 struct Location;
 
-/** Get the corresponding concretised RAM relation name for the atom */
-std::string getConcreteRelationName(const ast::Atom* atom);
-
 /** Get the corresponding concretised RAM relation name for the relation */
-std::string getConcreteRelationName(const ast::Relation* rel, const std::string relationNamePrefix = "");
+std::string getConcreteRelationName(const ast::QualifiedName& name, const std::string prefix = "");
 
 /** converts the given relation identifier into a relation name */
-std::string getRelationName(const ast::QualifiedName& id);
+std::string getRelationName(const ast::QualifiedName& name);
 
 /** Get the corresponding RAM delta relation name for the relation */
-std::string getDeltaRelationName(const ast::Relation* rel);
+std::string getDeltaRelationName(const ast::QualifiedName& name);
 
 /** Get the corresponding RAM 'new' relation name for the relation */
-std::string getNewRelationName(const ast::Relation* rel);
+std::string getNewRelationName(const ast::QualifiedName& name);
 
 /** Append statement to a list of statements */
 void appendStmt(VecOwn<ram::Statement>& stmtList, Own<ram::Statement> stmt);

@@ -190,7 +190,7 @@ Own<ram::Statement> AstToRamTranslator::translateNonRecursiveRelation(const ast:
     // start with an empty sequence
     VecOwn<ram::Statement> result;
 
-    std::string relName = getConcreteRelationName(&rel);
+    std::string relName = getConcreteRelationName(rel.getQualifiedName());
 
     // iterate over all non-recursive clauses that belong to the relation
     for (ast::Clause* clause : relDetail->getClauses(rel.getQualifiedName())) {
@@ -318,12 +318,12 @@ Own<ast::Clause> AstToRamTranslator::createDeltaClause(
 
     // @new :- ...
     const auto* headRelation = relDetail->getRelation(original->getHead()->getQualifiedName());
-    recursiveVersion->getHead()->setQualifiedName(getNewRelationName(headRelation));
+    recursiveVersion->getHead()->setQualifiedName(getNewRelationName(headRelation->getQualifiedName()));
 
     // ... :- ..., @delta, ...
     auto& recursiveAtom = ast::getBodyLiterals<ast::Atom>(*recursiveVersion)[recursiveAtomIdx];
     const auto* atomRelation = getAtomRelation(recursiveAtom, program);
-    recursiveAtom->setQualifiedName(getDeltaRelationName(atomRelation));
+    recursiveAtom->setQualifiedName(getDeltaRelationName(atomRelation->getQualifiedName()));
 
     // ... :- ..., !head.
     if (headRelation->getArity() > 0) {
@@ -366,7 +366,7 @@ VecOwn<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
             for (size_t k = i + 1; k < atoms.size(); k++) {
                 if (contains(scc, getAtomRelation(atoms[k], program))) {
                     auto cur = souffle::clone(ast::getBodyLiterals<ast::Atom>(*r1)[k]);
-                    cur->setQualifiedName(getDeltaRelationName(getAtomRelation(atoms[k], program)));
+                    cur->setQualifiedName(getDeltaRelationName(atoms[k]->getQualifiedName()));
                     r1->addToBody(mk<ast::Negation>(std::move(cur)));
                 }
             }
@@ -382,7 +382,8 @@ VecOwn<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
                         LogStatement::tRecursiveRule(relationName, version, srcLocation, clauseText);
                 const std::string logSizeStatement =
                         LogStatement::nRecursiveRule(relationName, version, srcLocation, clauseText);
-                rule = mk<ram::LogRelationTimer>(std::move(rule), logTimerStatement, getNewRelationName(rel));
+                rule = mk<ram::LogRelationTimer>(
+                        std::move(rule), logTimerStatement, getNewRelationName(rel->getQualifiedName()));
             }
 
             // add debug info
@@ -419,8 +420,9 @@ Own<ram::Statement> AstToRamTranslator::generateStratumPreamble(
         appendStmt(preamble, translateNonRecursiveRelation(*rel));
 
         // Copy the result into the delta relation
-        appendStmt(preamble,
-                generateRelationMerge(rel, getDeltaRelationName(rel), getConcreteRelationName(rel)));
+        std::string deltaRelation = getDeltaRelationName(rel->getQualifiedName());
+        std::string mainRelation = getConcreteRelationName(rel->getQualifiedName());
+        appendStmt(preamble, generateRelationMerge(rel, deltaRelation, mainRelation));
     }
     return mk<ram::Sequence>(std::move(preamble));
 }
@@ -430,8 +432,8 @@ Own<ram::Statement> AstToRamTranslator::generateStratumPostamble(
     VecOwn<ram::Statement> postamble;
     for (const ast::Relation* rel : scc) {
         // Drop temporary tables after recursion
-        appendStmt(postamble, mk<ram::Clear>(getDeltaRelationName(rel)));
-        appendStmt(postamble, mk<ram::Clear>(getNewRelationName(rel)));
+        appendStmt(postamble, mk<ram::Clear>(getDeltaRelationName(rel->getQualifiedName())));
+        appendStmt(postamble, mk<ram::Clear>(getNewRelationName(rel->getQualifiedName())));
     }
     return mk<ram::Sequence>(std::move(postamble));
 }
@@ -441,16 +443,18 @@ Own<ram::Statement> AstToRamTranslator::generateStratumTableUpdates(
     VecOwn<ram::Statement> updateTable;
     for (const ast::Relation* rel : scc) {
         // Copy @new into main relation, @delta := @new, and empty out @new
-        Own<ram::Statement> updateRelTable = mk<ram::Sequence>(
-                generateRelationMerge(rel, getConcreteRelationName(rel), getNewRelationName(rel)),
-                mk<ram::Swap>(getDeltaRelationName(rel), getNewRelationName(rel)),
-                mk<ram::Clear>(getNewRelationName(rel)));
+        std::string mainRelation = getConcreteRelationName(rel->getQualifiedName());
+        std::string newRelation = getNewRelationName(rel->getQualifiedName());
+        std::string deltaRelation = getDeltaRelationName(rel->getQualifiedName());
+        Own<ram::Statement> updateRelTable =
+                mk<ram::Sequence>(generateRelationMerge(rel, mainRelation, newRelation),
+                        mk<ram::Swap>(deltaRelation, newRelation), mk<ram::Clear>(newRelation));
 
         // Measure update time
         if (Global::config().has("profile")) {
             updateRelTable = mk<ram::LogRelationTimer>(std::move(updateRelTable),
                     LogStatement::cRecursiveRelation(toString(rel->getQualifiedName()), rel->getSrcLoc()),
-                    getNewRelationName(rel));
+                    newRelation);
         }
 
         appendStmt(updateTable, std::move(updateRelTable));
@@ -475,8 +479,8 @@ Own<ram::Statement> AstToRamTranslator::generateStratumMainLoop(
             const auto& srcLocation = rel->getSrcLoc();
             const std::string logTimerStatement = LogStatement::tRecursiveRelation(relationName, srcLocation);
             const std::string logSizeStatement = LogStatement::nRecursiveRelation(relationName, srcLocation);
-            auto newStmt = mk<ram::LogRelationTimer>(
-                    mk<ram::Sequence>(std::move(loopRelSeq)), logTimerStatement, getNewRelationName(rel));
+            auto newStmt = mk<ram::LogRelationTimer>(mk<ram::Sequence>(std::move(loopRelSeq)),
+                    logTimerStatement, getNewRelationName(rel->getQualifiedName()));
             loopRelSeq.clear();
             appendStmt(loopRelSeq, std::move(newStmt));
         }
@@ -498,7 +502,7 @@ Own<ram::Statement> AstToRamTranslator::generateStratumExitSequence(
     // (1) if all relations in the scc are empty
     Own<ram::Condition> emptinessCheck;
     for (const ast::Relation* rel : scc) {
-        addCondition(emptinessCheck, mk<ram::EmptinessCheck>(getNewRelationName(rel)));
+        addCondition(emptinessCheck, mk<ram::EmptinessCheck>(getNewRelationName(rel->getQualifiedName())));
     }
     appendStmt(exitConditions, mk<ram::Exit>(std::move(emptinessCheck)));
 
@@ -506,7 +510,7 @@ Own<ram::Statement> AstToRamTranslator::generateStratumExitSequence(
     for (const ast::Relation* rel : scc) {
         if (ioType->isLimitSize(rel)) {
             Own<ram::Condition> limit = mk<ram::Constraint>(BinaryConstraintOp::GE,
-                    mk<ram::RelationSize>(getConcreteRelationName(rel)),
+                    mk<ram::RelationSize>(getConcreteRelationName(rel->getQualifiedName())),
                     mk<ram::SignedConstant>(ioType->getLimitSize(rel)));
             appendStmt(exitConditions, mk<ram::Exit>(std::move(limit)));
         }
@@ -624,12 +628,12 @@ Own<ram::Statement> AstToRamTranslator::generateLoadRelation(const ast::Relation
         }
 
         // Create the resultant load statement, with profile information
-        Own<ram::Statement> loadStmt = mk<ram::IO>(getConcreteRelationName(relation), directives);
+        std::string ramRelationName = getConcreteRelationName(relation->getQualifiedName());
+        Own<ram::Statement> loadStmt = mk<ram::IO>(ramRelationName, directives);
         if (Global::config().has("profile")) {
-            const std::string logTimerStatement = LogStatement::tRelationLoadTime(
-                    toString(relation->getQualifiedName()), relation->getSrcLoc());
-            loadStmt = mk<ram::LogRelationTimer>(
-                    std::move(loadStmt), logTimerStatement, getConcreteRelationName(relation));
+            const std::string logTimerStatement =
+                    LogStatement::tRelationLoadTime(ramRelationName, relation->getSrcLoc());
+            loadStmt = mk<ram::LogRelationTimer>(std::move(loadStmt), logTimerStatement, ramRelationName);
         }
 
         appendStmt(loadStmts, std::move(loadStmt));
@@ -653,12 +657,12 @@ Own<ram::Statement> AstToRamTranslator::generateStoreRelation(const ast::Relatio
         }
 
         // Create the resultant store statement, with profile information
-        Own<ram::Statement> storeStmt = mk<ram::IO>(getConcreteRelationName(relation), directives);
+        std::string ramRelationName = getConcreteRelationName(relation->getQualifiedName());
+        Own<ram::Statement> storeStmt = mk<ram::IO>(ramRelationName, directives);
         if (Global::config().has("profile")) {
-            const std::string logTimerStatement = LogStatement::tRelationSaveTime(
-                    toString(relation->getQualifiedName()), relation->getSrcLoc());
-            storeStmt = mk<ram::LogRelationTimer>(
-                    std::move(storeStmt), logTimerStatement, getConcreteRelationName(relation));
+            const std::string logTimerStatement =
+                    LogStatement::tRelationSaveTime(ramRelationName, relation->getSrcLoc());
+            storeStmt = mk<ram::LogRelationTimer>(std::move(storeStmt), logTimerStatement, ramRelationName);
         }
 
         appendStmt(storeStmts, std::move(storeStmt));
@@ -694,13 +698,13 @@ void AstToRamTranslator::createRamRelations(size_t scc) {
         // Recursive relations also require @delta and @new variants, with the same signature
         if (isRecursive) {
             // Add delta relation
-            std::string deltaName = getDeltaRelationName(rel);
+            std::string deltaName = getDeltaRelationName(rel->getQualifiedName());
             auto deltaRelation = mk<ram::Relation>(deltaName, arity, auxiliaryArity, attributeNames,
                     attributeTypeQualifiers, representation);
             addRamRelation(deltaName, std::move(deltaRelation));
 
             // Add new relation
-            std::string newName = getNewRelationName(rel);
+            std::string newName = getNewRelationName(rel->getQualifiedName());
             auto newRelation = mk<ram::Relation>(
                     newName, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
             addRamRelation(newName, std::move(newRelation));

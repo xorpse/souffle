@@ -60,12 +60,12 @@ Own<ast::Clause> ProvenanceTranslator::createDeltaClause(
 
     // @new :- ...
     const auto* headRelation = relDetail->getRelation(original->getHead()->getQualifiedName());
-    recursiveVersion->getHead()->setQualifiedName(getNewRelationName(headRelation));
+    recursiveVersion->getHead()->setQualifiedName(getNewRelationName(headRelation->getQualifiedName()));
 
     // ... :- ..., @delta, ...
     auto& recursiveAtom = ast::getBodyLiterals<ast::Atom>(*recursiveVersion)[recursiveAtomIdx];
     const auto* atomRelation = getAtomRelation(recursiveAtom, program);
-    recursiveAtom->setQualifiedName(getDeltaRelationName(atomRelation));
+    recursiveAtom->setQualifiedName(getDeltaRelationName(atomRelation->getQualifiedName()));
 
     // ... :- ..., !head.
     recursiveVersion->addToBody(mk<ast::ProvenanceNegation>(souffle::clone(original->getHead())));
@@ -259,7 +259,7 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
     };
 
     auto makeRamAtomExistenceCheck = [&](ast::Atom* atom) {
-        auto relName = getConcreteRelationName(atom);
+        auto relName = getConcreteRelationName(atom->getQualifiedName());
         size_t auxiliaryArity = auxArityAnalysis->getArity(atom);
 
         // translate variables to subroutine arguments
