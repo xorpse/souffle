@@ -1,0 +1,5 @@
+<map id="souffle::ram::Choice::clone" name="souffle::ram::Choice::clone">
+<area shape="rect" id="node1" title="Create a clone (i.e." alt="" coords="5,5,157,47"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_abstract_choice.html#a9677b02bb281a97c51889ce9341fd864" title=" " alt="" coords="205,5,412,47"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#ab097fb451e787a08a185a449bacde2db" title="Compares two values referenced by a pointer where the case where both pointers are null is also consi..." alt="" coords="460,13,595,39"/>
+</map>

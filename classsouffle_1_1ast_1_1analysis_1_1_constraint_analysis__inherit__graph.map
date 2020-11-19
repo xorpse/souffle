@@ -1,0 +1,5 @@
+<map id="souffle::ast::analysis::ConstraintAnalysis&lt; AnalysisVar &gt;" name="souffle::ast::analysis::ConstraintAnalysis&lt; AnalysisVar &gt;">
+<area shape="rect" id="node1" title="A base class for ConstraintAnalysis collecting constraints for an analysis by visiting every node of ..." alt="" coords="23,461,187,656"/>
+<area shape="rect" id="node2" href="$structsouffle_1_1ast_1_1_visitor.html" title=" " alt="" coords="33,131,177,413"/>
+<area shape="rect" id="node3" href="$structsouffle_1_1ast_1_1ast__visitor__tag.html" title="A tag type required for the is_ast_visitor type trait to identify AstVisitors." alt="" coords="5,5,204,83"/>
+</map>

@@ -1,0 +1,8 @@
+<map id="souffle::ram::transform::CollapseFiltersTransformer::collapseFilters" name="souffle::ram::transform::CollapseFiltersTransformer::collapseFilters">
+<area shape="rect" id="node1" title="Collapse consecutive filter operations." alt="" coords="5,100,209,156"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#adea839071e91666e99dedc870a42941c" title=" " alt="" coords="312,5,421,32"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#aa0949fa42d9e396bb5407f69b450c1f1" title="Filter a vector to include certain elements." alt="" coords="315,56,419,83"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1_nested_operation.html#a39970444a2e5cffa4a32a283ebfd184e" title="Get nested operation." alt="" coords="257,107,476,149"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ram_1_1_nested_operation.html#af409277f57f3310ada9cdd1e37772c59" title="Get profile text." alt="" coords="257,173,476,214"/>
+<area shape="rect" id="node6" href="$namespacesouffle_1_1ram.html#a4610432d16a73ad71051c85a274d3bbe" title="Convert list of conditions to a conjunction." alt="" coords="275,239,458,265"/>
+</map>

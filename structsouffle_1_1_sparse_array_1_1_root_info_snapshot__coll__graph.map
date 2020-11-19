@@ -1,0 +1,11 @@
+<map id="souffle::SparseArray&lt; T, BITS, merge_op, copy_op &gt;::RootInfoSnapshot" name="souffle::SparseArray&lt; T, BITS, merge_op, copy_op &gt;::RootInfoSnapshot">
+<area shape="rect" id="node1" title="A struct to cover a snapshot of the root node state." alt="" coords="83,175,301,281"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,20,80,97"/>
+<area shape="rect" id="node3" href="$structsouffle_1_1_sparse_array_1_1_node.html" title="The node type of the internally maintained tree." alt="" coords="305,5,463,112"/>
+<area shape="rect" id="node4" href="$unionsouffle_1_1_sparse_array_1_1_cell.html" title="The value stored in a single cell of a inner or leaf node." alt="" coords="574,175,733,281"/>
+<area shape="rect" id="node5" title=" " alt="" coords="569,20,738,97"/>
+<area shape="rect" id="node6" title=" " alt="" coords="763,13,976,105"/>
+<area shape="rect" id="node7" title=" " alt="" coords="1001,20,1039,97"/>
+<area shape="rect" id="node8" title=" " alt="" coords="104,20,179,97"/>
+<area shape="rect" id="node9" title=" " alt="" coords="203,20,280,97"/>
+</map>

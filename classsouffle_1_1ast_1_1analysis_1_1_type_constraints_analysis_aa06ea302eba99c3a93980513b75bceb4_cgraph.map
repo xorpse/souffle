@@ -1,0 +1,12 @@
+<map id="souffle::ast::analysis::TypeConstraintsAnalysis::visitNumericConstant" name="souffle::ast::analysis::TypeConstraintsAnalysis::visitNumericConstant">
+<area shape="rect" id="node1" title=" " alt="" coords="5,194,195,250"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#a785852c2fc649d79a481627605ffcf4f" title="Can a string be parsed as RamFloat." alt="" coords="271,5,474,47"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#a89f207449b2332bf06ab28993dda09b9" title="Can a string be parsed as RamSigned." alt="" coords="271,71,474,112"/>
+<area shape="rect" id="node4" href="$namespacesouffle.html#a3773094eb7aa42e20a209b40c9873aa4" title="Can a string be parsed as RamUnsigned." alt="" coords="271,136,474,177"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ast_1_1_constant.html#a9af8dcfd680d849d228893dd2a19ab33" title="Get string representation of Constant." alt="" coords="293,201,453,243"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1ast_1_1analysis_1_1_type_environment.html#ab8c62c73847b8a2bbe952ad3f622776f" title=" " alt="" coords="243,267,503,308"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1ast_1_1_numeric_constant.html#a8c1211fed605c4df2ff2424efacabcb6" title=" " alt="" coords="265,332,480,373"/>
+<area shape="rect" id="node9" href="$structsouffle_1_1ast_1_1analysis_1_1_type_set.html#ac0192db5fb8a12035aeecbcb320d942b" title="Adds the given type to this set." alt="" coords="295,397,451,439"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1ast_1_1_constant.html#ab7e71ead5e98326a3ac0c8acb0889ef8" title="Abstract equality check for two AST nodes." alt="" coords="551,332,711,373"/>
+<area shape="rect" id="node10" href="$structsouffle_1_1ast_1_1analysis_1_1_type_set.html#a4d998d2bb359d4d8ee11bfa51aab0356" title="Universality check." alt="" coords="553,397,709,439"/>
+</map>

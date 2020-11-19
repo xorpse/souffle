@@ -1,0 +1,12 @@
+<map id="souffle::interpreter::ParallelScan" name="souffle::interpreter::ParallelScan">
+<area shape="rect" id="node1" title=" " alt="" coords="592,632,735,724"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_scan.html" title=" " alt="" coords="485,483,628,575"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1interpreter_1_1_node.html" title="This is a shadow node for a ram::Node that is enriched for with local information so that the interpr..." alt="" coords="249,263,392,413"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="5,5,148,200"/>
+<area shape="rect" id="node5" title=" " alt="" coords="172,64,299,141"/>
+<area shape="rect" id="node6" title=" " alt="" coords="323,64,491,141"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1interpreter_1_1_nested_operation.html" title="Encode a nested operation for the interpreter node. E.g. Loop, IndexScan." alt="" coords="467,285,646,391"/>
+<area shape="rect" id="node8" title=" " alt="" coords="515,57,702,149"/>
+<area shape="rect" id="node9" href="$classsouffle_1_1interpreter_1_1_abstract_parallel.html" title="node that utilizes parallel execution should inherit from this class. Enable node with its own view c..." alt="" coords="675,476,825,583"/>
+<area shape="rect" id="node10" title=" " alt="" coords="670,292,875,384"/>
+</map>

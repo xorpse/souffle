@@ -1,0 +1,6 @@
+<map id="souffle::ast::removeRelationIOs" name="souffle::ast::removeRelationIOs">
+<area shape="rect" id="node1" title="Removes the set of IOs with the given relation name." alt="" coords="5,71,232,98"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_atom.html#ab9a22c7f862012f074559a4061696241" title="Return qualified name." alt="" coords="295,5,443,47"/>
+<area shape="rect" id="node3" href="$namespacesouffle_1_1ast.html#af59ed6a7c649aec10999baea2f2c8b35" title="Returns the relation with the given name in the program." alt="" coords="280,71,457,98"/>
+<area shape="rect" id="node4" href="$namespacesouffle_1_1ast.html#a575099d0db1a527134d072d5689b7cbb" title="Removes the set of clauses with the given relation name." alt="" coords="505,64,712,105"/>
+</map>

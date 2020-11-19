@@ -1,0 +1,4 @@
+<map id="souffle::ast::transform::RemoveRelationCopiesTransformer" name="souffle::ast::transform::RemoveRelationCopiesTransformer">
+<area shape="rect" id="node1" title="Transformation pass to replaces copy of relations by their origin." alt="" coords="5,204,265,340"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1transform_1_1_transformer.html" title=" " alt="" coords="52,5,219,156"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="souffle::ast::analysis::SubsetType" name="souffle::ast::analysis::SubsetType">
+<area shape="rect" id="node1" title="A type being a subset of another type." alt="" coords="18,277,174,399"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1analysis_1_1_primitive_type.html" title="PrimitiveType = Number/Unsigned/Float/Symbol The class representing pre&#45;built, concrete types." alt="" coords="18,447,174,553"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1analysis_1_1_type.html" title="An abstract base class for types to be covered within a type environment." alt="" coords="5,5,187,229"/>
+</map>

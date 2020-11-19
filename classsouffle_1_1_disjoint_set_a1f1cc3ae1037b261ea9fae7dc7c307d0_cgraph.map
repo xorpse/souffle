@@ -1,0 +1,4 @@
+<map id="souffle::DisjointSet::clear" name="souffle::DisjointSet::clear">
+<area shape="rect" id="node1" title="Clears the DisjointSet of all nodes Invalidates all iterators." alt="" coords="5,5,151,47"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1_disjoint_set.html#aed80ba6959ac42fae1ea8985a55d6c89" title="Equivalent to the find() function in union/find Find the highest ancestor of the provided node &#45; flat..." alt="" coords="199,5,344,47"/>
+</map>

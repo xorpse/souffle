@@ -1,0 +1,4 @@
+<map id="souffle::ast::analysis::RedundantRelationsAnalysis" name="souffle::ast::analysis::RedundantRelationsAnalysis">
+<area shape="rect" id="node1" title="Analysis pass identifying relations which do not contribute to the computation of the output relation..." alt="" coords="5,204,239,369"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1analysis_1_1_analysis.html" title="Abstract class for a AST Analysis." alt="" coords="44,5,200,156"/>
+</map>

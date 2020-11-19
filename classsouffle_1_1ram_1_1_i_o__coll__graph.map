@@ -1,0 +1,8 @@
+<map id="souffle::ram::IO" name="souffle::ram::IO">
+<area shape="rect" id="node1" title="I/O statement for a relation." alt="" coords="261,603,395,753"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_relation_statement.html" title="RAM Statements with a single relation." alt="" coords="49,433,279,540"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_statement.html" title="Abstract class for RAM statements." alt="" coords="5,249,181,371"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="22,5,165,200"/>
+<area shape="rect" id="node5" title=" " alt="" coords="205,271,264,349"/>
+<area shape="rect" id="node6" title=" " alt="" coords="303,441,462,533"/>
+</map>

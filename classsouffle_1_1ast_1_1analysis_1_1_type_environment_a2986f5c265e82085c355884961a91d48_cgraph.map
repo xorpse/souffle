@@ -1,0 +1,6 @@
+<map id="souffle::ast::analysis::TypeEnvironment::getConstantNumericTypes" name="souffle::ast::analysis::TypeEnvironment::getConstantNumericTypes">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,236,87"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1analysis_1_1_type_environment.html#a2733384dd579272c8807936b364dcf44" title=" " alt="" coords="284,39,465,80"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1analysis_1_1_type.html#a7a65c1b4b77cf014624b8deefac42ac5" title=" " alt="" coords="513,5,716,47"/>
+<area shape="rect" id="node4" href="$namespacesouffle_1_1ast_1_1analysis.html#a0bf3d7f4bb24ba4705fc57759c922ab6" title="A constraint factory ensuring that all the types associated to the variable a are subtypes of the var..." alt="" coords="537,71,693,112"/>
+</map>

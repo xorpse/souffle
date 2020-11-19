@@ -1,0 +1,6 @@
+<map id="souffle::EquivalenceRelation::iterator::iterator" name="souffle::EquivalenceRelation::iterator::iterator">
+<area shape="rect" id="node1" title=" " alt="" coords="5,71,212,112"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1_piggy_list.html#a746c46251639906bcfcc16bbd113b0d8" title="Well, returns the number of nodes exist within the list + number of nodes queued to be inserted The r..." alt="" coords="297,5,430,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1_equivalence_relation_1_1iterator.html#a5dde1b519fc9b4d38e204a43e92b3798" title="quick update to whatever the current index is pointing to" alt="" coords="260,71,467,112"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1_equivalence_relation_1_1iterator.html#a20d3042fe47d57c6aba43d0e547dc89d" title="quick update to whatever the current index is pointing to" alt="" coords="260,136,467,177"/>
+</map>

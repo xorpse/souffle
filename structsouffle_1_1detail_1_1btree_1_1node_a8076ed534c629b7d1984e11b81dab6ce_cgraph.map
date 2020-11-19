@@ -1,0 +1,6 @@
+<map id="souffle::detail::btree::node::asInnerNode" name="souffle::detail::btree::node::asInnerNode">
+<area shape="rect" id="node1" title="A utility function providing a reference to this node as an inner node." alt="" coords="5,71,159,112"/>
+<area shape="rect" id="node2" href="$structsouffle_1_1detail_1_1btree_1_1node.html#a9f008a6b7c3080d1b1fce71212cb41b5" title="Obtains a reference to the child of the given index." alt="" coords="207,5,360,47"/>
+<area shape="rect" id="node3" href="$structsouffle_1_1detail_1_1btree_1_1node.html#a8a7cb37c43cb1f5a466a48a76f50c32c" title="Computes the number of nested levels of the tree rooted by this node." alt="" coords="207,71,360,112"/>
+<area shape="rect" id="node4" href="$structsouffle_1_1detail_1_1btree_1_1base.html#a054d65429e318a7d47c2e9a6d180f6cd" title=" " alt="" coords="207,136,360,177"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="souffle::ast2ram::AstToRamTranslator::nameUnnamedVariables" name="souffle::ast2ram::AstToRamTranslator::nameUnnamedVariables">
+<area shape="rect" id="node1" title="assigns names to unnamed variables such that enclosing constructs may be cloned without losing the va..." alt="" coords="5,5,260,47"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#aecc08c83ad9634fc515b7aa094702949" title="A generic function converting strings into strings (trivial case)." alt="" coords="308,13,433,39"/>
+</map>

@@ -1,0 +1,12 @@
+<map id="souffle::interpreter::Project" name="souffle::interpreter::Project">
+<area shape="rect" id="node1" title=" " alt="" coords="323,647,465,739"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_node.html" title="This is a shadow node for a ram::Node that is enriched for with local information so that the interpr..." alt="" coords="239,447,381,597"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="5,189,148,384"/>
+<area shape="rect" id="node4" title=" " alt="" coords="172,248,299,325"/>
+<area shape="rect" id="node5" title=" " alt="" coords="323,248,491,325"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1interpreter_1_1_super_operation.html" title="node that utilizes the super instruction optimization should inherit from this class...." alt="" coords="443,469,591,575"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1interpreter_1_1_super_instruction.html" title="This class encodes information for a super&#45;instruction, which is used to eliminate Number and TupleEl..." alt="" coords="516,219,669,355"/>
+<area shape="rect" id="node8" title=" " alt="" coords="341,13,481,105"/>
+<area shape="rect" id="node9" title=" " alt="" coords="505,20,680,97"/>
+<area shape="rect" id="node10" title=" " alt="" coords="705,5,891,112"/>
+</map>

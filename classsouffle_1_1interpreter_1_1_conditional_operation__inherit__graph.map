@@ -1,0 +1,13 @@
+<map id="souffle::interpreter::ConditionalOperation" name="souffle::interpreter::ConditionalOperation">
+<area shape="rect" id="node1" title="Encode a conditional operation for the interpreter node. E.g. Exit, Filter." alt="" coords="383,5,569,112"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_aggregate.html" title=" " alt="" coords="155,160,298,267"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1interpreter_1_1_break.html" title=" " alt="" coords="322,167,465,259"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1interpreter_1_1_choice.html" title=" " alt="" coords="489,167,631,259"/>
+<area shape="rect" id="node11" href="$classsouffle_1_1interpreter_1_1_filter.html" title=" " alt="" coords="655,167,798,259"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1interpreter_1_1_index_aggregate.html" title=" " alt="" coords="21,315,171,407"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1interpreter_1_1_parallel_aggregate.html" title=" " alt="" coords="195,315,341,407"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1interpreter_1_1_parallel_index_aggregate.html" title=" " alt="" coords="5,455,187,547"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1interpreter_1_1_index_choice.html" title=" " alt="" coords="447,315,590,407"/>
+<area shape="rect" id="node10" href="$classsouffle_1_1interpreter_1_1_parallel_choice.html" title=" " alt="" coords="614,315,757,407"/>
+<area shape="rect" id="node9" href="$classsouffle_1_1interpreter_1_1_parallel_index_choice.html" title=" " alt="" coords="439,455,598,547"/>
+</map>

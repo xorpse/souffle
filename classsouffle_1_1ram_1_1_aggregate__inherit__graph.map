@@ -1,0 +1,10 @@
+<map id="souffle::ram::Aggregate" name="souffle::ram::Aggregate">
+<area shape="rect" id="node1" title="Aggregation function applied on some relation." alt="" coords="157,1116,331,1267"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1ram_1_1_parallel_aggregate.html" title="Parallel Aggregation function applied on some relation." alt="" coords="133,1315,355,1421"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_relation_operation.html" title="Abstract class for operations on relations." alt="" coords="5,903,232,1024"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_tuple_operation.html" title="Abstract class for relation searches and lookups." alt="" coords="15,660,222,811"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1_nested_operation.html" title="Abstract class for a nesting operations in a loop&#45;nest." alt="" coords="9,417,228,612"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ram_1_1_operation.html" title="Abstract class for a relational algebra operation." alt="" coords="33,248,205,369"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="47,5,190,200"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1ram_1_1_abstract_aggregate.html" title="Abstract class for aggregation." alt="" coords="256,859,485,1068"/>
+</map>

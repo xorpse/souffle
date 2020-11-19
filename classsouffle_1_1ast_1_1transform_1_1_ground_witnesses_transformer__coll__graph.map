@@ -1,0 +1,4 @@
+<map id="souffle::ast::transform::GroundWitnessesTransformer" name="souffle::ast::transform::GroundWitnessesTransformer">
+<area shape="rect" id="node1" title="Apply a grounding so that the witness of a selection aggregate (min/max) can be transferred to the ou..." alt="" coords="5,204,228,325"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1transform_1_1_transformer.html" title=" " alt="" coords="33,5,200,156"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="souffle::ast::transform::IOAttributesTransformer::clone" name="souffle::ast::transform::IOAttributesTransformer::clone">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,192,87"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_translation_unit.html#a19431bc77b4a4e05d5a24e7b3807703d" title="get analysis: analysis is generated on the fly if not present" alt="" coords="240,5,413,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1_translation_unit.html#a8f0d6c64ddd338b8a9372a63d950b45c" title="Return the program." alt="" coords="240,71,413,112"/>
+</map>

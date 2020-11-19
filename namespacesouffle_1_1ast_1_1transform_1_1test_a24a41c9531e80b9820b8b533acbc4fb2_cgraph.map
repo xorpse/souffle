@@ -1,0 +1,9 @@
+<map id="souffle::ast::transform::test::TEST" name="souffle::ast::transform::test::TEST">
+<area shape="rect" id="node1" title="Test that copies of relations are removed by RemoveRelationCopiesTransformer." alt="" coords="5,89,172,131"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1_parser_driver.html#a24903f948735cea332d950fe68c484aa" title=" " alt="" coords="220,89,384,131"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1_parser_driver.html#a2209f59a1f90f0ae0267691e360bbeba" title=" " alt="" coords="432,89,587,131"/>
+<area shape="rect" id="node4" href="$namespace_t_c_b___s_p_a_n___n_a_m_e_s_p_a_c_e___n_a_m_e_1_1detail.html#ada90c89c458a0d53c483e767de7b7701" title=" " alt="" coords="635,5,809,47"/>
+<area shape="rect" id="node5" href="$_parser_driver_8cpp.html#a27fd9b6b0c9a907d6781e30d529e39d9" title=" " alt="" coords="665,71,779,98"/>
+<area shape="rect" id="node6" href="$_parser_driver_8cpp.html#a45c0eb07993a6eca6aab8fce3ffecea4" title=" " alt="" coords="659,122,785,149"/>
+<area shape="rect" id="node7" href="$_parser_driver_8cpp.html#a105b0061f1fb49827305f5d1bad07b91" title=" " alt="" coords="683,173,761,199"/>
+</map>

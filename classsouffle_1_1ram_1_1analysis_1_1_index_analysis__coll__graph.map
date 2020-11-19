@@ -1,0 +1,10 @@
+<map id="souffle::ram::analysis::IndexAnalysis" name="souffle::ram::analysis::IndexAnalysis">
+<area shape="rect" id="node1" title=" " alt="" coords="359,543,534,752"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1analysis_1_1_analysis.html" title="Abstract class for a RAM Analysis." alt="" coords="296,145,459,296"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1analysis_1_1_relation_analysis.html" title="A RAM Analysis for finding relations by name." alt="" coords="129,359,292,480"/>
+<area shape="rect" id="node3" title=" " alt="" coords="348,5,407,83"/>
+<area shape="rect" id="node5" title=" " alt="" coords="5,182,56,259"/>
+<area shape="rect" id="node6" title=" " alt="" coords="80,175,272,267"/>
+<area shape="rect" id="node7" title=" " alt="" coords="400,373,661,465"/>
+<area shape="rect" id="node8" title=" " alt="" coords="685,373,851,465"/>
+</map>

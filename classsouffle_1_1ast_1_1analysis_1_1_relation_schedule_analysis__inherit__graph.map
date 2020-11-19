@@ -1,0 +1,4 @@
+<map id="souffle::ast::analysis::RelationScheduleAnalysis" name="souffle::ast::analysis::RelationScheduleAnalysis">
+<area shape="rect" id="node1" title="Analysis pass computing a schedule for computing relations." alt="" coords="5,204,257,399"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1analysis_1_1_analysis.html" title="Abstract class for a AST Analysis." alt="" coords="53,5,209,156"/>
+</map>

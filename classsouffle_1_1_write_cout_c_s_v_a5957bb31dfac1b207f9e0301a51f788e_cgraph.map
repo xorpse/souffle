@@ -1,0 +1,8 @@
+<map id="souffle::WriteCoutCSV::writeNextTuple" name="souffle::WriteCoutCSV::writeNextTuple">
+<area shape="rect" id="node1" title=" " alt="" coords="5,57,171,98"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#a1f3d2bbfbcd58c76463920d43a29b3d0" title="Obtains a reference to the lock synchronizing output operations." alt="" coords="232,5,401,32"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1_write_cout_print_size.html#a581cc4b20d77784985d660044d96e539" title=" " alt="" coords="219,57,415,98"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1_write_stream.html#a8a909447132d9783c1582a278c9ae888" title=" " alt="" coords="239,122,395,163"/>
+<area shape="rect" id="node4" href="$namespacesouffle.html#a315141918c39611929a694840f046fb5" title=" " alt="" coords="489,64,593,91"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1_write_stream.html#a146d0383eb6ab1ca175216f971cdb5b3" title=" " alt="" coords="463,122,619,163"/>
+</map>

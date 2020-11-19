@@ -1,0 +1,6 @@
+<map id="souffle::interpreter::Filter" name="souffle::interpreter::Filter">
+<area shape="rect" id="node1" title=" " alt="" coords="193,233,336,325"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_node.html" title="This is a shadow node for a ram::Node that is enriched for with local information so that the interpr..." alt="" coords="5,5,148,185"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1interpreter_1_1_conditional_operation.html" title="Encode a conditional operation for the interpreter node. E.g. Exit, Filter." alt="" coords="172,42,357,149"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1interpreter_1_1_nested_operation.html" title="Encode a nested operation for the interpreter node. E.g. Loop, IndexScan." alt="" coords="382,42,561,149"/>
+</map>

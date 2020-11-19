@@ -1,0 +1,4 @@
+<map id="souffle::ast::analysis::UnionType" name="souffle::ast::analysis::UnionType">
+<area shape="rect" id="node1" title="A union type combining a list of types into a new, aggregated type." alt="" coords="17,277,175,413"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1analysis_1_1_type.html" title="An abstract base class for types to be covered within a type environment." alt="" coords="5,5,187,229"/>
+</map>

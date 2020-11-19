@@ -1,0 +1,5 @@
+<map id="souffle::ast::transform::MagicSetTransformer::AdornDatabaseTransformer::queueAdornment" name="souffle::ast::transform::MagicSetTransformer::AdornDatabaseTransformer::queueAdornment">
+<area shape="rect" id="node1" title="Add an adornment to the ToDo queue if it hasn&#39;t been processed before." alt="" coords="5,21,213,91"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#af3295dd83a588d612cf777e600beac4a" title="A utility to check generically whether a given element is contained in a given container." alt="" coords="301,5,430,32"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1transform_1_1_magic_set_transformer_1_1_adorn_database_transformer.html#a959ff85116ffe0675fa074db9c6570ba" title="Get the unique identifier corresponding to an adorned predicate." alt="" coords="261,57,469,127"/>
+</map>

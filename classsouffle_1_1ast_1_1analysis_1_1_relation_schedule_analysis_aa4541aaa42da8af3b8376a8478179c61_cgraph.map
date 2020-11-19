@@ -1,0 +1,5 @@
+<map id="souffle::ast::analysis::RelationScheduleAnalysis::run" name="souffle::ast::analysis::RelationScheduleAnalysis::run">
+<area shape="rect" id="node1" title="run analysis for a Ast translation unit" alt="" coords="5,43,232,84"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1analysis_1_1_s_c_c_graph_analysis.html#a32bf9b7c45a817e0a21b6e45a0720b8d" title="Return if the given SCC is recursive." alt="" coords="280,5,513,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1analysis_1_1_topologically_sorted_s_c_c_graph_analysis.html#a3f7aa6b1f34fe810845f31399748f17f" title=" " alt="" coords="285,71,508,127"/>
+</map>

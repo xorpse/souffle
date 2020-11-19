@@ -1,0 +1,11 @@
+<map id="souffle::ram::transform::ReorderConditionsTransformer" name="souffle::ram::transform::ReorderConditionsTransformer">
+<area shape="rect" id="node1" title="Reorders conjunctive terms depending on cost, i.e., cheap terms should be executed first." alt="" coords="110,741,338,863"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1transform_1_1_transformer.html" title="@Class Transformer @Brief abstract transformer class for a translation unit" alt="" coords="78,543,250,679"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1analysis_1_1_complexity_analysis.html" title="A Ram Analysis for determining the number of relational operations in a condition / expression." alt="" coords="274,550,451,671"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1analysis_1_1_analysis.html" title="Abstract class for a RAM Analysis." alt="" coords="296,145,459,296"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1ram_1_1analysis_1_1_relation_analysis.html" title="A RAM Analysis for finding relations by name." alt="" coords="129,359,292,480"/>
+<area shape="rect" id="node5" title=" " alt="" coords="348,5,407,83"/>
+<area shape="rect" id="node7" title=" " alt="" coords="5,182,56,259"/>
+<area shape="rect" id="node8" title=" " alt="" coords="80,175,272,267"/>
+<area shape="rect" id="node9" title=" " alt="" coords="400,373,565,465"/>
+</map>

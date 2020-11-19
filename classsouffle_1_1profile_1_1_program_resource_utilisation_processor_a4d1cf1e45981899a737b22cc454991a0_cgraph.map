@@ -1,0 +1,7 @@
+<map id="souffle::profile::ProgramResourceUtilisationProcessor::process" name="souffle::profile::ProgramResourceUtilisationProcessor::process">
+<area shape="rect" id="node1" title="process event input" alt="" coords="5,97,217,153"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1profile_1_1_frequency_atom_processor.html#a3b3de5ea328cb01bcc83b97c695464d5" title=" " alt="" coords="265,5,559,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1profile_1_1_event_processor_singleton.html#a3a6564631bccb96da84ccad7edfe4dc9" title="get instance" alt="" coords="301,71,523,112"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1profile_1_1_frequency_atom_processor.html#a1394ca7a636a523ea114419931016ba7" title="process event input" alt="" coords="317,136,507,177"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1profile_1_1_event_processor_singleton.html#ae2856808d00c373283c4397452279687" title="register an event processor with its keyword" alt="" coords="291,201,533,243"/>
+</map>

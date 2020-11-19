@@ -1,0 +1,4 @@
+<map id="souffle::LRUCache&lt; T, 1 &gt;::forEachInOrder" name="souffle::LRUCache&lt; T, 1 &gt;::forEachInOrder">
+<area shape="rect" id="node1" title="See description in most general case." alt="" coords="5,5,176,47"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1_l_r_u_cache.html#adc19d9bf75f545ab13fedf0321b0b75f" title="Iterates over the elements within this cache in LRU order." alt="" coords="224,5,372,47"/>
+</map>

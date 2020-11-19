@@ -1,0 +1,6 @@
+<map id="souffle::ast::NilConstant" name="souffle::ast::NilConstant">
+<area shape="rect" id="node1" title="Defines the nil constant." alt="" coords="5,616,184,708"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_constant.html" title="Abstract constant class." alt="" coords="15,432,175,568"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1_argument.html" title="An abstract class for arguments." alt="" coords="11,292,178,384"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ast_1_1_node.html" title="Abstract class for syntactic elements in an input program." alt="" coords="23,5,166,244"/>
+</map>

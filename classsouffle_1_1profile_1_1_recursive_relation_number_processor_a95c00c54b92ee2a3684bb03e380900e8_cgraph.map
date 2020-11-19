@@ -1,0 +1,5 @@
+<map id="souffle::profile::RecursiveRelationNumberProcessor::process" name="souffle::profile::RecursiveRelationNumberProcessor::process">
+<area shape="rect" id="node1" title="process event input" alt="" coords="5,31,196,87"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1profile_1_1_event_processor_singleton.html#a3a6564631bccb96da84ccad7edfe4dc9" title="get instance" alt="" coords="253,5,476,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1profile_1_1_event_processor_singleton.html#ae2856808d00c373283c4397452279687" title="register an event processor with its keyword" alt="" coords="244,71,485,112"/>
+</map>

@@ -1,0 +1,12 @@
+<map id="souffle::ram::transform::IndexedInequalityTransformer" name="souffle::ram::transform::IndexedInequalityTransformer">
+<area shape="rect" id="node1" title="Removes Inequalities from Indexed Operations and replaces them with a Filter Operation and empty Inde..." alt="" coords="296,815,520,936"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1transform_1_1_transformer.html" title="@Class Transformer @Brief abstract transformer class for a translation unit" alt="" coords="125,579,297,715"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1analysis_1_1_relation_analysis.html" title="A RAM Analysis for finding relations by name." alt="" coords="515,359,677,480"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1ram_1_1analysis_1_1_index_analysis.html" title=" " alt="" coords="321,543,495,752"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1analysis_1_1_analysis.html" title="Abstract class for a RAM Analysis." alt="" coords="152,145,315,296"/>
+<area shape="rect" id="node5" title=" " alt="" coords="204,5,263,83"/>
+<area shape="rect" id="node6" title=" " alt="" coords="497,182,548,259"/>
+<area shape="rect" id="node7" title=" " alt="" coords="572,175,764,267"/>
+<area shape="rect" id="node9" title=" " alt="" coords="40,373,301,465"/>
+<area shape="rect" id="node10" title=" " alt="" coords="325,373,491,465"/>
+</map>

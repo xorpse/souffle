@@ -1,0 +1,5 @@
+<map id="souffle::detail::brie::copy" name="souffle::detail::brie::copy">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,149,47"/>
+<area shape="rect" id="node2" href="$structsouffle_1_1detail_1_1brie_1_1default__factory.html#a39e757da75f8daf1ab892fbe7236fff5" title=" " alt="" coords="197,5,399,47"/>
+<area shape="rect" id="node3" href="$structsouffle_1_1detail_1_1brie_1_1default__merge.html#ae12193cf8e257def0d905a60d9f69910" title="Merges two values a and b when merging spase maps." alt="" coords="447,5,645,47"/>
+</map>

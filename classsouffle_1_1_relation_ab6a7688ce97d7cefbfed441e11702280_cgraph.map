@@ -1,0 +1,5 @@
+<map id="souffle::Relation::getPrimaryArity" name="souffle::Relation::getPrimaryArity">
+<area shape="rect" id="node1" title="Return the number of non&#45;auxiliary attributes." alt="" coords="5,39,141,80"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1_relation.html#ae1e94eafaaf1d1a7ec5c2a4dbdddf51c" title="Return the arity of a relation." alt="" coords="189,5,325,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1_relation.html#a2607e76650b5045cd84babfdd0bd64f3" title="Get the attribute type of a relation at the column specified by the parameter." alt="" coords="189,71,325,112"/>
+</map>

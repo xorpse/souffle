@@ -1,0 +1,6 @@
+<map id="souffle::ast::getVariables" name="souffle::ast::getVariables">
+<area shape="rect" id="node1" title="Obtains a list of all variables referenced within the AST rooted by the given root node." alt="" coords="5,46,188,73"/>
+<area shape="rect" id="node2" href="$namespacesouffle_1_1ast.html#a0bf6b9bdf0a8866bd27dde18442ab43d" title="A utility function visiting all nodes within the ast rooted by the given node recursively in a depth&#45;..." alt="" coords="236,39,405,80"/>
+<area shape="rect" id="node3" href="$structsouffle_1_1ast_1_1detail_1_1_lambda_visitor.html#a25be59532c20369733ec6bf2e28d8278" title=" " alt="" coords="453,5,680,47"/>
+<area shape="rect" id="node4" href="$structsouffle_1_1ast_1_1detail_1_1_lambda_visitor.html#ac4e7f87964de0bd68f27e2167bd33d6c" title=" " alt="" coords="487,71,647,112"/>
+</map>

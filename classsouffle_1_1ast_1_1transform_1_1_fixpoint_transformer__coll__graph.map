@@ -1,0 +1,7 @@
+<map id="souffle::ast::transform::FixpointTransformer" name="souffle::ast::transform::FixpointTransformer">
+<area shape="rect" id="node1" title="Transformer that repeatedly executes a sub&#45;transformer until no changes are made." alt="" coords="170,447,349,641"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1transform_1_1_meta_transformer.html" title="Transformer that coordinates other sub&#45;transformations." alt="" coords="63,219,247,384"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1transform_1_1_transformer.html" title=" " alt="" coords="5,5,172,156"/>
+<area shape="rect" id="node4" title=" " alt="" coords="197,42,247,119"/>
+<area shape="rect" id="node5" title=" " alt="" coords="271,255,458,347"/>
+</map>

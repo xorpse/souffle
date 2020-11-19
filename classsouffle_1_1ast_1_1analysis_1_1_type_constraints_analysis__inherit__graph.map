@@ -1,0 +1,6 @@
+<map id="souffle::ast::analysis::TypeConstraintsAnalysis" name="souffle::ast::analysis::TypeConstraintsAnalysis">
+<area shape="rect" id="node1" title="Constraint analysis framework for types." alt="" coords="5,704,212,1075"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1analysis_1_1_constraint_analysis.html" title=" " alt="" coords="27,461,191,656"/>
+<area shape="rect" id="node3" href="$structsouffle_1_1ast_1_1_visitor.html" title=" " alt="" coords="37,131,181,413"/>
+<area shape="rect" id="node4" href="$structsouffle_1_1ast_1_1ast__visitor__tag.html" title="A tag type required for the is_ast_visitor type trait to identify AstVisitors." alt="" coords="9,5,208,83"/>
+</map>

@@ -1,0 +1,8 @@
+<map id="souffle::ram::transform::HoistAggregateTransformer::hoistAggregate" name="souffle::ram::transform::HoistAggregateTransformer::hoistAggregate">
+<area shape="rect" id="node1" title="Apply hoistAggregate to the whole program." alt="" coords="5,115,215,171"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1transform_1_1_transformer.html#a691013aca8b04e8b676238440d1f8b5c" title="@Brief apply the transformer to a translation unit @Param translationUnit that will be transformed." alt="" coords="275,5,447,47"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#adea839071e91666e99dedc870a42941c" title=" " alt="" coords="306,71,415,98"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1analysis_1_1_level_analysis.html#a2afe65ccfe64a1ec590911e5e983d99a" title="Get level of a RAM expression/condition." alt="" coords="269,123,453,164"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ram_1_1_query.html#a465772e2a3335bdf9ba02bfd9297ca13" title="Get RAM operation." alt="" coords="287,188,434,229"/>
+<area shape="rect" id="node6" href="$namespacesouffle_1_1ram.html#ae8f9feae749370f84ae61bb4733070d3" title="Creates a node mapper based on a corresponding lambda expression." alt="" coords="263,253,459,295"/>
+</map>

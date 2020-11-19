@@ -1,0 +1,5 @@
+<map id="souffle::ast::analysis::TopologicallySortedSCCGraphAnalysis::topologicalOrderingCost" name="souffle::ast::analysis::TopologicallySortedSCCGraphAnalysis::topologicalOrderingCost">
+<area shape="rect" id="node1" title="Calculate the topological ordering cost of a permutation of as of yet unordered SCCs using the ordere..." alt="" coords="5,31,248,87"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1analysis_1_1_s_c_c_graph_analysis.html#aa34144a7041451a2234dbe78b15015c3" title="Get all predecessor SCCs of a given SCC." alt="" coords="296,5,587,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1analysis_1_1_s_c_c_graph_analysis.html#ac50e80d7fea45796717d649fc4e233c3" title="Get all successor SCCs of a given SCC." alt="" coords="303,71,580,112"/>
+</map>

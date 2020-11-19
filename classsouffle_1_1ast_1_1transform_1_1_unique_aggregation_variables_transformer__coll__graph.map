@@ -1,0 +1,4 @@
+<map id="souffle::ast::transform::UniqueAggregationVariablesTransformer" name="souffle::ast::transform::UniqueAggregationVariablesTransformer">
+<area shape="rect" id="node1" title="Transformation pass to rename aggregation variables to make them unique." alt="" coords="5,204,220,340"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1transform_1_1_transformer.html" title=" " alt="" coords="29,5,196,156"/>
+</map>

@@ -1,0 +1,8 @@
+<map id="souffle::ast::analysis::RelationDetailCacheAnalysis" name="souffle::ast::analysis::RelationDetailCacheAnalysis">
+<area shape="rect" id="node1" title="Analysis pass mapping identifiers with relations and clauses." alt="" coords="226,359,461,524"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1analysis_1_1_analysis.html" title="Abstract class for a AST Analysis." alt="" coords="5,145,161,296"/>
+<area shape="rect" id="node3" title=" " alt="" coords="54,5,113,83"/>
+<area shape="rect" id="node4" title=" " alt="" coords="186,167,357,274"/>
+<area shape="rect" id="node5" title=" " alt="" coords="391,182,442,259"/>
+<area shape="rect" id="node6" title=" " alt="" coords="465,167,688,274"/>
+</map>

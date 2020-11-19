@@ -1,0 +1,4 @@
+<map id="souffle::detail::binary_search" name="souffle::detail::binary_search">
+<area shape="rect" id="node1" title="A binary search strategy for looking up keys in b&#45;tree nodes." alt="" coords="7,145,167,281"/>
+<area shape="rect" id="node2" href="$structsouffle_1_1detail_1_1search__strategy.html" title="A common base class for search strategies in b&#45;trees." alt="" coords="5,5,168,97"/>
+</map>

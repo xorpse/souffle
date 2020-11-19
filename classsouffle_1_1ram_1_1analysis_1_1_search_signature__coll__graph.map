@@ -1,0 +1,4 @@
+<map id="souffle::ram::analysis::SearchSignature" name="souffle::ram::analysis::SearchSignature">
+<area shape="rect" id="node1" title="search signature of a RAM operation; each bit represents an attribute of a relation." alt="" coords="15,145,213,428"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,5,223,83"/>
+</map>

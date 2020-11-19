@@ -1,0 +1,7 @@
+<map id="souffle::ast::analysis::RecursiveClausesAnalysis" name="souffle::ast::analysis::RecursiveClausesAnalysis">
+<area shape="rect" id="node1" title="Analysis pass identifying clauses which are recursive." alt="" coords="103,359,320,509"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1analysis_1_1_analysis.html" title="Abstract class for a AST Analysis." alt="" coords="5,145,161,296"/>
+<area shape="rect" id="node3" title=" " alt="" coords="54,5,113,83"/>
+<area shape="rect" id="node4" title=" " alt="" coords="186,182,237,259"/>
+<area shape="rect" id="node5" title=" " alt="" coords="261,175,401,267"/>
+</map>

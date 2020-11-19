@@ -1,0 +1,10 @@
+<map id="souffle::ram::transform::MakeIndexTransformer" name="souffle::ram::transform::MakeIndexTransformer">
+<area shape="rect" id="node1" title="Make indexable operations to indexed operations." alt="" coords="117,741,335,951"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1transform_1_1_transformer.html" title="@Class Transformer @Brief abstract transformer class for a translation unit" alt="" coords="5,543,177,679"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1analysis_1_1_relation_analysis.html" title="A RAM Analysis for finding relations by name." alt="" coords="182,359,345,480"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1ram_1_1analysis_1_1_level_analysis.html" title="A Ram Analysis for determining the level of a expression/condition." alt="" coords="338,550,501,671"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1analysis_1_1_analysis.html" title="Abstract class for a RAM Analysis." alt="" coords="287,145,450,296"/>
+<area shape="rect" id="node5" title=" " alt="" coords="339,5,398,83"/>
+<area shape="rect" id="node6" title=" " alt="" coords="474,182,525,259"/>
+<area shape="rect" id="node7" title=" " alt="" coords="71,175,263,267"/>
+</map>

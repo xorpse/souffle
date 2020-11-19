@@ -1,0 +1,10 @@
+<map id="souffle::ast::transform::PartitionBodyLiteralsTransformer::transform" name="souffle::ast::transform::PartitionBodyLiteralsTransformer::transform">
+<area shape="rect" id="node1" title=" " alt="" coords="5,115,248,171"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#adea839071e91666e99dedc870a42941c" title=" " alt="" coords="326,5,435,32"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1_clause.html#a199bb0fc53e3f9980967d67b8dfb68a5" title="Obtains a copy of the internally maintained body literals." alt="" coords="307,57,454,98"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ast_1_1_clause.html#a92a6ca9ea20fe63f074d597d81d07c08" title="Return the atom that represents the head of the clause." alt="" coords="307,122,454,163"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ast_1_1_node.html#ac87a64ccec4ee0e470effeef0c6f3a0b" title="Return source location of the Node." alt="" coords="313,187,449,229"/>
+<area shape="rect" id="node6" href="$namespacesouffle_1_1ast.html#a0bf6b9bdf0a8866bd27dde18442ab43d" title="A utility function visiting all nodes within the ast rooted by the given node recursively in a depth&#45;..." alt="" coords="296,253,465,294"/>
+<area shape="rect" id="node7" href="$structsouffle_1_1ast_1_1detail_1_1_lambda_visitor.html#a25be59532c20369733ec6bf2e28d8278" title=" " alt="" coords="513,219,740,261"/>
+<area shape="rect" id="node8" href="$structsouffle_1_1ast_1_1detail_1_1_lambda_visitor.html#ac4e7f87964de0bd68f27e2167bd33d6c" title=" " alt="" coords="547,285,707,326"/>
+</map>

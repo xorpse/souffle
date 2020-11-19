@@ -1,0 +1,12 @@
+<map id="souffle::Diagnostic" name="souffle::Diagnostic">
+<area shape="rect" id="node1" title=" " alt="" coords="176,756,375,921"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,572,204,664"/>
+<area shape="rect" id="node3" title=" " alt="" coords="249,579,301,657"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1_diagnostic_message.html" title=" " alt="" coords="325,543,527,693"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1_src_location.html" title="A class describing a range in an input file." alt="" coords="227,359,377,480"/>
+<area shape="rect" id="node6" title=" " alt="" coords="168,182,327,259"/>
+<area shape="rect" id="node7" href="$structsouffle_1_1_src_location_1_1_point.html" title="A class locating a single point in an input file." alt="" coords="351,160,501,281"/>
+<area shape="rect" id="node8" title=" " alt="" coords="407,5,445,83"/>
+<area shape="rect" id="node9" title=" " alt="" coords="401,381,451,458"/>
+<area shape="rect" id="node10" title=" " alt="" coords="482,381,541,458"/>
+</map>

@@ -1,0 +1,42 @@
+<map id="souffle::ast::transform::test::TEST" name="souffle::ast::transform::test::TEST">
+<area shape="rect" id="node1" title="Test the equivalence (or lack of equivalence) of clauses using the MinimiseProgramTransfomer." alt="" coords="5,93,172,135"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_program.html#a89bc64ed82fbb346ff8fcb922386c196" title="Return relations." alt="" coords="271,28,429,69"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1_parser_driver.html#a24903f948735cea332d950fe68c484aa" title=" " alt="" coords="268,93,432,135"/>
+<area shape="rect" id="node10" href="$classsouffle_1_1ast_1_1transform_1_1_remove_relation_copies_transformer.html#a5b9ed2a8624e1caef78b6a741a450c78" title="Replaces copies of relations by their origin in the given program." alt="" coords="220,323,480,379"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#ad62d4e824a9d74c7462da546a21780fe" title="A utility function enabling the creation of a vector of pointers." alt="" coords="542,35,689,62"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1_parser_driver.html#a2209f59a1f90f0ae0267691e360bbeba" title=" " alt="" coords="538,89,693,131"/>
+<area shape="rect" id="node6" href="$namespace_t_c_b___s_p_a_n___n_a_m_e_s_p_a_c_e___n_a_m_e_1_1detail.html#ada90c89c458a0d53c483e767de7b7701" title=" " alt="" coords="751,5,925,47"/>
+<area shape="rect" id="node7" href="$_parser_driver_8cpp.html#a27fd9b6b0c9a907d6781e30d529e39d9" title=" " alt="" coords="781,71,895,98"/>
+<area shape="rect" id="node8" href="$_parser_driver_8cpp.html#a45c0eb07993a6eca6aab8fce3ffecea4" title=" " alt="" coords="775,122,901,149"/>
+<area shape="rect" id="node9" href="$_parser_driver_8cpp.html#a105b0061f1fb49827305f5d1bad07b91" title=" " alt="" coords="799,173,877,199"/>
+<area shape="rect" id="node11" href="$namespacesouffle.html#ae16e133691dd9963d4234b61e3cc203f" title="A function testing whether two containers are equal with the given Comparator." alt="" coords="534,155,697,182"/>
+<area shape="rect" id="node12" href="$classsouffle_1_1ast_1_1_atom.html#a48b2afc7e3e22611a93b42f0089342d8" title="Return arguments." alt="" coords="547,207,684,248"/>
+<area shape="rect" id="node13" href="$classsouffle_1_1ast_1_1_clause.html#a199bb0fc53e3f9980967d67b8dfb68a5" title="Obtains a copy of the internally maintained body literals." alt="" coords="542,272,689,313"/>
+<area shape="rect" id="node14" href="$namespacesouffle_1_1ast.html#a4aa067ee069beebb52dff5ee7250fc5f" title="Returns a vector of clauses in the program describing the relation with the given name." alt="" coords="528,338,703,365"/>
+<area shape="rect" id="node15" href="$classsouffle_1_1ast_1_1_clause.html#a92a6ca9ea20fe63f074d597d81d07c08" title="Return the atom that represents the head of the clause." alt="" coords="542,389,689,431"/>
+<area shape="rect" id="node16" href="$classsouffle_1_1ast_1_1_atom.html#ab9a22c7f862012f074559a4061696241" title="Return qualified name." alt="" coords="541,455,689,496"/>
+<area shape="rect" id="node17" href="$namespacesouffle_1_1ast.html#ad6da4b3c542f0471e3af4a47e3978e23" title="Returns whether the given clause is a fact." alt="" coords="546,521,685,547"/>
+<area shape="rect" id="node18" href="$_tui_8h.html#afb01ff7ecf303cdcd8f713643f605b77" title=" " alt="" coords="596,571,635,598"/>
+<area shape="rect" id="node19" href="$namespacesouffle_1_1test.html#a10453085bc4f71f32dcda443d4b3c446" title=" " alt="" coords="767,454,909,481"/>
+<area shape="rect" id="node20" href="$namespacesouffle_1_1profile_1_1_tools.html#afe466b09ae5ee2e1c7c64d55a0ae0c21" title=" " alt="" coords="760,505,916,547"/>
+<area shape="rect" id="node21" href="$classsouffle_1_1profile_1_1_table.html#ad5808507021b6f9cdd5641aac825f29e" title=" " alt="" coords="1027,517,1185,559"/>
+<area shape="rect" id="node22" href="$namespacetinyformat.html#a970fd8292e14eb74ba55bafb41017016" title=" " alt="" coords="771,622,905,649"/>
+<area shape="rect" id="node33" href="$classsouffle_1_1profile_1_1_table.html#ad4cd261b758bcc2bc223b1b8d9aaa94e" title=" " alt="" coords="759,793,917,835"/>
+<area shape="rect" id="node23" href="$namespacetinyformat.html#adc3e74768f0e2204f9f9a726fc07ec61" title=" " alt="" coords="1035,609,1177,635"/>
+<area shape="rect" id="node24" href="$namespacetinyformat.html#ab7b10973ec89e6601353675a85f99d61" title=" " alt="" coords="1287,583,1491,610"/>
+<area shape="rect" id="node25" href="$namespacetinyformat.html#a86ed74eb3ed66a662e96220d877da964" title="Format list of arguments to the stream according to the given format string." alt="" coords="1313,634,1464,661"/>
+<area shape="rect" id="node26" href="$namespacetinyformat_1_1detail.html#a9fe547bc617c38498e58c12cce507bec" title=" " alt="" coords="1539,627,1675,668"/>
+<area shape="rect" id="node27" href="$classtinyformat_1_1detail_1_1_format_arg.html#acbf435711bbe4a4da7fc81758d7108a9" title=" " alt="" coords="1742,561,1893,603"/>
+<area shape="rect" id="node28" href="$namespacetinyformat_1_1detail.html#ad3d636b9f85202b515c8940b7fcb62a6" title=" " alt="" coords="1725,627,1910,668"/>
+<area shape="rect" id="node29" href="$namespacetinyformat_1_1detail.html#ab4493739cbfe66bc79867f13f1fdf0db" title=" " alt="" coords="1723,692,1912,733"/>
+<area shape="rect" id="node30" href="$namespacetinyformat_1_1detail.html#a67285e0adb9f4164f9fc30a3eb11c771" title=" " alt="" coords="2187,663,2351,704"/>
+<area shape="rect" id="node31" href="$namespacetinyformat_1_1detail.html#ae1e94cbdd9e7cf26f17856a1792664e1" title=" " alt="" coords="1960,721,2139,763"/>
+<area shape="rect" id="node32" href="$classtinyformat_1_1detail_1_1_format_arg.html#a91b69f66ce9dc8ca2914dce8985d7a1a" title=" " alt="" coords="2201,728,2337,769"/>
+<area shape="rect" id="node34" href="$classsouffle_1_1profile_1_1_data_comparator.html#a734aaeddd3c8a7952ac75358d9cdfe5d" title="Sort by copy time." alt="" coords="975,659,1237,686"/>
+<area shape="rect" id="node35" href="$classsouffle_1_1profile_1_1_data_comparator.html#a76f98b6d43dc528c8f8bddb3746e8269" title="Sort by ID." alt="" coords="979,710,1233,737"/>
+<area shape="rect" id="node36" href="$classsouffle_1_1profile_1_1_data_comparator.html#ac520aeef0437cb4a54c57b83bfc7af82" title="Sort by name." alt="" coords="991,761,1221,803"/>
+<area shape="rect" id="node37" href="$classsouffle_1_1profile_1_1_data_comparator.html#af08f9cf841481752c50d2483027f0a07" title="Sort by non&#45;recursive time." alt="" coords="991,827,1221,868"/>
+<area shape="rect" id="node38" href="$classsouffle_1_1profile_1_1_data_comparator.html#a286b840ac5b9694c711f384e3edc0914" title="Sort by recursive time." alt="" coords="975,893,1237,919"/>
+<area shape="rect" id="node39" href="$classsouffle_1_1profile_1_1_data_comparator.html#a48b1c57f77017e9ae5a301526ca4a438" title="Sort by total time." alt="" coords="991,944,1221,985"/>
+<area shape="rect" id="node40" href="$classsouffle_1_1profile_1_1_data_comparator.html#ae89cb5ff565853d5eb8c5a6299f8774a" title="Sort by tuple count." alt="" coords="973,1010,1239,1037"/>
+</map>

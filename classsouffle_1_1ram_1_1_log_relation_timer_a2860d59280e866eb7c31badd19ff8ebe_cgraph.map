@@ -1,0 +1,7 @@
+<map id="souffle::ram::LogRelationTimer::clone" name="souffle::ram::LogRelationTimer::clone">
+<area shape="rect" id="node1" title="Create a clone (i.e." alt="" coords="5,71,191,112"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_abstract_log.html#a7d9358153615eab773aa9bd100151e0c" title=" " alt="" coords="239,5,424,47"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1_node.html#aee4a45e0aa0b8e4c3a12eaf840955535" title="Apply the mapper to all child nodes." alt="" coords="260,71,403,112"/>
+<area shape="rect" id="node5" href="$namespacesouffle.html#a850ddc94302e9b170a98729a22a4c8fa" title="Applies a function to each element of a vector and returns the results." alt="" coords="280,137,383,163"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#ab097fb451e787a08a185a449bacde2db" title="Compares two values referenced by a pointer where the case where both pointers are null is also consi..." alt="" coords="472,13,607,39"/>
+</map>

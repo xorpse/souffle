@@ -1,0 +1,11 @@
+<map id="souffle::interpreter::ViewOperation" name="souffle::interpreter::ViewOperation">
+<area shape="rect" id="node1" title="operation that utilizes the index view from underlying relation should inherit from this class." alt="" coords="365,5,508,112"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_existence_check.html" title=" " alt="" coords="5,160,167,325"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1interpreter_1_1_index_aggregate.html" title=" " alt="" coords="191,197,341,289"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1interpreter_1_1_index_choice.html" title=" " alt="" coords="365,197,508,289"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1interpreter_1_1_index_scan.html" title=" " alt="" coords="532,197,675,289"/>
+<area shape="rect" id="node9" href="$classsouffle_1_1interpreter_1_1_provenance_existence_check.html" title=" " alt="" coords="699,197,926,289"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1interpreter_1_1_parallel_index_aggregate.html" title=" " alt="" coords="151,373,333,465"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1interpreter_1_1_parallel_index_choice.html" title=" " alt="" coords="357,373,516,465"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1interpreter_1_1_parallel_index_scan.html" title=" " alt="" coords="540,373,685,465"/>
+</map>

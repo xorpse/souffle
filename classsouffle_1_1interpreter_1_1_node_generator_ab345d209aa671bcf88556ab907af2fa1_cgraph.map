@@ -1,0 +1,5 @@
+<map id="souffle::interpreter::NodeGenerator::encodeIndexPos" name="souffle::interpreter::NodeGenerator::encodeIndexPos">
+<area shape="rect" id="node1" title="Return operation index id from the result of indexAnalysis." alt="" coords="5,43,248,84"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1analysis_1_1_search_signature.html#abd1cd7d94f5928e8cbe5f78b42908360" title=" " alt="" coords="325,5,499,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1analysis_1_1_search_signature.html#ac1f80126eab5752a06c3847f3fa37835" title=" " alt="" coords="296,71,528,127"/>
+</map>

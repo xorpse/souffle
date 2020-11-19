@@ -1,0 +1,4 @@
+<map id="souffle::ast::BranchDeclaration" name="souffle::ast::BranchDeclaration">
+<area shape="rect" id="node1" title="Wrapper for the single branch declaration (product type) inside ADT declaration." alt="" coords="5,292,228,443"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_node.html" title="Abstract class for syntactic elements in an input program." alt="" coords="45,5,188,244"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="souffle::detail::linear_search::upper_bound" name="souffle::detail::linear_search::upper_bound">
+<area shape="rect" id="node1" title="Obtains a reference to the first element in the given range that such that the given key is less than..." alt="" coords="5,5,169,47"/>
+<area shape="rect" id="node2" href="$structsouffle_1_1detail_1_1binary__search.html#a7d36c6a2af6e8b2e7acccb52633f1621" title="Required user&#45;defined default constructor." alt="" coords="217,5,388,47"/>
+</map>

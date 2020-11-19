@@ -1,0 +1,4 @@
+<map id="souffle::ast::getClauseNum" name="souffle::ast::getClauseNum">
+<area shape="rect" id="node1" title="Returns the index of a clause within its relation, ignoring facts." alt="" coords="5,5,204,32"/>
+<area shape="rect" id="node2" href="$namespacesouffle_1_1ast.html#ad6da4b3c542f0471e3af4a47e3978e23" title="Returns whether the given clause is a fact." alt="" coords="252,5,391,32"/>
+</map>

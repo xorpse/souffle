@@ -1,0 +1,10 @@
+<map id="souffle::ast::transform::FoldAnonymousRecords::transform" name="souffle::ast::transform::FoldAnonymousRecords::transform">
+<area shape="rect" id="node1" title=" " alt="" coords="5,89,192,145"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1transform_1_1_fold_anonymous_records.html#ab46263482ff5b1ce4ece7bca0ad83764" title="Determine if the clause contains at least one binary constraint which can be expanded." alt="" coords="240,49,469,105"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1transform_1_1_fold_anonymous_records.html#acb2cd3b1bda8faf14f00509b6db65bc8" title="Process a single clause." alt="" coords="261,129,448,185"/>
+<area shape="rect" id="node4" href="$namespacesouffle.html#adea839071e91666e99dedc870a42941c" title=" " alt="" coords="579,5,688,32"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ast_1_1transform_1_1_fold_anonymous_records.html#aa8ea465275c07ae801e34bafdf735a57" title="Expand constraint on records position&#45;wise." alt="" coords="517,56,749,112"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1ast_1_1_binary_constraint.html#a874409f092ce4b5f741534e9f66159c3" title="Return binary operator." alt="" coords="528,137,739,178"/>
+<area shape="rect" id="node7" href="$namespacesouffle.html#a6befeedfd76433e1bd51a1f6cd42afec" title=" " alt="" coords="549,203,717,229"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1ast_1_1transform_1_1_fold_anonymous_records.html#aaa0cdfc93ce346a7eeff1ec3a6202bd0" title="Determine if binary constraint can be expanded." alt="" coords="540,253,727,309"/>
+</map>

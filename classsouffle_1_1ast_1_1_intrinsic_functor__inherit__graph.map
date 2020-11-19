@@ -1,0 +1,7 @@
+<map id="souffle::ast::IntrinsicFunctor" name="souffle::ast::IntrinsicFunctor">
+<area shape="rect" id="node1" title="Intrinsic Functor class for functors are in&#45;built." alt="" coords="5,844,208,1112"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_functor.html" title="Abstract functor class." alt="" coords="31,675,182,796"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1_term.html" title="Defines an abstract term class used for functors and other constructors." alt="" coords="35,432,178,627"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ast_1_1_argument.html" title="An abstract class for arguments." alt="" coords="23,292,190,384"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ast_1_1_node.html" title="Abstract class for syntactic elements in an input program." alt="" coords="35,5,178,244"/>
+</map>

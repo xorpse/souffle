@@ -1,0 +1,5 @@
+<map id="souffle::ast::analysis::TypeEnvironment::print" name="souffle::ast::analysis::TypeEnvironment::print">
+<area shape="rect" id="node1" title=" " alt="" coords="5,39,187,80"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1analysis_1_1_type.html#a7a65c1b4b77cf014624b8deefac42ac5" title=" " alt="" coords="235,5,437,47"/>
+<area shape="rect" id="node3" href="$namespacesouffle_1_1ast_1_1analysis.html#a0bf3d7f4bb24ba4705fc57759c922ab6" title="A constraint factory ensuring that all the types associated to the variable a are subtypes of the var..." alt="" coords="258,71,414,112"/>
+</map>

@@ -1,0 +1,9 @@
+<map id="souffle::synthesiser::NullaryRelation" name="souffle::synthesiser::NullaryRelation">
+<area shape="rect" id="node1" title=" " alt="" coords="375,580,549,716"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_relation.html" title="An abstract class for performing indexed operations." alt="" coords="377,277,547,531"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="5,5,148,200"/>
+<area shape="rect" id="node4" title=" " alt="" coords="172,64,331,141"/>
+<area shape="rect" id="node5" title=" " alt="" coords="355,64,569,141"/>
+<area shape="rect" id="node6" title=" " alt="" coords="594,64,653,141"/>
+<area shape="rect" id="node7" title=" " alt="" coords="677,64,737,141"/>
+</map>

@@ -1,0 +1,6 @@
+<map id="souffle::ast::analysis::TypeSet::end" name="souffle::ast::analysis::TypeSet::end">
+<area shape="rect" id="node1" title="Allows to iterate over the types contained in this set (only if not universal)" alt="" coords="5,5,161,47"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#a14b5f9eb9ec09c40e558b242e75de872" title="A generic test checking whether all elements within a container satisfy a certain predicate." alt="" coords="209,13,320,39"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#a34f8eecb81c090fca9e58d3357b63ed9" title="A generic test checking whether any elements within a container satisfy a certain predicate." alt="" coords="368,13,487,39"/>
+<area shape="rect" id="node4" href="$namespacesouffle.html#af4ec690ba482fd3a9692b5e31f6ad347" title="A generic test checking whether all elements within a container satisfy a certain predicate." alt="" coords="535,13,661,39"/>
+</map>

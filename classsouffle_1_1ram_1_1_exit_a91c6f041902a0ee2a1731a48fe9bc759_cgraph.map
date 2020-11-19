@@ -1,0 +1,5 @@
+<map id="souffle::ram::Exit::apply" name="souffle::ram::Exit::apply">
+<area shape="rect" id="node1" title="Apply the mapper to all child nodes." alt="" coords="5,35,139,76"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_exit.html#a88d3a084f174eb6437f9dd700ff28ca3" title="Get exit condition." alt="" coords="187,5,320,47"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#a0fff2be077dd5d1105f3a6e718339f2f" title="A utility printing a given value multiple times." alt="" coords="198,71,309,98"/>
+</map>

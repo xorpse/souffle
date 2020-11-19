@@ -1,0 +1,5 @@
+<map id="souffle::ast::analysis::RelationScheduleAnalysisStep" name="souffle::ast::analysis::RelationScheduleAnalysisStep">
+<area shape="rect" id="node1" title="A single step in a relation schedule, consisting of the relations computed in the step and the relati..." alt="" coords="5,175,249,325"/>
+<area shape="rect" id="node2" title=" " alt="" coords="42,13,93,90"/>
+<area shape="rect" id="node3" title=" " alt="" coords="117,5,257,97"/>
+</map>

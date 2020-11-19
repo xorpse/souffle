@@ -1,0 +1,4 @@
+<map id="souffle::ast::analysis::RelationDetailCacheAnalysis" name="souffle::ast::analysis::RelationDetailCacheAnalysis">
+<area shape="rect" id="node1" title="Analysis pass mapping identifiers with relations and clauses." alt="" coords="5,204,240,399"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1analysis_1_1_analysis.html" title="Abstract class for a AST Analysis." alt="" coords="45,5,201,156"/>
+</map>

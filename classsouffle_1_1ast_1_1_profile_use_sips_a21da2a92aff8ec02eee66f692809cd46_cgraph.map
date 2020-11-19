@@ -1,0 +1,4 @@
+<map id="souffle::ast::ProfileUseSips::evaluateCosts" name="souffle::ast::ProfileUseSips::evaluateCosts">
+<area shape="rect" id="node1" title="Evaluates the cost of choosing each atom next in the current schedule." alt="" coords="5,13,173,54"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1analysis_1_1_profile_use_analysis.html#a166e27c01a801a6749bf46ed99d9f575" title="Return size of relation in the profile." alt="" coords="221,5,380,61"/>
+</map>

@@ -1,0 +1,10 @@
+<map id="souffle::ast::Term" name="souffle::ast::Term">
+<area shape="rect" id="node1" title="Defines an abstract term class used for functors and other constructors." alt="" coords="161,985,304,1180"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_argument.html" title="An abstract class for arguments." alt="" coords="56,831,223,923"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1_node.html" title="Abstract class for syntactic elements in an input program." alt="" coords="68,543,211,781"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1_src_location.html" title="A class describing a range in an input file." alt="" coords="65,359,214,480"/>
+<area shape="rect" id="node5" title=" " alt="" coords="5,182,164,259"/>
+<area shape="rect" id="node6" href="$structsouffle_1_1_src_location_1_1_point.html" title="A class locating a single point in an input file." alt="" coords="189,160,338,281"/>
+<area shape="rect" id="node7" title=" " alt="" coords="244,5,283,83"/>
+<area shape="rect" id="node8" title=" " alt="" coords="247,831,408,923"/>
+</map>

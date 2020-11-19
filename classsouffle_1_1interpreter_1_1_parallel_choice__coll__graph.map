@@ -1,0 +1,13 @@
+<map id="souffle::interpreter::ParallelChoice" name="souffle::interpreter::ParallelChoice">
+<area shape="rect" id="node1" title=" " alt="" coords="511,632,653,724"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_choice.html" title=" " alt="" coords="404,483,547,575"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1interpreter_1_1_node.html" title="This is a shadow node for a ram::Node that is enriched for with local information so that the interpr..." alt="" coords="164,263,307,413"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="5,5,148,200"/>
+<area shape="rect" id="node5" title=" " alt="" coords="172,64,299,141"/>
+<area shape="rect" id="node6" title=" " alt="" coords="323,64,491,141"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1interpreter_1_1_conditional_operation.html" title="Encode a conditional operation for the interpreter node. E.g. Exit, Filter." alt="" coords="331,285,516,391"/>
+<area shape="rect" id="node8" title=" " alt="" coords="521,57,707,149"/>
+<area shape="rect" id="node9" href="$classsouffle_1_1interpreter_1_1_nested_operation.html" title="Encode a nested operation for the interpreter node. E.g. Loop, IndexScan." alt="" coords="541,285,719,391"/>
+<area shape="rect" id="node10" href="$classsouffle_1_1interpreter_1_1_abstract_parallel.html" title="node that utilizes parallel execution should inherit from this class. Enable node with its own view c..." alt="" coords="709,476,860,583"/>
+<area shape="rect" id="node11" title=" " alt="" coords="743,292,949,384"/>
+</map>

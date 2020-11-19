@@ -1,0 +1,5 @@
+<map id="souffle::ram::False" name="souffle::ram::False">
+<area shape="rect" id="node1" title=" " alt="" coords="20,373,161,465"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_condition.html" title="Abstract class for conditions and boolean values in RAM." alt="" coords="5,248,176,325"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="19,5,162,200"/>
+</map>

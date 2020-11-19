@@ -1,0 +1,5 @@
+<map id="souffle::Relation::iterator::operator!=" name="souffle::Relation::iterator::operator!=">
+<area shape="rect" id="node1" title="Overload the &quot;!=&quot; operator." alt="" coords="5,39,155,80"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1_relation.html#ae1e94eafaaf1d1a7ec5c2a4dbdddf51c" title="Return the arity of a relation." alt="" coords="203,5,339,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1_relation.html#a56563e42502037c4ca15e878fff6af70" title="Return the number of auxiliary attributes." alt="" coords="203,71,339,112"/>
+</map>

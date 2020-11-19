@@ -1,0 +1,7 @@
+<map id="souffle::profile::Tui::genJsonRelations" name="souffle::profile::Tui::genJsonRelations">
+<area shape="rect" id="node1" title=" " alt="" coords="5,104,148,145"/>
+<area shape="rect" id="node2" href="$namespacesouffle_1_1profile_1_1_tools.html#a65cd76e226eb994f292d7323815e865d" title="escape escapes and quotes, and remove surrounding quotes" alt="" coords="215,5,371,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1profile_1_1_output_processor.html#a3e9eb169f1e5833392a062c84b41e5bc" title=" " alt="" coords="196,71,391,112"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1profile_1_1_table.html#ad5808507021b6f9cdd5641aac825f29e" title=" " alt="" coords="215,136,372,177"/>
+<area shape="rect" id="node5" href="$namespacesouffle.html#aecc08c83ad9634fc515b7aa094702949" title="A generic function converting strings into strings (trivial case)." alt="" coords="231,202,356,229"/>
+</map>

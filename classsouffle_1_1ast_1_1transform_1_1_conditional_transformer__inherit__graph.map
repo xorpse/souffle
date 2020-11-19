@@ -1,0 +1,5 @@
+<map id="souffle::ast::transform::ConditionalTransformer" name="souffle::ast::transform::ConditionalTransformer">
+<area shape="rect" id="node1" title="Transformer that executes a sub&#45;transformer iff a condition holds." alt="" coords="5,417,204,641"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1transform_1_1_meta_transformer.html" title="Transformer that coordinates other sub&#45;transformations." alt="" coords="13,204,197,369"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1transform_1_1_transformer.html" title=" " alt="" coords="21,5,188,156"/>
+</map>

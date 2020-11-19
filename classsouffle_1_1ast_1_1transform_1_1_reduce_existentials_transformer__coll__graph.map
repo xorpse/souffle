@@ -1,0 +1,4 @@
+<map id="souffle::ast::transform::ReduceExistentialsTransformer" name="souffle::ast::transform::ReduceExistentialsTransformer">
+<area shape="rect" id="node1" title="Transformation pass to reduce unnecessary computation for relations that only appear in the form A(_,..." alt="" coords="5,204,237,325"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1transform_1_1_transformer.html" title=" " alt="" coords="38,5,205,156"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="souffle::ram::transform::ChoiceConversionTransformer" name="souffle::ram::transform::ChoiceConversionTransformer">
+<area shape="rect" id="node1" title="Convert (Scan/If)/(IndexScan/If) operaitons to (Choice)/(IndexChoice) operations." alt="" coords="5,189,231,340"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1transform_1_1_transformer.html" title="@Class Transformer @Brief abstract transformer class for a translation unit" alt="" coords="32,5,204,141"/>
+</map>

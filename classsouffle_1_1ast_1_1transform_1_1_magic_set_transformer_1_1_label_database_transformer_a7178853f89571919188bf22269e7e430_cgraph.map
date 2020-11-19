@@ -1,0 +1,5 @@
+<map id="souffle::ast::transform::MagicSetTransformer::LabelDatabaseTransformer::isNegativelyLabelled" name="souffle::ast::transform::MagicSetTransformer::LabelDatabaseTransformer::isNegativelyLabelled">
+<area shape="rect" id="node1" title="Check if a relation is negatively labelled." alt="" coords="5,24,211,95"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_translation_unit.html#a19431bc77b4a4e05d5a24e7b3807703d" title="get analysis: analysis is generated on the fly if not present" alt="" coords="259,5,432,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1_translation_unit.html#a8f0d6c64ddd338b8a9372a63d950b45c" title="Return the program." alt="" coords="259,71,432,112"/>
+</map>

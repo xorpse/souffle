@@ -1,0 +1,12 @@
+<map id="souffle::profile::RelationIOTimingProcessor::process" name="souffle::profile::RelationIOTimingProcessor::process">
+<area shape="rect" id="node1" title="process event input" alt="" coords="5,144,208,185"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1profile_1_1_event_processor_singleton.html#a3a6564631bccb96da84ccad7edfe4dc9" title="get instance" alt="" coords="285,5,507,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1profile_1_1_program_timepoint_processor.html#acbd67d452abef84e2d025a3d8ccb853c" title="process event input" alt="" coords="291,71,501,112"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1profile_1_1_program_timepoint_processor.html#acc3ce2aaccb46270ae3abda6539a31ee" title=" " alt="" coords="256,137,536,193"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1profile_1_1_event_processor_singleton.html#ae2856808d00c373283c4397452279687" title="register an event processor with its keyword" alt="" coords="275,217,517,259"/>
+<area shape="rect" id="node8" href="$namespacesouffle_1_1test.html#a5aa039c5d9fc1d573db6bfa98f1fcd53" title=" " alt="" coords="327,283,465,310"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1profile_1_1_program_runtime_processor.html#ab7dcc9ae26262e33b84a0596865467d7" title=" " alt="" coords="584,137,843,193"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1profile_1_1_program_resource_utilisation_processor.html#a55dfe7a6b05fa26d0ffcf899206ea32c" title=" " alt="" coords="891,137,1165,193"/>
+<area shape="rect" id="node9" href="$namespacesouffle_1_1test.html#aa6c5045991d8e1bae130ffb16b2c2255" title=" " alt="" coords="633,258,794,285"/>
+<area shape="rect" id="node10" href="$namespacesouffle_1_1test.html#a4195ac46f2a48cfa9b911259a22c3ccb" title=" " alt="" coords="646,309,781,335"/>
+</map>

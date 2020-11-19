@@ -1,0 +1,10 @@
+<map id="souffle::ast::ast_visitor_tag" name="souffle::ast::ast_visitor_tag">
+<area shape="rect" id="node1" title="A tag type required for the is_ast_visitor type trait to identify AstVisitors." alt="" coords="212,5,411,83"/>
+<area shape="rect" id="node2" href="$structsouffle_1_1ast_1_1_visitor.html" title="The generic base type of all AstVisitors realizing the dispatching of visitor calls." alt="" coords="155,131,299,413"/>
+<area shape="rect" id="node3" href="$structsouffle_1_1ast_1_1_visitor.html" title=" " alt="" coords="323,131,467,413"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ast_1_1analysis_1_1_constraint_analysis.html" title=" " alt="" coords="27,564,191,759"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1ast_1_1analysis_1_1_constraint_analysis.html" title="A base class for ConstraintAnalysis collecting constraints for an analysis by visiting every node of ..." alt="" coords="215,564,379,759"/>
+<area shape="rect" id="node7" href="$structsouffle_1_1ast_1_1detail_1_1_lambda_visitor.html" title="A specialized visitor wrapping a lambda function – an auxiliary type required for visitor convenience..." alt="" coords="403,608,585,715"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1ast_1_1transform_1_1_type_checker_impl.html" title=" " alt="" coords="609,461,806,861"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ast_1_1analysis_1_1_type_constraints_analysis.html" title="Constraint analysis framework for types." alt="" coords="5,909,212,1280"/>
+</map>

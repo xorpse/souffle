@@ -1,0 +1,5 @@
+<map id="souffle::ast::transform::MaterializeAggregationQueriesTransformer::instantiateUnnamedVariables" name="souffle::ast::transform::MaterializeAggregationQueriesTransformer::instantiateUnnamedVariables">
+<area shape="rect" id="node1" title="Whatever variables have been left unnamed have significance for a count aggregate." alt="" coords="5,16,307,72"/>
+<area shape="rect" id="node2" href="$namespacesouffle_1_1test.html#a10453085bc4f71f32dcda443d4b3c446" title=" " alt="" coords="355,5,497,32"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#aecc08c83ad9634fc515b7aa094702949" title="A generic function converting strings into strings (trivial case)." alt="" coords="363,56,489,83"/>
+</map>

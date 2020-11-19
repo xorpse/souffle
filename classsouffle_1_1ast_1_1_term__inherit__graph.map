@@ -1,0 +1,10 @@
+<map id="souffle::ast::Term" name="souffle::ast::Term">
+<area shape="rect" id="node1" title="Defines an abstract term class used for functors and other constructors." alt="" coords="202,432,345,627"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ast_1_1_branch_init.html" title="Initialization of ADT instance." alt="" coords="5,675,173,811"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ast_1_1_functor.html" title="Abstract functor class." alt="" coords="198,682,349,803"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1ast_1_1_record_init.html" title="Defines a record initialization class." alt="" coords="373,689,541,796"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_argument.html" title="An abstract class for arguments." alt="" coords="190,292,357,384"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1_node.html" title="Abstract class for syntactic elements in an input program." alt="" coords="202,5,345,244"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1ast_1_1_intrinsic_functor.html" title="Intrinsic Functor class for functors are in&#45;built." alt="" coords="59,859,261,1127"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1ast_1_1_user_defined_functor.html" title="User&#45;Defined functor class." alt="" coords="285,888,488,1097"/>
+</map>

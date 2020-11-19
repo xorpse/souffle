@@ -1,0 +1,5 @@
+<map id="souffle::ram::analysis::MaxMatching::solve" name="souffle::ram::analysis::MaxMatching::solve">
+<area shape="rect" id="node1" title="@Brief solve the maximum matching problem" alt="" coords="5,39,168,80"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1analysis_1_1_max_matching.html#a2541f8e9b68f12ed759ba04dcc6cbdfc" title="@Brief perform a depth first search in the graph" alt="" coords="218,5,401,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1analysis_1_1_max_matching.html#a77d2cf7bd11f7e9be14c679ffcc42516" title="@Brief get match for a search signature" alt="" coords="216,71,403,112"/>
+</map>

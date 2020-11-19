@@ -1,0 +1,6 @@
+<map id="souffle::ram::transform::ExpandFilterTransformer::expandFilters" name="souffle::ram::transform::ExpandFilterTransformer::expandFilters">
+<area shape="rect" id="node1" title="Expand filter operations." alt="" coords="5,41,195,97"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#adea839071e91666e99dedc870a42941c" title=" " alt="" coords="299,5,408,32"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#aa0949fa42d9e396bb5407f69b450c1f1" title="Filter a vector to include certain elements." alt="" coords="301,56,405,83"/>
+<area shape="rect" id="node4" href="$namespacesouffle_1_1ram.html#acf6d2a90790978f30945fcf3faa851e3" title="Convert terms of a conjunction to a list." alt="" coords="243,107,464,133"/>
+</map>

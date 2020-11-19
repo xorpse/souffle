@@ -1,0 +1,5 @@
+<map id="souffle::interpreter::Project" name="souffle::interpreter::Project">
+<area shape="rect" id="node1" title=" " alt="" coords="89,233,232,325"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_node.html" title="This is a shadow node for a ram::Node that is enriched for with local information so that the interpr..." alt="" coords="5,5,148,185"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1interpreter_1_1_super_operation.html" title="node that utilizes the super instruction optimization should inherit from this class...." alt="" coords="172,42,320,149"/>
+</map>

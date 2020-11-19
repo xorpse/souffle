@@ -1,0 +1,7 @@
+<map id="souffle::interpreter::ParallelScan" name="souffle::interpreter::ParallelScan">
+<area shape="rect" id="node1" title=" " alt="" coords="183,388,325,480"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_scan.html" title=" " alt="" coords="97,241,240,333"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1interpreter_1_1_node.html" title="This is a shadow node for a ram::Node that is enriched for with local information so that the interpr..." alt="" coords="5,5,148,185"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1interpreter_1_1_nested_operation.html" title="Encode a nested operation for the interpreter node. E.g. Loop, IndexScan." alt="" coords="173,42,351,149"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1interpreter_1_1_abstract_parallel.html" title="node that utilizes parallel execution should inherit from this class. Enable node with its own view c..." alt="" coords="264,233,415,340"/>
+</map>

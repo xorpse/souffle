@@ -1,0 +1,4 @@
+<map id="souffle::ast::transform::RemoveRedundantRelationsTransformer" name="souffle::ast::transform::RemoveRedundantRelationsTransformer">
+<area shape="rect" id="node1" title="Transformation pass to remove relations which are redundant (do not contribute to output)." alt="" coords="5,204,299,325"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1transform_1_1_transformer.html" title=" " alt="" coords="69,5,235,156"/>
+</map>

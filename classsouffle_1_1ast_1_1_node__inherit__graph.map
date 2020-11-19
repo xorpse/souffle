@@ -1,0 +1,39 @@
+<map id="souffle::ast::Node" name="souffle::ast::Node">
+<area shape="rect" id="node1" title="Abstract class for syntactic elements in an input program." alt="" coords="2318,5,2461,244"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_argument.html" title="An abstract class for arguments." alt="" coords="730,453,897,545"/>
+<area shape="rect" id="node19" href="$classsouffle_1_1ast_1_1_attribute.html" title="Attribute class." alt="" coords="921,409,1079,589"/>
+<area shape="rect" id="node20" href="$classsouffle_1_1ast_1_1_branch_declaration.html" title="Wrapper for the single branch declaration (product type) inside ADT declaration." alt="" coords="1103,424,1326,575"/>
+<area shape="rect" id="node21" href="$classsouffle_1_1ast_1_1_clause.html" title="Intermediate representation of a horn clause." alt="" coords="1351,351,1521,648"/>
+<area shape="rect" id="node22" href="$classsouffle_1_1ast_1_1_component.html" title="Component class." alt="" coords="1545,314,1724,685"/>
+<area shape="rect" id="node23" href="$classsouffle_1_1ast_1_1_component_init.html" title="Component initialization class." alt="" coords="1749,387,1947,611"/>
+<area shape="rect" id="node24" href="$classsouffle_1_1ast_1_1_component_type.html" title="Component type of a component." alt="" coords="1971,402,2178,597"/>
+<area shape="rect" id="node25" href="$classsouffle_1_1ast_1_1_directive.html" title="a directive has a type (e.g. input/output/printsize/limitsize), qualified relation name,..." alt="" coords="2203,365,2368,633"/>
+<area shape="rect" id="node26" href="$classsouffle_1_1ast_1_1_execution_order.html" title="An execution order for atoms within a clause; one or more execution orders form a plan." alt="" coords="2393,431,2594,567"/>
+<area shape="rect" id="node27" href="$classsouffle_1_1ast_1_1_execution_plan.html" title=" " alt="" coords="2618,417,2811,582"/>
+<area shape="rect" id="node28" href="$classsouffle_1_1ast_1_1_functor_declaration.html" title="User&#45;defined functor declaration." alt="" coords="2835,380,3061,619"/>
+<area shape="rect" id="node29" href="$classsouffle_1_1ast_1_1_literal.html" title="Defines an abstract class for literals in a horn clause." alt="" coords="3085,453,3227,545"/>
+<area shape="rect" id="node34" href="$classsouffle_1_1ast_1_1_pragma.html" title="Representation of a global option." alt="" coords="3252,424,3404,575"/>
+<area shape="rect" id="node35" href="$classsouffle_1_1ast_1_1_program.html" title="The program class consists of relations, clauses and types." alt="" coords="3428,292,3660,707"/>
+<area shape="rect" id="node36" href="$classsouffle_1_1ast_1_1_relation.html" title="Defines a relation with a name, attributes, qualifiers, and internal representation." alt="" coords="3685,351,3851,648"/>
+<area shape="rect" id="node37" href="$classsouffle_1_1ast_1_1_type.html" title="An abstract base class for types." alt="" coords="3876,439,4041,560"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1_aggregator.html" title="Defines the aggregator class." alt="" coords="64,755,243,1037"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ast_1_1_constant.html" title="Abstract constant class." alt="" coords="267,828,427,964"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1ast_1_1_counter.html" title="counter functor (incrementing a value after each invocation)" alt="" coords="451,850,605,942"/>
+<area shape="rect" id="node9" href="$classsouffle_1_1ast_1_1_subroutine_argument.html" title="Defines the argument class for subrountines." alt="" coords="629,821,811,971"/>
+<area shape="rect" id="node10" href="$classsouffle_1_1ast_1_1_term.html" title="Defines an abstract term class used for functors and other constructors." alt="" coords="835,799,978,993"/>
+<area shape="rect" id="node16" href="$classsouffle_1_1ast_1_1_type_cast.html" title="Defines a type cast class for expressions." alt="" coords="1002,791,1163,1001"/>
+<area shape="rect" id="node17" href="$classsouffle_1_1ast_1_1_unnamed_variable.html" title="Unnamed variable class." alt="" coords="1188,850,1407,942"/>
+<area shape="rect" id="node18" href="$classsouffle_1_1ast_1_1_variable.html" title="Named variable class." alt="" coords="1431,821,1585,971"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ast_1_1_nil_constant.html" title="Defines the nil constant." alt="" coords="5,1137,184,1229"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1ast_1_1_numeric_constant.html" title="Numeric Constant." alt="" coords="209,1085,423,1280"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1ast_1_1_string_constant.html" title="String constant class." alt="" coords="447,1129,646,1236"/>
+<area shape="rect" id="node11" href="$classsouffle_1_1ast_1_1_branch_init.html" title="Initialization of ADT instance." alt="" coords="671,1115,839,1251"/>
+<area shape="rect" id="node12" href="$classsouffle_1_1ast_1_1_functor.html" title="Abstract functor class." alt="" coords="863,1122,1014,1243"/>
+<area shape="rect" id="node15" href="$classsouffle_1_1ast_1_1_record_init.html" title="Defines a record initialization class." alt="" coords="1039,1129,1207,1236"/>
+<area shape="rect" id="node13" href="$classsouffle_1_1ast_1_1_intrinsic_functor.html" title="Intrinsic Functor class for functors are in&#45;built." alt="" coords="724,1328,927,1596"/>
+<area shape="rect" id="node14" href="$classsouffle_1_1ast_1_1_user_defined_functor.html" title="User&#45;Defined functor class." alt="" coords="951,1357,1153,1567"/>
+<area shape="rect" id="node30" href="$classsouffle_1_1ast_1_1_atom.html" title="An atom class." alt="" coords="2881,777,3047,1015"/>
+<area shape="rect" id="node31" href="$classsouffle_1_1ast_1_1_constraint.html" title="Abstract class for AST constraints." alt="" coords="3071,857,3241,935"/>
+<area shape="rect" id="node32" href="$classsouffle_1_1ast_1_1_negation.html" title="Negation of an atom negated atom." alt="" coords="3265,813,3426,979"/>
+<area shape="rect" id="node33" href="$classsouffle_1_1ast_1_1_provenance_negation.html" title="Subclass of Literal that represents a negated atom, * e.g., !parent(x,y)." alt="" coords="3256,1122,3435,1243"/>
+</map>

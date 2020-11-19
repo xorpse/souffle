@@ -1,0 +1,10 @@
+<map id="souffle::ram::transform::ChoiceConversionTransformer" name="souffle::ram::transform::ChoiceConversionTransformer">
+<area shape="rect" id="node1" title="Convert (Scan/If)/(IndexScan/If) operaitons to (Choice)/(IndexChoice) operations." alt="" coords="5,741,231,892"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1transform_1_1_transformer.html" title="@Class Transformer @Brief abstract transformer class for a translation unit" alt="" coords="11,543,183,679"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1analysis_1_1_level_analysis.html" title="A Ram Analysis for determining the level of a expression/condition." alt="" coords="207,550,370,671"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1analysis_1_1_analysis.html" title="Abstract class for a RAM Analysis." alt="" coords="395,145,558,296"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1ram_1_1analysis_1_1_relation_analysis.html" title="A RAM Analysis for finding relations by name." alt="" coords="207,359,370,480"/>
+<area shape="rect" id="node5" title=" " alt="" coords="447,5,506,83"/>
+<area shape="rect" id="node7" title=" " alt="" coords="105,182,155,259"/>
+<area shape="rect" id="node8" title=" " alt="" coords="179,175,371,267"/>
+</map>

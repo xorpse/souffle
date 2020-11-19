@@ -1,0 +1,12 @@
+<map id="souffle::ram::NestedIntrinsicOperator" name="souffle::ram::NestedIntrinsicOperator">
+<area shape="rect" id="node1" title="Effectively identical to IntrinsicOperator, except it can produce multiple results." alt="" coords="467,889,673,1084"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_tuple_operation.html" title="Abstract class for relation searches and lookups." alt="" coords="251,676,457,827"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_nested_operation.html" title="Abstract class for a nesting operations in a loop&#45;nest." alt="" coords="169,433,387,613"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1_operation.html" title="Abstract class for a relational algebra operation." alt="" coords="5,249,177,371"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="20,5,163,200"/>
+<area shape="rect" id="node6" title=" " alt="" coords="202,264,354,356"/>
+<area shape="rect" id="node7" title=" " alt="" coords="403,271,462,349"/>
+<area shape="rect" id="node8" title=" " alt="" coords="412,485,451,562"/>
+<area shape="rect" id="node9" title=" " alt="" coords="481,713,659,790"/>
+<area shape="rect" id="node10" title=" " alt="" coords="683,705,849,797"/>
+</map>

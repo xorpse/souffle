@@ -1,0 +1,6 @@
+<map id="souffle::interpreter::RelInterface::size" name="souffle::interpreter::RelInterface::size">
+<area shape="rect" id="node1" title="Get number of tuples in relation." alt="" coords="5,13,148,54"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_rel_interface_1_1iterator__base.html#a64f3cf22b91d0ca9960cc25ccc2885e0" title=" " alt="" coords="196,5,361,61"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1interpreter_1_1_rel_interface.html#a2be50223e79a9500f4aa175e3c4b1799" title="Get attribute type." alt="" coords="409,13,601,54"/>
+<area shape="rect" id="node4" href="$structsouffle_1_1interpreter_1_1_relation_wrapper.html#ab35364f5dfa7333d22b5f4ece52b43bc" title=" " alt="" coords="649,13,823,54"/>
+</map>

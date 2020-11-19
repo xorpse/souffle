@@ -1,0 +1,4 @@
+<map id="souffle::ast::Visitor&lt; R, Params &gt;" name="souffle::ast::Visitor&lt; R, Params &gt;">
+<area shape="rect" id="node1" title="The generic base type of all AstVisitors realizing the dispatching of visitor calls." alt="" coords="33,131,177,413"/>
+<area shape="rect" id="node2" href="$structsouffle_1_1ast_1_1ast__visitor__tag.html" title="A tag type required for the is_ast_visitor type trait to identify AstVisitors." alt="" coords="5,5,204,83"/>
+</map>

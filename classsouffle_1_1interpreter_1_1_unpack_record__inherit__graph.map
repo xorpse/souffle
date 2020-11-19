@@ -1,0 +1,5 @@
+<map id="souffle::interpreter::UnpackRecord" name="souffle::interpreter::UnpackRecord">
+<area shape="rect" id="node1" title=" " alt="" coords="97,233,240,340"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_node.html" title="This is a shadow node for a ram::Node that is enriched for with local information so that the interpr..." alt="" coords="5,5,148,185"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1interpreter_1_1_nested_operation.html" title="Encode a nested operation for the interpreter node. E.g. Loop, IndexScan." alt="" coords="173,42,351,149"/>
+</map>

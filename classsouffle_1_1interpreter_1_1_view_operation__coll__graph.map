@@ -1,0 +1,4 @@
+<map id="souffle::interpreter::ViewOperation" name="souffle::interpreter::ViewOperation">
+<area shape="rect" id="node1" title="operation that utilizes the index view from underlying relation should inherit from this class." alt="" coords="5,145,148,252"/>
+<area shape="rect" id="node2" title=" " alt="" coords="47,5,107,83"/>
+</map>

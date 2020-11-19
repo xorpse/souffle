@@ -1,0 +1,4 @@
+<map id="souffle::ast::transform::formNegatedLiterals" name="souffle::ast::transform::formNegatedLiterals">
+<area shape="rect" id="node1" title="Forms the bodies that will replace the negation of a given inlined atom." alt="" coords="5,5,172,47"/>
+<area shape="rect" id="node2" href="$namespacesouffle_1_1ast_1_1transform.html#a3ce47150ce3942c816dc5d8286f3ee23" title="Inlines the given atom based on a given clause." alt="" coords="220,5,387,47"/>
+</map>

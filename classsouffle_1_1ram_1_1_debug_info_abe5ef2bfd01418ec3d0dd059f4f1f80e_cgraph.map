@@ -1,0 +1,6 @@
+<map id="souffle::ram::DebugInfo::clone" name="souffle::ram::DebugInfo::clone">
+<area shape="rect" id="node1" title="Create a clone (i.e." alt="" coords="5,35,180,76"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_abstract_log.html#a7d9358153615eab773aa9bd100151e0c" title=" " alt="" coords="228,5,413,47"/>
+<area shape="rect" id="node4" href="$namespacesouffle.html#a850ddc94302e9b170a98729a22a4c8fa" title="Applies a function to each element of a vector and returns the results." alt="" coords="269,71,372,98"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#ab097fb451e787a08a185a449bacde2db" title="Compares two values referenced by a pointer where the case where both pointers are null is also consi..." alt="" coords="461,13,596,39"/>
+</map>

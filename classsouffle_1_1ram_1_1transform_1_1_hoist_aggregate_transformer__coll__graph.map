@@ -1,0 +1,10 @@
+<map id="souffle::ram::transform::HoistAggregateTransformer" name="souffle::ram::transform::HoistAggregateTransformer">
+<area shape="rect" id="node1" title=" " alt="" coords="8,741,217,863"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1transform_1_1_transformer.html" title="@Class Transformer @Brief abstract transformer class for a translation unit" alt="" coords="5,543,177,679"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1analysis_1_1_level_analysis.html" title="A Ram Analysis for determining the level of a expression/condition." alt="" coords="202,550,365,671"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1analysis_1_1_analysis.html" title="Abstract class for a RAM Analysis." alt="" coords="390,145,553,296"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1ram_1_1analysis_1_1_relation_analysis.html" title="A RAM Analysis for finding relations by name." alt="" coords="202,359,365,480"/>
+<area shape="rect" id="node5" title=" " alt="" coords="442,5,501,83"/>
+<area shape="rect" id="node7" title=" " alt="" coords="99,182,150,259"/>
+<area shape="rect" id="node8" title=" " alt="" coords="174,175,366,267"/>
+</map>

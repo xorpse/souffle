@@ -1,0 +1,6 @@
+<map id="genJsonAtoms" name="genJsonAtoms">
+<area shape="rect" id="node1" title=" " alt="" coords="5,78,120,105"/>
+<area shape="rect" id="node2" href="$namespacesouffle_1_1profile_1_1_tools.html#a65cd76e226eb994f292d7323815e865d" title="escape escapes and quotes, and remove surrounding quotes" alt="" coords="187,5,343,47"/>
+<area shape="rect" id="node3" href="$namespacesouffle_1_1profile_1_1_tools.html#a7c25512762a92c980a664299f22ccf01" title="Remove &#160;&#160;and \t characters, &#160;&#160;and \t sequence of two chars, and wrapping quotes." alt="" coords="187,71,343,112"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1profile_1_1_output_processor.html#a3e9eb169f1e5833392a062c84b41e5bc" title=" " alt="" coords="168,136,363,177"/>
+</map>

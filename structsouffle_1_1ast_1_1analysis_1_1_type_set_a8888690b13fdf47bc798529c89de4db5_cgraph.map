@@ -1,0 +1,4 @@
+<map id="souffle::ast::analysis::TypeSet::begin" name="souffle::ast::analysis::TypeSet::begin">
+<area shape="rect" id="node1" title="Allows to iterate over the types contained in this set (only if not universal)" alt="" coords="5,5,161,47"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#aeb411c7585f438a75ef3de5b6ae2abc5" title="A factory function enabling the construction of a dereferencing iterator utilizing the automated dedu..." alt="" coords="209,13,340,39"/>
+</map>

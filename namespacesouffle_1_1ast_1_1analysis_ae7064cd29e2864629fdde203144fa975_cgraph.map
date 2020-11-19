@@ -1,0 +1,4 @@
+<map id="souffle::ast::analysis::getGreatestCommonSubtypes" name="souffle::ast::analysis::getGreatestCommonSubtypes">
+<area shape="rect" id="node1" title="Computes the greatest common sub types of all the types in the given set." alt="" coords="5,5,232,47"/>
+<area shape="rect" id="node2" href="$namespacesouffle_1_1ast_1_1analysis.html#a1073ec3616e2b1e5628ef038ce21e975" title="Computes the greatest common sub types of the two given types." alt="" coords="280,5,507,47"/>
+</map>

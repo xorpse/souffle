@@ -1,0 +1,9 @@
+<map id="souffle::ram::AbstractParallel" name="souffle::ram::AbstractParallel">
+<area shape="rect" id="node1" title="Abstract class for parallel operation." alt="" coords="578,5,789,83"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_parallel_aggregate.html" title="Parallel Aggregation function applied on some relation." alt="" coords="5,138,228,245"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_parallel_choice.html" title="Find a tuple in a relation such that a given condition holds in parallel." alt="" coords="251,138,451,245"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1_parallel_index_aggregate.html" title="Aggregate over values of a relation using an index in parallel." alt="" coords="475,131,673,252"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ram_1_1_parallel_index_choice.html" title="Use an index to find a tuple in a relation such that a given condition holds in parallel." alt="" coords="698,131,890,252"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1ram_1_1_parallel_index_scan.html" title="Search for tuples of a relation matching a criteria." alt="" coords="915,138,1137,245"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1ram_1_1_parallel_scan.html" title="Iterate all tuples of a relation in parallel." alt="" coords="1162,138,1349,245"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="souffle::ast::renameAtoms" name="souffle::ast::renameAtoms">
+<area shape="rect" id="node1" title="Rename all atoms hat appear in a node to a given name." alt="" coords="5,31,200,57"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#adea839071e91666e99dedc870a42941c" title=" " alt="" coords="258,5,367,32"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#af3295dd83a588d612cf777e600beac4a" title="A utility to check generically whether a given element is contained in a given container." alt="" coords="248,56,377,83"/>
+</map>

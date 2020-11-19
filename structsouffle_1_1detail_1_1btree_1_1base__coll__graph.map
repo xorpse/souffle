@@ -1,0 +1,8 @@
+<map id="souffle::detail::btree&lt; Key, Comparator, Allocator, blockSize, SearchStrategy, isSet, WeakComparator, Updater &gt;::base" name="souffle::detail::btree&lt; Key, Comparator, Allocator, blockSize, SearchStrategy, isSet, WeakComparator, Updater &gt;::base">
+<area shape="rect" id="node1" title="The base type of all node types containing essential book&#45;keeping information." alt="" coords="286,145,579,340"/>
+<area shape="rect" id="node2" href="$structsouffle_1_1detail_1_1btree_1_1node.html" title="The actual, generic node implementation covering the operations for both, inner and leaf nodes." alt="" coords="5,403,300,700"/>
+<area shape="rect" id="node3" title=" " alt="" coords="41,204,88,281"/>
+<area shape="rect" id="node4" title=" " alt="" coords="171,5,231,83"/>
+<area shape="rect" id="node5" title=" " alt="" coords="366,5,417,83"/>
+<area shape="rect" id="node6" title=" " alt="" coords="441,5,507,83"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="souffle::ast::analysis::TypeSet::insert" name="souffle::ast::analysis::TypeSet::insert">
+<area shape="rect" id="node1" title="Adds the given type to this set." alt="" coords="5,5,161,47"/>
+<area shape="rect" id="node2" href="$structsouffle_1_1ast_1_1analysis_1_1_type_set.html#a4d998d2bb359d4d8ee11bfa51aab0356" title="Universality check." alt="" coords="209,5,365,47"/>
+</map>

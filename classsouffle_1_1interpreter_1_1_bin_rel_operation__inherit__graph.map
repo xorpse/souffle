@@ -1,0 +1,5 @@
+<map id="souffle::interpreter::BinRelOperation" name="souffle::interpreter::BinRelOperation">
+<area shape="rect" id="node1" title="operation that involves with two relations should inherit from this class. E.g. Swap,..." alt="" coords="83,5,236,141"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_extend.html" title=" " alt="" coords="5,189,148,281"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1interpreter_1_1_swap.html" title=" " alt="" coords="172,189,315,281"/>
+</map>

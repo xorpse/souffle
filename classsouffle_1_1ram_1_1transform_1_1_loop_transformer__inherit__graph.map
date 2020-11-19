@@ -1,0 +1,5 @@
+<map id="souffle::ram::transform::LoopTransformer" name="souffle::ram::transform::LoopTransformer">
+<area shape="rect" id="node1" title="@Class LoopTransformer @Brief Composite loop transformer" alt="" coords="5,329,177,451"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1transform_1_1_meta_transformer.html" title="@Class MetaTransformer @Brief Abstract class to identifier meta transformer" alt="" coords="5,189,177,281"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1transform_1_1_transformer.html" title="@Class Transformer @Brief abstract transformer class for a translation unit" alt="" coords="5,5,177,141"/>
+</map>

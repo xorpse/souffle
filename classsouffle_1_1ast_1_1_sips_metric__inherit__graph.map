@@ -1,0 +1,14 @@
+<map id="souffle::ast::SipsMetric" name="souffle::ast::SipsMetric">
+<area shape="rect" id="node1" title="Class for SIPS cost&#45;metric functions Each subclass represents a different heuristic used for evaluati..." alt="" coords="1055,5,1225,127"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_all_bound_sips.html" title="Goal: Prioritise atoms with all arguments bound." alt="" coords="5,182,192,274"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1_delta_input_sips.html" title="Goal: prioritise (1) all&#45;bound, then (2) deltas, then (3) input, and then (4) left&#45;most." alt="" coords="216,175,413,281"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ast_1_1_delta_sips.html" title="Goal: prioritise (1) all&#45;bound, then (2) deltas, and then (3) left&#45;most." alt="" coords="438,182,602,274"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ast_1_1_input_sips.html" title="Goal: prioritise (1) all&#45;bound, then (2) input, and then (3) left&#45;most." alt="" coords="627,175,789,281"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1ast_1_1_least_free_sips.html" title="Goal: choose the atom with the least number of unbound arguments." alt="" coords="813,182,1005,274"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1ast_1_1_least_free_vars_sips.html" title="Goal: choose the atom with the least amount of unbound variables." alt="" coords="1030,182,1250,274"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1ast_1_1_max_bound_sips.html" title="Goal: prioritise (1) all&#45;bound, then (2) max number of bound vars, then (3) left&#45;most." alt="" coords="1274,182,1473,274"/>
+<area shape="rect" id="node9" href="$classsouffle_1_1ast_1_1_max_ratio_sips.html" title="Goal: prioritise max ratio of bound args." alt="" coords="1497,182,1687,274"/>
+<area shape="rect" id="node10" href="$classsouffle_1_1ast_1_1_naive_sips.html" title="Goal: Prioritise (1) all bound, then (2) atoms with at least one bound argument, then (3) left&#45;most." alt="" coords="1711,182,1878,274"/>
+<area shape="rect" id="node11" href="$classsouffle_1_1ast_1_1_profile_use_sips.html" title="Goal: reorder based on the given profiling information Metric: cost(atom_R) = log(|atom_R|) * #free/#..." alt="" coords="1903,182,2097,274"/>
+<area shape="rect" id="node12" href="$classsouffle_1_1ast_1_1_strict_sips.html" title="Goal: Always choose the left&#45;most atom." alt="" coords="2121,182,2284,274"/>
+</map>

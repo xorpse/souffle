@@ -1,0 +1,6 @@
+<map id="souffle::TEST" name="souffle::TEST">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,112,83"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1_trie.html#a2c8d39e2308a0f31831944b4710501db" title="Obtains an iterator referencing the first element stored within this trie." alt="" coords="169,5,311,32"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1_trie.html#aa0f1b9e11caf4042daf24a538d2ef825" title=" " alt="" coords="160,56,320,83"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1_trie.html#a1f9c2c2441a37df805ad567b1ed97aba" title="Obtains an iterator referencing the position after the last element stored within this trie." alt="" coords="175,107,305,133"/>
+</map>

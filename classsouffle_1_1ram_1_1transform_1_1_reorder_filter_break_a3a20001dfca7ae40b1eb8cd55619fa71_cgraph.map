@@ -1,0 +1,5 @@
+<map id="souffle::ram::transform::ReorderFilterBreak::reorderFilterBreak" name="souffle::ram::transform::ReorderFilterBreak::reorderFilterBreak">
+<area shape="rect" id="node1" title="reorder filter&#45;break nesting to break&#45;filter nesting" alt="" coords="5,16,177,72"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#adea839071e91666e99dedc870a42941c" title=" " alt="" coords="225,5,335,32"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#aa0949fa42d9e396bb5407f69b450c1f1" title="Filter a vector to include certain elements." alt="" coords="228,56,332,83"/>
+</map>

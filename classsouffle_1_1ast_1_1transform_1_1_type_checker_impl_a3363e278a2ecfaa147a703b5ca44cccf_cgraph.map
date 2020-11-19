@@ -1,0 +1,7 @@
+<map id="souffle::ast::transform::TypeCheckerImpl::visitVariable" name="souffle::ast::transform::TypeCheckerImpl::visitVariable">
+<area shape="rect" id="node1" title=" " alt="" coords="5,104,236,145"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1_error_report.html#a699dc9231cef74ac54573e3c79de7143" title="Adds an error with the given message and location." alt="" coords="301,5,449,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1_node.html#ac87a64ccec4ee0e470effeef0c6f3a0b" title="Return source location of the Node." alt="" coords="307,71,443,112"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ast_1_1analysis_1_1_type_analysis.html#aacd3f8e49332e8d1b0f979c86d778a50" title="Get the computed types for the given argument." alt="" coords="284,136,465,177"/>
+<area shape="rect" id="node5" href="$namespacesouffle_1_1ast_1_1analysis.html#a03c482b5c5fefb75d263667dbe6b1995" title="Check if the type is of a kind corresponding to the TypeAttribute." alt="" coords="297,201,453,243"/>
+</map>

@@ -1,0 +1,13 @@
+<map id="souffle::ast::InputSips" name="souffle::ast::InputSips">
+<area shape="rect" id="node1" title="Goal: prioritise (1) all&#45;bound, then (2) input, and then (3) left&#45;most." alt="" coords="318,675,481,767"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_sips_metric.html" title="Class for SIPS cost&#45;metric functions Each subclass represents a different heuristic used for evaluati..." alt="" coords="126,447,297,568"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1analysis_1_1_i_o_type_analysis.html" title=" " alt="" coords="321,403,477,612"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ast_1_1analysis_1_1_analysis.html" title="Abstract class for a AST Analysis." alt="" coords="169,145,325,296"/>
+<area shape="rect" id="node9" href="$classsouffle_1_1ast_1_1analysis_1_1_relation_detail_cache_analysis.html" title="Analysis pass mapping identifiers with relations and clauses." alt="" coords="502,425,737,590"/>
+<area shape="rect" id="node5" title=" " alt="" coords="218,5,277,83"/>
+<area shape="rect" id="node6" title=" " alt="" coords="349,167,500,274"/>
+<area shape="rect" id="node7" title=" " alt="" coords="525,182,575,259"/>
+<area shape="rect" id="node8" title=" " alt="" coords="5,175,145,267"/>
+<area shape="rect" id="node10" title=" " alt="" coords="599,167,770,274"/>
+<area shape="rect" id="node11" title=" " alt="" coords="795,167,1017,274"/>
+</map>

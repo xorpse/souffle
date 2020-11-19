@@ -1,0 +1,4 @@
+<map id="souffle::ast::transform::RemoveBooleanConstraintsTransformer" name="souffle::ast::transform::RemoveBooleanConstraintsTransformer">
+<area shape="rect" id="node1" title="Transformation pass to remove constant boolean constraints Should be called after any transformation ..." alt="" coords="5,204,295,325"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1transform_1_1_transformer.html" title=" " alt="" coords="67,5,233,156"/>
+</map>

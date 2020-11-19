@@ -1,0 +1,4 @@
+<map id="souffle::ast::transform::MaterializeSingletonAggregationTransformer" name="souffle::ast::transform::MaterializeSingletonAggregationTransformer">
+<area shape="rect" id="node1" title="Replaces literals containing single&#45;valued aggregates with a synthesised relation." alt="" coords="5,204,248,369"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1transform_1_1_transformer.html" title=" " alt="" coords="43,5,210,156"/>
+</map>

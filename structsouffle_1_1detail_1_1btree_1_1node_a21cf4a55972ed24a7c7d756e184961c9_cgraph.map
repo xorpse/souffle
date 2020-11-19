@@ -1,0 +1,4 @@
+<map id="souffle::detail::btree::node::rebalance_or_split" name="souffle::detail::btree::node::rebalance_or_split">
+<area shape="rect" id="node1" title="Moves keys from this node to one of its siblings or splits this node to make some space for the inser..." alt="" coords="5,5,195,47"/>
+<area shape="rect" id="node2" href="$structsouffle_1_1detail_1_1btree_1_1node.html#ab86aecc8497b36d000fc8c0204114ed4" title="Splits this node." alt="" coords="243,5,396,47"/>
+</map>

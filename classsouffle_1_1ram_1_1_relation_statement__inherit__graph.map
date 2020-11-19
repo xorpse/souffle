@@ -1,0 +1,9 @@
+<map id="souffle::ram::RelationStatement" name="souffle::ram::RelationStatement">
+<area shape="rect" id="node1" title="RAM Statements with a single relation." alt="" coords="216,417,447,524"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1_clear.html" title="Delete tuples of a relation." alt="" coords="5,594,148,701"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ram_1_1_i_o.html" title="I/O statement for a relation." alt="" coords="172,572,307,723"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1ram_1_1_log_relation_timer.html" title="Execution time logger for a statement." alt="" coords="331,572,516,723"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1ram_1_1_log_size.html" title="Log relation size and a logging message." alt="" coords="540,579,699,715"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_statement.html" title="Abstract class for RAM statements." alt="" coords="243,248,419,369"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="260,5,403,200"/>
+</map>

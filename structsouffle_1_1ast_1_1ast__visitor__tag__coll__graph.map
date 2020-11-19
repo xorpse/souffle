@@ -1,0 +1,3 @@
+<map id="souffle::ast::ast_visitor_tag" name="souffle::ast::ast_visitor_tag">
+<area shape="rect" id="node1" title="A tag type required for the is_ast_visitor type trait to identify AstVisitors." alt="" coords="5,5,204,83"/>
+</map>

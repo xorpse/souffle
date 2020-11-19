@@ -1,0 +1,8 @@
+<map id="souffle::ram::ExistenceCheck" name="souffle::ram::ExistenceCheck">
+<area shape="rect" id="node1" title="Existence check for a tuple(&#45;pattern) in a relation." alt="" coords="179,633,389,725"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_abstract_existence_check.html" title="Abstract existence check for a tuple in a relation." alt="" coords="171,404,397,584"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_condition.html" title="Abstract class for conditions and boolean values in RAM." alt="" coords="5,257,176,334"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="19,5,162,200"/>
+<area shape="rect" id="node5" title=" " alt="" coords="201,249,367,341"/>
+<area shape="rect" id="node6" title=" " alt="" coords="392,257,451,334"/>
+</map>

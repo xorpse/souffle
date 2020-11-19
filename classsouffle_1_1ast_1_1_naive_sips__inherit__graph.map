@@ -1,0 +1,4 @@
+<map id="souffle::ast::NaiveSips" name="souffle::ast::NaiveSips">
+<area shape="rect" id="node1" title="Goal: Prioritise (1) all bound, then (2) atoms with at least one bound argument, then (3) left&#45;most." alt="" coords="7,175,174,267"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_sips_metric.html" title="Class for SIPS cost&#45;metric functions Each subclass represents a different heuristic used for evaluati..." alt="" coords="5,5,176,127"/>
+</map>

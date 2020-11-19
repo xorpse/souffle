@@ -1,0 +1,9 @@
+<map id="souffle::ram::transform::ParallelTransformer" name="souffle::ram::transform::ParallelTransformer">
+<area shape="rect" id="node1" title="Transforms Choice/IndexChoice/IndexScan/Scan into parallel versions." alt="" coords="19,557,206,679"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1transform_1_1_transformer.html" title="@Class Transformer @Brief abstract transformer class for a translation unit" alt="" coords="5,359,177,495"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1analysis_1_1_relation_analysis.html" title="A RAM Analysis for finding relations by name." alt="" coords="202,366,365,487"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1analysis_1_1_analysis.html" title="Abstract class for a RAM Analysis." alt="" coords="71,145,234,296"/>
+<area shape="rect" id="node5" title=" " alt="" coords="123,5,182,83"/>
+<area shape="rect" id="node6" title=" " alt="" coords="258,182,309,259"/>
+<area shape="rect" id="node7" title=" " alt="" coords="333,175,525,267"/>
+</map>

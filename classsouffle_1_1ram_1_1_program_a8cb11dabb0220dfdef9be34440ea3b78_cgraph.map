@@ -1,0 +1,5 @@
+<map id="souffle::ram::Program::clone" name="souffle::ram::Program::clone">
+<area shape="rect" id="node1" title="Create a clone (i.e." alt="" coords="5,23,168,65"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#adea839071e91666e99dedc870a42941c" title=" " alt="" coords="255,5,364,32"/>
+<area shape="rect" id="node3" href="$namespacesouffle_1_1ast_1_1analysis.html#af454c8b25ece926ca5206774d8f23be1" title="A generic factory for constraints of the form." alt="" coords="216,56,403,83"/>
+</map>

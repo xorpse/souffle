@@ -1,0 +1,4 @@
+<map id="souffle::ram::transform::ParallelTransformer" name="souffle::ram::transform::ParallelTransformer">
+<area shape="rect" id="node1" title="Transforms Choice/IndexChoice/IndexScan/Scan into parallel versions." alt="" coords="5,189,192,311"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1transform_1_1_transformer.html" title="@Class Transformer @Brief abstract transformer class for a translation unit" alt="" coords="13,5,185,141"/>
+</map>

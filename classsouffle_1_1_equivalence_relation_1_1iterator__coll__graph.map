@@ -1,0 +1,44 @@
+<map id="souffle::EquivalenceRelation&lt; TupleType &gt;::iterator" name="souffle::EquivalenceRelation&lt; TupleType &gt;::iterator">
+<area shape="rect" id="node1" title=" " alt="" coords="3457,3245,3663,3484"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1_piggy_list.html" title=" " alt="" coords="468,241,639,523"/>
+<area shape="rect" id="node3" title=" " alt="" coords="838,27,973,105"/>
+<area shape="rect" id="node34" href="$classsouffle_1_1_random_insert_piggy_list.html" title=" " alt="" coords="709,248,917,516"/>
+<area shape="rect" id="node37" href="$classsouffle_1_1_piggy_list.html" title=" " alt="" coords="941,233,1144,531"/>
+<area shape="rect" id="node4" title=" " alt="" coords="5,27,189,105"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1_spin_lock.html" title="A &#39;sequential&#39; non&#45;locking implementation for a spin lock." alt="" coords="495,5,627,127"/>
+<area shape="rect" id="node6" title=" " alt="" coords="1681,27,1741,105"/>
+<area shape="rect" id="node11" href="$classsouffle_1_1detail_1_1btree.html" title=" " alt="" coords="1301,1192,1617,1680"/>
+<area shape="rect" id="node15" href="$structsouffle_1_1detail_1_1btree_1_1node.html" title="The actual, generic node implementation covering the operations for both, inner and leaf nodes." alt="" coords="2138,233,2433,531"/>
+<area shape="rect" id="node16" href="$structsouffle_1_1detail_1_1btree_1_1base.html" title="The base type of all node types containing essential book&#45;keeping information." alt="" coords="2269,645,2563,839"/>
+<area shape="rect" id="node29" href="$classsouffle_1_1detail_1_1btree.html" title=" " alt="" coords="1967,1199,2283,1673"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1_equivalence_relation.html" title=" " alt="" coords="1327,2900,1534,3168"/>
+<area shape="rect" id="node8" title=" " alt="" coords="1373,2650,1488,2727"/>
+<area shape="rect" id="node9" href="$classsouffle_1_1_lambda_b_tree_set.html" title=" " alt="" coords="573,2292,824,2516"/>
+<area shape="rect" id="node10" href="$classsouffle_1_1detail_1_1_lambda_b_tree.html" title=" " alt="" coords="859,1743,1157,1996"/>
+<area shape="rect" id="node12" href="$structsouffle_1_1detail_1_1btree_1_1hint__statistics.html" title=" " alt="" coords="1602,674,1841,810"/>
+<area shape="rect" id="node13" href="$classsouffle_1_1_cache_access_counter.html" title="cache hits/misses." alt="" coords="1557,292,1768,472"/>
+<area shape="rect" id="node14" href="$structsouffle_1_1detail_1_1btree_1_1leaf__node.html" title="The data type representing leaf nodes of the b&#45;tree." alt="" coords="2006,674,2245,810"/>
+<area shape="rect" id="node17" title=" " alt="" coords="3103,343,3153,421"/>
+<area shape="rect" id="node18" title=" " alt="" coords="2457,343,2524,421"/>
+<area shape="rect" id="node19" title=" " alt="" coords="2262,27,2309,105"/>
+<area shape="rect" id="node20" href="$structsouffle_1_1detail_1_1updater.html" title=" " alt="" coords="910,696,1079,788"/>
+<area shape="rect" id="node21" href="$classsouffle_1_1_eqrel_map_comparator_3_01_store_pair_01_4.html" title=" " alt="" coords="1104,696,1264,788"/>
+<area shape="rect" id="node22" href="$classsouffle_1_1_optimistic_read_write_lock.html" title="A &#39;sequential&#39; non&#45;locking implementation for an optimistic r/w lock." alt="" coords="1339,637,1578,847"/>
+<area shape="rect" id="node23" href="$structsouffle_1_1detail_1_1default__strategy.html" title=" " alt="" coords="2676,696,2847,788"/>
+<area shape="rect" id="node24" href="$structsouffle_1_1detail_1_1binary.html" title=" " alt="" coords="3357,343,3517,421"/>
+<area shape="rect" id="node30" href="$structsouffle_1_1detail_1_1default__strategy.html" title=" " alt="" coords="3352,696,3523,788"/>
+<area shape="rect" id="node25" href="$structsouffle_1_1detail_1_1strategy__selection.html" title=" " alt="" coords="3489,20,3698,112"/>
+<area shape="rect" id="node26" href="$classsouffle_1_1_sparse_disjoint_set.html" title=" " alt="" coords="1160,2540,1349,2837"/>
+<area shape="rect" id="node27" href="$classsouffle_1_1_lambda_b_tree_set.html" title=" " alt="" coords="1428,2059,1695,2268"/>
+<area shape="rect" id="node28" href="$classsouffle_1_1detail_1_1_lambda_b_tree.html" title=" " alt="" coords="1590,1743,1909,1996"/>
+<area shape="rect" id="node31" href="$structsouffle_1_1_eqrel_map_comparator.html" title=" " alt="" coords="2871,681,3083,803"/>
+<area shape="rect" id="node32" href="$structsouffle_1_1detail_1_1updater.html" title=" " alt="" coords="3107,696,3277,788"/>
+<area shape="rect" id="node33" title=" " alt="" coords="1243,2125,1365,2202"/>
+<area shape="rect" id="node35" href="$classstd_1_1array_3_01std_1_1atomic_3_01value__type_01_5_01_4_00_01max_containers_01_4.html" title=" " alt="" coords="214,20,471,112"/>
+<area shape="rect" id="node36" href="$classsouffle_1_1_disjoint_set.html" title="Structure that emulates a Disjoint Set, i.e." alt="" coords="842,871,987,1168"/>
+<area shape="rect" id="node38" title=" " alt="" coords="1086,20,1290,112"/>
+<area shape="rect" id="node39" title=" " alt="" coords="1512,2650,1637,2727"/>
+<area shape="rect" id="node40" title=" " alt="" coords="3598,2995,3685,3073"/>
+<area shape="rect" id="node41" title=" " alt="" coords="3709,2995,3779,3073"/>
+<area shape="rect" id="node42" title=" " alt="" coords="3835,2995,3909,3073"/>
+</map>

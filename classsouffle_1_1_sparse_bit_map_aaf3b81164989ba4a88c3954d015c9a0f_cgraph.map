@@ -1,0 +1,4 @@
+<map id="souffle::SparseBitMap::clear" name="souffle::SparseBitMap::clear">
+<area shape="rect" id="node1" title="Resets all contained bits to 0." alt="" coords="5,5,169,47"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1_sparse_array.html#ab61dbfbc191d6b051fba0d209660ab86" title="Computes the memory usage of the given sub&#45;tree." alt="" coords="217,5,371,47"/>
+</map>

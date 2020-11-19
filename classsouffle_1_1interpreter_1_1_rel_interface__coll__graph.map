@@ -1,0 +1,12 @@
+<map id="souffle::interpreter::RelInterface" name="souffle::interpreter::RelInterface">
+<area shape="rect" id="node1" title="Wrapper class for interpreter relations." alt="" coords="361,564,519,847"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1_relation.html" title="Object&#45;oriented wrapper class for Souffle&#39;s templatized relations." alt="" coords="5,204,163,487"/>
+<area shape="rect" id="node3" href="$structsouffle_1_1interpreter_1_1_relation_wrapper.html" title="Wrapper for InterpreterRelation." alt="" coords="266,211,433,479"/>
+<area shape="rect" id="node4" title=" " alt="" coords="196,27,271,105"/>
+<area shape="rect" id="node5" title=" " alt="" coords="405,27,464,105"/>
+<area shape="rect" id="node6" title=" " alt="" coords="553,307,711,384"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1_symbol_table.html" title=" " alt="" coords="736,219,904,472"/>
+<area shape="rect" id="node8" title=" " alt="" coords="587,27,744,105"/>
+<area shape="rect" id="node9" href="$structsouffle_1_1_lock.html" title="A small utility class for implementing simple locks." alt="" coords="768,5,872,127"/>
+<area shape="rect" id="node10" title=" " alt="" coords="897,20,1055,112"/>
+</map>

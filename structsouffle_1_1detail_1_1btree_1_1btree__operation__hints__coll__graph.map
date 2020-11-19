@@ -1,0 +1,7 @@
+<map id="souffle::detail::btree&lt; Key, Comparator, Allocator, blockSize, SearchStrategy, isSet, WeakComparator, Updater &gt;::btree_operation_hints&lt; size &gt;" name="souffle::detail::btree&lt; Key, Comparator, Allocator, blockSize, SearchStrategy, isSet, WeakComparator, Updater &gt;::btree_operation_hints&lt; size &gt;">
+<area shape="rect" id="node1" title="A collection of operation hints speeding up some of the involved operations by exploiting temporal lo..." alt="" coords="131,447,373,597"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1_l_r_u_cache.html" title=" " alt="" coords="177,175,327,325"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,5,147,97"/>
+<area shape="rect" id="node4" title=" " alt="" coords="171,13,333,90"/>
+<area shape="rect" id="node5" title=" " alt="" coords="358,13,418,90"/>
+</map>

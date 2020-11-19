@@ -1,0 +1,8 @@
+<map id="souffle::ram::ram_visitor_tag" name="souffle::ram::ram_visitor_tag">
+<area shape="rect" id="node1" title="A tag type required for the is_ram_visitor type trait to identify RamVisitors." alt="" coords="150,5,361,83"/>
+<area shape="rect" id="node2" href="$structsouffle_1_1ram_1_1_visitor.html" title="The generic base type of all RamVisitors realizing the dispatching of visitor calls." alt="" coords="5,131,156,443"/>
+<area shape="rect" id="node3" href="$structsouffle_1_1ram_1_1_visitor.html" title=" " alt="" coords="180,131,331,443"/>
+<area shape="rect" id="node5" href="$structsouffle_1_1ram_1_1_visitor.html" title=" " alt="" coords="365,131,516,443"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1interpreter_1_1_node_generator.html" title=" " alt="" coords="138,491,349,1052"/>
+<area shape="rect" id="node6" href="$structsouffle_1_1ram_1_1detail_1_1_lambda_visitor.html" title="A specialized visitor wrapping a lambda function – an auxiliary type required for visitor convenience..." alt="" coords="373,718,554,825"/>
+</map>

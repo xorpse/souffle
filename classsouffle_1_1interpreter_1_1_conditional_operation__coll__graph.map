@@ -1,0 +1,4 @@
+<map id="souffle::interpreter::ConditionalOperation" name="souffle::interpreter::ConditionalOperation">
+<area shape="rect" id="node1" title="Encode a conditional operation for the interpreter node. E.g. Exit, Filter." alt="" coords="6,160,191,267"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,5,192,97"/>
+</map>

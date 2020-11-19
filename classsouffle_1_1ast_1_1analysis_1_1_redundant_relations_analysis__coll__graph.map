@@ -1,0 +1,11 @@
+<map id="souffle::ast::analysis::RedundantRelationsAnalysis" name="souffle::ast::analysis::RedundantRelationsAnalysis">
+<area shape="rect" id="node1" title="Analysis pass identifying relations which do not contribute to the computation of the output relation..." alt="" coords="255,748,489,884"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1analysis_1_1_analysis.html" title="Abstract class for a AST Analysis." alt="" coords="442,277,598,428"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ast_1_1analysis_1_1_precedence_graph_analysis.html" title="Analysis pass computing the precedence graph of the relations of the datalog progam." alt="" coords="192,549,408,685"/>
+<area shape="rect" id="node3" title=" " alt="" coords="491,35,549,112"/>
+<area shape="rect" id="node4" title=" " alt="" coords="89,314,140,391"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1_graph.html" title=" " alt="" coords="164,219,417,487"/>
+<area shape="rect" id="node7" title=" " alt="" coords="5,5,211,141"/>
+<area shape="rect" id="node8" title=" " alt="" coords="235,20,426,127"/>
+<area shape="rect" id="node9" title=" " alt="" coords="483,571,623,663"/>
+</map>

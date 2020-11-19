@@ -1,0 +1,4 @@
+<map id="souffle::ram::NestedOperation::print" name="souffle::ram::NestedOperation::print">
+<area shape="rect" id="node1" title="Pretty print with indentation." alt="" coords="5,5,224,47"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#ab097fb451e787a08a185a449bacde2db" title="Compares two values referenced by a pointer where the case where both pointers are null is also consi..." alt="" coords="272,13,407,39"/>
+</map>

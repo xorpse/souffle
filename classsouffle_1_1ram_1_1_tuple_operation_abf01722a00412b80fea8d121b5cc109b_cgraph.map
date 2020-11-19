@@ -1,0 +1,4 @@
+<map id="souffle::ram::TupleOperation::getChildNodes" name="souffle::ram::TupleOperation::getChildNodes">
+<area shape="rect" id="node1" title="Obtain list of all embedded child nodes." alt="" coords="5,5,212,47"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_nested_operation.html#a687b2c4e5c58d0da6a6d39ac52849c4e" title="Equality check for two RAM nodes." alt="" coords="260,5,479,47"/>
+</map>

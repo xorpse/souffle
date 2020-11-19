@@ -1,0 +1,12 @@
+<map id="souffle::ast::Relation" name="souffle::ast::Relation">
+<area shape="rect" id="node1" title="Defines a relation with a name, attributes, qualifiers, and internal representation." alt="" coords="347,1053,513,1307"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_node.html" title="Abstract class for syntactic elements in an input program." alt="" coords="183,752,325,991"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1_src_location.html" title="A class describing a range in an input file." alt="" coords="179,359,329,480"/>
+<area shape="rect" id="node4" title=" " alt="" coords="41,182,200,259"/>
+<area shape="rect" id="node10" href="$classsouffle_1_1ast_1_1_qualified_name.html" title="Qualified Name class defines fully/partially qualified names to identify objects in components." alt="" coords="5,504,204,728"/>
+<area shape="rect" id="node5" href="$structsouffle_1_1_src_location_1_1_point.html" title="A class locating a single point in an input file." alt="" coords="241,160,390,281"/>
+<area shape="rect" id="node6" title=" " alt="" coords="296,5,335,83"/>
+<area shape="rect" id="node7" title=" " alt="" coords="349,825,511,917"/>
+<area shape="rect" id="node8" title=" " alt="" coords="535,833,717,910"/>
+<area shape="rect" id="node9" title=" " alt="" coords="741,833,916,910"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="souffle::ast::transform::ResolveAliasesTransformer::removeComplexTermsInAtoms" name="souffle::ast::transform::ResolveAliasesTransformer::removeComplexTermsInAtoms">
+<area shape="rect" id="node1" title="Removes complex terms in atoms, replacing them with constrained variables." alt="" coords="5,5,236,61"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#a34f8eecb81c090fca9e58d3357b63ed9" title="A generic test checking whether any elements within a container satisfy a certain predicate." alt="" coords="284,20,403,47"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#af4ec690ba482fd3a9692b5e31f6ad347" title="A generic test checking whether all elements within a container satisfy a certain predicate." alt="" coords="451,20,577,47"/>
+</map>

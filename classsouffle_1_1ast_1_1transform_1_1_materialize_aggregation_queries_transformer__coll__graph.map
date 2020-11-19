@@ -1,0 +1,4 @@
+<map id="souffle::ast::transform::MaterializeAggregationQueriesTransformer" name="souffle::ast::transform::MaterializeAggregationQueriesTransformer">
+<area shape="rect" id="node1" title="Transformation pass to create artificial relations for bodies of aggregation functions consisting of ..." alt="" coords="5,204,256,413"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1transform_1_1_transformer.html" title=" " alt="" coords="47,5,214,156"/>
+</map>

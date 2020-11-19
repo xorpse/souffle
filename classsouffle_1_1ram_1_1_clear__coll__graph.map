@@ -1,0 +1,7 @@
+<map id="souffle::ram::Clear" name="souffle::ram::Clear">
+<area shape="rect" id="node1" title="Delete tuples of a relation." alt="" coords="127,589,270,696"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_relation_statement.html" title="RAM Statements with a single relation." alt="" coords="83,433,314,540"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_statement.html" title="Abstract class for RAM statements." alt="" coords="5,249,181,371"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="22,5,165,200"/>
+<area shape="rect" id="node5" title=" " alt="" coords="205,271,264,349"/>
+</map>

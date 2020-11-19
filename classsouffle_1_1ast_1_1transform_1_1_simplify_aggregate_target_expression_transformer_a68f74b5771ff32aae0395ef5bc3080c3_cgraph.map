@@ -1,0 +1,10 @@
+<map id="souffle::ast::transform::SimplifyAggregateTargetExpressionTransformer::transform" name="souffle::ast::transform::SimplifyAggregateTargetExpressionTransformer::transform">
+<area shape="rect" id="node1" title=" " alt="" coords="5,115,267,171"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#adea839071e91666e99dedc870a42941c" title=" " alt="" coords="374,5,483,32"/>
+<area shape="rect" id="node3" href="$namespacesouffle_1_1ast_1_1analysis.html#a9db4a30b81cfeab00fdbe334526fb30e" title="Find a variable name using base to form a string like base1 Use this when you need to limit the scope..." alt="" coords="333,57,525,98"/>
+<area shape="rect" id="node4" href="$namespacesouffle_1_1ast_1_1analysis.html#a2e435338888fbb0a6cc096f1e699f637" title="Computes the set of variables occurring outside the aggregate." alt="" coords="315,122,543,163"/>
+<area shape="rect" id="node5" href="$namespacesouffle_1_1ast_1_1analysis.html#ac7dcac078836134ae4e1e59e4d3148e3" title="Computes the set of witness variables that are used in the aggregate A variable is a witness if it oc..." alt="" coords="347,187,510,229"/>
+<area shape="rect" id="node6" href="$namespacesouffle_1_1ast.html#a0bf6b9bdf0a8866bd27dde18442ab43d" title="A utility function visiting all nodes within the ast rooted by the given node recursively in a depth&#45;..." alt="" coords="344,253,513,294"/>
+<area shape="rect" id="node7" href="$structsouffle_1_1ast_1_1detail_1_1_lambda_visitor.html#a25be59532c20369733ec6bf2e28d8278" title=" " alt="" coords="591,219,817,261"/>
+<area shape="rect" id="node8" href="$structsouffle_1_1ast_1_1detail_1_1_lambda_visitor.html#ac4e7f87964de0bd68f27e2167bd33d6c" title=" " alt="" coords="624,285,784,326"/>
+</map>

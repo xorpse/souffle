@@ -1,0 +1,5 @@
+<map id="souffle::ast::Constraint" name="souffle::ast::Constraint">
+<area shape="rect" id="node1" title="Abstract class for AST constraints." alt="" coords="5,432,175,509"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_literal.html" title="Defines an abstract class for literals in a horn clause." alt="" coords="19,292,161,384"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1_node.html" title="Abstract class for syntactic elements in an input program." alt="" coords="19,5,161,244"/>
+</map>

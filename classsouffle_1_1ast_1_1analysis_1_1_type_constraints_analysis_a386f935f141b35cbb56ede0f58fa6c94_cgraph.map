@@ -1,0 +1,7 @@
+<map id="souffle::ast::analysis::TypeConstraintsAnalysis::visitNegation" name="souffle::ast::analysis::TypeConstraintsAnalysis::visitNegation">
+<area shape="rect" id="node1" title=" " alt="" coords="5,116,195,172"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1analysis_1_1_constraint_analysis.html#ab5ec7ba5e63bb01178d3367e898f18e4" title="Adds another constraint to the internally maintained list of constraints." alt="" coords="277,5,468,61"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1analysis_1_1_type_environment.html#ab8c62c73847b8a2bbe952ad3f622776f" title=" " alt="" coords="243,86,503,127"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ast_1_1analysis_1_1_constraint_analysis.html#a932b8be0a8de453ba7a96db8f00c9473" title="A utility function mapping an Argument to its associated analysis variable." alt="" coords="291,152,454,208"/>
+<area shape="rect" id="node5" href="$namespacesouffle_1_1ast_1_1analysis.html#a0bf3d7f4bb24ba4705fc57759c922ab6" title="A constraint factory ensuring that all the types associated to the variable a are subtypes of the var..." alt="" coords="295,233,451,274"/>
+</map>

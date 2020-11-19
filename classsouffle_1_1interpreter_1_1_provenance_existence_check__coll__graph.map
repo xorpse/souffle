@@ -1,0 +1,16 @@
+<map id="souffle::interpreter::ProvenanceExistenceCheck" name="souffle::interpreter::ProvenanceExistenceCheck">
+<area shape="rect" id="node1" title=" " alt="" coords="601,647,827,739"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_unary_node.html" title="Unary node represents interpreter node with a single child." alt="" coords="453,491,596,597"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1interpreter_1_1_node.html" title="This is a shadow node for a ram::Node that is enriched for with local information so that the interpr..." alt="" coords="231,277,373,428"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="5,5,148,200"/>
+<area shape="rect" id="node5" title=" " alt="" coords="172,64,299,141"/>
+<area shape="rect" id="node6" title=" " alt="" coords="323,64,491,141"/>
+<area shape="rect" id="node7" title=" " alt="" coords="431,307,618,399"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1interpreter_1_1_super_operation.html" title="node that utilizes the super instruction optimization should inherit from this class...." alt="" coords="640,491,788,597"/>
+<area shape="rect" id="node9" href="$classsouffle_1_1interpreter_1_1_super_instruction.html" title="This class encodes information for a super&#45;instruction, which is used to eliminate Number and TupleEl..." alt="" coords="669,285,823,421"/>
+<area shape="rect" id="node10" title=" " alt="" coords="516,57,656,149"/>
+<area shape="rect" id="node11" title=" " alt="" coords="680,64,855,141"/>
+<area shape="rect" id="node12" title=" " alt="" coords="879,49,1066,156"/>
+<area shape="rect" id="node13" href="$classsouffle_1_1interpreter_1_1_view_operation.html" title="operation that utilizes the index view from underlying relation should inherit from this class." alt="" coords="812,491,955,597"/>
+<area shape="rect" id="node14" title=" " alt="" coords="853,314,913,391"/>
+</map>

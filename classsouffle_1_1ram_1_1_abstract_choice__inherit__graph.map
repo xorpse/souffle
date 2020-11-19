@@ -1,0 +1,7 @@
+<map id="souffle::ram::AbstractChoice" name="souffle::ram::AbstractChoice">
+<area shape="rect" id="node1" title="Abstract class for a choice operation." alt="" coords="111,5,318,141"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_choice.html" title="Find a tuple in a relation such that a given condition holds." alt="" coords="41,189,193,340"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1_index_choice.html" title="Use an index to find a tuple in a relation such that a given condition holds." alt="" coords="225,189,413,340"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_parallel_choice.html" title="Find a tuple in a relation such that a given condition holds in parallel." alt="" coords="5,395,205,502"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ram_1_1_parallel_index_choice.html" title="Use an index to find a tuple in a relation such that a given condition holds in parallel." alt="" coords="229,388,421,509"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="souffle::detail::brie::TrieTypes&lt; 1u &gt;::iterator_core" name="souffle::detail::brie::TrieTypes&lt; 1u &gt;::iterator_core">
+<area shape="rect" id="node1" title="The iterator core of this level contributing to the construction of a composed trie iterator." alt="" coords="49,505,275,700"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1detail_1_1brie_1_1_sparse_bit_map_iter.html" title="Iterator type for souffle::SparseArray." alt="" coords="53,145,271,443"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,5,100,83"/>
+<area shape="rect" id="node4" title=" " alt="" coords="125,5,199,83"/>
+<area shape="rect" id="node5" title=" " alt="" coords="224,5,295,83"/>
+</map>

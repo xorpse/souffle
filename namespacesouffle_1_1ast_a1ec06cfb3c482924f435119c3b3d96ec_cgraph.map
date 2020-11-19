@@ -1,0 +1,5 @@
+<map id="souffle::ast::getRecords" name="souffle::ast::getRecords">
+<area shape="rect" id="node1" title="Obtains a list of all records referenced within the AST rooted by the given root node." alt="" coords="5,13,180,39"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_program.html#a529839d448f4139ce2e4e87bcfe3201f" title="Return clauses." alt="" coords="228,5,385,47"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#ad62d4e824a9d74c7462da546a21780fe" title="A utility function enabling the creation of a vector of pointers." alt="" coords="433,13,580,39"/>
+</map>

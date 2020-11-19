@@ -1,0 +1,13 @@
+<map id="include/souffle/profile/ProgramRun.h" name="include/souffle/profile/ProgramRun.h">
+<area shape="rect" id="node1" title=" " alt="" coords="528,5,691,47"/>
+<area shape="rect" id="node2" href="$_profile_use_8cpp.html" title=" " alt="" coords="477,191,675,218"/>
+<area shape="rect" id="node3" href="$_profile_use_8h.html" title=" " alt="" coords="270,102,453,129"/>
+<area shape="rect" id="node6" href="$_output_processor_8h.html" title=" " alt="" coords="715,95,877,136"/>
+<area shape="rect" id="node7" href="$_tui_8h.html" title=" " alt="" coords="715,184,877,225"/>
+<area shape="rect" id="node11" href="$_reader_8h.html" title=" " alt="" coords="528,95,691,136"/>
+<area shape="rect" id="node4" href="$_reorder_literals_8cpp.html" title=" " alt="" coords="5,191,245,218"/>
+<area shape="rect" id="node5" href="$_sips_metric_8cpp.html" title=" " alt="" coords="270,191,453,218"/>
+<area shape="rect" id="node8" href="$_cli_8h.html" title=" " alt="" coords="641,273,804,315"/>
+<area shape="rect" id="node10" href="$main_8cpp.html" title=" " alt="" coords="828,281,911,307"/>
+<area shape="rect" id="node9" href="$souffle__prof_8cpp.html" title=" " alt="" coords="660,363,785,389"/>
+</map>

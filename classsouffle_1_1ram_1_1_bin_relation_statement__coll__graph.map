@@ -1,0 +1,6 @@
+<map id="souffle::ram::BinRelationStatement" name="souffle::ram::BinRelationStatement">
+<area shape="rect" id="node1" title="Abstract class for a binary relation." alt="" coords="103,448,294,584"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_statement.html" title="Abstract class for RAM statements." alt="" coords="5,249,181,371"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="22,5,165,200"/>
+<area shape="rect" id="node4" title=" " alt="" coords="205,271,264,349"/>
+</map>

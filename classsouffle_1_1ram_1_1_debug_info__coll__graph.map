@@ -1,0 +1,8 @@
+<map id="souffle::ram::DebugInfo" name="souffle::ram::DebugInfo">
+<area shape="rect" id="node1" title="Debug statement." alt="" coords="107,463,282,599"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_statement.html" title="Abstract class for RAM statements." alt="" coords="5,277,181,399"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="22,5,165,200"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1_abstract_log.html" title="Abstract class for logging." alt="" coords="206,263,391,413"/>
+<area shape="rect" id="node5" title=" " alt="" coords="205,57,357,149"/>
+<area shape="rect" id="node6" title=" " alt="" coords="381,64,440,141"/>
+</map>

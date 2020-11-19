@@ -1,0 +1,6 @@
+<map id="souffle::ast::BranchInit" name="souffle::ast::BranchInit">
+<area shape="rect" id="node1" title="Initialization of ADT instance." alt="" coords="5,675,173,811"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_term.html" title="Defines an abstract term class used for functors and other constructors." alt="" coords="18,432,161,627"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1_argument.html" title="An abstract class for arguments." alt="" coords="6,292,173,384"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ast_1_1_node.html" title="Abstract class for syntactic elements in an input program." alt="" coords="18,5,161,244"/>
+</map>

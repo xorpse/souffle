@@ -1,0 +1,5 @@
+<map id="souffle::ast::transform::MagicSetTransformer::LabelDatabaseTransformer::NegativeLabellingTransformer::getNegativeLabel" name="souffle::ast::transform::MagicSetTransformer::LabelDatabaseTransformer::NegativeLabellingTransformer::getNegativeLabel">
+<area shape="rect" id="node1" title="Provide a unique name for negatively&#45;labelled relations." alt="" coords="5,5,232,91"/>
+<area shape="rect" id="node2" href="$namespacesouffle_1_1test.html#a10453085bc4f71f32dcda443d4b3c446" title=" " alt="" coords="308,5,451,32"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1_qualified_name.html#aad398c1744b3162c468ce921d4c5061a" title="prepend qualifiers" alt="" coords="280,57,479,98"/>
+</map>

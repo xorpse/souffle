@@ -1,0 +1,7 @@
+<map id="souffle::ram::Parallel" name="souffle::ram::Parallel">
+<area shape="rect" id="node1" title="Parallel block of statements." alt="" coords="113,648,269,784"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_list_statement.html" title="Abstract class for a list of RAM statements." alt="" coords="91,433,290,599"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_statement.html" title="Abstract class for RAM statements." alt="" coords="5,249,181,371"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="22,5,165,200"/>
+<area shape="rect" id="node5" title=" " alt="" coords="206,264,373,356"/>
+</map>

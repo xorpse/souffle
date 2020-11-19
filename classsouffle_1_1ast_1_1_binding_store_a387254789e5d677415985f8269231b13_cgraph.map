@@ -1,0 +1,8 @@
+<map id="souffle::ast::BindingStore::BindingStore" name="souffle::ast::BindingStore::BindingStore">
+<area shape="rect" id="node1" title=" " alt="" coords="5,64,191,105"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_binary_constraint.html#a874409f092ce4b5f741534e9f66159c3" title="Return binary operator." alt="" coords="239,5,449,47"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#a6befeedfd76433e1bd51a1f6cd42afec" title=" " alt="" coords="260,71,428,98"/>
+<area shape="rect" id="node4" href="$namespacesouffle_1_1ast.html#a0bf6b9bdf0a8866bd27dde18442ab43d" title="A utility function visiting all nodes within the ast rooted by the given node recursively in a depth&#45;..." alt="" coords="259,123,429,164"/>
+<area shape="rect" id="node5" href="$structsouffle_1_1ast_1_1detail_1_1_lambda_visitor.html#a25be59532c20369733ec6bf2e28d8278" title=" " alt="" coords="497,89,724,131"/>
+<area shape="rect" id="node6" href="$structsouffle_1_1ast_1_1detail_1_1_lambda_visitor.html#ac4e7f87964de0bd68f27e2167bd33d6c" title=" " alt="" coords="531,155,691,196"/>
+</map>

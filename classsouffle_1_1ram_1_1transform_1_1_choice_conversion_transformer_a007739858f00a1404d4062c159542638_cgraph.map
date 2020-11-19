@@ -1,0 +1,7 @@
+<map id="souffle::ram::transform::ChoiceConversionTransformer::rewriteIndexScan" name="souffle::ram::transform::ChoiceConversionTransformer::rewriteIndexScan">
+<area shape="rect" id="node1" title="Rewrite IndexScan operations." alt="" coords="5,83,231,139"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#aa0949fa42d9e396bb5407f69b450c1f1" title="Filter a vector to include certain elements." alt="" coords="325,5,429,32"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1analysis_1_1_level_analysis.html#a2afe65ccfe64a1ec590911e5e983d99a" title="Get level of a RAM expression/condition." alt="" coords="285,57,469,98"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1_tuple_element.html#ac192573146b917c5e8247a623dc2fb3c" title="Get identifier." alt="" coords="279,122,475,163"/>
+<area shape="rect" id="node5" href="$namespacesouffle_1_1ram.html#a4607c9129a184d174bd3319a9920e8cf" title="A utility function visiting all nodes within the RAM fragments rooted by the given node recursively i..." alt="" coords="289,187,464,229"/>
+</map>

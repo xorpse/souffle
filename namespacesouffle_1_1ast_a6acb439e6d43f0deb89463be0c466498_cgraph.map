@@ -1,0 +1,7 @@
+<map id="souffle::ast::getHeadRelation" name="souffle::ast::getHeadRelation">
+<area shape="rect" id="node1" title="Returns the relation referenced by the head of the given clause." alt="" coords="5,35,216,61"/>
+<area shape="rect" id="node2" href="$namespacesouffle_1_1ast.html#a1cd3603ceb19cd0d014f1e0da9312c18" title="Returns the relation referenced by the given atom." alt="" coords="264,5,476,32"/>
+<area shape="rect" id="node3" href="$namespacesouffle_1_1ast.html#a0bf6b9bdf0a8866bd27dde18442ab43d" title="A utility function visiting all nodes within the ast rooted by the given node recursively in a depth&#45;..." alt="" coords="285,57,455,98"/>
+<area shape="rect" id="node4" href="$structsouffle_1_1ast_1_1detail_1_1_lambda_visitor.html#a25be59532c20369733ec6bf2e28d8278" title=" " alt="" coords="524,23,751,65"/>
+<area shape="rect" id="node5" href="$structsouffle_1_1ast_1_1detail_1_1_lambda_visitor.html#ac4e7f87964de0bd68f27e2167bd33d6c" title=" " alt="" coords="557,89,717,130"/>
+</map>

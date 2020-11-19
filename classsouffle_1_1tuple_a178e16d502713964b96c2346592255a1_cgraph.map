@@ -1,0 +1,7 @@
+<map id="souffle::tuple::rewind" name="souffle::tuple::rewind">
+<area shape="rect" id="node1" title="Reset the index giving the &quot;current element&quot; of the tuple to zero." alt="" coords="5,111,164,138"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1_relation.html#a2607e76650b5045cd84babfdd0bd64f3" title="Get the attribute type of a relation at the column specified by the parameter." alt="" coords="223,5,359,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1_relation.html#aafe66b5dd0bb775432f884bc47741a52" title="Get the symbol table of a relation." alt="" coords="223,71,359,112"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1_symbol_table.html#ada9d8afe1219bf54d16507b424f512c6" title="Find the index of a symbol in the table, inserting a new symbol if it does not exist there already." alt="" coords="212,136,369,177"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1tuple.html#ac91152e6dedf29a05abca2d339ea896c" title="Return the number of elements in the tuple." alt="" coords="220,202,361,229"/>
+</map>

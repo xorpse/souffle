@@ -1,0 +1,4 @@
+<map id="souffle::ast::visitDepthFirst" name="souffle::ast::visitDepthFirst">
+<area shape="rect" id="node1" title="A utility function visiting all nodes within a given list of AST root nodes recursively in a depth&#45;fi..." alt="" coords="5,5,175,47"/>
+<area shape="rect" id="node2" href="$namespacesouffle_1_1ast_1_1detail.html#ab842ed6fc6af91aaf5cfc9aa9f16f765" title="A factory function for creating LambdaVisitor instances." alt="" coords="223,5,383,47"/>
+</map>

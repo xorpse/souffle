@@ -1,0 +1,4 @@
+<map id="souffle::ram::transform::HoistConditionsTransformer" name="souffle::ram::transform::HoistConditionsTransformer">
+<area shape="rect" id="node1" title="Hosts conditions in a loop&#45;nest to the most&#45;outer/semantically&#45;correct loop." alt="" coords="5,189,216,311"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1transform_1_1_transformer.html" title="@Class Transformer @Brief abstract transformer class for a translation unit" alt="" coords="25,5,197,141"/>
+</map>

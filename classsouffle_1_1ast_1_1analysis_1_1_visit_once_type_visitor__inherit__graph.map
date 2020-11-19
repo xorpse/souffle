@@ -1,0 +1,4 @@
+<map id="souffle::ast::analysis::VisitOnceTypeVisitor&lt; R &gt;" name="souffle::ast::analysis::VisitOnceTypeVisitor&lt; R &gt;">
+<area shape="rect" id="node1" title="A visitor for types visiting each type only once (effectively breaking recursive cycles)." alt="" coords="5,189,208,281"/>
+<area shape="rect" id="node2" href="$structsouffle_1_1ast_1_1analysis_1_1_type_visitor.html" title="A visitor for Types." alt="" coords="29,5,185,141"/>
+</map>

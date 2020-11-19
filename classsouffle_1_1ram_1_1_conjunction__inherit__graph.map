@@ -1,0 +1,5 @@
+<map id="souffle::ram::Conjunction" name="souffle::ram::Conjunction">
+<area shape="rect" id="node1" title="A conjunction of conditions." alt="" coords="5,373,191,568"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_condition.html" title="Abstract class for conditions and boolean values in RAM." alt="" coords="13,248,183,325"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="27,5,169,200"/>
+</map>

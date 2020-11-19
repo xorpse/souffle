@@ -1,0 +1,12 @@
+<map id="souffle::interpreter::Relation&lt; _Arity, Structure &gt;" name="souffle::interpreter::Relation&lt; _Arity, Structure &gt;">
+<area shape="rect" id="node1" title="A relation, composed of a collection of indexes." alt="" coords="295,792,513,1060"/>
+<area shape="rect" id="node2" href="$structsouffle_1_1interpreter_1_1_relation_wrapper.html" title="Wrapper for InterpreterRelation." alt="" coords="26,461,193,729"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,226,80,303"/>
+<area shape="rect" id="node4" title=" " alt="" coords="148,226,207,303"/>
+<area shape="rect" id="node5" href="$class_vec_own_3_01souffle_1_1interpreter_1_1_index_01_4.html" title=" " alt="" coords="217,549,428,641"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1interpreter_1_1_index.html" title="An index is an abstraction of a data structure." alt="" coords="453,476,654,715"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1interpreter_1_1_order.html" title="An order to be enforced for storing tuples within indexes." alt="" coords="489,145,631,384"/>
+<area shape="rect" id="node8" title=" " alt="" coords="485,5,635,83"/>
+<area shape="rect" id="node9" title=" " alt="" coords="667,226,727,303"/>
+<area shape="rect" id="node10" title=" " alt="" coords="322,226,465,303"/>
+</map>

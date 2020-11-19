@@ -1,0 +1,9 @@
+<map id="souffle::ast::analysis::PrecedenceGraphAnalysis" name="souffle::ast::analysis::PrecedenceGraphAnalysis">
+<area shape="rect" id="node1" title="Analysis pass computing the precedence graph of the relations of the datalog progam." alt="" coords="103,549,319,685"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1analysis_1_1_analysis.html" title="Abstract class for a AST Analysis." alt="" coords="5,277,161,428"/>
+<area shape="rect" id="node3" title=" " alt="" coords="54,35,113,112"/>
+<area shape="rect" id="node4" title=" " alt="" coords="186,314,237,391"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1_graph.html" title=" " alt="" coords="261,219,514,487"/>
+<area shape="rect" id="node6" title=" " alt="" coords="210,5,415,141"/>
+<area shape="rect" id="node7" title=" " alt="" coords="440,20,631,127"/>
+</map>

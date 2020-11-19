@@ -1,0 +1,5 @@
+<map id="souffle::isValidFunctorOpArity" name="souffle::isValidFunctorOpArity">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,188,47"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#a34f8eecb81c090fca9e58d3357b63ed9" title="A generic test checking whether any elements within a container satisfy a certain predicate." alt="" coords="236,13,355,39"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#af4ec690ba482fd3a9692b5e31f6ad347" title="A generic test checking whether all elements within a container satisfy a certain predicate." alt="" coords="403,13,529,39"/>
+</map>

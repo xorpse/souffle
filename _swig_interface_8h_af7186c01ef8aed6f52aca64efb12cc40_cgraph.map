@@ -1,0 +1,4 @@
+<map id="newInstance" name="newInstance">
+<area shape="rect" id="node1" title="Creates an instance of a SWIG souffle::SouffleProgram that can be called within a program of a suppor..." alt="" coords="5,13,109,39"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1_program_factory.html#aeeb8c8fa86018f5f19cf6d419acdec54" title="Create new instance (abstract)." alt="" coords="157,5,333,47"/>
+</map>

@@ -1,0 +1,3 @@
+<map id="souffle::ram::ram_visitor_tag" name="souffle::ram::ram_visitor_tag">
+<area shape="rect" id="node1" title="A tag type required for the is_ram_visitor type trait to identify RamVisitors." alt="" coords="5,5,216,83"/>
+</map>

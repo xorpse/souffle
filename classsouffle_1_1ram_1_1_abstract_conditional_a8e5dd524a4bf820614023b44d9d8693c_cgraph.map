@@ -1,0 +1,5 @@
+<map id="souffle::ram::AbstractConditional::getCondition" name="souffle::ram::AbstractConditional::getCondition">
+<area shape="rect" id="node1" title="Get condition that must be satisfied." alt="" coords="5,5,241,47"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_nested_operation.html#afc6376a2073c5dd2781288d5169f26a2" title="Obtain list of all embedded child nodes." alt="" coords="289,5,508,47"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#a850ddc94302e9b170a98729a22a4c8fa" title="Applies a function to each element of a vector and returns the results." alt="" coords="556,13,659,39"/>
+</map>

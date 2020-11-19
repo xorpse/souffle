@@ -1,0 +1,3 @@
+<map id="HoistAggregatesTransformer" name="HoistAggregatesTransformer">
+<area shape="rect" id="node1" title="Pushes one Aggregate as far up the loop nest as possible." alt="" coords="5,5,213,83"/>
+</map>

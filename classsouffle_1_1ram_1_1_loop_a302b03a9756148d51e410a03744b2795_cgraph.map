@@ -1,0 +1,5 @@
+<map id="souffle::ram::Loop::apply" name="souffle::ram::Loop::apply">
+<area shape="rect" id="node1" title="Apply the mapper to all child nodes." alt="" coords="5,35,144,76"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_statement.html#a29deb72ff6b094026ee0fc9fe70db4f9" title="Print RAM node." alt="" coords="192,5,368,47"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#a0fff2be077dd5d1105f3a6e718339f2f" title="A utility printing a given value multiple times." alt="" coords="225,71,335,98"/>
+</map>

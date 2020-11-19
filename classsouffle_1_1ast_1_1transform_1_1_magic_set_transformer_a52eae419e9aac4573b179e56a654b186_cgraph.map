@@ -1,0 +1,5 @@
+<map id="souffle::ast::transform::MagicSetTransformer::transform" name="souffle::ast::transform::MagicSetTransformer::transform">
+<area shape="rect" id="node1" title=" " alt="" coords="5,45,173,101"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1transform_1_1_magic_set_transformer.html#acc290fbbb2493ced7c90ae25acf420ed" title="Determines whether any part of the MST should be run." alt="" coords="221,5,389,61"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1transform_1_1_pipeline_transformer.html#aa3a0b9ac81e071f4b5d232c569fbabc2" title=" " alt="" coords="222,85,389,141"/>
+</map>

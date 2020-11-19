@@ -1,0 +1,4 @@
+<map id="souffle::any_of" name="souffle::any_of">
+<area shape="rect" id="node1" title="A generic test checking whether any elements within a container satisfy a certain predicate." alt="" coords="5,5,124,32"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#af4ec690ba482fd3a9692b5e31f6ad347" title="A generic test checking whether all elements within a container satisfy a certain predicate." alt="" coords="172,5,299,32"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="souffle::ram::analysis::IndexAnalysis::getSearchSignature" name="souffle::ram::analysis::IndexAnalysis::getSearchSignature">
+<area shape="rect" id="node1" title="@Brief Get the index signature for a provenance existence check" alt="" coords="5,5,261,47"/>
+<area shape="rect" id="node2" href="$namespacesouffle_1_1ram.html#a0d10001e285b2d129058d9e7b81d85bd" title="Determines if an expression represents an undefined value." alt="" coords="309,13,504,39"/>
+</map>

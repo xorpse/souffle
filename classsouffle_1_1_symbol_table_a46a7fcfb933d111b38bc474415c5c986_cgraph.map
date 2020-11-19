@@ -1,0 +1,5 @@
+<map id="souffle::SymbolTable::unsafeLookup" name="souffle::SymbolTable::unsafeLookup">
+<area shape="rect" id="node1" title="Find the index of a symbol in the table, inserting a new symbol if it does not exist there already." alt="" coords="5,5,163,47"/>
+<area shape="rect" id="node2" href="$structsouffle_1_1_lock.html#a0fe2edd3ac13a141851fa021716bae04" title=" " alt="" coords="416,13,576,39"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1_symbol_table.html#ab9b012e60e61e149cfc430a9eccc20ea" title=" " alt="" coords="211,35,368,76"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="souffle::ast::visitDepthFirstPostOrder" name="souffle::ast::visitDepthFirstPostOrder">
+<area shape="rect" id="node1" title="A utility function visiting all nodes within the ast rooted by the given node recursively in a depth&#45;..." alt="" coords="5,5,175,47"/>
+<area shape="rect" id="node2" href="$namespacesouffle_1_1ast.html#a5960a86f605f8b9c72e6ff2234804f96" title="A utility function visiting all nodes within the ast rooted by the given node recursively in a depth&#45;..." alt="" coords="223,5,392,47"/>
+</map>

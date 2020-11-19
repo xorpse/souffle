@@ -1,0 +1,9 @@
+<map id="souffle::ram::Filter::clone" name="souffle::ram::Filter::clone">
+<area shape="rect" id="node1" title="Create a clone (i.e." alt="" coords="5,71,147,112"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_abstract_conditional.html#a8e5dd524a4bf820614023b44d9d8693c" title="Get condition that must be satisfied." alt="" coords="195,5,431,47"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ram_1_1_nested_operation.html#aa92ce491d1048172c334ce2187bf62ac" title="Pretty print with indentation." alt="" coords="203,71,422,112"/>
+<area shape="rect" id="node7" href="$namespacesouffle.html#a0fff2be077dd5d1105f3a6e718339f2f" title="A utility printing a given value multiple times." alt="" coords="257,137,368,163"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_nested_operation.html#afc6376a2073c5dd2781288d5169f26a2" title="Obtain list of all embedded child nodes." alt="" coords="479,5,697,47"/>
+<area shape="rect" id="node4" href="$namespacesouffle.html#a850ddc94302e9b170a98729a22a4c8fa" title="Applies a function to each element of a vector and returns the results." alt="" coords="745,13,848,39"/>
+<area shape="rect" id="node6" href="$namespacesouffle.html#ab097fb451e787a08a185a449bacde2db" title="Compares two values referenced by a pointer where the case where both pointers are null is also consi..." alt="" coords="521,78,655,105"/>
+</map>

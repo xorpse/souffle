@@ -1,0 +1,6 @@
+<map id="souffle::ast::transform::IODefaultsTransformer::transform" name="souffle::ast::transform::IODefaultsTransformer::transform">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,183,87"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_program.html#a208f2cba6b32d097542187844eea2283" title="Return relation directives." alt="" coords="239,5,396,47"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ast_1_1_translation_unit.html#a8f0d6c64ddd338b8a9372a63d950b45c" title="Return the program." alt="" coords="231,71,404,112"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#ad62d4e824a9d74c7462da546a21780fe" title="A utility function enabling the creation of a vector of pointers." alt="" coords="452,13,599,39"/>
+</map>

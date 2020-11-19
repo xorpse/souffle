@@ -1,0 +1,13 @@
+<map id="souffle::interpreter::Scan::Scan" name="souffle::interpreter::Scan::Scan">
+<area shape="rect" id="node1" title=" " alt="" coords="5,189,148,231"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_index_scan.html#a41fc2ece680f305b9a674075fb8cf2a3" title=" " alt="" coords="196,95,368,136"/>
+<area shape="rect" id="node9" href="$classsouffle_1_1interpreter_1_1_super_operation.html#ad4c04d1e1599e3d66490ad142937d478" title=" " alt="" coords="632,175,872,216"/>
+<area shape="rect" id="node10" href="$classsouffle_1_1interpreter_1_1_view_operation.html#a807dc3f71b9f0e0ce8acc8f27c5d0a56" title=" " alt="" coords="637,240,867,281"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1interpreter_1_1_choice.html#ac4f6873fc796a90e49e6f45f6d117b17" title=" " alt="" coords="429,131,571,172"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1interpreter_1_1_node.html#a802011bafcf6c2b3137cddd444793141" title=" " alt="" coords="978,17,1121,59"/>
+<area shape="rect" id="node11" href="$classsouffle_1_1interpreter_1_1_conditional_operation.html#a5199855bcfc43e81b89e6d6d7c626a7a" title=" " alt="" coords="416,50,584,106"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1interpreter_1_1_index_choice.html#a561fc6e25d93709e94e95cf00aa39fe9" title=" " alt="" coords="653,109,851,151"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1interpreter_1_1_unpack_record.html#aabc75481df8b0866446c77c65f9d4212" title=" " alt="" coords="958,83,1141,124"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1interpreter_1_1_nested_operation.html#aa7a5e6d72292c858f974fbe8df906f36" title=" " alt="" coords="920,148,1179,189"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1interpreter_1_1_unpack_record.html#adf30edd1db0e813f4da0e3c110648473" title=" " alt="" coords="936,213,1163,255"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="souffle::interpreter::NodeGenerator" name="souffle::interpreter::NodeGenerator">
+<area shape="rect" id="node1" title=" " alt="" coords="5,491,216,1052"/>
+<area shape="rect" id="node2" href="$structsouffle_1_1ram_1_1_visitor.html" title=" " alt="" coords="35,131,186,443"/>
+<area shape="rect" id="node3" href="$structsouffle_1_1ram_1_1ram__visitor__tag.html" title="A tag type required for the is_ram_visitor type trait to identify RamVisitors." alt="" coords="5,5,216,83"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="souffle::profile::RelationIOTimingProcessor" name="souffle::profile::RelationIOTimingProcessor">
+<area shape="rect" id="node1" title="Recursive Relation Copy Timing Profile Event Processor." alt="" coords="5,145,228,252"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1profile_1_1_event_processor.html" title="Abstract Class for EventProcessor." alt="" coords="5,5,228,97"/>
+</map>

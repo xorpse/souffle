@@ -1,0 +1,13 @@
+<map id="souffle::ast::analysis::TypeEnvironmentAnalysis" name="souffle::ast::analysis::TypeEnvironmentAnalysis">
+<area shape="rect" id="node1" title=" " alt="" coords="369,880,584,1060"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1analysis_1_1_analysis.html" title="Abstract class for a AST Analysis." alt="" coords="5,608,161,759"/>
+<area shape="rect" id="node3" title=" " alt="" coords="54,292,113,369"/>
+<area shape="rect" id="node4" title=" " alt="" coords="186,623,381,744"/>
+<area shape="rect" id="node5" title=" " alt="" coords="427,645,478,722"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1ast_1_1analysis_1_1_type_environment.html" title="A type environment is a set of types." alt="" coords="502,549,721,817"/>
+<area shape="rect" id="node7" title=" " alt="" coords="463,270,629,391"/>
+<area shape="rect" id="node8" href="$structsouffle_1_1ast_1_1analysis_1_1_type_set.html" title="A collection to represent sets of types." alt="" coords="653,204,809,457"/>
+<area shape="rect" id="node9" title=" " alt="" coords="578,5,749,141"/>
+<area shape="rect" id="node10" title=" " alt="" coords="773,35,823,112"/>
+<area shape="rect" id="node11" title=" " alt="" coords="745,637,883,729"/>
+</map>

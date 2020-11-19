@@ -1,0 +1,6 @@
+<map id="souffle::ast::NumericConstant" name="souffle::ast::NumericConstant">
+<area shape="rect" id="node1" title="Numeric Constant." alt="" coords="5,616,220,811"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_constant.html" title="Abstract constant class." alt="" coords="33,432,193,568"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1_argument.html" title="An abstract class for arguments." alt="" coords="29,292,196,384"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ast_1_1_node.html" title="Abstract class for syntactic elements in an input program." alt="" coords="41,5,184,244"/>
+</map>

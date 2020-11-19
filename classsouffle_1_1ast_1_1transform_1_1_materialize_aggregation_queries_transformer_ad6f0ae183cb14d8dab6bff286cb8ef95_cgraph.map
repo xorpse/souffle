@@ -1,0 +1,4 @@
+<map id="souffle::ast::transform::MaterializeAggregationQueriesTransformer::groundInjectedParameters" name="souffle::ast::transform::MaterializeAggregationQueriesTransformer::groundInjectedParameters">
+<area shape="rect" id="node1" title="Modify the aggClause by adding in grounding literals for every variable that appears in the clause un..." alt="" coords="5,5,284,61"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#adea839071e91666e99dedc870a42941c" title=" " alt="" coords="332,20,441,47"/>
+</map>

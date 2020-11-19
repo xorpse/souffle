@@ -1,0 +1,6 @@
+<map id="souffle::interpreter::BinaryNode" name="souffle::interpreter::BinaryNode">
+<area shape="rect" id="node1" title="Binary node represents interpreter node with two children." alt="" coords="88,233,231,369"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1interpreter_1_1_conjunction.html" title=" " alt="" coords="5,417,148,509"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1interpreter_1_1_constraint.html" title=" " alt="" coords="172,417,315,509"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_node.html" title="This is a shadow node for a ram::Node that is enriched for with local information so that the interpr..." alt="" coords="88,5,231,185"/>
+</map>

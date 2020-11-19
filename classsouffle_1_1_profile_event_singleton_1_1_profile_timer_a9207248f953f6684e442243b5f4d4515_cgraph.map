@@ -1,0 +1,4 @@
+<map id="souffle::ProfileEventSingleton::ProfileTimer::increaseInterval" name="souffle::ProfileEventSingleton::ProfileTimer::increaseInterval">
+<area shape="rect" id="node1" title="Increase value of time interval by factor of 2." alt="" coords="5,5,228,47"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1_profile_event_singleton_1_1_profile_timer.html#a93ba8071064539710392db26064308da" title="run method for thread th" alt="" coords="276,5,489,47"/>
+</map>

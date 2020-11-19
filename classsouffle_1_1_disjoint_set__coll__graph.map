@@ -1,0 +1,8 @@
+<map id="souffle::DisjointSet" name="souffle::DisjointSet">
+<area shape="rect" id="node1" title="Structure that emulates a Disjoint Set, i.e." alt="" coords="251,593,396,891"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1_piggy_list.html" title=" " alt="" coords="222,233,425,531"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,27,140,105"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1_spin_lock.html" title="A &#39;sequential&#39; non&#45;locking implementation for a spin lock." alt="" coords="164,5,296,127"/>
+<area shape="rect" id="node5" title=" " alt="" coords="320,20,524,112"/>
+<area shape="rect" id="node6" title=" " alt="" coords="551,27,611,105"/>
+</map>

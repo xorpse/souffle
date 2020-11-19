@@ -1,0 +1,4 @@
+<map id="souffle::ast::transform::IOAttributesTransformer" name="souffle::ast::transform::IOAttributesTransformer">
+<area shape="rect" id="node1" title="Transformation pass to set attribute names and types in IO operations." alt="" coords="5,204,196,428"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1transform_1_1_transformer.html" title=" " alt="" coords="17,5,184,156"/>
+</map>

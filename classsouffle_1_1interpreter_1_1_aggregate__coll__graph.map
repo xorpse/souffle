@@ -1,0 +1,10 @@
+<map id="souffle::interpreter::Aggregate" name="souffle::interpreter::Aggregate">
+<area shape="rect" id="node1" title=" " alt="" coords="452,463,595,569"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_node.html" title="This is a shadow node for a ram::Node that is enriched for with local information so that the interpr..." alt="" coords="224,263,367,413"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="5,5,148,200"/>
+<area shape="rect" id="node4" title=" " alt="" coords="172,64,299,141"/>
+<area shape="rect" id="node5" title=" " alt="" coords="323,64,491,141"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1interpreter_1_1_conditional_operation.html" title="Encode a conditional operation for the interpreter node. E.g. Exit, Filter." alt="" coords="545,285,731,391"/>
+<area shape="rect" id="node7" title=" " alt="" coords="545,57,731,149"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1interpreter_1_1_nested_operation.html" title="Encode a nested operation for the interpreter node. E.g. Loop, IndexScan." alt="" coords="755,285,934,391"/>
+</map>

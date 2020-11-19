@@ -1,0 +1,7 @@
+<map id="souffle::ram::analysis::Analysis" name="souffle::ram::analysis::Analysis">
+<area shape="rect" id="node1" title="Abstract class for a RAM Analysis." alt="" coords="309,5,471,156"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1analysis_1_1_complexity_analysis.html" title="A Ram Analysis for determining the number of relational operations in a condition / expression." alt="" coords="5,255,183,391"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1analysis_1_1_index_analysis.html" title=" " alt="" coords="207,204,381,443"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1analysis_1_1_level_analysis.html" title="A Ram Analysis for determining the level of a expression/condition." alt="" coords="406,255,569,391"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ram_1_1analysis_1_1_relation_analysis.html" title="A RAM Analysis for finding relations by name." alt="" coords="593,255,755,391"/>
+</map>

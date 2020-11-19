@@ -1,0 +1,5 @@
+<map id="souffle::ram::transform::ConditionalTransformer" name="souffle::ram::transform::ConditionalTransformer">
+<area shape="rect" id="node1" title="@Class ConditionalTransformer @Brief Composite conditional transformer" alt="" coords="5,329,204,465"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1transform_1_1_meta_transformer.html" title="@Class MetaTransformer @Brief Abstract class to identifier meta transformer" alt="" coords="19,189,191,281"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1transform_1_1_transformer.html" title="@Class Transformer @Brief abstract transformer class for a translation unit" alt="" coords="19,5,191,141"/>
+</map>

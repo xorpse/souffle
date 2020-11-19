@@ -1,0 +1,7 @@
+<map id="souffle::ram::LogSize" name="souffle::ram::LogSize">
+<area shape="rect" id="node1" title="Log relation size and a logging message." alt="" coords="123,589,281,725"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_relation_statement.html" title="RAM Statements with a single relation." alt="" coords="5,433,236,540"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_statement.html" title="Abstract class for RAM statements." alt="" coords="33,249,209,371"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="49,5,192,200"/>
+<area shape="rect" id="node5" title=" " alt="" coords="245,271,303,349"/>
+</map>

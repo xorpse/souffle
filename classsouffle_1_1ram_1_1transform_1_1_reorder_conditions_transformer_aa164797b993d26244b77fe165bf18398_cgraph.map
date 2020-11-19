@@ -1,0 +1,7 @@
+<map id="souffle::ram::transform::ReorderConditionsTransformer::reorderConditions" name="souffle::ram::transform::ReorderConditionsTransformer::reorderConditions">
+<area shape="rect" id="node1" title="Reorder conjunctive terms in filter operations." alt="" coords="5,67,233,123"/>
+<area shape="rect" id="node2" href="$namespacesouffle.html#adea839071e91666e99dedc870a42941c" title=" " alt="" coords="337,5,447,32"/>
+<area shape="rect" id="node3" href="$namespacesouffle.html#aa0949fa42d9e396bb5407f69b450c1f1" title="Filter a vector to include certain elements." alt="" coords="340,56,444,83"/>
+<area shape="rect" id="node4" href="$namespacesouffle_1_1ram.html#a4610432d16a73ad71051c85a274d3bbe" title="Convert list of conditions to a conjunction." alt="" coords="301,107,483,133"/>
+<area shape="rect" id="node5" href="$namespacesouffle_1_1ram.html#acf6d2a90790978f30945fcf3faa851e3" title="Convert terms of a conjunction to a list." alt="" coords="281,157,503,184"/>
+</map>

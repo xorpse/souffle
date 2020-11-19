@@ -1,0 +1,6 @@
+<map id="souffle::interpreter::RelationWrapper" name="souffle::interpreter::RelationWrapper">
+<area shape="rect" id="node1" title="Wrapper for InterpreterRelation." alt="" coords="110,5,277,303"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_relation.html" title=" " alt="" coords="5,351,168,663"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1interpreter_1_1_relation.html" title="A relation, composed of a collection of indexes." alt="" coords="192,351,411,663"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1interpreter_1_1_eqrel_relation.html" title=" " alt="" coords="15,711,158,803"/>
+</map>

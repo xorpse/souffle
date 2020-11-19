@@ -1,0 +1,4 @@
+<map id="souffle::interpreter::NestedOperation" name="souffle::interpreter::NestedOperation">
+<area shape="rect" id="node1" title="Encode a nested operation for the interpreter node. E.g. Loop, IndexScan." alt="" coords="9,160,188,267"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,5,192,97"/>
+</map>

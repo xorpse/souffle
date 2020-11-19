@@ -1,0 +1,10 @@
+<map id="souffle::ram::Relation" name="souffle::ram::Relation">
+<area shape="rect" id="node1" title="An abstract class for performing indexed operations." alt="" coords="500,248,671,575"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1synthesiser_1_1_brie_relation.html" title=" " alt="" coords="5,623,179,759"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1synthesiser_1_1_direct_relation.html" title=" " alt="" coords="203,623,376,759"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1synthesiser_1_1_eqrel_relation.html" title=" " alt="" coords="400,623,573,759"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1synthesiser_1_1_indirect_relation.html" title=" " alt="" coords="597,623,771,759"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1synthesiser_1_1_info_relation.html" title=" " alt="" coords="795,623,968,759"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1synthesiser_1_1_nullary_relation.html" title=" " alt="" coords="992,623,1165,759"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="514,5,657,200"/>
+</map>

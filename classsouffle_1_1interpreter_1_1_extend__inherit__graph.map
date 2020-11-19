@@ -1,0 +1,5 @@
+<map id="souffle::interpreter::Extend" name="souffle::interpreter::Extend">
+<area shape="rect" id="node1" title=" " alt="" coords="91,233,233,325"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_node.html" title="This is a shadow node for a ram::Node that is enriched for with local information so that the interpr..." alt="" coords="5,5,148,185"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1interpreter_1_1_bin_rel_operation.html" title="operation that involves with two relations should inherit from this class. E.g. Swap,..." alt="" coords="172,27,325,163"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="souffle::ast::NodeMapper" name="souffle::ast::NodeMapper">
+<area shape="rect" id="node1" title="An abstract class for manipulating AST Nodes by substitution." alt="" coords="36,5,221,112"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1detail_1_1_lambda_node_mapper.html" title="A special NodeMapper wrapping a lambda conducting node transformations." alt="" coords="5,160,252,267"/>
+</map>

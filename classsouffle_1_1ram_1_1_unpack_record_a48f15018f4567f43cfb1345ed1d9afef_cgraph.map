@@ -1,0 +1,5 @@
+<map id="souffle::ram::UnpackRecord::getArity" name="souffle::ram::UnpackRecord::getArity">
+<area shape="rect" id="node1" title="Get arity of record." alt="" coords="5,5,208,47"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_tuple_operation.html#abf01722a00412b80fea8d121b5cc109b" title="Obtain list of all embedded child nodes." alt="" coords="256,5,463,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_nested_operation.html#a687b2c4e5c58d0da6a6d39ac52849c4e" title="Equality check for two RAM nodes." alt="" coords="511,5,729,47"/>
+</map>

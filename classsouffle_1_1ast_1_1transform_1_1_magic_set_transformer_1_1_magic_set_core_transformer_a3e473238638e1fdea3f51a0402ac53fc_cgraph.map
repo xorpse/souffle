@@ -1,0 +1,5 @@
+<map id="souffle::ast::transform::MagicSetTransformer::MagicSetCoreTransformer::getMagicName" name="souffle::ast::transform::MagicSetTransformer::MagicSetCoreTransformer::getMagicName">
+<area shape="rect" id="node1" title="Gets a unique magic identifier for a given adorned relation name." alt="" coords="5,24,204,95"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_atom.html#a48b2afc7e3e22611a93b42f0089342d8" title="Return arguments." alt="" coords="257,5,395,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1_atom.html#ab9a22c7f862012f074559a4061696241" title="Return qualified name." alt="" coords="252,71,400,112"/>
+</map>

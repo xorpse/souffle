@@ -1,0 +1,7 @@
+<map id="souffle::profile::NonRecursiveRuleNumberProcessor::process" name="souffle::profile::NonRecursiveRuleNumberProcessor::process">
+<area shape="rect" id="node1" title="process event input" alt="" coords="5,108,229,149"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1profile_1_1_event_processor_singleton.html#a3a6564631bccb96da84ccad7edfe4dc9" title="get instance" alt="" coords="296,5,519,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1profile_1_1_recursive_rule_timing_processor.html#a556e7b9a8e917ef34df20a8106e7d042" title="abstract interface for processing an profile event" alt="" coords="299,71,516,112"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1profile_1_1_recursive_rule_timing_processor.html#a5ebfd6ed954c44949be430c8d407be1b" title=" " alt="" coords="277,137,537,193"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1profile_1_1_event_processor_singleton.html#ae2856808d00c373283c4397452279687" title="register an event processor with its keyword" alt="" coords="287,217,528,259"/>
+</map>

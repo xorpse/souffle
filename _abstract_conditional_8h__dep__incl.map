@@ -1,0 +1,38 @@
+<map id="ram/AbstractConditional.h" name="ram/AbstractConditional.h">
+<area shape="rect" id="node1" title=" " alt="" coords="3778,5,3970,32"/>
+<area shape="rect" id="node2" href="$_break_8h.html" title=" " alt="" coords="3822,80,3925,107"/>
+<area shape="rect" id="node16" href="$ram_2utility_2_visitor_8h.html" title=" " alt="" coords="3003,162,3150,189"/>
+<area shape="rect" id="node35" href="$_filter_8h.html" title=" " alt="" coords="4494,80,4590,107"/>
+<area shape="rect" id="node3" href="$_clause_translator_8cpp.html" title=" " alt="" coords="3937,162,4152,189"/>
+<area shape="rect" id="node4" href="$_engine_8cpp.html" title=" " alt="" coords="3650,415,3817,442"/>
+<area shape="rect" id="node5" href="$_generator_8h.html" title=" " alt="" coords="4679,251,4850,278"/>
+<area shape="rect" id="node13" href="$_level_8cpp.html" title=" " alt="" coords="4381,251,4553,278"/>
+<area shape="rect" id="node14" href="$ram__operation__equal__clone__test_8cpp.html" title=" " alt="" coords="4176,155,4358,196"/>
+<area shape="rect" id="node15" href="$ram__statement__equal__clone__test_8cpp.html" title=" " alt="" coords="4382,155,4570,196"/>
+<area shape="rect" id="node18" href="$_synthesiser_8cpp.html" title=" " alt="" coords="4247,333,4450,360"/>
+<area shape="rect" id="node6" href="$_engine_8h.html" title=" " alt="" coords="4612,333,4762,360"/>
+<area shape="rect" id="node7" href="$_generator_8cpp.html" title=" " alt="" coords="4770,415,4956,442"/>
+<area shape="rect" id="node8" href="$_prog_interface_8h.html" title=" " alt="" coords="3143,415,3338,442"/>
+<area shape="rect" id="node10" href="$main_8cpp.html" title=" " alt="" coords="3350,505,3432,531"/>
+<area shape="rect" id="node11" href="$ram__arithmetic__test_8cpp.html" title=" " alt="" coords="4407,408,4564,449"/>
+<area shape="rect" id="node12" href="$ram__relation__test_8cpp.html" title=" " alt="" coords="4588,408,4746,449"/>
+<area shape="rect" id="node9" href="$interpreter__relation__test_8cpp.html" title=" " alt="" coords="3126,497,3326,539"/>
+<area shape="rect" id="node17" href="$_synthesiser_8h.html" title=" " alt="" coords="4169,251,4357,278"/>
+<area shape="rect" id="node19" href="$_complexity_8cpp.html" title=" " alt="" coords="3522,251,3732,278"/>
+<area shape="rect" id="node20" href="$_index_8cpp.html" title=" " alt="" coords="3756,251,3930,278"/>
+<area shape="rect" id="node21" href="$ram_2analysis_2_relation_8cpp.html" title=" " alt="" coords="3954,251,4145,278"/>
+<area shape="rect" id="node22" href="$_choice_conversion_8cpp.html" title=" " alt="" coords="27,251,291,278"/>
+<area shape="rect" id="node23" href="$_collapse_filters_8cpp.html" title=" " alt="" coords="315,251,558,278"/>
+<area shape="rect" id="node24" href="$_eliminate_duplicates_8cpp.html" title=" " alt="" coords="582,251,861,278"/>
+<area shape="rect" id="node25" href="$_expand_filter_8cpp.html" title=" " alt="" coords="886,251,1112,278"/>
+<area shape="rect" id="node26" href="$_hoist_aggregate_8cpp.html" title=" " alt="" coords="1136,251,1384,278"/>
+<area shape="rect" id="node27" href="$_hoist_conditions_8cpp.html" title=" " alt="" coords="1408,251,1659,278"/>
+<area shape="rect" id="node28" href="$_if_conversion_8cpp.html" title=" " alt="" coords="1683,251,1912,278"/>
+<area shape="rect" id="node29" href="$_indexed_inequality_8cpp.html" title=" " alt="" coords="1936,251,2198,278"/>
+<area shape="rect" id="node30" href="$_make_index_8cpp.html" title=" " alt="" coords="2222,251,2440,278"/>
+<area shape="rect" id="node31" href="$_parallel_8cpp.html" title=" " alt="" coords="2464,251,2659,278"/>
+<area shape="rect" id="node32" href="$_reorder_conditions_8cpp.html" title=" " alt="" coords="2683,251,2950,278"/>
+<area shape="rect" id="node33" href="$_reorder_filter_break_8cpp.html" title=" " alt="" coords="2974,244,3178,285"/>
+<area shape="rect" id="node34" href="$_tuple_id_8cpp.html" title=" " alt="" coords="3202,251,3396,278"/>
+<area shape="rect" id="node36" href="$_ast_to_ram_translator_8cpp.html" title=" " alt="" coords="4924,162,5159,189"/>
+</map>

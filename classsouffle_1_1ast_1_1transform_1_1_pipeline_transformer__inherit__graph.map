@@ -1,0 +1,7 @@
+<map id="souffle::ast::transform::PipelineTransformer" name="souffle::ast::transform::PipelineTransformer">
+<area shape="rect" id="node1" title="Transformer that holds an arbitrary number of sub&#45;transformations." alt="" coords="153,417,332,627"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ast_1_1transform_1_1_magic_set_transformer.html" title="Magic Set Transformation." alt="" coords="5,675,232,884"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ast_1_1transform_1_1_magic_set_transformer_1_1_label_database_transformer.html" title="Database labeller." alt="" coords="257,704,479,855"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1transform_1_1_meta_transformer.html" title="Transformer that coordinates other sub&#45;transformations." alt="" coords="151,204,335,369"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1transform_1_1_transformer.html" title=" " alt="" coords="159,5,326,156"/>
+</map>

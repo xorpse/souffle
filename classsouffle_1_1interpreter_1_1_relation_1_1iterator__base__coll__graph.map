@@ -1,0 +1,8 @@
+<map id="souffle::interpreter::Relation&lt; _Arity, Structure &gt;::iterator_base" name="souffle::interpreter::Relation&lt; _Arity, Structure &gt;::iterator_base">
+<area shape="rect" id="node1" title=" " alt="" coords="323,447,527,612"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_relation_wrapper_1_1iterator__base.html" title="A virtualized iterator class that can be used by the Proginterface." alt="" coords="5,189,239,340"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1interpreter_1_1_order.html" title="An order to be enforced for storing tuples within indexes." alt="" coords="263,145,405,384"/>
+<area shape="rect" id="node4" title=" " alt="" coords="259,5,409,83"/>
+<area shape="rect" id="node5" title=" " alt="" coords="430,226,497,303"/>
+<area shape="rect" id="node6" title=" " alt="" coords="521,226,592,303"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="souffle::ast::StringConstant::clone" name="souffle::ast::StringConstant::clone">
+<area shape="rect" id="node1" title="Create clone." alt="" coords="5,5,204,47"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_constant.html#a9af8dcfd680d849d228893dd2a19ab33" title="Get string representation of Constant." alt="" coords="252,5,412,47"/>
+</map>

@@ -1,0 +1,19 @@
+<map id="souffle::Explain::processCommand" name="souffle::Explain::processCommand">
+<area shape="rect" id="node1" title=" " alt="" coords="5,483,185,524"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1_explain_provenance.html#a5f94975a8d859d66a42e86db0f664a83" title=" " alt="" coords="244,5,443,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1_explain_provenance.html#ae47ab84e33106198463e9d35b53aae8d" title=" " alt="" coords="244,71,443,112"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1_explain_provenance.html#a69f6e64a87fdd6e392c7d29a50c72556" title=" " alt="" coords="233,136,453,177"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1_explain_provenance.html#a5040492d289339b1c7f55b82cd4172b0" title=" " alt="" coords="244,201,443,243"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1_explain_config.html#a09302d18324fc2d82e3d3eaf354fc377" title=" " alt="" coords="262,267,425,308"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1_explain.html#a5de4555ccb310379f47cc78aff482dae" title=" " alt="" coords="251,333,435,359"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1_explain_provenance.html#aadcec6224703d8b59f7743ce97bf7f03" title=" " alt="" coords="244,384,443,425"/>
+<area shape="rect" id="node9" href="$classsouffle_1_1_explain_provenance.html#a673a11cad7ca9189d74525974b750f71" title=" " alt="" coords="244,449,443,491"/>
+<area shape="rect" id="node10" href="$classsouffle_1_1_explain_provenance.html#af1571b104107b98bf2a2d73b984709f1" title=" " alt="" coords="244,515,443,556"/>
+<area shape="rect" id="node11" href="$classsouffle_1_1_explain.html#ab7363e371d6ed14e5e2fb1b8b76eae28" title="Parse tuple, split into relation name and values." alt="" coords="243,581,443,607"/>
+<area shape="rect" id="node12" href="$classsouffle_1_1_explain.html#acbcb12d257a7135e5fc4e6165c90a980" title=" " alt="" coords="248,631,439,658"/>
+<area shape="rect" id="node13" href="$classsouffle_1_1_explain.html#a9c241ef09b38c79a474d29a1743940b4" title=" " alt="" coords="251,682,436,709"/>
+<area shape="rect" id="node14" href="$classsouffle_1_1_explain.html#ab2b1d19c2de89711c98837e00346b614" title=" " alt="" coords="240,733,447,759"/>
+<area shape="rect" id="node15" href="$classsouffle_1_1_explain.html#a604284066a7e277b411916e7dc4c4fc6" title=" " alt="" coords="250,783,437,810"/>
+<area shape="rect" id="node16" href="$classsouffle_1_1_explain_provenance.html#a5358f914c827c4dd7a64acc24e52b5ad" title="Process query with given arguments." alt="" coords="244,835,443,876"/>
+<area shape="rect" id="node17" href="$namespacesouffle.html#a2925d5d1ec64b003a6b111ed29a2392b" title="utility function to split a string" alt="" coords="292,901,395,927"/>
+</map>

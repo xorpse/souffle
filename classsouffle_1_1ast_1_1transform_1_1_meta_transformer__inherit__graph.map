@@ -1,0 +1,12 @@
+<map id="souffle::ast::transform::MetaTransformer" name="souffle::ast::transform::MetaTransformer">
+<area shape="rect" id="node1" title="Transformer that coordinates other sub&#45;transformations." alt="" coords="535,204,719,369"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1transform_1_1_conditional_transformer.html" title="Transformer that executes a sub&#45;transformer iff a condition holds." alt="" coords="5,417,204,641"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ast_1_1transform_1_1_debug_reporter.html" title="Transformation pass which wraps another transformation pass and generates a debug report section for ..." alt="" coords="229,425,413,634"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1ast_1_1transform_1_1_fixpoint_transformer.html" title="Transformer that repeatedly executes a sub&#45;transformer until no changes are made." alt="" coords="437,432,615,627"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1ast_1_1transform_1_1_null_transformer.html" title="Transformer that does absolutely nothing." alt="" coords="639,439,818,619"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1ast_1_1transform_1_1_pipeline_transformer.html" title="Transformer that holds an arbitrary number of sub&#45;transformations." alt="" coords="842,425,1021,634"/>
+<area shape="rect" id="node10" href="$classsouffle_1_1ast_1_1transform_1_1_while_transformer.html" title="Transformer that repeatedly executes a sub&#45;transformer while a condition is met." alt="" coords="1045,417,1223,641"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1transform_1_1_transformer.html" title=" " alt="" coords="544,5,711,156"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1ast_1_1transform_1_1_magic_set_transformer.html" title="Magic Set Transformation." alt="" coords="694,689,921,899"/>
+<area shape="rect" id="node9" href="$classsouffle_1_1ast_1_1transform_1_1_magic_set_transformer_1_1_label_database_transformer.html" title="Database labeller." alt="" coords="945,719,1168,869"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="souffle::ram::transform::IfConversionTransformer" name="souffle::ram::transform::IfConversionTransformer">
+<area shape="rect" id="node1" title="Convert IndexScan operations to Filter/Existence Checks." alt="" coords="5,189,196,325"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1transform_1_1_transformer.html" title="@Class Transformer @Brief abstract transformer class for a translation unit" alt="" coords="15,5,187,141"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="souffle::interpreter::ViewWrapper" name="souffle::interpreter::ViewWrapper">
+<area shape="rect" id="node1" title="A dummy wrapper for indexViews." alt="" coords="123,5,269,97"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_index_1_1_view.html" title="A view on a relation caching local access patterns (not thread safe!)." alt="" coords="5,145,192,311"/>
+<area shape="rect" id="node3" href="$structsouffle_1_1interpreter_1_1_index_3_010_00_01_structure_01_4_1_1_view.html" title=" " alt="" coords="217,153,373,303"/>
+</map>

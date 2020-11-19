@@ -1,0 +1,4 @@
+<map id="souffle::ast::InputSips" name="souffle::ast::InputSips">
+<area shape="rect" id="node1" title="Goal: prioritise (1) all&#45;bound, then (2) input, and then (3) left&#45;most." alt="" coords="9,175,172,281"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_sips_metric.html" title="Class for SIPS cost&#45;metric functions Each subclass represents a different heuristic used for evaluati..." alt="" coords="5,5,176,127"/>
+</map>

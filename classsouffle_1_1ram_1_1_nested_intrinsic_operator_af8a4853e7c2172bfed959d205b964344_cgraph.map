@@ -1,0 +1,6 @@
+<map id="souffle::ram::NestedIntrinsicOperator::clone" name="souffle::ram::NestedIntrinsicOperator::clone">
+<area shape="rect" id="node1" title="Create a clone (i.e." alt="" coords="5,35,212,76"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_nested_operation.html#a0e2716aaa9c303f38931579657354428" title="Apply the mapper to all child nodes." alt="" coords="260,5,479,47"/>
+<area shape="rect" id="node4" href="$namespacesouffle.html#a850ddc94302e9b170a98729a22a4c8fa" title="Applies a function to each element of a vector and returns the results." alt="" coords="318,71,421,98"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_operation.html#a045e698337332afe22f8f05759d9c2fd" title="Print RAM node." alt="" coords="527,5,699,47"/>
+</map>

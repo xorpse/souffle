@@ -1,0 +1,7 @@
+<map id="souffle::tuple" name="souffle::tuple">
+<area shape="rect" id="node1" title="Defines a tuple for the OO interface such that relations with varying columns can be accessed." alt="" coords="202,351,326,575"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1_relation.html" title="Object&#45;oriented wrapper class for Souffle&#39;s templatized relations." alt="" coords="5,5,163,288"/>
+<area shape="rect" id="node3" title=" " alt="" coords="187,108,253,185"/>
+<area shape="rect" id="node4" title=" " alt="" coords="278,108,338,185"/>
+<area shape="rect" id="node5" title=" " alt="" coords="362,108,537,185"/>
+</map>

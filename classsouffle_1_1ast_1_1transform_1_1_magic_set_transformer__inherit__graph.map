@@ -1,0 +1,6 @@
+<map id="souffle::ast::transform::MagicSetTransformer" name="souffle::ast::transform::MagicSetTransformer">
+<area shape="rect" id="node1" title="Magic Set Transformation." alt="" coords="5,675,232,884"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1transform_1_1_pipeline_transformer.html" title="Transformer that holds an arbitrary number of sub&#45;transformations." alt="" coords="29,417,208,627"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1transform_1_1_meta_transformer.html" title="Transformer that coordinates other sub&#45;transformations." alt="" coords="27,204,211,369"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ast_1_1transform_1_1_transformer.html" title=" " alt="" coords="35,5,202,156"/>
+</map>

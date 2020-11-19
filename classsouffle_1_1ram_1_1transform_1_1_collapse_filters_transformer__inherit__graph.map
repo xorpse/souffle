@@ -1,0 +1,4 @@
+<map id="souffle::ram::transform::CollapseFiltersTransformer" name="souffle::ram::transform::CollapseFiltersTransformer">
+<area shape="rect" id="node1" title="Transforms consecutive filters into a single filter containing a conjunction." alt="" coords="5,189,209,311"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1transform_1_1_transformer.html" title="@Class Transformer @Brief abstract transformer class for a translation unit" alt="" coords="21,5,193,141"/>
+</map>

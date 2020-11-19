@@ -1,0 +1,6 @@
+<map id="souffle::ram::EmptinessCheck" name="souffle::ram::EmptinessCheck">
+<area shape="rect" id="node1" title="Emptiness check for a relation." alt="" coords="87,389,303,525"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ram_1_1_condition.html" title="Abstract class for conditions and boolean values in RAM." alt="" coords="5,249,176,327"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ram_1_1_node.html" title="Node is a superclass for all RAM IR classes." alt="" coords="19,5,162,200"/>
+<area shape="rect" id="node4" title=" " alt="" coords="200,249,259,327"/>
+</map>

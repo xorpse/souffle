@@ -1,0 +1,4 @@
+<map id="souffle::ram::Visitor&lt; R, Params &gt;" name="souffle::ram::Visitor&lt; R, Params &gt;">
+<area shape="rect" id="node1" title="The generic base type of all RamVisitors realizing the dispatching of visitor calls." alt="" coords="35,131,186,443"/>
+<area shape="rect" id="node2" href="$structsouffle_1_1ram_1_1ram__visitor__tag.html" title="A tag type required for the is_ram_visitor type trait to identify RamVisitors." alt="" coords="5,5,216,83"/>
+</map>

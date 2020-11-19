@@ -1,0 +1,10 @@
+<map id="souffle::ast::Attribute" name="souffle::ast::Attribute">
+<area shape="rect" id="node1" title="Attribute class." alt="" coords="199,1053,357,1219"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_node.html" title="Abstract class for syntactic elements in an input program." alt="" coords="207,752,349,991"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1_src_location.html" title="A class describing a range in an input file." alt="" coords="203,359,353,480"/>
+<area shape="rect" id="node4" title=" " alt="" coords="41,182,200,259"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1ast_1_1_qualified_name.html" title="Qualified Name class defines fully/partially qualified names to identify objects in components." alt="" coords="5,504,204,728"/>
+<area shape="rect" id="node5" href="$structsouffle_1_1_src_location_1_1_point.html" title="A class locating a single point in an input file." alt="" coords="241,160,390,281"/>
+<area shape="rect" id="node6" title=" " alt="" coords="296,5,335,83"/>
+<area shape="rect" id="node7" title=" " alt="" coords="374,833,433,910"/>
+</map>

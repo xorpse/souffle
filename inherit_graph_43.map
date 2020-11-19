@@ -1,0 +1,13 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classsouffle_1_1ast_1_1analysis_1_1_type.html" title="An abstract base class for types to be covered within a type environment." alt="" coords="5,253,161,294"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_algebraic_data_type.html" title="Combination of types using sums and products." alt="" coords="209,5,433,32"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast_1_1analysis_1_1_algebraic_data_type.html" title="Aggregates types using sums and products." alt="" coords="243,57,399,98"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ast_1_1analysis_1_1_constant_type.html" title="Representing the type assigned to a constant." alt="" coords="243,122,399,163"/>
+<area shape="rect" id="node5" href="$structsouffle_1_1ast_1_1analysis_1_1_record_type.html" title="A record type combining a list of fields into a new, aggregated type." alt="" coords="243,187,399,229"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1ast_1_1analysis_1_1_subset_type.html" title="A type being a subset of another type." alt="" coords="243,253,399,294"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1ast_1_1analysis_1_1_union_type.html" title="A union type combining a list of types into a new, aggregated type." alt="" coords="243,318,399,359"/>
+<area shape="rect" id="node9" href="$classsouffle_1_1ast_1_1_record_type.html" title="Record type class for record type declarations." alt="" coords="233,384,410,411"/>
+<area shape="rect" id="node10" href="$classsouffle_1_1ast_1_1_subset_type.html" title="Defines subset type class." alt="" coords="233,435,409,461"/>
+<area shape="rect" id="node11" href="$classsouffle_1_1ast_1_1_union_type.html" title="The union type class." alt="" coords="236,485,407,512"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1ast_1_1analysis_1_1_primitive_type.html" title="PrimitiveType = Number/Unsigned/Float/Symbol The class representing pre&#45;built, concrete types." alt="" coords="481,253,637,294"/>
+</map>

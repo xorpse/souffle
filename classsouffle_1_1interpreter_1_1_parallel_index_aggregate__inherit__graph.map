@@ -1,0 +1,11 @@
+<map id="souffle::interpreter::ParallelIndexAggregate" name="souffle::interpreter::ParallelIndexAggregate">
+<area shape="rect" id="node1" title=" " alt="" coords="430,543,611,635"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1interpreter_1_1_index_aggregate.html" title=" " alt="" coords="359,395,509,487"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1interpreter_1_1_aggregate.html" title=" " alt="" coords="193,233,336,340"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1interpreter_1_1_node.html" title="This is a shadow node for a ram::Node that is enriched for with local information so that the interpr..." alt="" coords="5,5,148,185"/>
+<area shape="rect" id="node5" href="$classsouffle_1_1interpreter_1_1_conditional_operation.html" title="Encode a conditional operation for the interpreter node. E.g. Exit, Filter." alt="" coords="172,42,357,149"/>
+<area shape="rect" id="node6" href="$classsouffle_1_1interpreter_1_1_nested_operation.html" title="Encode a nested operation for the interpreter node. E.g. Loop, IndexScan." alt="" coords="382,42,561,149"/>
+<area shape="rect" id="node7" href="$classsouffle_1_1interpreter_1_1_super_operation.html" title="node that utilizes the super instruction optimization should inherit from this class...." alt="" coords="360,233,508,340"/>
+<area shape="rect" id="node8" href="$classsouffle_1_1interpreter_1_1_view_operation.html" title="operation that utilizes the index view from underlying relation should inherit from this class." alt="" coords="532,233,675,340"/>
+<area shape="rect" id="node9" href="$classsouffle_1_1interpreter_1_1_abstract_parallel.html" title="node that utilizes parallel execution should inherit from this class. Enable node with its own view c..." alt="" coords="533,388,684,495"/>
+</map>

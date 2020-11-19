@@ -1,0 +1,6 @@
+<map id="souffle::ast2ram::ClauseTranslator::translateClause" name="souffle::ast2ram::ClauseTranslator::translateClause">
+<area shape="rect" id="node1" title="generate RAM code for a clause" alt="" coords="5,71,201,112"/>
+<area shape="rect" id="node2" href="$classsouffle_1_1ast_1_1_atom.html#a48b2afc7e3e22611a93b42f0089342d8" title="Return arguments." alt="" coords="284,5,421,47"/>
+<area shape="rect" id="node3" href="$classsouffle_1_1ast2ram_1_1_ast_to_ram_translator.html#a3b2af71dd0e00118ea26e77ba76fb1f7" title="a utility to translate atoms to relations" alt="" coords="249,71,456,112"/>
+<area shape="rect" id="node4" href="$classsouffle_1_1ast2ram_1_1_ast_to_ram_translator.html#aca2e8d2c1c919e85f9950d1c29901198" title="translate an AST argument to a RAM value" alt="" coords="252,136,453,177"/>
+</map>
