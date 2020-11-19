@@ -112,6 +112,8 @@ protected:
 
     void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
 
+    Own<ram::Relation> createRamRelation(
+            const ast::Relation* baseRelation, std::string ramRelationName) const;
     VecOwn<ram::Relation> createRamRelations(const std::vector<size_t>& sccOrdering) const;
     virtual Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const;
     RamDomain getConstantRamRepresentation(const ast::Constant& constant) const;

@@ -664,46 +664,42 @@ Own<ram::Statement> AstToRamTranslator::generateStoreRelation(const ast::Relatio
     return mk<ram::Sequence>(std::move(storeStmts));
 }
 
+Own<ram::Relation> AstToRamTranslator::createRamRelation(
+        const ast::Relation* baseRelation, std::string ramRelationName) const {
+    auto arity = baseRelation->getArity();
+    auto auxiliaryArity = auxArityAnalysis->getArity(baseRelation);
+    auto representation = baseRelation->getRepresentation();
+
+    std::vector<std::string> attributeNames;
+    std::vector<std::string> attributeTypeQualifiers;
+    for (const auto& attribute : baseRelation->getAttributes()) {
+        attributeNames.push_back(attribute->getName());
+        attributeTypeQualifiers.push_back(getTypeQualifier(typeEnv->getType(attribute->getTypeName())));
+    }
+
+    return mk<ram::Relation>(
+            ramRelationName, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
+}
+
 VecOwn<ram::Relation> AstToRamTranslator::createRamRelations(const std::vector<size_t>& sccOrdering) const {
     VecOwn<ram::Relation> ramRelations;
     for (const auto& scc : sccOrdering) {
         const auto& isRecursive = sccGraph->isRecursive(scc);
         const auto& sccRelations = sccGraph->getInternalRelations(scc);
         for (const auto& rel : sccRelations) {
-            std::string name = getRelationName(rel->getQualifiedName());
-            auto arity = rel->getArity();
-            auto auxiliaryArity = auxArityAnalysis->getArity(rel);
-            auto representation = rel->getRepresentation();
-            const auto& attributes = rel->getAttributes();
-
-            std::vector<std::string> attributeNames;
-            std::vector<std::string> attributeTypeQualifiers;
-            for (size_t i = 0; i < rel->getArity(); ++i) {
-                attributeNames.push_back(attributes[i]->getName());
-                if (typeEnv != nullptr) {
-                    attributeTypeQualifiers.push_back(
-                            getTypeQualifier(typeEnv->getType(attributes[i]->getTypeName())));
-                }
-            }
-
             // Add main relation
-            auto ramRelation = mk<ram::Relation>(
-                    name, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
-            ramRelations.push_back(std::move(ramRelation));
+            std::string mainName = getConcreteRelationName(rel->getQualifiedName());
+            ramRelations.push_back(createRamRelation(rel, mainName));
 
             // Recursive relations also require @delta and @new variants, with the same signature
             if (isRecursive) {
                 // Add delta relation
                 std::string deltaName = getDeltaRelationName(rel->getQualifiedName());
-                auto deltaRelation = mk<ram::Relation>(deltaName, arity, auxiliaryArity, attributeNames,
-                        attributeTypeQualifiers, representation);
-                ramRelations.push_back(std::move(deltaRelation));
+                ramRelations.push_back(createRamRelation(rel, deltaName));
 
                 // Add new relation
                 std::string newName = getNewRelationName(rel->getQualifiedName());
-                auto newRelation = mk<ram::Relation>(newName, arity, auxiliaryArity, attributeNames,
-                        attributeTypeQualifiers, representation);
-                ramRelations.push_back(std::move(newRelation));
+                ramRelations.push_back(createRamRelation(rel, newName));
             }
         }
     }
