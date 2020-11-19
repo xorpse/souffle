@@ -84,7 +84,8 @@ NullableVector<std::vector<Literal*>> getInlinedLiteral(Program&, Literal*);
 /**
  * Replace constants in the head of inlined clauses with (constrained) variables.
  */
-void normaliseInlinedHeads(Program& program) {
+bool normaliseInlinedHeads(Program& program) {
+    bool changed = false;
     static int newVarCount = 0;
 
     // Go through the clauses of all inlined relations
@@ -126,15 +127,19 @@ void normaliseInlinedHeads(Program& program) {
             // Replace the old clause with this one
             program.addClause(std::move(newClause));
             program.removeClause(clause);
+            changed = true;
         }
     }
+
+    return changed;
 }
 
 /**
  * Removes all underscores in all atoms of inlined relations
  */
-void nameInlinedUnderscores(Program& program) {
+bool nameInlinedUnderscores(Program& program) {
     struct M : public NodeMapper {
+        mutable bool changed = false;
         const std::set<QualifiedName> inlinedRelations;
         bool replaceUnderscores;
 
@@ -152,6 +157,7 @@ void nameInlinedUnderscores(Program& program) {
                         // in all of its subnodes with named variables.
                         M replace(inlinedRelations, true);
                         node->apply(replace);
+                        changed |= replace.changed;
                         return node;
                     }
                 }
@@ -161,6 +167,7 @@ void nameInlinedUnderscores(Program& program) {
                 // general
                 std::stringstream newVarName;
                 newVarName << "<underscore_" << underscoreCount++ << ">";
+                changed = true;
                 return mk<ast::Variable>(newVarName.str());
             }
 
@@ -180,6 +187,7 @@ void nameInlinedUnderscores(Program& program) {
     // Apply the renaming procedure to the entire program
     M update(inlinedRelations, false);
     program.apply(update);
+    return update.changed;
 }
 
 /**
@@ -991,10 +999,10 @@ bool InlineRelationsTransformer::transform(TranslationUnit& translationUnit) {
 
     // Replace constants in the head of inlined clauses with (constrained) variables.
     // This is done to simplify atom unification, particularly when negations are involved.
-    normaliseInlinedHeads(program);
+    changed |= normaliseInlinedHeads(program);
 
     // Remove underscores in inlined atoms in the program to avoid issues during atom unification
-    nameInlinedUnderscores(program);
+    changed |= nameInlinedUnderscores(program);
 
     // Keep trying to inline things until we reach a fixed point.
     // Since we know there are no cyclic dependencies between inlined relations, this will necessarily
@@ -1033,6 +1041,7 @@ bool InlineRelationsTransformer::transform(TranslationUnit& translationUnit) {
         // Delete all clauses that were replaced
         for (const Clause* clause : clausesToDelete) {
             program.removeClause(clause);
+            changed = true;
         }
     }
 
