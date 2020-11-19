@@ -111,8 +111,8 @@ protected:
     const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
 
     void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
-    void addRamRelation(std::string relationName, Own<ram::Relation> ramRelation);
 
+    VecOwn<ram::Relation> createRamRelations(const std::vector<size_t>& sccOrdering) const;
     virtual Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const;
     RamDomain getConstantRamRepresentation(const ast::Constant& constant) const;
     Own<ram::Statement> generateClauseVersion(const std::set<const ast::Relation*>& scc,
@@ -148,12 +148,7 @@ protected:
 
 private:
     std::map<std::string, Own<ram::Statement>> ramSubroutines;
-    std::map<std::string, Own<ram::Relation>> ramRelations;
     Own<SymbolTable> symbolTable;
-
-    /** Create RAM relations for a given SCC */
-    // TODO (azreika): remove RAM relation creation here entirely
-    void createRamRelations(size_t scc);
 
     /** Replace ADTs with special records */
     static bool removeADTs(const ast::TranslationUnit& translationUnit);

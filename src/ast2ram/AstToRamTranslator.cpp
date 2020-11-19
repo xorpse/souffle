@@ -121,11 +121,6 @@ void AstToRamTranslator::addRamSubroutine(std::string subroutineID, Own<ram::Sta
     ramSubroutines[subroutineID] = std::move(subroutine);
 }
 
-void AstToRamTranslator::addRamRelation(std::string relationName, Own<ram::Relation> ramRelation) {
-    assert(!contains(ramRelations, relationName) && "ram relation should not already exist");
-    ramRelations[relationName] = std::move(ramRelation);
-}
-
 size_t AstToRamTranslator::getEvaluationArity(const ast::Atom* atom) const {
     std::string relName = atom->getQualifiedName().toString();
     if (isPrefix("@info_", relName)) return 0;
@@ -669,46 +664,50 @@ Own<ram::Statement> AstToRamTranslator::generateStoreRelation(const ast::Relatio
     return mk<ram::Sequence>(std::move(storeStmts));
 }
 
-void AstToRamTranslator::createRamRelations(size_t scc) {
-    const auto& isRecursive = sccGraph->isRecursive(scc);
-    const auto& sccRelations = sccGraph->getInternalRelations(scc);
-    for (const auto& rel : sccRelations) {
-        std::string name = getRelationName(rel->getQualifiedName());
-        auto arity = rel->getArity();
-        auto auxiliaryArity = auxArityAnalysis->getArity(rel);
-        auto representation = rel->getRepresentation();
-        const auto& attributes = rel->getAttributes();
+VecOwn<ram::Relation> AstToRamTranslator::createRamRelations(const std::vector<size_t>& sccOrdering) const {
+    VecOwn<ram::Relation> ramRelations;
+    for (const auto& scc : sccOrdering) {
+        const auto& isRecursive = sccGraph->isRecursive(scc);
+        const auto& sccRelations = sccGraph->getInternalRelations(scc);
+        for (const auto& rel : sccRelations) {
+            std::string name = getRelationName(rel->getQualifiedName());
+            auto arity = rel->getArity();
+            auto auxiliaryArity = auxArityAnalysis->getArity(rel);
+            auto representation = rel->getRepresentation();
+            const auto& attributes = rel->getAttributes();
 
-        std::vector<std::string> attributeNames;
-        std::vector<std::string> attributeTypeQualifiers;
-        for (size_t i = 0; i < rel->getArity(); ++i) {
-            attributeNames.push_back(attributes[i]->getName());
-            if (typeEnv != nullptr) {
-                attributeTypeQualifiers.push_back(
-                        getTypeQualifier(typeEnv->getType(attributes[i]->getTypeName())));
+            std::vector<std::string> attributeNames;
+            std::vector<std::string> attributeTypeQualifiers;
+            for (size_t i = 0; i < rel->getArity(); ++i) {
+                attributeNames.push_back(attributes[i]->getName());
+                if (typeEnv != nullptr) {
+                    attributeTypeQualifiers.push_back(
+                            getTypeQualifier(typeEnv->getType(attributes[i]->getTypeName())));
+                }
+            }
+
+            // Add main relation
+            auto ramRelation = mk<ram::Relation>(
+                    name, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
+            ramRelations.push_back(std::move(ramRelation));
+
+            // Recursive relations also require @delta and @new variants, with the same signature
+            if (isRecursive) {
+                // Add delta relation
+                std::string deltaName = getDeltaRelationName(rel->getQualifiedName());
+                auto deltaRelation = mk<ram::Relation>(deltaName, arity, auxiliaryArity, attributeNames,
+                        attributeTypeQualifiers, representation);
+                ramRelations.push_back(std::move(deltaRelation));
+
+                // Add new relation
+                std::string newName = getNewRelationName(rel->getQualifiedName());
+                auto newRelation = mk<ram::Relation>(newName, arity, auxiliaryArity, attributeNames,
+                        attributeTypeQualifiers, representation);
+                ramRelations.push_back(std::move(newRelation));
             }
         }
-
-        // Add main relation
-        auto ramRelation = mk<ram::Relation>(
-                name, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
-        addRamRelation(name, std::move(ramRelation));
-
-        // Recursive relations also require @delta and @new variants, with the same signature
-        if (isRecursive) {
-            // Add delta relation
-            std::string deltaName = getDeltaRelationName(rel->getQualifiedName());
-            auto deltaRelation = mk<ram::Relation>(deltaName, arity, auxiliaryArity, attributeNames,
-                    attributeTypeQualifiers, representation);
-            addRamRelation(deltaName, std::move(deltaRelation));
-
-            // Add new relation
-            std::string newName = getNewRelationName(rel->getQualifiedName());
-            auto newRelation = mk<ram::Relation>(
-                    newName, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
-            addRamRelation(newName, std::move(newRelation));
-        }
     }
+    return ramRelations;
 }
 
 void AstToRamTranslator::finaliseAstTypes(ast::Program& program) const {
@@ -735,13 +734,8 @@ Own<ram::Sequence> AstToRamTranslator::generateProgram(const ast::TranslationUni
     if (sccGraph->getNumberOfSCCs() == 0) {
         return mk<ram::Sequence>();
     }
-
-    // Create all relevant RAM relations
     const auto& sccOrdering =
             translationUnit.getAnalysis<ast::analysis::TopologicallySortedSCCGraphAnalysis>()->order();
-    for (const auto& scc : sccOrdering) {
-        createRamRelations(scc);
-    }
 
     // Create subroutines for each SCC according to topological order
     for (size_t i = 0; i < sccOrdering.size(); i++) {
@@ -806,15 +800,18 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
     removeADTs(tu);
 
     /* -- Translation -- */
-    // Create the final RAM program
+    // Generate the RAM program code
     auto ramMain = generateProgram(tu);
+
+    // Create the relevant RAM relations
+    const auto& sccOrdering = tu.getAnalysis<ast::analysis::TopologicallySortedSCCGraphAnalysis>()->order();
+    auto ramRelations = createRamRelations(sccOrdering);
+
+    // Combine all parts into the final RAM program
     ErrorReport& errReport = tu.getErrorReport();
     DebugReport& debugReport = tu.getDebugReport();
-    VecOwn<ram::Relation> rels;
-    for (auto& cur : ramRelations) {
-        rels.push_back(std::move(cur.second));
-    }
-    auto ramProgram = mk<ram::Program>(std::move(rels), std::move(ramMain), std::move(ramSubroutines));
+    auto ramProgram =
+            mk<ram::Program>(std::move(ramRelations), std::move(ramMain), std::move(ramSubroutines));
 
     // Add the translated program to the debug report
     if (Global::config().has("debug-report")) {
