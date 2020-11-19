@@ -24,7 +24,7 @@ public:
     ~ProvenanceTranslator() = default;
 
 protected:
-    Own<ram::Sequence> translateProgram(const ast::TranslationUnit& translationUnit) override;
+    Own<ram::Sequence> generateProgram(const ast::TranslationUnit& translationUnit) override;
     Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const override;
     Own<ram::Statement> generateClearExpiredRelations(
             const std::set<const ast::Relation*>& expiredRelations) const override;

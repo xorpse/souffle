@@ -39,9 +39,9 @@
 
 namespace souffle::ast2ram {
 
-Own<ram::Sequence> ProvenanceTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {
+Own<ram::Sequence> ProvenanceTranslator::generateProgram(const ast::TranslationUnit& translationUnit) {
     // do the regular translation
-    auto ramProgram = AstToRamTranslator::translateProgram(translationUnit);
+    auto ramProgram = AstToRamTranslator::generateProgram(translationUnit);
 
     // add subroutines for each clause
     addProvenanceClauseSubroutines(program);

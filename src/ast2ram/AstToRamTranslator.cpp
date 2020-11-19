@@ -735,7 +735,7 @@ void AstToRamTranslator::finaliseAstTypes(ast::Program& program) const {
     });
 }
 
-Own<ram::Sequence> AstToRamTranslator::translateProgram(const ast::TranslationUnit& translationUnit) {
+Own<ram::Sequence> AstToRamTranslator::generateProgram(const ast::TranslationUnit& translationUnit) {
     // Check if trivial program
     if (sccGraph->getNumberOfSCCs() == 0) {
         return mk<ram::Sequence>();
@@ -812,7 +812,7 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
 
     /* -- Translation -- */
     // Create the final RAM program
-    auto ramMain = translateProgram(tu);
+    auto ramMain = generateProgram(tu);
     ErrorReport& errReport = tu.getErrorReport();
     DebugReport& debugReport = tu.getDebugReport();
     VecOwn<ram::Relation> rels;

@@ -86,15 +86,17 @@ public:
         return sipsMetric.get();
     }
 
-    size_t getEvaluationArity(const ast::Atom* atom) const;
+    /** Translates an AST program into a corresponding RAM program */
+    Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
+
+    // TODO (azreika): remove this when RAM relation creation removed
     const ram::Relation* lookupRelation(const std::string& name) const;
 
-    /** AST->RAM translation methods */
-    Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
-    Own<ram::Expression> translateValue(const ast::Argument* arg, const ValueIndex& index) const;
+    // TODO (azreika): these probably belong more to the clause translator
+    size_t getEvaluationArity(const ast::Atom* atom) const;
     Own<ram::Condition> translateConstraint(const ast::Literal* arg, const ValueIndex& index) const;
+    Own<ram::Expression> translateValue(const ast::Argument* arg, const ValueIndex& index) const;
     Own<ram::Expression> translateConstant(const ast::Constant& c) const;
-    virtual Own<ram::Sequence> translateProgram(const ast::TranslationUnit& translationUnit);
 
 protected:
     const ast::Program* program = nullptr;
@@ -116,8 +118,6 @@ protected:
 
     virtual Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const;
     RamDomain getConstantRamRepresentation(const ast::Constant& constant) const;
-
-    // clean up
     Own<ram::Statement> generateClauseVersion(const std::set<const ast::Relation*>& scc,
             const ast::Clause* cl, size_t deltaAtomIdx, size_t version) const;
     Own<ram::Statement> translateRecursiveClauses(
@@ -126,6 +126,7 @@ protected:
     /** -- Generation methods -- */
 
     /** High-level relation translation */
+    virtual Own<ram::Sequence> generateProgram(const ast::TranslationUnit& translationUnit);
     Own<ram::Statement> generateNonRecursiveRelation(const ast::Relation& rel) const;
     Own<ram::Statement> generateRecursiveStratum(const std::set<const ast::Relation*>& scc) const;
 
@@ -154,6 +155,7 @@ private:
     Own<SymbolTable> symbolTable;
 
     /** Create RAM relations for a given SCC */
+    // TODO (azreika): remove RAM relation creation here entirely
     void createRamRelations(size_t scc);
 
     /** Replace ADTs with special records */
