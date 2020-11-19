@@ -340,7 +340,7 @@ Own<ram::Statement> AstToRamTranslator::generateClauseVersion(const std::set<con
     // Replace wildcards with variables to reduce indices
     nameUnnamedVariables(fixedClause.get());
 
-    // TODO: reduce R to P ...
+    // Add in negated deltas for later recursive relations to simulate prev construct
     for (size_t j = deltaAtomIdx + 1; j < atoms.size(); j++) {
         const auto* atomRelation = getAtomRelation(atoms[j], program);
         if (contains(scc, atomRelation)) {
@@ -350,6 +350,7 @@ Own<ram::Statement> AstToRamTranslator::generateClauseVersion(const std::set<con
         }
     }
 
+    // Translate the resultant clause as would be done normally
     Own<ram::Statement> rule = ClauseTranslator(*this).translateClause(*fixedClause, *cl, version);
 
     // Add loging
