@@ -148,16 +148,21 @@ protected:
     Own<ram::Statement> generateMergeRelations(
             const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const;
 
-private:
-    std::map<std::string, Own<ram::Statement>> ramSubroutines;
-    Own<SymbolTable> symbolTable;
+    /** -- AST preprocessing -- */
+
+    /** Main general preprocessor */
+    virtual void preprocessAstProgram(ast::TranslationUnit& tu);
 
     /** Replace ADTs with special records */
-    static bool removeADTs(const ast::TranslationUnit& translationUnit);
+    bool removeADTs(ast::TranslationUnit& translationUnit);
 
     /** Finalise the types of polymorphic objects */
     // TODO (azreika): should be removed once the translator is refactored to avoid cloning
-    void finaliseAstTypes(ast::Program& program) const;
+    void finaliseAstTypes(ast::Program& program);
+
+private:
+    std::map<std::string, Own<ram::Statement>> ramSubroutines;
+    Own<SymbolTable> symbolTable;
 };
 
 }  // namespace souffle::ast2ram

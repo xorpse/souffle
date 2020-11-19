@@ -536,7 +536,7 @@ Own<ram::Statement> AstToRamTranslator::generateRecursiveStratum(
     return mk<ram::Sequence>(std::move(result));
 }
 
-bool AstToRamTranslator::removeADTs(const ast::TranslationUnit& translationUnit) {
+bool AstToRamTranslator::removeADTs(ast::TranslationUnit& translationUnit) {
     struct ADTsFuneral : public ast::NodeMapper {
         mutable bool changed{false};
         const ast::analysis::SumTypeBranchesAnalysis& sumTypesBranches;
@@ -706,7 +706,7 @@ VecOwn<ram::Relation> AstToRamTranslator::createRamRelations(const std::vector<s
     return ramRelations;
 }
 
-void AstToRamTranslator::finaliseAstTypes(ast::Program& program) const {
+void AstToRamTranslator::finaliseAstTypes(ast::Program& program) {
     visitDepthFirst(program, [&](const ast::NumericConstant& nc) {
         const_cast<ast::NumericConstant&>(nc).setFinalType(polyAnalysis->getInferredType(&nc));
     });
@@ -764,6 +764,14 @@ Own<ram::Sequence> AstToRamTranslator::generateProgram(const ast::TranslationUni
     return mk<ram::Sequence>(std::move(res));
 }
 
+void AstToRamTranslator::preprocessAstProgram(ast::TranslationUnit& tu) {
+    // Finalise polymorphic types in the AST
+    finaliseAstTypes(tu.getProgram());
+
+    // Replace ADTs with record representatives
+    removeADTs(tu);
+}
+
 Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit& tu) {
     // Start timer
     auto ram_start = std::chrono::high_resolution_clock::now();
@@ -789,11 +797,8 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
     relDetail = tu.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
     polyAnalysis = tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
 
-    // Finalise polymorphic types in the AST
-    finaliseAstTypes(tu.getProgram());
-
-    // Replace ADTs with record representatives
-    removeADTs(tu);
+    // Run the AST preprocessor
+    preprocessAstProgram(tu);
 
     /* -- Translation -- */
     // Generate the RAM program code
