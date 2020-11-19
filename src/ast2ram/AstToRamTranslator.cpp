@@ -711,11 +711,6 @@ void AstToRamTranslator::createRamRelations(size_t scc) {
     }
 }
 
-const ram::Relation* AstToRamTranslator::lookupRelation(const std::string& name) const {
-    assert(contains(ramRelations, name) && "relation not found");
-    return ramRelations.at(name).get();
-}
-
 void AstToRamTranslator::finaliseAstTypes(ast::Program& program) const {
     visitDepthFirst(program, [&](const ast::NumericConstant& nc) {
         const_cast<ast::NumericConstant&>(nc).setFinalType(polyAnalysis->getInferredType(&nc));

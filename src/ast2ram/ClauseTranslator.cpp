@@ -386,15 +386,15 @@ Own<ast::Clause> ClauseTranslator::getReorderedClause(const ast::Clause& clause,
 }
 
 void ClauseTranslator::indexValues(const ast::Node* curNode, const std::vector<ast::Argument*>& curNodeArgs,
-        std::map<const ast::Node*, int>& nodeLevel, const ram::Relation* relation) {
+        std::map<const ast::Node*, int>& nodeLevel, const std::string& relationName, size_t relationArity) {
     for (size_t pos = 0; pos < curNodeArgs.size(); ++pos) {
         // get argument
         auto& arg = curNodeArgs[pos];
 
         // check for variable references
         if (auto var = dynamic_cast<const ast::Variable*>(arg)) {
-            if (pos < relation->getArity()) {
-                valueIndex->addVarReference(*var, nodeLevel[curNode], pos, relation->getName());
+            if (pos < relationArity) {
+                valueIndex->addVarReference(*var, nodeLevel[curNode], pos, relationName);
             } else {
                 valueIndex->addVarReference(*var, nodeLevel[curNode], pos);
             }
@@ -410,7 +410,7 @@ void ClauseTranslator::indexValues(const ast::Node* curNode, const std::vector<a
             valueIndex->setRecordDefinition(*rec, nodeLevel[curNode], pos);
 
             // resolve nested components
-            indexValues(rec, rec->getArguments(), nodeLevel, relation);
+            indexValues(rec, rec->getArguments(), nodeLevel, relationName, relationArity);
         }
     }
 }
@@ -426,8 +426,8 @@ void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
         op_nesting.push_back(atom);
 
         // index each value in the atom
-        indexValues(atom, atom->getArguments(), nodeLevel,
-                translator.lookupRelation(getConcreteRelationName(atom->getQualifiedName())));
+        indexValues(atom, atom->getArguments(), nodeLevel, getConcreteRelationName(atom->getQualifiedName()),
+                atom->getArity());
     }
 
     // add aggregation functions

@@ -89,9 +89,6 @@ public:
     /** Translates an AST program into a corresponding RAM program */
     Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
 
-    // TODO (azreika): remove this when RAM relation creation removed
-    const ram::Relation* lookupRelation(const std::string& name) const;
-
     // TODO (azreika): these probably belong more to the clause translator
     size_t getEvaluationArity(const ast::Atom* atom) const;
     Own<ram::Condition> translateConstraint(const ast::Literal* arg, const ValueIndex& index) const;
