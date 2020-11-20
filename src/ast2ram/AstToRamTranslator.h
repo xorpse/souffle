@@ -108,7 +108,6 @@ protected:
     const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
     const ast::analysis::RelationScheduleAnalysis* relationSchedule = nullptr;
     const ast::analysis::SCCGraphAnalysis* sccGraph = nullptr;
-    const ast::analysis::RecursiveClausesAnalysis* recursiveClauses = nullptr;
     const ast::analysis::RelationDetailCacheAnalysis* relDetail = nullptr;
     const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
 

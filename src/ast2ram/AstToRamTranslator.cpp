@@ -192,7 +192,7 @@ Own<ram::Statement> AstToRamTranslator::generateNonRecursiveRelation(const ast::
     // Iterate over all non-recursive clauses that belong to the relation
     for (ast::Clause* clause : relDetail->getClauses(rel.getQualifiedName())) {
         // Skip recursive rules
-        if (recursiveClauses->recursive(clause)) {
+        if (context->isRecursiveClause(clause)) {
             continue;
         }
 
@@ -380,7 +380,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
     // Translate each recursive clasue
     for (const auto& cl : relDetail->getClauses(rel->getQualifiedName())) {
         // Skip non-recursive clauses
-        if (!recursiveClauses->recursive(cl)) {
+        if (!context->isRecursiveClause(cl)) {
             continue;
         }
 
@@ -793,7 +793,6 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
     typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
     relationSchedule = tu.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
     sccGraph = tu.getAnalysis<ast::analysis::SCCGraphAnalysis>();
-    recursiveClauses = tu.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
     auxArityAnalysis = tu.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
     functorAnalysis = tu.getAnalysis<ast::analysis::FunctorAnalysis>();
     relDetail = tu.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
