@@ -736,7 +736,7 @@ Own<ram::Sequence> AstToRamTranslator::generateProgram(const ast::TranslationUni
         auto stratum = generateStratum(sccOrdering.at(i));
 
         // Clear expired relations
-        const auto& expiredRelations = relationSchedule->schedule().at(i).expired();
+        const auto& expiredRelations = context->getExpiredRelations(i);
         stratum = mk<ram::Sequence>(std::move(stratum), generateClearExpiredRelations(expiredRelations));
 
         // Add the subroutine

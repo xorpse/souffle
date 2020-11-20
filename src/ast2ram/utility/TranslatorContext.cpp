@@ -15,12 +15,15 @@
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast/TranslationUnit.h"
 #include "ast/analysis/RecursiveClauses.h"
+#include "ast/analysis/RelationSchedule.h"
+#include "ast/analysis/SCCGraph.h"
 
 namespace souffle::ast2ram {
 
 TranslatorContext::TranslatorContext(ast::TranslationUnit& tu) : tu(tu) {
     recursiveClauses = tu.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
     sccGraph = tu.getAnalysis<ast::analysis::SCCGraphAnalysis>();
+    relationSchedule = tu.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
 }
 
 bool TranslatorContext::isRecursiveClause(const ast::Clause* clause) const {
@@ -45,6 +48,10 @@ std::set<const ast::Relation*> TranslatorContext::getInputRelationsInSCC(size_t 
 
 std::set<const ast::Relation*> TranslatorContext::getOutputRelationsInSCC(size_t scc) const {
     return sccGraph->getInternalOutputRelations(scc);
+}
+
+std::set<const ast::Relation*> TranslatorContext::getExpiredRelations(size_t scc) const {
+    return relationSchedule->schedule().at(scc).expired();
 }
 
 }  // namespace souffle::ast2ram

@@ -25,6 +25,7 @@ class TranslationUnit;
 
 namespace souffle::ast::analysis {
 class RecursiveClausesAnalysis;
+class RelationScheduleAnalysis;
 class SCCGraphAnalysis;
 }  // namespace souffle::ast::analysis
 
@@ -40,6 +41,7 @@ public:
     /** SCC-related methods */
     size_t getNumberOfSCCs() const;
     bool isRecursiveSCC(size_t scc) const;
+    std::set<const ast::Relation*> getExpiredRelations(size_t scc) const;
     std::set<const ast::Relation*> getRelationsInSCC(size_t scc) const;
     std::set<const ast::Relation*> getInputRelationsInSCC(size_t scc) const;
     std::set<const ast::Relation*> getOutputRelationsInSCC(size_t scc) const;
@@ -47,6 +49,7 @@ public:
 private:
     const ast::TranslationUnit& tu;
     const ast::analysis::RecursiveClausesAnalysis* recursiveClauses;
+    const ast::analysis::RelationScheduleAnalysis* relationSchedule;
     const ast::analysis::SCCGraphAnalysis* sccGraph;
 };
 
