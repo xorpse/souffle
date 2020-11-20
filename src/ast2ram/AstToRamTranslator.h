@@ -44,10 +44,6 @@ class IOTypeAnalysis;
 class AuxiliaryArityAnalysis;
 class FunctorAnalysis;
 class PolymorphicObjectsAnalysis;
-class RecursiveClausesAnalysis;
-class RelationDetailCacheAnalysis;
-class RelationScheduleAnalysis;
-class SCCGraphAnalysis;
 class TypeEnvironment;
 }  // namespace souffle::ast::analysis
 
