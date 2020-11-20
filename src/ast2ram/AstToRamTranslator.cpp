@@ -54,6 +54,7 @@
 #include "ast2ram/ConstraintTranslator.h"
 #include "ast2ram/ValueIndex.h"
 #include "ast2ram/ValueTranslator.h"
+#include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ram/Call.h"
 #include "ram/Clear.h"
@@ -785,6 +786,7 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
         sipsChosen = Global::config().get("RamSIPS");
     }
     sipsMetric = ast::SipsMetric::create(sipsChosen, tu);
+    context = mk<TranslatorContext>(tu);
 
     // Grab all relevant analyses
     ioType = tu.getAnalysis<ast::analysis::IOTypeAnalysis>();

@@ -63,6 +63,7 @@ class TranslationUnit;
 namespace souffle::ast2ram {
 
 struct Location;
+class TranslatorContext;
 class ValueIndex;
 
 class AstToRamTranslator {
@@ -97,6 +98,7 @@ public:
 
 protected:
     const ast::Program* program = nullptr;
+    Own<TranslatorContext> context;
     Own<ast::SipsMetric> sipsMetric;
 
     /** Analyses needed */
