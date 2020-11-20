@@ -249,15 +249,13 @@ Own<ram::Statement> AstToRamTranslator::generateStratum(size_t scc) const {
     VecOwn<ram::Statement> current;
 
     // load all internal input relations from the facts dir with a .facts extension
-    const auto& sccInputRelations = sccGraph->getInternalInputRelations(scc);
-    for (const auto& relation : sccInputRelations) {
+    for (const auto& relation : context->getInputRelationsInSCC(scc)) {
         appendStmt(current, generateLoadRelation(relation));
     }
 
     // Compute the current stratum
-    const auto& isRecursive = sccGraph->isRecursive(scc);
-    const auto& sccRelations = sccGraph->getInternalRelations(scc);
-    if (isRecursive) {
+    const auto& sccRelations = context->getRelationsInSCC(scc);
+    if (context->isRecursiveSCC(scc)) {
         appendStmt(current, generateRecursiveStratum(sccRelations));
     } else {
         assert(sccRelations.size() == 1 && "only one relation should exist in non-recursive stratum");
@@ -266,8 +264,7 @@ Own<ram::Statement> AstToRamTranslator::generateStratum(size_t scc) const {
     }
 
     // Store all internal output relations to the output dir with a .csv extension
-    const auto& sccOutputRelations = sccGraph->getInternalOutputRelations(scc);
-    for (const auto& relation : sccOutputRelations) {
+    for (const auto& relation : context->getOutputRelationsInSCC(scc)) {
         appendStmt(current, generateStoreRelation(relation));
     }
 
@@ -685,9 +682,8 @@ Own<ram::Relation> AstToRamTranslator::createRamRelation(
 VecOwn<ram::Relation> AstToRamTranslator::createRamRelations(const std::vector<size_t>& sccOrdering) const {
     VecOwn<ram::Relation> ramRelations;
     for (const auto& scc : sccOrdering) {
-        const auto& isRecursive = sccGraph->isRecursive(scc);
-        const auto& sccRelations = sccGraph->getInternalRelations(scc);
-        for (const auto& rel : sccRelations) {
+        bool isRecursive = context->isRecursiveSCC(scc);
+        for (const auto& rel : context->getRelationsInSCC(scc)) {
             // Add main relation
             std::string mainName = getConcreteRelationName(rel->getQualifiedName());
             ramRelations.push_back(createRamRelation(rel, mainName));
@@ -728,7 +724,7 @@ void AstToRamTranslator::finaliseAstTypes(ast::Program& program) {
 
 Own<ram::Sequence> AstToRamTranslator::generateProgram(const ast::TranslationUnit& translationUnit) {
     // Check if trivial program
-    if (sccGraph->getNumberOfSCCs() == 0) {
+    if (context->getNumberOfSCCs() == 0) {
         return mk<ram::Sequence>();
     }
     const auto& sccOrdering =
@@ -792,7 +788,6 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
     ioType = tu.getAnalysis<ast::analysis::IOTypeAnalysis>();
     typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
     relationSchedule = tu.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
-    sccGraph = tu.getAnalysis<ast::analysis::SCCGraphAnalysis>();
     auxArityAnalysis = tu.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
     functorAnalysis = tu.getAnalysis<ast::analysis::FunctorAnalysis>();
     relDetail = tu.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
