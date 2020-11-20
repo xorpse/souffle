@@ -19,12 +19,14 @@
 
 namespace souffle::ast {
 class Clause;
+class QualifiedName;
 class Relation;
 class TranslationUnit;
 }  // namespace souffle::ast
 
 namespace souffle::ast::analysis {
 class RecursiveClausesAnalysis;
+class RelationDetailCacheAnalysis;
 class RelationScheduleAnalysis;
 class SCCGraphAnalysis;
 }  // namespace souffle::ast::analysis
@@ -35,7 +37,11 @@ class TranslatorContext {
 public:
     TranslatorContext(ast::TranslationUnit& tu);
 
+    /** Relation-related methods */
+    ast::Relation* getRelation(const ast::QualifiedName& name) const;
+
     /** Clause-related methods */
+    std::set<ast::Clause*> getClauses(const ast::QualifiedName& name) const;
     bool isRecursiveClause(const ast::Clause* clause) const;
 
     /** SCC-related methods */
@@ -51,6 +57,7 @@ private:
     const ast::analysis::RecursiveClausesAnalysis* recursiveClauses;
     const ast::analysis::RelationScheduleAnalysis* relationSchedule;
     const ast::analysis::SCCGraphAnalysis* sccGraph;
+    const ast::analysis::RelationDetailCacheAnalysis* relationDetail;
 };
 
 }  // namespace souffle::ast2ram

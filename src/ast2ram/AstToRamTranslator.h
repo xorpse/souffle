@@ -79,10 +79,6 @@ public:
         return functorAnalysis;
     }
 
-    const ast::analysis::PolymorphicObjectsAnalysis* getPolymorphicObjectsAnalysis() const {
-        return polyAnalysis;
-    }
-
     const ast::SipsMetric* getSipsMetric() const {
         return sipsMetric.get();
     }
@@ -102,13 +98,12 @@ protected:
     Own<ast::SipsMetric> sipsMetric;
 
     /** Analyses needed */
+    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
+    const ast::analysis::FunctorAnalysis* functorAnalysis = nullptr;
+    const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
+
     const ast::analysis::TypeEnvironment* typeEnv = nullptr;
     const ast::analysis::IOTypeAnalysis* ioType = nullptr;
-    const ast::analysis::FunctorAnalysis* functorAnalysis = nullptr;
-    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
-    const ast::analysis::RelationScheduleAnalysis* relationSchedule = nullptr;
-    const ast::analysis::RelationDetailCacheAnalysis* relDetail = nullptr;
-    const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
 
     void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
 

@@ -13,10 +13,13 @@
  ***********************************************************************/
 
 #include "ast2ram/utility/TranslatorContext.h"
+#include "ast/QualifiedName.h"
 #include "ast/TranslationUnit.h"
 #include "ast/analysis/RecursiveClauses.h"
+#include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/RelationSchedule.h"
 #include "ast/analysis/SCCGraph.h"
+#include <set>
 
 namespace souffle::ast2ram {
 
@@ -24,6 +27,7 @@ TranslatorContext::TranslatorContext(ast::TranslationUnit& tu) : tu(tu) {
     recursiveClauses = tu.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
     sccGraph = tu.getAnalysis<ast::analysis::SCCGraphAnalysis>();
     relationSchedule = tu.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
+    relationDetail = tu.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
 }
 
 bool TranslatorContext::isRecursiveClause(const ast::Clause* clause) const {
@@ -52,6 +56,14 @@ std::set<const ast::Relation*> TranslatorContext::getOutputRelationsInSCC(size_t
 
 std::set<const ast::Relation*> TranslatorContext::getExpiredRelations(size_t scc) const {
     return relationSchedule->schedule().at(scc).expired();
+}
+
+std::set<ast::Clause*> TranslatorContext::getClauses(const ast::QualifiedName& name) const {
+    return relationDetail->getClauses(name);
+}
+
+ast::Relation* TranslatorContext::getRelation(const ast::QualifiedName& name) const {
+    return relationDetail->getRelation(name);
 }
 
 }  // namespace souffle::ast2ram

@@ -133,7 +133,7 @@ size_t AstToRamTranslator::getEvaluationArity(const ast::Atom* atom) const {
         relName = stripPrefix("@new_", relName);
     }
 
-    const auto* originalRelation = relDetail->getRelation(ast::QualifiedName(relName));
+    const auto* originalRelation = context->getRelation(ast::QualifiedName(relName));
     return auxArityAnalysis->getArity(originalRelation);
 }
 
@@ -190,7 +190,7 @@ Own<ram::Statement> AstToRamTranslator::generateNonRecursiveRelation(const ast::
     std::string relName = getConcreteRelationName(rel.getQualifiedName());
 
     // Iterate over all non-recursive clauses that belong to the relation
-    for (ast::Clause* clause : relDetail->getClauses(rel.getQualifiedName())) {
+    for (ast::Clause* clause : context->getClauses(rel.getQualifiedName())) {
         // Skip recursive rules
         if (context->isRecursiveClause(clause)) {
             continue;
@@ -375,7 +375,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
     VecOwn<ram::Statement> result;
 
     // Translate each recursive clasue
-    for (const auto& cl : relDetail->getClauses(rel->getQualifiedName())) {
+    for (const auto& cl : context->getClauses(rel->getQualifiedName())) {
         // Skip non-recursive clauses
         if (!context->isRecursiveClause(cl)) {
             continue;
@@ -787,10 +787,8 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
     // Grab all relevant analyses
     ioType = tu.getAnalysis<ast::analysis::IOTypeAnalysis>();
     typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
-    relationSchedule = tu.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
     auxArityAnalysis = tu.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
     functorAnalysis = tu.getAnalysis<ast::analysis::FunctorAnalysis>();
-    relDetail = tu.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
     polyAnalysis = tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
 
     // Run the AST preprocessor
