@@ -85,12 +85,14 @@ public:
         }
     };
 
+    // raw ptr to begin
     Iterator begin() const {
         return Iterator(const_cast<AttributeConstraint*>(constraints.data()));
     }
 
+    // raw ptr to end
     Iterator end() const {
-        return Iterator(nullptr);
+        return Iterator(const_cast<AttributeConstraint*>(constraints.data() + constraints.size()));
     }
 
     class Iterator : public std::iterator<std::random_access_iterator_tag, AttributeConstraint> {
