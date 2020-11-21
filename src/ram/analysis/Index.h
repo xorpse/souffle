@@ -67,8 +67,6 @@ public:
 
     bool empty() const;
 
-    static bool isComparable(const SearchSignature& lhs, const SearchSignature& rhs);
-    static bool isSubset(const SearchSignature& lhs, const SearchSignature& rhs);
     static SearchSignature getDelta(const SearchSignature& lhs, const SearchSignature& rhs);
     static SearchSignature getFullSearchSignature(size_t arity);
 
@@ -185,7 +183,7 @@ private:
     /**
      * distance function of nodes
      */
-    using DistanceMap = std::map<Node, Distance>;
+    using DistanceMap = std::unordered_map<Node, Distance>;
 
     Matchings match;
     Graph graph;
@@ -216,7 +214,7 @@ public:
     using LexOrder = std::vector<AttributeIndex>;
     using OrderCollection = std::vector<LexOrder>;
     using Chain = std::vector<SearchSignature>;
-    using ChainOrderMap = std::list<Chain>;
+    using ChainOrderMap = std::vector<Chain>;
 
     class SearchComparator {
     public:
@@ -233,9 +231,11 @@ public:
 
     /** @Brief Add new key to an Index Set */
     inline void addSearch(SearchSignature cols) {
-        if (!cols.empty()) {
-            searches.insert(cols);
+        if (cols.empty()) {
+            return;
         }
+
+        searches.insert(cols);
     }
 
     MinIndexSelection() = default;

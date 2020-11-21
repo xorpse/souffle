@@ -55,8 +55,29 @@ const AttributeConstraint& SearchSignature::operator[](std::size_t pos) const {
 
 // comparison operators
 bool SearchSignature::operator<(const SearchSignature& other) const {
-    assert(constraints.size() == other.constraints.size());
-    return isComparable(*this, other) && isSubset(*this, other);
+    assert(arity() == other.arity());
+    // ignore duplicates
+    if (constraints == other.constraints) {
+        return false;
+    }
+
+    // (1) LHS is a subset of RHS
+    for (size_t i = 0; i < other.arity(); ++i) {
+        if (constraints[i] != AttributeConstraint::None &&
+                other.constraints[i] == AttributeConstraint::None) {
+            return false;
+        }
+    }
+
+    // (2) If RHS has an inequality then LHS can't have that attribute
+    for (size_t i = 0; i < other.arity(); ++i) {
+        if (other.constraints[i] == AttributeConstraint::Inequal) {
+            if (constraints[i] != AttributeConstraint::None) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 bool SearchSignature::operator==(const SearchSignature& other) const {
@@ -72,34 +93,6 @@ bool SearchSignature::empty() const {
     size_t len = constraints.size();
     for (size_t i = 0; i < len; ++i) {
         if (constraints[i] != AttributeConstraint::None) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool SearchSignature::isComparable(const SearchSignature& lhs, const SearchSignature& rhs) {
-    assert(lhs.arity() == rhs.arity());
-    if (lhs == rhs) {
-        return true;
-    }
-
-    bool withinDelta = true;
-    for (size_t i = 0; i < rhs.arity(); ++i) {
-        if (rhs[i] == AttributeConstraint::Inequal) {
-            if (lhs[i] != AttributeConstraint::None) {
-                withinDelta = false;
-            }
-        }
-    }
-    return withinDelta;
-}
-
-bool SearchSignature::isSubset(const SearchSignature& lhs, const SearchSignature& rhs) {
-    assert(lhs.arity() == rhs.arity());
-    size_t len = lhs.arity();
-    for (size_t i = 0; i < len; ++i) {
-        if (lhs[i] != AttributeConstraint::None && rhs[i] == AttributeConstraint::None) {
             return false;
         }
     }
@@ -245,9 +238,6 @@ void MinIndexSelection::solve() {
     // map the signatures of each search to a unique index for the matching problem
     AttributeIndex currentIndex = 1;
     for (SearchSignature s : searches) {
-        if (s.empty()) {
-            continue;
-        }
         // map the signature to its unique index in each set
         signatureToIndexA.insert({s, currentIndex});
         signatureToIndexB.insert({s, currentIndex + 1});
@@ -258,14 +248,15 @@ void MinIndexSelection::solve() {
     }
 
     // Construct the matching poblem
-    for (auto search : searches) {
-        for (auto itt : searches) {
-            if (search == itt) {
+    // For each pair of search sets
+    // Draw an edge from LHS to RHS if LHS precedes RHS in the partial order
+    for (auto left : searches) {
+        for (auto right : searches) {
+            if (left == right) {
                 continue;
             }
-
-            if (search < itt) {
-                matching.addEdge(signatureToIndexA[search], signatureToIndexB[itt]);
+            if (left < right) {
+                matching.addEdge(signatureToIndexA[left], signatureToIndexB[right]);
             }
         }
     }
