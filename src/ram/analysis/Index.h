@@ -53,6 +53,7 @@ enum class AttributeConstraint { None, Equal, Inequal };
  * */
 class SearchSignature {
 public:
+    class Iterator;
     explicit SearchSignature(size_t arity);
     size_t arity() const;
 
@@ -82,6 +83,96 @@ public:
             }
             return seed;
         }
+    };
+
+    Iterator begin() const {
+        return Iterator(const_cast<AttributeConstraint*>(constraints.data()));
+    }
+
+    Iterator end() const {
+        return Iterator(nullptr);
+    }
+
+    class Iterator : public std::iterator<std::random_access_iterator_tag, AttributeConstraint> {
+    public:
+        using difference_type =
+                typename std::iterator<std::random_access_iterator_tag, AttributeConstraint>::difference_type;
+
+        Iterator() : it(nullptr) {}
+        Iterator(AttributeConstraint* rhs) : it(rhs) {}
+        Iterator(const Iterator& rhs) : it(rhs.it) {}
+        inline Iterator& operator=(AttributeConstraint* rhs) {
+            it = rhs;
+            return *this;
+        }
+        inline Iterator& operator=(const Iterator& rhs) {
+            it = rhs.it;
+            return *this;
+        }
+        inline Iterator& operator+=(difference_type rhs) {
+            it += rhs;
+            return *this;
+        }
+        inline Iterator& operator-=(difference_type rhs) {
+            it -= rhs;
+            return *this;
+        }
+        inline AttributeConstraint& operator*() const {
+            return *it;
+        }
+        inline AttributeConstraint operator->() const {
+            return *it;
+        }
+        inline AttributeConstraint& operator[](difference_type rhs) const {
+            return it[rhs];
+        }
+
+        inline Iterator& operator++() {
+            ++it;
+            return *this;
+        }
+        inline Iterator& operator--() {
+            --it;
+            return *this;
+        }
+
+        inline difference_type operator-(const Iterator& rhs) const {
+            return {it - rhs.it};
+        }
+        inline Iterator operator+(difference_type rhs) const {
+            return {it + rhs};
+        }
+        inline Iterator operator-(difference_type rhs) const {
+            return {it - rhs};
+        }
+        friend inline Iterator operator+(difference_type lhs, const Iterator& rhs) {
+            return {rhs.it + lhs};
+        }
+        friend inline Iterator operator-(difference_type lhs, const Iterator& rhs) {
+            return {rhs.it - lhs};
+        }
+
+        inline bool operator==(const Iterator& rhs) const {
+            return it == rhs.it;
+        }
+        inline bool operator!=(const Iterator& rhs) const {
+            return it != rhs.it;
+        }
+        inline bool operator>(const Iterator& rhs) const {
+            return it > rhs.it;
+        }
+        inline bool operator<(const Iterator& rhs) const {
+            return it < rhs.it;
+        }
+        inline bool operator>=(const Iterator& rhs) const {
+            return it >= rhs.it;
+        }
+        inline bool operator<=(const Iterator& rhs) const {
+            return it <= rhs.it;
+        }
+
+    private:
+        AttributeConstraint* it;
     };
 
 private:
