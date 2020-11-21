@@ -78,17 +78,6 @@ bool SearchSignature::empty() const {
     return true;
 }
 
-bool SearchSignature::containsEquality() const {
-    for (auto constraint : constraints) {
-        if (constraint == AttributeConstraint::Equal) {
-            return true;
-        }
-    }
-    return false;
-}
-
-// Note: We have 0 < 1 and 0 < 2 but we cannot say that 1 < 2.
-// The reason for this is to prevent search chains such as 100->101->201 which have no valid lex-order
 bool SearchSignature::isComparable(const SearchSignature& lhs, const SearchSignature& rhs) {
     assert(lhs.arity() == rhs.arity());
     if (lhs == rhs) {
@@ -135,16 +124,6 @@ SearchSignature SearchSignature::getFullSearchSignature(size_t arity) {
     SearchSignature res(arity);
     for (size_t i = 0; i < arity; ++i) {
         res.constraints[i] = AttributeConstraint::Equal;
-    }
-    return res;
-}
-
-SearchSignature SearchSignature::getDischarged(const SearchSignature& signature) {
-    SearchSignature res = signature;  // copy original
-    for (size_t i = 0; i < res.arity(); ++i) {
-        if (res[i] == AttributeConstraint::Inequal) {
-            res[i] = AttributeConstraint::None;
-        }
     }
     return res;
 }

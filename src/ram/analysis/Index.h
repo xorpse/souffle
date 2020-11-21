@@ -46,9 +46,11 @@ namespace souffle::ram::analysis {
 
 enum class AttributeConstraint { None, Equal, Inequal };
 
-/** search signature of a RAM operation; each bit represents an attribute of a relation.
- * A one represents that the attribute has an assigned value; a zero represents that
- * no value exists (i.e. attribute is unbounded) in the search. */
+/** Search Signature of a RAM Operation
+ *	Inequal - The attribute has an inequality constraint i.e. 11 <= x <= 13
+ *      Equal   - The attribute has an equality constraint i.e. x = 17
+ *      None    - The attribute no constraint
+ * */
 class SearchSignature {
 public:
     explicit SearchSignature(size_t arity);
@@ -64,13 +66,11 @@ public:
     bool operator!=(const SearchSignature& other) const;
 
     bool empty() const;
-    bool containsEquality() const;
 
     static bool isComparable(const SearchSignature& lhs, const SearchSignature& rhs);
     static bool isSubset(const SearchSignature& lhs, const SearchSignature& rhs);
     static SearchSignature getDelta(const SearchSignature& lhs, const SearchSignature& rhs);
     static SearchSignature getFullSearchSignature(size_t arity);
-    static SearchSignature getDischarged(const SearchSignature& signature);
 
     friend std::ostream& operator<<(std::ostream& out, const SearchSignature& signature);
 
@@ -216,8 +216,6 @@ public:
     using LexOrder = std::vector<AttributeIndex>;
     using OrderCollection = std::vector<LexOrder>;
     using Chain = std::vector<SearchSignature>;
-    // A chain is a vector of SearchSignature to support inserting incomparable elements later
-    // E.g. 1 --> 2 we don't have 1 and 2 as comparable but they form a valid lex-order
     using ChainOrderMap = std::list<Chain>;
 
     class SearchComparator {
@@ -303,14 +301,14 @@ public:
         /* Print searches */
         os << "\tNumber of Searches: " << getSearches().size() << "\n";
 
-        /* print searches */
+        /* Print searches */
         for (auto& search : getSearches()) {
             os << "\t\t";
             os << search;
             os << "\n";
         }
 
-        /* print chains */
+        /* Print chains */
         for (auto& chain : getAllChains()) {
             os << join(chain, "-->") << "\n";
         }
