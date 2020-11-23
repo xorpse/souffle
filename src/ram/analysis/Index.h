@@ -46,11 +46,14 @@ namespace souffle::ram::analysis {
 
 enum class AttributeConstraint { None, Equal, Inequal };
 
-/** search signature of a RAM operation; each bit represents an attribute of a relation.
- * A one represents that the attribute has an assigned value; a zero represents that
- * no value exists (i.e. attribute is unbounded) in the search. */
+/** Search Signature of a RAM Operation
+ *    Inequal - The attribute has an inequality constraint i.e. 11 <= x <= 13
+ *    Equal   - The attribute has an equality constraint i.e. x = 17
+ *    None    - The attribute no constraint
+ * */
 class SearchSignature {
 public:
+    class Iterator;
     explicit SearchSignature(size_t arity);
     size_t arity() const;
 
@@ -64,13 +67,9 @@ public:
     bool operator!=(const SearchSignature& other) const;
 
     bool empty() const;
-    bool containsEquality() const;
 
-    static bool isComparable(const SearchSignature& lhs, const SearchSignature& rhs);
-    static bool isSubset(const SearchSignature& lhs, const SearchSignature& rhs);
     static SearchSignature getDelta(const SearchSignature& lhs, const SearchSignature& rhs);
     static SearchSignature getFullSearchSignature(size_t arity);
-    static SearchSignature getDischarged(const SearchSignature& signature);
 
     friend std::ostream& operator<<(std::ostream& out, const SearchSignature& signature);
 
@@ -84,6 +83,98 @@ public:
             }
             return seed;
         }
+    };
+
+    // raw ptr to begin
+    Iterator begin() const {
+        return Iterator(const_cast<AttributeConstraint*>(constraints.data()));
+    }
+
+    // raw ptr to end
+    Iterator end() const {
+        return Iterator(const_cast<AttributeConstraint*>(constraints.data() + constraints.size()));
+    }
+
+    class Iterator : public std::iterator<std::random_access_iterator_tag, AttributeConstraint> {
+    public:
+        using difference_type =
+                typename std::iterator<std::random_access_iterator_tag, AttributeConstraint>::difference_type;
+
+        Iterator() : it(nullptr) {}
+        Iterator(AttributeConstraint* rhs) : it(rhs) {}
+        Iterator(const Iterator& rhs) : it(rhs.it) {}
+        inline Iterator& operator=(AttributeConstraint* rhs) {
+            it = rhs;
+            return *this;
+        }
+        inline Iterator& operator=(const Iterator& rhs) {
+            it = rhs.it;
+            return *this;
+        }
+        inline Iterator& operator+=(difference_type rhs) {
+            it += rhs;
+            return *this;
+        }
+        inline Iterator& operator-=(difference_type rhs) {
+            it -= rhs;
+            return *this;
+        }
+        inline AttributeConstraint& operator*() const {
+            return *it;
+        }
+        inline AttributeConstraint operator->() const {
+            return *it;
+        }
+        inline AttributeConstraint& operator[](difference_type rhs) const {
+            return it[rhs];
+        }
+
+        inline Iterator& operator++() {
+            ++it;
+            return *this;
+        }
+        inline Iterator& operator--() {
+            --it;
+            return *this;
+        }
+
+        inline difference_type operator-(const Iterator& rhs) const {
+            return {it - rhs.it};
+        }
+        inline Iterator operator+(difference_type rhs) const {
+            return {it + rhs};
+        }
+        inline Iterator operator-(difference_type rhs) const {
+            return {it - rhs};
+        }
+        friend inline Iterator operator+(difference_type lhs, const Iterator& rhs) {
+            return {rhs.it + lhs};
+        }
+        friend inline Iterator operator-(difference_type lhs, const Iterator& rhs) {
+            return {rhs.it - lhs};
+        }
+
+        inline bool operator==(const Iterator& rhs) const {
+            return it == rhs.it;
+        }
+        inline bool operator!=(const Iterator& rhs) const {
+            return it != rhs.it;
+        }
+        inline bool operator>(const Iterator& rhs) const {
+            return it > rhs.it;
+        }
+        inline bool operator<(const Iterator& rhs) const {
+            return it < rhs.it;
+        }
+        inline bool operator>=(const Iterator& rhs) const {
+            return it >= rhs.it;
+        }
+        inline bool operator<=(const Iterator& rhs) const {
+            return it <= rhs.it;
+        }
+
+    private:
+        AttributeConstraint* it;
     };
 
 private:
@@ -185,7 +276,7 @@ private:
     /**
      * distance function of nodes
      */
-    using DistanceMap = std::map<Node, Distance>;
+    using DistanceMap = std::unordered_map<Node, Distance>;
 
     Matchings match;
     Graph graph;
@@ -216,9 +307,7 @@ public:
     using LexOrder = std::vector<AttributeIndex>;
     using OrderCollection = std::vector<LexOrder>;
     using Chain = std::vector<SearchSignature>;
-    // A chain is a vector of SearchSignature to support inserting incomparable elements later
-    // E.g. 1 --> 2 we don't have 1 and 2 as comparable but they form a valid lex-order
-    using ChainOrderMap = std::list<Chain>;
+    using ChainOrderMap = std::vector<Chain>;
 
     class SearchComparator {
     public:
@@ -235,9 +324,11 @@ public:
 
     /** @Brief Add new key to an Index Set */
     inline void addSearch(SearchSignature cols) {
-        if (!cols.empty()) {
-            searches.insert(cols);
+        if (cols.empty()) {
+            return;
         }
+
+        searches.insert(cols);
     }
 
     MinIndexSelection() = default;
@@ -303,14 +394,14 @@ public:
         /* Print searches */
         os << "\tNumber of Searches: " << getSearches().size() << "\n";
 
-        /* print searches */
+        /* Print searches */
         for (auto& search : getSearches()) {
             os << "\t\t";
             os << search;
             os << "\n";
         }
 
-        /* print chains */
+        /* Print chains */
         for (auto& chain : getAllChains()) {
             os << join(chain, "-->") << "\n";
         }
