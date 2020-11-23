@@ -550,7 +550,8 @@ void TypeCheckerImpl::visitBinaryConstraint(const BinaryConstraint& constraint) 
 
     // Skip checks if either side could not be fully deduced
     // The unable-to-deduce-type checker will point out the issue.
-    if (leftTypes.size() != 1 || rightTypes.size() != 1) return;
+    if (leftTypes.isAll() || leftTypes.size() != 1) return;
+    if (rightTypes.isAll() || rightTypes.size() != 1) return;
 
     // Extract types from singleton sets.
     auto& leftType = *typeAnalysis.getTypes(left).begin();
