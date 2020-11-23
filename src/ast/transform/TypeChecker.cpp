@@ -548,11 +548,9 @@ void TypeCheckerImpl::visitBinaryConstraint(const BinaryConstraint& constraint) 
     auto leftTypes = typeAnalysis.getTypes(left);
     auto rightTypes = typeAnalysis.getTypes(right);
 
-    // Skip checks if either side is `Bottom` b/c it just adds noise.
+    // Skip checks if either side could not be fully deduced
     // The unable-to-deduce-type checker will point out the issue.
-    if (leftTypes.empty() || rightTypes.empty() || leftTypes.isAll() || rightTypes.isAll()) return;
-
-    assert((leftTypes.size() == 1) && (rightTypes.size() == 1));
+    if (leftTypes.size() != 1 || rightTypes.size() != 1) return;
 
     // Extract types from singleton sets.
     auto& leftType = *typeAnalysis.getTypes(left).begin();
