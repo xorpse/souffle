@@ -55,8 +55,30 @@ const AttributeConstraint& SearchSignature::operator[](std::size_t pos) const {
 
 // comparison operators
 bool SearchSignature::operator<(const SearchSignature& other) const {
-    assert(constraints.size() == other.constraints.size());
-    return isComparable(*this, other) && isSubset(*this, other);
+    assert(arity() == other.arity());
+    // ignore duplicates
+    if (*this == other) {
+        return false;
+    }
+
+    // (1) LHS is a subset of RHS
+    for (size_t i = 0; i < other.arity(); ++i) {
+        if (constraints[i] != AttributeConstraint::None) {
+            if (other.constraints[i] == AttributeConstraint::None) {
+                return false;
+            }
+        }
+    }
+
+    // (2) If RHS has an inequality then LHS can't have that attribute
+    for (size_t i = 0; i < other.arity(); ++i) {
+        if (other.constraints[i] == AttributeConstraint::Inequal) {
+            if (constraints[i] != AttributeConstraint::None) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 bool SearchSignature::operator==(const SearchSignature& other) const {
@@ -69,61 +91,18 @@ bool SearchSignature::operator!=(const SearchSignature& other) const {
 }
 
 bool SearchSignature::empty() const {
-    size_t len = constraints.size();
-    for (size_t i = 0; i < len; ++i) {
-        if (constraints[i] != AttributeConstraint::None) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool SearchSignature::containsEquality() const {
-    for (auto constraint : constraints) {
-        if (constraint == AttributeConstraint::Equal) {
-            return true;
-        }
-    }
-    return false;
-}
-
-// Note: We have 0 < 1 and 0 < 2 but we cannot say that 1 < 2.
-// The reason for this is to prevent search chains such as 100->101->201 which have no valid lex-order
-bool SearchSignature::isComparable(const SearchSignature& lhs, const SearchSignature& rhs) {
-    assert(lhs.arity() == rhs.arity());
-    if (lhs == rhs) {
-        return true;
-    }
-
-    bool withinDelta = true;
-    for (size_t i = 0; i < rhs.arity(); ++i) {
-        if (rhs[i] == AttributeConstraint::Inequal) {
-            if (lhs[i] != AttributeConstraint::None) {
-                withinDelta = false;
-            }
-        }
-    }
-    return withinDelta;
-}
-
-bool SearchSignature::isSubset(const SearchSignature& lhs, const SearchSignature& rhs) {
-    assert(lhs.arity() == rhs.arity());
-    size_t len = lhs.arity();
-    for (size_t i = 0; i < len; ++i) {
-        if (lhs[i] != AttributeConstraint::None && rhs[i] == AttributeConstraint::None) {
-            return false;
-        }
-    }
-    return true;
+    return std::all_of(constraints.begin(), constraints.end(),
+            [](AttributeConstraint c) { return c == AttributeConstraint::None; });
 }
 
 SearchSignature SearchSignature::getDelta(const SearchSignature& lhs, const SearchSignature& rhs) {
     assert(lhs.arity() == rhs.arity());
     SearchSignature delta(lhs.arity());
     for (size_t i = 0; i < lhs.arity(); ++i) {
-        // if constraints are the same then delta is nothing
+        // if rhs is empty then delta is just lhs
         if (rhs[i] == AttributeConstraint::None) {
             delta.constraints[i] = lhs[i];
+            // otherwise no delta
         } else {
             delta.constraints[i] = AttributeConstraint::None;
         }
@@ -133,19 +112,7 @@ SearchSignature SearchSignature::getDelta(const SearchSignature& lhs, const Sear
 
 SearchSignature SearchSignature::getFullSearchSignature(size_t arity) {
     SearchSignature res(arity);
-    for (size_t i = 0; i < arity; ++i) {
-        res.constraints[i] = AttributeConstraint::Equal;
-    }
-    return res;
-}
-
-SearchSignature SearchSignature::getDischarged(const SearchSignature& signature) {
-    SearchSignature res = signature;  // copy original
-    for (size_t i = 0; i < res.arity(); ++i) {
-        if (res[i] == AttributeConstraint::Inequal) {
-            res[i] = AttributeConstraint::None;
-        }
-    }
+    std::for_each(res.begin(), res.end(), [](auto& constraint) { constraint = AttributeConstraint::Equal; });
     return res;
 }
 
@@ -265,10 +232,7 @@ void MinIndexSelection::solve() {
 
     // map the signatures of each search to a unique index for the matching problem
     AttributeIndex currentIndex = 1;
-    for (SearchSignature s : searches) {
-        if (s.empty()) {
-            continue;
-        }
+    for (auto s : searches) {
         // map the signature to its unique index in each set
         signatureToIndexA.insert({s, currentIndex});
         signatureToIndexB.insert({s, currentIndex + 1});
@@ -279,14 +243,12 @@ void MinIndexSelection::solve() {
     }
 
     // Construct the matching poblem
-    for (auto search : searches) {
-        for (auto itt : searches) {
-            if (search == itt) {
-                continue;
-            }
-
-            if (search < itt) {
-                matching.addEdge(signatureToIndexA[search], signatureToIndexB[itt]);
+    // For each pair of search sets
+    // Draw an edge from LHS to RHS if LHS precedes RHS in the partial order
+    for (auto left : searches) {
+        for (auto right : searches) {
+            if (left < right) {
+                matching.addEdge(signatureToIndexA[left], signatureToIndexB[right]);
             }
         }
     }
@@ -321,10 +283,9 @@ void MinIndexSelection::solve() {
     for (auto chain : chains) {
         for (auto search : chain) {
             int idx = map(search);
-            size_t l = card(search);
 
             SearchSignature k(search.arity());
-            for (size_t i = 0; i < l; i++) {
+            for (size_t i = 0; i < card(search); i++) {
                 k[orders[idx][i]] = AttributeConstraint::Equal;
             }
             for (size_t i = 0; i < search.arity(); ++i) {
@@ -420,15 +381,19 @@ void MinIndexSelection::updateSearch(SearchSignature oldSearch, SearchSignature 
 void MinIndexSelection::removeExtraInequalities() {
     for (auto oldSearch : searches) {
         auto newSearch = oldSearch;
-        bool seenInequality = false;
-        for (size_t i = 0; i < oldSearch.arity(); ++i) {
-            if (oldSearch[i] == AttributeConstraint::Inequal) {
-                if (seenInequality) {
-                    newSearch[i] = AttributeConstraint::None;
-                } else {
-                    seenInequality = true;
-                }
+
+        // find the first inequality (if it exists)
+        auto it = std::find(newSearch.begin(), newSearch.end(), AttributeConstraint::Inequal);
+        // remove all inequalities
+        std::for_each(newSearch.begin(), newSearch.end(), [](auto& constraint) {
+            if (constraint == AttributeConstraint::Inequal) {
+                constraint = AttributeConstraint::None;
             }
+        });
+        // add back the first inequality (if it exists)
+        if (it != newSearch.end()) {
+            auto index = std::distance(newSearch.begin(), it);
+            newSearch[index] = AttributeConstraint::Inequal;
         }
         updateSearch(oldSearch, newSearch);
     }
