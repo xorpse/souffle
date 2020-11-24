@@ -825,7 +825,10 @@ private:
             }
 
             if (isSolution) {
-                std::cout << solution.str();  // print previous solution (if any)
+                // print previous solution (if any)
+                if (solutionCount != 0) {
+                    std::cout << solution.str() << std::endl;
+                }
                 solution.str(std::string());  // reset solution and process
 
                 size_t c = 0;
@@ -842,8 +845,9 @@ private:
                         default: fatal("invalid type: `%c`", var.second.getType());
                     }
 
-                    auto sep = ++c < nameToEquivalence.size() ? ", " : " ";
-                    solution << sep;
+                    if (++c < nameToEquivalence.size()) {
+                        solution << ", ";
+                    }
                 }
 
                 solutionCount++;
