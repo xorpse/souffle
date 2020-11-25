@@ -777,7 +777,7 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
     // Set up the translator
     program = &tu.getProgram();
     symbolTable = mk<SymbolTable>();
-    context = mk<TranslatorContext>(tu);
+    context = mk<TranslatorContext>(*symbolTable, tu);
 
     // Grab all relevant analyses
     ioType = tu.getAnalysis<ast::analysis::IOTypeAnalysis>();

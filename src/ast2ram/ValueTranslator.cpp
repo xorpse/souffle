@@ -19,7 +19,6 @@
 #include "ast/StringConstant.h"
 #include "ast/UserDefinedFunctor.h"
 #include "ast/analysis/Functor.h"
-#include "ast2ram/AstToRamTranslator.h"
 #include "ast2ram/ValueIndex.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"

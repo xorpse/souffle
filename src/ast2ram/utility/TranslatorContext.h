@@ -19,6 +19,10 @@
 #include <cstddef>
 #include <set>
 
+namespace souffle {
+class SymbolTable;
+}
+
 namespace souffle::ast {
 class Clause;
 class Functor;
@@ -41,7 +45,7 @@ namespace souffle::ast2ram {
 
 class TranslatorContext {
 public:
-    TranslatorContext(ast::TranslationUnit& tu);
+    TranslatorContext(const SymbolTable& symbolTable, const ast::TranslationUnit& tu);
 
     /** Relation methods */
     ast::Relation* getRelation(const ast::QualifiedName& name) const;
@@ -76,6 +80,8 @@ private:
     const ast::analysis::RelationDetailCacheAnalysis* relationDetail;
     const ast::analysis::FunctorAnalysis* functorAnalysis;
     Own<ast::SipsMetric> sipsMetric;
+
+    const SymbolTable& symbolTable;
 };
 
 }  // namespace souffle::ast2ram
