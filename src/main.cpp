@@ -57,6 +57,7 @@
 #include "ast/transform/SimplifyAggregateTargetExpression.h"
 #include "ast/transform/UniqueAggregationVariables.h"
 #include "ast2ram/AstToRamTranslator.h"
+#include "ast2ram/ProvenanceTranslator.h"
 #include "config.h"
 #include "interpreter/Engine.h"
 #include "interpreter/ProgInterface.h"
@@ -583,7 +584,9 @@ int main(int argc, char** argv) {
     // ------- execution -------------
     /* translate AST to RAM */
     debugReport.startSection();
-    auto ramTranslationUnit = ast2ram::AstToRamTranslator().translateUnit(*astTranslationUnit);
+    auto ramTranslationUnit = Global::config().has("provenance")
+                                      ? ast2ram::ProvenanceTranslator().translateUnit(*astTranslationUnit)
+                                      : ast2ram::AstToRamTranslator().translateUnit(*astTranslationUnit);
     debugReport.endSection("ast-to-ram", "Translate AST to RAM");
 
     // Apply RAM transforms
