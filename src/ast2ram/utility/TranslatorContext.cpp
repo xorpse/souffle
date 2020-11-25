@@ -14,14 +14,17 @@
 
 #include "ast2ram/utility/TranslatorContext.h"
 #include "Global.h"
+#include "ast/Atom.h"
 #include "ast/QualifiedName.h"
 #include "ast/TranslationUnit.h"
+#include "ast/analysis/AuxArity.h"
 #include "ast/analysis/Functor.h"
 #include "ast/analysis/RecursiveClauses.h"
 #include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/RelationSchedule.h"
 #include "ast/analysis/SCCGraph.h"
 #include "ast/utility/SipsMetric.h"
+#include "souffle/utility/StringUtil.h"
 #include <set>
 
 namespace souffle::ast2ram {
@@ -29,6 +32,7 @@ namespace souffle::ast2ram {
 TranslatorContext::TranslatorContext(SymbolTable& symbolTable, const ast::TranslationUnit& tu)
         : symbolTable(symbolTable) {
     // Set up analyses
+    auxArityAnalysis = tu.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
     recursiveClauses = tu.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
     sccGraph = tu.getAnalysis<ast::analysis::SCCGraphAnalysis>();
     relationSchedule = tu.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
@@ -93,6 +97,21 @@ const std::vector<TypeAttribute>& TranslatorContext::getFunctorArgTypes(
 
 bool TranslatorContext::isStatefulFunctor(const ast::UserDefinedFunctor* udf) const {
     return functorAnalysis->isStateful(udf);
+}
+
+size_t TranslatorContext::getEvaluationArity(const ast::Atom* atom) const {
+    std::string relName = atom->getQualifiedName().toString();
+    if (isPrefix("@info_", relName)) return 0;
+
+    // Get the original relation name
+    if (isPrefix("@delta_", relName)) {
+        relName = stripPrefix("@delta_", relName);
+    } else if (isPrefix("@new_", relName)) {
+        relName = stripPrefix("@new_", relName);
+    }
+
+    const auto* originalRelation = getRelation(ast::QualifiedName(relName));
+    return auxArityAnalysis->getArity(originalRelation);
 }
 
 }  // namespace souffle::ast2ram

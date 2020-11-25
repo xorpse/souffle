@@ -24,6 +24,7 @@ class SymbolTable;
 }
 
 namespace souffle::ast {
+class Atom;
 class Clause;
 class Functor;
 class QualifiedName;
@@ -34,6 +35,7 @@ class UserDefinedFunctor;
 }  // namespace souffle::ast
 
 namespace souffle::ast::analysis {
+class AuxiliaryArityAnalysis;
 class FunctorAnalysis;
 class RecursiveClausesAnalysis;
 class RelationDetailCacheAnalysis;
@@ -73,11 +75,14 @@ public:
         return sipsMetric.get();
     }
 
+    size_t getEvaluationArity(const ast::Atom* atom) const;
+
     SymbolTable& getSymbolTable() const {
         return symbolTable;
     }
 
 private:
+    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis;
     const ast::analysis::RecursiveClausesAnalysis* recursiveClauses;
     const ast::analysis::RelationScheduleAnalysis* relationSchedule;
     const ast::analysis::SCCGraphAnalysis* sccGraph;

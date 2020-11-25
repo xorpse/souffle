@@ -148,7 +148,7 @@ Own<ram::Expression> AstToRamTranslator::translateValue(
 Own<ram::Condition> AstToRamTranslator::translateConstraint(
         const ast::Literal* lit, const ValueIndex& index) const {
     assert(lit != nullptr && "literal should be defined");
-    return ConstraintTranslator::translate(*this, index, *lit);
+    return ConstraintTranslator::translate(*context, index, *lit);
 }
 
 RamDomain AstToRamTranslator::getConstantRamRepresentation(const ast::Constant& constant) const {
