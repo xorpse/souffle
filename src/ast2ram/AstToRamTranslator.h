@@ -28,11 +28,8 @@ class SymbolTable;
 }
 
 namespace souffle::ast {
-class Argument;
-class Atom;
 class Clause;
 class Constant;
-class Literal;
 class Program;
 class Relation;
 class TranslationUnit;
@@ -40,14 +37,11 @@ class TranslationUnit;
 
 namespace souffle::ast::analysis {
 class IOTypeAnalysis;
-class AuxiliaryArityAnalysis;
-class FunctorAnalysis;
 class PolymorphicObjectsAnalysis;
 class TypeEnvironment;
 }  // namespace souffle::ast::analysis
 
 namespace souffle::ram {
-class Condition;
 class Expression;
 class Relation;
 class Sequence;
@@ -57,9 +51,7 @@ class TranslationUnit;
 
 namespace souffle::ast2ram {
 
-struct Location;
 class TranslatorContext;
-class ValueIndex;
 
 class AstToRamTranslator {
 public:
