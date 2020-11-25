@@ -22,6 +22,7 @@
 #include "ast/analysis/RelationDetailCache.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
+#include "ast2ram/ConstraintTranslator.h"
 #include "ast2ram/ProvenanceClauseTranslator.h"
 #include "ast2ram/ValueIndex.h"
 #include "ast2ram/ValueTranslator.h"
@@ -336,7 +337,7 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
             con->apply(varsToArgs);
 
             // translate to a ram::Condition
-            auto condition = AstToRamTranslator::translateConstraint(*context, con, ValueIndex());
+            auto condition = ConstraintTranslator::translate(*context, ValueIndex(), con);
             auto negativeCondition = mk<ram::Negation>(souffle::clone(condition));
 
             appendStmt(searchSequence,

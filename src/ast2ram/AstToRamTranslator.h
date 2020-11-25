@@ -71,8 +71,6 @@ public:
 
     // TODO (azreika): these probably belong more to the clause translator
     size_t getEvaluationArity(const ast::Atom* atom) const;
-    static Own<ram::Condition> translateConstraint(
-            const TranslatorContext& context, const ast::Literal* arg, const ValueIndex& index);
     static Own<ram::Expression> translateConstant(const TranslatorContext& context, const ast::Constant& c);
 
 protected:

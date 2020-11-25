@@ -132,12 +132,6 @@ size_t AstToRamTranslator::getEvaluationArity(const ast::Atom* atom) const {
     return context->getAuxiliaryArity(originalRelation);
 }
 
-Own<ram::Condition> AstToRamTranslator::translateConstraint(
-        const TranslatorContext& context, const ast::Literal* lit, const ValueIndex& index) {
-    assert(lit != nullptr && "literal should be defined");
-    return ConstraintTranslator::translate(context, index, *lit);
-}
-
 RamDomain AstToRamTranslator::getConstantRamRepresentation(
         const TranslatorContext& context, const ast::Constant& constant) {
     if (auto strConstant = dynamic_cast<const ast::StringConstant*>(&constant)) {

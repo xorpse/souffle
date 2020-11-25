@@ -28,6 +28,7 @@
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
 #include "ast2ram/AstToRamTranslator.h"
+#include "ast2ram/ConstraintTranslator.h"
 #include "ast2ram/Location.h"
 #include "ast2ram/ValueIndex.h"
 #include "ast2ram/ValueTranslator.h"
@@ -104,7 +105,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
 
     /* add conditions caused by atoms, negations, and binary relations */
     for (const auto& lit : clause.getBodyLiterals()) {
-        if (auto condition = AstToRamTranslator::translateConstraint(context, lit, *valueIndex)) {
+        if (auto condition = ConstraintTranslator::translate(context, *valueIndex, lit)) {
             op = mk<ram::Filter>(std::move(condition), std::move(op));
         }
     }
@@ -143,7 +144,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
 
             // translate constraints of sub-clause
             for (auto&& lit : agg->getBodyLiterals()) {
-                if (auto newCondition = AstToRamTranslator::translateConstraint(context, lit, *valueIndex)) {
+                if (auto newCondition = ConstraintTranslator::translate(context, *valueIndex, lit)) {
                     addAggCondition(std::move(newCondition));
                 }
             }

@@ -32,8 +32,9 @@
 namespace souffle::ast2ram {
 
 Own<ram::Condition> ConstraintTranslator::translate(
-        const TranslatorContext& context, const ValueIndex& index, const ast::Literal& lit) {
-    return ConstraintTranslator(context, index)(lit);
+        const TranslatorContext& context, const ValueIndex& index, const ast::Literal* lit) {
+    assert(lit != nullptr && "literal should be defined");
+    return ConstraintTranslator(context, index)(*lit);
 }
 
 Own<ram::Condition> ConstraintTranslator::visitAtom(const ast::Atom&) {

@@ -39,7 +39,7 @@ public:
             : context(context), index(index) {}
 
     static Own<ram::Condition> translate(
-            const TranslatorContext& context, const ValueIndex& index, const ast::Literal& lit);
+            const TranslatorContext& context, const ValueIndex& index, const ast::Literal* lit);
 
     /** -- Visitors -- */
     Own<ram::Condition> visitAtom(const ast::Atom&) override;
