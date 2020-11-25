@@ -24,6 +24,7 @@
 #include "ast/utility/Visitor.h"
 #include "ast2ram/ProvenanceClauseTranslator.h"
 #include "ast2ram/ValueIndex.h"
+#include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ram/ExistenceCheck.h"
 #include "ram/Filter.h"
@@ -166,7 +167,7 @@ Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clau
             intermediateClause->addToBody(std::move(constraint));
         }
     }
-    return ProvenanceClauseTranslator(*this).translateClause(*intermediateClause, clause);
+    return ProvenanceClauseTranslator(*context).translateClause(*intermediateClause, clause);
 }
 
 /** make a subroutine to search for subproofs for the non-existence of a tuple */
@@ -334,7 +335,7 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
             con->apply(varsToArgs);
 
             // translate to a ram::Condition
-            auto condition = translateConstraint(con, ValueIndex());
+            auto condition = AstToRamTranslator::translateConstraint(*context, con, ValueIndex());
             auto negativeCondition = mk<ram::Negation>(souffle::clone(condition));
 
             appendStmt(searchSequence,

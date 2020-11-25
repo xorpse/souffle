@@ -146,14 +146,15 @@ Own<ram::Expression> AstToRamTranslator::translateValue(
 }
 
 Own<ram::Condition> AstToRamTranslator::translateConstraint(
-        const ast::Literal* lit, const ValueIndex& index) const {
+        const TranslatorContext& context, const ast::Literal* lit, const ValueIndex& index) {
     assert(lit != nullptr && "literal should be defined");
-    return ConstraintTranslator::translate(*context, index, *lit);
+    return ConstraintTranslator::translate(context, index, *lit);
 }
 
-RamDomain AstToRamTranslator::getConstantRamRepresentation(const ast::Constant& constant) const {
+RamDomain AstToRamTranslator::getConstantRamRepresentation(
+        const TranslatorContext& context, const ast::Constant& constant) {
     if (auto strConstant = dynamic_cast<const ast::StringConstant*>(&constant)) {
-        return symbolTable->lookup(strConstant->getConstant());
+        return context.getSymbolTable().lookup(strConstant->getConstant());
     } else if (isA<ast::NilConstant>(&constant)) {
         return 0;
     } else if (auto* numConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
@@ -170,8 +171,9 @@ RamDomain AstToRamTranslator::getConstantRamRepresentation(const ast::Constant& 
     fatal("unaccounted-for constant");
 }
 
-Own<ram::Expression> AstToRamTranslator::translateConstant(ast::Constant const& c) const {
-    auto const rawConstant = getConstantRamRepresentation(c);
+Own<ram::Expression> AstToRamTranslator::translateConstant(
+        const TranslatorContext& context, ast::Constant const& c) {
+    auto const rawConstant = getConstantRamRepresentation(context, c);
     if (auto* const c_num = dynamic_cast<const ast::NumericConstant*>(&c)) {
         switch (c_num->getFinalType().value()) {
             case ast::NumericConstant::Type::Int: return mk<ram::SignedConstant>(rawConstant);
@@ -199,7 +201,7 @@ Own<ram::Statement> AstToRamTranslator::generateNonRecursiveRelation(const ast::
         }
 
         // Translate clause
-        Own<ram::Statement> rule = ClauseTranslator(*this).translateClause(*clause, *clause);
+        Own<ram::Statement> rule = ClauseTranslator(*context).translateClause(*clause, *clause);
 
         // Add logging
         if (Global::config().has("profile")) {
@@ -346,7 +348,7 @@ Own<ram::Statement> AstToRamTranslator::generateClauseVersion(const std::set<con
     }
 
     // Translate the resultant clause as would be done normally
-    Own<ram::Statement> rule = ClauseTranslator(*this).translateClause(*fixedClause, *cl, version);
+    Own<ram::Statement> rule = ClauseTranslator(*context).translateClause(*fixedClause, *cl, version);
 
     // Add loging
     if (Global::config().has("profile")) {

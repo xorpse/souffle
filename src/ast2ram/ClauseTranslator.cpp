@@ -30,6 +30,7 @@
 #include "ast2ram/AstToRamTranslator.h"
 #include "ast2ram/Location.h"
 #include "ast2ram/ValueIndex.h"
+#include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ram/Aggregate.h"
 #include "ram/Break.h"
@@ -68,7 +69,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
         // translate arguments
         VecOwn<ram::Expression> values;
         for (auto& arg : head->getArguments()) {
-            values.push_back(translator.translateValue(arg, ValueIndex()));
+            values.push_back(AstToRamTranslator::translateValue(context, arg, ValueIndex()));
         }
 
         // create a fact statement
@@ -102,7 +103,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
 
     /* add conditions caused by atoms, negations, and binary relations */
     for (const auto& lit : clause.getBodyLiterals()) {
-        if (auto condition = translator.translateConstraint(lit, *valueIndex)) {
+        if (auto condition = AstToRamTranslator::translateConstraint(context, lit, *valueIndex)) {
             op = mk<ram::Filter>(std::move(condition), std::move(op));
         }
     }
@@ -141,7 +142,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
 
             // translate constraints of sub-clause
             for (auto&& lit : agg->getBodyLiterals()) {
-                if (auto newCondition = translator.translateConstraint(lit, *valueIndex)) {
+                if (auto newCondition = AstToRamTranslator::translateConstraint(context, lit, *valueIndex)) {
                     addAggCondition(std::move(newCondition));
                 }
             }
@@ -177,7 +178,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
                                 break;
                             }
                         }
-                    } else if (auto value = translator.translateValue(arg, *valueIndex)) {
+                    } else if (auto value = AstToRamTranslator::translateValue(context, arg, *valueIndex)) {
                         addAggEqCondition(std::move(value));
                     }
                     ++pos;
@@ -185,7 +186,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
             }
 
             // translate aggregate expression
-            auto expr = translator.translateValue(agg->getTargetExpression(), *valueIndex);
+            auto expr = AstToRamTranslator::translateValue(context, agg->getTargetExpression(), *valueIndex);
 
             // add Ram-Aggregation layer
             op = mk<ram::Aggregate>(std::move(op), agg->getFinalType().value(),
@@ -195,7 +196,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
         } else if (const auto* func = dynamic_cast<const ast::IntrinsicFunctor*>(cur)) {
             VecOwn<ram::Expression> args;
             for (auto&& x : func->getArguments()) {
-                args.push_back(translator.translateValue(x, *valueIndex));
+                args.push_back(AstToRamTranslator::translateValue(context, x, *valueIndex));
             }
 
             auto func_op = [&]() -> ram::NestedIntrinsicOp {
@@ -296,7 +297,7 @@ Own<ram::Operation> ClauseTranslator::createOperation(const ast::Clause& clause)
 
     VecOwn<ram::Expression> values;
     for (ast::Argument* arg : head->getArguments()) {
-        values.push_back(translator.translateValue(arg, *valueIndex));
+        values.push_back(AstToRamTranslator::translateValue(context, arg, *valueIndex));
     }
 
     Own<ram::Operation> project = mk<ram::Project>(headRelationName, std::move(values));
@@ -337,12 +338,12 @@ Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
                     "numeric constant not bound to a type");
             op = mkFilter(numericConstant && numericConstant->getFinalType().value() ==
                                                      ast::NumericConstant::Type::Float,
-                    translator.translateConstant(*constant), pos);
+                    AstToRamTranslator::translateConstant(context, *constant), pos);
         } else if (const auto* functor = dynamic_cast<const ast::Functor*>(argument)) {
             if (constrainByFunctors) {
-                TypeAttribute returnType = translator.getFunctorAnalysis()->getReturnType(functor);
+                TypeAttribute returnType = context.getFunctorReturnType(functor);
                 op = mkFilter(returnType == TypeAttribute::Float,
-                        translator.translateValue(functor, *valueIndex), pos);
+                        AstToRamTranslator::translateValue(context, functor, *valueIndex), pos);
             }
         }
         pos++;
@@ -356,7 +357,7 @@ Own<ast::Clause> ClauseTranslator::getReorderedClause(const ast::Clause& clause,
     if (plan == nullptr) {
         // no plan, so reorder it according to the internal heuristic
         if (auto* reorderedClause = ast::transform::ReorderLiteralsTransformer::reorderClauseWithSips(
-                    *translator.getSipsMetric(), &clause)) {
+                    *context.getSipsMetric(), &clause)) {
             return Own<ast::Clause>(reorderedClause);
         }
         return nullptr;

@@ -35,18 +35,18 @@ class Statement;
 
 namespace souffle::ast2ram {
 
-class AstToRamTranslator;
+class TranslatorContext;
 class ValueIndex;
 
 class ClauseTranslator {
 public:
-    ClauseTranslator(const AstToRamTranslator& translator) : translator(translator) {}
+    ClauseTranslator(const TranslatorContext& context) : context(context) {}
 
     Own<ram::Statement> translateClause(
             const ast::Clause& clause, const ast::Clause& originalClause, const int version = 0);
 
 protected:
-    const AstToRamTranslator& translator;
+    const TranslatorContext& context;
 
     // value index to keep track of references in the loop nest
     Own<ValueIndex> valueIndex = mk<ValueIndex>();

@@ -82,9 +82,10 @@ public:
 
     // TODO (azreika): these probably belong more to the clause translator
     size_t getEvaluationArity(const ast::Atom* atom) const;
-    Own<ram::Condition> translateConstraint(const ast::Literal* arg, const ValueIndex& index) const;
+    static Own<ram::Condition> translateConstraint(
+            const TranslatorContext& context, const ast::Literal* arg, const ValueIndex& index);
     Own<ram::Expression> translateValue(const ast::Argument* arg, const ValueIndex& index) const;
-    Own<ram::Expression> translateConstant(const ast::Constant& c) const;
+    static Own<ram::Expression> translateConstant(const TranslatorContext& context, const ast::Constant& c);
     static Own<ram::Expression> translateValue(
             const TranslatorContext& context, const ast::Argument* arg, const ValueIndex& index);
 
@@ -106,7 +107,8 @@ protected:
             const ast::Relation* baseRelation, std::string ramRelationName) const;
     VecOwn<ram::Relation> createRamRelations(const std::vector<size_t>& sccOrdering) const;
     virtual Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const;
-    RamDomain getConstantRamRepresentation(const ast::Constant& constant) const;
+    static RamDomain getConstantRamRepresentation(
+            const TranslatorContext& context, const ast::Constant& constant);
     Own<ram::Statement> generateClauseVersion(const std::set<const ast::Relation*>& scc,
             const ast::Clause* cl, size_t deltaAtomIdx, size_t version) const;
     Own<ram::Statement> translateRecursiveClauses(
