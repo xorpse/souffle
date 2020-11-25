@@ -130,7 +130,7 @@ size_t AstToRamTranslator::getEvaluationArity(const ast::Atom* atom) const {
     }
 
     const auto* originalRelation = context->getRelation(ast::QualifiedName(relName));
-    return auxArityAnalysis->getArity(originalRelation);
+    return context->getAuxiliaryArity(originalRelation);
 }
 
 Own<ram::Expression> AstToRamTranslator::translateValue(
@@ -669,7 +669,7 @@ Own<ram::Statement> AstToRamTranslator::generateStoreRelation(const ast::Relatio
 Own<ram::Relation> AstToRamTranslator::createRamRelation(
         const ast::Relation* baseRelation, std::string ramRelationName) const {
     auto arity = baseRelation->getArity();
-    auto auxiliaryArity = auxArityAnalysis->getArity(baseRelation);
+    auto auxiliaryArity = context->getAuxiliaryArity(baseRelation);
     auto representation = baseRelation->getRepresentation();
 
     std::vector<std::string> attributeNames;
@@ -719,10 +719,10 @@ void AstToRamTranslator::finaliseAstTypes(ast::Program& program) {
     });
     visitDepthFirst(program, [&](const ast::IntrinsicFunctor& inf) {
         const_cast<ast::IntrinsicFunctor&>(inf).setFinalOpType(polyAnalysis->getOverloadedFunctionOp(&inf));
-        const_cast<ast::IntrinsicFunctor&>(inf).setFinalReturnType(functorAnalysis->getReturnType(&inf));
+        const_cast<ast::IntrinsicFunctor&>(inf).setFinalReturnType(context->getFunctorReturnType(&inf));
     });
     visitDepthFirst(program, [&](const ast::UserDefinedFunctor& udf) {
-        const_cast<ast::UserDefinedFunctor&>(udf).setFinalReturnType(functorAnalysis->getReturnType(&udf));
+        const_cast<ast::UserDefinedFunctor&>(udf).setFinalReturnType(context->getFunctorReturnType(&udf));
     });
 }
 
@@ -790,9 +790,6 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
     // Grab all relevant analyses
     ioType = tu.getAnalysis<ast::analysis::IOTypeAnalysis>();
     typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
-    auxArityAnalysis = tu.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
-    functorAnalysis = tu.getAnalysis<ast::analysis::FunctorAnalysis>();
-    polyAnalysis = tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
 
     // Run the AST preprocessor
     preprocessAstProgram(tu);

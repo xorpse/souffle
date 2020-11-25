@@ -75,6 +75,8 @@ public:
         return sipsMetric.get();
     }
 
+    size_t getAuxiliaryArity(const ast::Atom* atom) const;
+    size_t getAuxiliaryArity(const ast::Relation* relation) const;
     size_t getEvaluationArity(const ast::Atom* atom) const;
 
     SymbolTable& getSymbolTable() const {

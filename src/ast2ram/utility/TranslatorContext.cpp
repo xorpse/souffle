@@ -99,6 +99,14 @@ bool TranslatorContext::isStatefulFunctor(const ast::UserDefinedFunctor* udf) co
     return functorAnalysis->isStateful(udf);
 }
 
+size_t TranslatorContext::getAuxiliaryArity(const ast::Atom* atom) const {
+    return auxArityAnalysis->getArity(atom);
+}
+
+size_t TranslatorContext::getAuxiliaryArity(const ast::Relation* relation) const {
+    return auxArityAnalysis->getArity(relation);
+}
+
 size_t TranslatorContext::getEvaluationArity(const ast::Atom* atom) const {
     std::string relName = atom->getQualifiedName().toString();
     if (isPrefix("@info_", relName)) return 0;

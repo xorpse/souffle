@@ -67,14 +67,6 @@ public:
     AstToRamTranslator();
     ~AstToRamTranslator();
 
-    const ast::analysis::AuxiliaryArityAnalysis* getAuxArityAnalysis() const {
-        return auxArityAnalysis;
-    }
-
-    const ast::analysis::FunctorAnalysis* getFunctorAnalysis() const {
-        return functorAnalysis;
-    }
-
     const ast::SipsMetric* getSipsMetric() const;
 
     /** Translates an AST program into a corresponding RAM program */
@@ -94,10 +86,7 @@ protected:
     Own<TranslatorContext> context;
 
     /** Analyses needed */
-    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
-    const ast::analysis::FunctorAnalysis* functorAnalysis = nullptr;
     const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
-
     const ast::analysis::TypeEnvironment* typeEnv = nullptr;
     const ast::analysis::IOTypeAnalysis* ioType = nullptr;
 

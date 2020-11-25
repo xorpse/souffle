@@ -116,7 +116,7 @@ Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clau
 
     // add constraint for each argument in head of atom
     ast::Atom* head = intermediateClause->getHead();
-    size_t auxiliaryArity = auxArityAnalysis->getArity(head);
+    size_t auxiliaryArity = context->getAuxiliaryArity(head);
     auto args = head->getArguments();
     for (size_t i = 0; i < head->getArity() - auxiliaryArity; i++) {
         auto arg = args[i];
@@ -261,7 +261,7 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
 
     auto makeRamAtomExistenceCheck = [&](ast::Atom* atom) {
         auto relName = getConcreteRelationName(atom->getQualifiedName());
-        size_t auxiliaryArity = auxArityAnalysis->getArity(atom);
+        size_t auxiliaryArity = context->getAuxiliaryArity(atom);
 
         // translate variables to subroutine arguments
         VariablesToArguments varsToArgs(uniqueVariables);
