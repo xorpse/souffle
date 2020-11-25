@@ -16,6 +16,7 @@
 #include "Global.h"
 #include "ast/QualifiedName.h"
 #include "ast/TranslationUnit.h"
+#include "ast/analysis/Functor.h"
 #include "ast/analysis/RecursiveClauses.h"
 #include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/RelationSchedule.h"
@@ -74,6 +75,23 @@ std::set<ast::Clause*> TranslatorContext::getClauses(const ast::QualifiedName& n
 
 ast::Relation* TranslatorContext::getRelation(const ast::QualifiedName& name) const {
     return relationDetail->getRelation(name);
+}
+
+TypeAttribute TranslatorContext::getFunctorReturnType(const ast::Functor* functor) const {
+    return functorAnalysis->getReturnType(functor);
+}
+
+TypeAttribute TranslatorContext::getFunctorArgType(const ast::Functor* functor, size_t idx) const {
+    return functorAnalysis->getArgType(functor, idx);
+}
+
+const std::vector<TypeAttribute>& TranslatorContext::getFunctorArgTypes(
+        const ast::UserDefinedFunctor& udf) const {
+    return functorAnalysis->getArgTypes(udf);
+}
+
+bool TranslatorContext::isStatefulFunctor(const ast::UserDefinedFunctor* udf) const {
+    return functorAnalysis->isStateful(udf);
 }
 
 }  // namespace souffle::ast2ram

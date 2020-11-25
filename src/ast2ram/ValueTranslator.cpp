@@ -21,6 +21,7 @@
 #include "ast/analysis/Functor.h"
 #include "ast2ram/AstToRamTranslator.h"
 #include "ast2ram/ValueIndex.h"
+#include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ram/AutoIncrement.h"
 #include "ram/FloatConstant.h"
@@ -38,9 +39,14 @@
 
 namespace souffle::ast2ram {
 
-Own<ram::Expression> ValueTranslator::translate(const AstToRamTranslator& translator, const ValueIndex& index,
+Own<ram::Expression> ValueTranslator::translate(const TranslatorContext& context, const ValueIndex& index,
         SymbolTable& symTab, const ast::Argument& arg) {
-    return ValueTranslator(translator, index, symTab)(arg);
+    return ValueTranslator(context, index, symTab)(arg);
+}
+
+Own<ram::Expression> ValueTranslator::translateValue(const ast::Argument* arg) const {
+    if (arg == nullptr) return nullptr;
+    return ValueTranslator::translate(context, index, symTab, *arg);
 }
 
 Own<ram::Expression> ValueTranslator::visitVariable(const ast::Variable& var) {
@@ -75,13 +81,13 @@ Own<ram::Expression> ValueTranslator::visitNilConstant(const ast::NilConstant&) 
 }
 
 Own<ram::Expression> ValueTranslator::visitTypeCast(const ast::TypeCast& typeCast) {
-    return translator.translateValue(typeCast.getValue(), index);
+    return translateValue(typeCast.getValue());
 }
 
 Own<ram::Expression> ValueTranslator::visitIntrinsicFunctor(const ast::IntrinsicFunctor& inf) {
     VecOwn<ram::Expression> values;
     for (const auto& cur : inf.getArguments()) {
-        values.push_back(translator.translateValue(cur, index));
+        values.push_back(translateValue(cur));
     }
 
     if (ast::analysis::FunctorAnalysis::isMultiResult(inf)) {
@@ -94,12 +100,12 @@ Own<ram::Expression> ValueTranslator::visitIntrinsicFunctor(const ast::Intrinsic
 Own<ram::Expression> ValueTranslator::visitUserDefinedFunctor(const ast::UserDefinedFunctor& udf) {
     VecOwn<ram::Expression> values;
     for (const auto& cur : udf.getArguments()) {
-        values.push_back(translator.translateValue(cur, index));
+        values.push_back(translateValue(cur));
     }
-    auto returnType = translator.getFunctorAnalysis()->getReturnType(&udf);
-    auto argTypes = translator.getFunctorAnalysis()->getArgTypes(udf);
-    return mk<ram::UserDefinedOperator>(udf.getName(), argTypes, returnType,
-            translator.getFunctorAnalysis()->isStateful(&udf), std::move(values));
+    auto returnType = context.getFunctorReturnType(&udf);
+    auto argTypes = context.getFunctorArgTypes(udf);
+    return mk<ram::UserDefinedOperator>(
+            udf.getName(), argTypes, returnType, context.isStatefulFunctor(&udf), std::move(values));
 }
 
 Own<ram::Expression> ValueTranslator::visitCounter(const ast::Counter&) {
@@ -109,7 +115,7 @@ Own<ram::Expression> ValueTranslator::visitCounter(const ast::Counter&) {
 Own<ram::Expression> ValueTranslator::visitRecordInit(const ast::RecordInit& init) {
     VecOwn<ram::Expression> values;
     for (const auto& cur : init.getArguments()) {
-        values.push_back(translator.translateValue(cur, index));
+        values.push_back(translateValue(cur));
     }
     return mk<ram::PackRecord>(std::move(values));
 }

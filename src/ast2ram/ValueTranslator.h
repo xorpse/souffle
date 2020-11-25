@@ -41,14 +41,15 @@ class Expression;
 namespace souffle::ast2ram {
 
 class AstToRamTranslator;
+class TranslatorContext;
 class ValueIndex;
 
 class ValueTranslator : public ast::Visitor<Own<ram::Expression>> {
 public:
-    ValueTranslator(const AstToRamTranslator& translator, const ValueIndex& index, SymbolTable& symTab)
-            : translator(translator), index(index), symTab(symTab) {}
+    ValueTranslator(const TranslatorContext& context, const ValueIndex& index, SymbolTable& symTab)
+            : context(context), index(index), symTab(symTab) {}
 
-    static Own<ram::Expression> translate(const AstToRamTranslator& translator, const ValueIndex& index,
+    static Own<ram::Expression> translate(const TranslatorContext& context, const ValueIndex& index,
             SymbolTable& symTab, const ast::Argument& arg);
 
     /** -- Visitors -- */
@@ -66,9 +67,11 @@ public:
     Own<ram::Expression> visitSubroutineArgument(const ast::SubroutineArgument& subArg) override;
 
 private:
-    const AstToRamTranslator& translator;
+    const TranslatorContext& context;
     const ValueIndex& index;
     SymbolTable& symTab;
+
+    Own<ram::Expression> translateValue(const ast::Argument* arg) const;
 };
 
 }  // namespace souffle::ast2ram
