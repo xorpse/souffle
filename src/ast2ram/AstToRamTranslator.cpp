@@ -139,6 +139,12 @@ Own<ram::Expression> AstToRamTranslator::translateValue(
     return ValueTranslator::translate(*context, index, *arg);
 }
 
+Own<ram::Expression> AstToRamTranslator::translateValue(
+        const TranslatorContext& context, const ast::Argument* arg, const ValueIndex& index) {
+    if (arg == nullptr) return nullptr;
+    return ValueTranslator::translate(context, index, *arg);
+}
+
 Own<ram::Condition> AstToRamTranslator::translateConstraint(
         const ast::Literal* lit, const ValueIndex& index) const {
     assert(lit != nullptr && "literal should be defined");

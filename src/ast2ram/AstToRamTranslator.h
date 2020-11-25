@@ -85,6 +85,8 @@ public:
     Own<ram::Condition> translateConstraint(const ast::Literal* arg, const ValueIndex& index) const;
     Own<ram::Expression> translateValue(const ast::Argument* arg, const ValueIndex& index) const;
     Own<ram::Expression> translateConstant(const ast::Constant& c) const;
+    static Own<ram::Expression> translateValue(
+            const TranslatorContext& context, const ast::Argument* arg, const ValueIndex& index);
 
 protected:
     const ast::Program* program = nullptr;
