@@ -50,7 +50,7 @@ public:
             : context(context), index(index) {}
 
     static Own<ram::Expression> translate(
-            const TranslatorContext& context, const ValueIndex& index, const ast::Argument& arg);
+            const TranslatorContext& context, const ValueIndex& index, const ast::Argument* arg);
 
     /** -- Visitors -- */
     Own<ram::Expression> visitVariable(const ast::Variable& var) override;

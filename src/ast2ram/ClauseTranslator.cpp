@@ -30,6 +30,7 @@
 #include "ast2ram/AstToRamTranslator.h"
 #include "ast2ram/Location.h"
 #include "ast2ram/ValueIndex.h"
+#include "ast2ram/ValueTranslator.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ram/Aggregate.h"
@@ -69,7 +70,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
         // translate arguments
         VecOwn<ram::Expression> values;
         for (auto& arg : head->getArguments()) {
-            values.push_back(AstToRamTranslator::translateValue(context, arg, ValueIndex()));
+            values.push_back(ValueTranslator::translate(context, ValueIndex(), arg));
         }
 
         // create a fact statement
@@ -178,7 +179,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
                                 break;
                             }
                         }
-                    } else if (auto value = AstToRamTranslator::translateValue(context, arg, *valueIndex)) {
+                    } else if (auto value = ValueTranslator::translate(context, *valueIndex, arg)) {
                         addAggEqCondition(std::move(value));
                     }
                     ++pos;
@@ -186,7 +187,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
             }
 
             // translate aggregate expression
-            auto expr = AstToRamTranslator::translateValue(context, agg->getTargetExpression(), *valueIndex);
+            auto expr = ValueTranslator::translate(context, *valueIndex, agg->getTargetExpression());
 
             // add Ram-Aggregation layer
             op = mk<ram::Aggregate>(std::move(op), agg->getFinalType().value(),
@@ -196,7 +197,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
         } else if (const auto* func = dynamic_cast<const ast::IntrinsicFunctor*>(cur)) {
             VecOwn<ram::Expression> args;
             for (auto&& x : func->getArguments()) {
-                args.push_back(AstToRamTranslator::translateValue(context, x, *valueIndex));
+                args.push_back(ValueTranslator::translate(context, *valueIndex, x));
             }
 
             auto func_op = [&]() -> ram::NestedIntrinsicOp {
@@ -297,7 +298,7 @@ Own<ram::Operation> ClauseTranslator::createOperation(const ast::Clause& clause)
 
     VecOwn<ram::Expression> values;
     for (ast::Argument* arg : head->getArguments()) {
-        values.push_back(AstToRamTranslator::translateValue(context, arg, *valueIndex));
+        values.push_back(ValueTranslator::translate(context, *valueIndex, arg));
     }
 
     Own<ram::Operation> project = mk<ram::Project>(headRelationName, std::move(values));
@@ -343,7 +344,7 @@ Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
             if (constrainByFunctors) {
                 TypeAttribute returnType = context.getFunctorReturnType(functor);
                 op = mkFilter(returnType == TypeAttribute::Float,
-                        AstToRamTranslator::translateValue(context, functor, *valueIndex), pos);
+                        ValueTranslator::translate(context, *valueIndex, functor), pos);
             }
         }
         pos++;

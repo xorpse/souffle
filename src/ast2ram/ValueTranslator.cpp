@@ -39,13 +39,13 @@
 namespace souffle::ast2ram {
 
 Own<ram::Expression> ValueTranslator::translate(
-        const TranslatorContext& context, const ValueIndex& index, const ast::Argument& arg) {
-    return ValueTranslator(context, index)(arg);
+        const TranslatorContext& context, const ValueIndex& index, const ast::Argument* arg) {
+    if (arg == nullptr) return nullptr;
+    return ValueTranslator(context, index)(*arg);
 }
 
 Own<ram::Expression> ValueTranslator::translateValue(const ast::Argument* arg) const {
-    if (arg == nullptr) return nullptr;
-    return ValueTranslator::translate(context, index, *arg);
+    return ValueTranslator::translate(context, index, arg);
 }
 
 Own<ram::Expression> ValueTranslator::visitVariable(const ast::Variable& var) {

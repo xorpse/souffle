@@ -24,6 +24,7 @@
 #include "ast/utility/Visitor.h"
 #include "ast2ram/ProvenanceClauseTranslator.h"
 #include "ast2ram/ValueIndex.h"
+#include "ast2ram/ValueTranslator.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ram/ExistenceCheck.h"
@@ -274,7 +275,7 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
         // add each value (subroutine argument) to the search query
         for (size_t i = 0; i < atom->getArity() - auxiliaryArity; i++) {
             auto arg = atomArgs[i];
-            query.push_back(AstToRamTranslator::translateValue(*context, arg, ValueIndex()));
+            query.push_back(ValueTranslator::translate(*context, ValueIndex(), arg));
         }
 
         // fill up query with nullptrs for the provenance columns
