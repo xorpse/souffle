@@ -38,14 +38,14 @@
 
 namespace souffle::ast2ram {
 
-Own<ram::Expression> ValueTranslator::translate(const TranslatorContext& context, const ValueIndex& index,
-        SymbolTable& symTab, const ast::Argument& arg) {
-    return ValueTranslator(context, index, symTab)(arg);
+Own<ram::Expression> ValueTranslator::translate(
+        const TranslatorContext& context, const ValueIndex& index, const ast::Argument& arg) {
+    return ValueTranslator(context, index)(arg);
 }
 
 Own<ram::Expression> ValueTranslator::translateValue(const ast::Argument* arg) const {
     if (arg == nullptr) return nullptr;
-    return ValueTranslator::translate(context, index, symTab, *arg);
+    return ValueTranslator::translate(context, index, *arg);
 }
 
 Own<ram::Expression> ValueTranslator::visitVariable(const ast::Variable& var) {
@@ -72,7 +72,7 @@ Own<ram::Expression> ValueTranslator::visitNumericConstant(const ast::NumericCon
 }
 
 Own<ram::Expression> ValueTranslator::visitStringConstant(const ast::StringConstant& c) {
-    return mk<ram::SignedConstant>(symTab.lookup(c.getConstant()));
+    return mk<ram::SignedConstant>(context.getSymbolTable().lookup(c.getConstant()));
 }
 
 Own<ram::Expression> ValueTranslator::visitNilConstant(const ast::NilConstant&) {

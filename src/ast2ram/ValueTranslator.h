@@ -46,11 +46,11 @@ class ValueIndex;
 
 class ValueTranslator : public ast::Visitor<Own<ram::Expression>> {
 public:
-    ValueTranslator(const TranslatorContext& context, const ValueIndex& index, SymbolTable& symTab)
-            : context(context), index(index), symTab(symTab) {}
+    ValueTranslator(const TranslatorContext& context, const ValueIndex& index)
+            : context(context), index(index) {}
 
-    static Own<ram::Expression> translate(const TranslatorContext& context, const ValueIndex& index,
-            SymbolTable& symTab, const ast::Argument& arg);
+    static Own<ram::Expression> translate(
+            const TranslatorContext& context, const ValueIndex& index, const ast::Argument& arg);
 
     /** -- Visitors -- */
     Own<ram::Expression> visitVariable(const ast::Variable& var) override;
@@ -69,7 +69,6 @@ public:
 private:
     const TranslatorContext& context;
     const ValueIndex& index;
-    SymbolTable& symTab;
 
     Own<ram::Expression> translateValue(const ast::Argument* arg) const;
 };

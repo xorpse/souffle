@@ -45,7 +45,7 @@ namespace souffle::ast2ram {
 
 class TranslatorContext {
 public:
-    TranslatorContext(const SymbolTable& symbolTable, const ast::TranslationUnit& tu);
+    TranslatorContext(SymbolTable& symbolTable, const ast::TranslationUnit& tu);
 
     /** Relation methods */
     ast::Relation* getRelation(const ast::QualifiedName& name) const;
@@ -73,6 +73,10 @@ public:
         return sipsMetric.get();
     }
 
+    SymbolTable& getSymbolTable() const {
+        return symbolTable;
+    }
+
 private:
     const ast::analysis::RecursiveClausesAnalysis* recursiveClauses;
     const ast::analysis::RelationScheduleAnalysis* relationSchedule;
@@ -81,7 +85,7 @@ private:
     const ast::analysis::FunctorAnalysis* functorAnalysis;
     Own<ast::SipsMetric> sipsMetric;
 
-    const SymbolTable& symbolTable;
+    SymbolTable& symbolTable;
 };
 
 }  // namespace souffle::ast2ram

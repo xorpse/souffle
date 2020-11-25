@@ -136,7 +136,7 @@ size_t AstToRamTranslator::getEvaluationArity(const ast::Atom* atom) const {
 Own<ram::Expression> AstToRamTranslator::translateValue(
         const ast::Argument* arg, const ValueIndex& index) const {
     if (arg == nullptr) return nullptr;
-    return ValueTranslator::translate(*context, index, *symbolTable, *arg);
+    return ValueTranslator::translate(*context, index, *arg);
 }
 
 Own<ram::Condition> AstToRamTranslator::translateConstraint(
