@@ -32,6 +32,9 @@ m4_define([TEST_PROV],[
   # invoke souffle
   AT_CHECK(["$SOUFFLE" FLAGS -D. -F FACTS PROGRAM 0<TESTDIR/TESTNAME.in 1>TESTNAME.out 2>TESTNAME.err], [0])
   SORTED_SAME_FILES([*.csv],[EXPECTEDDIR])
+
+  # provenance output generates a `.' after the final tuple
+  # since tuple output is non-deterministic, this `.' should be decoupled from the tuple
   sed 's/\.$/\n./' TESTNAME.out | sort > TESTNAME.out.generated
   sed 's/\.$/\n./' EXPECTEDDIR/TESTNAME.out | sort > TESTNAME.out.expected
   SAME_FILE([TESTNAME.out.generated],[TESTNAME.out.expected])
