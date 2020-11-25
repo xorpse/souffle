@@ -48,6 +48,7 @@ namespace souffle::ast2ram {
 class TranslatorContext {
 public:
     TranslatorContext(SymbolTable& symbolTable, const ast::TranslationUnit& tu);
+    ~TranslatorContext();
 
     /** Relation methods */
     ast::Relation* getRelation(const ast::QualifiedName& name) const;

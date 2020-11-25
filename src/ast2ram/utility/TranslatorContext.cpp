@@ -46,6 +46,8 @@ TranslatorContext::TranslatorContext(SymbolTable& symbolTable, const ast::Transl
     sipsMetric = ast::SipsMetric::create(sipsChosen, tu);
 }
 
+TranslatorContext::~TranslatorContext() = default;
+
 bool TranslatorContext::isRecursiveClause(const ast::Clause* clause) const {
     return recursiveClauses->recursive(clause);
 }

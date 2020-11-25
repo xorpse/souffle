@@ -43,7 +43,6 @@
 #include "ast/analysis/TopologicallySortedSCCGraph.h"
 #include "ast/analysis/TypeEnvironment.h"
 #include "ast/utility/NodeMapper.h"
-#include "ast/utility/SipsMetric.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
 #include "ast2ram/ClauseTranslator.h"
@@ -771,10 +770,6 @@ void AstToRamTranslator::preprocessAstProgram(ast::TranslationUnit& tu) {
 
     // Replace ADTs with record representatives
     removeADTs(tu);
-}
-
-const ast::SipsMetric* AstToRamTranslator::getSipsMetric() const {
-    return context->getSipsMetric();
 }
 
 Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit& tu) {

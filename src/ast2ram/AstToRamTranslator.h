@@ -35,7 +35,6 @@ class Constant;
 class Literal;
 class Program;
 class Relation;
-class SipsMetric;
 class TranslationUnit;
 }  // namespace souffle::ast
 
@@ -66,8 +65,6 @@ class AstToRamTranslator {
 public:
     AstToRamTranslator();
     ~AstToRamTranslator();
-
-    const ast::SipsMetric* getSipsMetric() const;
 
     /** Translates an AST program into a corresponding RAM program */
     Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
