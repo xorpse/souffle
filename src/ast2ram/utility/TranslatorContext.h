@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "souffle/utility/ContainerUtil.h"
 #include <cstddef>
 #include <set>
 
@@ -21,6 +22,7 @@ namespace souffle::ast {
 class Clause;
 class QualifiedName;
 class Relation;
+class SipsMetric;
 class TranslationUnit;
 }  // namespace souffle::ast
 
@@ -37,14 +39,14 @@ class TranslatorContext {
 public:
     TranslatorContext(ast::TranslationUnit& tu);
 
-    /** Relation-related methods */
+    /** Relation methods */
     ast::Relation* getRelation(const ast::QualifiedName& name) const;
 
-    /** Clause-related methods */
+    /** Clause methods */
     std::set<ast::Clause*> getClauses(const ast::QualifiedName& name) const;
     bool isRecursiveClause(const ast::Clause* clause) const;
 
-    /** SCC-related methods */
+    /** SCC methods */
     size_t getNumberOfSCCs() const;
     bool isRecursiveSCC(size_t scc) const;
     std::set<const ast::Relation*> getExpiredRelations(size_t scc) const;
@@ -52,12 +54,17 @@ public:
     std::set<const ast::Relation*> getInputRelationsInSCC(size_t scc) const;
     std::set<const ast::Relation*> getOutputRelationsInSCC(size_t scc) const;
 
+    /** Analyses */
+    const ast::SipsMetric* getSipsMetric() const {
+        return sipsMetric.get();
+    }
+
 private:
-    const ast::TranslationUnit& tu;
     const ast::analysis::RecursiveClausesAnalysis* recursiveClauses;
     const ast::analysis::RelationScheduleAnalysis* relationSchedule;
     const ast::analysis::SCCGraphAnalysis* sccGraph;
     const ast::analysis::RelationDetailCacheAnalysis* relationDetail;
+    Own<ast::SipsMetric> sipsMetric;
 };
 
 }  // namespace souffle::ast2ram

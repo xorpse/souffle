@@ -765,6 +765,10 @@ void AstToRamTranslator::preprocessAstProgram(ast::TranslationUnit& tu) {
     removeADTs(tu);
 }
 
+const ast::SipsMetric* AstToRamTranslator::getSipsMetric() const {
+    return context->getSipsMetric();
+}
+
 Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit& tu) {
     // Start timer
     auto ram_start = std::chrono::high_resolution_clock::now();
@@ -773,11 +777,6 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
     // Set up the translator
     program = &tu.getProgram();
     symbolTable = mk<SymbolTable>();
-    std::string sipsChosen = "all-bound";
-    if (Global::config().has("RamSIPS")) {
-        sipsChosen = Global::config().get("RamSIPS");
-    }
-    sipsMetric = ast::SipsMetric::create(sipsChosen, tu);
     context = mk<TranslatorContext>(tu);
 
     // Grab all relevant analyses

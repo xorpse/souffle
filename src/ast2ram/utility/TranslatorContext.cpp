@@ -13,21 +13,31 @@
  ***********************************************************************/
 
 #include "ast2ram/utility/TranslatorContext.h"
+#include "Global.h"
 #include "ast/QualifiedName.h"
 #include "ast/TranslationUnit.h"
 #include "ast/analysis/RecursiveClauses.h"
 #include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/RelationSchedule.h"
 #include "ast/analysis/SCCGraph.h"
+#include "ast/utility/SipsMetric.h"
 #include <set>
 
 namespace souffle::ast2ram {
 
-TranslatorContext::TranslatorContext(ast::TranslationUnit& tu) : tu(tu) {
+TranslatorContext::TranslatorContext(ast::TranslationUnit& tu) {
+    // Set up analyses
     recursiveClauses = tu.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
     sccGraph = tu.getAnalysis<ast::analysis::SCCGraphAnalysis>();
     relationSchedule = tu.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
     relationDetail = tu.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
+
+    // Set up SIPS metric
+    std::string sipsChosen = "all-bound";
+    if (Global::config().has("RamSIPS")) {
+        sipsChosen = Global::config().get("RamSIPS");
+    }
+    sipsMetric = ast::SipsMetric::create(sipsChosen, tu);
 }
 
 bool TranslatorContext::isRecursiveClause(const ast::Clause* clause) const {

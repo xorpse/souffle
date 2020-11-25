@@ -75,9 +75,7 @@ public:
         return functorAnalysis;
     }
 
-    const ast::SipsMetric* getSipsMetric() const {
-        return sipsMetric.get();
-    }
+    const ast::SipsMetric* getSipsMetric() const;
 
     /** Translates an AST program into a corresponding RAM program */
     Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
@@ -91,7 +89,6 @@ public:
 protected:
     const ast::Program* program = nullptr;
     Own<TranslatorContext> context;
-    Own<ast::SipsMetric> sipsMetric;
 
     /** Analyses needed */
     const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
