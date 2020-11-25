@@ -72,7 +72,7 @@ Own<ram::Expression> ValueTranslator::visitNumericConstant(const ast::NumericCon
 }
 
 Own<ram::Expression> ValueTranslator::visitStringConstant(const ast::StringConstant& c) {
-    return mk<ram::SignedConstant>(context.getSymbolTable().lookup(c.getConstant()));
+    return mk<ram::SignedConstant>(context.getSymbolTable().lookupExisting(c.getConstant()));
 }
 
 Own<ram::Expression> ValueTranslator::visitNilConstant(const ast::NilConstant&) {

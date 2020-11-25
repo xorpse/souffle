@@ -47,7 +47,7 @@ namespace souffle::ast2ram {
 
 class TranslatorContext {
 public:
-    TranslatorContext(SymbolTable& symbolTable, const ast::TranslationUnit& tu);
+    TranslatorContext(const SymbolTable& symbolTable, const ast::TranslationUnit& tu);
     ~TranslatorContext();
 
     /** Relation methods */
@@ -80,7 +80,7 @@ public:
     size_t getAuxiliaryArity(const ast::Relation* relation) const;
     size_t getEvaluationArity(const ast::Atom* atom) const;
 
-    SymbolTable& getSymbolTable() const {
+    const SymbolTable& getSymbolTable() const {
         return symbolTable;
     }
 
@@ -93,7 +93,7 @@ private:
     const ast::analysis::FunctorAnalysis* functorAnalysis;
     Own<ast::SipsMetric> sipsMetric;
 
-    SymbolTable& symbolTable;
+    const SymbolTable& symbolTable;
 };
 
 }  // namespace souffle::ast2ram

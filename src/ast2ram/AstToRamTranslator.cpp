@@ -115,7 +115,7 @@ void AstToRamTranslator::addRamSubroutine(std::string subroutineID, Own<ram::Sta
 RamDomain AstToRamTranslator::getConstantRamRepresentation(
         const TranslatorContext& context, const ast::Constant& constant) {
     if (auto strConstant = dynamic_cast<const ast::StringConstant*>(&constant)) {
-        return context.getSymbolTable().lookup(strConstant->getConstant());
+        return context.getSymbolTable().lookupExisting(strConstant->getConstant());
     } else if (isA<ast::NilConstant>(&constant)) {
         return 0;
     } else if (auto* numConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
