@@ -274,7 +274,7 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
         // add each value (subroutine argument) to the search query
         for (size_t i = 0; i < atom->getArity() - auxiliaryArity; i++) {
             auto arg = atomArgs[i];
-            query.push_back(translateValue(arg, ValueIndex()));
+            query.push_back(AstToRamTranslator::translateValue(*context, arg, ValueIndex()));
         }
 
         // fill up query with nullptrs for the provenance columns

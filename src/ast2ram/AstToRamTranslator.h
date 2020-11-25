@@ -73,7 +73,6 @@ public:
     size_t getEvaluationArity(const ast::Atom* atom) const;
     static Own<ram::Condition> translateConstraint(
             const TranslatorContext& context, const ast::Literal* arg, const ValueIndex& index);
-    Own<ram::Expression> translateValue(const ast::Argument* arg, const ValueIndex& index) const;
     static Own<ram::Expression> translateConstant(const TranslatorContext& context, const ast::Constant& c);
     static Own<ram::Expression> translateValue(
             const TranslatorContext& context, const ast::Argument* arg, const ValueIndex& index);
