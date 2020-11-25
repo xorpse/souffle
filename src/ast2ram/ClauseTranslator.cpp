@@ -322,28 +322,30 @@ Own<ram::Condition> ClauseTranslator::createCondition(const ast::Clause& origina
 
 Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
         const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op, bool constrainByFunctors) {
-    auto mkFilter = [&](bool isFloatArg, Own<ram::Expression> rhs) {
+    auto mkFilter = [&](bool isFloatArg, Own<ram::Expression> rhs, size_t pos) {
         return mk<ram::Filter>(
                 mk<ram::Constraint>(isFloatArg ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ,
                         mk<ram::TupleElement>(level, pos), std::move(rhs)),
                 std::move(op));
     };
 
+    size_t pos = 0;
     for (const auto* argument : arguments) {
-        if (const auto* constant = dynamic_cast<const ast::Constant*>(a)) {
+        if (const auto* constant = dynamic_cast<const ast::Constant*>(argument)) {
             const auto* numericConstant = dynamic_cast<const ast::NumericConstant*>(constant);
             assert((!numericConstant || numericConstant->getFinalType().has_value()) &&
                     "numeric constant not bound to a type");
             op = mkFilter(numericConstant && numericConstant->getFinalType().value() ==
                                                      ast::NumericConstant::Type::Float,
-                    translator.translateConstant(*c));
+                    translator.translateConstant(*constant), pos);
         } else if (const auto* functor = dynamic_cast<const ast::Functor*>(argument)) {
             if (constrainByFunctors) {
                 TypeAttribute returnType = translator.getFunctorAnalysis()->getReturnType(functor);
-                op = mkFilter(
-                        returnType == TypeAttribute::Float, translator.translateValue(functor, *valueIndex));
+                op = mkFilter(returnType == TypeAttribute::Float,
+                        translator.translateValue(functor, *valueIndex), pos);
             }
         }
+        pos++;
     }
 
     return op;
