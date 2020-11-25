@@ -69,8 +69,7 @@ public:
     /** Translates an AST program into a corresponding RAM program */
     Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
 
-    // TODO (azreika): these probably belong more to the clause translator
-    size_t getEvaluationArity(const ast::Atom* atom) const;
+    // TODO (azreika): this should be split into its own class
     static Own<ram::Expression> translateConstant(const TranslatorContext& context, const ast::Constant& c);
 
 protected:

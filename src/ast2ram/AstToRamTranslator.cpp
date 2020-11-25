@@ -117,21 +117,6 @@ void AstToRamTranslator::addRamSubroutine(std::string subroutineID, Own<ram::Sta
     ramSubroutines[subroutineID] = std::move(subroutine);
 }
 
-size_t AstToRamTranslator::getEvaluationArity(const ast::Atom* atom) const {
-    std::string relName = atom->getQualifiedName().toString();
-    if (isPrefix("@info_", relName)) return 0;
-
-    // Get the original relation name
-    if (isPrefix("@delta_", relName)) {
-        relName = stripPrefix("@delta_", relName);
-    } else if (isPrefix("@new_", relName)) {
-        relName = stripPrefix("@new_", relName);
-    }
-
-    const auto* originalRelation = context->getRelation(ast::QualifiedName(relName));
-    return context->getAuxiliaryArity(originalRelation);
-}
-
 RamDomain AstToRamTranslator::getConstantRamRepresentation(
         const TranslatorContext& context, const ast::Constant& constant) {
     if (auto strConstant = dynamic_cast<const ast::StringConstant*>(&constant)) {
