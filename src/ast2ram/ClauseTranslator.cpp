@@ -56,7 +56,7 @@ namespace souffle::ast2ram {
 Own<ram::Statement> ClauseTranslator::translateClause(
         const ast::Clause& clause, const ast::Clause& originalClause, const int version) {
     if (auto reorderedClause = getReorderedClause(clause, version)) {
-        // translate reordered clause
+        // translate reordered clause instead
         return translateClause(*reorderedClause, originalClause, version);
     }
 
@@ -292,18 +292,17 @@ Own<ram::Statement> ClauseTranslator::translateClause(
 
 Own<ram::Operation> ClauseTranslator::createOperation(const ast::Clause& clause) {
     const auto head = clause.getHead();
+    auto headRelationName = getConcreteRelationName(head->getQualifiedName());
 
     VecOwn<ram::Expression> values;
     for (ast::Argument* arg : head->getArguments()) {
         values.push_back(translator.translateValue(arg, *valueIndex));
     }
 
-    Own<ram::Operation> project =
-            mk<ram::Project>(getConcreteRelationName(head->getQualifiedName()), std::move(values));
+    Own<ram::Operation> project = mk<ram::Project>(headRelationName, std::move(values));
 
     if (head->getArity() == 0) {
-        project = mk<ram::Filter>(mk<ram::EmptinessCheck>(getConcreteRelationName(head->getQualifiedName())),
-                std::move(project));
+        project = mk<ram::Filter>(mk<ram::EmptinessCheck>(headRelationName), std::move(project));
     }
 
     // build up insertion call
@@ -322,9 +321,7 @@ Own<ram::Condition> ClauseTranslator::createCondition(const ast::Clause& origina
 }
 
 Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
-        const std::vector<ast::Argument*>& args, Own<ram::Operation> op, bool constrainByFunctors) {
-    size_t pos = 0;
-
+        const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op, bool constrainByFunctors) {
     auto mkFilter = [&](bool isFloatArg, Own<ram::Expression> rhs) {
         return mk<ram::Filter>(
                 mk<ram::Constraint>(isFloatArg ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ,
@@ -332,22 +329,21 @@ Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
                 std::move(op));
     };
 
-    for (auto* a : args) {
-        if (auto* c = dynamic_cast<const ast::Constant*>(a)) {
-            auto* const c_num = dynamic_cast<const ast::NumericConstant*>(c);
-            assert((!c_num || c_num->getFinalType().has_value()) &&
-                    "numeric constant wasn't bound to a type");
-            op = mkFilter(c_num && c_num->getFinalType().value() == ast::NumericConstant::Type::Float,
+    for (const auto* argument : arguments) {
+        if (const auto* constant = dynamic_cast<const ast::Constant*>(a)) {
+            const auto* numericConstant = dynamic_cast<const ast::NumericConstant*>(constant);
+            assert((!numericConstant || numericConstant->getFinalType().has_value()) &&
+                    "numeric constant not bound to a type");
+            op = mkFilter(numericConstant && numericConstant->getFinalType().value() ==
+                                                     ast::NumericConstant::Type::Float,
                     translator.translateConstant(*c));
-        } else if (auto* func = dynamic_cast<const ast::Functor*>(a)) {
+        } else if (const auto* functor = dynamic_cast<const ast::Functor*>(argument)) {
             if (constrainByFunctors) {
-                TypeAttribute returnType = translator.getFunctorAnalysis()->getReturnType(func);
+                TypeAttribute returnType = translator.getFunctorAnalysis()->getReturnType(functor);
                 op = mkFilter(
-                        returnType == TypeAttribute::Float, translator.translateValue(func, *valueIndex));
+                        returnType == TypeAttribute::Float, translator.translateValue(functor, *valueIndex));
             }
         }
-
-        ++pos;
     }
 
     return op;

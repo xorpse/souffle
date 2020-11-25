@@ -58,7 +58,7 @@ protected:
     virtual Own<ram::Condition> createCondition(const ast::Clause& originalClause);
 
     /** apply constraint filters to a given operation */
-    Own<ram::Operation> filterByConstraints(size_t level, const std::vector<ast::Argument*>& args,
+    Own<ram::Operation> filterByConstraints(size_t level, const std::vector<ast::Argument*>& arguments,
             Own<ram::Operation> op, bool constrainByFunctors = true);
 
 private:
