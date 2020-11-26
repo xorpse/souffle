@@ -709,6 +709,7 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
     // Grab all relevant analyses
     ioType = tu.getAnalysis<ast::analysis::IOTypeAnalysis>();
     typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
+    polyAnalysis = tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
 
     // Run the AST preprocessor
     preprocessAstProgram(tu);
