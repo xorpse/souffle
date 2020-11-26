@@ -461,13 +461,13 @@ Own<ram::Statement> AstToRamTranslator::generateRecursiveStratum(
     return mk<ram::Sequence>(std::move(result));
 }
 
-bool AstToRamTranslator::removeADTs(ast::TranslationUnit& translationUnit) {
+bool AstToRamTranslator::removeADTs(ast::TranslationUnit& tu) {
     struct ADTsFuneral : public ast::NodeMapper {
         mutable bool changed{false};
         const ast::analysis::SumTypeBranchesAnalysis& sumTypesBranches;
 
-        ADTsFuneral(const ast::TranslationUnit& tu)
-                : sumTypesBranches(*tu.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>()) {}
+        ADTsFuneral(const ast::TranslationUnit& translationUnit)
+                : sumTypesBranches(*translationUnit.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>()) {}
 
         Own<ast::Node> operator()(Own<ast::Node> node) const override {
             // Rewrite sub-expressions first
@@ -527,8 +527,8 @@ bool AstToRamTranslator::removeADTs(ast::TranslationUnit& translationUnit) {
         }
     };
 
-    ADTsFuneral mapper(translationUnit);
-    translationUnit.getProgram().apply(mapper);
+    ADTsFuneral mapper(tu);
+    tu.getProgram().apply(mapper);
     return mapper.changed;
 }
 
@@ -619,7 +619,9 @@ VecOwn<ram::Relation> AstToRamTranslator::createRamRelations(const std::vector<s
     return ramRelations;
 }
 
-void AstToRamTranslator::finaliseAstTypes(ast::Program& program) {
+void AstToRamTranslator::finaliseAstTypes(ast::TranslationUnit& tu) {
+    auto& program = tu.getProgram();
+    const auto* polyAnalysis = tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
     visitDepthFirst(program, [&](const ast::NumericConstant& nc) {
         const_cast<ast::NumericConstant&>(nc).setFinalType(polyAnalysis->getInferredType(&nc));
     });
@@ -679,7 +681,7 @@ Own<ram::Sequence> AstToRamTranslator::generateProgram(const ast::TranslationUni
 
 void AstToRamTranslator::preprocessAstProgram(ast::TranslationUnit& tu) {
     // Finalise polymorphic types in the AST
-    finaliseAstTypes(tu.getProgram());
+    finaliseAstTypes(tu);
 
     // Replace ADTs with record representatives
     removeADTs(tu);
@@ -696,7 +698,6 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
 
     // Grab all relevant analyses
     typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
-    polyAnalysis = tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
 
     // Run the AST preprocessor
     preprocessAstProgram(tu);
