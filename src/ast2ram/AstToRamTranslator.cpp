@@ -31,7 +31,6 @@
 #include "ast/RecordInit.h"
 #include "ast/Relation.h"
 #include "ast/TranslationUnit.h"
-#include "ast/analysis/IOType.h"
 #include "ast/analysis/PolymorphicObjects.h"
 #include "ast/analysis/SumTypeBranches.h"
 #include "ast/analysis/TopologicallySortedSCCGraph.h"
@@ -428,10 +427,10 @@ Own<ram::Statement> AstToRamTranslator::generateStratumExitSequence(
 
     // (2) if the size limit has been reached for any limitsize relations
     for (const ast::Relation* rel : scc) {
-        if (ioType->isLimitSize(rel)) {
+        if (context->hasSizeLimit(rel)) {
             Own<ram::Condition> limit = mk<ram::Constraint>(BinaryConstraintOp::GE,
                     mk<ram::RelationSize>(getConcreteRelationName(rel->getQualifiedName())),
-                    mk<ram::SignedConstant>(ioType->getLimitSize(rel)));
+                    mk<ram::SignedConstant>(context->getSizeLimit(rel)));
             appendStmt(exitConditions, mk<ram::Exit>(std::move(limit)));
         }
     }
@@ -696,7 +695,6 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
     context = mk<TranslatorContext>(tu);
 
     // Grab all relevant analyses
-    ioType = tu.getAnalysis<ast::analysis::IOTypeAnalysis>();
     typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
     polyAnalysis = tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
 

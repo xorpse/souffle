@@ -20,6 +20,7 @@
 #include "ast/TranslationUnit.h"
 #include "ast/analysis/AuxArity.h"
 #include "ast/analysis/Functor.h"
+#include "ast/analysis/IOType.h"
 #include "ast/analysis/RecursiveClauses.h"
 #include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/RelationSchedule.h"
@@ -42,6 +43,7 @@ TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
     sccGraph = tu.getAnalysis<ast::analysis::SCCGraphAnalysis>();
     relationSchedule = tu.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
     relationDetail = tu.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
+    ioType = tu.getAnalysis<ast::analysis::IOTypeAnalysis>();
 
     // Set up SIPS metric
     std::string sipsChosen = "all-bound";
@@ -75,6 +77,15 @@ std::vector<ast::Directive*> TranslatorContext::getStoreDirectives(const ast::Qu
 std::vector<ast::Directive*> TranslatorContext::getLoadDirectives(const ast::QualifiedName& name) const {
     return filter(getDirectives(*program, name),
             [&](const ast::Directive* dir) { return dir->getType() == ast::DirectiveType::input; });
+}
+
+bool TranslatorContext::hasSizeLimit(const ast::Relation* relation) const {
+    return ioType->isLimitSize(relation);
+}
+
+size_t TranslatorContext::getSizeLimit(const ast::Relation* relation) const {
+    assert(hasSizeLimit(relation) && "relation does not have a size limit");
+    return ioType->getLimitSize(relation);
 }
 
 const ast::Relation* TranslatorContext::getAtomRelation(const ast::Atom* atom) const {

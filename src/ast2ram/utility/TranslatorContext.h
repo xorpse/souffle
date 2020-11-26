@@ -35,6 +35,7 @@ class UserDefinedFunctor;
 namespace souffle::ast::analysis {
 class AuxiliaryArityAnalysis;
 class FunctorAnalysis;
+class IOTypeAnalysis;
 class RecursiveClausesAnalysis;
 class RelationDetailCacheAnalysis;
 class RelationScheduleAnalysis;
@@ -57,6 +58,8 @@ public:
     const ast::Relation* getAtomRelation(const ast::Atom* atom) const;
     std::vector<ast::Directive*> getStoreDirectives(const ast::QualifiedName& name) const;
     std::vector<ast::Directive*> getLoadDirectives(const ast::QualifiedName& name) const;
+    bool hasSizeLimit(const ast::Relation* relation) const;
+    size_t getSizeLimit(const ast::Relation* relation) const;
 
     /** Clause methods */
     std::set<ast::Clause*> getClauses(const ast::QualifiedName& name) const;
@@ -93,6 +96,7 @@ private:
     const ast::analysis::SCCGraphAnalysis* sccGraph;
     const ast::analysis::RelationDetailCacheAnalysis* relationDetail;
     const ast::analysis::FunctorAnalysis* functorAnalysis;
+    const ast::analysis::IOTypeAnalysis* ioType;
     Own<ast::SipsMetric> sipsMetric;
 };
 

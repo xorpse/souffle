@@ -34,7 +34,6 @@ class TranslationUnit;
 }  // namespace souffle::ast
 
 namespace souffle::ast::analysis {
-class IOTypeAnalysis;
 class PolymorphicObjectsAnalysis;
 class TypeEnvironment;
 }  // namespace souffle::ast::analysis
@@ -65,7 +64,6 @@ protected:
     /** Analyses needed */
     const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
     const ast::analysis::TypeEnvironment* typeEnv = nullptr;
-    const ast::analysis::IOTypeAnalysis* ioType = nullptr;
 
     void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
 
