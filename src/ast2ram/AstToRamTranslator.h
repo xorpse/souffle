@@ -59,7 +59,6 @@ public:
     Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
 
 protected:
-    const ast::Program* program = nullptr;
     Own<TranslatorContext> context;
     Own<SymbolTable> symbolTable;
 

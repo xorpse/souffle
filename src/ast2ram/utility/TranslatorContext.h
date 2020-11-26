@@ -48,8 +48,13 @@ public:
     TranslatorContext(const ast::TranslationUnit& tu);
     ~TranslatorContext();
 
+    const ast::Program* getProgram() const {
+        return program;
+    }
+
     /** Relation methods */
     ast::Relation* getRelation(const ast::QualifiedName& name) const;
+    const ast::Relation* getAtomRelation(const ast::Atom* atom) const;
     std::vector<ast::Directive*> getStoreDirectives(const ast::QualifiedName& name) const;
     std::vector<ast::Directive*> getLoadDirectives(const ast::QualifiedName& name) const;
 

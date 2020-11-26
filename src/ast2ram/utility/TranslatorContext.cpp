@@ -77,6 +77,10 @@ std::vector<ast::Directive*> TranslatorContext::getLoadDirectives(const ast::Qua
             [&](const ast::Directive* dir) { return dir->getType() == ast::DirectiveType::input; });
 }
 
+const ast::Relation* TranslatorContext::getAtomRelation(const ast::Atom* atom) const {
+    return ast::getAtomRelation(atom, program);
+}
+
 std::set<const ast::Relation*> TranslatorContext::getRelationsInSCC(size_t scc) const {
     return sccGraph->getInternalRelations(scc);
 }

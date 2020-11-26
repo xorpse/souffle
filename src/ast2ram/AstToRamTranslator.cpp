@@ -262,7 +262,7 @@ Own<ram::Statement> AstToRamTranslator::generateClauseVersion(const std::set<con
 
     // Add in negated deltas for later recursive relations to simulate prev construct
     for (size_t j = deltaAtomIdx + 1; j < atoms.size(); j++) {
-        const auto* atomRelation = getAtomRelation(atoms[j], program);
+        const auto* atomRelation = context->getAtomRelation(atoms[j]);
         if (contains(scc, atomRelation)) {
             auto deltaAtom = souffle::clone(ast::getBodyLiterals<ast::Atom>(*fixedClause)[j]);
             deltaAtom->setQualifiedName(getDeltaRelationName(atomRelation->getQualifiedName()));
@@ -316,7 +316,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
             const auto* atom = atoms[i];
 
             // Only interested in atoms within the same SCC
-            if (!contains(scc, getAtomRelation(atom, program))) {
+            if (!contains(scc, context->getAtomRelation(atom))) {
                 continue;
             }
 
@@ -692,7 +692,6 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
 
     /* -- Set-up -- */
     // Set up the translator
-    program = &tu.getProgram();
     symbolTable = mk<SymbolTable>();
     context = mk<TranslatorContext>(tu);
 

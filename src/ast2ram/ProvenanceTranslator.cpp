@@ -47,7 +47,7 @@ Own<ram::Sequence> ProvenanceTranslator::generateProgram(const ast::TranslationU
     auto ramProgram = AstToRamTranslator::generateProgram(translationUnit);
 
     // add subroutines for each clause
-    addProvenanceClauseSubroutines(program);
+    addProvenanceClauseSubroutines(context->getProgram());
 
     return ramProgram;
 }
