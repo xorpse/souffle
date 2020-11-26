@@ -85,7 +85,7 @@ private:
     void createValueIndex(const ast::Clause& clause);
 
     static RamDomain getConstantRamRepresentation(SymbolTable& symbolTable, const ast::Constant& constant);
-    static Own<ram::Expression> translateConstant(SymbolTable& symbolTable, const ast::Constant& c);
+    static Own<ram::Expression> translateConstant(SymbolTable& symbolTable, const ast::Constant& constant);
 };
 
 }  // namespace souffle::ast2ram

@@ -353,10 +353,11 @@ RamDomain ClauseTranslator::getConstantRamRepresentation(
     fatal("unaccounted-for constant");
 }
 
-Own<ram::Expression> ClauseTranslator::translateConstant(SymbolTable& symbolTable, const ast::Constant& c) {
-    auto const rawConstant = getConstantRamRepresentation(symbolTable, c);
-    if (auto* const c_num = dynamic_cast<const ast::NumericConstant*>(&c)) {
-        switch (c_num->getFinalType().value()) {
+Own<ram::Expression> ClauseTranslator::translateConstant(
+        SymbolTable& symbolTable, const ast::Constant& constant) {
+    auto rawConstant = getConstantRamRepresentation(symbolTable, constant);
+    if (const auto* numericConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
+        switch (numericConstant->getFinalType().value()) {
             case ast::NumericConstant::Type::Int: return mk<ram::SignedConstant>(rawConstant);
             case ast::NumericConstant::Type::Uint: return mk<ram::UnsignedConstant>(rawConstant);
             case ast::NumericConstant::Type::Float: return mk<ram::FloatConstant>(rawConstant);
