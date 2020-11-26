@@ -58,7 +58,6 @@ public:
     /** Translates an AST program into a corresponding RAM program */
     Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
 
-    // TODO (azreika): this should be split into its own class
 protected:
     const ast::Program* program = nullptr;
     Own<TranslatorContext> context;
