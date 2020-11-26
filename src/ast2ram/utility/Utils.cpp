@@ -22,7 +22,7 @@
 #include "ast/UnnamedVariable.h"
 #include "ast/Variable.h"
 #include "ast/utility/Utils.h"
-#include "ast2ram/Location.h"
+#include "ast2ram/utility/Location.h"
 #include "ram/Clear.h"
 #include "ram/TupleElement.h"
 #include "souffle/utility/ContainerUtil.h"
