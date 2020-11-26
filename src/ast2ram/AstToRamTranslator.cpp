@@ -34,7 +34,6 @@
 #include "ast/analysis/PolymorphicObjects.h"
 #include "ast/analysis/SumTypeBranches.h"
 #include "ast/analysis/TopologicallySortedSCCGraph.h"
-#include "ast/analysis/TypeEnvironment.h"
 #include "ast/utility/NodeMapper.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
@@ -588,7 +587,7 @@ Own<ram::Relation> AstToRamTranslator::createRamRelation(
     std::vector<std::string> attributeTypeQualifiers;
     for (const auto& attribute : baseRelation->getAttributes()) {
         attributeNames.push_back(attribute->getName());
-        attributeTypeQualifiers.push_back(getTypeQualifier(typeEnv->getType(attribute->getTypeName())));
+        attributeTypeQualifiers.push_back(context->getAttributeTypeQualifier(attribute->getTypeName()));
     }
 
     return mk<ram::Relation>(
@@ -695,9 +694,6 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
     // Set up the translator
     symbolTable = mk<SymbolTable>();
     context = mk<TranslatorContext>(tu);
-
-    // Grab all relevant analyses
-    typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
 
     // Run the AST preprocessor
     preprocessAstProgram(tu);

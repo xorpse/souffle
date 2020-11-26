@@ -25,6 +25,8 @@
 #include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/RelationSchedule.h"
 #include "ast/analysis/SCCGraph.h"
+#include "ast/analysis/TypeEnvironment.h"
+#include "ast/analysis/TypeSystem.h"
 #include "ast/utility/SipsMetric.h"
 #include "ast/utility/Utils.h"
 #include "souffle/utility/FunctionalUtil.h"
@@ -44,6 +46,7 @@ TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
     relationSchedule = tu.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
     relationDetail = tu.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
     ioType = tu.getAnalysis<ast::analysis::IOTypeAnalysis>();
+    typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
 
     // Set up SIPS metric
     std::string sipsChosen = "all-bound";
@@ -57,6 +60,10 @@ TranslatorContext::~TranslatorContext() = default;
 
 bool TranslatorContext::isRecursiveClause(const ast::Clause* clause) const {
     return recursiveClauses->recursive(clause);
+}
+
+std::string TranslatorContext::getAttributeTypeQualifier(const ast::QualifiedName& name) const {
+    return getTypeQualifier(typeEnv->getType(name));
 }
 
 size_t TranslatorContext::getNumberOfSCCs() const {

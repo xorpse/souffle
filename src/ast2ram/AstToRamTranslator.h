@@ -33,10 +33,6 @@ class Relation;
 class TranslationUnit;
 }  // namespace souffle::ast
 
-namespace souffle::ast::analysis {
-class TypeEnvironment;
-}  // namespace souffle::ast::analysis
-
 namespace souffle::ram {
 class Relation;
 class Sequence;
@@ -60,11 +56,7 @@ protected:
     Own<TranslatorContext> context;
     Own<SymbolTable> symbolTable;
 
-    /** Analyses needed */
-    const ast::analysis::TypeEnvironment* typeEnv = nullptr;
-
     void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
-
     Own<ram::Relation> createRamRelation(
             const ast::Relation* baseRelation, std::string ramRelationName) const;
     VecOwn<ram::Relation> createRamRelations(const std::vector<size_t>& sccOrdering) const;

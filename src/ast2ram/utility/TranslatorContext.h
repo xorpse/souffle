@@ -40,6 +40,7 @@ class RecursiveClausesAnalysis;
 class RelationDetailCacheAnalysis;
 class RelationScheduleAnalysis;
 class SCCGraphAnalysis;
+class TypeEnvironment;
 }  // namespace souffle::ast::analysis
 
 namespace souffle::ast2ram {
@@ -58,6 +59,7 @@ public:
     const ast::Relation* getAtomRelation(const ast::Atom* atom) const;
     std::vector<ast::Directive*> getStoreDirectives(const ast::QualifiedName& name) const;
     std::vector<ast::Directive*> getLoadDirectives(const ast::QualifiedName& name) const;
+    std::string getAttributeTypeQualifier(const ast::QualifiedName& name) const;
     bool hasSizeLimit(const ast::Relation* relation) const;
     size_t getSizeLimit(const ast::Relation* relation) const;
 
@@ -97,6 +99,7 @@ private:
     const ast::analysis::RelationDetailCacheAnalysis* relationDetail;
     const ast::analysis::FunctorAnalysis* functorAnalysis;
     const ast::analysis::IOTypeAnalysis* ioType;
+    const ast::analysis::TypeEnvironment* typeEnv;
     Own<ast::SipsMetric> sipsMetric;
 };
 
