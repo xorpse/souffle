@@ -185,7 +185,7 @@ public:
 
         /** Obtains a pair of iterators representing the given range within this index. */
         souffle::range<iterator> range(const Tuple& low, const Tuple& high) {
-            if (cmp.less(low, high) != true) {
+            if (cmp(low, high) > 0) {
                 return {data.end(), data.end()};
             }
             return {data.lower_bound(low, hints), data.upper_bound(high, hints)};
@@ -270,7 +270,7 @@ public:
      * Returns a pair of iterators covering elements in the range [low,high)
      */
     souffle::range<iterator> range(const Tuple& low, const Tuple& high) const {
-        if (cmp.less(low, high) != true) {
+        if (cmp(low, high) > 0) {
             return {data.end(), data.end()};
         }
         return {data.lower_bound(low), data.upper_bound(high)};
