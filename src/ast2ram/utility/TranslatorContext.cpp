@@ -32,6 +32,7 @@ namespace souffle::ast2ram {
 TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
     // Set up analyses
     auxArityAnalysis = tu.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
+    functorAnalysis = tu.getAnalysis<ast::analysis::FunctorAnalysis>();
     recursiveClauses = tu.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
     sccGraph = tu.getAnalysis<ast::analysis::SCCGraphAnalysis>();
     relationSchedule = tu.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
