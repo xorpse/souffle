@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include "souffle/RamTypes.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <map>
 #include <set>
@@ -29,7 +28,6 @@ class SymbolTable;
 
 namespace souffle::ast {
 class Clause;
-class Constant;
 class Program;
 class Relation;
 class TranslationUnit;
@@ -42,7 +40,6 @@ class TypeEnvironment;
 }  // namespace souffle::ast::analysis
 
 namespace souffle::ram {
-class Expression;
 class Relation;
 class Sequence;
 class Statement;
@@ -62,8 +59,6 @@ public:
     Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
 
     // TODO (azreika): this should be split into its own class
-    static Own<ram::Expression> translateConstant(const TranslatorContext& context, const ast::Constant& c);
-
 protected:
     const ast::Program* program = nullptr;
     Own<TranslatorContext> context;
@@ -79,8 +74,6 @@ protected:
             const ast::Relation* baseRelation, std::string ramRelationName) const;
     VecOwn<ram::Relation> createRamRelations(const std::vector<size_t>& sccOrdering) const;
     virtual Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const;
-    static RamDomain getConstantRamRepresentation(
-            const TranslatorContext& context, const ast::Constant& constant);
     Own<ram::Statement> generateClauseVersion(const std::set<const ast::Relation*>& scc,
             const ast::Clause* cl, size_t deltaAtomIdx, size_t version) const;
     Own<ram::Statement> translateRecursiveClauses(

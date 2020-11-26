@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "souffle/RamTypes.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <map>
 #include <vector>
@@ -23,12 +24,14 @@
 namespace souffle::ast {
 class Argument;
 class Clause;
+class Constant;
 class Node;
 }  // namespace souffle::ast
 
 namespace souffle::ram {
-class Operation;
 class Condition;
+class Expression;
+class Operation;
 class Relation;
 class Statement;
 }  // namespace souffle::ram
@@ -74,6 +77,10 @@ private:
             size_t relationArity);
 
     void createValueIndex(const ast::Clause& clause);
+
+    static RamDomain getConstantRamRepresentation(
+            const TranslatorContext& context, const ast::Constant& constant);
+    static Own<ram::Expression> translateConstant(const TranslatorContext& context, const ast::Constant& c);
 };
 
 }  // namespace souffle::ast2ram

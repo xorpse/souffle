@@ -18,9 +18,12 @@
 #include "Global.h"
 #include "ast/Aggregator.h"
 #include "ast/Clause.h"
+#include "ast/Constant.h"
 #include "ast/IntrinsicFunctor.h"
+#include "ast/NilConstant.h"
 #include "ast/NumericConstant.h"
 #include "ast/RecordInit.h"
+#include "ast/StringConstant.h"
 #include "ast/UnnamedVariable.h"
 #include "ast/analysis/Functor.h"
 #include "ast/analysis/PolymorphicObjects.h"
@@ -40,15 +43,19 @@
 #include "ram/Constraint.h"
 #include "ram/EmptinessCheck.h"
 #include "ram/Filter.h"
+#include "ram/FloatConstant.h"
 #include "ram/Negation.h"
 #include "ram/NestedIntrinsicOperator.h"
 #include "ram/Project.h"
 #include "ram/Query.h"
 #include "ram/Relation.h"
 #include "ram/Scan.h"
+#include "ram/SignedConstant.h"
 #include "ram/TupleElement.h"
 #include "ram/UnpackRecord.h"
+#include "ram/UnsignedConstant.h"
 #include "ram/utility/Utils.h"
+#include "souffle/SymbolTable.h"
 #include "souffle/utility/StringUtil.h"
 #include <map>
 #include <vector>
@@ -323,6 +330,40 @@ Own<ram::Condition> ClauseTranslator::createCondition(const ast::Clause& origina
     return nullptr;
 }
 
+RamDomain ClauseTranslator::getConstantRamRepresentation(
+        const TranslatorContext& context, const ast::Constant& constant) {
+    if (auto strConstant = dynamic_cast<const ast::StringConstant*>(&constant)) {
+        return context.getSymbolTable().lookupExisting(strConstant->getConstant());
+    } else if (isA<ast::NilConstant>(&constant)) {
+        return 0;
+    } else if (auto* numConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
+        assert(numConstant->getFinalType().has_value() && "constant should have valid type");
+        switch (numConstant->getFinalType().value()) {
+            case ast::NumericConstant::Type::Int:
+                return RamSignedFromString(numConstant->getConstant(), nullptr, 0);
+            case ast::NumericConstant::Type::Uint:
+                return RamUnsignedFromString(numConstant->getConstant(), nullptr, 0);
+            case ast::NumericConstant::Type::Float: return RamFloatFromString(numConstant->getConstant());
+        }
+    }
+
+    fatal("unaccounted-for constant");
+}
+
+Own<ram::Expression> ClauseTranslator::translateConstant(
+        const TranslatorContext& context, ast::Constant const& c) {
+    auto const rawConstant = getConstantRamRepresentation(context, c);
+    if (auto* const c_num = dynamic_cast<const ast::NumericConstant*>(&c)) {
+        switch (c_num->getFinalType().value()) {
+            case ast::NumericConstant::Type::Int: return mk<ram::SignedConstant>(rawConstant);
+            case ast::NumericConstant::Type::Uint: return mk<ram::UnsignedConstant>(rawConstant);
+            case ast::NumericConstant::Type::Float: return mk<ram::FloatConstant>(rawConstant);
+        }
+        fatal("unaccounted-for constant");
+    }
+    return mk<ram::SignedConstant>(rawConstant);
+}
+
 Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
         const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op, bool constrainByFunctors) {
     auto mkFilter = [&](bool isFloatArg, Own<ram::Expression> rhs, size_t pos) {
@@ -340,7 +381,7 @@ Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
                     "numeric constant not bound to a type");
             op = mkFilter(numericConstant && numericConstant->getFinalType().value() ==
                                                      ast::NumericConstant::Type::Float,
-                    AstToRamTranslator::translateConstant(context, *constant), pos);
+                    translateConstant(context, *constant), pos);
         } else if (const auto* functor = dynamic_cast<const ast::Functor*>(argument)) {
             if (constrainByFunctors) {
                 TypeAttribute returnType = context.getFunctorReturnType(functor);

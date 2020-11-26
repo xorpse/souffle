@@ -23,16 +23,13 @@
 #include "ast/BinaryConstraint.h"
 #include "ast/BranchInit.h"
 #include "ast/Clause.h"
-#include "ast/Constant.h"
 #include "ast/Directive.h"
 #include "ast/Negation.h"
-#include "ast/NilConstant.h"
 #include "ast/Node.h"
 #include "ast/NumericConstant.h"
 #include "ast/Program.h"
 #include "ast/RecordInit.h"
 #include "ast/Relation.h"
-#include "ast/StringConstant.h"
 #include "ast/TranslationUnit.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/PolymorphicObjects.h"
@@ -57,7 +54,6 @@
 #include "ram/Expression.h"
 #include "ram/Extend.h"
 #include "ram/Filter.h"
-#include "ram/FloatConstant.h"
 #include "ram/IO.h"
 #include "ram/LogRelationTimer.h"
 #include "ram/LogSize.h"
@@ -110,40 +106,6 @@ AstToRamTranslator::~AstToRamTranslator() = default;
 void AstToRamTranslator::addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine) {
     assert(!contains(ramSubroutines, subroutineID) && "subroutine ID should not already exist");
     ramSubroutines[subroutineID] = std::move(subroutine);
-}
-
-RamDomain AstToRamTranslator::getConstantRamRepresentation(
-        const TranslatorContext& context, const ast::Constant& constant) {
-    if (auto strConstant = dynamic_cast<const ast::StringConstant*>(&constant)) {
-        return context.getSymbolTable().lookupExisting(strConstant->getConstant());
-    } else if (isA<ast::NilConstant>(&constant)) {
-        return 0;
-    } else if (auto* numConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
-        assert(numConstant->getFinalType().has_value() && "constant should have valid type");
-        switch (numConstant->getFinalType().value()) {
-            case ast::NumericConstant::Type::Int:
-                return RamSignedFromString(numConstant->getConstant(), nullptr, 0);
-            case ast::NumericConstant::Type::Uint:
-                return RamUnsignedFromString(numConstant->getConstant(), nullptr, 0);
-            case ast::NumericConstant::Type::Float: return RamFloatFromString(numConstant->getConstant());
-        }
-    }
-
-    fatal("unaccounted-for constant");
-}
-
-Own<ram::Expression> AstToRamTranslator::translateConstant(
-        const TranslatorContext& context, ast::Constant const& c) {
-    auto const rawConstant = getConstantRamRepresentation(context, c);
-    if (auto* const c_num = dynamic_cast<const ast::NumericConstant*>(&c)) {
-        switch (c_num->getFinalType().value()) {
-            case ast::NumericConstant::Type::Int: return mk<ram::SignedConstant>(rawConstant);
-            case ast::NumericConstant::Type::Uint: return mk<ram::UnsignedConstant>(rawConstant);
-            case ast::NumericConstant::Type::Float: return mk<ram::FloatConstant>(rawConstant);
-        }
-        fatal("unaccounted-for constant");
-    }
-    return mk<ram::SignedConstant>(rawConstant);
 }
 
 Own<ram::Statement> AstToRamTranslator::generateClearRelation(const ast::Relation* relation) const {
