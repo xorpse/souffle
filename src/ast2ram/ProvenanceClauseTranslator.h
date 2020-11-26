@@ -33,7 +33,8 @@ class TranslatorContext;
 
 class ProvenanceClauseTranslator : public ClauseTranslator {
 public:
-    ProvenanceClauseTranslator(const TranslatorContext& context) : ClauseTranslator(context) {}
+    ProvenanceClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable)
+            : ClauseTranslator(context, symbolTable) {}
 
 protected:
     Own<ram::Operation> createOperation(const ast::Clause& clause) override;

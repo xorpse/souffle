@@ -169,7 +169,7 @@ Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clau
             intermediateClause->addToBody(std::move(constraint));
         }
     }
-    return ProvenanceClauseTranslator(*context).translateClause(*intermediateClause, clause);
+    return ProvenanceClauseTranslator(*context, *symbolTable).translateClause(*intermediateClause, clause);
 }
 
 /** make a subroutine to search for subproofs for the non-existence of a tuple */
@@ -276,7 +276,7 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
         // add each value (subroutine argument) to the search query
         for (size_t i = 0; i < atom->getArity() - auxiliaryArity; i++) {
             auto arg = atomArgs[i];
-            query.push_back(ValueTranslator::translate(*context, ValueIndex(), arg));
+            query.push_back(ValueTranslator::translate(*context, *symbolTable, ValueIndex(), arg));
         }
 
         // fill up query with nullptrs for the provenance columns
@@ -337,7 +337,7 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
             con->apply(varsToArgs);
 
             // translate to a ram::Condition
-            auto condition = ConstraintTranslator::translate(*context, ValueIndex(), con);
+            auto condition = ConstraintTranslator::translate(*context, *symbolTable, ValueIndex(), con);
             auto negativeCondition = mk<ram::Negation>(souffle::clone(condition));
 
             appendStmt(searchSequence,

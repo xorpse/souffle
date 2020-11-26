@@ -31,10 +31,10 @@
 
 namespace souffle::ast2ram {
 
-Own<ram::Condition> ConstraintTranslator::translate(
-        const TranslatorContext& context, const ValueIndex& index, const ast::Literal* lit) {
+Own<ram::Condition> ConstraintTranslator::translate(const TranslatorContext& context,
+        SymbolTable& symbolTable, const ValueIndex& index, const ast::Literal* lit) {
     assert(lit != nullptr && "literal should be defined");
-    return ConstraintTranslator(context, index)(*lit);
+    return ConstraintTranslator(context, symbolTable, index)(*lit);
 }
 
 Own<ram::Condition> ConstraintTranslator::visitAtom(const ast::Atom&) {
@@ -43,8 +43,8 @@ Own<ram::Condition> ConstraintTranslator::visitAtom(const ast::Atom&) {
 
 Own<ram::Condition> ConstraintTranslator::visitBinaryConstraint(const ast::BinaryConstraint& binRel) {
     assert(binRel.getFinalType().has_value() && "binary constraint has unset type");
-    auto valLHS = ValueTranslator::translate(context, index, binRel.getLHS());
-    auto valRHS = ValueTranslator::translate(context, index, binRel.getRHS());
+    auto valLHS = ValueTranslator::translate(context, symbolTable, index, binRel.getLHS());
+    auto valRHS = ValueTranslator::translate(context, symbolTable, index, binRel.getRHS());
     return mk<ram::Constraint>(binRel.getFinalType().value(), std::move(valLHS), std::move(valRHS));
 }
 
@@ -57,7 +57,7 @@ Own<ram::Condition> ConstraintTranslator::visitProvenanceNegation(const ast::Pro
 
     auto args = atom->getArguments();
     for (size_t i = 0; i < arity; i++) {
-        values.push_back(ValueTranslator::translate(context, index, args[i]));
+        values.push_back(ValueTranslator::translate(context, symbolTable, index, args[i]));
     }
     // we don't care about the provenance columns when doing the existence check
     if (Global::config().has("provenance")) {
@@ -65,7 +65,7 @@ Own<ram::Condition> ConstraintTranslator::visitProvenanceNegation(const ast::Pro
         values.push_back(mk<ram::UndefValue>());
         // add the height annotation for provenanceNotExists
         for (size_t height = 1; height < auxiliaryArity; height++) {
-            values.push_back(ValueTranslator::translate(context, index, args[arity + height]));
+            values.push_back(ValueTranslator::translate(context, symbolTable, index, args[arity + height]));
         }
     }
     return mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(
@@ -87,7 +87,7 @@ Own<ram::Condition> ConstraintTranslator::visitNegation(const ast::Negation& neg
     VecOwn<ram::Expression> values;
     auto args = atom->getArguments();
     for (size_t i = 0; i < arity; i++) {
-        values.push_back(ValueTranslator::translate(context, index, args[i]));
+        values.push_back(ValueTranslator::translate(context, symbolTable, index, args[i]));
     }
     for (size_t i = 0; i < auxiliaryArity; i++) {
         values.push_back(mk<ram::UndefValue>());

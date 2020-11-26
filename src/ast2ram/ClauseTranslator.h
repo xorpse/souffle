@@ -21,6 +21,10 @@
 #include <map>
 #include <vector>
 
+namespace souffle {
+class SymbolTable;
+}
+
 namespace souffle::ast {
 class Argument;
 class Clause;
@@ -43,13 +47,15 @@ class ValueIndex;
 
 class ClauseTranslator {
 public:
-    ClauseTranslator(const TranslatorContext& context) : context(context) {}
+    ClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable)
+            : context(context), symbolTable(symbolTable) {}
 
     Own<ram::Statement> translateClause(
             const ast::Clause& clause, const ast::Clause& originalClause, const int version = 0);
 
 protected:
     const TranslatorContext& context;
+    SymbolTable& symbolTable;
 
     // value index to keep track of references in the loop nest
     Own<ValueIndex> valueIndex = mk<ValueIndex>();
@@ -78,9 +84,8 @@ private:
 
     void createValueIndex(const ast::Clause& clause);
 
-    static RamDomain getConstantRamRepresentation(
-            const TranslatorContext& context, const ast::Constant& constant);
-    static Own<ram::Expression> translateConstant(const TranslatorContext& context, const ast::Constant& c);
+    static RamDomain getConstantRamRepresentation(SymbolTable& symbolTable, const ast::Constant& constant);
+    static Own<ram::Expression> translateConstant(SymbolTable& symbolTable, const ast::Constant& c);
 };
 
 }  // namespace souffle::ast2ram

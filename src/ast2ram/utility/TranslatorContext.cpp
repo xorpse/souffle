@@ -29,8 +29,7 @@
 
 namespace souffle::ast2ram {
 
-TranslatorContext::TranslatorContext(const SymbolTable& symbolTable, const ast::TranslationUnit& tu)
-        : symbolTable(symbolTable) {
+TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
     // Set up analyses
     auxArityAnalysis = tu.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
     recursiveClauses = tu.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();

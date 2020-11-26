@@ -19,10 +19,6 @@
 #include <cstddef>
 #include <set>
 
-namespace souffle {
-class SymbolTable;
-}
-
 namespace souffle::ast {
 class Atom;
 class Clause;
@@ -47,7 +43,7 @@ namespace souffle::ast2ram {
 
 class TranslatorContext {
 public:
-    TranslatorContext(const SymbolTable& symbolTable, const ast::TranslationUnit& tu);
+    TranslatorContext(const ast::TranslationUnit& tu);
     ~TranslatorContext();
 
     /** Relation methods */
@@ -80,10 +76,6 @@ public:
     size_t getAuxiliaryArity(const ast::Relation* relation) const;
     size_t getEvaluationArity(const ast::Atom* atom) const;
 
-    const SymbolTable& getSymbolTable() const {
-        return symbolTable;
-    }
-
 private:
     const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis;
     const ast::analysis::RecursiveClausesAnalysis* recursiveClauses;
@@ -92,8 +84,6 @@ private:
     const ast::analysis::RelationDetailCacheAnalysis* relationDetail;
     const ast::analysis::FunctorAnalysis* functorAnalysis;
     Own<ast::SipsMetric> sipsMetric;
-
-    const SymbolTable& symbolTable;
 };
 
 }  // namespace souffle::ast2ram

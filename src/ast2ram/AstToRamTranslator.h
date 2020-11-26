@@ -61,6 +61,7 @@ public:
 protected:
     const ast::Program* program = nullptr;
     Own<TranslatorContext> context;
+    Own<SymbolTable> symbolTable;
 
     /** Analyses needed */
     const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
@@ -118,7 +119,6 @@ protected:
 
 private:
     std::map<std::string, Own<ram::Statement>> ramSubroutines;
-    Own<SymbolTable> symbolTable;
 };
 
 }  // namespace souffle::ast2ram

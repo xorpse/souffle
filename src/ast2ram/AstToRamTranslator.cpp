@@ -124,7 +124,7 @@ Own<ram::Statement> AstToRamTranslator::generateNonRecursiveRelation(const ast::
         }
 
         // Translate clause
-        Own<ram::Statement> rule = ClauseTranslator(*context).translateClause(*clause, *clause);
+        Own<ram::Statement> rule = ClauseTranslator(*context, *symbolTable).translateClause(*clause, *clause);
 
         // Add logging
         if (Global::config().has("profile")) {
@@ -271,7 +271,8 @@ Own<ram::Statement> AstToRamTranslator::generateClauseVersion(const std::set<con
     }
 
     // Translate the resultant clause as would be done normally
-    Own<ram::Statement> rule = ClauseTranslator(*context).translateClause(*fixedClause, *cl, version);
+    Own<ram::Statement> rule =
+            ClauseTranslator(*context, *symbolTable).translateClause(*fixedClause, *cl, version);
 
     // Add loging
     if (Global::config().has("profile")) {
@@ -704,7 +705,7 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
     // Set up the translator
     program = &tu.getProgram();
     symbolTable = mk<SymbolTable>();
-    context = mk<TranslatorContext>(*symbolTable, tu);
+    context = mk<TranslatorContext>(tu);
 
     // Grab all relevant analyses
     ioType = tu.getAnalysis<ast::analysis::IOTypeAnalysis>();
