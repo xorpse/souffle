@@ -22,7 +22,9 @@
 namespace souffle::ast {
 class Atom;
 class Clause;
+class Directive;
 class Functor;
+class Program;
 class QualifiedName;
 class Relation;
 class SipsMetric;
@@ -48,6 +50,8 @@ public:
 
     /** Relation methods */
     ast::Relation* getRelation(const ast::QualifiedName& name) const;
+    std::vector<ast::Directive*> getStoreDirectives(const ast::QualifiedName& name) const;
+    std::vector<ast::Directive*> getLoadDirectives(const ast::QualifiedName& name) const;
 
     /** Clause methods */
     std::set<ast::Clause*> getClauses(const ast::QualifiedName& name) const;
@@ -77,6 +81,7 @@ public:
     size_t getEvaluationArity(const ast::Atom* atom) const;
 
 private:
+    const ast::Program* program;
     const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis;
     const ast::analysis::RecursiveClausesAnalysis* recursiveClauses;
     const ast::analysis::RelationScheduleAnalysis* relationSchedule;

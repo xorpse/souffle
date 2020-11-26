@@ -535,12 +535,7 @@ bool AstToRamTranslator::removeADTs(ast::TranslationUnit& translationUnit) {
 
 Own<ram::Statement> AstToRamTranslator::generateLoadRelation(const ast::Relation* relation) const {
     VecOwn<ram::Statement> loadStmts;
-    for (const auto* load : getDirectives(*program, relation->getQualifiedName())) {
-        // Must be a load
-        if (load->getType() != ast::DirectiveType::input) {
-            continue;
-        }
-
+    for (const auto* load : context->getLoadDirectives(relation->getQualifiedName())) {
         // Set up the corresponding directive map
         std::map<std::string, std::string> directives;
         for (const auto& [key, value] : load->getParameters()) {
@@ -563,13 +558,7 @@ Own<ram::Statement> AstToRamTranslator::generateLoadRelation(const ast::Relation
 
 Own<ram::Statement> AstToRamTranslator::generateStoreRelation(const ast::Relation* relation) const {
     VecOwn<ram::Statement> storeStmts;
-    for (const auto* store : getDirectives(*program, relation->getQualifiedName())) {
-        // Must be a storage relation
-        if (store->getType() != ast::DirectiveType::printsize &&
-                store->getType() != ast::DirectiveType::output) {
-            continue;
-        }
-
+    for (const auto* store : context->getStoreDirectives(relation->getQualifiedName())) {
         // Set up the corresponding directive map
         std::map<std::string, std::string> directives;
         for (const auto& [key, value] : store->getParameters()) {
