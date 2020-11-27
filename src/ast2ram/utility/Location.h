@@ -27,6 +27,7 @@ struct Location {
     const int element;
     std::string relation;
 
+    // TODO: should probably be size_t
     Location(int ident, int elem, std::string rel = "")
             : identifier(ident), element(elem), relation(std::move(rel)) {}
 
