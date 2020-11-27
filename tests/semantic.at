@@ -58,16 +58,20 @@ m4_define([TEST_EVAL_JSON],[
   m4_define([EXPECTEDDIR], [TESTDIR$4])
   # invoke souffle
   AT_CHECK(["$SOUFFLE" FLAGS -D. -F FACTS PROGRAM 1>TESTNAME.out 2>TESTNAME.err], [0])
-  sed 's/\(@<:@@:>@,@:>@\)$/\n\1/' TESTNAME.out | sort > TESTNAME.out.generated
-  sed 's/\(@<:@@:>@,@:>@\)$/\n\1/' EXPECTEDDIR/TESTNAME.out | sort > TESTNAME.out.expected
+  sed 's/\(@<:@@:>@,@:>@\)$/\
+\1/' TESTNAME.out | sort > TESTNAME.out.generated
+  sed 's/\(@<:@@:>@,@:>@\)$/\
+\1/' EXPECTEDDIR/TESTNAME.out | sort > TESTNAME.out.expected
   SAME_FILE([TESTNAME.out.generated],[TESTNAME.out.expected])
 
   for i in *.json
   do
     if ls "$i" 2>&1 > /dev/null;
     then
-      sed 's/\(@<:@@:>@,@:>@\)$/\n\1/' $i | sort > $i.generated
-      sed 's/\(@<:@@:>@,@:>@\)$/\n\1/' EXPECTEDDIR/$i | sort > $i.expected
+      sed 's/\(@<:@@:>@,@:>@\)$/\
+\1/' $i | sort > $i.generated
+      sed 's/\(@<:@@:>@,@:>@\)$/\
+\1/' EXPECTEDDIR/$i | sort > $i.expected
       SAME_FILE([$i.generated],[$i.expected])
     fi
   done
