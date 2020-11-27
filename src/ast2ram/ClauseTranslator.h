@@ -50,8 +50,9 @@ public:
     ClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable)
             : context(context), symbolTable(symbolTable) {}
 
+    /** Generate RAM code for a clause */
     Own<ram::Statement> translateClause(
-            const ast::Clause& clause, const ast::Clause& originalClause, const int version = 0);
+            const ast::Clause& clause, const ast::Clause& originalClause, int version = 0);
 
 protected:
     const TranslatorContext& context;
@@ -63,7 +64,7 @@ protected:
     // current nesting level
     int level = 0;
 
-    virtual Own<ram::Operation> createOperation(const ast::Clause& clause);
+    virtual Own<ram::Operation> createProjection(const ast::Clause& clause);
     virtual Own<ram::Condition> createCondition(const ast::Clause& originalClause);
 
     /** apply constraint filters to a given operation */
@@ -83,6 +84,22 @@ private:
             size_t relationArity);
 
     void createValueIndex(const ast::Clause& clause);
+
+    // Add equivalence constraints imposed by variable bindings
+    Own<ram::Operation> addVariableBindingConstraints(Own<ram::Operation> op);
+
+    // Add constraints imposed by the body literals
+    Own<ram::Operation> addBodyLiteralConstraints(const ast::Clause& clause, Own<ram::Operation> op);
+
+    // Add aggregator conditions
+    Own<ram::Operation> addAggregatorConstraints(Own<ram::Operation> op);
+
+    // Add generator levels
+    Own<ram::Operation> addGeneratorLevels(Own<ram::Operation> op);
+
+    // Build operation bottom-up
+    Own<ram::Operation> buildFinalOperation(const ast::Clause& clause, const ast::Clause& originalClause,
+            int version, Own<ram::Operation> op);
 
     static RamDomain getConstantRamRepresentation(SymbolTable& symbolTable, const ast::Constant& constant);
     static Own<ram::Expression> translateConstant(SymbolTable& symbolTable, const ast::Constant& constant);

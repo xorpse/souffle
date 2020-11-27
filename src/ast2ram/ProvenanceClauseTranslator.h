@@ -37,7 +37,7 @@ public:
             : ClauseTranslator(context, symbolTable) {}
 
 protected:
-    Own<ram::Operation> createOperation(const ast::Clause& clause) override;
+    Own<ram::Operation> createProjection(const ast::Clause& clause) override;
     Own<ram::Condition> createCondition(const ast::Clause& originalClause) override;
 };
 }  // namespace souffle::ast2ram

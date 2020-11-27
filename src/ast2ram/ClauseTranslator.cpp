@@ -62,26 +62,24 @@
 
 namespace souffle::ast2ram {
 
-/** generate RAM code for a clause */
 Own<ram::Statement> ClauseTranslator::translateClause(
-        const ast::Clause& clause, const ast::Clause& originalClause, const int version) {
+        const ast::Clause& clause, const ast::Clause& originalClause, int version) {
     if (auto reorderedClause = getReorderedClause(clause, version)) {
         // translate reordered clause instead
         return translateClause(*reorderedClause, originalClause, version);
     }
 
-    // get extract some details
-    const ast::Atom* head = clause.getHead();
-
-    // handle facts
+    // Handle facts
     if (isFact(clause)) {
-        // translate arguments
+        const auto* head = clause.getHead();
+
+        // Translate arguments
         VecOwn<ram::Expression> values;
         for (auto& arg : head->getArguments()) {
             values.push_back(ValueTranslator::translate(context, symbolTable, ValueIndex(), arg));
         }
 
-        // create a fact statement
+        // Create a fact statement
         return mk<ram::Query>(
                 mk<ram::Project>(getConcreteRelationName(head->getQualifiedName()), std::move(values)));
     }
@@ -91,55 +89,138 @@ Own<ram::Statement> ClauseTranslator::translateClause(
 
     createValueIndex(clause);
 
-    // -- create RAM statement --
+    /* -- create RAM statement -- */
 
-    Own<ram::Operation> op = createOperation(clause);
+    // Create the projection statement
+    Own<ram::Operation> op = createProjection(clause);
 
-    /* add equivalence constraints imposed by variable binding */
-    for (const auto& cur : valueIndex->getVariableReferences()) {
-        // the first appearance
-        const Location& first = *cur.second.begin();
-        // all other appearances
-        for (const Location& loc : cur.second) {
-            if (first != loc && !valueIndex->isGenerator(loc.identifier)) {
+    // Set up the main operations in the clause
+    op = addVariableBindingConstraints(std::move(op));
+    op = addBodyLiteralConstraints(clause, std::move(op));
+    op = addAggregatorConstraints(std::move(op));
+    op = addGeneratorLevels(std::move(op));
+    op = buildFinalOperation(clause, originalClause, version, std::move(op));
+
+    // Generate the final RAM insert statement
+    Own<ram::Condition> cond = createCondition(originalClause);
+    if (cond != nullptr) {
+        return mk<ram::Query>(mk<ram::Filter>(std::move(cond), std::move(op)));
+    } else {
+        return mk<ram::Query>(std::move(op));
+    }
+}
+
+Own<ram::Operation> ClauseTranslator::addVariableBindingConstraints(Own<ram::Operation> op) {
+    for (const auto& [_, references] : valueIndex->getVariableReferences()) {
+        // Equate the first appearance to all other appearances
+        assert(!references.empty() && "variable should appear at least once");
+        const auto& first = *references.begin();
+        for (const auto& reference : references) {
+            if (first != reference && !valueIndex->isGenerator(reference.identifier)) {
                 // FIXME: equiv' for float types (`FEQ`)
                 op = mk<ram::Filter>(mk<ram::Constraint>(BinaryConstraintOp::EQ, makeRamTupleElement(first),
-                                             makeRamTupleElement(loc)),
+                                             makeRamTupleElement(reference)),
                         std::move(op));
             }
         }
     }
+    return op;
+}
 
-    /* add conditions caused by atoms, negations, and binary relations */
-    for (const auto& lit : clause.getBodyLiterals()) {
-        if (auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
-            op = mk<ram::Filter>(std::move(condition), std::move(op));
-        }
+Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause) {
+    const auto head = clause.getHead();
+    auto headRelationName = getConcreteRelationName(head->getQualifiedName());
+
+    VecOwn<ram::Expression> values;
+    for (ast::Argument* arg : head->getArguments()) {
+        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, arg));
     }
 
-    // add aggregator conditions
-    size_t curLevel = op_nesting.size() - 1;
-    for (auto it = op_nesting.rbegin(); it != op_nesting.rend(); ++it, --curLevel) {
-        const ast::Node* cur = *it;
+    Own<ram::Operation> project = mk<ram::Project>(headRelationName, std::move(values));
+
+    if (head->getArity() == 0) {
+        project = mk<ram::Filter>(mk<ram::EmptinessCheck>(headRelationName), std::move(project));
+    }
+
+    // build up insertion call
+    return project;  // start with innermost
+}
+
+Own<ram::Operation> ClauseTranslator::buildFinalOperation(
+        const ast::Clause& clause, const ast::Clause& originalClause, int version, Own<ram::Operation> op) {
+    const ast::Atom* head = clause.getHead();
+
+    // build operation bottom-up
+    while (!op_nesting.empty()) {
+        // get next operator
+        const ast::Node* cur = op_nesting.back();
+        op_nesting.pop_back();
+
+        // get current nesting level
+        auto level = op_nesting.size();
 
         if (const auto* atom = dynamic_cast<const ast::Atom*>(cur)) {
             // add constraints
-            size_t pos = 0;
-            for (auto arg : atom->getArguments()) {
-                if (auto* agg = dynamic_cast<ast::Aggregator*>(arg)) {
-                    auto loc = valueIndex->getGeneratorLoc(*agg);
-                    // FIXME: equiv' for float types (`FEQ`)
-                    op = mk<ram::Filter>(
-                            mk<ram::Constraint>(BinaryConstraintOp::EQ, mk<ram::TupleElement>(curLevel, pos),
-                                    makeRamTupleElement(loc)),
+            // TODO: do we wish to enable constraints by header functor? record inits do so...
+            op = filterByConstraints(level, atom->getArguments(), std::move(op), false);
+
+            // check whether all arguments are unnamed variables
+            bool isAllArgsUnnamed = true;
+            for (auto* argument : atom->getArguments()) {
+                if (!isA<ast::UnnamedVariable>(argument)) {
+                    isAllArgsUnnamed = false;
+                }
+            }
+
+            // add check for emptiness for an atom
+            op = mk<ram::Filter>(mk<ram::Negation>(mk<ram::EmptinessCheck>(
+                                         getConcreteRelationName(atom->getQualifiedName()))),
+                    std::move(op));
+
+            // add a scan level
+            if (atom->getArity() != 0 && !isAllArgsUnnamed) {
+                if (head->getArity() == 0) {
+                    op = mk<ram::Break>(mk<ram::Negation>(mk<ram::EmptinessCheck>(
+                                                getConcreteRelationName(head->getQualifiedName()))),
                             std::move(op));
                 }
-                ++pos;
+                if (Global::config().has("profile")) {
+                    std::stringstream ss;
+                    ss << head->getQualifiedName();
+                    ss.str("");
+                    ss << "@frequency-atom" << ';';
+                    ss << originalClause.getHead()->getQualifiedName() << ';';
+                    ss << version << ';';
+                    ss << stringify(toString(clause)) << ';';
+                    ss << stringify(toString(*atom)) << ';';
+                    ss << stringify(toString(originalClause)) << ';';
+                    ss << level << ';';
+                    op = mk<ram::Scan>(getConcreteRelationName(atom->getQualifiedName()), level,
+                            std::move(op), ss.str());
+                } else {
+                    op = mk<ram::Scan>(
+                            getConcreteRelationName(atom->getQualifiedName()), level, std::move(op));
+                }
             }
+
+            // TODO: support constants in nested records!
+        } else if (const auto* rec = dynamic_cast<const ast::RecordInit*>(cur)) {
+            // add constant constraints
+            op = filterByConstraints(level, rec->getArguments(), std::move(op));
+
+            // add an unpack level
+            const Location& loc = valueIndex->getDefinitionPoint(*rec);
+            op = mk<ram::UnpackRecord>(
+                    std::move(op), level, makeRamTupleElement(loc), rec->getArguments().size());
+        } else {
+            fatal("Unsupported AST node for creation of scan-level!");
         }
     }
 
-    // add generator levels
+    return op;
+}
+
+Own<ram::Operation> ClauseTranslator::addGeneratorLevels(Own<ram::Operation> op) {
     --level;
     for (auto* cur : reverse(generators)) {
         if (auto agg = dynamic_cast<const ast::Aggregator*>(cur)) {
@@ -227,99 +308,38 @@ Own<ram::Statement> ClauseTranslator::translateClause(
         --level;
     }
 
-    // build operation bottom-up
-    while (!op_nesting.empty()) {
-        // get next operator
-        const ast::Node* cur = op_nesting.back();
-        op_nesting.pop_back();
-
-        // get current nesting level
-        auto level = op_nesting.size();
-
-        if (const auto* atom = dynamic_cast<const ast::Atom*>(cur)) {
-            // add constraints
-            // TODO: do we wish to enable constraints by header functor? record inits do so...
-            op = filterByConstraints(level, atom->getArguments(), std::move(op), false);
-
-            // check whether all arguments are unnamed variables
-            bool isAllArgsUnnamed = true;
-            for (auto* argument : atom->getArguments()) {
-                if (!isA<ast::UnnamedVariable>(argument)) {
-                    isAllArgsUnnamed = false;
-                }
-            }
-
-            // add check for emptiness for an atom
-            op = mk<ram::Filter>(mk<ram::Negation>(mk<ram::EmptinessCheck>(
-                                         getConcreteRelationName(atom->getQualifiedName()))),
-                    std::move(op));
-
-            // add a scan level
-            if (atom->getArity() != 0 && !isAllArgsUnnamed) {
-                if (head->getArity() == 0) {
-                    op = mk<ram::Break>(mk<ram::Negation>(mk<ram::EmptinessCheck>(
-                                                getConcreteRelationName(head->getQualifiedName()))),
-                            std::move(op));
-                }
-                if (Global::config().has("profile")) {
-                    std::stringstream ss;
-                    ss << head->getQualifiedName();
-                    ss.str("");
-                    ss << "@frequency-atom" << ';';
-                    ss << originalClause.getHead()->getQualifiedName() << ';';
-                    ss << version << ';';
-                    ss << stringify(toString(clause)) << ';';
-                    ss << stringify(toString(*atom)) << ';';
-                    ss << stringify(toString(originalClause)) << ';';
-                    ss << level << ';';
-                    op = mk<ram::Scan>(getConcreteRelationName(atom->getQualifiedName()), level,
-                            std::move(op), ss.str());
-                } else {
-                    op = mk<ram::Scan>(
-                            getConcreteRelationName(atom->getQualifiedName()), level, std::move(op));
-                }
-            }
-
-            // TODO: support constants in nested records!
-        } else if (const auto* rec = dynamic_cast<const ast::RecordInit*>(cur)) {
-            // add constant constraints
-            op = filterByConstraints(level, rec->getArguments(), std::move(op));
-
-            // add an unpack level
-            const Location& loc = valueIndex->getDefinitionPoint(*rec);
-            op = mk<ram::UnpackRecord>(
-                    std::move(op), level, makeRamTupleElement(loc), rec->getArguments().size());
-        } else {
-            fatal("Unsupported AST node for creation of scan-level!");
-        }
-    }
-
-    /* generate the final RAM Insert statement */
-    Own<ram::Condition> cond = createCondition(originalClause);
-    if (cond != nullptr) {
-        return mk<ram::Query>(mk<ram::Filter>(std::move(cond), std::move(op)));
-    } else {
-        return mk<ram::Query>(std::move(op));
-    }
+    return op;
 }
 
-Own<ram::Operation> ClauseTranslator::createOperation(const ast::Clause& clause) {
-    const auto head = clause.getHead();
-    auto headRelationName = getConcreteRelationName(head->getQualifiedName());
-
-    VecOwn<ram::Expression> values;
-    for (ast::Argument* arg : head->getArguments()) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, arg));
+Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
+        const ast::Clause& clause, Own<ram::Operation> op) {
+    for (const auto& lit : clause.getBodyLiterals()) {
+        if (auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
+            op = mk<ram::Filter>(std::move(condition), std::move(op));
+        }
     }
+    return op;
+}
 
-    Own<ram::Operation> project = mk<ram::Project>(headRelationName, std::move(values));
-
-    if (head->getArity() == 0) {
-        project = mk<ram::Filter>(mk<ram::EmptinessCheck>(headRelationName), std::move(project));
+Own<ram::Operation> ClauseTranslator::addAggregatorConstraints(Own<ram::Operation> op) {
+    for (int curLevel = op_nesting.size() - 1; curLevel >= 0; curLevel--) {
+        const auto* cur = op_nesting.at(curLevel);
+        if (const auto* atom = dynamic_cast<const ast::Atom*>(cur)) {
+            const auto& args = atom->getArguments();
+            for (size_t i = 0; i < args.size(); i++) {
+                const auto* arg = args.at(i);
+                if (auto* agg = dynamic_cast<const ast::Aggregator*>(arg)) {
+                    auto loc = valueIndex->getGeneratorLoc(*agg);
+                    // FIXME: equiv' for float types (`FEQ`)
+                    op = mk<ram::Filter>(
+                            mk<ram::Constraint>(BinaryConstraintOp::EQ, mk<ram::TupleElement>(curLevel, i),
+                                    makeRamTupleElement(loc)),
+                            std::move(op));
+                }
+            }
+        }
     }
-
-    // build up insertion call
-    return project;  // start with innermost
+    return op;
 }
 
 Own<ram::Condition> ClauseTranslator::createCondition(const ast::Clause& originalClause) {
