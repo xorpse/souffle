@@ -29,11 +29,12 @@ class Operation;
 
 namespace souffle::ast2ram {
 
-class AstToRamTranslator;
+class TranslatorContext;
 
 class ProvenanceClauseTranslator : public ClauseTranslator {
 public:
-    ProvenanceClauseTranslator(AstToRamTranslator& translator) : ClauseTranslator(translator) {}
+    ProvenanceClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable)
+            : ClauseTranslator(context, symbolTable) {}
 
 protected:
     Own<ram::Operation> createOperation(const ast::Clause& clause) override;

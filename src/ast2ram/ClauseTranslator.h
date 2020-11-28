@@ -16,37 +16,46 @@
 
 #pragma once
 
+#include "souffle/RamTypes.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <map>
 #include <vector>
 
+namespace souffle {
+class SymbolTable;
+}
+
 namespace souffle::ast {
 class Argument;
 class Clause;
+class Constant;
 class Node;
 }  // namespace souffle::ast
 
 namespace souffle::ram {
-class Operation;
 class Condition;
+class Expression;
+class Operation;
 class Relation;
 class Statement;
 }  // namespace souffle::ram
 
 namespace souffle::ast2ram {
 
-class AstToRamTranslator;
+class TranslatorContext;
 class ValueIndex;
 
 class ClauseTranslator {
 public:
-    ClauseTranslator(const AstToRamTranslator& translator) : translator(translator) {}
+    ClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable)
+            : context(context), symbolTable(symbolTable) {}
 
     Own<ram::Statement> translateClause(
             const ast::Clause& clause, const ast::Clause& originalClause, const int version = 0);
 
 protected:
-    const AstToRamTranslator& translator;
+    const TranslatorContext& context;
+    SymbolTable& symbolTable;
 
     // value index to keep track of references in the loop nest
     Own<ValueIndex> valueIndex = mk<ValueIndex>();
@@ -58,7 +67,7 @@ protected:
     virtual Own<ram::Condition> createCondition(const ast::Clause& originalClause);
 
     /** apply constraint filters to a given operation */
-    Own<ram::Operation> filterByConstraints(size_t level, const std::vector<ast::Argument*>& args,
+    Own<ram::Operation> filterByConstraints(size_t level, const std::vector<ast::Argument*>& arguments,
             Own<ram::Operation> op, bool constrainByFunctors = true);
 
 private:
@@ -70,9 +79,13 @@ private:
     Own<ast::Clause> getReorderedClause(const ast::Clause& clause, const int version) const;
 
     void indexValues(const ast::Node* curNode, const std::vector<ast::Argument*>& curNodeArgs,
-            std::map<const ast::Node*, int>& nodeLevel, const ram::Relation* relation);
+            std::map<const ast::Node*, int>& nodeLevel, const std::string& relationName,
+            size_t relationArity);
 
     void createValueIndex(const ast::Clause& clause);
+
+    static RamDomain getConstantRamRepresentation(SymbolTable& symbolTable, const ast::Constant& constant);
+    static Own<ram::Expression> translateConstant(SymbolTable& symbolTable, const ast::Constant& constant);
 };
 
 }  // namespace souffle::ast2ram

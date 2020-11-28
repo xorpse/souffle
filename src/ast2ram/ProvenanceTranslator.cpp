@@ -22,8 +22,11 @@
 #include "ast/analysis/RelationDetailCache.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
+#include "ast2ram/ConstraintTranslator.h"
 #include "ast2ram/ProvenanceClauseTranslator.h"
 #include "ast2ram/ValueIndex.h"
+#include "ast2ram/ValueTranslator.h"
+#include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ram/ExistenceCheck.h"
 #include "ram/Filter.h"
@@ -115,7 +118,7 @@ Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clau
 
     // add constraint for each argument in head of atom
     ast::Atom* head = intermediateClause->getHead();
-    size_t auxiliaryArity = auxArityAnalysis->getArity(head);
+    size_t auxiliaryArity = context->getAuxiliaryArity(head);
     auto args = head->getArguments();
     for (size_t i = 0; i < head->getArity() - auxiliaryArity; i++) {
         auto arg = args[i];
@@ -166,7 +169,7 @@ Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clau
             intermediateClause->addToBody(std::move(constraint));
         }
     }
-    return ProvenanceClauseTranslator(*this).translateClause(*intermediateClause, clause);
+    return ProvenanceClauseTranslator(*context, *symbolTable).translateClause(*intermediateClause, clause);
 }
 
 /** make a subroutine to search for subproofs for the non-existence of a tuple */
@@ -260,7 +263,7 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
 
     auto makeRamAtomExistenceCheck = [&](ast::Atom* atom) {
         auto relName = getConcreteRelationName(atom->getQualifiedName());
-        size_t auxiliaryArity = auxArityAnalysis->getArity(atom);
+        size_t auxiliaryArity = context->getAuxiliaryArity(atom);
 
         // translate variables to subroutine arguments
         VariablesToArguments varsToArgs(uniqueVariables);
@@ -273,7 +276,7 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
         // add each value (subroutine argument) to the search query
         for (size_t i = 0; i < atom->getArity() - auxiliaryArity; i++) {
             auto arg = atomArgs[i];
-            query.push_back(translateValue(arg, ValueIndex()));
+            query.push_back(ValueTranslator::translate(*context, *symbolTable, ValueIndex(), arg));
         }
 
         // fill up query with nullptrs for the provenance columns
@@ -334,7 +337,7 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
             con->apply(varsToArgs);
 
             // translate to a ram::Condition
-            auto condition = translateConstraint(con, ValueIndex());
+            auto condition = ConstraintTranslator::translate(*context, *symbolTable, ValueIndex(), con);
             auto negativeCondition = mk<ram::Negation>(souffle::clone(condition));
 
             appendStmt(searchSequence,
