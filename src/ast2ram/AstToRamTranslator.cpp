@@ -31,18 +31,16 @@
 #include "ast/RecordInit.h"
 #include "ast/Relation.h"
 #include "ast/TranslationUnit.h"
-#include "ast/analysis/IOType.h"
 #include "ast/analysis/PolymorphicObjects.h"
 #include "ast/analysis/SumTypeBranches.h"
 #include "ast/analysis/TopologicallySortedSCCGraph.h"
-#include "ast/analysis/TypeEnvironment.h"
 #include "ast/utility/NodeMapper.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
 #include "ast2ram/ClauseTranslator.h"
-#include "ast2ram/ValueIndex.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
+#include "ast2ram/utility/ValueIndex.h"
 #include "ram/Call.h"
 #include "ram/Clear.h"
 #include "ram/Condition.h"
@@ -262,7 +260,7 @@ Own<ram::Statement> AstToRamTranslator::generateClauseVersion(const std::set<con
 
     // Add in negated deltas for later recursive relations to simulate prev construct
     for (size_t j = deltaAtomIdx + 1; j < atoms.size(); j++) {
-        const auto* atomRelation = getAtomRelation(atoms[j], program);
+        const auto* atomRelation = context->getAtomRelation(atoms[j]);
         if (contains(scc, atomRelation)) {
             auto deltaAtom = souffle::clone(ast::getBodyLiterals<ast::Atom>(*fixedClause)[j]);
             deltaAtom->setQualifiedName(getDeltaRelationName(atomRelation->getQualifiedName()));
@@ -316,7 +314,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
             const auto* atom = atoms[i];
 
             // Only interested in atoms within the same SCC
-            if (!contains(scc, getAtomRelation(atom, program))) {
+            if (!contains(scc, context->getAtomRelation(atom))) {
                 continue;
             }
 
@@ -428,10 +426,10 @@ Own<ram::Statement> AstToRamTranslator::generateStratumExitSequence(
 
     // (2) if the size limit has been reached for any limitsize relations
     for (const ast::Relation* rel : scc) {
-        if (ioType->isLimitSize(rel)) {
+        if (context->hasSizeLimit(rel)) {
             Own<ram::Condition> limit = mk<ram::Constraint>(BinaryConstraintOp::GE,
                     mk<ram::RelationSize>(getConcreteRelationName(rel->getQualifiedName())),
-                    mk<ram::SignedConstant>(ioType->getLimitSize(rel)));
+                    mk<ram::SignedConstant>(context->getSizeLimit(rel)));
             appendStmt(exitConditions, mk<ram::Exit>(std::move(limit)));
         }
     }
@@ -462,13 +460,13 @@ Own<ram::Statement> AstToRamTranslator::generateRecursiveStratum(
     return mk<ram::Sequence>(std::move(result));
 }
 
-bool AstToRamTranslator::removeADTs(ast::TranslationUnit& translationUnit) {
+bool AstToRamTranslator::removeADTs(ast::TranslationUnit& tu) {
     struct ADTsFuneral : public ast::NodeMapper {
         mutable bool changed{false};
         const ast::analysis::SumTypeBranchesAnalysis& sumTypesBranches;
 
-        ADTsFuneral(const ast::TranslationUnit& tu)
-                : sumTypesBranches(*tu.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>()) {}
+        ADTsFuneral(const ast::TranslationUnit& translationUnit)
+                : sumTypesBranches(*translationUnit.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>()) {}
 
         Own<ast::Node> operator()(Own<ast::Node> node) const override {
             // Rewrite sub-expressions first
@@ -528,19 +526,14 @@ bool AstToRamTranslator::removeADTs(ast::TranslationUnit& translationUnit) {
         }
     };
 
-    ADTsFuneral mapper(translationUnit);
-    translationUnit.getProgram().apply(mapper);
+    ADTsFuneral mapper(tu);
+    tu.getProgram().apply(mapper);
     return mapper.changed;
 }
 
 Own<ram::Statement> AstToRamTranslator::generateLoadRelation(const ast::Relation* relation) const {
     VecOwn<ram::Statement> loadStmts;
-    for (const auto* load : getDirectives(*program, relation->getQualifiedName())) {
-        // Must be a load
-        if (load->getType() != ast::DirectiveType::input) {
-            continue;
-        }
-
+    for (const auto* load : context->getLoadDirectives(relation->getQualifiedName())) {
         // Set up the corresponding directive map
         std::map<std::string, std::string> directives;
         for (const auto& [key, value] : load->getParameters()) {
@@ -563,13 +556,7 @@ Own<ram::Statement> AstToRamTranslator::generateLoadRelation(const ast::Relation
 
 Own<ram::Statement> AstToRamTranslator::generateStoreRelation(const ast::Relation* relation) const {
     VecOwn<ram::Statement> storeStmts;
-    for (const auto* store : getDirectives(*program, relation->getQualifiedName())) {
-        // Must be a storage relation
-        if (store->getType() != ast::DirectiveType::printsize &&
-                store->getType() != ast::DirectiveType::output) {
-            continue;
-        }
-
+    for (const auto* store : context->getStoreDirectives(relation->getQualifiedName())) {
         // Set up the corresponding directive map
         std::map<std::string, std::string> directives;
         for (const auto& [key, value] : store->getParameters()) {
@@ -600,7 +587,7 @@ Own<ram::Relation> AstToRamTranslator::createRamRelation(
     std::vector<std::string> attributeTypeQualifiers;
     for (const auto& attribute : baseRelation->getAttributes()) {
         attributeNames.push_back(attribute->getName());
-        attributeTypeQualifiers.push_back(getTypeQualifier(typeEnv->getType(attribute->getTypeName())));
+        attributeTypeQualifiers.push_back(context->getAttributeTypeQualifier(attribute->getTypeName()));
     }
 
     return mk<ram::Relation>(
@@ -631,7 +618,9 @@ VecOwn<ram::Relation> AstToRamTranslator::createRamRelations(const std::vector<s
     return ramRelations;
 }
 
-void AstToRamTranslator::finaliseAstTypes(ast::Program& program) {
+void AstToRamTranslator::finaliseAstTypes(ast::TranslationUnit& tu) {
+    auto& program = tu.getProgram();
+    const auto* polyAnalysis = tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
     visitDepthFirst(program, [&](const ast::NumericConstant& nc) {
         const_cast<ast::NumericConstant&>(nc).setFinalType(polyAnalysis->getInferredType(&nc));
     });
@@ -691,7 +680,7 @@ Own<ram::Sequence> AstToRamTranslator::generateProgram(const ast::TranslationUni
 
 void AstToRamTranslator::preprocessAstProgram(ast::TranslationUnit& tu) {
     // Finalise polymorphic types in the AST
-    finaliseAstTypes(tu.getProgram());
+    finaliseAstTypes(tu);
 
     // Replace ADTs with record representatives
     removeADTs(tu);
@@ -703,14 +692,8 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
 
     /* -- Set-up -- */
     // Set up the translator
-    program = &tu.getProgram();
     symbolTable = mk<SymbolTable>();
     context = mk<TranslatorContext>(tu);
-
-    // Grab all relevant analyses
-    ioType = tu.getAnalysis<ast::analysis::IOTypeAnalysis>();
-    typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
-    polyAnalysis = tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
 
     // Run the AST preprocessor
     preprocessAstProgram(tu);

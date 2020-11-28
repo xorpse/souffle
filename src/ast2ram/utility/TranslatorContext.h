@@ -22,7 +22,9 @@
 namespace souffle::ast {
 class Atom;
 class Clause;
+class Directive;
 class Functor;
+class Program;
 class QualifiedName;
 class Relation;
 class SipsMetric;
@@ -33,10 +35,12 @@ class UserDefinedFunctor;
 namespace souffle::ast::analysis {
 class AuxiliaryArityAnalysis;
 class FunctorAnalysis;
+class IOTypeAnalysis;
 class RecursiveClausesAnalysis;
 class RelationDetailCacheAnalysis;
 class RelationScheduleAnalysis;
 class SCCGraphAnalysis;
+class TypeEnvironment;
 }  // namespace souffle::ast::analysis
 
 namespace souffle::ast2ram {
@@ -46,8 +50,18 @@ public:
     TranslatorContext(const ast::TranslationUnit& tu);
     ~TranslatorContext();
 
+    const ast::Program* getProgram() const {
+        return program;
+    }
+
     /** Relation methods */
     ast::Relation* getRelation(const ast::QualifiedName& name) const;
+    const ast::Relation* getAtomRelation(const ast::Atom* atom) const;
+    std::vector<ast::Directive*> getStoreDirectives(const ast::QualifiedName& name) const;
+    std::vector<ast::Directive*> getLoadDirectives(const ast::QualifiedName& name) const;
+    std::string getAttributeTypeQualifier(const ast::QualifiedName& name) const;
+    bool hasSizeLimit(const ast::Relation* relation) const;
+    size_t getSizeLimit(const ast::Relation* relation) const;
 
     /** Clause methods */
     std::set<ast::Clause*> getClauses(const ast::QualifiedName& name) const;
@@ -77,12 +91,15 @@ public:
     size_t getEvaluationArity(const ast::Atom* atom) const;
 
 private:
+    const ast::Program* program;
     const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis;
     const ast::analysis::RecursiveClausesAnalysis* recursiveClauses;
     const ast::analysis::RelationScheduleAnalysis* relationSchedule;
     const ast::analysis::SCCGraphAnalysis* sccGraph;
     const ast::analysis::RelationDetailCacheAnalysis* relationDetail;
     const ast::analysis::FunctorAnalysis* functorAnalysis;
+    const ast::analysis::IOTypeAnalysis* ioType;
+    const ast::analysis::TypeEnvironment* typeEnv;
     Own<ast::SipsMetric> sipsMetric;
 };
 

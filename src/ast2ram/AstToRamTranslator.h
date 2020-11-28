@@ -33,12 +33,6 @@ class Relation;
 class TranslationUnit;
 }  // namespace souffle::ast
 
-namespace souffle::ast::analysis {
-class IOTypeAnalysis;
-class PolymorphicObjectsAnalysis;
-class TypeEnvironment;
-}  // namespace souffle::ast::analysis
-
 namespace souffle::ram {
 class Relation;
 class Sequence;
@@ -59,17 +53,10 @@ public:
     Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
 
 protected:
-    const ast::Program* program = nullptr;
     Own<TranslatorContext> context;
     Own<SymbolTable> symbolTable;
 
-    /** Analyses needed */
-    const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
-    const ast::analysis::TypeEnvironment* typeEnv = nullptr;
-    const ast::analysis::IOTypeAnalysis* ioType = nullptr;
-
     void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
-
     Own<ram::Relation> createRamRelation(
             const ast::Relation* baseRelation, std::string ramRelationName) const;
     VecOwn<ram::Relation> createRamRelations(const std::vector<size_t>& sccOrdering) const;
@@ -111,11 +98,11 @@ protected:
     virtual void preprocessAstProgram(ast::TranslationUnit& tu);
 
     /** Replace ADTs with special records */
-    bool removeADTs(ast::TranslationUnit& translationUnit);
+    bool removeADTs(ast::TranslationUnit& tu);
 
     /** Finalise the types of polymorphic objects */
     // TODO (azreika): should be removed once the translator is refactored to avoid cloning
-    void finaliseAstTypes(ast::Program& program);
+    void finaliseAstTypes(ast::TranslationUnit& tu);
 
 private:
     std::map<std::string, Own<ram::Statement>> ramSubroutines;

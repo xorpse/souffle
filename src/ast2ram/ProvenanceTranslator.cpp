@@ -24,10 +24,10 @@
 #include "ast/utility/Visitor.h"
 #include "ast2ram/ConstraintTranslator.h"
 #include "ast2ram/ProvenanceClauseTranslator.h"
-#include "ast2ram/ValueIndex.h"
 #include "ast2ram/ValueTranslator.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
+#include "ast2ram/utility/ValueIndex.h"
 #include "ram/ExistenceCheck.h"
 #include "ram/Filter.h"
 #include "ram/Negation.h"
@@ -47,7 +47,7 @@ Own<ram::Sequence> ProvenanceTranslator::generateProgram(const ast::TranslationU
     auto ramProgram = AstToRamTranslator::generateProgram(translationUnit);
 
     // add subroutines for each clause
-    addProvenanceClauseSubroutines(program);
+    addProvenanceClauseSubroutines(context->getProgram());
 
     return ramProgram;
 }
