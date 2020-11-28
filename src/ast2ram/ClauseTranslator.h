@@ -101,6 +101,9 @@ private:
     Own<ram::Operation> buildFinalOperation(const ast::Clause& clause, const ast::Clause& originalClause,
             int version, Own<ram::Operation> op);
 
+    // Return the write-location for the generator, or {} if an equivalent arg was already seen
+    std::optional<int> addGenerator(const ast::Argument& arg);
+
     static RamDomain getConstantRamRepresentation(SymbolTable& symbolTable, const ast::Constant& constant);
     static Own<ram::Expression> translateConstant(SymbolTable& symbolTable, const ast::Constant& constant);
 };

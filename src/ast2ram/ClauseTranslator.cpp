@@ -153,7 +153,7 @@ Own<ram::Operation> ClauseTranslator::buildFinalOperation(
     // build operation bottom-up
     while (!op_nesting.empty()) {
         // get next operator
-        const ast::Node* cur = op_nesting.back();
+        const auto* cur = op_nesting.back();
         op_nesting.pop_back();
 
         // get current nesting level
@@ -224,8 +224,9 @@ Own<ram::Operation> ClauseTranslator::addGeneratorLevels(Own<ram::Operation> op)
     --level;
     for (auto* cur : reverse(generators)) {
         if (auto agg = dynamic_cast<const ast::Aggregator*>(cur)) {
-            // condition for aggregate and helper function to add terms
             Own<ram::Condition> aggCond;
+
+            // helper functions to add terms
             auto addAggCondition = [&](Own<ram::Condition> arg) {
                 aggCond = aggCond ? mk<ram::Conjunction>(std::move(aggCond), std::move(arg)) : std::move(arg);
             };
@@ -296,6 +297,8 @@ Own<ram::Operation> ClauseTranslator::addGeneratorLevels(Own<ram::Operation> op)
             };
 
             op = mk<ram::NestedIntrinsicOperator>(func_op(), std::move(args), std::move(op), level);
+        } else {
+            assert(false && "unhandled generator");
         }
 
         --level;
@@ -389,8 +392,8 @@ Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
                 std::move(op));
     };
 
-    size_t pos = 0;
-    for (const auto* argument : arguments) {
+    for (size_t pos = 0; pos < arguments.size(); pos++) {
+        const auto* argument = arguments.at(pos);
         if (const auto* constant = dynamic_cast<const ast::Constant*>(argument)) {
             const auto* numericConstant = dynamic_cast<const ast::NumericConstant*>(constant);
             assert((!numericConstant || numericConstant->getFinalType().has_value()) &&
@@ -405,7 +408,6 @@ Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
                         ValueTranslator::translate(context, symbolTable, *valueIndex, functor), pos);
             }
         }
-        pos++;
     }
 
     return op;
@@ -473,6 +475,19 @@ void ClauseTranslator::indexValues(const ast::Node* curNode, const std::vector<a
     }
 }
 
+std::optional<int> ClauseTranslator::addGenerator(const ast::Argument& arg) {
+    // TODO: by-value comparison for CSE; do this elsewhere
+    if (dynamic_cast<const ast::Aggregator*>(&arg) != nullptr &&
+            any_of(generators, [&](auto* x) { return *x == arg; })) {
+        return {};
+    }
+    generators.push_back(&arg);
+
+    int aggLoc = level++;
+    valueIndex->setGeneratorLoc(arg, Location({aggLoc, 0}));
+    return aggLoc;
+}
+
 /** index values in rule */
 void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
     for (const auto* atom : ast::getBodyLiterals<ast::Atom>(clause)) {
@@ -490,22 +505,8 @@ void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
 
     // add aggregation functions
     visitDepthFirstPostOrder(clause, [&](const ast::Argument& arg) {
-        // returns the write-location for this generator (or none if an equiv arg was already seen)
-        auto addGenerator = [&]() -> std::optional<int> {
-            // The by-value compare means that we're effectively doing CSE for any
-            // generator args during code-gen. This is a weird place to do this.
-            if (dynamic_cast<const ast::Aggregator*>(&arg) != nullptr &&
-                    any_of(generators, [&](auto* x) { return *x == arg; }))
-                return {};
-            generators.push_back(&arg);
-
-            int aggLoc = level++;
-            valueIndex->setGeneratorLoc(arg, Location({aggLoc, 0}));
-            return aggLoc;
-        };
-
         if (auto agg = dynamic_cast<const ast::Aggregator*>(&arg)) {
-            if (auto aggLoc = addGenerator()) {
+            if (auto aggLoc = addGenerator(arg)) {
                 // bind aggregator variables to locations
                 const ast::Atom* atom = nullptr;
                 for (auto lit : agg->getBodyLiterals()) {
@@ -530,7 +531,7 @@ void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
 
         auto* func = as<ast::IntrinsicFunctor>(arg);
         if (func && ast::analysis::FunctorAnalysis::isMultiResult(*func)) {
-            addGenerator();
+            addGenerator(arg);
         }
     });
 
