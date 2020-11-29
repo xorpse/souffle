@@ -15,10 +15,10 @@
  *
  ***********************************************************************/
 
-#include "ast2ram/ValueIndex.h"
+#include "ast2ram/utility/ValueIndex.h"
 #include "ast/Aggregator.h"
 #include "ast/Variable.h"
-#include "ast2ram/Location.h"
+#include "ast2ram/utility/Location.h"
 #include "ram/Relation.h"
 #include "souffle/utility/FunctionalUtil.h"
 #include "souffle/utility/StreamUtil.h"

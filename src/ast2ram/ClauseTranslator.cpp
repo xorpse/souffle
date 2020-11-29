@@ -18,9 +18,12 @@
 #include "Global.h"
 #include "ast/Aggregator.h"
 #include "ast/Clause.h"
+#include "ast/Constant.h"
 #include "ast/IntrinsicFunctor.h"
+#include "ast/NilConstant.h"
 #include "ast/NumericConstant.h"
 #include "ast/RecordInit.h"
+#include "ast/StringConstant.h"
 #include "ast/UnnamedVariable.h"
 #include "ast/analysis/Functor.h"
 #include "ast/analysis/PolymorphicObjects.h"
@@ -28,24 +31,31 @@
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
 #include "ast2ram/AstToRamTranslator.h"
-#include "ast2ram/Location.h"
-#include "ast2ram/ValueIndex.h"
+#include "ast2ram/ConstraintTranslator.h"
+#include "ast2ram/ValueTranslator.h"
+#include "ast2ram/utility/Location.h"
+#include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
+#include "ast2ram/utility/ValueIndex.h"
 #include "ram/Aggregate.h"
 #include "ram/Break.h"
 #include "ram/Conjunction.h"
 #include "ram/Constraint.h"
 #include "ram/EmptinessCheck.h"
 #include "ram/Filter.h"
+#include "ram/FloatConstant.h"
 #include "ram/Negation.h"
 #include "ram/NestedIntrinsicOperator.h"
 #include "ram/Project.h"
 #include "ram/Query.h"
 #include "ram/Relation.h"
 #include "ram/Scan.h"
+#include "ram/SignedConstant.h"
 #include "ram/TupleElement.h"
 #include "ram/UnpackRecord.h"
+#include "ram/UnsignedConstant.h"
 #include "ram/utility/Utils.h"
+#include "souffle/SymbolTable.h"
 #include "souffle/utility/StringUtil.h"
 #include <map>
 #include <vector>
@@ -56,7 +66,7 @@ namespace souffle::ast2ram {
 Own<ram::Statement> ClauseTranslator::translateClause(
         const ast::Clause& clause, const ast::Clause& originalClause, const int version) {
     if (auto reorderedClause = getReorderedClause(clause, version)) {
-        // translate reordered clause
+        // translate reordered clause instead
         return translateClause(*reorderedClause, originalClause, version);
     }
 
@@ -68,7 +78,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
         // translate arguments
         VecOwn<ram::Expression> values;
         for (auto& arg : head->getArguments()) {
-            values.push_back(translator.translateValue(arg, ValueIndex()));
+            values.push_back(ValueTranslator::translate(context, symbolTable, ValueIndex(), arg));
         }
 
         // create a fact statement
@@ -102,7 +112,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
 
     /* add conditions caused by atoms, negations, and binary relations */
     for (const auto& lit : clause.getBodyLiterals()) {
-        if (auto condition = translator.translateConstraint(lit, *valueIndex)) {
+        if (auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
             op = mk<ram::Filter>(std::move(condition), std::move(op));
         }
     }
@@ -141,7 +151,8 @@ Own<ram::Statement> ClauseTranslator::translateClause(
 
             // translate constraints of sub-clause
             for (auto&& lit : agg->getBodyLiterals()) {
-                if (auto newCondition = translator.translateConstraint(lit, *valueIndex)) {
+                if (auto newCondition =
+                                ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
                     addAggCondition(std::move(newCondition));
                 }
             }
@@ -177,7 +188,8 @@ Own<ram::Statement> ClauseTranslator::translateClause(
                                 break;
                             }
                         }
-                    } else if (auto value = translator.translateValue(arg, *valueIndex)) {
+                    } else if (auto value =
+                                       ValueTranslator::translate(context, symbolTable, *valueIndex, arg)) {
                         addAggEqCondition(std::move(value));
                     }
                     ++pos;
@@ -185,7 +197,8 @@ Own<ram::Statement> ClauseTranslator::translateClause(
             }
 
             // translate aggregate expression
-            auto expr = translator.translateValue(agg->getTargetExpression(), *valueIndex);
+            auto expr =
+                    ValueTranslator::translate(context, symbolTable, *valueIndex, agg->getTargetExpression());
 
             // add Ram-Aggregation layer
             op = mk<ram::Aggregate>(std::move(op), agg->getFinalType().value(),
@@ -195,7 +208,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
         } else if (const auto* func = dynamic_cast<const ast::IntrinsicFunctor*>(cur)) {
             VecOwn<ram::Expression> args;
             for (auto&& x : func->getArguments()) {
-                args.push_back(translator.translateValue(x, *valueIndex));
+                args.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, x));
             }
 
             auto func_op = [&]() -> ram::NestedIntrinsicOp {
@@ -292,18 +305,17 @@ Own<ram::Statement> ClauseTranslator::translateClause(
 
 Own<ram::Operation> ClauseTranslator::createOperation(const ast::Clause& clause) {
     const auto head = clause.getHead();
+    auto headRelationName = getConcreteRelationName(head->getQualifiedName());
 
     VecOwn<ram::Expression> values;
     for (ast::Argument* arg : head->getArguments()) {
-        values.push_back(translator.translateValue(arg, *valueIndex));
+        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, arg));
     }
 
-    Own<ram::Operation> project =
-            mk<ram::Project>(getConcreteRelationName(head->getQualifiedName()), std::move(values));
+    Own<ram::Operation> project = mk<ram::Project>(headRelationName, std::move(values));
 
     if (head->getArity() == 0) {
-        project = mk<ram::Filter>(mk<ram::EmptinessCheck>(getConcreteRelationName(head->getQualifiedName())),
-                std::move(project));
+        project = mk<ram::Filter>(mk<ram::EmptinessCheck>(headRelationName), std::move(project));
     }
 
     // build up insertion call
@@ -321,33 +333,66 @@ Own<ram::Condition> ClauseTranslator::createCondition(const ast::Clause& origina
     return nullptr;
 }
 
-Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
-        const std::vector<ast::Argument*>& args, Own<ram::Operation> op, bool constrainByFunctors) {
-    size_t pos = 0;
+RamDomain ClauseTranslator::getConstantRamRepresentation(
+        SymbolTable& symbolTable, const ast::Constant& constant) {
+    if (auto strConstant = dynamic_cast<const ast::StringConstant*>(&constant)) {
+        return symbolTable.lookup(strConstant->getConstant());
+    } else if (isA<ast::NilConstant>(&constant)) {
+        return 0;
+    } else if (auto* numConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
+        assert(numConstant->getFinalType().has_value() && "constant should have valid type");
+        switch (numConstant->getFinalType().value()) {
+            case ast::NumericConstant::Type::Int:
+                return RamSignedFromString(numConstant->getConstant(), nullptr, 0);
+            case ast::NumericConstant::Type::Uint:
+                return RamUnsignedFromString(numConstant->getConstant(), nullptr, 0);
+            case ast::NumericConstant::Type::Float: return RamFloatFromString(numConstant->getConstant());
+        }
+    }
 
-    auto mkFilter = [&](bool isFloatArg, Own<ram::Expression> rhs) {
+    fatal("unaccounted-for constant");
+}
+
+Own<ram::Expression> ClauseTranslator::translateConstant(
+        SymbolTable& symbolTable, const ast::Constant& constant) {
+    auto rawConstant = getConstantRamRepresentation(symbolTable, constant);
+    if (const auto* numericConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
+        switch (numericConstant->getFinalType().value()) {
+            case ast::NumericConstant::Type::Int: return mk<ram::SignedConstant>(rawConstant);
+            case ast::NumericConstant::Type::Uint: return mk<ram::UnsignedConstant>(rawConstant);
+            case ast::NumericConstant::Type::Float: return mk<ram::FloatConstant>(rawConstant);
+        }
+        fatal("unaccounted-for constant");
+    }
+    return mk<ram::SignedConstant>(rawConstant);
+}
+
+Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
+        const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op, bool constrainByFunctors) {
+    auto mkFilter = [&](bool isFloatArg, Own<ram::Expression> rhs, size_t pos) {
         return mk<ram::Filter>(
                 mk<ram::Constraint>(isFloatArg ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ,
                         mk<ram::TupleElement>(level, pos), std::move(rhs)),
                 std::move(op));
     };
 
-    for (auto* a : args) {
-        if (auto* c = dynamic_cast<const ast::Constant*>(a)) {
-            auto* const c_num = dynamic_cast<const ast::NumericConstant*>(c);
-            assert((!c_num || c_num->getFinalType().has_value()) &&
-                    "numeric constant wasn't bound to a type");
-            op = mkFilter(c_num && c_num->getFinalType().value() == ast::NumericConstant::Type::Float,
-                    translator.translateConstant(*c));
-        } else if (auto* func = dynamic_cast<const ast::Functor*>(a)) {
+    size_t pos = 0;
+    for (const auto* argument : arguments) {
+        if (const auto* constant = dynamic_cast<const ast::Constant*>(argument)) {
+            const auto* numericConstant = dynamic_cast<const ast::NumericConstant*>(constant);
+            assert((!numericConstant || numericConstant->getFinalType().has_value()) &&
+                    "numeric constant not bound to a type");
+            op = mkFilter(numericConstant && numericConstant->getFinalType().value() ==
+                                                     ast::NumericConstant::Type::Float,
+                    translateConstant(symbolTable, *constant), pos);
+        } else if (const auto* functor = dynamic_cast<const ast::Functor*>(argument)) {
             if (constrainByFunctors) {
-                TypeAttribute returnType = translator.getFunctorAnalysis()->getReturnType(func);
-                op = mkFilter(
-                        returnType == TypeAttribute::Float, translator.translateValue(func, *valueIndex));
+                TypeAttribute returnType = context.getFunctorReturnType(functor);
+                op = mkFilter(returnType == TypeAttribute::Float,
+                        ValueTranslator::translate(context, symbolTable, *valueIndex, functor), pos);
             }
         }
-
-        ++pos;
+        pos++;
     }
 
     return op;
@@ -358,7 +403,7 @@ Own<ast::Clause> ClauseTranslator::getReorderedClause(const ast::Clause& clause,
     if (plan == nullptr) {
         // no plan, so reorder it according to the internal heuristic
         if (auto* reorderedClause = ast::transform::ReorderLiteralsTransformer::reorderClauseWithSips(
-                    *translator.getSipsMetric(), &clause)) {
+                    *context.getSipsMetric(), &clause)) {
             return Own<ast::Clause>(reorderedClause);
         }
         return nullptr;
@@ -386,15 +431,15 @@ Own<ast::Clause> ClauseTranslator::getReorderedClause(const ast::Clause& clause,
 }
 
 void ClauseTranslator::indexValues(const ast::Node* curNode, const std::vector<ast::Argument*>& curNodeArgs,
-        std::map<const ast::Node*, int>& nodeLevel, const ram::Relation* relation) {
+        std::map<const ast::Node*, int>& nodeLevel, const std::string& relationName, size_t relationArity) {
     for (size_t pos = 0; pos < curNodeArgs.size(); ++pos) {
         // get argument
         auto& arg = curNodeArgs[pos];
 
         // check for variable references
         if (auto var = dynamic_cast<const ast::Variable*>(arg)) {
-            if (pos < relation->getArity()) {
-                valueIndex->addVarReference(*var, nodeLevel[curNode], pos, relation->getName());
+            if (pos < relationArity) {
+                valueIndex->addVarReference(*var, nodeLevel[curNode], pos, relationName);
             } else {
                 valueIndex->addVarReference(*var, nodeLevel[curNode], pos);
             }
@@ -410,7 +455,7 @@ void ClauseTranslator::indexValues(const ast::Node* curNode, const std::vector<a
             valueIndex->setRecordDefinition(*rec, nodeLevel[curNode], pos);
 
             // resolve nested components
-            indexValues(rec, rec->getArguments(), nodeLevel, relation);
+            indexValues(rec, rec->getArguments(), nodeLevel, relationName, relationArity);
         }
     }
 }
@@ -426,8 +471,8 @@ void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
         op_nesting.push_back(atom);
 
         // index each value in the atom
-        indexValues(atom, atom->getArguments(), nodeLevel,
-                translator.lookupRelation(getConcreteRelationName(atom->getQualifiedName())));
+        indexValues(atom, atom->getArguments(), nodeLevel, getConcreteRelationName(atom->getQualifiedName()),
+                atom->getArity());
     }
 
     // add aggregation functions

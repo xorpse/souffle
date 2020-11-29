@@ -17,6 +17,10 @@
 #include "ast/utility/Visitor.h"
 #include "souffle/utility/ContainerUtil.h"
 
+namespace souffle {
+class SymbolTable;
+}
+
 namespace souffle::ast {
 class Atom;
 class BinaryConstraint;
@@ -30,16 +34,16 @@ class Condition;
 
 namespace souffle::ast2ram {
 
+class TranslatorContext;
 class ValueIndex;
-class AstToRamTranslator;
 
 class ConstraintTranslator : public ast::Visitor<Own<ram::Condition>> {
 public:
-    ConstraintTranslator(const AstToRamTranslator& translator, const ValueIndex& index)
-            : translator(translator), index(index) {}
+    ConstraintTranslator(const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index)
+            : context(context), symbolTable(symbolTable), index(index) {}
 
-    static Own<ram::Condition> translate(
-            const AstToRamTranslator& translator, const ValueIndex& index, const ast::Literal& lit);
+    static Own<ram::Condition> translate(const TranslatorContext& context, SymbolTable& symbolTable,
+            const ValueIndex& index, const ast::Literal* lit);
 
     /** -- Visitors -- */
     Own<ram::Condition> visitAtom(const ast::Atom&) override;
@@ -48,7 +52,8 @@ public:
     Own<ram::Condition> visitNegation(const ast::Negation& neg) override;
 
 private:
-    const AstToRamTranslator& translator;
+    const TranslatorContext& context;
+    SymbolTable& symbolTable;
     const ValueIndex& index;
 };
 

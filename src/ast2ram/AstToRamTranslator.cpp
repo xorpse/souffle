@@ -23,38 +23,24 @@
 #include "ast/BinaryConstraint.h"
 #include "ast/BranchInit.h"
 #include "ast/Clause.h"
-#include "ast/Constant.h"
 #include "ast/Directive.h"
 #include "ast/Negation.h"
-#include "ast/NilConstant.h"
 #include "ast/Node.h"
 #include "ast/NumericConstant.h"
 #include "ast/Program.h"
-#include "ast/QualifiedName.h"
 #include "ast/RecordInit.h"
 #include "ast/Relation.h"
-#include "ast/StringConstant.h"
 #include "ast/TranslationUnit.h"
-#include "ast/analysis/AuxArity.h"
-#include "ast/analysis/Functor.h"
-#include "ast/analysis/IOType.h"
 #include "ast/analysis/PolymorphicObjects.h"
-#include "ast/analysis/RecursiveClauses.h"
-#include "ast/analysis/RelationDetailCache.h"
-#include "ast/analysis/RelationSchedule.h"
-#include "ast/analysis/SCCGraph.h"
 #include "ast/analysis/SumTypeBranches.h"
 #include "ast/analysis/TopologicallySortedSCCGraph.h"
-#include "ast/analysis/TypeEnvironment.h"
 #include "ast/utility/NodeMapper.h"
-#include "ast/utility/SipsMetric.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
 #include "ast2ram/ClauseTranslator.h"
-#include "ast2ram/ConstraintTranslator.h"
-#include "ast2ram/ValueIndex.h"
-#include "ast2ram/ValueTranslator.h"
+#include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
+#include "ast2ram/utility/ValueIndex.h"
 #include "ram/Call.h"
 #include "ram/Clear.h"
 #include "ram/Condition.h"
@@ -66,7 +52,6 @@
 #include "ram/Expression.h"
 #include "ram/Extend.h"
 #include "ram/Filter.h"
-#include "ram/FloatConstant.h"
 #include "ram/IO.h"
 #include "ram/LogRelationTimer.h"
 #include "ram/LogSize.h"
@@ -121,70 +106,6 @@ void AstToRamTranslator::addRamSubroutine(std::string subroutineID, Own<ram::Sta
     ramSubroutines[subroutineID] = std::move(subroutine);
 }
 
-void AstToRamTranslator::addRamRelation(std::string relationName, Own<ram::Relation> ramRelation) {
-    assert(!contains(ramRelations, relationName) && "ram relation should not already exist");
-    ramRelations[relationName] = std::move(ramRelation);
-}
-
-size_t AstToRamTranslator::getEvaluationArity(const ast::Atom* atom) const {
-    std::string relName = atom->getQualifiedName().toString();
-    if (isPrefix("@info_", relName)) return 0;
-
-    // Get the original relation name
-    if (isPrefix("@delta_", relName)) {
-        relName = stripPrefix("@delta_", relName);
-    } else if (isPrefix("@new_", relName)) {
-        relName = stripPrefix("@new_", relName);
-    }
-
-    const auto* originalRelation = relDetail->getRelation(ast::QualifiedName(relName));
-    return auxArityAnalysis->getArity(originalRelation);
-}
-
-Own<ram::Expression> AstToRamTranslator::translateValue(
-        const ast::Argument* arg, const ValueIndex& index) const {
-    if (arg == nullptr) return nullptr;
-    return ValueTranslator::translate(*this, index, *symbolTable, *arg);
-}
-
-Own<ram::Condition> AstToRamTranslator::translateConstraint(
-        const ast::Literal* lit, const ValueIndex& index) const {
-    assert(lit != nullptr && "literal should be defined");
-    return ConstraintTranslator::translate(*this, index, *lit);
-}
-
-RamDomain AstToRamTranslator::getConstantRamRepresentation(const ast::Constant& constant) const {
-    if (auto strConstant = dynamic_cast<const ast::StringConstant*>(&constant)) {
-        return symbolTable->lookup(strConstant->getConstant());
-    } else if (isA<ast::NilConstant>(&constant)) {
-        return 0;
-    } else if (auto* numConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
-        assert(numConstant->getFinalType().has_value() && "constant should have valid type");
-        switch (numConstant->getFinalType().value()) {
-            case ast::NumericConstant::Type::Int:
-                return RamSignedFromString(numConstant->getConstant(), nullptr, 0);
-            case ast::NumericConstant::Type::Uint:
-                return RamUnsignedFromString(numConstant->getConstant(), nullptr, 0);
-            case ast::NumericConstant::Type::Float: return RamFloatFromString(numConstant->getConstant());
-        }
-    }
-
-    fatal("unaccounted-for constant");
-}
-
-Own<ram::Expression> AstToRamTranslator::translateConstant(ast::Constant const& c) const {
-    auto const rawConstant = getConstantRamRepresentation(c);
-    if (auto* const c_num = dynamic_cast<const ast::NumericConstant*>(&c)) {
-        switch (c_num->getFinalType().value()) {
-            case ast::NumericConstant::Type::Int: return mk<ram::SignedConstant>(rawConstant);
-            case ast::NumericConstant::Type::Uint: return mk<ram::UnsignedConstant>(rawConstant);
-            case ast::NumericConstant::Type::Float: return mk<ram::FloatConstant>(rawConstant);
-        }
-        fatal("unaccounted-for constant");
-    }
-    return mk<ram::SignedConstant>(rawConstant);
-}
-
 Own<ram::Statement> AstToRamTranslator::generateClearRelation(const ast::Relation* relation) const {
     return mk<ram::Clear>(getConcreteRelationName(relation->getQualifiedName()));
 }
@@ -194,14 +115,14 @@ Own<ram::Statement> AstToRamTranslator::generateNonRecursiveRelation(const ast::
     std::string relName = getConcreteRelationName(rel.getQualifiedName());
 
     // Iterate over all non-recursive clauses that belong to the relation
-    for (ast::Clause* clause : relDetail->getClauses(rel.getQualifiedName())) {
+    for (ast::Clause* clause : context->getClauses(rel.getQualifiedName())) {
         // Skip recursive rules
-        if (recursiveClauses->recursive(clause)) {
+        if (context->isRecursiveClause(clause)) {
             continue;
         }
 
         // Translate clause
-        Own<ram::Statement> rule = ClauseTranslator(*this).translateClause(*clause, *clause);
+        Own<ram::Statement> rule = ClauseTranslator(*context, *symbolTable).translateClause(*clause, *clause);
 
         // Add logging
         if (Global::config().has("profile")) {
@@ -253,15 +174,13 @@ Own<ram::Statement> AstToRamTranslator::generateStratum(size_t scc) const {
     VecOwn<ram::Statement> current;
 
     // load all internal input relations from the facts dir with a .facts extension
-    const auto& sccInputRelations = sccGraph->getInternalInputRelations(scc);
-    for (const auto& relation : sccInputRelations) {
+    for (const auto& relation : context->getInputRelationsInSCC(scc)) {
         appendStmt(current, generateLoadRelation(relation));
     }
 
     // Compute the current stratum
-    const auto& isRecursive = sccGraph->isRecursive(scc);
-    const auto& sccRelations = sccGraph->getInternalRelations(scc);
-    if (isRecursive) {
+    const auto& sccRelations = context->getRelationsInSCC(scc);
+    if (context->isRecursiveSCC(scc)) {
         appendStmt(current, generateRecursiveStratum(sccRelations));
     } else {
         assert(sccRelations.size() == 1 && "only one relation should exist in non-recursive stratum");
@@ -270,8 +189,7 @@ Own<ram::Statement> AstToRamTranslator::generateStratum(size_t scc) const {
     }
 
     // Store all internal output relations to the output dir with a .csv extension
-    const auto& sccOutputRelations = sccGraph->getInternalOutputRelations(scc);
-    for (const auto& relation : sccOutputRelations) {
+    for (const auto& relation : context->getOutputRelationsInSCC(scc)) {
         appendStmt(current, generateStoreRelation(relation));
     }
 
@@ -342,7 +260,7 @@ Own<ram::Statement> AstToRamTranslator::generateClauseVersion(const std::set<con
 
     // Add in negated deltas for later recursive relations to simulate prev construct
     for (size_t j = deltaAtomIdx + 1; j < atoms.size(); j++) {
-        const auto* atomRelation = getAtomRelation(atoms[j], program);
+        const auto* atomRelation = context->getAtomRelation(atoms[j]);
         if (contains(scc, atomRelation)) {
             auto deltaAtom = souffle::clone(ast::getBodyLiterals<ast::Atom>(*fixedClause)[j]);
             deltaAtom->setQualifiedName(getDeltaRelationName(atomRelation->getQualifiedName()));
@@ -351,7 +269,8 @@ Own<ram::Statement> AstToRamTranslator::generateClauseVersion(const std::set<con
     }
 
     // Translate the resultant clause as would be done normally
-    Own<ram::Statement> rule = ClauseTranslator(*this).translateClause(*fixedClause, *cl, version);
+    Own<ram::Statement> rule =
+            ClauseTranslator(*context, *symbolTable).translateClause(*fixedClause, *cl, version);
 
     // Add loging
     if (Global::config().has("profile")) {
@@ -382,9 +301,9 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
     VecOwn<ram::Statement> result;
 
     // Translate each recursive clasue
-    for (const auto& cl : relDetail->getClauses(rel->getQualifiedName())) {
+    for (const auto& cl : context->getClauses(rel->getQualifiedName())) {
         // Skip non-recursive clauses
-        if (!recursiveClauses->recursive(cl)) {
+        if (!context->isRecursiveClause(cl)) {
             continue;
         }
 
@@ -395,7 +314,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
             const auto* atom = atoms[i];
 
             // Only interested in atoms within the same SCC
-            if (!contains(scc, getAtomRelation(atom, program))) {
+            if (!contains(scc, context->getAtomRelation(atom))) {
                 continue;
             }
 
@@ -507,10 +426,10 @@ Own<ram::Statement> AstToRamTranslator::generateStratumExitSequence(
 
     // (2) if the size limit has been reached for any limitsize relations
     for (const ast::Relation* rel : scc) {
-        if (ioType->isLimitSize(rel)) {
+        if (context->hasSizeLimit(rel)) {
             Own<ram::Condition> limit = mk<ram::Constraint>(BinaryConstraintOp::GE,
                     mk<ram::RelationSize>(getConcreteRelationName(rel->getQualifiedName())),
-                    mk<ram::SignedConstant>(ioType->getLimitSize(rel)));
+                    mk<ram::SignedConstant>(context->getSizeLimit(rel)));
             appendStmt(exitConditions, mk<ram::Exit>(std::move(limit)));
         }
     }
@@ -541,13 +460,13 @@ Own<ram::Statement> AstToRamTranslator::generateRecursiveStratum(
     return mk<ram::Sequence>(std::move(result));
 }
 
-bool AstToRamTranslator::removeADTs(const ast::TranslationUnit& translationUnit) {
+bool AstToRamTranslator::removeADTs(ast::TranslationUnit& tu) {
     struct ADTsFuneral : public ast::NodeMapper {
         mutable bool changed{false};
         const ast::analysis::SumTypeBranchesAnalysis& sumTypesBranches;
 
-        ADTsFuneral(const ast::TranslationUnit& tu)
-                : sumTypesBranches(*tu.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>()) {}
+        ADTsFuneral(const ast::TranslationUnit& translationUnit)
+                : sumTypesBranches(*translationUnit.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>()) {}
 
         Own<ast::Node> operator()(Own<ast::Node> node) const override {
             // Rewrite sub-expressions first
@@ -607,19 +526,14 @@ bool AstToRamTranslator::removeADTs(const ast::TranslationUnit& translationUnit)
         }
     };
 
-    ADTsFuneral mapper(translationUnit);
-    translationUnit.getProgram().apply(mapper);
+    ADTsFuneral mapper(tu);
+    tu.getProgram().apply(mapper);
     return mapper.changed;
 }
 
 Own<ram::Statement> AstToRamTranslator::generateLoadRelation(const ast::Relation* relation) const {
     VecOwn<ram::Statement> loadStmts;
-    for (const auto* load : getDirectives(*program, relation->getQualifiedName())) {
-        // Must be a load
-        if (load->getType() != ast::DirectiveType::input) {
-            continue;
-        }
-
+    for (const auto* load : context->getLoadDirectives(relation->getQualifiedName())) {
         // Set up the corresponding directive map
         std::map<std::string, std::string> directives;
         for (const auto& [key, value] : load->getParameters()) {
@@ -642,13 +556,7 @@ Own<ram::Statement> AstToRamTranslator::generateLoadRelation(const ast::Relation
 
 Own<ram::Statement> AstToRamTranslator::generateStoreRelation(const ast::Relation* relation) const {
     VecOwn<ram::Statement> storeStmts;
-    for (const auto* store : getDirectives(*program, relation->getQualifiedName())) {
-        // Must be a storage relation
-        if (store->getType() != ast::DirectiveType::printsize &&
-                store->getType() != ast::DirectiveType::output) {
-            continue;
-        }
-
+    for (const auto* store : context->getStoreDirectives(relation->getQualifiedName())) {
         // Set up the corresponding directive map
         std::map<std::string, std::string> directives;
         for (const auto& [key, value] : store->getParameters()) {
@@ -669,54 +577,50 @@ Own<ram::Statement> AstToRamTranslator::generateStoreRelation(const ast::Relatio
     return mk<ram::Sequence>(std::move(storeStmts));
 }
 
-void AstToRamTranslator::createRamRelations(size_t scc) {
-    const auto& isRecursive = sccGraph->isRecursive(scc);
-    const auto& sccRelations = sccGraph->getInternalRelations(scc);
-    for (const auto& rel : sccRelations) {
-        std::string name = getRelationName(rel->getQualifiedName());
-        auto arity = rel->getArity();
-        auto auxiliaryArity = auxArityAnalysis->getArity(rel);
-        auto representation = rel->getRepresentation();
-        const auto& attributes = rel->getAttributes();
+Own<ram::Relation> AstToRamTranslator::createRamRelation(
+        const ast::Relation* baseRelation, std::string ramRelationName) const {
+    auto arity = baseRelation->getArity();
+    auto auxiliaryArity = context->getAuxiliaryArity(baseRelation);
+    auto representation = baseRelation->getRepresentation();
 
-        std::vector<std::string> attributeNames;
-        std::vector<std::string> attributeTypeQualifiers;
-        for (size_t i = 0; i < rel->getArity(); ++i) {
-            attributeNames.push_back(attributes[i]->getName());
-            if (typeEnv != nullptr) {
-                attributeTypeQualifiers.push_back(
-                        getTypeQualifier(typeEnv->getType(attributes[i]->getTypeName())));
+    std::vector<std::string> attributeNames;
+    std::vector<std::string> attributeTypeQualifiers;
+    for (const auto& attribute : baseRelation->getAttributes()) {
+        attributeNames.push_back(attribute->getName());
+        attributeTypeQualifiers.push_back(context->getAttributeTypeQualifier(attribute->getTypeName()));
+    }
+
+    return mk<ram::Relation>(
+            ramRelationName, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
+}
+
+VecOwn<ram::Relation> AstToRamTranslator::createRamRelations(const std::vector<size_t>& sccOrdering) const {
+    VecOwn<ram::Relation> ramRelations;
+    for (const auto& scc : sccOrdering) {
+        bool isRecursive = context->isRecursiveSCC(scc);
+        for (const auto& rel : context->getRelationsInSCC(scc)) {
+            // Add main relation
+            std::string mainName = getConcreteRelationName(rel->getQualifiedName());
+            ramRelations.push_back(createRamRelation(rel, mainName));
+
+            // Recursive relations also require @delta and @new variants, with the same signature
+            if (isRecursive) {
+                // Add delta relation
+                std::string deltaName = getDeltaRelationName(rel->getQualifiedName());
+                ramRelations.push_back(createRamRelation(rel, deltaName));
+
+                // Add new relation
+                std::string newName = getNewRelationName(rel->getQualifiedName());
+                ramRelations.push_back(createRamRelation(rel, newName));
             }
         }
-
-        // Add main relation
-        auto ramRelation = mk<ram::Relation>(
-                name, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
-        addRamRelation(name, std::move(ramRelation));
-
-        // Recursive relations also require @delta and @new variants, with the same signature
-        if (isRecursive) {
-            // Add delta relation
-            std::string deltaName = getDeltaRelationName(rel->getQualifiedName());
-            auto deltaRelation = mk<ram::Relation>(deltaName, arity, auxiliaryArity, attributeNames,
-                    attributeTypeQualifiers, representation);
-            addRamRelation(deltaName, std::move(deltaRelation));
-
-            // Add new relation
-            std::string newName = getNewRelationName(rel->getQualifiedName());
-            auto newRelation = mk<ram::Relation>(
-                    newName, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
-            addRamRelation(newName, std::move(newRelation));
-        }
     }
+    return ramRelations;
 }
 
-const ram::Relation* AstToRamTranslator::lookupRelation(const std::string& name) const {
-    assert(contains(ramRelations, name) && "relation not found");
-    return ramRelations.at(name).get();
-}
-
-void AstToRamTranslator::finaliseAstTypes(ast::Program& program) const {
+void AstToRamTranslator::finaliseAstTypes(ast::TranslationUnit& tu) {
+    auto& program = tu.getProgram();
+    const auto* polyAnalysis = tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
     visitDepthFirst(program, [&](const ast::NumericConstant& nc) {
         const_cast<ast::NumericConstant&>(nc).setFinalType(polyAnalysis->getInferredType(&nc));
     });
@@ -728,25 +632,20 @@ void AstToRamTranslator::finaliseAstTypes(ast::Program& program) const {
     });
     visitDepthFirst(program, [&](const ast::IntrinsicFunctor& inf) {
         const_cast<ast::IntrinsicFunctor&>(inf).setFinalOpType(polyAnalysis->getOverloadedFunctionOp(&inf));
-        const_cast<ast::IntrinsicFunctor&>(inf).setFinalReturnType(functorAnalysis->getReturnType(&inf));
+        const_cast<ast::IntrinsicFunctor&>(inf).setFinalReturnType(context->getFunctorReturnType(&inf));
     });
     visitDepthFirst(program, [&](const ast::UserDefinedFunctor& udf) {
-        const_cast<ast::UserDefinedFunctor&>(udf).setFinalReturnType(functorAnalysis->getReturnType(&udf));
+        const_cast<ast::UserDefinedFunctor&>(udf).setFinalReturnType(context->getFunctorReturnType(&udf));
     });
 }
 
 Own<ram::Sequence> AstToRamTranslator::generateProgram(const ast::TranslationUnit& translationUnit) {
     // Check if trivial program
-    if (sccGraph->getNumberOfSCCs() == 0) {
+    if (context->getNumberOfSCCs() == 0) {
         return mk<ram::Sequence>();
     }
-
-    // Create all relevant RAM relations
     const auto& sccOrdering =
             translationUnit.getAnalysis<ast::analysis::TopologicallySortedSCCGraphAnalysis>()->order();
-    for (const auto& scc : sccOrdering) {
-        createRamRelations(scc);
-    }
 
     // Create subroutines for each SCC according to topological order
     for (size_t i = 0; i < sccOrdering.size(); i++) {
@@ -754,7 +653,7 @@ Own<ram::Sequence> AstToRamTranslator::generateProgram(const ast::TranslationUni
         auto stratum = generateStratum(sccOrdering.at(i));
 
         // Clear expired relations
-        const auto& expiredRelations = relationSchedule->schedule().at(i).expired();
+        const auto& expiredRelations = context->getExpiredRelations(i);
         stratum = mk<ram::Sequence>(std::move(stratum), generateClearExpiredRelations(expiredRelations));
 
         // Add the subroutine
@@ -779,47 +678,39 @@ Own<ram::Sequence> AstToRamTranslator::generateProgram(const ast::TranslationUni
     return mk<ram::Sequence>(std::move(res));
 }
 
+void AstToRamTranslator::preprocessAstProgram(ast::TranslationUnit& tu) {
+    // Finalise polymorphic types in the AST
+    finaliseAstTypes(tu);
+
+    // Replace ADTs with record representatives
+    removeADTs(tu);
+}
+
 Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit& tu) {
     // Start timer
     auto ram_start = std::chrono::high_resolution_clock::now();
 
     /* -- Set-up -- */
     // Set up the translator
-    program = &tu.getProgram();
     symbolTable = mk<SymbolTable>();
-    std::string sipsChosen = "all-bound";
-    if (Global::config().has("RamSIPS")) {
-        sipsChosen = Global::config().get("RamSIPS");
-    }
-    sipsMetric = ast::SipsMetric::create(sipsChosen, tu);
+    context = mk<TranslatorContext>(tu);
 
-    // Grab all relevant analyses
-    ioType = tu.getAnalysis<ast::analysis::IOTypeAnalysis>();
-    typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
-    relationSchedule = tu.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
-    sccGraph = tu.getAnalysis<ast::analysis::SCCGraphAnalysis>();
-    recursiveClauses = tu.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
-    auxArityAnalysis = tu.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
-    functorAnalysis = tu.getAnalysis<ast::analysis::FunctorAnalysis>();
-    relDetail = tu.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
-    polyAnalysis = tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
-
-    // Finalise polymorphic types in the AST
-    finaliseAstTypes(tu.getProgram());
-
-    // Replace ADTs with record representatives
-    removeADTs(tu);
+    // Run the AST preprocessor
+    preprocessAstProgram(tu);
 
     /* -- Translation -- */
-    // Create the final RAM program
+    // Generate the RAM program code
     auto ramMain = generateProgram(tu);
+
+    // Create the relevant RAM relations
+    const auto& sccOrdering = tu.getAnalysis<ast::analysis::TopologicallySortedSCCGraphAnalysis>()->order();
+    auto ramRelations = createRamRelations(sccOrdering);
+
+    // Combine all parts into the final RAM program
     ErrorReport& errReport = tu.getErrorReport();
     DebugReport& debugReport = tu.getDebugReport();
-    VecOwn<ram::Relation> rels;
-    for (auto& cur : ramRelations) {
-        rels.push_back(std::move(cur.second));
-    }
-    auto ramProgram = mk<ram::Program>(std::move(rels), std::move(ramMain), std::move(ramSubroutines));
+    auto ramProgram =
+            mk<ram::Program>(std::move(ramRelations), std::move(ramMain), std::move(ramSubroutines));
 
     // Add the translated program to the debug report
     if (Global::config().has("debug-report")) {
