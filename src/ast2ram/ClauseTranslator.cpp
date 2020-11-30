@@ -262,7 +262,8 @@ Own<ram::Operation> ClauseTranslator::addGeneratorLevels(Own<ram::Operation> op)
                             break;
                         }
                     }
-                } else if (arg != nullptr) {
+                } else {
+                    assert(arg != nullptr && "aggregator argument cannot be nullptr");
                     auto value = ValueTranslator::translate(context, symbolTable, *valueIndex, arg);
                     aggCond = addAggEqCondition(std::move(aggCond), std::move(value), i);
                 }
