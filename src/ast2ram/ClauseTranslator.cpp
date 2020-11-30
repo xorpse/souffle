@@ -319,20 +319,25 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
 
 Own<ram::Operation> ClauseTranslator::addAggregatorConstraints(Own<ram::Operation> op) {
     for (int curLevel = op_nesting.size() - 1; curLevel >= 0; curLevel--) {
-        const auto* cur = op_nesting.at(curLevel);
-        if (const auto* atom = dynamic_cast<const ast::Atom*>(cur)) {
-            const auto& args = atom->getArguments();
-            for (size_t i = 0; i < args.size(); i++) {
-                const auto* arg = args.at(i);
-                if (auto* agg = dynamic_cast<const ast::Aggregator*>(arg)) {
-                    auto loc = valueIndex->getGeneratorLoc(*agg);
-                    // FIXME: equiv' for float types (`FEQ`)
-                    op = mk<ram::Filter>(
-                            mk<ram::Constraint>(BinaryConstraintOp::EQ, mk<ram::TupleElement>(curLevel, i),
-                                    makeRamTupleElement(loc)),
-                            std::move(op));
-                }
+        // Only interested in atom arguments
+        const auto* atom = dynamic_cast<const ast::Atom*>(op_nesting.at(curLevel));
+        if (atom == nullptr) {
+            continue;
+        }
+
+        // Go through the aggregator arguments in the atom
+        const auto& args = atom->getArguments();
+        for (size_t i = 0; i < args.size(); i++) {
+            const auto* agg = dynamic_cast<const ast::Aggregator*>(args.at(i));
+            if (agg == nullptr) {
+                continue;
             }
+
+            auto loc = valueIndex->getGeneratorLoc(*agg);
+            // FIXME: equiv' for float types (`FEQ`)
+            op = mk<ram::Filter>(mk<ram::Constraint>(BinaryConstraintOp::EQ,
+                                         mk<ram::TupleElement>(curLevel, i), makeRamTupleElement(loc)),
+                    std::move(op));
         }
     }
     return op;
@@ -446,7 +451,7 @@ Own<ast::Clause> ClauseTranslator::getReorderedClause(const ast::Clause& clause,
 }
 
 void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::Argument*>& nodeArgs) {
-    for (size_t i = 0; i < nodeArgs.size(); ++i) {
+    for (size_t i = 0; i < nodeArgs.size(); i++) {
         const auto& arg = nodeArgs.at(i);
 
         // check for variable references
