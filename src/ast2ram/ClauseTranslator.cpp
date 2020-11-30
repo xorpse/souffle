@@ -221,29 +221,25 @@ Own<ram::Operation> ClauseTranslator::buildFinalOperation(
 }
 
 Own<ram::Operation> ClauseTranslator::addGeneratorLevels(Own<ram::Operation> op) {
+    auto addAggEqCondition = [&](Own<ram::Condition> aggr, Own<ram::Expression> value, size_t pos) {
+        if (isUndefValue(value.get())) return aggr;
+
+        // FIXME: equiv' for float types (`FEQ`)
+        return addConjunctiveTerm(
+                std::move(aggr), mk<ram::Constraint>(BinaryConstraintOp::EQ,
+                                         mk<ram::TupleElement>(level, pos), std::move(value)));
+    };
+
     --level;
     for (auto* cur : reverse(generators)) {
         if (auto agg = dynamic_cast<const ast::Aggregator*>(cur)) {
             Own<ram::Condition> aggCond;
 
-            // helper functions to add terms
-            auto addAggCondition = [&](Own<ram::Condition> arg) {
-                aggCond = aggCond ? mk<ram::Conjunction>(std::move(aggCond), std::move(arg)) : std::move(arg);
-            };
-
-            auto addAggEqCondition = [&](Own<ram::Expression> value, size_t pos) {
-                if (isUndefValue(value.get())) return;
-
-                // FIXME: equiv' for float types (`FEQ`)
-                addAggCondition(mk<ram::Constraint>(
-                        BinaryConstraintOp::EQ, mk<ram::TupleElement>(level, pos), std::move(value)));
-            };
-
             // translate constraints of sub-clause
             for (auto&& lit : agg->getBodyLiterals()) {
                 if (auto newCondition =
                                 ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
-                    addAggCondition(std::move(newCondition));
+                    aggCond = addConjunctiveTerm(std::move(aggCond), std::move(newCondition));
                 }
             }
 
@@ -262,12 +258,12 @@ Own<ram::Operation> ClauseTranslator::addGeneratorLevels(Own<ram::Operation> op)
                 if (auto* var = dynamic_cast<const ast::Variable*>(arg)) {
                     for (auto&& loc : valueIndex->getVariableReferences().find(var->getName())->second) {
                         if (level != loc.identifier || (int)i != loc.element) {
-                            addAggEqCondition(makeRamTupleElement(loc), i);
+                            aggCond = addAggEqCondition(std::move(aggCond), makeRamTupleElement(loc), i);
                             break;
                         }
                     }
                 } else if (auto value = ValueTranslator::translate(context, symbolTable, *valueIndex, arg)) {
-                    addAggEqCondition(std::move(value), i);
+                    aggCond = addAggEqCondition(std::move(aggCond), std::move(value), i);
                 }
             }
 
@@ -318,6 +314,7 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
 }
 
 Own<ram::Operation> ClauseTranslator::addAggregatorConstraints(Own<ram::Operation> op) {
+    // TODO: go through this one
     for (int curLevel = op_nesting.size() - 1; curLevel >= 0; curLevel--) {
         // Only interested in atom arguments
         const auto* atom = dynamic_cast<const ast::Atom*>(op_nesting.at(curLevel));

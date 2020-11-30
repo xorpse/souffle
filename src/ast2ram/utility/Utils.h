@@ -28,6 +28,7 @@ class Relation;
 
 namespace souffle::ram {
 class Clear;
+class Condition;
 class Statement;
 class TupleElement;
 }  // namespace souffle::ram
@@ -56,5 +57,8 @@ void nameUnnamedVariables(ast::Clause* clause);
 
 /** Create a RAM element access node */
 Own<ram::TupleElement> makeRamTupleElement(const Location& loc);
+
+/** Add a term to a conjunction */
+Own<ram::Condition> addConjunctiveTerm(Own<ram::Condition> curCondition, Own<ram::Condition> newTerm);
 
 }  // namespace souffle::ast2ram
