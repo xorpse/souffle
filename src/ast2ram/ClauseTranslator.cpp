@@ -234,13 +234,19 @@ Own<ram::Operation> ClauseTranslator::instantiateAggregator(
     Own<ram::Condition> aggCond;
 
     // translate constraints of sub-clause
-    for (auto&& lit : agg->getBodyLiterals()) {
-        if (auto newCondition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
-            aggCond = addConjunctiveTerm(std::move(aggCond), std::move(newCondition));
+    for (const auto* lit : agg->getBodyLiterals()) {
+        // atoms handled later
+        if (isA<ast::Atom>(lit)) {
+            continue;
         }
+
+        // literal becomes a constraint
+        auto newCondition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit);
+        assert(newCondition != nullptr && "condition should be a valid value");
+        aggCond = addConjunctiveTerm(std::move(aggCond), std::move(newCondition));
     }
 
-    // translate arguments's of atom to conditions
+    // translate arguments of atom to conditions
     const auto& aggBodyAtoms =
             filter(agg->getBodyLiterals(), [&](const ast::Literal* lit) { return isA<ast::Atom>(lit); });
     assert(aggBodyAtoms.size() == 1 && "exactly one atom should exist per aggregator body");
@@ -314,10 +320,16 @@ Own<ram::Operation> ClauseTranslator::addGeneratorLevels(Own<ram::Operation> op)
 
 Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
         const ast::Clause& clause, Own<ram::Operation> op) {
-    for (const auto& lit : clause.getBodyLiterals()) {
-        if (auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
-            op = mk<ram::Filter>(std::move(condition), std::move(op));
+    for (const auto* lit : clause.getBodyLiterals()) {
+        // atoms not handled here
+        if (isA<ast::Atom>(lit)) {
+            continue;
         }
+
+        // constraints become literals
+        auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit);
+        assert(condition != nullptr && "condition should be a valid value");
+        op = mk<ram::Filter>(std::move(condition), std::move(op));
     }
     return op;
 }
