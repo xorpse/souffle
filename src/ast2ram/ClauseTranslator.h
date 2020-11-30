@@ -26,9 +26,11 @@ class SymbolTable;
 }
 
 namespace souffle::ast {
+class Aggregator;
 class Argument;
 class Clause;
 class Constant;
+class IntrinsicFunctor;
 class Node;
 }  // namespace souffle::ast
 
@@ -106,6 +108,10 @@ private:
 
     static RamDomain getConstantRamRepresentation(SymbolTable& symbolTable, const ast::Constant& constant);
     static Own<ram::Expression> translateConstant(SymbolTable& symbolTable, const ast::Constant& constant);
+
+    Own<ram::Operation> instantiateAggregator(Own<ram::Operation> op, const ast::Aggregator* agg);
+    Own<ram::Operation> instantiateMultiResultFunctor(
+            Own<ram::Operation> op, const ast::IntrinsicFunctor* inf);
 };
 
 }  // namespace souffle::ast2ram

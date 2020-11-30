@@ -220,7 +220,8 @@ Own<ram::Operation> ClauseTranslator::buildFinalOperation(
     return op;
 }
 
-Own<ram::Operation> ClauseTranslator::addGeneratorLevels(Own<ram::Operation> op) {
+Own<ram::Operation> ClauseTranslator::instantiateAggregator(
+        Own<ram::Operation> op, const ast::Aggregator* agg) {
     auto addAggEqCondition = [&](Own<ram::Condition> aggr, Own<ram::Expression> value, size_t pos) {
         if (isUndefValue(value.get())) return aggr;
 
@@ -230,79 +231,84 @@ Own<ram::Operation> ClauseTranslator::addGeneratorLevels(Own<ram::Operation> op)
                                          mk<ram::TupleElement>(level, pos), std::move(value)));
     };
 
+    Own<ram::Condition> aggCond;
+
+    // translate constraints of sub-clause
+    for (auto&& lit : agg->getBodyLiterals()) {
+        if (auto newCondition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
+            aggCond = addConjunctiveTerm(std::move(aggCond), std::move(newCondition));
+        }
+    }
+
+    // translate arguments's of atom to conditions
+    const auto& aggBodyAtoms =
+            filter(agg->getBodyLiterals(), [&](const ast::Literal* lit) { return isA<ast::Atom>(lit); });
+    assert(aggBodyAtoms.size() == 1 && "exactly one atom should exist per aggregator body");
+    const auto* aggAtom = static_cast<const ast::Atom*>(aggBodyAtoms.at(0));
+
+    const auto& aggAtomArgs = aggAtom->getArguments();
+    for (size_t i = 0; i < aggAtomArgs.size(); i++) {
+        const auto* arg = aggAtomArgs.at(i);
+
+        // variable bindings are issued differently since we don't want self
+        // referential variable bindings
+        if (auto* var = dynamic_cast<const ast::Variable*>(arg)) {
+            for (auto&& loc : valueIndex->getVariableReferences().find(var->getName())->second) {
+                if (level != loc.identifier || (int)i != loc.element) {
+                    aggCond = addAggEqCondition(std::move(aggCond), makeRamTupleElement(loc), i);
+                    break;
+                }
+            }
+        } else {
+            assert(arg != nullptr && "aggregator argument cannot be nullptr");
+            auto value = ValueTranslator::translate(context, symbolTable, *valueIndex, arg);
+            aggCond = addAggEqCondition(std::move(aggCond), std::move(value), i);
+        }
+    }
+
+    // translate aggregate expression
+    const auto* aggExpr = agg->getTargetExpression();
+    auto expr = aggExpr ? ValueTranslator::translate(context, symbolTable, *valueIndex, aggExpr) : nullptr;
+
+    // add Ram-Aggregation layer
+    return mk<ram::Aggregate>(std::move(op), agg->getFinalType().value(),
+            getConcreteRelationName(aggAtom->getQualifiedName()),
+            expr ? std::move(expr) : mk<ram::UndefValue>(), aggCond ? std::move(aggCond) : mk<ram::True>(),
+            level);
+}
+
+Own<ram::Operation> ClauseTranslator::instantiateMultiResultFunctor(
+        Own<ram::Operation> op, const ast::IntrinsicFunctor* inf) {
+    VecOwn<ram::Expression> args;
+    for (auto&& x : inf->getArguments()) {
+        args.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, x));
+    }
+
+    auto func_op = [&]() -> ram::NestedIntrinsicOp {
+        switch (inf->getFinalOpType().value()) {
+            case FunctorOp::RANGE: return ram::NestedIntrinsicOp::RANGE;
+            case FunctorOp::URANGE: return ram::NestedIntrinsicOp::URANGE;
+            case FunctorOp::FRANGE: return ram::NestedIntrinsicOp::FRANGE;
+
+            default: fatal("missing case handler or bad code-gen");
+        }
+    };
+
+    return mk<ram::NestedIntrinsicOperator>(func_op(), std::move(args), std::move(op), level);
+}
+
+Own<ram::Operation> ClauseTranslator::addGeneratorLevels(Own<ram::Operation> op) {
     --level;
     for (auto* cur : reverse(generators)) {
         if (auto agg = dynamic_cast<const ast::Aggregator*>(cur)) {
-            Own<ram::Condition> aggCond;
-
-            // translate constraints of sub-clause
-            for (auto&& lit : agg->getBodyLiterals()) {
-                if (auto newCondition =
-                                ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
-                    aggCond = addConjunctiveTerm(std::move(aggCond), std::move(newCondition));
-                }
-            }
-
-            // translate arguments's of atom to conditions
-            const auto& aggBodyAtoms = filter(
-                    agg->getBodyLiterals(), [&](const ast::Literal* lit) { return isA<ast::Atom>(lit); });
-            assert(aggBodyAtoms.size() == 1 && "exactly one atom should exist per aggregator body");
-            const auto* aggAtom = static_cast<const ast::Atom*>(aggBodyAtoms.at(0));
-
-            const auto& aggAtomArgs = aggAtom->getArguments();
-            for (size_t i = 0; i < aggAtomArgs.size(); i++) {
-                const auto* arg = aggAtomArgs.at(i);
-
-                // variable bindings are issued differently since we don't want self
-                // referential variable bindings
-                if (auto* var = dynamic_cast<const ast::Variable*>(arg)) {
-                    for (auto&& loc : valueIndex->getVariableReferences().find(var->getName())->second) {
-                        if (level != loc.identifier || (int)i != loc.element) {
-                            aggCond = addAggEqCondition(std::move(aggCond), makeRamTupleElement(loc), i);
-                            break;
-                        }
-                    }
-                } else {
-                    assert(arg != nullptr && "aggregator argument cannot be nullptr");
-                    auto value = ValueTranslator::translate(context, symbolTable, *valueIndex, arg);
-                    aggCond = addAggEqCondition(std::move(aggCond), std::move(value), i);
-                }
-            }
-
-            // translate aggregate expression
-            const auto* aggExpr = agg->getTargetExpression();
-            auto expr = aggExpr ? ValueTranslator::translate(context, symbolTable, *valueIndex, aggExpr)
-                                : nullptr;
-
-            // add Ram-Aggregation layer
-            op = mk<ram::Aggregate>(std::move(op), agg->getFinalType().value(),
-                    getConcreteRelationName(aggAtom->getQualifiedName()),
-                    expr ? std::move(expr) : mk<ram::UndefValue>(),
-                    aggCond ? std::move(aggCond) : mk<ram::True>(), level);
-        } else if (const auto* func = dynamic_cast<const ast::IntrinsicFunctor*>(cur)) {
-            VecOwn<ram::Expression> args;
-            for (auto&& x : func->getArguments()) {
-                args.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, x));
-            }
-
-            auto func_op = [&]() -> ram::NestedIntrinsicOp {
-                switch (func->getFinalOpType().value()) {
-                    case FunctorOp::RANGE: return ram::NestedIntrinsicOp::RANGE;
-                    case FunctorOp::URANGE: return ram::NestedIntrinsicOp::URANGE;
-                    case FunctorOp::FRANGE: return ram::NestedIntrinsicOp::FRANGE;
-
-                    default: fatal("missing case handler or bad code-gen");
-                }
-            };
-
-            op = mk<ram::NestedIntrinsicOperator>(func_op(), std::move(args), std::move(op), level);
+            op = instantiateAggregator(std::move(op), agg);
+        } else if (const auto* inf = dynamic_cast<const ast::IntrinsicFunctor*>(cur)) {
+            op = instantiateMultiResultFunctor(std::move(op), inf);
         } else {
             assert(false && "unhandled generator");
         }
-
         --level;
     }
-
     return op;
 }
 
