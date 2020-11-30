@@ -244,8 +244,8 @@ Own<ram::Operation> ClauseTranslator::addGeneratorLevels(Own<ram::Operation> op)
             }
 
             // translate arguments's of atom to conditions
-            const auto& aggBodyAtoms = filter(agg->getBodyLiterals(),
-                    [&](const ast::Literal* lit) { return dynamic_cast<const ast::Atom*>(lit) != nullptr; });
+            const auto& aggBodyAtoms = filter(
+                    agg->getBodyLiterals(), [&](const ast::Literal* lit) { return isA<ast::Atom>(lit); });
             assert(aggBodyAtoms.size() == 1 && "exactly one atom should exist per aggregator body");
             const auto* aggAtom = static_cast<const ast::Atom*>(aggBodyAtoms.at(0));
 
@@ -468,8 +468,7 @@ void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::
 
 std::optional<int> ClauseTranslator::addGenerator(const ast::Argument& arg) {
     // TODO: by-value comparison for CSE; do this elsewhere
-    if (dynamic_cast<const ast::Aggregator*>(&arg) != nullptr &&
-            any_of(generators, [&](auto* x) { return *x == arg; })) {
+    if (isA<ast::Aggregator>(&arg) && any_of(generators, [&](auto* x) { return *x == arg; })) {
         return {};
     }
     generators.push_back(&arg);
