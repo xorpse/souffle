@@ -83,9 +83,7 @@ private:
     void indexAtoms(const ast::Clause& clause);
     void indexAggregators(const ast::Clause& clause);
     void indexMultiResultFunctors(const ast::Clause& clause);
-
-    void indexValues(int curNodeLevel, const std::vector<ast::Argument*>& curNodeArgs,
-            const std::string& relationName, size_t relationArity);
+    void indexNodeArguments(int nodeLevel, const std::vector<ast::Argument*>& nodeArgs);
 
     // Add equivalence constraints imposed by variable bindings
     Own<ram::Operation> addVariableBindingConstraints(Own<ram::Operation> op);

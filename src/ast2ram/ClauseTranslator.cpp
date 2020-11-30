@@ -445,27 +445,21 @@ Own<ast::Clause> ClauseTranslator::getReorderedClause(const ast::Clause& clause,
     return reorderedClause;
 }
 
-void ClauseTranslator::indexValues(int curNodeLevel, const std::vector<ast::Argument*>& curNodeArgs,
-        const std::string& relationName, size_t relationArity) {
-    for (size_t pos = 0; pos < curNodeArgs.size(); ++pos) {
-        // get argument
-        const auto& arg = curNodeArgs[pos];
+void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::Argument*>& nodeArgs) {
+    for (size_t i = 0; i < nodeArgs.size(); ++i) {
+        const auto& arg = nodeArgs.at(i);
 
         // check for variable references
         if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
-            valueIndex->addVarReference(*var, curNodeLevel, pos);
+            valueIndex->addVarReference(*var, nodeLevel, i);
         }
 
         // check for nested records
         if (auto rec = dynamic_cast<const ast::RecordInit*>(arg)) {
             // introduce new nesting level for unpack
             op_nesting.push_back(rec);
-
-            // register location of record
-            valueIndex->setRecordDefinition(*rec, curNodeLevel, pos);
-
-            // resolve nested components
-            indexValues(level++, rec->getArguments(), relationName, relationArity);
+            valueIndex->setRecordDefinition(*rec, nodeLevel, i);
+            indexNodeArguments(level++, rec->getArguments());
         }
     }
 }
@@ -487,10 +481,7 @@ void ClauseTranslator::indexAtoms(const ast::Clause& clause) {
     for (const auto* atom : ast::getBodyLiterals<ast::Atom>(clause)) {
         // give the atom the current level
         op_nesting.push_back(atom);
-
-        // index each value in the atom
-        indexValues(level++, atom->getArguments(), getConcreteRelationName(atom->getQualifiedName()),
-                atom->getArity());
+        indexNodeArguments(level++, atom->getArguments());
     }
 }
 
