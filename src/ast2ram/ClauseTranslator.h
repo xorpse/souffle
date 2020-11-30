@@ -87,16 +87,9 @@ private:
     void indexMultiResultFunctors(const ast::Clause& clause);
     void indexNodeArguments(int nodeLevel, const std::vector<ast::Argument*>& nodeArgs);
 
-    // Add equivalence constraints imposed by variable bindings
     Own<ram::Operation> addVariableBindingConstraints(Own<ram::Operation> op);
-
-    // Add constraints imposed by the body literals
     Own<ram::Operation> addBodyLiteralConstraints(const ast::Clause& clause, Own<ram::Operation> op);
-
-    // Add aggregator conditions
     Own<ram::Operation> addAggregatorConstraints(Own<ram::Operation> op);
-
-    // Add generator levels
     Own<ram::Operation> addGeneratorLevels(Own<ram::Operation> op);
 
     // Build operation bottom-up
