@@ -445,7 +445,7 @@ Own<ast::Clause> ClauseTranslator::getReorderedClause(const ast::Clause& clause,
     return reorderedClause;
 }
 
-void ClauseTranslator::indexValues(const ast::Node* curNode, const std::vector<ast::Argument*>& curNodeArgs,
+void ClauseTranslator::indexValues(int curNodeLevel, const std::vector<ast::Argument*>& curNodeArgs,
         std::map<const ast::Node*, int>& nodeLevel, const std::string& relationName, size_t relationArity) {
     for (size_t pos = 0; pos < curNodeArgs.size(); ++pos) {
         // get argument
@@ -454,9 +454,9 @@ void ClauseTranslator::indexValues(const ast::Node* curNode, const std::vector<a
         // check for variable references
         if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
             if (pos < relationArity) {
-                valueIndex->addVarReference(*var, nodeLevel[curNode], pos, relationName);
+                valueIndex->addVarReference(*var, curNodeLevel, pos, relationName);
             } else {
-                valueIndex->addVarReference(*var, nodeLevel[curNode], pos);
+                valueIndex->addVarReference(*var, curNodeLevel, pos);
             }
         }
 
@@ -467,10 +467,10 @@ void ClauseTranslator::indexValues(const ast::Node* curNode, const std::vector<a
             nodeLevel[rec] = level++;
 
             // register location of record
-            valueIndex->setRecordDefinition(*rec, nodeLevel[curNode], pos);
+            valueIndex->setRecordDefinition(*rec, curNodeLevel, pos);
 
             // resolve nested components
-            indexValues(rec, rec->getArguments(), nodeLevel, relationName, relationArity);
+            indexValues(nodeLevel[rec], rec->getArguments(), nodeLevel, relationName, relationArity);
         }
     }
 }
@@ -498,7 +498,7 @@ void ClauseTranslator::indexAtoms(const ast::Clause& clause) {
         op_nesting.push_back(atom);
 
         // index each value in the atom
-        indexValues(atom, atom->getArguments(), nodeLevel, getConcreteRelationName(atom->getQualifiedName()),
+        indexValues(nodeLevel[atom], atom->getArguments(), nodeLevel, getConcreteRelationName(atom->getQualifiedName()),
                 atom->getArity());
     }
 }

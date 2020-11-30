@@ -84,7 +84,7 @@ private:
     void indexAggregators(const ast::Clause& clause);
     void indexMultiResultFunctors(const ast::Clause& clause);
 
-    void indexValues(const ast::Node* curNode, const std::vector<ast::Argument*>& curNodeArgs,
+    void indexValues(int curNodeLevel, const std::vector<ast::Argument*>& curNodeArgs,
             std::map<const ast::Node*, int>& nodeLevel, const std::string& relationName,
             size_t relationArity);
 
