@@ -24,6 +24,8 @@
 #include "ast/utility/Utils.h"
 #include "ast2ram/utility/Location.h"
 #include "ram/Clear.h"
+#include "ram/Condition.h"
+#include "ram/Conjunction.h"
 #include "ram/TupleElement.h"
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/StringUtil.h"
@@ -85,6 +87,11 @@ void nameUnnamedVariables(ast::Clause* clause) {
 
 Own<ram::TupleElement> makeRamTupleElement(const Location& loc) {
     return mk<ram::TupleElement>(loc.identifier, loc.element);
+}
+
+Own<ram::Condition> addConjunctiveTerm(Own<ram::Condition> curCondition, Own<ram::Condition> newTerm) {
+    return curCondition ? mk<ram::Conjunction>(std::move(curCondition), std::move(newTerm))
+                        : std::move(newTerm);
 }
 
 }  // namespace souffle::ast2ram

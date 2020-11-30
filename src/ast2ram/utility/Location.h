@@ -25,10 +25,9 @@ namespace souffle::ast2ram {
 struct Location {
     const int identifier;
     const int element;
-    std::string relation;
 
-    Location(int ident, int elem, std::string rel = "")
-            : identifier(ident), element(elem), relation(std::move(rel)) {}
+    // TODO (azreika): change these to size_t
+    Location(int ident, int elem) : identifier(ident), element(elem) {}
 
     Location(const Location& l) = default;
 
