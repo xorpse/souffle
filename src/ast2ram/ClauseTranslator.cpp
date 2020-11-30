@@ -262,14 +262,16 @@ Own<ram::Operation> ClauseTranslator::addGeneratorLevels(Own<ram::Operation> op)
                             break;
                         }
                     }
-                } else if (auto value = ValueTranslator::translate(context, symbolTable, *valueIndex, arg)) {
+                } else if (arg != nullptr) {
+                    auto value = ValueTranslator::translate(context, symbolTable, *valueIndex, arg);
                     aggCond = addAggEqCondition(std::move(aggCond), std::move(value), i);
                 }
             }
 
             // translate aggregate expression
-            auto expr =
-                    ValueTranslator::translate(context, symbolTable, *valueIndex, agg->getTargetExpression());
+            const auto* aggExpr = agg->getTargetExpression();
+            auto expr = aggExpr ? ValueTranslator::translate(context, symbolTable, *valueIndex, aggExpr)
+                                : nullptr;
 
             // add Ram-Aggregation layer
             op = mk<ram::Aggregate>(std::move(op), agg->getFinalType().value(),

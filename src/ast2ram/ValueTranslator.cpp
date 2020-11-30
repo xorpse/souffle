@@ -40,7 +40,7 @@ namespace souffle::ast2ram {
 
 Own<ram::Expression> ValueTranslator::translate(const TranslatorContext& context, SymbolTable& symbolTable,
         const ValueIndex& index, const ast::Argument* arg) {
-    if (arg == nullptr) return nullptr;
+    assert(arg != nullptr && "arg should be defined");
     return ValueTranslator(context, symbolTable, index)(*arg);
 }
 
