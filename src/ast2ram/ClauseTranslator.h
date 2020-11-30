@@ -85,8 +85,7 @@ private:
     void indexMultiResultFunctors(const ast::Clause& clause);
 
     void indexValues(int curNodeLevel, const std::vector<ast::Argument*>& curNodeArgs,
-            std::map<const ast::Node*, int>& nodeLevel, const std::string& relationName,
-            size_t relationArity);
+            const std::string& relationName, size_t relationArity);
 
     // Add equivalence constraints imposed by variable bindings
     Own<ram::Operation> addVariableBindingConstraints(Own<ram::Operation> op);

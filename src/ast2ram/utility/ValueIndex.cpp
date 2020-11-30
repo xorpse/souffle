@@ -35,8 +35,8 @@ void ValueIndex::addVarReference(const ast::Variable& var, const Location& l) {
     locs.insert(l);
 }
 
-void ValueIndex::addVarReference(const ast::Variable& var, int ident, int pos, std::string rel) {
-    addVarReference(var, Location({ident, pos, rel}));
+void ValueIndex::addVarReference(const ast::Variable& var, int ident, int pos) {
+    addVarReference(var, Location({ident, pos}));
 }
 
 bool ValueIndex::isDefined(const ast::Variable& var) const {
@@ -73,8 +73,8 @@ const Location& ValueIndex::getGeneratorLoc(const ast::Argument& arg) const {
     fatal("arg `%s` has no generator location", arg);
 }
 
-void ValueIndex::setRecordDefinition(const ast::RecordInit& init, int ident, int pos, std::string rel) {
-    recordDefinitionPoints.insert({&init, Location({ident, pos, rel})});
+void ValueIndex::setRecordDefinition(const ast::RecordInit& init, int ident, int pos) {
+    recordDefinitionPoints.insert({&init, Location({ident, pos})});
 }
 
 const Location& ValueIndex::getDefinitionPoint(const ast::RecordInit& init) const {

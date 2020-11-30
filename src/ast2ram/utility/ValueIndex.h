@@ -43,12 +43,12 @@ public:
         return varReferencePoints;
     }
     void addVarReference(const ast::Variable& var, const Location& l);
-    void addVarReference(const ast::Variable& var, int ident, int pos, std::string rel = "");
+    void addVarReference(const ast::Variable& var, int ident, int pos);
     bool isDefined(const ast::Variable& var) const;
     const Location& getDefinitionPoint(const ast::Variable& var) const;
 
     // -- records --
-    void setRecordDefinition(const ast::RecordInit& init, int ident, int pos, std::string rel = "");
+    void setRecordDefinition(const ast::RecordInit& init, int ident, int pos);
     const Location& getDefinitionPoint(const ast::RecordInit& init) const;
 
     // -- generators (aggregates & some functors) --
