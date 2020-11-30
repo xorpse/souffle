@@ -335,7 +335,7 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
 }
 
 Own<ram::Operation> ClauseTranslator::addAggregatorConstraints(Own<ram::Operation> op) {
-    // TODO: go through this one
+    // TODO (azreika): needs some clean up
     for (int curLevel = op_nesting.size() - 1; curLevel >= 0; curLevel--) {
         // Only interested in atom arguments
         const auto* atom = dynamic_cast<const ast::Atom*>(op_nesting.at(curLevel));
@@ -488,7 +488,7 @@ void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::
 }
 
 std::optional<int> ClauseTranslator::addGenerator(const ast::Argument& arg) {
-    // TODO: by-value comparison for CSE; do this elsewhere
+    // TODO (azreika): by-value comparison for CSE; do this in the AST like other generators
     if (isA<ast::Aggregator>(&arg) && any_of(generators, [&](auto* x) { return *x == arg; })) {
         return {};
     }

@@ -34,7 +34,7 @@ Own<ram::Condition> ProvenanceClauseTranslator::createCondition(const ast::Claus
     return nullptr;
 }
 
-// TODO: this doesn't fit
+// TODO (azreika): this overload doesn't really fit
 Own<ram::Operation> ProvenanceClauseTranslator::createProjection(const ast::Clause& clause) {
     VecOwn<ram::Expression> values;
 
