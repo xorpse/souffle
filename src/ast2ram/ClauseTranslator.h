@@ -79,11 +79,14 @@ private:
 
     Own<ast::Clause> getReorderedClause(const ast::Clause& clause, const int version) const;
 
+    void indexClause(const ast::Clause& clause);
+    void indexAtoms(const ast::Clause& clause);
+    void indexAggregators(const ast::Clause& clause);
+    void indexMultiResultFunctors(const ast::Clause& clause);
+
     void indexValues(const ast::Node* curNode, const std::vector<ast::Argument*>& curNodeArgs,
             std::map<const ast::Node*, int>& nodeLevel, const std::string& relationName,
             size_t relationArity);
-
-    void createValueIndex(const ast::Clause& clause);
 
     // Add equivalence constraints imposed by variable bindings
     Own<ram::Operation> addVariableBindingConstraints(Own<ram::Operation> op);

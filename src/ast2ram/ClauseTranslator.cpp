@@ -87,7 +87,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
     // the rest should be rules
     assert(isRule(clause));
 
-    createValueIndex(clause);
+    indexClause(clause);
 
     /* -- create RAM statement -- */
 
@@ -449,10 +449,10 @@ void ClauseTranslator::indexValues(const ast::Node* curNode, const std::vector<a
         std::map<const ast::Node*, int>& nodeLevel, const std::string& relationName, size_t relationArity) {
     for (size_t pos = 0; pos < curNodeArgs.size(); ++pos) {
         // get argument
-        auto& arg = curNodeArgs[pos];
+        const auto& arg = curNodeArgs[pos];
 
         // check for variable references
-        if (auto var = dynamic_cast<const ast::Variable*>(arg)) {
+        if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
             if (pos < relationArity) {
                 valueIndex->addVarReference(*var, nodeLevel[curNode], pos, relationName);
             } else {
@@ -488,8 +488,7 @@ std::optional<int> ClauseTranslator::addGenerator(const ast::Argument& arg) {
     return aggLoc;
 }
 
-/** index values in rule */
-void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
+void ClauseTranslator::indexAtoms(const ast::Clause& clause) {
     for (const auto* atom : ast::getBodyLiterals<ast::Atom>(clause)) {
         // map from each list of arguments to its nesting level
         std::map<const ast::Node*, int> nodeLevel;
@@ -502,9 +501,10 @@ void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
         indexValues(atom, atom->getArguments(), nodeLevel, getConcreteRelationName(atom->getQualifiedName()),
                 atom->getArity());
     }
+}
 
-    // add aggregation functions
-    visitDepthFirstPostOrder(clause, [&](const ast::Argument& arg) {
+void ClauseTranslator::indexAggregators(const ast::Clause& clause) {
+    visitDepthFirst(clause, [&](const ast::Argument& arg) {
         if (auto agg = dynamic_cast<const ast::Aggregator*>(&arg)) {
             if (auto aggLoc = addGenerator(arg)) {
                 // bind aggregator variables to locations
@@ -528,7 +528,11 @@ void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
                 }
             }
         }
+    });
+}
 
+void ClauseTranslator::indexMultiResultFunctors(const ast::Clause& clause) {
+    visitDepthFirst(clause, [&](const ast::Argument& arg) {
         auto* func = as<ast::IntrinsicFunctor>(arg);
         if (func && ast::analysis::FunctorAnalysis::isMultiResult(*func)) {
             addGenerator(arg);
@@ -544,6 +548,12 @@ void ClauseTranslator::createValueIndex(const ast::Clause& clause) {
         if (!ast::analysis::FunctorAnalysis::isMultiResult(*rhs)) return;
         valueIndex->addVarReference(*lhs, valueIndex->getGeneratorLoc(*rhs));
     });
+}
+
+void ClauseTranslator::indexClause(const ast::Clause& clause) {
+    indexAtoms(clause);
+    indexAggregators(clause);
+    indexMultiResultFunctors(clause);
 }
 
 }  // namespace souffle::ast2ram
