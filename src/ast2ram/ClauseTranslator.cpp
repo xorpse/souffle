@@ -235,15 +235,10 @@ Own<ram::Operation> ClauseTranslator::instantiateAggregator(
 
     // translate constraints of sub-clause
     for (const auto* lit : agg->getBodyLiterals()) {
-        // atoms handled later
-        if (isA<ast::Atom>(lit)) {
-            continue;
-        }
-
         // literal becomes a constraint
-        auto newCondition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit);
-        assert(newCondition != nullptr && "condition should be a valid value");
-        aggCond = addConjunctiveTerm(std::move(aggCond), std::move(newCondition));
+        if (auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
+            aggCond = addConjunctiveTerm(std::move(aggCond), std::move(condition));
+        }
     }
 
     // translate arguments of atom to conditions
@@ -321,15 +316,10 @@ Own<ram::Operation> ClauseTranslator::addGeneratorLevels(Own<ram::Operation> op)
 Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
         const ast::Clause& clause, Own<ram::Operation> op) {
     for (const auto* lit : clause.getBodyLiterals()) {
-        // atoms not handled here
-        if (isA<ast::Atom>(lit)) {
-            continue;
-        }
-
         // constraints become literals
-        auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit);
-        assert(condition != nullptr && "condition should be a valid value");
-        op = mk<ram::Filter>(std::move(condition), std::move(op));
+        if (auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
+            op = mk<ram::Filter>(std::move(condition), std::move(op));
+        }
     }
     return op;
 }
