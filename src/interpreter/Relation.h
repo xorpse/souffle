@@ -184,7 +184,7 @@ public:
             : RelationWrapper(Arity, auxiliaryArity, std::move(name)) {
         for (auto order : orderSet.getAllOrders()) {
             // Expand the order to a total order
-            ram::analysis::MinIndexSelection::AttributeSet set{order.begin(), order.end()};
+            ram::analysis::IndexAnalysis::AttributeSet set{order.begin(), order.end()};
 
             // This operation is not performance critical.
             // Not using constexpr Arity to avoid compiler warning. (When Arity == 0)

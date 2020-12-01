@@ -116,7 +116,7 @@ void NullaryRelation::generateTypeStruct(std::ostream&) {
 /** Generate index set for a direct indexed relation */
 void DirectRelation::computeIndices() {
     // Generate and set indices
-    MinIndexSelection::OrderCollection inds = indices.getAllOrders();
+    IndexAnalysis::OrderCollection inds = indices.getAllOrders();
 
     // generate a full index if no indices exist
     assert(!inds.empty() && "no full index in relation");
@@ -191,7 +191,7 @@ void DirectRelation::generateTypeStruct(std::ostream& out) {
     auto types = relation.getAttributeTypes();
     const auto& inds = getIndices();
     size_t numIndexes = inds.size();
-    std::map<MinIndexSelection::LexOrder, int> indexToNumMap;
+    std::map<IndexAnalysis::LexOrder, int> indexToNumMap;
 
     // struct definition
     out << "struct " << getTypeName() << " {\n";
@@ -514,7 +514,7 @@ void IndirectRelation::computeIndices() {
     assert(!isProvenance && "indirect indexes cannot used for provenance");
 
     // Generate and set indices
-    MinIndexSelection::OrderCollection inds = indices.getAllOrders();
+    IndexAnalysis::OrderCollection inds = indices.getAllOrders();
 
     // generate a full index if no indices exist
     assert(!inds.empty() && "no full index in relation");
@@ -561,7 +561,7 @@ void IndirectRelation::generateTypeStruct(std::ostream& out) {
     const auto& inds = getIndices();
     auto types = relation.getAttributeTypes();
     size_t numIndexes = inds.size();
-    std::map<MinIndexSelection::LexOrder, int> indexToNumMap;
+    std::map<IndexAnalysis::LexOrder, int> indexToNumMap;
 
     // struct definition
     out << "struct " << getTypeName() << " {\n";
@@ -850,7 +850,7 @@ void BrieRelation::computeIndices() {
     assert(!isProvenance && "bries cannot be used with provenance");
 
     // Generate and set indices
-    MinIndexSelection::OrderCollection inds = indices.getAllOrders();
+    IndexAnalysis::OrderCollection inds = indices.getAllOrders();
 
     // generate a full index if no indices exist
     assert(!inds.empty() && "No full index in relation");
@@ -905,7 +905,7 @@ void BrieRelation::generateTypeStruct(std::ostream& out) {
     size_t arity = getArity();
     const auto& inds = getIndices();
     size_t numIndexes = inds.size();
-    std::map<MinIndexSelection::LexOrder, int> indexToNumMap;
+    std::map<IndexAnalysis::LexOrder, int> indexToNumMap;
 
     // struct definition
     out << "struct " << getTypeName() << " {\n";
@@ -1158,7 +1158,7 @@ void EqrelRelation::generateTypeStruct(std::ostream& out) {
     constexpr souffle::Relation::arity_type arity = 2;
     const auto& inds = getIndices();
     size_t numIndexes = inds.size();
-    std::map<MinIndexSelection::LexOrder, int> indexToNumMap;
+    std::map<IndexAnalysis::LexOrder, int> indexToNumMap;
 
     // struct definition
     out << "struct " << getTypeName() << " {\n";

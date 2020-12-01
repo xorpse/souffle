@@ -33,7 +33,7 @@ public:
     }
 };
 
-using Nodes = MinIndexSelection::SearchSet;
+using Nodes = IndexAnalysis::SearchSet;
 
 SearchSignature setBits(size_t arity, uint64_t mask) {
     SearchSignature search(arity);

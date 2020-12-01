@@ -21,6 +21,7 @@
 
 namespace souffle::synthesiser {
 
+using ram::analysis::IndexAnalysis;
 using ram::analysis::MinIndexSelection;
 
 class Relation {
@@ -46,7 +47,7 @@ public:
     /** Get list of indices used for relation,
      * guaranteed that original indices in analysis::MinIndexSelection
      * come before any generated indices */
-    MinIndexSelection::OrderCollection getIndices() const {
+    IndexAnalysis::OrderCollection getIndices() const {
         return computedIndices;
     }
 
@@ -89,7 +90,7 @@ protected:
     std::string dataStructure;
 
     /** The final list of indices used */
-    MinIndexSelection::OrderCollection computedIndices;
+    IndexAnalysis::OrderCollection computedIndices;
 
     /** The list of indices added for provenance computation */
     std::set<int> provenanceIndexNumbers;
