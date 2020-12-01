@@ -464,8 +464,30 @@ void ClauseTranslator::indexAtoms(const ast::Clause& clause) {
     }
 }
 
+void ClauseTranslator::indexAggregator(const ast::Aggregator& agg) {
+    auto aggLoc = valueIndex->getGeneratorLoc(agg);
+
+    // Get the single body atom inside the aggregator
+    const auto& aggBodyAtoms =
+            filter(agg.getBodyLiterals(), [&](const ast::Literal* lit) { return isA<ast::Atom>(lit); });
+    assert(aggBodyAtoms.size() == 1 && "exactly one atom should exist per aggregator body");
+    const auto* aggAtom = static_cast<const ast::Atom*>(aggBodyAtoms.at(0));
+
+    // Add the variable references inside this atom
+    const auto& aggAtomArgs = aggAtom->getArguments();
+    for (size_t i = 0; i < aggAtomArgs.size(); i++) {
+        const auto* arg = aggAtomArgs.at(i);
+        if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
+            valueIndex->addVarReference(*var, aggLoc.identifier, (int)i);
+        }
+    }
+}
+
 void ClauseTranslator::indexAggregators(const ast::Clause& clause) {
     visitDepthFirst(clause, [&](const ast::Aggregator& agg) { addGenerator(agg); });
+
+    // index aggregator atoms
+    visitDepthFirst(clause, [&](const ast::Aggregator& agg) { indexAggregator(agg); });
 
     // add aggregator introductions
     visitDepthFirst(clause, [&](const ast::BinaryConstraint& bc) {
