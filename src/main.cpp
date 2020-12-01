@@ -489,6 +489,7 @@ int main(int argc, char** argv) {
             mk<ast::transform::MaterializeSingletonAggregationTransformer>(),
             mk<ast::transform::FixpointTransformer>(
                     mk<ast::transform::MaterializeAggregationQueriesTransformer>()),
+            mk<ast::transform::RemoveRedundantSumsTransformer>(),
             mk<ast::transform::NormaliseGeneratorsTransformer>(),
             mk<ast::transform::ResolveAliasesTransformer>(),
             mk<ast::transform::RemoveBooleanConstraintsTransformer>(),
@@ -505,7 +506,6 @@ int main(int argc, char** argv) {
             mk<ast::transform::RemoveRelationCopiesTransformer>(), std::move(partitionPipeline),
             std::move(equivalencePipeline), mk<ast::transform::RemoveRelationCopiesTransformer>(),
             std::move(magicPipeline), mk<ast::transform::ReorderLiteralsTransformer>(),
-            mk<ast::transform::RemoveRedundantSumsTransformer>(),
             mk<ast::transform::RemoveEmptyRelationsTransformer>(),
             mk<ast::transform::AddNullariesToAtomlessAggregatesTransformer>(),
             mk<ast::transform::ReorderLiteralsTransformer>(), mk<ast::transform::ExecutionPlanChecker>(),
