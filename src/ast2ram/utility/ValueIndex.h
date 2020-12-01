@@ -42,6 +42,7 @@ public:
     const std::map<std::string, std::set<Location>>& getVariableReferences() const {
         return varReferencePoints;
     }
+    const std::set<Location>& getVariableReferences(std::string var) const;
     void addVarReference(const ast::Variable& var, const Location& l);
     void addVarReference(const ast::Variable& var, int ident, int pos);
     bool isDefined(const ast::Variable& var) const;
@@ -68,8 +69,7 @@ private:
     std::map<const ast::RecordInit*, Location> recordDefinitionPoints;
 
     // Map from generative arguments to definition point
-    // Arguments indexed by value, not address, so std::map can't be used
-    std::vector<std::pair<const ast::Argument*, Location>> generatorDefinitionPoints;
+    std::map<const ast::Argument*, Location> generatorDefinitionPoints;
 };
 
 }  // namespace souffle::ast2ram
