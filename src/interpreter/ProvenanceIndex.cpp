@@ -18,13 +18,14 @@
 
 namespace souffle::interpreter {
 
-#define CREATE_PROVENANCE_REL(Structure, Arity, ...)                                                         \
-    case (Arity): {                                                                                          \
-        return mk<Relation<Arity, interpreter::Provenance>>(id.getAuxiliaryArity(), id.getName(), orderSet); \
+#define CREATE_PROVENANCE_REL(Structure, Arity, ...)                \
+    case (Arity): {                                                 \
+        return mk<Relation<Arity, interpreter::Provenance>>(        \
+                id.getAuxiliaryArity(), id.getName(), idxAnalysis); \
     }
 
 Own<RelationWrapper> createProvenanceRelation(
-        const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet) {
+        const ram::Relation& id, const ram::analysis::IndexAnalysis* idxAnalysis) {
     switch (id.getArity()) {
         FOR_EACH_PROVENANCE(CREATE_PROVENANCE_REL);
 

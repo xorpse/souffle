@@ -21,9 +21,9 @@
 namespace souffle::interpreter {
 
 Own<RelationWrapper> createEqrelRelation(
-        const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet) {
+        const ram::Relation& id, const ram::analysis::IndexAnalysis* idxAnalysis) {
     assert(id.getArity() == 2 && "Eqivalence relation must have arity size 2.");
-    return mk<EqrelRelation>(id.getAuxiliaryArity(), id.getName(), orderSet);
+    return mk<EqrelRelation>(id.getAuxiliaryArity(), id.getName(), idxAnalysis);
 }
 
 }  // namespace souffle::interpreter

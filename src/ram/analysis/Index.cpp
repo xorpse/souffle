@@ -231,7 +231,7 @@ void MinIndexSelection::solve() {
     removeExtraInequalities();
 
     // map the signatures of each search to a unique index for the matching problem
-    IndexAnalysis::AttributeIndex currentIndex = 1;
+    AttributeIndex currentIndex = 1;
     for (auto s : searches) {
         // map the signature to its unique index in each set
         signatureToIndexA.insert({s, currentIndex});
@@ -300,10 +300,9 @@ void MinIndexSelection::solve() {
     }
 }
 
-IndexAnalysis::Chain MinIndexSelection::getChain(
-        const SearchSignature umn, const MaxMatching::Matchings& match) {
+Chain MinIndexSelection::getChain(const SearchSignature umn, const MaxMatching::Matchings& match) {
     SearchSignature start = umn;  // start at an unmatched node
-    IndexAnalysis::Chain chain;
+    Chain chain;
     // given an unmapped node from set A we follow it from set B until it cannot be matched from B
     //  if not mateched from B then umn is a chain
     //
@@ -329,16 +328,16 @@ IndexAnalysis::Chain MinIndexSelection::getChain(
     }
 }
 
-const IndexAnalysis::ChainOrderMap MinIndexSelection::getChainsFromMatching(
-        const MaxMatching::Matchings& match, const IndexAnalysis::SearchSet& nodes) {
+const ChainOrderMap MinIndexSelection::getChainsFromMatching(
+        const MaxMatching::Matchings& match, const SearchSet& nodes) {
     assert(!nodes.empty());
 
     // Get all unmatched nodes from A
-    const IndexAnalysis::SearchSet& umKeys = getUnmatchedKeys(match, nodes);
+    const SearchSet& umKeys = getUnmatchedKeys(match, nodes);
     // Case: if no unmatched nodes then we have an anti-chain
     if (umKeys.empty()) {
         for (auto node : nodes) {
-            IndexAnalysis::Chain a;
+            Chain a;
             a.push_back(node);
             chainToOrder.push_back(a);
             return chainToOrder;
@@ -348,7 +347,7 @@ const IndexAnalysis::ChainOrderMap MinIndexSelection::getChainsFromMatching(
     assert(!umKeys.empty());
 
     // A worklist of used nodes
-    IndexAnalysis::SearchSet usedKeys;
+    SearchSet usedKeys;
 
     // Case: nodes < umKeys or if nodes == umKeys then anti chain - this is handled by this loop
     for (auto umKey : umKeys) {
@@ -399,10 +398,12 @@ void MinIndexSelection::removeExtraInequalities() {
     }
 }
 
-IndexAnalysis::AttributeSet MinIndexSelection::getAttributesToDischarge(
-        const SearchSignature& s, const Relation& rel) {
+const AttributeSet MinIndexSelection::getAttributesToDischarge(
+        const Relation& rel, const SearchSignature& s) const {
+    auto dischargedAttributes = dischargedMap.count(s) > 0 ? dischargedMap.at(s) : AttributeSet{};
+
     // by default we have all attributes w/inequalities discharged
-    IndexAnalysis::AttributeSet allInequalities;
+    AttributeSet allInequalities;
     for (size_t i = 0; i < s.arity(); ++i) {
         if (s[i] == AttributeConstraint::Inequal) {
             allInequalities.insert(i);
@@ -422,7 +423,8 @@ IndexAnalysis::AttributeSet MinIndexSelection::getAttributesToDischarge(
 
     // if we are in the interpreter then we only permit signed inequalities
     // remembering to discharge any excess signed inequalities!
-    IndexAnalysis::AttributeSet interpreterAttributesToDischarge(dischargedMap[s]);
+    AttributeSet interpreterAttributesToDischarge = dischargedAttributes;
+
     for (size_t i = 0; i < s.arity(); ++i) {
         if (s[i] == AttributeConstraint::Inequal && rel.getAttributeTypes()[i][0] != 'i') {
             interpreterAttributesToDischarge.insert(i);
@@ -433,7 +435,7 @@ IndexAnalysis::AttributeSet MinIndexSelection::getAttributesToDischarge(
         return interpreterAttributesToDischarge;
     }
 
-    return dischargedMap[s];
+    return dischargedAttributes;
 }
 
 void IndexAnalysis::run(const TranslationUnit& translationUnit) {

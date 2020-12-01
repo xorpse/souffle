@@ -51,9 +51,8 @@ bool IndexedInequalityTransformer::transformIndexToFilter(Program& program) {
             // find a IndexOperation
             if (const IndexOperation* indexOperation = dynamic_cast<IndexOperation*>(node.get())) {
                 const Relation& rel = relAnalysis->lookup(indexOperation->getRelation());
-                auto indexSelection = idxAnalysis->getIndexes(indexOperation->getRelation());
-                auto attributesToDischarge = indexSelection.getAttributesToDischarge(
-                        idxAnalysis->getSearchSignature(indexOperation), rel);
+                auto attributesToDischarge = idxAnalysis->getAttributesToDischarge(
+                        rel, idxAnalysis->getSearchSignature(indexOperation));
                 auto pattern = indexOperation->getRangePattern();
                 Own<Condition> condition;
                 RamPattern updatedPattern;

@@ -180,11 +180,11 @@ public:
     /**
      * Creates a relation, build all necessary indexes.
      */
-    Relation(size_t auxiliaryArity, std::string name, const ram::analysis::MinIndexSelection& orderSet)
-            : RelationWrapper(Arity, auxiliaryArity, std::move(name)) {
-        for (auto order : orderSet.getAllOrders()) {
+    Relation(size_t auxiliaryArity, std::string name, const ram::analysis::IndexAnalysis* idxAnalysis)
+            : RelationWrapper(Arity, auxiliaryArity, name) {
+        for (auto order : idxAnalysis->getAllOrders(name)) {
             // Expand the order to a total order
-            ram::analysis::IndexAnalysis::AttributeSet set{order.begin(), order.end()};
+            ram::analysis::AttributeSet set{order.begin(), order.end()};
 
             // This operation is not performance critical.
             // Not using constexpr Arity to avoid compiler warning. (When Arity == 0)
@@ -413,22 +413,22 @@ public:
 
 // The type of relation factory functions.
 using RelationFactory = Own<RelationWrapper> (*)(
-        const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet);
+        const ram::Relation& id, const ram::analysis::IndexAnalysis* idxAnalysis);
 
 // A factory for BTree based relation.
 Own<RelationWrapper> createBTreeRelation(
-        const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet);
+        const ram::Relation& id, const ram::analysis::IndexAnalysis* idxAnalysis);
 
 // A factory for BTree provenance index.
 Own<RelationWrapper> createProvenanceRelation(
-        const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet);
+        const ram::Relation& id, const ram::analysis::IndexAnalysis* idxAnalysis);
 
 // A factory for Brie based index.
 Own<RelationWrapper> createBrieRelation(
-        const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet);
+        const ram::Relation& id, const ram::analysis::IndexAnalysis* idxAnalysis);
 
 // A factory for Eqrel index.
 Own<RelationWrapper> createEqrelRelation(
-        const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet);
+        const ram::Relation& id, const ram::analysis::IndexAnalysis* idxAnalysis);
 
 }  // namespace souffle::interpreter

@@ -198,14 +198,14 @@ void Engine::createRelation(const ram::Relation& id, const size_t idx) {
     }
 
     RelationHandle res;
-    const auto& orderSet = isa->getIndexes(id.getName());
+
     if (id.getRepresentation() == RelationRepresentation::EQREL) {
-        res = createEqrelRelation(id, orderSet);
+        res = createEqrelRelation(id, isa);
     } else {
         if (isProvenance) {
-            res = createProvenanceRelation(id, orderSet);
+            res = createProvenanceRelation(id, isa);
         } else {
-            res = createBTreeRelation(id, orderSet);
+            res = createBTreeRelation(id, isa);
         }
     }
     relations[idx] = mk<RelationHandle>(std::move(res));

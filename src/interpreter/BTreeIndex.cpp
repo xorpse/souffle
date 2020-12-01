@@ -21,13 +21,13 @@
 
 namespace souffle::interpreter {
 
-#define CREATE_BTREE_REL(Structure, Arity, ...)                                                         \
-    case (Arity): {                                                                                     \
-        return mk<Relation<Arity, interpreter::Btree>>(id.getAuxiliaryArity(), id.getName(), orderSet); \
+#define CREATE_BTREE_REL(Structure, Arity, ...)                                                            \
+    case (Arity): {                                                                                        \
+        return mk<Relation<Arity, interpreter::Btree>>(id.getAuxiliaryArity(), id.getName(), idxAnalysis); \
     }
 
 Own<RelationWrapper> createBTreeRelation(
-        const ram::Relation& id, const ram::analysis::MinIndexSelection& orderSet) {
+        const ram::Relation& id, const ram::analysis::IndexAnalysis* idxAnalysis) {
     switch (id.getArity()) {
         FOR_EACH_BTREE(CREATE_BTREE_REL);
 
