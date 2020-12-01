@@ -97,7 +97,6 @@ Own<ram::Statement> ClauseTranslator::translateClause(
     // Set up the main operations in the clause
     op = addVariableBindingConstraints(std::move(op));
     op = addBodyLiteralConstraints(clause, std::move(op));
-    op = addAggregatorConstraints(std::move(op));
     op = addGeneratorLevels(std::move(op));
     op = buildFinalOperation(clause, originalClause, version, std::move(op));
 
@@ -319,33 +318,6 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
         // constraints become literals
         if (auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
             op = mk<ram::Filter>(std::move(condition), std::move(op));
-        }
-    }
-    return op;
-}
-
-Own<ram::Operation> ClauseTranslator::addAggregatorConstraints(Own<ram::Operation> op) {
-    // TODO (azreika): needs some clean up
-    for (int curLevel = op_nesting.size() - 1; curLevel >= 0; curLevel--) {
-        // Only interested in atom arguments
-        const auto* atom = dynamic_cast<const ast::Atom*>(op_nesting.at(curLevel));
-        if (atom == nullptr) {
-            continue;
-        }
-
-        // Go through the aggregator arguments in the atom
-        const auto& args = atom->getArguments();
-        for (size_t i = 0; i < args.size(); i++) {
-            const auto* agg = dynamic_cast<const ast::Aggregator*>(args.at(i));
-            if (agg == nullptr) {
-                continue;
-            }
-
-            auto loc = valueIndex->getGeneratorLoc(*agg);
-            // FIXME: equiv' for float types (`FEQ`)
-            op = mk<ram::Filter>(mk<ram::Constraint>(BinaryConstraintOp::EQ,
-                                         mk<ram::TupleElement>(curLevel, i), makeRamTupleElement(loc)),
-                    std::move(op));
         }
     }
     return op;
