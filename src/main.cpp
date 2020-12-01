@@ -38,7 +38,7 @@
 #include "ast/transform/MaterializeSingletonAggregation.h"
 #include "ast/transform/MinimiseProgram.h"
 #include "ast/transform/NameUnnamedVariables.h"
-#include "ast/transform/NormaliseMultiResultFunctors.h"
+#include "ast/transform/NormaliseGenerators.h"
 #include "ast/transform/PartitionBodyLiterals.h"
 #include "ast/transform/Pipeline.h"
 #include "ast/transform/PragmaChecker.h"
@@ -486,7 +486,7 @@ int main(int argc, char** argv) {
                     mk<ast::transform::FoldAnonymousRecords>())),
             mk<ast::transform::SemanticChecker>(), mk<ast::transform::GroundWitnessesTransformer>(),
             mk<ast::transform::UniqueAggregationVariablesTransformer>(),
-            mk<ast::transform::NormaliseMultiResultFunctorsTransformer>(),
+            mk<ast::transform::NormaliseGeneratorsTransformer>(),
             mk<ast::transform::MaterializeSingletonAggregationTransformer>(),
             mk<ast::transform::FixpointTransformer>(
                     mk<ast::transform::MaterializeAggregationQueriesTransformer>()),
