@@ -97,7 +97,6 @@ Own<ram::Statement> ClauseTranslator::translateClause(
     // Set up the main operations in the clause
     op = addVariableBindingConstraints(std::move(op));
     op = addBodyLiteralConstraints(clause, std::move(op));
-    op = addAggregatorConstraints(std::move(op));
     op = addGeneratorLevels(std::move(op));
     op = buildFinalOperation(clause, originalClause, version, std::move(op));
 
@@ -254,7 +253,7 @@ Own<ram::Operation> ClauseTranslator::instantiateAggregator(
         // variable bindings are issued differently since we don't want self
         // referential variable bindings
         if (auto* var = dynamic_cast<const ast::Variable*>(arg)) {
-            for (auto&& loc : valueIndex->getVariableReferences().find(var->getName())->second) {
+            for (auto&& loc : valueIndex->getVariableReferences(var->getName())) {
                 if (level != loc.identifier || (int)i != loc.element) {
                     aggCond = addAggEqCondition(std::move(aggCond), makeRamTupleElement(loc), i);
                     break;
@@ -319,33 +318,6 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
         // constraints become literals
         if (auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
             op = mk<ram::Filter>(std::move(condition), std::move(op));
-        }
-    }
-    return op;
-}
-
-Own<ram::Operation> ClauseTranslator::addAggregatorConstraints(Own<ram::Operation> op) {
-    // TODO (azreika): needs some clean up
-    for (int curLevel = op_nesting.size() - 1; curLevel >= 0; curLevel--) {
-        // Only interested in atom arguments
-        const auto* atom = dynamic_cast<const ast::Atom*>(op_nesting.at(curLevel));
-        if (atom == nullptr) {
-            continue;
-        }
-
-        // Go through the aggregator arguments in the atom
-        const auto& args = atom->getArguments();
-        for (size_t i = 0; i < args.size(); i++) {
-            const auto* agg = dynamic_cast<const ast::Aggregator*>(args.at(i));
-            if (agg == nullptr) {
-                continue;
-            }
-
-            auto loc = valueIndex->getGeneratorLoc(*agg);
-            // FIXME: equiv' for float types (`FEQ`)
-            op = mk<ram::Filter>(mk<ram::Constraint>(BinaryConstraintOp::EQ,
-                                         mk<ram::TupleElement>(curLevel, i), makeRamTupleElement(loc)),
-                    std::move(op));
         }
     }
     return op;
@@ -478,13 +450,8 @@ void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::
 }
 
 std::optional<int> ClauseTranslator::addGenerator(const ast::Argument& arg) {
-    // TODO (azreika): by-value comparison for CSE; do this in the AST like other generators
-    if (isA<ast::Aggregator>(&arg) && any_of(generators, [&](auto* x) { return *x == arg; })) {
-        return {};
-    }
-    generators.push_back(&arg);
-
     int aggLoc = level++;
+    generators.push_back(&arg);
     valueIndex->setGeneratorLoc(arg, Location({aggLoc, 0}));
     return aggLoc;
 }
@@ -497,38 +464,45 @@ void ClauseTranslator::indexAtoms(const ast::Clause& clause) {
     }
 }
 
-void ClauseTranslator::indexAggregators(const ast::Clause& clause) {
-    visitDepthFirst(clause, [&](const ast::Argument& arg) {
-        if (auto agg = dynamic_cast<const ast::Aggregator*>(&arg)) {
-            if (auto aggLoc = addGenerator(arg)) {
-                // bind aggregator variables to locations
-                const ast::Atom* atom = nullptr;
-                for (auto lit : agg->getBodyLiterals()) {
-                    if (atom == nullptr) {
-                        atom = dynamic_cast<const ast::Atom*>(lit);
-                    } else {
-                        break;
-                    }
-                }
-                if (atom != nullptr) {
-                    size_t pos = 0;
-                    for (auto* arg : atom->getArguments()) {
-                        if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
-                            valueIndex->addVarReference(*var, *aggLoc, (int)pos);
-                        }
-                        ++pos;
-                    }
-                }
-            }
+void ClauseTranslator::indexAggregator(const ast::Aggregator& agg) {
+    auto aggLoc = valueIndex->getGeneratorLoc(agg);
+
+    // Get the single body atom inside the aggregator
+    const auto& aggBodyAtoms =
+            filter(agg.getBodyLiterals(), [&](const ast::Literal* lit) { return isA<ast::Atom>(lit); });
+    assert(aggBodyAtoms.size() == 1 && "exactly one atom should exist per aggregator body");
+    const auto* aggAtom = static_cast<const ast::Atom*>(aggBodyAtoms.at(0));
+
+    // Add the variable references inside this atom
+    const auto& aggAtomArgs = aggAtom->getArguments();
+    for (size_t i = 0; i < aggAtomArgs.size(); i++) {
+        const auto* arg = aggAtomArgs.at(i);
+        if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
+            valueIndex->addVarReference(*var, aggLoc.identifier, (int)i);
         }
+    }
+}
+
+void ClauseTranslator::indexAggregators(const ast::Clause& clause) {
+    visitDepthFirst(clause, [&](const ast::Aggregator& agg) { addGenerator(agg); });
+
+    // index aggregator atoms
+    visitDepthFirst(clause, [&](const ast::Aggregator& agg) { indexAggregator(agg); });
+
+    // add aggregator introductions
+    visitDepthFirst(clause, [&](const ast::BinaryConstraint& bc) {
+        if (!isEqConstraint(bc.getBaseOperator())) return;
+        const auto* lhs = dynamic_cast<const ast::Variable*>(bc.getLHS());
+        const auto* rhs = dynamic_cast<const ast::Aggregator*>(bc.getRHS());
+        if (lhs == nullptr || rhs == nullptr) return;
+        valueIndex->addVarReference(*lhs, valueIndex->getGeneratorLoc(*rhs));
     });
 }
 
 void ClauseTranslator::indexMultiResultFunctors(const ast::Clause& clause) {
-    visitDepthFirst(clause, [&](const ast::Argument& arg) {
-        auto* func = as<ast::IntrinsicFunctor>(arg);
-        if (func && ast::analysis::FunctorAnalysis::isMultiResult(*func)) {
-            addGenerator(arg);
+    visitDepthFirst(clause, [&](const ast::IntrinsicFunctor& func) {
+        if (ast::analysis::FunctorAnalysis::isMultiResult(func)) {
+            addGenerator(func);
         }
     });
 

@@ -86,10 +86,10 @@ private:
     void indexAggregators(const ast::Clause& clause);
     void indexMultiResultFunctors(const ast::Clause& clause);
     void indexNodeArguments(int nodeLevel, const std::vector<ast::Argument*>& nodeArgs);
+    void indexAggregator(const ast::Aggregator& agg);
 
     Own<ram::Operation> addVariableBindingConstraints(Own<ram::Operation> op);
     Own<ram::Operation> addBodyLiteralConstraints(const ast::Clause& clause, Own<ram::Operation> op);
-    Own<ram::Operation> addAggregatorConstraints(Own<ram::Operation> op);
     Own<ram::Operation> addGeneratorLevels(Own<ram::Operation> op);
 
     // Build operation bottom-up
