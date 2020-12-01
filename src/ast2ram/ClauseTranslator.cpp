@@ -466,28 +466,18 @@ void ClauseTranslator::indexAtoms(const ast::Clause& clause) {
 
 void ClauseTranslator::indexAggregators(const ast::Clause& clause) {
     visitDepthFirst(clause, [&](const ast::Argument& arg) {
-        if (auto agg = dynamic_cast<const ast::Aggregator*>(&arg)) {
-            if (auto aggLoc = addGenerator(arg)) {
-                // bind aggregator variables to locations
-                const ast::Atom* atom = nullptr;
-                for (auto lit : agg->getBodyLiterals()) {
-                    if (atom == nullptr) {
-                        atom = dynamic_cast<const ast::Atom*>(lit);
-                    } else {
-                        break;
-                    }
-                }
-                if (atom != nullptr) {
-                    size_t pos = 0;
-                    for (auto* arg : atom->getArguments()) {
-                        if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
-                            valueIndex->addVarReference(*var, *aggLoc, (int)pos);
-                        }
-                        ++pos;
-                    }
-                }
-            }
+        if (isA<ast::Aggregator>(&arg)) {
+            addGenerator(arg);
         }
+    });
+
+    // add aggregator introductions
+    visitDepthFirst(clause, [&](const ast::BinaryConstraint& bc) {
+        if (!isEqConstraint(bc.getBaseOperator())) return;
+        const auto* lhs = dynamic_cast<const ast::Variable*>(bc.getLHS());
+        const auto* rhs = dynamic_cast<const ast::Aggregator*>(bc.getRHS());
+        if (lhs == nullptr || rhs == nullptr) return;
+        valueIndex->addVarReference(*lhs, valueIndex->getGeneratorLoc(*rhs));
     });
 }
 
