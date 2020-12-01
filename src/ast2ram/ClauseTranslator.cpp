@@ -478,10 +478,9 @@ void ClauseTranslator::indexAggregators(const ast::Clause& clause) {
 }
 
 void ClauseTranslator::indexMultiResultFunctors(const ast::Clause& clause) {
-    visitDepthFirst(clause, [&](const ast::Argument& arg) {
-        auto* func = as<ast::IntrinsicFunctor>(arg);
-        if (func && ast::analysis::FunctorAnalysis::isMultiResult(*func)) {
-            addGenerator(arg);
+    visitDepthFirst(clause, [&](const ast::IntrinsicFunctor& func) {
+        if (ast::analysis::FunctorAnalysis::isMultiResult(func)) {
+            addGenerator(func);
         }
     });
 
