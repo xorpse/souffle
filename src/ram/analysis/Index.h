@@ -509,17 +509,6 @@ public:
 
     void run(const TranslationUnit& translationUnit) override;
 
-    void print(std::ostream& os) const override;
-
-private:
-    /**
-     * @Brief get the minimal index cover for a relation
-     * @param relation name
-     * @result set of indexes of the minimal index cover
-     */
-    MinIndexSelection& getIndexes(const std::string& relName);
-
-public:
     const AttributeSet getAttributesToDischarge(const Relation& rel, const SearchSignature& s) const {
         return minIndexCover.at(rel.getName()).getAttributesToDischarge(rel, s);
     }
@@ -573,6 +562,15 @@ public:
      * the existence check.
      */
     bool isTotalSignature(const AbstractExistenceCheck* existCheck) const;
+
+private:
+    /**
+     * @Brief get the minimal index cover for a relation
+     * @param relation name
+     * @result set of indexes of the minimal index cover
+     */
+    MinIndexSelection& getIndexes(const std::string& relName);
+    void print(std::ostream& os) const override;
 
 private:
     /** relation analysis for looking up relations by name */
