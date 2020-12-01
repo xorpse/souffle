@@ -478,13 +478,8 @@ void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::
 }
 
 std::optional<int> ClauseTranslator::addGenerator(const ast::Argument& arg) {
-    // TODO (azreika): by-value comparison for CSE; do this in the AST like other generators
-    if (isA<ast::Aggregator>(&arg) && any_of(generators, [&](auto* x) { return *x == arg; })) {
-        return {};
-    }
-    generators.push_back(&arg);
-
     int aggLoc = level++;
+    generators.push_back(&arg);
     valueIndex->setGeneratorLoc(arg, Location({aggLoc, 0}));
     return aggLoc;
 }

@@ -51,26 +51,12 @@ const Location& ValueIndex::getDefinitionPoint(const ast::Variable& var) const {
 }
 
 void ValueIndex::setGeneratorLoc(const ast::Argument& arg, const Location& loc) {
-    generatorDefinitionPoints.push_back(std::make_pair(&arg, loc));
+    generatorDefinitionPoints.insert({&arg, loc});
 }
 
 const Location& ValueIndex::getGeneratorLoc(const ast::Argument& arg) const {
-    if (dynamic_cast<const ast::Aggregator*>(&arg) != nullptr) {
-        // aggregators can be used interchangeably if syntactically equal
-        for (const auto& cur : generatorDefinitionPoints) {
-            if (*cur.first == arg) {
-                return cur.second;
-            }
-        }
-    } else {
-        // otherwise, unique for each appearance
-        for (const auto& cur : generatorDefinitionPoints) {
-            if (cur.first == &arg) {
-                return cur.second;
-            }
-        }
-    }
-    fatal("arg `%s` has no generator location", arg);
+    assert(contains(generatorDefinitionPoints, &arg) && "undefined generator");
+    return generatorDefinitionPoints.at(&arg);
 }
 
 void ValueIndex::setRecordDefinition(const ast::RecordInit& init, int ident, int pos) {

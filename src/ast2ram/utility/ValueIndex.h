@@ -68,8 +68,7 @@ private:
     std::map<const ast::RecordInit*, Location> recordDefinitionPoints;
 
     // Map from generative arguments to definition point
-    // Arguments indexed by value, not address, so std::map can't be used
-    std::vector<std::pair<const ast::Argument*, Location>> generatorDefinitionPoints;
+    std::map<const ast::Argument*, Location> generatorDefinitionPoints;
 };
 
 }  // namespace souffle::ast2ram
