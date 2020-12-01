@@ -253,7 +253,7 @@ Own<ram::Operation> ClauseTranslator::instantiateAggregator(
         // variable bindings are issued differently since we don't want self
         // referential variable bindings
         if (auto* var = dynamic_cast<const ast::Variable*>(arg)) {
-            for (auto&& loc : valueIndex->getVariableReferences().find(var->getName())->second) {
+            for (auto&& loc : valueIndex->getVariableReferences(var->getName())) {
                 if (level != loc.identifier || (int)i != loc.element) {
                     aggCond = addAggEqCondition(std::move(aggCond), makeRamTupleElement(loc), i);
                     break;
@@ -465,11 +465,7 @@ void ClauseTranslator::indexAtoms(const ast::Clause& clause) {
 }
 
 void ClauseTranslator::indexAggregators(const ast::Clause& clause) {
-    visitDepthFirst(clause, [&](const ast::Argument& arg) {
-        if (isA<ast::Aggregator>(&arg)) {
-            addGenerator(arg);
-        }
-    });
+    visitDepthFirst(clause, [&](const ast::Aggregator& agg) { addGenerator(agg); });
 
     // add aggregator introductions
     visitDepthFirst(clause, [&](const ast::BinaryConstraint& bc) {

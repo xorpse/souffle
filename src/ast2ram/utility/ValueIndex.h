@@ -42,6 +42,7 @@ public:
     const std::map<std::string, std::set<Location>>& getVariableReferences() const {
         return varReferencePoints;
     }
+    const std::set<Location>& getVariableReferences(std::string var) const;
     void addVarReference(const ast::Variable& var, const Location& l);
     void addVarReference(const ast::Variable& var, int ident, int pos);
     bool isDefined(const ast::Variable& var) const;

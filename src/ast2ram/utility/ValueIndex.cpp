@@ -30,6 +30,11 @@ namespace souffle::ast2ram {
 ValueIndex::ValueIndex() = default;
 ValueIndex::~ValueIndex() = default;
 
+const std::set<Location>& ValueIndex::getVariableReferences(std::string var) const {
+    assert(contains(varReferencePoints, var) && "variable not indexed");
+    return varReferencePoints.at(var);
+}
+
 void ValueIndex::addVarReference(const ast::Variable& var, const Location& l) {
     std::set<Location>& locs = varReferencePoints[var.getName()];
     locs.insert(l);
