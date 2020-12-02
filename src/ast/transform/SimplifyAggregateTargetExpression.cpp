@@ -35,10 +35,13 @@ Aggregator* SimplifyAggregateTargetExpressionTransformer::simplifyTargetExpressi
     // We know that a variable from the TE is shadowing another variable
     // if a variable with the same name appears range-restricted in the outer scope.
 
-    // Make a unique target expression variable, and equate it to the original
+    // Create the new simplified target expression
     auto newTargetExpression = mk<Variable>(analysis::findUniqueVariableName(*clause, "x"));
+
+    // Create the new body, with the necessary equality between old and new target expressions
     auto equalityLiteral = std::make_unique<BinaryConstraint>(BinaryConstraintOp::EQ,
             souffle::clone(newTargetExpression), souffle::clone(origTargetExpression));
+
     std::vector<Own<Literal>> newBody;
     for (const auto* literal : aggregator->getBodyLiterals()) {
         newBody.push_back(souffle::clone(literal));
@@ -77,13 +80,11 @@ Aggregator* SimplifyAggregateTargetExpressionTransformer::simplifyTargetExpressi
         if (contains(varsGroundedOutside, v.getName())) {
             // rename it everywhere in the body so that we've scoped this properly.
             std::string newVarName = analysis::findUniqueVariableName(*clause, v.getName());
-            for (auto& literal : newBody) {
-                visitDepthFirst(*literal, [&](const Variable& literalVar) {
-                    if (literalVar == v) {
-                        const_cast<Variable&>(literalVar).setName(newVarName);
-                    }
-                });
-            }
+            visitDepthFirst(newBody, [&](const Variable& literalVar) {
+                if (literalVar.getName() == v.getName()) {
+                    const_cast<Variable&>(literalVar).setName(newVarName);
+                }
+            });
         }
     });
 
