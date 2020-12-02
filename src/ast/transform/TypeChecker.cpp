@@ -29,6 +29,7 @@
 #include "ast/Functor.h"
 #include "ast/IntrinsicFunctor.h"
 #include "ast/analysis/Functor.h"
+#include "ast/analysis/PolymorphicObjects.h"
 #include "ast/analysis/Type.h"
 #include "ast/analysis/TypeEnvironment.h"
 #include "ast/analysis/TypeSystem.h"
@@ -81,6 +82,7 @@ private:
     const TypeAnalysis& typeAnalysis = *tu.getAnalysis<TypeAnalysis>();
     const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>()->getTypeEnvironment();
     const FunctorAnalysis& functorAnalysis = *tu.getAnalysis<FunctorAnalysis>();
+    const PolymorphicObjectsAnalysis& polyAnalysis = *tu.getAnalysis<PolymorphicObjectsAnalysis>();
     const Program& program = tu.getProgram();
 
     std::unordered_set<const Atom*> negatedAtoms;
@@ -368,12 +370,12 @@ void TypeCheckerImpl::visitNumericConstant(const NumericConstant& constant) {
     TypeSet types = typeAnalysis.getTypes(&constant);
 
     // No type could be assigned.
-    if (!constant.getType().has_value()) {
+    if (polyAnalysis.hasInvalidType(&constant)) {
         report.addError("Ambiguous constant (unable to deduce type)", constant.getSrcLoc());
         return;
     }
 
-    switch (*constant.getType()) {
+    switch (polyAnalysis.getInferredType(&constant)) {
         case NumericConstant::Type::Int:
             if (!isOfKind(types, TypeAttribute::Signed)) {
                 report.addError("Number constant (type mismatch)", constant.getSrcLoc());
@@ -469,14 +471,14 @@ void TypeCheckerImpl::visitTypeCast(const ast::TypeCast& cast) {
 }
 
 void TypeCheckerImpl::visitIntrinsicFunctor(const IntrinsicFunctor& fun) {
-    if (!fun.getFunctionOp()) {  // no info => no overload found during inference
+    if (!typeAnalysis.hasValidTypeInfo(&fun)) {
         auto args = fun.getArguments();
-        if (!isValidFunctorOpArity(fun.getFunction(), args.size())) {
+        if (!isValidFunctorOpArity(fun.getBaseFunctionOp(), args.size())) {
             report.addError("invalid overload (arity mismatch)", fun.getSrcLoc());
             return;
         }
-
-        assert(validOverloads(typeAnalysis, fun).empty() && "polymorphic transformation wasn't applied?");
+        assert(typeAnalysis.getValidIntrinsicFunctorOverloads(fun).empty() &&
+                "unexpected type analysis result");
         report.addError("no valid overloads", fun.getSrcLoc());
     }
 }
@@ -538,7 +540,7 @@ void TypeCheckerImpl::visitUserDefinedFunctor(const UserDefinedFunctor& fun) {
 }
 
 void TypeCheckerImpl::visitBinaryConstraint(const BinaryConstraint& constraint) {
-    auto op = constraint.getOperator();
+    auto op = polyAnalysis.getOverloadedOperator(&constraint);
     auto left = constraint.getLHS();
     auto right = constraint.getRHS();
     auto opTypesAttrs = getBinaryConstraintTypes(op);
@@ -546,11 +548,10 @@ void TypeCheckerImpl::visitBinaryConstraint(const BinaryConstraint& constraint) 
     auto leftTypes = typeAnalysis.getTypes(left);
     auto rightTypes = typeAnalysis.getTypes(right);
 
-    // Skip checks if either side is `Bottom` b/c it just adds noise.
+    // Skip checks if either side could not be fully deduced
     // The unable-to-deduce-type checker will point out the issue.
-    if (leftTypes.empty() || rightTypes.empty() || leftTypes.isAll() || rightTypes.isAll()) return;
-
-    assert((leftTypes.size() == 1) && (rightTypes.size() == 1));
+    if (leftTypes.isAll() || leftTypes.size() != 1) return;
+    if (rightTypes.isAll() || rightTypes.size() != 1) return;
 
     // Extract types from singleton sets.
     auto& leftType = *typeAnalysis.getTypes(left).begin();
@@ -587,7 +588,7 @@ void TypeCheckerImpl::visitBinaryConstraint(const BinaryConstraint& constraint) 
 }
 
 void TypeCheckerImpl::visitAggregator(const Aggregator& aggregator) {
-    auto op = aggregator.getOperator();
+    auto op = polyAnalysis.getOverloadedOperator(&aggregator);
 
     auto aggregatorType = typeAnalysis.getTypes(&aggregator);
 

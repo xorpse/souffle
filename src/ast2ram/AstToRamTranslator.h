@@ -16,10 +16,7 @@
 
 #pragma once
 
-#include "ram/Relation.h"
-#include "souffle/RamTypes.h"
 #include "souffle/utility/ContainerUtil.h"
-#include <cassert>
 #include <map>
 #include <set>
 #include <string>
@@ -30,169 +27,85 @@ class SymbolTable;
 }
 
 namespace souffle::ast {
-class Argument;
-class Atom;
 class Clause;
-class Constant;
-class Literal;
 class Program;
-class QualifiedName;
 class Relation;
-class SipsMetric;
 class TranslationUnit;
 }  // namespace souffle::ast
 
-namespace souffle::ast::analysis {
-class IOTypeAnalysis;
-class AuxiliaryArityAnalysis;
-class FunctorAnalysis;
-class RecursiveClausesAnalysis;
-class TypeEnvironment;
-}  // namespace souffle::ast::analysis
-
 namespace souffle::ram {
-class Condition;
-class Expression;
 class Relation;
+class Sequence;
 class Statement;
 class TranslationUnit;
-class TupleElement;
 }  // namespace souffle::ram
 
 namespace souffle::ast2ram {
 
-struct Location;
-class ValueIndex;
+class TranslatorContext;
 
-/**
- * Main class for the AST->RAM translator
- */
 class AstToRamTranslator {
 public:
     AstToRamTranslator();
     ~AstToRamTranslator();
 
-    const ast::analysis::AuxiliaryArityAnalysis* getAuxArityAnalysis() const {
-        return auxArityAnalysis;
-    }
-
-    const ast::analysis::FunctorAnalysis* getFunctorAnalysis() const {
-        return functorAnalysis;
-    }
-
-    const ast::SipsMetric* getSipsMetric() const {
-        return sips.get();
-    }
-
-    const ast::Program* getProgram() const {
-        return program;
-    }
-
-    /** translates AST to translation unit */
+    /** Translates an AST program into a corresponding RAM program */
     Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
 
-    /** translate an AST argument to a RAM value */
-    Own<ram::Expression> translateValue(const ast::Argument* arg, const ValueIndex& index);
+protected:
+    Own<TranslatorContext> context;
+    Own<SymbolTable> symbolTable;
 
-    /** a utility to translate atoms to relations */
-    std::string translateRelation(const ast::Atom* atom);
+    void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
+    Own<ram::Relation> createRamRelation(
+            const ast::Relation* baseRelation, std::string ramRelationName) const;
+    VecOwn<ram::Relation> createRamRelations(const std::vector<size_t>& sccOrdering) const;
+    virtual Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const;
+    Own<ram::Statement> generateClauseVersion(const std::set<const ast::Relation*>& scc,
+            const ast::Clause* cl, size_t deltaAtomIdx, size_t version) const;
+    Own<ram::Statement> translateRecursiveClauses(
+            const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const;
 
-    /** translate an AST relation to a RAM relation */
-    std::string translateRelation(const ast::Relation* rel, const std::string relationNamePrefix = "");
+    /** -- Generation methods -- */
 
-    /** determine the auxiliary for relations */
-    size_t getEvaluationArity(const ast::Atom* atom) const;
+    /** High-level relation translation */
+    virtual Own<ram::Sequence> generateProgram(const ast::TranslationUnit& translationUnit);
+    Own<ram::Statement> generateNonRecursiveRelation(const ast::Relation& rel) const;
+    Own<ram::Statement> generateRecursiveStratum(const std::set<const ast::Relation*>& scc) const;
 
-    /** create a RAM element access node */
-    static Own<ram::TupleElement> makeRamTupleElement(const Location& loc);
+    /** IO translation */
+    Own<ram::Statement> generateStoreRelation(const ast::Relation* relation) const;
+    Own<ram::Statement> generateLoadRelation(const ast::Relation* relation) const;
 
-    /** translate an AST constraint to a RAM condition */
-    Own<ram::Condition> translateConstraint(const ast::Literal* arg, const ValueIndex& index);
+    /** Low-level stratum translation */
+    Own<ram::Statement> generateStratum(size_t scc) const;
+    Own<ram::Statement> generateStratumPreamble(const std::set<const ast::Relation*>& scc) const;
+    Own<ram::Statement> generateStratumPostamble(const std::set<const ast::Relation*>& scc) const;
+    Own<ram::Statement> generateStratumLoopBody(const std::set<const ast::Relation*>& scc) const;
+    Own<ram::Statement> generateStratumTableUpdates(const std::set<const ast::Relation*>& scc) const;
+    Own<ram::Statement> generateStratumExitSequence(const std::set<const ast::Relation*>& scc) const;
 
-    /** translate RAM code for a constant value */
-    Own<ram::Expression> translateConstant(ast::Constant const& c);
+    /** Other helper generations */
+    virtual Own<ram::Statement> generateClearExpiredRelations(
+            const std::set<const ast::Relation*>& expiredRelations) const;
+    Own<ram::Statement> generateClearRelation(const ast::Relation* relation) const;
+    Own<ram::Statement> generateMergeRelations(
+            const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const;
 
-    const ram::Relation* lookupRelation(const std::string& name) const {
-        auto it = ramRels.find(name);
-        assert(it != ramRels.end() && "relation not found");
-        return (*it).second.get();
-    }
+    /** -- AST preprocessing -- */
+
+    /** Main general preprocessor */
+    virtual void preprocessAstProgram(ast::TranslationUnit& tu);
+
+    /** Replace ADTs with special records */
+    bool removeADTs(ast::TranslationUnit& tu);
+
+    /** Finalise the types of polymorphic objects */
+    // TODO (azreika): should be removed once the translator is refactored to avoid cloning
+    void finaliseAstTypes(ast::TranslationUnit& tu);
 
 private:
-    /** AST program */
-    const ast::Program* program = nullptr;
-
-    /** Type environment */
-    const ast::analysis::TypeEnvironment* typeEnv = nullptr;
-
-    /** IO Type */
-    const ast::analysis::IOTypeAnalysis* ioType = nullptr;
-
-    /** Functors' analysis */
-    const ast::analysis::FunctorAnalysis* functorAnalysis = nullptr;
-
-    /** Auxiliary Arity Analysis */
-    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis = nullptr;
-
-    /** SIPS metric for reordering */
-    Own<ast::SipsMetric> sips;
-
-    /** RAM program */
-    Own<ram::Statement> ramMain;
-
-    /** Subroutines */
-    std::map<std::string, Own<ram::Statement>> ramSubs;
-
-    /** RAM relations */
-    std::map<std::string, Own<ram::Relation>> ramRels;
-
-    /** translate AST to RAM Program */
-    void translateProgram(const ast::TranslationUnit& translationUnit);
-
-    /**
-     * assigns names to unnamed variables such that enclosing
-     * constructs may be cloned without losing the variable-identity
-     */
-    void nameUnnamedVariables(ast::Clause* clause);
-
-    /** converts the given relation identifier into a relation name */
-    static std::string getRelationName(const ast::QualifiedName& id);
-
-    // TODO (b-scholz): revisit / refactor so that only one directive is translated
-    std::vector<std::map<std::string, std::string>> getInputDirectives(const ast::Relation* rel);
-
-    // TODO (b-scholz): revisit / refactor so that only one directive is translated
-    std::vector<std::map<std::string, std::string>> getOutputDirectives(const ast::Relation* rel);
-
-    /** translate a temporary `delta` relation to a RAM relation for semi-naive evaluation */
-    std::string translateDeltaRelation(const ast::Relation* rel);
-
-    /** translate a temporary `new` relation to a RAM relation for semi-naive evaluation */
-    std::string translateNewRelation(const ast::Relation* rel);
-
-    /** Return a symbol table **/
-    SymbolTable& getSymbolTable();
-
-    /** Get ram representation of constant */
-    RamDomain getConstantRamRepresentation(const ast::Constant& constant);
-
-    /**
-     * translate RAM code for the non-recursive clauses of the given relation.
-     *
-     * @return a corresponding statement or null if there are no non-recursive clauses.
-     */
-    Own<ram::Statement> translateNonRecursiveRelation(
-            const ast::Relation& rel, const ast::analysis::RecursiveClausesAnalysis* recursiveClauses);
-
-    /** translate RAM code for recursive relations in a strongly-connected component */
-    Own<ram::Statement> translateRecursiveRelation(const std::set<const ast::Relation*>& scc,
-            const ast::analysis::RecursiveClausesAnalysis* recursiveClauses);
-
-    /** translate RAM code for subroutine to get subproofs */
-    Own<ram::Statement> makeSubproofSubroutine(const ast::Clause& clause);
-
-    /** translate RAM code for subroutine to get subproofs for non-existence of a tuple */
-    Own<ram::Statement> makeNegationSubproofSubroutine(const ast::Clause& clause);
+    std::map<std::string, Own<ram::Statement>> ramSubroutines;
 };
 
 }  // namespace souffle::ast2ram

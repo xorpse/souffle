@@ -767,7 +767,7 @@ arg
         auto nested_arg = *$nested_arg;
         const auto* asNumeric = dynamic_cast<const ast::NumericConstant*>(&*nested_arg);
         if (asNumeric && !isPrefix("-", asNumeric->getConstant())) {
-            $$ = mk<ast::NumericConstant>("-" + asNumeric->getConstant(), asNumeric->getType(), @nested_arg);
+            $$ = mk<ast::NumericConstant>("-" + asNumeric->getConstant(), asNumeric->getFixedType(), @nested_arg);
         } else { // Otherwise, create a functor.
             $$ = mk<ast::IntrinsicFunctor>(@$, FUNCTOR_INTRINSIC_PREFIX_NEGATE_NAME, std::move(nested_arg));
         }

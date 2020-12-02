@@ -681,7 +681,7 @@ static const std::vector<SrcLocation> usesInvalidWitness(
         TranslationUnit& tu, const Clause& clause, const Aggregator& aggregate) {
     std::vector<SrcLocation> invalidWitnessLocations;
 
-    if (aggregate.getOperator() == AggregateOp::MIN || aggregate.getOperator() == AggregateOp::MAX) {
+    if (aggregate.getBaseOperator() == AggregateOp::MIN || aggregate.getBaseOperator() == AggregateOp::MAX) {
         return invalidWitnessLocations;  // ie empty result
     }
 

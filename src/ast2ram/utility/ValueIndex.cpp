@@ -15,10 +15,10 @@
  *
  ***********************************************************************/
 
-#include "ast2ram/ValueIndex.h"
+#include "ast2ram/utility/ValueIndex.h"
 #include "ast/Aggregator.h"
 #include "ast/Variable.h"
-#include "ast2ram/Location.h"
+#include "ast2ram/utility/Location.h"
 #include "ram/Relation.h"
 #include "souffle/utility/FunctionalUtil.h"
 #include "souffle/utility/StreamUtil.h"
@@ -30,80 +30,64 @@ namespace souffle::ast2ram {
 ValueIndex::ValueIndex() = default;
 ValueIndex::~ValueIndex() = default;
 
+const std::set<Location>& ValueIndex::getVariableReferences(std::string var) const {
+    assert(contains(varReferencePoints, var) && "variable not indexed");
+    return varReferencePoints.at(var);
+}
+
 void ValueIndex::addVarReference(const ast::Variable& var, const Location& l) {
-    std::set<Location>& locs = var_references[var.getName()];
+    std::set<Location>& locs = varReferencePoints[var.getName()];
     locs.insert(l);
 }
 
-void ValueIndex::addVarReference(const ast::Variable& var, int ident, int pos, std::string rel) {
-    addVarReference(var, Location({ident, pos, rel}));
+void ValueIndex::addVarReference(const ast::Variable& var, int ident, int pos) {
+    addVarReference(var, Location({ident, pos}));
 }
 
 bool ValueIndex::isDefined(const ast::Variable& var) const {
-    return var_references.find(var.getName()) != var_references.end();
+    return contains(varReferencePoints, var.getName());
 }
 
 const Location& ValueIndex::getDefinitionPoint(const ast::Variable& var) const {
-    auto pos = var_references.find(var.getName());
-    assert(pos != var_references.end() && "Undefined variable referenced!");
-    return *pos->second.begin();
+    assert(isDefined(var) && "undefined variable reference");
+    const auto& referencePoints = varReferencePoints.at(var.getName());
+    assert(!referencePoints.empty() && "at least one reference point should exist");
+    return *referencePoints.begin();
 }
 
 void ValueIndex::setGeneratorLoc(const ast::Argument& arg, const Location& loc) {
-    arg_generator_locations.push_back(std::make_pair(&arg, loc));
+    generatorDefinitionPoints.insert({&arg, loc});
 }
 
 const Location& ValueIndex::getGeneratorLoc(const ast::Argument& arg) const {
-    if (dynamic_cast<const ast::Aggregator*>(&arg) != nullptr) {
-        // aggregators can be used interchangeably if syntactically equal
-        for (const auto& cur : arg_generator_locations) {
-            if (*cur.first == arg) {
-                return cur.second;
-            }
-        }
-    } else {
-        // otherwise, unique for each appearance
-        for (const auto& cur : arg_generator_locations) {
-            if (cur.first == &arg) {
-                return cur.second;
-            }
-        }
-    }
-    fatal("arg `%s` has no generator location", arg);
+    assert(contains(generatorDefinitionPoints, &arg) && "undefined generator");
+    return generatorDefinitionPoints.at(&arg);
 }
 
-void ValueIndex::setRecordDefinition(const ast::RecordInit& init, const Location& l) {
-    record_definitions.insert({&init, l});
-}
-
-void ValueIndex::setRecordDefinition(const ast::RecordInit& init, int ident, int pos, std::string rel) {
-    setRecordDefinition(init, Location({ident, pos, rel}));
+void ValueIndex::setRecordDefinition(const ast::RecordInit& init, int ident, int pos) {
+    recordDefinitionPoints.insert({&init, Location({ident, pos})});
 }
 
 const Location& ValueIndex::getDefinitionPoint(const ast::RecordInit& init) const {
-    auto pos = record_definitions.find(&init);
-    if (pos != record_definitions.end()) {
-        return pos->second;
-    }
-
-    fatal("requested location for undefined record!");
+    assert(contains(recordDefinitionPoints, &init) && "undefined record");
+    return recordDefinitionPoints.at(&init);
 }
 
 bool ValueIndex::isGenerator(const int level) const {
     // check for aggregator definitions
-    return any_of(arg_generator_locations,
+    return any_of(generatorDefinitionPoints,
             [&level](const auto& location) { return location.second.identifier == level; });
 }
 
 bool ValueIndex::isSomethingDefinedOn(int level) const {
     // check for variable definitions
-    for (const auto& cur : var_references) {
+    for (const auto& cur : varReferencePoints) {
         if (cur.second.begin()->identifier == level) {
             return true;
         }
     }
     // check for record definitions
-    for (const auto& cur : record_definitions) {
+    for (const auto& cur : recordDefinitionPoints) {
         if (cur.second.identifier == level) {
             return true;
         }
@@ -114,7 +98,7 @@ bool ValueIndex::isSomethingDefinedOn(int level) const {
 
 void ValueIndex::print(std::ostream& out) const {
     out << "Variables:\n\t";
-    out << join(var_references, "\n\t");
+    out << join(varReferencePoints, "\n\t");
 }
 
 }  // namespace souffle::ast2ram

@@ -26,6 +26,7 @@
 #include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -45,17 +46,14 @@ namespace souffle::ast {
  */
 class Aggregator : public Argument {
 public:
-    Aggregator(AggregateOp fun, Own<Argument> expr = nullptr, VecOwn<Literal> body = {}, SrcLocation loc = {})
-            : Argument(std::move(loc)), fun(fun), targetExpression(std::move(expr)), body(std::move(body)) {}
+    Aggregator(AggregateOp baseOperator, Own<Argument> expr = nullptr, VecOwn<Literal> body = {},
+            SrcLocation loc = {})
+            : Argument(std::move(loc)), baseOperator(baseOperator), targetExpression(std::move(expr)),
+              body(std::move(body)) {}
 
-    /** Return aggregate operator */
-    AggregateOp getOperator() const {
-        return fun;
-    }
-
-    /** Set aggregate operator */
-    void setOperator(AggregateOp op) {
-        fun = op;
+    /** Return the (base type) operator of the aggregator */
+    AggregateOp getBaseOperator() const {
+        return baseOperator;
     }
 
     /** Return target expression */
@@ -85,7 +83,12 @@ public:
     }
 
     Aggregator* clone() const override {
-        return new Aggregator(fun, souffle::clone(targetExpression), souffle::clone(body), getSrcLoc());
+        auto* copy = new Aggregator(
+                baseOperator, souffle::clone(targetExpression), souffle::clone(body), getSrcLoc());
+        if (finalTranslatorType.has_value()) {
+            copy->setFinalType(finalTranslatorType.value());
+        }
+        return copy;
     }
 
     void apply(const NodeMapper& map) override {
@@ -97,9 +100,17 @@ public:
         }
     }
 
+    void setFinalType(AggregateOp newType) {
+        finalTranslatorType = newType;
+    }
+
+    std::optional<AggregateOp> getFinalType() const {
+        return finalTranslatorType;
+    }
+
 protected:
     void print(std::ostream& os) const override {
-        os << fun;
+        os << baseOperator;
         if (targetExpression) {
             os << " " << *targetExpression;
         }
@@ -108,19 +119,22 @@ protected:
 
     bool equal(const Node& node) const override {
         const auto& other = static_cast<const Aggregator&>(node);
-        return fun == other.fun && equal_ptr(targetExpression, other.targetExpression) &&
+        return baseOperator == other.baseOperator && equal_ptr(targetExpression, other.targetExpression) &&
                equal_targets(body, other.body);
     }
 
 private:
-    /** Aggregate operator */
-    AggregateOp fun;
+    /** Aggregate (base type) operator */
+    AggregateOp baseOperator;
 
     /** Aggregate expression */
     Own<Argument> targetExpression;
 
     /** Body literal of sub-query */
     VecOwn<Literal> body;
+
+    // TODO (azreika): remove after refactoring translator
+    std::optional<AggregateOp> finalTranslatorType;
 };
 
 }  // namespace souffle::ast

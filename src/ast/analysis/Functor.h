@@ -28,6 +28,8 @@
 
 namespace souffle::ast::analysis {
 
+class TypeAnalysis;
+
 class FunctorAnalysis : public Analysis {
 public:
     static constexpr const char* name = "functor-analysis";
@@ -52,8 +54,7 @@ public:
     bool isStateful(const UserDefinedFunctor* udf) const;
 
 private:
-    std::map<std::string, const FunctorDeclaration*> udfDeclaration;
-    std::map<std::string, const IntrinsicFunctorInfo*> functorInfo;
+    const TypeAnalysis* typeAnalysis = nullptr;
 };
 
 }  // namespace souffle::ast::analysis

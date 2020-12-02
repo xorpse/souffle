@@ -82,6 +82,8 @@ souffle_sources = \
         ast/analysis/Ground.h                              \
         ast/analysis/IOType.cpp                            \
         ast/analysis/IOType.h                              \
+        ast/analysis/PolymorphicObjects.cpp                \
+        ast/analysis/PolymorphicObjects.h                  \
         ast/analysis/PrecedenceGraph.cpp                   \
         ast/analysis/PrecedenceGraph.h                     \
         ast/analysis/ProfileUse.cpp                        \
@@ -102,12 +104,12 @@ souffle_sources = \
         ast/analysis/TopologicallySortedSCCGraph.h         \
         ast/analysis/Type.cpp                              \
         ast/analysis/Type.h                                \
+        ast/analysis/TypeConstraints.h                     \
+        ast/analysis/TypeConstraints.cpp                   \
         ast/analysis/TypeSystem.cpp                        \
         ast/analysis/TypeSystem.h                          \
         ast/analysis/TypeEnvironment.cpp                   \
         ast/analysis/TypeEnvironment.h                     \
-        ast/transform/ADTtoRecords.cpp                     \
-        ast/transform/ADTtoRecords.h                       \
         ast/transform/AddNullariesToAtomlessAggregates.cpp \
         ast/transform/AddNullariesToAtomlessAggregates.h   \
         ast/transform/ComponentChecker.cpp                 \
@@ -142,14 +144,12 @@ souffle_sources = \
         ast/transform/MinimiseProgram.h                    \
         ast/transform/NameUnnamedVariables.cpp             \
         ast/transform/NameUnnamedVariables.h               \
-        ast/transform/NormaliseMultiResultFunctors.cpp     \
-        ast/transform/NormaliseMultiResultFunctors.h       \
+        ast/transform/NormaliseGenerators.cpp              \
+        ast/transform/NormaliseGenerators.h                \
         ast/transform/Null.h                               \
         ast/transform/PartitionBodyLiterals.cpp            \
         ast/transform/PartitionBodyLiterals.h              \
         ast/transform/Pipeline.h                           \
-        ast/transform/PolymorphicObjects.cpp               \
-        ast/transform/PolymorphicObjects.h                 \
         ast/transform/PragmaChecker.cpp                    \
         ast/transform/PragmaChecker.h                      \
         ast/transform/Provenance.cpp                       \
@@ -166,8 +166,6 @@ souffle_sources = \
         ast/transform/RemoveRedundantSums.h                \
         ast/transform/RemoveRelationCopies.cpp             \
         ast/transform/RemoveRelationCopies.h               \
-        ast/transform/RemoveTypecasts.cpp                  \
-        ast/transform/RemoveTypecasts.h                    \
         ast/transform/ReorderLiterals.cpp                  \
         ast/transform/ReorderLiterals.h                    \
         ast/transform/ReplaceSingletonVariables.cpp        \
@@ -200,11 +198,21 @@ souffle_sources = \
         ast2ram/AstToRamTranslator.h                       \
         ast2ram/ClauseTranslator.cpp                       \
         ast2ram/ClauseTranslator.h                         \
-        ast2ram/Location.h                                 \
+        ast2ram/ConstraintTranslator.cpp                   \
+        ast2ram/ConstraintTranslator.h                     \
         ast2ram/ProvenanceClauseTranslator.cpp             \
         ast2ram/ProvenanceClauseTranslator.h               \
-        ast2ram/ValueIndex.cpp                             \
-        ast2ram/ValueIndex.h                               \
+        ast2ram/ProvenanceTranslator.cpp                   \
+        ast2ram/ProvenanceTranslator.h                     \
+        ast2ram/utility/Location.h                         \
+        ast2ram/utility/Utils.cpp                          \
+        ast2ram/utility/Utils.h                            \
+        ast2ram/utility/TranslatorContext.cpp              \
+        ast2ram/utility/TranslatorContext.h                \
+        ast2ram/utility/ValueIndex.cpp                     \
+        ast2ram/utility/ValueIndex.h                       \
+        ast2ram/ValueTranslator.cpp                        \
+        ast2ram/ValueTranslator.h                          \
         interpreter/Context.h                              \
         interpreter/Engine.cpp                             \
         interpreter/Engine.h                               \

@@ -213,8 +213,12 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
     // tests whether something is a record
     auto isRec = [&](const Argument& arg) { return isA<RecordInit>(&arg); };
 
-    // tests whether something is a multi-result functor
-    auto isMultiResultFunctor = [&](const Argument& arg) {
+    // tests whether something is a generator
+    auto isGenerator = [&](const Argument& arg) {
+        // aggregators
+        if (isA<Aggregator>(&arg)) return true;
+
+        // or multi-result functors
         const auto* inf = dynamic_cast<const IntrinsicFunctor*>(&arg);
         if (inf == nullptr) return false;
         return analysis::FunctorAnalysis::isMultiResult(*inf);
@@ -248,7 +252,7 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
     // I) extract equations
     std::vector<Equation> equations;
     visitDepthFirst(clause, [&](const BinaryConstraint& constraint) {
-        if (isEqConstraint(constraint.getOperator())) {
+        if (isEqConstraint(constraint.getBaseOperator())) {
             equations.push_back(Equation(constraint.getLHS(), constraint.getRHS()));
         }
     });
@@ -326,8 +330,8 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
         const auto& v = static_cast<const ast::Variable&>(lhs);
         const Argument& t = rhs;
 
-        // #6:  t is a multi-result functor => skip
-        if (isMultiResultFunctor(t)) {
+        // #6:  t is a generator => skip
+        if (isGenerator(t)) {
             continue;
         }
 
@@ -365,7 +369,7 @@ Own<Clause> ResolveAliasesTransformer::removeTrivialEquality(const Clause& claus
     for (Literal* literal : clause.getBodyLiterals()) {
         if (auto* constraint = dynamic_cast<BinaryConstraint*>(literal)) {
             // TODO: don't filter out `FEQ` constraints, since `x = x` can fail when `x` is a NaN
-            if (isEqConstraint(constraint->getOperator())) {
+            if (isEqConstraint(constraint->getBaseOperator())) {
                 if (*constraint->getLHS() == *constraint->getRHS()) {
                     continue;  // skip this one
                 }
