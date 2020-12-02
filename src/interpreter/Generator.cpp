@@ -496,7 +496,7 @@ size_t NodeGenerator::encodeIndexPos(RamNode& node) {
     if (signature.empty()) {
         signature = ram::analysis::SearchSignature::getFullSearchSignature(signature.arity());
     }
-    auto i = engine.isa->getLexOrderNum(name, signature);
+    auto i = engine.isa->getIndexSelection(name).getLexOrderNum(signature);
     indexTable[&node] = i;
     return i;
 };

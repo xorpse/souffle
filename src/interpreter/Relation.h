@@ -180,9 +180,10 @@ public:
     /**
      * Creates a relation, build all necessary indexes.
      */
-    Relation(size_t auxiliaryArity, std::string name, const ram::analysis::IndexAnalysis* idxAnalysis)
+    Relation(size_t auxiliaryArity, const std::string& name, const ram::analysis::IndexAnalysis* idxAnalysis)
             : RelationWrapper(Arity, auxiliaryArity, name) {
-        for (auto order : idxAnalysis->getAllOrders(name)) {
+        for (const auto& order : idxAnalysis->getIndexSelection(name).getAllOrders()) {
+            ram::analysis::LexOrder fullOrder = order;
             // Expand the order to a total order
             ram::analysis::AttributeSet set{order.begin(), order.end()};
 
@@ -190,11 +191,11 @@ public:
             // Not using constexpr Arity to avoid compiler warning. (When Arity == 0)
             for (size_t i = 0; i < getArity(); ++i) {
                 if (set.find(i) == set.end()) {
-                    order.push_back(i);
+                    fullOrder.push_back(i);
                 }
             }
 
-            indexes.push_back(mk<Index>(order));
+            indexes.push_back(mk<Index>(fullOrder));
         }
 
         // Use the first index as default main index

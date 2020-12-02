@@ -306,6 +306,7 @@ using LexOrder = std::vector<AttributeIndex>;
 using OrderCollection = std::vector<LexOrder>;
 using Chain = std::vector<SearchSignature>;
 using ChainOrderMap = std::vector<Chain>;
+using SignatureOrderMap = std::unordered_map<SearchSignature, LexOrder, SearchSignature::Hasher>;
 
 class SearchComparator {
 public:
@@ -498,6 +499,45 @@ protected:
 };
 
 /**
+ * @class FinalIndexSelection
+ * @Brief Encapsulates the result of the IndexAnalysis
+ * i.e. mapping each search (SearchSignature) to a corresponding index (LexOrder)
+ */
+class FinalIndexSelection {
+public:
+    FinalIndexSelection(SignatureOrderMap indexSelection) : indexSelection(indexSelection) {
+        for (const auto& entry : indexSelection) {
+            searches.push_back(entry.first);
+            orders.push_back(entry.second);
+        }
+    }
+
+    const std::vector<LexOrder>& getAllOrders() const {
+        return orders;
+    }
+    const std::vector<SearchSignature>& getSearches() const {
+        return searches;
+    }
+    const LexOrder& getLexOrder(SearchSignature cols) const {
+        return indexSelection.at(cols);
+    }
+
+    int getLexOrderNum(SearchSignature cols) const {
+        for (size_t index = 0; index < cols.arity(); ++index) {
+            if (searches[index] == cols) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+private:
+    SignatureOrderMap indexSelection;
+    std::vector<SearchSignature> searches;
+    std::vector<LexOrder> orders;
+};
+
+/**
  * @class RamIndexAnalyis
  * @Brief Analysis pass computing the index sets of RAM relations
  */
@@ -512,18 +552,14 @@ public:
     const AttributeSet getAttributesToDischarge(const Relation& rel, const SearchSignature& s) const {
         return minIndexCover.at(rel.getName()).getAttributesToDischarge(rel, s);
     }
-    const OrderCollection getAllOrders(const std::string& relName) const {
-        return minIndexCover.at(relName).getAllOrders();
-    }
-    const SearchSet& getSearches(const std::string& relName) const {
-        return minIndexCover.at(relName).getSearches();
-    }
-    const LexOrder& getLexOrder(const std::string& relName, SearchSignature cols) const {
-        return minIndexCover.at(relName).getLexOrder(cols);
-    }
 
-    int getLexOrderNum(const std::string& relName, SearchSignature cols) const {
-        return minIndexCover.at(relName).getLexOrderNum(cols);
+    const FinalIndexSelection getIndexSelection(const std::string& relName) const {
+        SignatureOrderMap indexSelection = {};
+        const auto& cover = minIndexCover.at(relName);
+        for (const auto& search : cover.getSearches()) {
+            indexSelection.insert({search, cover.getLexOrder(search)});
+        }
+        return FinalIndexSelection(indexSelection);
     }
 
     /**
