@@ -22,8 +22,8 @@
 
 namespace souffle::ast::transform {
 
-static Own<Aggregator> simplifyTargetExpression(
-        const TranslationUnit& tu, const Clause* originatingClause, const Aggregator* aggregator) {
+Aggregator* SimplifyAggregateTargetExpressionTransformer::simplifyTargetExpression(
+        const TranslationUnit& tu, const Clause* clause, const Aggregator* aggregator) {
     const auto* origTargetExpression = aggregator->getTargetExpression();
     assert(origTargetExpression != nullptr && !isA<Variable>(origTargetExpression) &&
             "aggregator should have complex target expression");
@@ -36,7 +36,7 @@ static Own<Aggregator> simplifyTargetExpression(
     // if a variable with the same name appears range-restricted in the outer scope.
 
     // Make a unique target expression variable, and equate it to the original
-    auto newTargetExpression = mk<Variable>(analysis::findUniqueVariableName(*originatingClause, "x"));
+    auto newTargetExpression = mk<Variable>(analysis::findUniqueVariableName(*clause, "x"));
     auto equalityLiteral = std::make_unique<BinaryConstraint>(BinaryConstraintOp::EQ,
             souffle::clone(newTargetExpression), souffle::clone(origTargetExpression));
     std::vector<Own<Literal>> newBody;
@@ -58,9 +58,8 @@ static Own<Aggregator> simplifyTargetExpression(
     // We already have a way to find witnesses and also to find variables occurring outside
     // this aggregate. We will take the set minus of variablesOccurringOutside - witnesses.
     // Whichever variables are in this set need to be renamed within the aggregate subclause.
-    auto witnesses = analysis::getWitnessVariables(tu, *originatingClause, *aggregator);
-    std::set<std::string> varsOutside =
-            analysis::getVariablesOutsideAggregate(*originatingClause, *aggregator);
+    auto witnesses = analysis::getWitnessVariables(tu, *clause, *aggregator);
+    std::set<std::string> varsOutside = analysis::getVariablesOutsideAggregate(*clause, *aggregator);
 
     std::set<std::string> varsGroundedOutside;
     for (auto& varName : varsOutside) {
@@ -77,7 +76,7 @@ static Own<Aggregator> simplifyTargetExpression(
     visitDepthFirst(*origTargetExpression, [&](const Variable& v) {
         if (contains(varsGroundedOutside, v.getName())) {
             // rename it everywhere in the body so that we've scoped this properly.
-            std::string newVarName = analysis::findUniqueVariableName(*originatingClause, v.getName());
+            std::string newVarName = analysis::findUniqueVariableName(*clause, v.getName());
             for (auto& literal : newBody) {
                 visitDepthFirst(*literal, [&](const Variable& literalVar) {
                     if (literalVar == v) {
@@ -89,9 +88,7 @@ static Own<Aggregator> simplifyTargetExpression(
     });
 
     // set up a new aggregate to replace this one
-    auto newAggregate =
-            mk<Aggregator>(aggregator->getBaseOperator(), std::move(newTargetExpression), std::move(newBody));
-    return newAggregate;
+    return new Aggregator(aggregator->getBaseOperator(), std::move(newTargetExpression), std::move(newBody));
 }
 
 bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& translationUnit) {
@@ -106,23 +103,23 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
     // -> :- A(y), x = sum z0: { B(y, z), z0 = y + z.
 
     struct replace_aggregators : public NodeMapper {
-        const std::map<const Aggregator*, Own<Aggregator>>& oldToNew;
+        const std::map<const Aggregator*, Aggregator*>& oldToNew;
 
-        replace_aggregators(const std::map<const Aggregator*, Own<Aggregator>>& oldToNew)
-                : oldToNew(oldToNew) {}
+        replace_aggregators(const std::map<const Aggregator*, Aggregator*>& oldToNew) : oldToNew(oldToNew) {}
 
         std::unique_ptr<Node> operator()(std::unique_ptr<Node> node) const override {
-            node->apply(*this);
             if (auto* aggregator = dynamic_cast<Aggregator*>(node.get())) {
                 if (contains(oldToNew, aggregator)) {
-                    return souffle::clone(oldToNew.at(aggregator));
+                    return Own<Aggregator>(oldToNew.at(aggregator));
                 }
             }
+            node->apply(*this);
             return node;
         }
     };
 
-    std::map<const Aggregator*, Own<Aggregator>> complexToSimple;
+    // Generate the necessary simplified forms for each complex aggregator
+    std::map<const Aggregator*, Aggregator*> complexToSimple;
     for (const auto* clause : program.getClauses()) {
         visitDepthFirst(*clause, [&](const Aggregator& aggregator) {
             const auto* targetExpression = aggregator.getTargetExpression();
@@ -133,6 +130,7 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
         });
     }
 
+    // Replace the old aggregators with the new
     replace_aggregators update(complexToSimple);
     program.apply(update);
     return !complexToSimple.empty();
