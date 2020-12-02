@@ -163,18 +163,14 @@ Own<ram::Operation> ClauseTranslator::buildFinalOperation(
             // TODO: do we wish to enable constraints by header functor? record inits do so...
             op = filterByConstraints(level, atom->getArguments(), std::move(op), false);
 
-            // check whether all arguments are unnamed variables
-            bool isAllArgsUnnamed = true;
-            for (auto* argument : atom->getArguments()) {
-                if (!isA<ast::UnnamedVariable>(argument)) {
-                    isAllArgsUnnamed = false;
-                }
-            }
-
             // add check for emptiness for an atom
             op = mk<ram::Filter>(mk<ram::Negation>(mk<ram::EmptinessCheck>(
                                          getConcreteRelationName(atom->getQualifiedName()))),
                     std::move(op));
+
+            // check whether all arguments are unnamed variables
+            bool isAllArgsUnnamed = all_of(atom->getArguments(),
+                    [&](const ast::Argument* arg) { return isA<ast::UnnamedVariable>(arg); });
 
             // add a scan level
             if (atom->getArity() != 0 && !isAllArgsUnnamed) {
