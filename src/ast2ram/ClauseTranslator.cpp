@@ -83,18 +83,18 @@ Own<ram::Statement> ClauseTranslator::translateClause(
         return mk<ram::Query>(
                 mk<ram::Project>(getConcreteRelationName(head->getQualifiedName()), std::move(values)));
     }
-
-    // the rest should be rules
     assert(isRule(clause));
 
+    // Index all variables and generators in the clause
     indexClause(clause);
 
-    /* -- create RAM statement -- */
+    // Set up the RAM statement bottom-up
+    return createRamQuery(clause, originalClause, version);
+}
 
-    // Create the projection statement
+Own<ram::Statement> ClauseTranslator::createRamQuery(
+        const ast::Clause& clause, const ast::Clause& originalClause, int version) {
     Own<ram::Operation> op = createProjection(clause);
-
-    // Set up the main operations in the clause bottom-up
     op = addVariableBindingConstraints(std::move(op));
     op = addBodyLiteralConstraints(clause, std::move(op));
     op = addGeneratorLevels(std::move(op));
