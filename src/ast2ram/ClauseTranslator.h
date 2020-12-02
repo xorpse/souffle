@@ -94,7 +94,7 @@ private:
             const ast::Clause& clause, const ast::Clause& originalClause, int version);
     Own<ram::Operation> addVariableBindingConstraints(Own<ram::Operation> op) const;
     Own<ram::Operation> addBodyLiteralConstraints(const ast::Clause& clause, Own<ram::Operation> op) const;
-    Own<ram::Operation> addGeneratorLevels(Own<ram::Operation> op);
+    Own<ram::Operation> addGeneratorLevels(Own<ram::Operation> op) const;
     Own<ram::Operation> addVariableIntroductions(const ast::Clause& clause, const ast::Clause& originalClause,
             int version, Own<ram::Operation> op);
     Own<ram::Operation> addEntryPoint(const ast::Clause& originalClause, Own<ram::Operation> op) const;
@@ -109,9 +109,10 @@ private:
     static RamDomain getConstantRamRepresentation(SymbolTable& symbolTable, const ast::Constant& constant);
     static Own<ram::Expression> translateConstant(SymbolTable& symbolTable, const ast::Constant& constant);
 
-    Own<ram::Operation> instantiateAggregator(Own<ram::Operation> op, const ast::Aggregator* agg);
+    Own<ram::Operation> instantiateAggregator(
+            Own<ram::Operation> op, const ast::Aggregator* agg, int curLevel) const;
     Own<ram::Operation> instantiateMultiResultFunctor(
-            Own<ram::Operation> op, const ast::IntrinsicFunctor* inf);
+            Own<ram::Operation> op, const ast::IntrinsicFunctor* inf, int curLevel) const;
 };
 
 }  // namespace souffle::ast2ram
