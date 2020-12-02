@@ -97,6 +97,7 @@ private:
     Own<ram::Operation> addGeneratorLevels(Own<ram::Operation> op);
     Own<ram::Operation> addVariableIntroductions(const ast::Clause& clause, const ast::Clause& originalClause,
             int version, Own<ram::Operation> op);
+    Own<ram::Operation> addEntryPoint(const ast::Clause& originalClause, Own<ram::Operation> op);
     Own<ram::Operation> addAtomScan(Own<ram::Operation> op, const ast::Atom* atom, const ast::Clause& clause,
             const ast::Clause& originalClause, int curLevel, int version);
     Own<ram::Operation> addRecordUnpack(Own<ram::Operation> op, const ast::RecordInit* rec, int curLevel);

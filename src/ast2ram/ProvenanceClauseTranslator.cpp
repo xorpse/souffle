@@ -30,11 +30,12 @@
 
 namespace souffle::ast2ram {
 
+// TODO (azreika): should change these to a ram query overload!!!
+
 Own<ram::Condition> ProvenanceClauseTranslator::createCondition(const ast::Clause& /* originalClause */) {
     return nullptr;
 }
 
-// TODO (azreika): this overload doesn't really fit
 Own<ram::Operation> ProvenanceClauseTranslator::createProjection(const ast::Clause& clause) {
     VecOwn<ram::Expression> values;
 

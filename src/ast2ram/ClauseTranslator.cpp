@@ -94,19 +94,19 @@ Own<ram::Statement> ClauseTranslator::translateClause(
 
 Own<ram::Statement> ClauseTranslator::createRamQuery(
         const ast::Clause& clause, const ast::Clause& originalClause, int version) {
-    Own<ram::Operation> op = createProjection(clause);
+    auto op = createProjection(clause);
     op = addVariableBindingConstraints(std::move(op));
     op = addBodyLiteralConstraints(clause, std::move(op));
     op = addGeneratorLevels(std::move(op));
     op = addVariableIntroductions(clause, originalClause, version, std::move(op));
+    op = addEntryPoint(originalClause, std::move(op));
+    return mk<ram::Query>(std::move(op));
+}
 
-    // Generate the final RAM insert statement
-    Own<ram::Condition> cond = createCondition(originalClause);
-    if (cond != nullptr) {
-        return mk<ram::Query>(mk<ram::Filter>(std::move(cond), std::move(op)));
-    } else {
-        return mk<ram::Query>(std::move(op));
-    }
+Own<ram::Operation> ClauseTranslator::addEntryPoint(
+        const ast::Clause& originalClause, Own<ram::Operation> op) {
+    auto cond = createCondition(originalClause);
+    return cond != nullptr ? mk<ram::Filter>(std::move(cond), std::move(op)) : std::move(op);
 }
 
 Own<ram::Operation> ClauseTranslator::addVariableBindingConstraints(Own<ram::Operation> op) {
