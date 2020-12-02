@@ -74,9 +74,7 @@ protected:
 
 private:
     std::vector<const ast::Argument*> generators;
-
-    // the order of processed operations
-    std::vector<const ast::Node*> op_nesting;
+    std::vector<const ast::Node*> operators;
 
     Own<ast::Clause> getReorderedClause(const ast::Clause& clause, const int version) const;
 

@@ -201,13 +201,13 @@ Own<ram::Operation> ClauseTranslator::addRecordUnpack(
 Own<ram::Operation> ClauseTranslator::addVariableIntroductions(
         const ast::Clause& clause, const ast::Clause& originalClause, int version, Own<ram::Operation> op) {
     // build operation bottom-up
-    while (!op_nesting.empty()) {
+    while (!operators.empty()) {
         // get next operator
-        const auto* cur = op_nesting.back();
-        op_nesting.pop_back();
+        const auto* cur = operators.back();
+        operators.pop_back();
 
         // get current nesting level
-        auto curLevel = op_nesting.size();
+        auto curLevel = operators.size();
 
         if (const auto* atom = dynamic_cast<const ast::Atom*>(cur)) {
             // add atom arguments through a scan
@@ -435,13 +435,13 @@ Own<ast::Clause> ClauseTranslator::getReorderedClause(const ast::Clause& clause,
 }
 
 int ClauseTranslator::addOperatorLevel(const ast::Node* node) {
-    int nodeLevel = op_nesting.size() + generators.size();
-    op_nesting.push_back(node);
+    int nodeLevel = operators.size() + generators.size();
+    operators.push_back(node);
     return nodeLevel;
 }
 
 int ClauseTranslator::addGeneratorLevel(const ast::Argument* arg) {
-    int generatorLevel = op_nesting.size() + generators.size();
+    int generatorLevel = operators.size() + generators.size();
     generators.push_back(arg);
     return generatorLevel;
 }
