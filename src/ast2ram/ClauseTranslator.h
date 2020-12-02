@@ -93,13 +93,11 @@ private:
     Own<ram::Operation> addVariableBindingConstraints(Own<ram::Operation> op);
     Own<ram::Operation> addBodyLiteralConstraints(const ast::Clause& clause, Own<ram::Operation> op);
     Own<ram::Operation> addGeneratorLevels(Own<ram::Operation> op);
+    Own<ram::Operation> addVariableIntroductions(const ast::Clause& clause, const ast::Clause& originalClause,
+            int version, Own<ram::Operation> op);
     Own<ram::Operation> addAtomScan(Own<ram::Operation> op, const ast::Atom* atom, const ast::Clause& clause,
             const ast::Clause& originalClause, int curLevel, int version);
     Own<ram::Operation> addRecordUnpack(Own<ram::Operation> op, const ast::RecordInit* rec, int curLevel);
-
-    // Build operation bottom-up
-    Own<ram::Operation> buildFinalOperation(const ast::Clause& clause, const ast::Clause& originalClause,
-            int version, Own<ram::Operation> op);
 
     // Return the write-location for the generator, or {} if an equivalent arg was already seen
     std::optional<int> addGenerator(const ast::Argument& arg);

@@ -94,11 +94,11 @@ Own<ram::Statement> ClauseTranslator::translateClause(
     // Create the projection statement
     Own<ram::Operation> op = createProjection(clause);
 
-    // Set up the main operations in the clause
+    // Set up the main operations in the clause bottom-up
     op = addVariableBindingConstraints(std::move(op));
     op = addBodyLiteralConstraints(clause, std::move(op));
     op = addGeneratorLevels(std::move(op));
-    op = buildFinalOperation(clause, originalClause, version, std::move(op));
+    op = addVariableIntroductions(clause, originalClause, version, std::move(op));
 
     // Generate the final RAM insert statement
     Own<ram::Condition> cond = createCondition(originalClause);
@@ -145,8 +145,8 @@ Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause
     return project;  // start with innermost
 }
 
-Own<ram::Operation> ClauseTranslator::addAtomScan(
-        Own<ram::Operation> op, const ast::Atom* atom, const ast::Clause& clause, const ast::Clause& originalClause, int curLevel, int version) {
+Own<ram::Operation> ClauseTranslator::addAtomScan(Own<ram::Operation> op, const ast::Atom* atom,
+        const ast::Clause& clause, const ast::Clause& originalClause, int curLevel, int version) {
     const ast::Atom* head = clause.getHead();
 
     // add constraints
@@ -198,7 +198,7 @@ Own<ram::Operation> ClauseTranslator::addRecordUnpack(
     return op;
 }
 
-Own<ram::Operation> ClauseTranslator::buildFinalOperation(
+Own<ram::Operation> ClauseTranslator::addVariableIntroductions(
         const ast::Clause& clause, const ast::Clause& originalClause, int version, Own<ram::Operation> op) {
     // build operation bottom-up
     while (!op_nesting.empty()) {
@@ -210,8 +210,10 @@ Own<ram::Operation> ClauseTranslator::buildFinalOperation(
         auto level = op_nesting.size();
 
         if (const auto* atom = dynamic_cast<const ast::Atom*>(cur)) {
+            // add atom arguments through a scan
             op = addAtomScan(std::move(op), atom, clause, originalClause, level, version);
         } else if (const auto* rec = dynamic_cast<const ast::RecordInit*>(cur)) {
+            // add record arguments through an unpack
             op = addRecordUnpack(std::move(op), rec, level);
         } else {
             fatal("Unsupported AST node for creation of scan-level!");
