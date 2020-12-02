@@ -294,7 +294,7 @@ Own<ram::Operation> ClauseTranslator::instantiateMultiResultFunctor(
 }
 
 Own<ram::Operation> ClauseTranslator::addGeneratorLevels(Own<ram::Operation> op) const {
-    size_t curLevel = 0;
+    size_t curLevel = operators.size() + generators.size() - 1;
     for (const auto* generator : reverse(generators)) {
         if (auto agg = dynamic_cast<const ast::Aggregator*>(generator)) {
             op = instantiateAggregator(std::move(op), agg, curLevel);
@@ -303,6 +303,7 @@ Own<ram::Operation> ClauseTranslator::addGeneratorLevels(Own<ram::Operation> op)
         } else {
             assert(false && "unhandled generator");
         }
+        curLevel--;
     }
     return op;
 }
