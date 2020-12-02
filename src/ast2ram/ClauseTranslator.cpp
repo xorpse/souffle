@@ -435,13 +435,15 @@ Own<ast::Clause> ClauseTranslator::getReorderedClause(const ast::Clause& clause,
 }
 
 int ClauseTranslator::addOperatorLevel(const ast::Node* node) {
+    int nodeLevel = op_nesting.size() + generators.size();
     op_nesting.push_back(node);
-    return level++;
+    return nodeLevel;
 }
 
 int ClauseTranslator::addGeneratorLevel(const ast::Argument* arg) {
+    int generatorLevel = op_nesting.size() + generators.size();
     generators.push_back(arg);
-    return level++;
+    return generatorLevel;
 }
 
 void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::Argument*>& nodeArgs) {
