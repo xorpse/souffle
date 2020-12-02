@@ -145,10 +145,61 @@ Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause
     return project;  // start with innermost
 }
 
-Own<ram::Operation> ClauseTranslator::buildFinalOperation(
-        const ast::Clause& clause, const ast::Clause& originalClause, int version, Own<ram::Operation> op) {
+Own<ram::Operation> ClauseTranslator::addAtomScan(
+        Own<ram::Operation> op, const ast::Atom* atom, const ast::Clause& clause, const ast::Clause& originalClause, int curLevel, int version) {
     const ast::Atom* head = clause.getHead();
 
+    // add constraints
+    // TODO: do we wish to enable constraints by header functor? record inits do so...
+    op = filterByConstraints(curLevel, atom->getArguments(), std::move(op), false);
+
+    // add check for emptiness for an atom
+    op = mk<ram::Filter>(
+            mk<ram::Negation>(mk<ram::EmptinessCheck>(getConcreteRelationName(atom->getQualifiedName()))),
+            std::move(op));
+
+    // check whether all arguments are unnamed variables
+    bool isAllArgsUnnamed = all_of(
+            atom->getArguments(), [&](const ast::Argument* arg) { return isA<ast::UnnamedVariable>(arg); });
+
+    // add a scan level
+    if (atom->getArity() != 0 && !isAllArgsUnnamed) {
+        if (head->getArity() == 0) {
+            op = mk<ram::Break>(mk<ram::Negation>(mk<ram::EmptinessCheck>(
+                                        getConcreteRelationName(head->getQualifiedName()))),
+                    std::move(op));
+        }
+
+        std::stringstream ss;
+        if (Global::config().has("profile")) {
+            ss << "@frequency-atom" << ';';
+            ss << originalClause.getHead()->getQualifiedName() << ';';
+            ss << version << ';';
+            ss << stringify(toString(clause)) << ';';
+            ss << stringify(toString(*atom)) << ';';
+            ss << stringify(toString(originalClause)) << ';';
+            ss << curLevel << ';';
+        }
+        op = mk<ram::Scan>(
+                getConcreteRelationName(atom->getQualifiedName()), curLevel, std::move(op), ss.str());
+    }
+
+    return op;
+}
+
+Own<ram::Operation> ClauseTranslator::addRecordUnpack(
+        Own<ram::Operation> op, const ast::RecordInit* rec, int curLevel) {
+    // add constant constraints
+    op = filterByConstraints(level, rec->getArguments(), std::move(op));
+
+    // add an unpack level
+    const Location& loc = valueIndex->getDefinitionPoint(*rec);
+    op = mk<ram::UnpackRecord>(std::move(op), curLevel, makeRamTupleElement(loc), rec->getArguments().size());
+    return op;
+}
+
+Own<ram::Operation> ClauseTranslator::buildFinalOperation(
+        const ast::Clause& clause, const ast::Clause& originalClause, int version, Own<ram::Operation> op) {
     // build operation bottom-up
     while (!op_nesting.empty()) {
         // get next operator
@@ -159,54 +210,9 @@ Own<ram::Operation> ClauseTranslator::buildFinalOperation(
         auto level = op_nesting.size();
 
         if (const auto* atom = dynamic_cast<const ast::Atom*>(cur)) {
-            // add constraints
-            // TODO: do we wish to enable constraints by header functor? record inits do so...
-            op = filterByConstraints(level, atom->getArguments(), std::move(op), false);
-
-            // add check for emptiness for an atom
-            op = mk<ram::Filter>(mk<ram::Negation>(mk<ram::EmptinessCheck>(
-                                         getConcreteRelationName(atom->getQualifiedName()))),
-                    std::move(op));
-
-            // check whether all arguments are unnamed variables
-            bool isAllArgsUnnamed = all_of(atom->getArguments(),
-                    [&](const ast::Argument* arg) { return isA<ast::UnnamedVariable>(arg); });
-
-            // add a scan level
-            if (atom->getArity() != 0 && !isAllArgsUnnamed) {
-                if (head->getArity() == 0) {
-                    op = mk<ram::Break>(mk<ram::Negation>(mk<ram::EmptinessCheck>(
-                                                getConcreteRelationName(head->getQualifiedName()))),
-                            std::move(op));
-                }
-                if (Global::config().has("profile")) {
-                    std::stringstream ss;
-                    ss << head->getQualifiedName();
-                    ss.str("");
-                    ss << "@frequency-atom" << ';';
-                    ss << originalClause.getHead()->getQualifiedName() << ';';
-                    ss << version << ';';
-                    ss << stringify(toString(clause)) << ';';
-                    ss << stringify(toString(*atom)) << ';';
-                    ss << stringify(toString(originalClause)) << ';';
-                    ss << level << ';';
-                    op = mk<ram::Scan>(getConcreteRelationName(atom->getQualifiedName()), level,
-                            std::move(op), ss.str());
-                } else {
-                    op = mk<ram::Scan>(
-                            getConcreteRelationName(atom->getQualifiedName()), level, std::move(op));
-                }
-            }
-
-            // TODO: support constants in nested records!
+            op = addAtomScan(std::move(op), atom, clause, originalClause, level, version);
         } else if (const auto* rec = dynamic_cast<const ast::RecordInit*>(cur)) {
-            // add constant constraints
-            op = filterByConstraints(level, rec->getArguments(), std::move(op));
-
-            // add an unpack level
-            const Location& loc = valueIndex->getDefinitionPoint(*rec);
-            op = mk<ram::UnpackRecord>(
-                    std::move(op), level, makeRamTupleElement(loc), rec->getArguments().size());
+            op = addRecordUnpack(std::move(op), rec, level);
         } else {
             fatal("Unsupported AST node for creation of scan-level!");
         }

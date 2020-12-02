@@ -28,10 +28,12 @@ class SymbolTable;
 namespace souffle::ast {
 class Aggregator;
 class Argument;
+class Atom;
 class Clause;
 class Constant;
 class IntrinsicFunctor;
 class Node;
+class RecordInit;
 }  // namespace souffle::ast
 
 namespace souffle::ram {
@@ -91,6 +93,9 @@ private:
     Own<ram::Operation> addVariableBindingConstraints(Own<ram::Operation> op);
     Own<ram::Operation> addBodyLiteralConstraints(const ast::Clause& clause, Own<ram::Operation> op);
     Own<ram::Operation> addGeneratorLevels(Own<ram::Operation> op);
+    Own<ram::Operation> addAtomScan(Own<ram::Operation> op, const ast::Atom* atom, const ast::Clause& clause,
+            const ast::Clause& originalClause, int curLevel, int version);
+    Own<ram::Operation> addRecordUnpack(Own<ram::Operation> op, const ast::RecordInit* rec, int curLevel);
 
     // Build operation bottom-up
     Own<ram::Operation> buildFinalOperation(const ast::Clause& clause, const ast::Clause& originalClause,
