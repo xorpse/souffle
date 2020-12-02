@@ -182,7 +182,8 @@ public:
      */
     Relation(size_t auxiliaryArity, const std::string& name, const ram::analysis::IndexAnalysis* idxAnalysis)
             : RelationWrapper(Arity, auxiliaryArity, name) {
-        for (const auto& order : idxAnalysis->getIndexSelection(name).getAllOrders()) {
+        auto finalSelection = idxAnalysis->getIndexSelection(name);
+        for (const auto& order : finalSelection.getAllOrders()) {
             ram::analysis::LexOrder fullOrder = order;
             // Expand the order to a total order
             ram::analysis::AttributeSet set{order.begin(), order.end()};
