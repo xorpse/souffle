@@ -180,10 +180,10 @@ public:
     /**
      * Creates a relation, build all necessary indexes.
      */
-    Relation(size_t auxiliaryArity, const std::string& name, const ram::analysis::IndexAnalysis* idxAnalysis)
+    Relation(size_t auxiliaryArity, const std::string& name, const ram::analysis::FinalIndexSelection& indexSelection)
             : RelationWrapper(Arity, auxiliaryArity, name) {
-        auto finalSelection = idxAnalysis->getIndexSelection(name);
-        for (const auto& order : finalSelection.getAllOrders()) {
+        
+        for (const auto& order : indexSelection.getAllOrders()) {
             ram::analysis::LexOrder fullOrder = order;
             // Expand the order to a total order
             ram::analysis::AttributeSet set{order.begin(), order.end()};
@@ -415,22 +415,19 @@ public:
 
 // The type of relation factory functions.
 using RelationFactory = Own<RelationWrapper> (*)(
-        const ram::Relation& id, const ram::analysis::IndexAnalysis* idxAnalysis);
+        const ram::Relation& id, const ram::analysis::FinalIndexSelection& indexSelection);
 
 // A factory for BTree based relation.
 Own<RelationWrapper> createBTreeRelation(
-        const ram::Relation& id, const ram::analysis::IndexAnalysis* idxAnalysis);
+        const ram::Relation& id, const ram::analysis::FinalIndexSelection& indexSelection);
 
 // A factory for BTree provenance index.
 Own<RelationWrapper> createProvenanceRelation(
-        const ram::Relation& id, const ram::analysis::IndexAnalysis* idxAnalysis);
-
+        const ram::Relation& id, const ram::analysis::FinalIndexSelection& indexSelection);
 // A factory for Brie based index.
 Own<RelationWrapper> createBrieRelation(
-        const ram::Relation& id, const ram::analysis::IndexAnalysis* idxAnalysis);
-
+        const ram::Relation& id, const ram::analysis::FinalIndexSelection& indexSelection);
 // A factory for Eqrel index.
 Own<RelationWrapper> createEqrelRelation(
-        const ram::Relation& id, const ram::analysis::IndexAnalysis* idxAnalysis);
-
+        const ram::Relation& id, const ram::analysis::FinalIndexSelection& indexSelection);
 }  // namespace souffle::interpreter
