@@ -45,18 +45,17 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
         std::unique_ptr<Node> operator()(std::unique_ptr<Node> node) const override {
             if (auto* aggregate = dynamic_cast<Aggregator*>(node.get())) {
                 // Check if the target expression is complex
-                if (aggregate->getTargetExpression() != nullptr &&
-                        dynamic_cast<const Variable*>(aggregate->getTargetExpression()) == nullptr) {
-                    // If it's complex, come up with a unique variable name to stand
-                    // in the place of the target expression. This will be set equal to the target
-                    // expression.
+                const auto* targetExpression = aggregate->getTargetExpression();
+                if (targetExpression != nullptr && !isA<Variable>(targetExpression)) {
+                    // Complex target expressions should be replaced with unique variables.
+
                     // What we might have though now is that a variable in the TE was shadowing
                     // a variable from the outer scope. Now we have "forgotten" this shadowing
                     // and need to restore it by scoping that variable properly.
                     // We know that a variable from the TE is shadowing another variable
                     // if a variable with the same name appears range-restricted in the outer scope.
 
-                    // make a unique target expression variable
+                    // Make a unique target expression variable
                     auto newTargetExpression =
                             mk<Variable>(analysis::findUniqueVariableName(*originatingClause, "x"));
                     auto equalityLiteral = std::make_unique<BinaryConstraint>(BinaryConstraintOp::EQ,
@@ -67,6 +66,7 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
                         newBody.push_back(souffle::clone(literal));
                     }
                     newBody.push_back(std::move(equalityLiteral));
+
                     // If there are occurrences of the same variable in the outer scope
                     // Then we need to be careful. There are two ensuing situations:
                     // 1) The variable in the outer scope is ungrounded (or occurs in the head)
@@ -86,7 +86,7 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
 
                     std::set<std::string> varsGroundedOutside;
                     for (auto& varName : varsOutside) {
-                        if (witnesses.find(varName) == witnesses.end()) {
+                        if (!contains(witnesses, varName)) {
                             varsGroundedOutside.insert(varName);
                         }
                     }
@@ -96,7 +96,7 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
                     // in the scope of the aggregate subclause should be local,
                     // not grounded from the outer scope (injected)
                     visitDepthFirst(*aggregate->getTargetExpression(), [&](const Variable& v) {
-                        if (varsGroundedOutside.find(v.getName()) != varsGroundedOutside.end()) {
+                        if (contains(varsGroundedOutside, v.getName())) {
                             // rename it everywhere in the body so that we've scoped this properly.
                             std::string newVarName =
                                     analysis::findUniqueVariableName(*originatingClause, v.getName());
