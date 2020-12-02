@@ -8,9 +8,10 @@
 
 /************************************************************************
  *
- * @file NormaliseMultiResultFunctors.h
+ * @file NormaliseGenerators.h
  *
- * Transform pass to normalise all appearances of multi-result functors.
+ * Transform pass to normalise all appearances of generators.
+ * Generators include multi-result functors + aggregators.
  *
  ***********************************************************************/
 
@@ -20,18 +21,18 @@
 
 namespace souffle::ast::transform {
 
-/** Uniquely names all appearances of ranges */
-class NormaliseMultiResultFunctorsTransformer : public Transformer {
+/** Uniquely names all appearances of generators */
+class NormaliseGeneratorsTransformer : public Transformer {
 public:
     std::string getName() const override {
-        return "NormaliseMultiResultFunctorsTransformer";
+        return "NormaliseGeneratorsTransformer";
     }
 
 private:
     bool transform(TranslationUnit& translationUnit) override;
 
-    NormaliseMultiResultFunctorsTransformer* clone() const override {
-        return new NormaliseMultiResultFunctorsTransformer();
+    NormaliseGeneratorsTransformer* clone() const override {
+        return new NormaliseGeneratorsTransformer();
     }
 };
 

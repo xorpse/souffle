@@ -30,13 +30,18 @@ namespace souffle::ast2ram {
 ValueIndex::ValueIndex() = default;
 ValueIndex::~ValueIndex() = default;
 
+const std::set<Location>& ValueIndex::getVariableReferences(std::string var) const {
+    assert(contains(varReferencePoints, var) && "variable not indexed");
+    return varReferencePoints.at(var);
+}
+
 void ValueIndex::addVarReference(const ast::Variable& var, const Location& l) {
     std::set<Location>& locs = varReferencePoints[var.getName()];
     locs.insert(l);
 }
 
-void ValueIndex::addVarReference(const ast::Variable& var, int ident, int pos, std::string rel) {
-    addVarReference(var, Location({ident, pos, rel}));
+void ValueIndex::addVarReference(const ast::Variable& var, int ident, int pos) {
+    addVarReference(var, Location({ident, pos}));
 }
 
 bool ValueIndex::isDefined(const ast::Variable& var) const {
@@ -51,30 +56,16 @@ const Location& ValueIndex::getDefinitionPoint(const ast::Variable& var) const {
 }
 
 void ValueIndex::setGeneratorLoc(const ast::Argument& arg, const Location& loc) {
-    generatorDefinitionPoints.push_back(std::make_pair(&arg, loc));
+    generatorDefinitionPoints.insert({&arg, loc});
 }
 
 const Location& ValueIndex::getGeneratorLoc(const ast::Argument& arg) const {
-    if (dynamic_cast<const ast::Aggregator*>(&arg) != nullptr) {
-        // aggregators can be used interchangeably if syntactically equal
-        for (const auto& cur : generatorDefinitionPoints) {
-            if (*cur.first == arg) {
-                return cur.second;
-            }
-        }
-    } else {
-        // otherwise, unique for each appearance
-        for (const auto& cur : generatorDefinitionPoints) {
-            if (cur.first == &arg) {
-                return cur.second;
-            }
-        }
-    }
-    fatal("arg `%s` has no generator location", arg);
+    assert(contains(generatorDefinitionPoints, &arg) && "undefined generator");
+    return generatorDefinitionPoints.at(&arg);
 }
 
-void ValueIndex::setRecordDefinition(const ast::RecordInit& init, int ident, int pos, std::string rel) {
-    recordDefinitionPoints.insert({&init, Location({ident, pos, rel})});
+void ValueIndex::setRecordDefinition(const ast::RecordInit& init, int ident, int pos) {
+    recordDefinitionPoints.insert({&init, Location({ident, pos})});
 }
 
 const Location& ValueIndex::getDefinitionPoint(const ast::RecordInit& init) const {
