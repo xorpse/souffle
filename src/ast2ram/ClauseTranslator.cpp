@@ -434,6 +434,16 @@ Own<ast::Clause> ClauseTranslator::getReorderedClause(const ast::Clause& clause,
     return reorderedClause;
 }
 
+int ClauseTranslator::addOperatorLevel(const ast::Node* node) {
+    op_nesting.push_back(node);
+    return level++;
+}
+
+int ClauseTranslator::addGeneratorLevel(const ast::Argument* arg) {
+    generators.push_back(arg);
+    return level++;
+}
+
 void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::Argument*>& nodeArgs) {
     for (size_t i = 0; i < nodeArgs.size(); i++) {
         const auto& arg = nodeArgs.at(i);
@@ -445,17 +455,17 @@ void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::
 
         // check for nested records
         if (auto rec = dynamic_cast<const ast::RecordInit*>(arg)) {
-            // introduce new nesting level for unpack
-            op_nesting.push_back(rec);
             valueIndex->setRecordDefinition(*rec, nodeLevel, i);
-            indexNodeArguments(level++, rec->getArguments());
+
+            // introduce new nesting level for unpack
+            auto unpackLevel = addOperatorLevel(rec);
+            indexNodeArguments(unpackLevel, rec->getArguments());
         }
     }
 }
 
 std::optional<int> ClauseTranslator::addGenerator(const ast::Argument& arg) {
-    int aggLoc = level++;
-    generators.push_back(&arg);
+    int aggLoc = addGeneratorLevel(&arg);
     valueIndex->setGeneratorLoc(arg, Location({aggLoc, 0}));
     return aggLoc;
 }
@@ -463,8 +473,8 @@ std::optional<int> ClauseTranslator::addGenerator(const ast::Argument& arg) {
 void ClauseTranslator::indexAtoms(const ast::Clause& clause) {
     for (const auto* atom : ast::getBodyLiterals<ast::Atom>(clause)) {
         // give the atom the current level
-        op_nesting.push_back(atom);
-        indexNodeArguments(level++, atom->getArguments());
+        int scanLevel = addOperatorLevel(atom);
+        indexNodeArguments(scanLevel, atom->getArguments());
     }
 }
 

@@ -83,6 +83,9 @@ private:
 
     Own<ast::Clause> getReorderedClause(const ast::Clause& clause, const int version) const;
 
+    int addGeneratorLevel(const ast::Argument* arg);
+    int addOperatorLevel(const ast::Node* node);
+
     void indexClause(const ast::Clause& clause);
     void indexAtoms(const ast::Clause& clause);
     void indexAggregators(const ast::Clause& clause);
