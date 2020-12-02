@@ -37,7 +37,6 @@ private:
 
     /**
      * Generates an equivalent aggregator with a simplified target expression.
-     *
      * @param tu translation unit
      * @param clause clause containing the aggregator
      * @param aggregator with a complex target expression
