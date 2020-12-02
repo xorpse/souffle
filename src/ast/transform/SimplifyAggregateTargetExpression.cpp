@@ -45,8 +45,8 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
         std::unique_ptr<Node> operator()(std::unique_ptr<Node> node) const override {
             if (auto* aggregate = dynamic_cast<Aggregator*>(node.get())) {
                 // Check if the target expression is complex
-                const auto* targetExpression = aggregate->getTargetExpression();
-                if (targetExpression != nullptr && !isA<Variable>(targetExpression)) {
+                const auto* originalTargetExpression = aggregate->getTargetExpression();
+                if (originalTargetExpression != nullptr && !isA<Variable>(originalTargetExpression)) {
                     // Complex target expressions should be replaced with unique variables.
 
                     // What we might have though now is that a variable in the TE was shadowing
@@ -55,14 +55,13 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
                     // We know that a variable from the TE is shadowing another variable
                     // if a variable with the same name appears range-restricted in the outer scope.
 
-                    // Make a unique target expression variable
+                    // Make a unique target expression variable, and equate it to the original
                     auto newTargetExpression =
                             mk<Variable>(analysis::findUniqueVariableName(*originatingClause, "x"));
                     auto equalityLiteral = std::make_unique<BinaryConstraint>(BinaryConstraintOp::EQ,
-                            souffle::clone(newTargetExpression),
-                            souffle::clone(aggregate->getTargetExpression()));
-                    std::vector<std::unique_ptr<Literal>> newBody;
-                    for (Literal* literal : aggregate->getBodyLiterals()) {
+                            souffle::clone(newTargetExpression), souffle::clone(originalTargetExpression));
+                    std::vector<Own<Literal>> newBody;
+                    for (const auto* literal : aggregate->getBodyLiterals()) {
                         newBody.push_back(souffle::clone(literal));
                     }
                     newBody.push_back(std::move(equalityLiteral));
@@ -95,7 +94,7 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
                     // the implication being that the occurrence of that variable
                     // in the scope of the aggregate subclause should be local,
                     // not grounded from the outer scope (injected)
-                    visitDepthFirst(*aggregate->getTargetExpression(), [&](const Variable& v) {
+                    visitDepthFirst(*originalTargetExpression, [&](const Variable& v) {
                         if (contains(varsGroundedOutside, v.getName())) {
                             // rename it everywhere in the body so that we've scoped this properly.
                             std::string newVarName =
@@ -123,12 +122,12 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
     };
 
     bool changed = false;
-    visitDepthFirst(program, [&](const Clause& clause) {
-        Own<Clause> oldClause = souffle::clone(&clause);
+    for (auto* clause : program.getClauses()) {
+        Own<Clause> oldClause = souffle::clone(clause);
         AggregateTESimplifier teSimplifier(&translationUnit, oldClause.get());
-        const_cast<Clause&>(clause).apply(teSimplifier);
+        clause->apply(teSimplifier);
         changed = changed || teSimplifier.causedChange();
-    });
+    }
     return changed;
 }
 }  // namespace souffle::ast::transform
