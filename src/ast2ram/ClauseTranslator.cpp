@@ -200,26 +200,18 @@ Own<ram::Operation> ClauseTranslator::addRecordUnpack(
 
 Own<ram::Operation> ClauseTranslator::addVariableIntroductions(
         const ast::Clause& clause, const ast::Clause& originalClause, int version, Own<ram::Operation> op) {
-    // build operation bottom-up
-    while (!operators.empty()) {
-        // get next operator
-        const auto* cur = operators.back();
-        operators.pop_back();
-
-        // get current nesting level
-        auto curLevel = operators.size();
-
-        if (const auto* atom = dynamic_cast<const ast::Atom*>(cur)) {
+    for (int i = operators.size() - 1; i >= 0; i--) {
+        const auto* curOp = operators.at(i);
+        if (const auto* atom = dynamic_cast<const ast::Atom*>(curOp)) {
             // add atom arguments through a scan
-            op = addAtomScan(std::move(op), atom, clause, originalClause, curLevel, version);
-        } else if (const auto* rec = dynamic_cast<const ast::RecordInit*>(cur)) {
+            op = addAtomScan(std::move(op), atom, clause, originalClause, i, version);
+        } else if (const auto* rec = dynamic_cast<const ast::RecordInit*>(curOp)) {
             // add record arguments through an unpack
-            op = addRecordUnpack(std::move(op), rec, curLevel);
+            op = addRecordUnpack(std::move(op), rec, i);
         } else {
             fatal("Unsupported AST node for creation of scan-level!");
         }
     }
-
     return op;
 }
 
