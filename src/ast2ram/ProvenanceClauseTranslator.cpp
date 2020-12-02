@@ -32,11 +32,12 @@ namespace souffle::ast2ram {
 
 // TODO (azreika): should change these to a ram query overload!!!
 
-Own<ram::Condition> ProvenanceClauseTranslator::createCondition(const ast::Clause& /* originalClause */) {
+Own<ram::Condition> ProvenanceClauseTranslator::createCondition(
+        const ast::Clause& /* originalClause */) const {
     return nullptr;
 }
 
-Own<ram::Operation> ProvenanceClauseTranslator::createProjection(const ast::Clause& clause) {
+Own<ram::Operation> ProvenanceClauseTranslator::createProjection(const ast::Clause& clause) const {
     VecOwn<ram::Expression> values;
 
     // get all values in the body

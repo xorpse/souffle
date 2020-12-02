@@ -104,12 +104,12 @@ Own<ram::Statement> ClauseTranslator::createRamQuery(
 }
 
 Own<ram::Operation> ClauseTranslator::addEntryPoint(
-        const ast::Clause& originalClause, Own<ram::Operation> op) {
+        const ast::Clause& originalClause, Own<ram::Operation> op) const {
     auto cond = createCondition(originalClause);
     return cond != nullptr ? mk<ram::Filter>(std::move(cond), std::move(op)) : std::move(op);
 }
 
-Own<ram::Operation> ClauseTranslator::addVariableBindingConstraints(Own<ram::Operation> op) {
+Own<ram::Operation> ClauseTranslator::addVariableBindingConstraints(Own<ram::Operation> op) const {
     for (const auto& [_, references] : valueIndex->getVariableReferences()) {
         // Equate the first appearance to all other appearances
         assert(!references.empty() && "variable should appear at least once");
@@ -126,7 +126,7 @@ Own<ram::Operation> ClauseTranslator::addVariableBindingConstraints(Own<ram::Ope
     return op;
 }
 
-Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause) {
+Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause) const {
     const auto head = clause.getHead();
     auto headRelationName = getConcreteRelationName(head->getQualifiedName());
 
@@ -146,7 +146,7 @@ Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause
 }
 
 Own<ram::Operation> ClauseTranslator::addAtomScan(Own<ram::Operation> op, const ast::Atom* atom,
-        const ast::Clause& clause, const ast::Clause& originalClause, int curLevel, int version) {
+        const ast::Clause& clause, const ast::Clause& originalClause, int curLevel, int version) const {
     const ast::Atom* head = clause.getHead();
 
     // add constraints
@@ -188,7 +188,7 @@ Own<ram::Operation> ClauseTranslator::addAtomScan(Own<ram::Operation> op, const 
 }
 
 Own<ram::Operation> ClauseTranslator::addRecordUnpack(
-        Own<ram::Operation> op, const ast::RecordInit* rec, int curLevel) {
+        Own<ram::Operation> op, const ast::RecordInit* rec, int curLevel) const {
     // add constant constraints
     op = filterByConstraints(level, rec->getArguments(), std::move(op));
 
@@ -317,7 +317,7 @@ Own<ram::Operation> ClauseTranslator::addGeneratorLevels(Own<ram::Operation> op)
 }
 
 Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
-        const ast::Clause& clause, Own<ram::Operation> op) {
+        const ast::Clause& clause, Own<ram::Operation> op) const {
     for (const auto* lit : clause.getBodyLiterals()) {
         // constraints become literals
         if (auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
@@ -327,7 +327,7 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
     return op;
 }
 
-Own<ram::Condition> ClauseTranslator::createCondition(const ast::Clause& originalClause) {
+Own<ram::Condition> ClauseTranslator::createCondition(const ast::Clause& originalClause) const {
     const auto head = originalClause.getHead();
 
     // add stopping criteria for nullary relations
@@ -373,7 +373,8 @@ Own<ram::Expression> ClauseTranslator::translateConstant(
 }
 
 Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const level,
-        const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op, bool constrainByFunctors) {
+        const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op,
+        bool constrainByFunctors) const {
     auto mkFilter = [&](bool isFloatArg, Own<ram::Expression> rhs, size_t pos) {
         return mk<ram::Filter>(
                 mk<ram::Constraint>(isFloatArg ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ,

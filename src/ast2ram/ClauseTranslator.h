@@ -68,12 +68,12 @@ protected:
     // current nesting level
     int level = 0;
 
-    virtual Own<ram::Operation> createProjection(const ast::Clause& clause);
-    virtual Own<ram::Condition> createCondition(const ast::Clause& originalClause);
+    virtual Own<ram::Operation> createProjection(const ast::Clause& clause) const;
+    virtual Own<ram::Condition> createCondition(const ast::Clause& originalClause) const;
 
     /** apply constraint filters to a given operation */
     Own<ram::Operation> filterByConstraints(size_t level, const std::vector<ast::Argument*>& arguments,
-            Own<ram::Operation> op, bool constrainByFunctors = true);
+            Own<ram::Operation> op, bool constrainByFunctors = true) const;
 
 private:
     std::vector<const ast::Argument*> generators;
@@ -92,15 +92,16 @@ private:
 
     Own<ram::Statement> createRamQuery(
             const ast::Clause& clause, const ast::Clause& originalClause, int version);
-    Own<ram::Operation> addVariableBindingConstraints(Own<ram::Operation> op);
-    Own<ram::Operation> addBodyLiteralConstraints(const ast::Clause& clause, Own<ram::Operation> op);
+    Own<ram::Operation> addVariableBindingConstraints(Own<ram::Operation> op) const;
+    Own<ram::Operation> addBodyLiteralConstraints(const ast::Clause& clause, Own<ram::Operation> op) const;
     Own<ram::Operation> addGeneratorLevels(Own<ram::Operation> op);
     Own<ram::Operation> addVariableIntroductions(const ast::Clause& clause, const ast::Clause& originalClause,
             int version, Own<ram::Operation> op);
-    Own<ram::Operation> addEntryPoint(const ast::Clause& originalClause, Own<ram::Operation> op);
+    Own<ram::Operation> addEntryPoint(const ast::Clause& originalClause, Own<ram::Operation> op) const;
     Own<ram::Operation> addAtomScan(Own<ram::Operation> op, const ast::Atom* atom, const ast::Clause& clause,
-            const ast::Clause& originalClause, int curLevel, int version);
-    Own<ram::Operation> addRecordUnpack(Own<ram::Operation> op, const ast::RecordInit* rec, int curLevel);
+            const ast::Clause& originalClause, int curLevel, int version) const;
+    Own<ram::Operation> addRecordUnpack(
+            Own<ram::Operation> op, const ast::RecordInit* rec, int curLevel) const;
 
     // Return the write-location for the generator, or {} if an equivalent arg was already seen
     std::optional<int> addGenerator(const ast::Argument& arg);
