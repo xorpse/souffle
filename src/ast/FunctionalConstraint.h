@@ -24,6 +24,7 @@
 #include "parser/SrcLocation.h"
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/MiscUtil.h"
+#include "souffle/utility/StreamUtil.h"
 #include <cassert>
 #include <iostream>
 #include <memory>
@@ -36,28 +37,25 @@ namespace souffle::ast {
 /**
  * @class FunctionalConstraint
  * @brief Functional constraint (choice construct) class
- * 
+ *
  * Representing a functional dependency (choice construct)
  * eg. x -> y
  * x uniquely identifies some y value
- * LHS of dependency stored as a vector of pointers (each pointer = 1 LHS argument) 
+ * LHS of dependency stored as a vector of pointers (each pointer = 1 LHS argument)
  * eg. (x,y) -> z
  */
 class FunctionalConstraint : public Constraint {
 public:
-    FunctionalConstraint(
-            VecOwn<Variable> ls, Own<Variable> rs, SrcLocation loc = {})
+    FunctionalConstraint(VecOwn<Variable> ls, Own<Variable> rs, SrcLocation loc = {})
             : Constraint(std::move(loc)), lhs(std::move(ls)), positions(lhs.size(), 0), rhs(std::move(rs)) {}
 
-    FunctionalConstraint(
-            Own<Variable> ls, Own<Variable> rs, SrcLocation loc = {})
-            : Constraint(std::move(loc)), positions(1, 0), rhs(std::move(rs)) 
-            {
-                lhs.push_back(std::move(ls));
-            }
+    FunctionalConstraint(Own<Variable> ls, Own<Variable> rs, SrcLocation loc = {})
+            : Constraint(std::move(loc)), positions(1, 0), rhs(std::move(rs)) {
+        lhs.push_back(std::move(ls));
+    }
 
-    /** get left-hand side of functional constraint */ 
-    const Variable *getLHS(size_t lhsNum) const {
+    /** get left-hand side of functional constraint */
+    const Variable* getLHS(size_t lhsNum) const {
         return lhs.at(lhsNum).get();
     }
 
@@ -66,9 +64,9 @@ public:
         return lhs.size();
     }
 
-    /** get left-hand side of functional constraint */ 
-    const Variable *getRHS() const {
-        return rhs.get(); 
+    /** get left-hand side of functional constraint */
+    const Variable* getRHS() const {
+        return rhs.get();
     }
 
     std::vector<const Node*> getChildNodes() const override {
@@ -85,9 +83,7 @@ public:
         for (size_t i = 0; i < lhs.size(); i++) {
             newLHS.push_back(Own<Variable>(lhs.at(i)->clone()));
         }
-        auto* res = new FunctionalConstraint(
-            std::move(newLHS),
-            Own<Variable>(rhs->clone()));
+        auto* res = new FunctionalConstraint(std::move(newLHS), Own<Variable>(rhs->clone()));
         for (size_t i = 0; i < lhs.size(); i++) {
             res->setPosition(i, (this->getPosition(i)));
         }
@@ -95,17 +91,17 @@ public:
         return res;
     }
 
-    /* get index position of LHS (source) in relation arguments (0-indexed) */ 
+    /* get index position of LHS (source) in relation arguments (0-indexed) */
     size_t getPosition(size_t lhsNum) const {
         return positions.at(lhsNum);
     }
 
-    /** set index position of LHS (source) in relation arguments (0-indexed) 
+    /** set index position of LHS (source) in relation arguments (0-indexed)
      * lhsNum = the LHS source currently wanting to be set
      * i.e. (x,y)->z: to set y, lhsNum = 1
      * pos: the attribute's index position in relation (0-indexed)
-    */
-    void setPosition (size_t lhsNum, size_t pos) {
+     */
+    void setPosition(size_t lhsNum, size_t pos) {
         positions.at(lhsNum) = pos;
     }
 
@@ -140,20 +136,20 @@ public:
                 break;
             }
         }
-        return lhsMatch && equal_ptr(rhs,other.rhs);
+        return lhsMatch && equal_ptr(rhs, other.rhs);
     }
 
-    /* lhs of functional constraint */ 
-    VecOwn<Variable> lhs; 
+    /* lhs of functional constraint */
+    VecOwn<Variable> lhs;
 
     /** index positions of LHS (source) nodes in relation arguments (0-indexed)
-     * eg. A(x,y,z) constrains y->z 
+     * eg. A(x,y,z) constrains y->z
      * Dependency y->z has position 1
      **/
     std::vector<size_t> positions;
 
-    /* rhs of functional constraint */ 
+    /* rhs of functional constraint */
     Own<Variable> rhs;
-}; 
+};
 
-} // namespace souffle::ast
+}  // namespace souffle::ast

@@ -605,7 +605,7 @@ void SemanticCheckerImpl::checkRelationDependencies(const Relation& relation) {
             if (a->getName() == fd->getRHS()->getName()) {
                 rightFound = true;
             }
-            
+
             // Once all LHS (source) and RHS args are found, safely break
             if (leftFound == fd->getArity() && rightFound) {
                 break;
@@ -613,11 +613,13 @@ void SemanticCheckerImpl::checkRelationDependencies(const Relation& relation) {
         }
 
         if (leftFound != fd->getArity()) {
-            report.addError("LHS of functional dependency not found in relation definition.", fd->getSrcLoc());
+            report.addError(
+                    "LHS of functional dependency not found in relation definition.", fd->getSrcLoc());
         }
         if (!rightFound) {
-            report.addError("RHS of functional dependency not found in relation definition: " + fd->getRHS()->getName(),
-                fd->getSrcLoc());
+            report.addError("RHS of functional dependency not found in relation definition: " +
+                                    fd->getRHS()->getName(),
+                    fd->getSrcLoc());
         }
     }
 }
