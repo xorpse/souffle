@@ -155,8 +155,7 @@ Own<ram::Operation> ClauseTranslator::addAtomScan(Own<ram::Operation> op, const 
     const ast::Atom* head = clause.getHead();
 
     // add constraints
-    // TODO: do we wish to enable constraints by header functor? record inits do so...
-    op = filterByConstraints(curLevel, atom->getArguments(), std::move(op), false);
+    op = addConstantConstraints(curLevel, atom->getArguments(), std::move(op));
 
     // add check for emptiness for an atom
     op = mk<ram::Filter>(
@@ -195,7 +194,7 @@ Own<ram::Operation> ClauseTranslator::addAtomScan(Own<ram::Operation> op, const 
 Own<ram::Operation> ClauseTranslator::addRecordUnpack(
         Own<ram::Operation> op, const ast::RecordInit* rec, int curLevel) const {
     // add constant constraints
-    op = filterByConstraints(curLevel, rec->getArguments(), std::move(op));
+    op = addConstantConstraints(curLevel, rec->getArguments(), std::move(op));
 
     // add an unpack level
     const Location& loc = valueIndex->getDefinitionPoint(*rec);
@@ -369,9 +368,8 @@ Own<ram::Expression> ClauseTranslator::translateConstant(
     return mk<ram::SignedConstant>(rawConstant);
 }
 
-Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const curLevel,
-        const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op,
-        bool constrainByFunctors) const {
+Own<ram::Operation> ClauseTranslator::addConstantConstraints(
+        size_t const curLevel, const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op) const {
     // Helper function to add a constraint check
     auto addFilter = [&](bool isFloatArg, Own<ram::Expression> rhs, size_t pos) {
         return mk<ram::Filter>(
@@ -392,12 +390,6 @@ Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const curLevel,
         } else if (const auto* constant = dynamic_cast<const ast::Constant*>(argument)) {
             auto translatedArg = translateConstant(symbolTable, *constant);
             op = addFilter(false, std::move(translatedArg), i);
-        } else if (const auto* functor = dynamic_cast<const ast::Functor*>(argument)) {
-            if (constrainByFunctors) {
-                bool isFloat = context.getFunctorReturnType(functor) == TypeAttribute::Float;
-                auto translatedArg = ValueTranslator::translate(context, symbolTable, *valueIndex, functor);
-                op = addFilter(isFloat, std::move(translatedArg), i);
-            }
         }
     }
 
