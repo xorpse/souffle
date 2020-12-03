@@ -121,10 +121,9 @@ Own<ram::Operation> ClauseTranslator::addVariableBindingConstraints(Own<ram::Ope
         const auto& first = *references.begin();
         for (const auto& reference : references) {
             if (first != reference && !valueIndex->isGenerator(reference.identifier)) {
-                // FIXME: equiv' for float types (`FEQ`)
-                op = mk<ram::Filter>(mk<ram::Constraint>(BinaryConstraintOp::EQ, makeRamTupleElement(first),
-                                             makeRamTupleElement(reference)),
-                        std::move(op));
+                // TODO: float type equivalence check
+                op = addEqualityCheck(
+                        std::move(op), makeRamTupleElement(first), makeRamTupleElement(reference), false);
             }
         }
     }
@@ -224,7 +223,7 @@ Own<ram::Operation> ClauseTranslator::instantiateAggregator(
     auto addAggEqCondition = [&](Own<ram::Condition> aggr, Own<ram::Expression> value, size_t pos) {
         if (isUndefValue(value.get())) return aggr;
 
-        // FIXME: equiv' for float types (`FEQ`)
+        // TODO: float type equivalence check
         return addConjunctiveTerm(
                 std::move(aggr), mk<ram::Constraint>(BinaryConstraintOp::EQ,
                                          mk<ram::TupleElement>(curLevel, pos), std::move(value)));
@@ -368,15 +367,15 @@ Own<ram::Expression> ClauseTranslator::translateConstant(
     return mk<ram::SignedConstant>(rawConstant);
 }
 
-Own<ram::Operation> ClauseTranslator::addConstantConstraints(
-        size_t const curLevel, const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op) const {
-    // Helper function to add a constraint check
-    auto addEqualityCheck = [&](Own<ram::Operation> op, Own<ram::Expression> lhs, Own<ram::Expression> rhs,
-                                    bool isFloat) {
-        auto eqOp = isFloat ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ;
-        return mk<ram::Filter>(mk<ram::Constraint>(eqOp, std::move(lhs), std::move(rhs)), std::move(op));
-    };
+Own<ram::Operation> ClauseTranslator::addEqualityCheck(
+        Own<ram::Operation> op, Own<ram::Expression> lhs, Own<ram::Expression> rhs, bool isFloat) const {
+    auto eqOp = isFloat ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ;
+    auto eqConstraint = mk<ram::Constraint>(eqOp, std::move(lhs), std::move(rhs));
+    return mk<ram::Filter>(std::move(eqConstraint), std::move(op));
+}
 
+Own<ram::Operation> ClauseTranslator::addConstantConstraints(
+        size_t curLevel, const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op) const {
     for (size_t i = 0; i < arguments.size(); i++) {
         const auto* argument = arguments.at(i);
         if (const auto* numericConstant = dynamic_cast<const ast::NumericConstant*>(argument)) {

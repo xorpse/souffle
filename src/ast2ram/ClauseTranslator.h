@@ -88,6 +88,9 @@ private:
     void indexNodeArguments(int nodeLevel, const std::vector<ast::Argument*>& nodeArgs);
     void indexAggregatorBody(const ast::Aggregator& agg);
 
+    Own<ram::Operation> addEqualityCheck(
+            Own<ram::Operation> op, Own<ram::Expression> lhs, Own<ram::Expression> rhs, bool isFloat) const;
+
     Own<ram::Statement> createRamFactQuery(const ast::Clause& clause) const;
     Own<ram::Statement> createRamRuleQuery(
             const ast::Clause& clause, const ast::Clause& originalClause, int version);
