@@ -88,7 +88,8 @@ private:
     void indexNodeArguments(int nodeLevel, const std::vector<ast::Argument*>& nodeArgs);
     void indexAggregator(const ast::Aggregator& agg);
 
-    Own<ram::Statement> createRamQuery(
+    Own<ram::Statement> createRamFactQuery(const ast::Clause& clause) const;
+    Own<ram::Statement> createRamRuleQuery(
             const ast::Clause& clause, const ast::Clause& originalClause, int version);
     Own<ram::Operation> addVariableBindingConstraints(Own<ram::Operation> op) const;
     Own<ram::Operation> addBodyLiteralConstraints(const ast::Clause& clause, Own<ram::Operation> op) const;

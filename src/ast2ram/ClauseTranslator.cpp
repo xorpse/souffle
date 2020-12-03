@@ -65,35 +65,40 @@ namespace souffle::ast2ram {
 Own<ram::Statement> ClauseTranslator::translateClause(
         const ast::Clause& clause, const ast::Clause& originalClause, int version) {
     if (auto reorderedClause = getReorderedClause(clause, version)) {
-        // translate reordered clause instead
+        // Translate reordered clause instead
         return translateClause(*reorderedClause, originalClause, version);
     }
 
-    // Handle facts
+    // Create the appropriate query
     if (isFact(clause)) {
-        const auto* head = clause.getHead();
-
-        // Translate arguments
-        VecOwn<ram::Expression> values;
-        for (auto& arg : head->getArguments()) {
-            values.push_back(ValueTranslator::translate(context, symbolTable, ValueIndex(), arg));
-        }
-
-        // Create a fact statement
-        return mk<ram::Query>(
-                mk<ram::Project>(getConcreteRelationName(head->getQualifiedName()), std::move(values)));
+        return createRamFactQuery(clause);
     }
-    assert(isRule(clause));
+    return createRamRuleQuery(clause, originalClause, version);
+}
+
+Own<ram::Statement> ClauseTranslator::createRamFactQuery(const ast::Clause& clause) const {
+    assert(isFact(clause) && "clause should be fact");
+    const auto* head = clause.getHead();
+
+    // Translate arguments
+    VecOwn<ram::Expression> values;
+    for (auto& arg : head->getArguments()) {
+        values.push_back(ValueTranslator::translate(context, symbolTable, ValueIndex(), arg));
+    }
+
+    // Create a fact statement
+    return mk<ram::Query>(
+            mk<ram::Project>(getConcreteRelationName(head->getQualifiedName()), std::move(values)));
+}
+
+Own<ram::Statement> ClauseTranslator::createRamRuleQuery(
+        const ast::Clause& clause, const ast::Clause& originalClause, int version) {
+    assert(isRule(clause) && "clause should be rule");
 
     // Index all variables and generators in the clause
     indexClause(clause);
 
     // Set up the RAM statement bottom-up
-    return createRamQuery(clause, originalClause, version);
-}
-
-Own<ram::Statement> ClauseTranslator::createRamQuery(
-        const ast::Clause& clause, const ast::Clause& originalClause, int version) {
     auto op = createProjection(clause);
     op = addVariableBindingConstraints(std::move(op));
     op = addBodyLiteralConstraints(clause, std::move(op));
