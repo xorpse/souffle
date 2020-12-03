@@ -372,27 +372,31 @@ Own<ram::Expression> ClauseTranslator::translateConstant(
 Own<ram::Operation> ClauseTranslator::filterByConstraints(size_t const curLevel,
         const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op,
         bool constrainByFunctors) const {
-    auto mkFilter = [&](bool isFloatArg, Own<ram::Expression> rhs, size_t pos) {
+    // Helper function to add a constraint check
+    auto addFilter = [&](bool isFloatArg, Own<ram::Expression> rhs, size_t pos) {
         return mk<ram::Filter>(
                 mk<ram::Constraint>(isFloatArg ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ,
                         mk<ram::TupleElement>(curLevel, pos), std::move(rhs)),
                 std::move(op));
     };
 
-    for (size_t pos = 0; pos < arguments.size(); pos++) {
-        const auto* argument = arguments.at(pos);
-        if (const auto* constant = dynamic_cast<const ast::Constant*>(argument)) {
-            const auto* numericConstant = dynamic_cast<const ast::NumericConstant*>(constant);
-            assert((!numericConstant || numericConstant->getFinalType().has_value()) &&
-                    "numeric constant not bound to a type");
-            op = mkFilter(numericConstant && numericConstant->getFinalType().value() ==
-                                                     ast::NumericConstant::Type::Float,
-                    translateConstant(symbolTable, *constant), pos);
+    for (size_t i = 0; i < arguments.size(); i++) {
+        const auto* argument = arguments.at(i);
+        if (const auto* numericConstant = dynamic_cast<const ast::NumericConstant*>(argument)) {
+            const auto& finalType = numericConstant->getFinalType();
+            assert(finalType.has_value() && "numeric constant not bound to a type");
+
+            bool isFloat = finalType.value() == ast::NumericConstant::Type::Float;
+            auto translatedArg = translateConstant(symbolTable, *numericConstant);
+            op = addFilter(isFloat, std::move(translatedArg), i);
+        } else if (const auto* constant = dynamic_cast<const ast::Constant*>(argument)) {
+            auto translatedArg = translateConstant(symbolTable, *constant);
+            op = addFilter(false, std::move(translatedArg), i);
         } else if (const auto* functor = dynamic_cast<const ast::Functor*>(argument)) {
             if (constrainByFunctors) {
-                TypeAttribute returnType = context.getFunctorReturnType(functor);
-                op = mkFilter(returnType == TypeAttribute::Float,
-                        ValueTranslator::translate(context, symbolTable, *valueIndex, functor), pos);
+                bool isFloat = context.getFunctorReturnType(functor) == TypeAttribute::Float;
+                auto translatedArg = ValueTranslator::translate(context, symbolTable, *valueIndex, functor);
+                op = addFilter(isFloat, std::move(translatedArg), i);
             }
         }
     }
