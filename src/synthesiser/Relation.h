@@ -23,9 +23,9 @@ namespace souffle::synthesiser {
 
 class Relation {
 public:
-    Relation(const ram::Relation& rel, const ram::analysis::IndexAnalysis* idxAnalysis,
+    Relation(const ram::Relation& rel, const ram::analysis::FinalIndexSelection& indexSelection,
             const bool isProvenance = false)
-            : relation(rel), idxAnalysis(idxAnalysis), isProvenance(isProvenance) {}
+            : relation(rel), indexSelection(indexSelection), isProvenance(isProvenance) {}
 
     virtual ~Relation() = default;
 
@@ -70,14 +70,14 @@ public:
 
     /** Factory method to generate a SynthesiserRelation */
     static Own<Relation> getSynthesiserRelation(const ram::Relation& ramRel,
-            const ram::analysis::IndexAnalysis* indexAnalysis, bool isProvenance);
+            const ram::analysis::FinalIndexSelection& indexSelection, bool isProvenance);
 
 protected:
     /** Ram relation referred to by this */
     const ram::Relation& relation;
 
     /** Indices used for this relation */
-    const ram::analysis::IndexAnalysis* idxAnalysis;
+    const ram::analysis::FinalIndexSelection indexSelection;
 
     /** The data structure used for the relation */
     std::string dataStructure;
@@ -97,9 +97,9 @@ protected:
 
 class NullaryRelation : public Relation {
 public:
-    NullaryRelation(
-            const ram::Relation& ramRel, const ram::analysis::IndexAnalysis* indexAnalysis, bool isProvenance)
-            : Relation(ramRel, indexAnalysis, isProvenance) {}
+    NullaryRelation(const ram::Relation& ramRel, const ram::analysis::FinalIndexSelection& indexSelection,
+            bool isProvenance)
+            : Relation(ramRel, indexSelection, isProvenance) {}
 
     void computeIndices() override;
     std::string getTypeName() override;
@@ -108,9 +108,9 @@ public:
 
 class InfoRelation : public Relation {
 public:
-    InfoRelation(
-            const ram::Relation& ramRel, const ram::analysis::IndexAnalysis* indexAnalysis, bool isProvenance)
-            : Relation(ramRel, indexAnalysis, isProvenance) {}
+    InfoRelation(const ram::Relation& ramRel, const ram::analysis::FinalIndexSelection& indexSelection,
+            bool isProvenance)
+            : Relation(ramRel, indexSelection, isProvenance) {}
 
     void computeIndices() override;
     std::string getTypeName() override;
@@ -119,9 +119,9 @@ public:
 
 class DirectRelation : public Relation {
 public:
-    DirectRelation(
-            const ram::Relation& ramRel, const ram::analysis::IndexAnalysis* indexAnalysis, bool isProvenance)
-            : Relation(ramRel, indexAnalysis, isProvenance) {}
+    DirectRelation(const ram::Relation& ramRel, const ram::analysis::FinalIndexSelection& indexSelection,
+            bool isProvenance)
+            : Relation(ramRel, indexSelection, isProvenance) {}
 
     void computeIndices() override;
     std::string getTypeName() override;
@@ -130,9 +130,9 @@ public:
 
 class IndirectRelation : public Relation {
 public:
-    IndirectRelation(
-            const ram::Relation& ramRel, const ram::analysis::IndexAnalysis* indexAnalysis, bool isProvenance)
-            : Relation(ramRel, indexAnalysis, isProvenance) {}
+    IndirectRelation(const ram::Relation& ramRel, const ram::analysis::FinalIndexSelection& indexSelection,
+            bool isProvenance)
+            : Relation(ramRel, indexSelection, isProvenance) {}
 
     void computeIndices() override;
     std::string getTypeName() override;
@@ -141,9 +141,9 @@ public:
 
 class BrieRelation : public Relation {
 public:
-    BrieRelation(
-            const ram::Relation& ramRel, const ram::analysis::IndexAnalysis* indexAnalysis, bool isProvenance)
-            : Relation(ramRel, indexAnalysis, isProvenance) {}
+    BrieRelation(const ram::Relation& ramRel, const ram::analysis::FinalIndexSelection& indexSelection,
+            bool isProvenance)
+            : Relation(ramRel, indexSelection, isProvenance) {}
 
     void computeIndices() override;
     std::string getTypeName() override;
@@ -152,9 +152,9 @@ public:
 
 class EqrelRelation : public Relation {
 public:
-    EqrelRelation(
-            const ram::Relation& ramRel, const ram::analysis::IndexAnalysis* indexAnalysis, bool isProvenance)
-            : Relation(ramRel, indexAnalysis, isProvenance) {}
+    EqrelRelation(const ram::Relation& ramRel, const ram::analysis::FinalIndexSelection& indexSelection,
+            bool isProvenance)
+            : Relation(ramRel, indexSelection, isProvenance) {}
 
     void computeIndices() override;
     std::string getTypeName() override;

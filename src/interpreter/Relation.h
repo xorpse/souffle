@@ -180,9 +180,9 @@ public:
     /**
      * Creates a relation, build all necessary indexes.
      */
-    Relation(size_t auxiliaryArity, const std::string& name, const ram::analysis::FinalIndexSelection& indexSelection)
+    Relation(size_t auxiliaryArity, const std::string& name,
+            const ram::analysis::FinalIndexSelection& indexSelection)
             : RelationWrapper(Arity, auxiliaryArity, name) {
-        
         for (const auto& order : indexSelection.getAllOrders()) {
             ram::analysis::LexOrder fullOrder = order;
             // Expand the order to a total order

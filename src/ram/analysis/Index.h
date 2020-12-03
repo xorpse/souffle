@@ -304,6 +304,7 @@ using IndexSignatureMap = std::unordered_map<AttributeIndex, SearchSignature>;
 using DischargeMap = std::unordered_map<SearchSignature, AttributeSet, SearchSignature::Hasher>;
 using LexOrder = std::vector<AttributeIndex>;
 using OrderCollection = std::vector<LexOrder>;
+using SearchCollection = std::vector<SearchSignature>;
 using Chain = std::vector<SearchSignature>;
 using ChainOrderMap = std::vector<Chain>;
 using SignatureOrderMap = std::unordered_map<SearchSignature, LexOrder, SearchSignature::Hasher>;
@@ -505,36 +506,33 @@ protected:
  */
 class FinalIndexSelection {
 public:
-    FinalIndexSelection(SignatureOrderMap indexSelection) : indexSelection(indexSelection) {
-        for (const auto& entry : indexSelection) {
-            searches.push_back(entry.first);
-            orders.push_back(entry.second);
-        }
-    }
+    FinalIndexSelection(const SignatureOrderMap& indexSelection, const SearchSet& searchSet,
+            const OrderCollection& orders)
+            : indexSelection(indexSelection), searches(searchSet.begin(), searchSet.end()), orders(orders) {}
 
-    const std::vector<LexOrder>& getAllOrders() const {
+    const OrderCollection getAllOrders() const {
         return orders;
     }
-    const std::vector<SearchSignature>& getSearches() const {
+    const SearchCollection getSearches() const {
         return searches;
     }
-    const LexOrder& getLexOrder(SearchSignature cols) const {
+    const LexOrder getLexOrder(SearchSignature cols) const {
         return indexSelection.at(cols);
     }
 
     int getLexOrderNum(SearchSignature cols) const {
-        for (size_t index = 0; index < cols.arity(); ++index) {
-            if (searches[index] == cols) {
-                return index;
-            }
-        }
-        return -1;
+        // get the corresponding order
+        auto order = getLexOrder(cols);
+        // find the order in the collection
+        auto it = std::find(orders.begin(), orders.end(), order);
+        // return its relative index
+        return std::distance(orders.begin(), it);
     }
 
 private:
     SignatureOrderMap indexSelection;
-    std::vector<SearchSignature> searches;
-    std::vector<LexOrder> orders;
+    SearchCollection searches;
+    OrderCollection orders;
 };
 
 /**
@@ -559,7 +557,7 @@ public:
         for (const auto& search : cover.getSearches()) {
             indexSelection.insert({search, cover.getLexOrder(search)});
         }
-        return FinalIndexSelection(indexSelection);
+        return FinalIndexSelection(indexSelection, cover.getSearches(), cover.getAllOrders());
     }
 
     /**
