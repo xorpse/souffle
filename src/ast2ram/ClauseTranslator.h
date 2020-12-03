@@ -28,10 +28,12 @@ class SymbolTable;
 namespace souffle::ast {
 class Aggregator;
 class Argument;
+class Atom;
 class Clause;
 class Constant;
 class IntrinsicFunctor;
 class Node;
+class RecordInit;
 }  // namespace souffle::ast
 
 namespace souffle::ram {
@@ -63,23 +65,21 @@ protected:
     // value index to keep track of references in the loop nest
     Own<ValueIndex> valueIndex = mk<ValueIndex>();
 
-    // current nesting level
-    int level = 0;
-
-    virtual Own<ram::Operation> createProjection(const ast::Clause& clause);
-    virtual Own<ram::Condition> createCondition(const ast::Clause& originalClause);
+    virtual Own<ram::Operation> createProjection(const ast::Clause& clause) const;
+    virtual Own<ram::Condition> createCondition(const ast::Clause& originalClause) const;
 
     /** apply constraint filters to a given operation */
     Own<ram::Operation> filterByConstraints(size_t level, const std::vector<ast::Argument*>& arguments,
-            Own<ram::Operation> op, bool constrainByFunctors = true);
+            Own<ram::Operation> op, bool constrainByFunctors = true) const;
 
 private:
     std::vector<const ast::Argument*> generators;
-
-    // the order of processed operations
-    std::vector<const ast::Node*> op_nesting;
+    std::vector<const ast::Node*> operators;
 
     Own<ast::Clause> getReorderedClause(const ast::Clause& clause, const int version) const;
+
+    int addGeneratorLevel(const ast::Argument* arg);
+    int addOperatorLevel(const ast::Node* node);
 
     void indexClause(const ast::Clause& clause);
     void indexAtoms(const ast::Clause& clause);
@@ -88,13 +88,18 @@ private:
     void indexNodeArguments(int nodeLevel, const std::vector<ast::Argument*>& nodeArgs);
     void indexAggregator(const ast::Aggregator& agg);
 
-    Own<ram::Operation> addVariableBindingConstraints(Own<ram::Operation> op);
-    Own<ram::Operation> addBodyLiteralConstraints(const ast::Clause& clause, Own<ram::Operation> op);
-    Own<ram::Operation> addGeneratorLevels(Own<ram::Operation> op);
-
-    // Build operation bottom-up
-    Own<ram::Operation> buildFinalOperation(const ast::Clause& clause, const ast::Clause& originalClause,
+    Own<ram::Statement> createRamQuery(
+            const ast::Clause& clause, const ast::Clause& originalClause, int version);
+    Own<ram::Operation> addVariableBindingConstraints(Own<ram::Operation> op) const;
+    Own<ram::Operation> addBodyLiteralConstraints(const ast::Clause& clause, Own<ram::Operation> op) const;
+    Own<ram::Operation> addGeneratorLevels(Own<ram::Operation> op) const;
+    Own<ram::Operation> addVariableIntroductions(const ast::Clause& clause, const ast::Clause& originalClause,
             int version, Own<ram::Operation> op);
+    Own<ram::Operation> addEntryPoint(const ast::Clause& originalClause, Own<ram::Operation> op) const;
+    Own<ram::Operation> addAtomScan(Own<ram::Operation> op, const ast::Atom* atom, const ast::Clause& clause,
+            const ast::Clause& originalClause, int curLevel, int version) const;
+    Own<ram::Operation> addRecordUnpack(
+            Own<ram::Operation> op, const ast::RecordInit* rec, int curLevel) const;
 
     // Return the write-location for the generator, or {} if an equivalent arg was already seen
     std::optional<int> addGenerator(const ast::Argument& arg);
@@ -102,9 +107,10 @@ private:
     static RamDomain getConstantRamRepresentation(SymbolTable& symbolTable, const ast::Constant& constant);
     static Own<ram::Expression> translateConstant(SymbolTable& symbolTable, const ast::Constant& constant);
 
-    Own<ram::Operation> instantiateAggregator(Own<ram::Operation> op, const ast::Aggregator* agg);
+    Own<ram::Operation> instantiateAggregator(
+            Own<ram::Operation> op, const ast::Aggregator* agg, int curLevel) const;
     Own<ram::Operation> instantiateMultiResultFunctor(
-            Own<ram::Operation> op, const ast::IntrinsicFunctor* inf);
+            Own<ram::Operation> op, const ast::IntrinsicFunctor* inf, int curLevel) const;
 };
 
 }  // namespace souffle::ast2ram

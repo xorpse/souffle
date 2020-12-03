@@ -34,5 +34,15 @@ public:
 
 private:
     bool transform(TranslationUnit& translationUnit) override;
+
+    /**
+     * Generates an equivalent aggregator with a simplified target expression.
+     * @param tu translation unit
+     * @param clause clause containing the aggregator
+     * @param aggregator with a complex target expression
+     * @return equivalent aggregator with a simple target expression
+     */
+    static Aggregator* simplifyTargetExpression(
+            const TranslationUnit& tu, const Clause* clause, const Aggregator* aggregator);
 };
 }  // namespace souffle::ast::transform
