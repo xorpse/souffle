@@ -27,14 +27,26 @@
 
 namespace souffle::interpreter::test {
 
-using ::souffle::ram::analysis::MinIndexSelection;
+using ::souffle::ram::analysis::AttributeConstraint;
+using ::souffle::ram::analysis::FinalIndexSelection;
+using ::souffle::ram::analysis::LexOrder;
+using ::souffle::ram::analysis::OrderCollection;
+using ::souffle::ram::analysis::SearchSet;
+using ::souffle::ram::analysis::SearchSignature;
+using ::souffle::ram::analysis::SignatureOrderMap;
 
 TEST(Relation0, Construction) {
     // create a nullary relation
     SymbolTable symbolTable;
-    MinIndexSelection order{};
-    order.insertDefaultTotalIndex(0);
-    Relation<0, interpreter::Btree> rel(0, "test", order);
+
+    // create an index selection from no searches to a default index for arity 0
+    SignatureOrderMap mapping;
+    SearchSet searches;
+    LexOrder emptyOrder;
+    OrderCollection orders = {emptyOrder};
+    FinalIndexSelection indexSelection(mapping, searches, orders);
+
+    Relation<0, interpreter::Btree> rel(0, "test", indexSelection);
 
     souffle::Tuple<RamDomain, 0> tuple;
     // add some values
@@ -48,9 +60,15 @@ TEST(Relation0, Construction) {
 TEST(Relation0, Iteration) {
     // create a nullary relation
     SymbolTable symbolTable;
-    MinIndexSelection order{};
-    order.insertDefaultTotalIndex(0);
-    Relation<0, interpreter::Btree> rel(0, "test", order);
+
+    // create an index selection from no searches to a default index for arity 0
+    SignatureOrderMap mapping;
+    SearchSet searches;
+    LexOrder emptyOrder;
+    OrderCollection orders = {emptyOrder};
+    FinalIndexSelection indexSelection(mapping, searches, orders);
+
+    Relation<0, interpreter::Btree> rel(0, "test", indexSelection);
     RelationWrapper* wrapper = &rel;
 
     souffle::Tuple<RamDomain, 0> tuple;
@@ -67,9 +85,17 @@ TEST(Relation0, Iteration) {
 TEST(Relation1, Construction) {
     // create a single attribute relation
     SymbolTable symbolTable;
-    MinIndexSelection order{};
-    order.insertDefaultTotalIndex(1);
-    Relation<1, interpreter::Btree> rel(0, "test", order);
+
+    // create an index selection for a relation with arity 1 with only an existence check
+    SignatureOrderMap mapping;
+    SearchSignature existenceCheck = SearchSignature::getFullSearchSignature(1);
+    SearchSet searches = {existenceCheck};
+    LexOrder fullOrder = {0};
+    OrderCollection orders = {fullOrder};
+    mapping.insert({existenceCheck, fullOrder});
+    FinalIndexSelection indexSelection(mapping, searches, orders);
+
+    Relation<1, interpreter::Btree> rel(0, "test", indexSelection);
     RelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
 
     tuple d1(&relInt, {1});
@@ -88,9 +114,17 @@ TEST(Relation1, Construction) {
 TEST(Basic, Iteration) {
     // create a relation
     SymbolTable symbolTable;
-    MinIndexSelection order{};
-    order.insertDefaultTotalIndex(1);
-    Relation<1, interpreter::Btree> rel(0, "test", order);
+
+    // create an index selection for a relation with arity 1 with only an existence check
+    SignatureOrderMap mapping;
+    SearchSignature existenceCheck = SearchSignature::getFullSearchSignature(1);
+    SearchSet searches = {existenceCheck};
+    LexOrder fullOrder = {0};
+    OrderCollection orders = {fullOrder};
+    mapping.insert({existenceCheck, fullOrder});
+    FinalIndexSelection indexSelection(mapping, searches, orders);
+
+    Relation<1, interpreter::Btree> rel(0, "test", indexSelection);
     RelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
 
     // add some values
@@ -115,9 +149,17 @@ TEST(Basic, Iteration) {
 TEST(Independence, Iteration) {
     // create a table
     SymbolTable symbolTable;
-    MinIndexSelection order{};
-    order.insertDefaultTotalIndex(1);
-    Relation<1, interpreter::Btree> rel(0, "test", order);
+
+    // create an index selection for a relation with arity 1 with only an existence check
+    SignatureOrderMap mapping;
+    SearchSignature existenceCheck = SearchSignature::getFullSearchSignature(1);
+    SearchSet searches = {existenceCheck};
+    LexOrder fullOrder = {0};
+    OrderCollection orders = {fullOrder};
+    mapping.insert({existenceCheck, fullOrder});
+    FinalIndexSelection indexSelection(mapping, searches, orders);
+
+    Relation<1, interpreter::Btree> rel(0, "test", indexSelection);
     RelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
 
     // add a value
@@ -143,9 +185,17 @@ TEST(Independence, Iteration) {
 TEST(IndependentMoving, Iteration) {
     // create a table
     SymbolTable symbolTable;
-    MinIndexSelection order{};
-    order.insertDefaultTotalIndex(1);
-    Relation<1, interpreter::Btree> rel(0, "test", order);
+
+    // create an index selection for a relation with arity 1 with only an existence check
+    SignatureOrderMap mapping;
+    SearchSignature existenceCheck = SearchSignature::getFullSearchSignature(1);
+    SearchSet searches = {existenceCheck};
+    LexOrder fullOrder = {0};
+    OrderCollection orders = {fullOrder};
+    mapping.insert({existenceCheck, fullOrder});
+    FinalIndexSelection indexSelection(mapping, searches, orders);
+
+    Relation<1, interpreter::Btree> rel(0, "test", indexSelection);
     RelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
 
     // add a value
@@ -166,9 +216,17 @@ TEST(IndependentMoving, Iteration) {
 TEST(IndependentCopying, Iteration) {
     // create a table
     SymbolTable symbolTable;
-    MinIndexSelection order{};
-    order.insertDefaultTotalIndex(1);
-    Relation<1, interpreter::Btree> rel(0, "test", order);
+
+    // create an index selection for a relation with arity 1 with only an existence check
+    SignatureOrderMap mapping;
+    SearchSignature existenceCheck = SearchSignature::getFullSearchSignature(1);
+    SearchSet searches = {existenceCheck};
+    LexOrder fullOrder = {0};
+    OrderCollection orders = {fullOrder};
+    mapping.insert({existenceCheck, fullOrder});
+    FinalIndexSelection indexSelection(mapping, searches, orders);
+
+    Relation<1, interpreter::Btree> rel(0, "test", indexSelection);
     RelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
 
     // add a value
@@ -190,16 +248,17 @@ TEST(Reordering, Iteration) {
     // create a relation, with a non-default ordering.
     SymbolTable symbolTable;
 
+    // create an index selection for a relation with arity 1 with only an existence check
+    SignatureOrderMap mapping;
+    SearchSignature existenceCheck = SearchSignature::getFullSearchSignature(3);
+    SearchSet searches = {existenceCheck};
     // create an index of order {0, 2, 1}
-    MinIndexSelection order{};
-    ram::analysis::SearchSignature cols(3);
-    cols[0] = ram::analysis::AttributeConstraint::Equal;
-    cols[1] = ram::analysis::AttributeConstraint::None;
-    cols[2] = ram::analysis::AttributeConstraint::Equal;
-    order.addSearch(cols);
-    order.solve();
+    LexOrder fullOrder = {0, 2, 1};
+    OrderCollection orders = {fullOrder};
+    mapping.insert({existenceCheck, fullOrder});
+    FinalIndexSelection indexSelection(mapping, searches, orders);
 
-    Relation<3, interpreter::Btree> rel(0, "test", order);
+    Relation<3, interpreter::Btree> rel(0, "test", indexSelection);
     souffle::Tuple<RamDomain, 3> tuple{0, 1, 2};
     rel.insert(tuple);
 
