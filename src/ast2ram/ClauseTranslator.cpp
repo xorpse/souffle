@@ -460,10 +460,9 @@ void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::
     }
 }
 
-std::optional<int> ClauseTranslator::addGenerator(const ast::Argument& arg) {
+void ClauseTranslator::indexGenerator(const ast::Argument& arg) {
     int aggLoc = addGeneratorLevel(&arg);
     valueIndex->setGeneratorLoc(arg, Location({aggLoc, 0}));
-    return aggLoc;
 }
 
 void ClauseTranslator::indexAtoms(const ast::Clause& clause) {
@@ -495,7 +494,7 @@ void ClauseTranslator::indexAggregatorBody(const ast::Aggregator& agg) {
 
 void ClauseTranslator::indexAggregators(const ast::Clause& clause) {
     // Add each aggregator as an internal generator
-    visitDepthFirst(clause, [&](const ast::Aggregator& agg) { addGenerator(agg); });
+    visitDepthFirst(clause, [&](const ast::Aggregator& agg) { indexGenerator(agg); });
 
     // Index aggregator bodies
     visitDepthFirst(clause, [&](const ast::Aggregator& agg) { indexAggregatorBody(agg); });
@@ -514,7 +513,7 @@ void ClauseTranslator::indexMultiResultFunctors(const ast::Clause& clause) {
     // Add each multi-result functor as an internal generator
     visitDepthFirst(clause, [&](const ast::IntrinsicFunctor& func) {
         if (ast::analysis::FunctorAnalysis::isMultiResult(func)) {
-            addGenerator(func);
+            indexGenerator(func);
         }
     });
 
