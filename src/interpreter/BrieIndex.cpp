@@ -21,13 +21,13 @@
 
 namespace souffle::interpreter {
 
-#define CREATE_BRIE_REL(Structure, Arity, ...)                                                         \
-    case (Arity): {                                                                                    \
-        return mk<Relation<Arity, interpreter::Brie>>(id.getAuxiliaryArity(), id.getName(), orderSet); \
+#define CREATE_BRIE_REL(Structure, Arity, ...)                                                               \
+    case (Arity): {                                                                                          \
+        return mk<Relation<Arity, interpreter::Brie>>(id.getAuxiliaryArity(), id.getName(), indexSelection); \
     }
 
 Own<RelationWrapper> createBrieRelation(
-        const ram::Relation& id, const ram::analysis::MinIndexSelection& /* orderSet */) {
+        const ram::Relation& id, const ram::analysis::FinalIndexSelection& /* orderSet */) {
     switch (id.getArity()) {
         FOR_EACH_BRIE(CREATE_BRIE_REL);
 

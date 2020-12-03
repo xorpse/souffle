@@ -23,7 +23,7 @@ namespace souffle::synthesiser {
 
 using namespace stream_write_qualified_char_as_number;
 using namespace ram;
-using ram::analysis::MinIndexSelection;
+using ram::analysis::LexOrder;
 using ram::analysis::SearchSignature;
 
 std::string Relation::getTypeAttributeString(const std::vector<std::string>& attributeTypes,
@@ -42,29 +42,29 @@ std::string Relation::getTypeAttributeString(const std::vector<std::string>& att
     return type.str();
 }
 
-Own<Relation> Relation::getSynthesiserRelation(
-        const ram::Relation& ramRel, const MinIndexSelection& indexSet, bool isProvenance) {
+Own<Relation> Relation::getSynthesiserRelation(const ram::Relation& ramRel,
+        const ram::analysis::FinalIndexSelection& indexSelection, bool isProvenance) {
     Relation* rel;
 
     // Handle the qualifier in souffle code
     if (isProvenance) {
-        rel = new DirectRelation(ramRel, indexSet, isProvenance);
+        rel = new DirectRelation(ramRel, indexSelection, isProvenance);
     } else if (ramRel.isNullary()) {
-        rel = new NullaryRelation(ramRel, indexSet, isProvenance);
+        rel = new NullaryRelation(ramRel, indexSelection, isProvenance);
     } else if (ramRel.getRepresentation() == RelationRepresentation::BTREE) {
-        rel = new DirectRelation(ramRel, indexSet, isProvenance);
+        rel = new DirectRelation(ramRel, indexSelection, isProvenance);
     } else if (ramRel.getRepresentation() == RelationRepresentation::BRIE) {
-        rel = new BrieRelation(ramRel, indexSet, isProvenance);
+        rel = new BrieRelation(ramRel, indexSelection, isProvenance);
     } else if (ramRel.getRepresentation() == RelationRepresentation::EQREL) {
-        rel = new EqrelRelation(ramRel, indexSet, isProvenance);
+        rel = new EqrelRelation(ramRel, indexSelection, isProvenance);
     } else if (ramRel.getRepresentation() == RelationRepresentation::INFO) {
-        rel = new InfoRelation(ramRel, indexSet, isProvenance);
+        rel = new InfoRelation(ramRel, indexSelection, isProvenance);
     } else {
         // Handle the data structure command line flag
         if (ramRel.getArity() > 6) {
-            rel = new IndirectRelation(ramRel, indexSet, isProvenance);
+            rel = new IndirectRelation(ramRel, indexSelection, isProvenance);
         } else {
-            rel = new DirectRelation(ramRel, indexSet, isProvenance);
+            rel = new DirectRelation(ramRel, indexSelection, isProvenance);
         }
     }
 
@@ -116,7 +116,7 @@ void NullaryRelation::generateTypeStruct(std::ostream&) {
 /** Generate index set for a direct indexed relation */
 void DirectRelation::computeIndices() {
     // Generate and set indices
-    MinIndexSelection::OrderCollection inds = indices.getAllOrders();
+    auto inds = indexSelection.getAllOrders();
 
     // generate a full index if no indices exist
     assert(!inds.empty() && "no full index in relation");
@@ -177,7 +177,7 @@ std::string DirectRelation::getTypeName() {
         res << "__" << join(ind, "_");
     }
 
-    for (auto& search : getMinIndexSelection().getSearches()) {
+    for (auto& search : indexSelection.getSearches()) {
         res << "__" << search;
     }
 
@@ -191,7 +191,7 @@ void DirectRelation::generateTypeStruct(std::ostream& out) {
     auto types = relation.getAttributeTypes();
     const auto& inds = getIndices();
     size_t numIndexes = inds.size();
-    std::map<MinIndexSelection::LexOrder, int> indexToNumMap;
+    std::map<LexOrder, int> indexToNumMap;
 
     // struct definition
     out << "struct " << getTypeName() << " {\n";
@@ -217,8 +217,8 @@ void DirectRelation::generateTypeStruct(std::ostream& out) {
     for (size_t i = 0; i < inds.size(); i++) {
         auto& ind = inds[i];
 
-        if (i < getMinIndexSelection().getAllOrders().size()) {
-            indexToNumMap[getMinIndexSelection().getAllOrders()[i]] = i;
+        if (i < indexSelection.getAllOrders().size()) {
+            indexToNumMap[indexSelection.getAllOrders()[i]] = i;
         }
 
         std::vector<std::string> typecasts;
@@ -410,8 +410,8 @@ void DirectRelation::generateTypeStruct(std::ostream& out) {
     out << "}\n";
 
     // lowerUpperRange methods for each pattern which is used to search this relation
-    for (auto search : getMinIndexSelection().getSearches()) {
-        auto& lexOrder = getMinIndexSelection().getLexOrder(search);
+    for (auto search : indexSelection.getSearches()) {
+        auto& lexOrder = indexSelection.getLexOrder(search);
         size_t indNum = indexToNumMap[lexOrder];
 
         out << "range<t_ind_" << indNum << "::iterator> lowerUpperRange_" << search;
@@ -514,7 +514,7 @@ void IndirectRelation::computeIndices() {
     assert(!isProvenance && "indirect indexes cannot used for provenance");
 
     // Generate and set indices
-    MinIndexSelection::OrderCollection inds = indices.getAllOrders();
+    auto inds = indexSelection.getAllOrders();
 
     // generate a full index if no indices exist
     assert(!inds.empty() && "no full index in relation");
@@ -548,7 +548,7 @@ std::string IndirectRelation::getTypeName() {
         res << "__" << join(ind, "_");
     }
 
-    for (auto& search : getMinIndexSelection().getSearches()) {
+    for (auto& search : indexSelection.getSearches()) {
         res << "__" << search;
     }
 
@@ -561,7 +561,7 @@ void IndirectRelation::generateTypeStruct(std::ostream& out) {
     const auto& inds = getIndices();
     auto types = relation.getAttributeTypes();
     size_t numIndexes = inds.size();
-    std::map<MinIndexSelection::LexOrder, int> indexToNumMap;
+    std::map<LexOrder, int> indexToNumMap;
 
     // struct definition
     out << "struct " << getTypeName() << " {\n";
@@ -578,8 +578,8 @@ void IndirectRelation::generateTypeStruct(std::ostream& out) {
     for (size_t i = 0; i < inds.size(); i++) {
         auto ind = inds[i];
 
-        if (i < getMinIndexSelection().getAllOrders().size()) {
-            indexToNumMap[getMinIndexSelection().getAllOrders()[i]] = i;
+        if (i < indexSelection.getAllOrders().size()) {
+            indexToNumMap[indexSelection.getAllOrders()[i]] = i;
         }
 
         std::vector<std::string> typecasts;
@@ -749,8 +749,8 @@ void IndirectRelation::generateTypeStruct(std::ostream& out) {
     out << "}\n";
 
     // lowerUpperRange methods for each pattern which is used to search this relation
-    for (auto search : getMinIndexSelection().getSearches()) {
-        auto& lexOrder = getMinIndexSelection().getLexOrder(search);
+    for (auto search : indexSelection.getSearches()) {
+        auto& lexOrder = indexSelection.getLexOrder(search);
         size_t indNum = indexToNumMap[lexOrder];
 
         out << "range<iterator_" << indNum << "> lowerUpperRange_" << search;
@@ -850,7 +850,7 @@ void BrieRelation::computeIndices() {
     assert(!isProvenance && "bries cannot be used with provenance");
 
     // Generate and set indices
-    MinIndexSelection::OrderCollection inds = indices.getAllOrders();
+    auto inds = indexSelection.getAllOrders();
 
     // generate a full index if no indices exist
     assert(!inds.empty() && "No full index in relation");
@@ -893,7 +893,7 @@ std::string BrieRelation::getTypeName() {
         res << "__" << join(ind, "_");
     }
 
-    for (auto& search : getMinIndexSelection().getSearches()) {
+    for (auto& search : indexSelection.getSearches()) {
         res << "__" << search;
     }
 
@@ -905,7 +905,7 @@ void BrieRelation::generateTypeStruct(std::ostream& out) {
     size_t arity = getArity();
     const auto& inds = getIndices();
     size_t numIndexes = inds.size();
-    std::map<MinIndexSelection::LexOrder, int> indexToNumMap;
+    std::map<LexOrder, int> indexToNumMap;
 
     // struct definition
     out << "struct " << getTypeName() << " {\n";
@@ -913,8 +913,8 @@ void BrieRelation::generateTypeStruct(std::ostream& out) {
 
     // define trie structures
     for (size_t i = 0; i < inds.size(); i++) {
-        if (i < getMinIndexSelection().getAllOrders().size()) {
-            indexToNumMap[getMinIndexSelection().getAllOrders()[i]] = i;
+        if (i < indexSelection.getAllOrders().size()) {
+            indexToNumMap[indexSelection.getAllOrders()[i]] = i;
         }
         out << "using t_ind_" << i << " = Trie<" << inds[i].size() << ">;\n";
         out << "t_ind_" << i << " ind_" << i << ";\n";
@@ -1047,8 +1047,8 @@ void BrieRelation::generateTypeStruct(std::ostream& out) {
     out << "}\n";
 
     // loweUpperRange methods
-    for (auto search : getMinIndexSelection().getSearches()) {
-        auto& lexOrder = getMinIndexSelection().getLexOrder(search);
+    for (auto search : indexSelection.getSearches()) {
+        auto& lexOrder = indexSelection.getLexOrder(search);
         size_t indNum = indexToNumMap[lexOrder];
 
         out << "range<iterator_" << indNum << "> lowerUpperRange_" << search;
@@ -1158,7 +1158,7 @@ void EqrelRelation::generateTypeStruct(std::ostream& out) {
     constexpr souffle::Relation::arity_type arity = 2;
     const auto& inds = getIndices();
     size_t numIndexes = inds.size();
-    std::map<MinIndexSelection::LexOrder, int> indexToNumMap;
+    std::map<LexOrder, int> indexToNumMap;
 
     // struct definition
     out << "struct " << getTypeName() << " {\n";

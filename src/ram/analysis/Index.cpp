@@ -259,7 +259,7 @@ void MinIndexSelection::solve() {
     const MaxMatching::Matchings& matchings = matching.solve();
 
     // Extract the chains given the nodes and matchings
-    ChainOrderMap chains = getChainsFromMatching(matchings, searches);
+    auto chains = getChainsFromMatching(matchings, searches);
 
     // Should never get no chains back as we never call calculate on an empty graph
     assert(!chains.empty());
@@ -300,8 +300,7 @@ void MinIndexSelection::solve() {
     }
 }
 
-MinIndexSelection::Chain MinIndexSelection::getChain(
-        const SearchSignature umn, const MaxMatching::Matchings& match) {
+Chain MinIndexSelection::getChain(const SearchSignature umn, const MaxMatching::Matchings& match) {
     SearchSignature start = umn;  // start at an unmatched node
     Chain chain;
     // given an unmapped node from set A we follow it from set B until it cannot be matched from B
@@ -329,7 +328,7 @@ MinIndexSelection::Chain MinIndexSelection::getChain(
     }
 }
 
-const MinIndexSelection::ChainOrderMap MinIndexSelection::getChainsFromMatching(
+const ChainOrderMap MinIndexSelection::getChainsFromMatching(
         const MaxMatching::Matchings& match, const SearchSet& nodes) {
     assert(!nodes.empty());
 
@@ -352,7 +351,7 @@ const MinIndexSelection::ChainOrderMap MinIndexSelection::getChainsFromMatching(
 
     // Case: nodes < umKeys or if nodes == umKeys then anti chain - this is handled by this loop
     for (auto umKey : umKeys) {
-        Chain c = getChain(umKey, match);
+        auto c = getChain(umKey, match);
         assert(!c.empty());
         chainToOrder.push_back(c);
     }
@@ -399,8 +398,10 @@ void MinIndexSelection::removeExtraInequalities() {
     }
 }
 
-MinIndexSelection::AttributeSet MinIndexSelection::getAttributesToDischarge(
-        const SearchSignature& s, const Relation& rel) {
+const AttributeSet MinIndexSelection::getAttributesToDischarge(
+        const Relation& rel, const SearchSignature& s) const {
+    auto dischargedAttributes = dischargedMap.count(s) > 0 ? dischargedMap.at(s) : AttributeSet{};
+
     // by default we have all attributes w/inequalities discharged
     AttributeSet allInequalities;
     for (size_t i = 0; i < s.arity(); ++i) {
@@ -422,7 +423,8 @@ MinIndexSelection::AttributeSet MinIndexSelection::getAttributesToDischarge(
 
     // if we are in the interpreter then we only permit signed inequalities
     // remembering to discharge any excess signed inequalities!
-    AttributeSet interpreterAttributesToDischarge(dischargedMap[s]);
+    AttributeSet interpreterAttributesToDischarge = dischargedAttributes;
+
     for (size_t i = 0; i < s.arity(); ++i) {
         if (s[i] == AttributeConstraint::Inequal && rel.getAttributeTypes()[i][0] != 'i') {
             interpreterAttributesToDischarge.insert(i);
@@ -433,7 +435,7 @@ MinIndexSelection::AttributeSet MinIndexSelection::getAttributesToDischarge(
         return interpreterAttributesToDischarge;
     }
 
-    return dischargedMap[s];
+    return dischargedAttributes;
 }
 
 void IndexAnalysis::run(const TranslationUnit& translationUnit) {
