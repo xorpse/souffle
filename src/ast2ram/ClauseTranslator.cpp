@@ -371,11 +371,10 @@ Own<ram::Expression> ClauseTranslator::translateConstant(
 Own<ram::Operation> ClauseTranslator::addConstantConstraints(
         size_t const curLevel, const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op) const {
     // Helper function to add a constraint check
-    auto addFilter = [&](bool isFloatArg, Own<ram::Expression> rhs, size_t pos) {
-        return mk<ram::Filter>(
-                mk<ram::Constraint>(isFloatArg ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ,
-                        mk<ram::TupleElement>(curLevel, pos), std::move(rhs)),
-                std::move(op));
+    auto addEqualityCheck = [&](Own<ram::Operation> op, Own<ram::Expression> lhs, Own<ram::Expression> rhs,
+                                    bool isFloat) {
+        auto eqOp = isFloat ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ;
+        return mk<ram::Filter>(mk<ram::Constraint>(eqOp, std::move(lhs), std::move(rhs)), std::move(op));
     };
 
     for (size_t i = 0; i < arguments.size(); i++) {
@@ -385,11 +384,13 @@ Own<ram::Operation> ClauseTranslator::addConstantConstraints(
             assert(finalType.has_value() && "numeric constant not bound to a type");
 
             bool isFloat = finalType.value() == ast::NumericConstant::Type::Float;
-            auto translatedArg = translateConstant(symbolTable, *numericConstant);
-            op = addFilter(isFloat, std::move(translatedArg), i);
+            auto lhs = mk<ram::TupleElement>(curLevel, i);
+            auto rhs = translateConstant(symbolTable, *numericConstant);
+            op = addEqualityCheck(std::move(op), std::move(lhs), std::move(rhs), isFloat);
         } else if (const auto* constant = dynamic_cast<const ast::Constant*>(argument)) {
-            auto translatedArg = translateConstant(symbolTable, *constant);
-            op = addFilter(false, std::move(translatedArg), i);
+            auto lhs = mk<ram::TupleElement>(curLevel, i);
+            auto rhs = translateConstant(symbolTable, *constant);
+            op = addEqualityCheck(std::move(op), std::move(lhs), std::move(rhs), false);
         }
     }
 
