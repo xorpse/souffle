@@ -86,7 +86,7 @@ private:
     void indexAggregators(const ast::Clause& clause);
     void indexMultiResultFunctors(const ast::Clause& clause);
     void indexNodeArguments(int nodeLevel, const std::vector<ast::Argument*>& nodeArgs);
-    void indexAggregator(const ast::Aggregator& agg);
+    void indexAggregatorBody(const ast::Aggregator& agg);
 
     Own<ram::Statement> createRamFactQuery(const ast::Clause& clause) const;
     Own<ram::Statement> createRamRuleQuery(

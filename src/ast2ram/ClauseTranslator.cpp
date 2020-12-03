@@ -478,7 +478,7 @@ void ClauseTranslator::indexAtoms(const ast::Clause& clause) {
     }
 }
 
-void ClauseTranslator::indexAggregator(const ast::Aggregator& agg) {
+void ClauseTranslator::indexAggregatorBody(const ast::Aggregator& agg) {
     auto aggLoc = valueIndex->getGeneratorLoc(agg);
 
     // Get the single body atom inside the aggregator
@@ -498,12 +498,13 @@ void ClauseTranslator::indexAggregator(const ast::Aggregator& agg) {
 }
 
 void ClauseTranslator::indexAggregators(const ast::Clause& clause) {
+    // Add each aggregator as an internal generator
     visitDepthFirst(clause, [&](const ast::Aggregator& agg) { addGenerator(agg); });
 
-    // index aggregator atoms
-    visitDepthFirst(clause, [&](const ast::Aggregator& agg) { indexAggregator(agg); });
+    // Index aggregator bodies
+    visitDepthFirst(clause, [&](const ast::Aggregator& agg) { indexAggregatorBody(agg); });
 
-    // add aggregator introductions
+    // Add aggregator value introductions
     visitDepthFirst(clause, [&](const ast::BinaryConstraint& bc) {
         if (!isEqConstraint(bc.getBaseOperator())) return;
         const auto* lhs = dynamic_cast<const ast::Variable*>(bc.getLHS());
@@ -514,13 +515,14 @@ void ClauseTranslator::indexAggregators(const ast::Clause& clause) {
 }
 
 void ClauseTranslator::indexMultiResultFunctors(const ast::Clause& clause) {
+    // Add each multi-result functor as an internal generator
     visitDepthFirst(clause, [&](const ast::IntrinsicFunctor& func) {
         if (ast::analysis::FunctorAnalysis::isMultiResult(func)) {
             addGenerator(func);
         }
     });
 
-    // add multi-result functor introductions
+    // Add multi-result functor value introductions
     visitDepthFirst(clause, [&](const ast::BinaryConstraint& bc) {
         if (!isEqConstraint(bc.getBaseOperator())) return;
         const auto* lhs = dynamic_cast<const ast::Variable*>(bc.getLHS());
