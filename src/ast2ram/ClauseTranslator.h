@@ -70,6 +70,18 @@ protected:
     const TranslatorContext& context;
     SymbolTable& symbolTable;
 
+    const ast::Atom* deltaAtom = nullptr;
+    std::vector<const ast::Atom*> prevs{};
+
+    bool isRecursive() const {
+        return deltaAtom != nullptr;
+    }
+
+    std::string getClauseAtomName(const ast::Clause& clause, const ast::Atom* atom) const;
+
+    Own<ram::Operation> addNegate(
+            const ast::Clause& clause, const ast::Atom* atom, Own<ram::Operation> op, bool isDelta) const;
+
     // value index to keep track of references in the loop nest
     Own<ValueIndex> valueIndex = mk<ValueIndex>();
 
@@ -110,7 +122,7 @@ private:
     /** Core clause translation stages */
     Own<ram::Operation> addVariableBindingConstraints(Own<ram::Operation> op) const;
     Own<ram::Operation> addBodyLiteralConstraints(const ast::Clause& clause, Own<ram::Operation> op) const;
-    Own<ram::Operation> addGeneratorLevels(Own<ram::Operation> op) const;
+    Own<ram::Operation> addGeneratorLevels(Own<ram::Operation> op, const ast::Clause& clause) const;
     Own<ram::Operation> addVariableIntroductions(const ast::Clause& clause, const ast::Clause& originalClause,
             int version, Own<ram::Operation> op);
     Own<ram::Operation> addEntryPoint(const ast::Clause& originalClause, Own<ram::Operation> op) const;
@@ -130,8 +142,8 @@ private:
     static Own<ram::Expression> translateConstant(SymbolTable& symbolTable, const ast::Constant& constant);
 
     /** Generator instantiation */
-    Own<ram::Operation> instantiateAggregator(
-            Own<ram::Operation> op, const ast::Aggregator* agg, int curLevel) const;
+    Own<ram::Operation> instantiateAggregator(Own<ram::Operation> op, const ast::Clause& clause,
+            const ast::Aggregator* agg, int curLevel) const;
     Own<ram::Operation> instantiateMultiResultFunctor(
             Own<ram::Operation> op, const ast::IntrinsicFunctor* inf, int curLevel) const;
 };
