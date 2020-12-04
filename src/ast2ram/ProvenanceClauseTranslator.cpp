@@ -28,9 +28,15 @@
 #include "ram/Condition.h"
 #include "ram/Relation.h"
 #include "ram/SignedConstant.h"
+#include "ram/Statement.h"
 #include "ram/SubroutineReturn.h"
 
 namespace souffle::ast2ram {
+
+Own<ram::Statement> ProvenanceClauseTranslator::generateClause(const TranslatorContext& context,
+        SymbolTable& symbolTable, const ast::Clause& clause, const ast::Clause& originalClause, int version) {
+    return ProvenanceClauseTranslator(context, symbolTable).translateClause(clause, originalClause, version);
+}
 
 Own<ast::Clause> ProvenanceClauseTranslator::createDeltaClause(
         const ast::Clause* original, size_t recursiveAtomIdx) const {

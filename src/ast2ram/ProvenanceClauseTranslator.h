@@ -25,6 +25,7 @@ class Clause;
 namespace souffle::ram {
 class Condition;
 class Operation;
+class Statement;
 }  // namespace souffle::ram
 
 namespace souffle::ast2ram {
@@ -35,6 +36,9 @@ class ProvenanceClauseTranslator : public ClauseTranslator {
 public:
     ProvenanceClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable)
             : ClauseTranslator(context, symbolTable) {}
+
+    static Own<ram::Statement> generateClause(const TranslatorContext& context, SymbolTable& symbolTable,
+            const ast::Clause& clause, const ast::Clause& originalClause, int version = 0);
 
 protected:
     Own<ram::Operation> createProjection(const ast::Clause& clause) const override;

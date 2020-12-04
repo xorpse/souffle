@@ -69,13 +69,18 @@
 
 namespace souffle::ast2ram {
 
+Own<ram::Statement> ClauseTranslator::generateClause(const TranslatorContext& context,
+        SymbolTable& symbolTable, const ast::Clause& clause, const ast::Clause& originalClause, int version) {
+    return ClauseTranslator(context, symbolTable).translateClause(clause, originalClause, version);
+}
+
 VecOwn<ram::Statement> ClauseTranslator::generateClauseVersions(const TranslatorContext& context,
-        SymbolTable& symbolTable, const std::set<const ast::Relation*>& scc, const ast::Clause* cl) {
+        SymbolTable& symbolTable, const std::set<const ast::Relation*>& scc, const ast::Clause* clause) {
     VecOwn<ram::Statement> clauseVersions;
 
     // Create each version
     int version = 0;
-    const auto& atoms = ast::getBodyLiterals<ast::Atom>(*cl);
+    const auto& atoms = ast::getBodyLiterals<ast::Atom>(*clause);
     for (size_t i = 0; i < atoms.size(); i++) {
         const auto* atom = atoms[i];
 
@@ -85,7 +90,7 @@ VecOwn<ram::Statement> ClauseTranslator::generateClauseVersions(const Translator
         }
 
         auto translatedClause =
-                ClauseTranslator(context, symbolTable).generateClauseVersion(scc, cl, i, version);
+                ClauseTranslator(context, symbolTable).generateClauseVersion(scc, clause, i, version);
         appendStmt(clauseVersions, std::move(translatedClause));
 
         // increment version counter
@@ -93,9 +98,9 @@ VecOwn<ram::Statement> ClauseTranslator::generateClauseVersions(const Translator
     }
 
     // Check that the correct number of versions have been created
-    if (cl->getExecutionPlan() != nullptr) {
+    if (clause->getExecutionPlan() != nullptr) {
         int maxVersion = -1;
-        for (auto const& cur : cl->getExecutionPlan()->getOrders()) {
+        for (auto const& cur : clause->getExecutionPlan()->getOrders()) {
             maxVersion = std::max(cur.first, maxVersion);
         }
         assert(version > maxVersion && "missing clause versions");
