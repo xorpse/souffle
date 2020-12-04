@@ -60,13 +60,11 @@ public:
     Own<ram::Statement> translateClause(
             const ast::Clause& clause, const ast::Clause& originalClause, int version = 0);
 
-    static VecOwn<ram::Statement> generateClauseVersions(const std::set<const ast::Relation*>& scc,
-            const ast::Clause* cl, const AstToRamTranslator& tr, const TranslatorContext* context,
-            SymbolTable& symbolTable);
+    VecOwn<ram::Statement> generateClauseVersions(
+            const std::set<const ast::Relation*>& scc, const ast::Clause* cl, const AstToRamTranslator& tr);
 
-    static Own<ram::Statement> generateClauseVersion(const std::set<const ast::Relation*>& scc,
-            const ast::Clause* cl, size_t deltaAtomIdx, size_t version, const AstToRamTranslator& tr,
-            const TranslatorContext* context, SymbolTable& symbolTable);
+    Own<ram::Statement> generateClauseVersion(const std::set<const ast::Relation*>& scc,
+            const ast::Clause* cl, size_t deltaAtomIdx, size_t version, const AstToRamTranslator& tr);
 
 protected:
     const TranslatorContext& context;

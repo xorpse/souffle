@@ -69,9 +69,8 @@
 
 namespace souffle::ast2ram {
 
-VecOwn<ram::Statement> ClauseTranslator::generateClauseVersions(const std::set<const ast::Relation*>& scc,
-        const ast::Clause* cl, const AstToRamTranslator& tr, const TranslatorContext* context,
-        SymbolTable& symbolTable) {
+VecOwn<ram::Statement> ClauseTranslator::generateClauseVersions(
+        const std::set<const ast::Relation*>& scc, const ast::Clause* cl, const AstToRamTranslator& tr) {
     VecOwn<ram::Statement> clauseVersions;
 
     // Create each version
@@ -81,11 +80,11 @@ VecOwn<ram::Statement> ClauseTranslator::generateClauseVersions(const std::set<c
         const auto* atom = atoms[i];
 
         // Only interested in atoms within the same SCC
-        if (!contains(scc, context->getAtomRelation(atom))) {
+        if (!contains(scc, context.getAtomRelation(atom))) {
             continue;
         }
 
-        appendStmt(clauseVersions, generateClauseVersion(scc, cl, i, version, tr, context, symbolTable));
+        appendStmt(clauseVersions, generateClauseVersion(scc, cl, i, version, tr));
 
         // increment version counter
         version++;
@@ -104,8 +103,7 @@ VecOwn<ram::Statement> ClauseTranslator::generateClauseVersions(const std::set<c
 }
 
 Own<ram::Statement> ClauseTranslator::generateClauseVersion(const std::set<const ast::Relation*>& scc,
-        const ast::Clause* cl, size_t deltaAtomIdx, size_t version, const AstToRamTranslator& tr,
-        const TranslatorContext* context, SymbolTable& symbolTable) {
+        const ast::Clause* cl, size_t deltaAtomIdx, size_t version, const AstToRamTranslator& tr) {
     const auto& atoms = ast::getBodyLiterals<ast::Atom>(*cl);
 
     // Modify the processed rule to use delta relation and write to new relation
@@ -116,7 +114,7 @@ Own<ram::Statement> ClauseTranslator::generateClauseVersion(const std::set<const
 
     // Add in negated deltas for later recursive relations to simulate prev construct
     for (size_t j = deltaAtomIdx + 1; j < atoms.size(); j++) {
-        const auto* atomRelation = context->getAtomRelation(atoms[j]);
+        const auto* atomRelation = context.getAtomRelation(atoms[j]);
         if (contains(scc, atomRelation)) {
             auto deltaAtom = souffle::clone(ast::getBodyLiterals<ast::Atom>(*fixedClause)[j]);
             deltaAtom->setQualifiedName(getDeltaRelationName(atomRelation->getQualifiedName()));
@@ -125,8 +123,7 @@ Own<ram::Statement> ClauseTranslator::generateClauseVersion(const std::set<const
     }
 
     // Translate the resultant clause as would be done normally
-    Own<ram::Statement> rule =
-            ClauseTranslator(*context, symbolTable).translateClause(*fixedClause, *cl, version);
+    Own<ram::Statement> rule = translateClause(*fixedClause, *cl, version);
 
     // Add loging
     if (Global::config().has("profile")) {

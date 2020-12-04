@@ -260,8 +260,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
             continue;
         }
 
-        auto clauseVersions =
-                ClauseTranslator::generateClauseVersions(scc, cl, *this, context.get(), *symbolTable);
+        auto clauseVersions = ClauseTranslator(*context, *symbolTable).generateClauseVersions(scc, cl, *this);
         for (auto& clauseVersion : clauseVersions) {
             appendStmt(result, std::move(clauseVersion));
         }
