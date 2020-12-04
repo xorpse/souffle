@@ -69,8 +69,8 @@
 
 namespace souffle::ast2ram {
 
-VecOwn<ram::Statement> ClauseTranslator::generateClauseVersions(
-        const std::set<const ast::Relation*>& scc, const ast::Clause* cl, const AstToRamTranslator& tr) {
+VecOwn<ram::Statement> ClauseTranslator::generateClauseVersions(const TranslatorContext& context,
+        SymbolTable& symbolTable, const std::set<const ast::Relation*>& scc, const ast::Clause* cl) {
     VecOwn<ram::Statement> clauseVersions;
 
     // Create each version
@@ -84,7 +84,9 @@ VecOwn<ram::Statement> ClauseTranslator::generateClauseVersions(
             continue;
         }
 
-        appendStmt(clauseVersions, generateClauseVersion(scc, cl, i, version, tr));
+        auto translatedClause =
+                ClauseTranslator(context, symbolTable).generateClauseVersion(scc, cl, i, version);
+        appendStmt(clauseVersions, std::move(translatedClause));
 
         // increment version counter
         version++;
@@ -123,7 +125,7 @@ Own<ast::Clause> ClauseTranslator::createDeltaClause(
 }
 
 Own<ram::Statement> ClauseTranslator::generateClauseVersion(const std::set<const ast::Relation*>& scc,
-        const ast::Clause* cl, size_t deltaAtomIdx, size_t version, const AstToRamTranslator& tr) {
+        const ast::Clause* cl, size_t deltaAtomIdx, size_t version) {
     const auto& atoms = ast::getBodyLiterals<ast::Atom>(*cl);
 
     // Modify the processed rule to use delta relation and write to new relation
