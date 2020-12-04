@@ -34,6 +34,7 @@ class Constant;
 class IntrinsicFunctor;
 class Node;
 class RecordInit;
+class Relation;
 }  // namespace souffle::ast
 
 namespace souffle::ram {
@@ -46,6 +47,7 @@ class Statement;
 
 namespace souffle::ast2ram {
 
+class AstToRamTranslator;
 class TranslatorContext;
 class ValueIndex;
 
@@ -57,6 +59,14 @@ public:
     /** Generate RAM code for a clause */
     Own<ram::Statement> translateClause(
             const ast::Clause& clause, const ast::Clause& originalClause, int version = 0);
+
+    static VecOwn<ram::Statement> generateClauseVersions(const std::set<const ast::Relation*>& scc,
+            const ast::Clause* cl, const AstToRamTranslator& tr, const TranslatorContext* context,
+            SymbolTable& symbolTable);
+
+    static Own<ram::Statement> generateClauseVersion(const std::set<const ast::Relation*>& scc,
+            const ast::Clause* cl, size_t deltaAtomIdx, size_t version, const AstToRamTranslator& tr,
+            const TranslatorContext* context, SymbolTable& symbolTable);
 
 protected:
     const TranslatorContext& context;

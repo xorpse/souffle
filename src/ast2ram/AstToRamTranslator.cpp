@@ -248,53 +248,6 @@ Own<ast::Clause> AstToRamTranslator::createDeltaClause(
     return recursiveVersion;
 }
 
-Own<ram::Statement> AstToRamTranslator::generateClauseVersion(const std::set<const ast::Relation*>& scc,
-        const ast::Clause* cl, size_t deltaAtomIdx, size_t version) const {
-    const auto& atoms = ast::getBodyLiterals<ast::Atom>(*cl);
-
-    // Modify the processed rule to use delta relation and write to new relation
-    auto fixedClause = createDeltaClause(cl, deltaAtomIdx);
-
-    // Replace wildcards with variables to reduce indices
-    nameUnnamedVariables(fixedClause.get());
-
-    // Add in negated deltas for later recursive relations to simulate prev construct
-    for (size_t j = deltaAtomIdx + 1; j < atoms.size(); j++) {
-        const auto* atomRelation = context->getAtomRelation(atoms[j]);
-        if (contains(scc, atomRelation)) {
-            auto deltaAtom = souffle::clone(ast::getBodyLiterals<ast::Atom>(*fixedClause)[j]);
-            deltaAtom->setQualifiedName(getDeltaRelationName(atomRelation->getQualifiedName()));
-            fixedClause->addToBody(mk<ast::Negation>(std::move(deltaAtom)));
-        }
-    }
-
-    // Translate the resultant clause as would be done normally
-    Own<ram::Statement> rule =
-            ClauseTranslator(*context, *symbolTable).translateClause(*fixedClause, *cl, version);
-
-    // Add loging
-    if (Global::config().has("profile")) {
-        const std::string& relationName = toString(cl->getHead()->getQualifiedName());
-        const auto& srcLocation = cl->getSrcLoc();
-        const std::string clauseText = stringify(toString(*cl));
-        const std::string logTimerStatement =
-                LogStatement::tRecursiveRule(relationName, version, srcLocation, clauseText);
-        const std::string logSizeStatement =
-                LogStatement::nRecursiveRule(relationName, version, srcLocation, clauseText);
-        rule = mk<ram::LogRelationTimer>(
-                std::move(rule), logTimerStatement, getNewRelationName(cl->getHead()->getQualifiedName()));
-    }
-
-    // Add debug info
-    std::ostringstream ds;
-    ds << toString(*cl) << "\nin file ";
-    ds << cl->getSrcLoc();
-    rule = mk<ram::DebugInfo>(std::move(rule), ds.str());
-
-    // Add to loop body
-    return mk<ram::Sequence>(std::move(rule));
-}
-
 Own<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
         const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const {
     assert(contains(scc, rel) && "relation should belong to scc");
@@ -307,30 +260,10 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
             continue;
         }
 
-        // Create each version
-        int version = 0;
-        const auto& atoms = ast::getBodyLiterals<ast::Atom>(*cl);
-        for (size_t i = 0; i < atoms.size(); i++) {
-            const auto* atom = atoms[i];
-
-            // Only interested in atoms within the same SCC
-            if (!contains(scc, context->getAtomRelation(atom))) {
-                continue;
-            }
-
-            appendStmt(result, generateClauseVersion(scc, cl, i, version));
-
-            // increment version counter
-            version++;
-        }
-
-        // Check that the correct number of versions have been created
-        if (cl->getExecutionPlan() != nullptr) {
-            int maxVersion = -1;
-            for (auto const& cur : cl->getExecutionPlan()->getOrders()) {
-                maxVersion = std::max(cur.first, maxVersion);
-            }
-            assert(version > maxVersion && "missing clause versions");
+        auto clauseVersions =
+                ClauseTranslator::generateClauseVersions(scc, cl, *this, context.get(), *symbolTable);
+        for (auto& clauseVersion : clauseVersions) {
+            appendStmt(result, std::move(clauseVersion));
         }
     }
 

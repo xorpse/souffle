@@ -22,10 +22,10 @@ class ProvenanceTranslator : public AstToRamTranslator {
 public:
     ProvenanceTranslator() = default;
     ~ProvenanceTranslator() = default;
+    Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const override;
 
 protected:
     Own<ram::Sequence> generateProgram(const ast::TranslationUnit& translationUnit) override;
-    Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const override;
     Own<ram::Statement> generateClearExpiredRelations(
             const std::set<const ast::Relation*>& expiredRelations) const override;
 
