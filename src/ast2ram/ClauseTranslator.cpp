@@ -90,6 +90,9 @@ VecOwn<ram::Statement> ClauseTranslator::generateClauseVersions(const Translator
             continue;
         }
 
+        // Replace wildcards with variables to reduce indices
+        // nameUnnamedVariables(clause);
+
         auto translatedClause =
                 ClauseTranslator(context, symbolTable).generateClauseVersion(scc, clause, i, version);
         appendStmt(clauseVersions, std::move(translatedClause));
@@ -111,47 +114,41 @@ VecOwn<ram::Statement> ClauseTranslator::generateClauseVersions(const Translator
 }
 
 Own<ram::Statement> ClauseTranslator::generateClauseVersion(const std::set<const ast::Relation*>& scc,
-        const ast::Clause* cl, size_t deltaAtomIdx, size_t version) {
-    const auto& atoms = ast::getBodyLiterals<ast::Atom>(*cl);
+        const ast::Clause* clause, size_t deltaAtomIdx, size_t version) {
+    const auto& atoms = ast::getBodyLiterals<ast::Atom>(*clause);
 
-    // Modify the processed rule to use delta relation and write to new relation
-    deltaAtom = ast::getBodyLiterals<ast::Atom>(*cl).at(deltaAtomIdx);
+    // Update delta atom
+    deltaAtom = atoms.at(deltaAtomIdx);
 
-    // Replace wildcards with variables to reduce indices
-    // nameUnnamedVariables(cl);
-
-    // Add in negated deltas for later recursive relations to simulate prev construct
+    // Update prevs list
     prevs.clear();
     for (size_t j = deltaAtomIdx + 1; j < atoms.size(); j++) {
         const auto* atomRelation = context.getAtomRelation(atoms[j]);
         if (contains(scc, atomRelation)) {
             prevs.push_back(atoms[j]);
-            // auto deltaAtom = souffle::clone(ast::getBodyLiterals<ast::Atom>(*fixedClause)[j]);
-            // deltaAtom->setQualifiedName(getDeltaRelationName(atomRelation->getQualifiedName()));
-            // fixedClause->addToBody(mk<ast::Negation>(std::move(deltaAtom)));
         }
     }
 
     // Translate the resultant clause as would be done normally
-    Own<ram::Statement> rule = translateClause(*cl, *cl, version);
+    Own<ram::Statement> rule = translateClause(*clause, *clause, version);
 
     // Add loging
     if (Global::config().has("profile")) {
-        const std::string& relationName = toString(cl->getHead()->getQualifiedName());
-        const auto& srcLocation = cl->getSrcLoc();
-        const std::string clauseText = stringify(toString(*cl));
+        const std::string& relationName = toString(clause->getHead()->getQualifiedName());
+        const auto& srcLocation = clause->getSrcLoc();
+        const std::string clauseText = stringify(toString(*clause));
         const std::string logTimerStatement =
                 LogStatement::tRecursiveRule(relationName, version, srcLocation, clauseText);
         const std::string logSizeStatement =
                 LogStatement::nRecursiveRule(relationName, version, srcLocation, clauseText);
-        rule = mk<ram::LogRelationTimer>(
-                std::move(rule), logTimerStatement, getNewRelationName(cl->getHead()->getQualifiedName()));
+        rule = mk<ram::LogRelationTimer>(std::move(rule), logTimerStatement,
+                getNewRelationName(clause->getHead()->getQualifiedName()));
     }
 
     // Add debug info
     std::ostringstream ds;
-    ds << toString(*cl) << "\nin file ";
-    ds << cl->getSrcLoc();
+    ds << toString(*clause) << "\nin file ";
+    ds << clause->getSrcLoc();
     rule = mk<ram::DebugInfo>(std::move(rule), ds.str());
 
     // Add to loop body

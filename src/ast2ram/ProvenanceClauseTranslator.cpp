@@ -91,15 +91,6 @@ Own<ram::Operation> ProvenanceClauseTranslator::createProjection(const ast::Clau
             for (ast::Argument* arg : atom->getArguments()) {
                 values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, arg));
             }
-        } else if (auto neg = dynamic_cast<ast::ProvenanceNegation*>(lit)) {
-            size_t auxiliaryArity = context.getEvaluationArity(neg->getAtom());
-            for (size_t i = 0; i < neg->getAtom()->getArguments().size() - auxiliaryArity; ++i) {
-                auto arg = neg->getAtom()->getArguments()[i];
-                values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, arg));
-            }
-            for (size_t i = 0; i < auxiliaryArity; ++i) {
-                values.push_back(mk<ram::SignedConstant>(-1));
-            }
         } else if (auto neg = dynamic_cast<ast::Negation*>(lit)) {
             for (ast::Argument* arg : neg->getAtom()->getArguments()) {
                 values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, arg));
@@ -107,6 +98,19 @@ Own<ram::Operation> ProvenanceClauseTranslator::createProjection(const ast::Clau
         } else if (auto con = dynamic_cast<ast::BinaryConstraint*>(lit)) {
             values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, con->getLHS()));
             values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, con->getRHS()));
+        }
+    }
+
+    // final provenance negation
+    if (isRecursive()) {
+        const auto* head = clause.getHead();
+        size_t auxiliaryArity = context.getEvaluationArity(head);
+        for (size_t i = 0; i < head->getArguments().size() - auxiliaryArity; i++) {
+            auto arg = head->getArguments().at(i);
+            values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, arg));
+        }
+        for (size_t i = 0; i < auxiliaryArity; ++i) {
+            values.push_back(mk<ram::SignedConstant>(-1));
         }
     }
 
