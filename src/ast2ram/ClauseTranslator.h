@@ -76,6 +76,8 @@ protected:
     virtual Own<ram::Operation> createProjection(const ast::Clause& clause) const;
     virtual Own<ram::Condition> createCondition(const ast::Clause& originalClause) const;
 
+    virtual Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const;
+
 private:
     std::vector<const ast::Argument*> generators;
     std::vector<const ast::Node*> operators;

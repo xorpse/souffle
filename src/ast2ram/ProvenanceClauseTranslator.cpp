@@ -19,9 +19,11 @@
 #include "ast/BinaryConstraint.h"
 #include "ast/Clause.h"
 #include "ast/ProvenanceNegation.h"
+#include "ast/utility/Utils.h"
 #include "ast2ram/AstToRamTranslator.h"
 #include "ast2ram/ValueTranslator.h"
 #include "ast2ram/utility/TranslatorContext.h"
+#include "ast2ram/utility/Utils.h"
 #include "ast2ram/utility/ValueIndex.h"
 #include "ram/Condition.h"
 #include "ram/Relation.h"
@@ -29,6 +31,24 @@
 #include "ram/SubroutineReturn.h"
 
 namespace souffle::ast2ram {
+
+Own<ast::Clause> ProvenanceClauseTranslator::createDeltaClause(
+        const ast::Clause* original, size_t recursiveAtomIdx) const {
+    auto recursiveVersion = souffle::clone(original);
+
+    // @new :- ...
+    const auto* headAtom = original->getHead();
+    recursiveVersion->getHead()->setQualifiedName(getNewRelationName(headAtom->getQualifiedName()));
+
+    // ... :- ..., @delta, ...
+    auto* recursiveAtom = ast::getBodyLiterals<ast::Atom>(*recursiveVersion).at(recursiveAtomIdx);
+    recursiveAtom->setQualifiedName(getDeltaRelationName(recursiveAtom->getQualifiedName()));
+
+    // ... :- ..., !head.
+    recursiveVersion->addToBody(mk<ast::ProvenanceNegation>(souffle::clone(original->getHead())));
+
+    return recursiveVersion;
+}
 
 // TODO (azreika): should change these to a ram query overload!!!
 

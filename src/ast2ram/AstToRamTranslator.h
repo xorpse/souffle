@@ -52,8 +52,6 @@ public:
     /** Translates an AST program into a corresponding RAM program */
     Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
 
-    virtual Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const;
-
 protected:
     Own<TranslatorContext> context;
     Own<SymbolTable> symbolTable;

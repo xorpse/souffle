@@ -58,24 +58,6 @@ Own<ram::Statement> ProvenanceTranslator::generateClearExpiredRelations(
     return mk<ram::Sequence>();
 }
 
-Own<ast::Clause> ProvenanceTranslator::createDeltaClause(
-        const ast::Clause* original, size_t recursiveAtomIdx) const {
-    auto recursiveVersion = souffle::clone(original);
-
-    // @new :- ...
-    const auto* headAtom = original->getHead();
-    recursiveVersion->getHead()->setQualifiedName(getNewRelationName(headAtom->getQualifiedName()));
-
-    // ... :- ..., @delta, ...
-    auto* recursiveAtom = ast::getBodyLiterals<ast::Atom>(*recursiveVersion).at(recursiveAtomIdx);
-    recursiveAtom->setQualifiedName(getDeltaRelationName(recursiveAtom->getQualifiedName()));
-
-    // ... :- ..., !head.
-    recursiveVersion->addToBody(mk<ast::ProvenanceNegation>(souffle::clone(original->getHead())));
-
-    return recursiveVersion;
-}
-
 void ProvenanceTranslator::addProvenanceClauseSubroutines(const ast::Program* program) {
     visitDepthFirst(*program, [&](const ast::Clause& clause) {
         std::stringstream relName;

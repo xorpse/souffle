@@ -102,12 +102,32 @@ VecOwn<ram::Statement> ClauseTranslator::generateClauseVersions(
     return clauseVersions;
 }
 
+Own<ast::Clause> ClauseTranslator::createDeltaClause(
+        const ast::Clause* original, size_t recursiveAtomIdx) const {
+    auto recursiveVersion = souffle::clone(original);
+
+    // @new :- ...
+    const auto* headAtom = original->getHead();
+    recursiveVersion->getHead()->setQualifiedName(getNewRelationName(headAtom->getQualifiedName()));
+
+    // ... :- ..., @delta, ...
+    auto* recursiveAtom = ast::getBodyLiterals<ast::Atom>(*recursiveVersion).at(recursiveAtomIdx);
+    recursiveAtom->setQualifiedName(getDeltaRelationName(recursiveAtom->getQualifiedName()));
+
+    // ... :- ..., !head.
+    if (headAtom->getArity() > 0) {
+        recursiveVersion->addToBody(mk<ast::Negation>(souffle::clone(headAtom)));
+    }
+
+    return recursiveVersion;
+}
+
 Own<ram::Statement> ClauseTranslator::generateClauseVersion(const std::set<const ast::Relation*>& scc,
         const ast::Clause* cl, size_t deltaAtomIdx, size_t version, const AstToRamTranslator& tr) {
     const auto& atoms = ast::getBodyLiterals<ast::Atom>(*cl);
 
     // Modify the processed rule to use delta relation and write to new relation
-    auto fixedClause = tr.createDeltaClause(cl, deltaAtomIdx);
+    auto fixedClause = createDeltaClause(cl, deltaAtomIdx);
 
     // Replace wildcards with variables to reduce indices
     nameUnnamedVariables(fixedClause.get());

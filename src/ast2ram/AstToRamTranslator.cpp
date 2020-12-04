@@ -228,26 +228,6 @@ Own<ram::Statement> AstToRamTranslator::generateMergeRelations(
     return stmt;
 }
 
-Own<ast::Clause> AstToRamTranslator::createDeltaClause(
-        const ast::Clause* original, size_t recursiveAtomIdx) const {
-    auto recursiveVersion = souffle::clone(original);
-
-    // @new :- ...
-    const auto* headAtom = original->getHead();
-    recursiveVersion->getHead()->setQualifiedName(getNewRelationName(headAtom->getQualifiedName()));
-
-    // ... :- ..., @delta, ...
-    auto* recursiveAtom = ast::getBodyLiterals<ast::Atom>(*recursiveVersion).at(recursiveAtomIdx);
-    recursiveAtom->setQualifiedName(getDeltaRelationName(recursiveAtom->getQualifiedName()));
-
-    // ... :- ..., !head.
-    if (headAtom->getArity() > 0) {
-        recursiveVersion->addToBody(mk<ast::Negation>(souffle::clone(headAtom)));
-    }
-
-    return recursiveVersion;
-}
-
 Own<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
         const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const {
     assert(contains(scc, rel) && "relation should belong to scc");

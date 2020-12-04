@@ -22,7 +22,6 @@ class ProvenanceTranslator : public AstToRamTranslator {
 public:
     ProvenanceTranslator() = default;
     ~ProvenanceTranslator() = default;
-    Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const override;
 
 protected:
     Own<ram::Sequence> generateProgram(const ast::TranslationUnit& translationUnit) override;
