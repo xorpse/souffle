@@ -79,7 +79,7 @@ protected:
 
     std::string getClauseAtomName(const ast::Clause& clause, const ast::Atom* atom) const;
 
-    Own<ram::Operation> addNegate(
+    virtual Own<ram::Operation> addNegate(
             const ast::Clause& clause, const ast::Atom* atom, Own<ram::Operation> op, bool isDelta) const;
 
     // value index to keep track of references in the loop nest
@@ -90,8 +90,6 @@ protected:
 
     virtual Own<ram::Operation> createProjection(const ast::Clause& clause) const;
     virtual Own<ram::Condition> createCondition(const ast::Clause& originalClause) const;
-
-    virtual Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const;
 
 private:
     std::vector<const ast::Argument*> generators;

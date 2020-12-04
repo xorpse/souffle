@@ -15,6 +15,7 @@
  ***********************************************************************/
 
 #include "ast2ram/ProvenanceClauseTranslator.h"
+#include "Global.h"
 #include "ast/Atom.h"
 #include "ast/BinaryConstraint.h"
 #include "ast/Clause.h"
@@ -26,10 +27,14 @@
 #include "ast2ram/utility/Utils.h"
 #include "ast2ram/utility/ValueIndex.h"
 #include "ram/Condition.h"
+#include "ram/Filter.h"
+#include "ram/Negation.h"
+#include "ram/ProvenanceExistenceCheck.h"
 #include "ram/Relation.h"
 #include "ram/SignedConstant.h"
 #include "ram/Statement.h"
 #include "ram/SubroutineReturn.h"
+#include "ram/UndefValue.h"
 
 namespace souffle::ast2ram {
 
@@ -38,22 +43,36 @@ Own<ram::Statement> ProvenanceClauseTranslator::generateClause(const TranslatorC
     return ProvenanceClauseTranslator(context, symbolTable).translateClause(clause, originalClause, version);
 }
 
-Own<ast::Clause> ProvenanceClauseTranslator::createDeltaClause(
-        const ast::Clause* original, size_t recursiveAtomIdx) const {
-    auto recursiveVersion = souffle::clone(original);
+Own<ram::Operation> ProvenanceClauseTranslator::addNegate(
+        const ast::Clause& clause, const ast::Atom* atom, Own<ram::Operation> op, bool isDelta) const {
+    if (isDelta) {
+        return ClauseTranslator::addNegate(clause, atom, std::move(op), isDelta);
+    }
 
-    // @new :- ...
-    const auto* headAtom = original->getHead();
-    recursiveVersion->getHead()->setQualifiedName(getNewRelationName(headAtom->getQualifiedName()));
+    size_t auxiliaryArity = context.getEvaluationArity(atom);
+    assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
+    size_t arity = atom->getArity() - auxiliaryArity;
 
-    // ... :- ..., @delta, ...
-    auto* recursiveAtom = ast::getBodyLiterals<ast::Atom>(*recursiveVersion).at(recursiveAtomIdx);
-    recursiveAtom->setQualifiedName(getDeltaRelationName(recursiveAtom->getQualifiedName()));
+    VecOwn<ram::Expression> values;
 
-    // ... :- ..., !head.
-    recursiveVersion->addToBody(mk<ast::ProvenanceNegation>(souffle::clone(original->getHead())));
+    auto args = atom->getArguments();
+    for (size_t i = 0; i < arity; i++) {
+        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[i]));
+    }
 
-    return recursiveVersion;
+    // we don't care about the provenance columns when doing the existence check
+    if (Global::config().has("provenance")) {
+        // undefined value for rule number
+        values.push_back(mk<ram::UndefValue>());
+        // add the height annotation for provenanceNotExists
+        for (size_t height = 1; height < auxiliaryArity; height++) {
+            values.push_back(
+                    ValueTranslator::translate(context, symbolTable, *valueIndex, args[arity + height]));
+        }
+    }
+    return mk<ram::Filter>(mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(
+                                   getConcreteRelationName(atom->getQualifiedName()), std::move(values))),
+            std::move(op));
 }
 
 // TODO (azreika): should change these to a ram query overload!!!
