@@ -249,102 +249,103 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
             // if no previous bounds are set then just assign them, consider both bounds to be set (but not
             // necessarily defined) in all remaining cases
 
-            bool newConstraint = isUndefValue(queryPattern.first[element].get()) &&
-                                 isUndefValue(queryPattern.second[element].get());
+            bool firstLowerBound = isUndefValue(queryPattern.first[element].get());
+            bool firstUpperBound = isUndefValue(queryPattern.second[element].get());
+            bool firstConstraint = firstLowerBound && firstUpperBound;
+
+            bool existingLowerBound = isUndefValue(lowerExpression.get());
+            bool existingUpperBound = isUndefValue(upperExpression.get());
+
             bool equality = (*lowerExpression == *upperExpression);
+            bool inequality = !equality;
+
+            auto& lowerBound = queryPattern.first[element];
+            auto& upperBound = queryPattern.second[element];
 
             // don't permit multiple inequalities
-            if (newConstraint && !equality && seenInequality) {
+            if (firstConstraint && inequality && seenInequality) {
                 addCondition(std::move(cond));
                 continue;
             }
 
             auto type = attributeTypes[element];
             indexable = true;
-            if (newConstraint) {
+            if (firstConstraint) {
                 // equality
-                queryPattern.first[element] = std::move(lowerExpression);
-                queryPattern.second[element] = std::move(upperExpression);
+                lowerBound = std::move(lowerExpression);
+                upperBound = std::move(upperExpression);
 
                 // seen inequality
-                if (!equality) {
+                if (inequality) {
                     seenInequality = true;
                 }
 
                 // if lower bound is undefined and we have a new lower bound then assign it
-            } else if (isUndefValue(queryPattern.first[element].get()) &&
-                       !isUndefValue(lowerExpression.get()) && isUndefValue(upperExpression.get())) {
+            } else if (firstLowerBound && !existingLowerBound && existingUpperBound) {
                 seenInequality = true;
-                queryPattern.first[element] = std::move(lowerExpression);
+                lowerBound = std::move(lowerExpression);
                 // if upper bound is undefined and we have a new upper bound then assign it
-            } else if (isUndefValue(queryPattern.second[element].get()) &&
-                       isUndefValue(lowerExpression.get()) && !isUndefValue(upperExpression.get())) {
+            } else if (firstUpperBound && existingLowerBound && !existingUpperBound) {
                 seenInequality = true;
-                queryPattern.second[element] = std::move(upperExpression);
+                upperBound = std::move(upperExpression);
                 // if both bounds are defined ...
                 // and equal then we have a previous equality constraint i.e. Tuple[level, element] = <expr1>
-            } else if (!isUndefValue(queryPattern.first[element].get()) &&
-                       !isUndefValue(queryPattern.second[element].get()) &&
-                       (*(queryPattern.first[element]) == *(queryPattern.second[element]))) {
+            } else if (!firstLowerBound && !firstUpperBound && (*(lowerBound) == *(upperBound))) {
                 // new equality constraint i.e. Tuple[level, element] = <expr2>
                 // simply hoist <expr1> = <expr2> to the outer loop
-                if (!isUndefValue(lowerExpression.get()) && !isUndefValue(upperExpression.get())) {
-                    addCondition(mk<Constraint>(getEqConstraint(type),
-                            souffle::clone(queryPattern.first[element]), std::move(lowerExpression)));
+                if (!existingLowerBound && !existingUpperBound) {
+                    addCondition(mk<Constraint>(
+                            getEqConstraint(type), souffle::clone(lowerBound), std::move(lowerExpression)));
                 }
                 // new lower bound i.e. Tuple[level, element] >= <expr2>
                 // we need to hoist <expr1> >= <expr2> to the outer loop
-                else if (!isUndefValue(lowerExpression.get()) && isUndefValue(upperExpression.get())) {
-                    addCondition(mk<Constraint>(getGreaterEqualConstraint(type),
-                            souffle::clone(queryPattern.first[element]), std::move(lowerExpression)));
+                else if (!existingLowerBound && existingUpperBound) {
+                    addCondition(mk<Constraint>(getGreaterEqualConstraint(type), souffle::clone(lowerBound),
+                            std::move(lowerExpression)));
                 }
                 // new upper bound i.e. Tuple[level, element] <= <expr2>
                 // we need to hoist <expr1> <= <expr2> to the outer loop
-                else if (isUndefValue(lowerExpression.get()) && !isUndefValue(upperExpression.get())) {
-                    addCondition(mk<Constraint>(getLessEqualConstraint(type),
-                            souffle::clone(queryPattern.first[element]), std::move(upperExpression)));
+                else if (existingLowerBound && !existingUpperBound) {
+                    addCondition(mk<Constraint>(getLessEqualConstraint(type), souffle::clone(lowerBound),
+                            std::move(upperExpression)));
                 }
                 // if either bound is defined but they aren't equal we must consider the cases for updating
                 // them note that at this point we know that if we have a lower/upper bound it can't be the
                 // first one
-            } else if (!isUndefValue(queryPattern.first[element].get()) ||
-                       !isUndefValue(queryPattern.second[element].get())) {
+            } else if (!firstLowerBound || !firstUpperBound) {
                 // if we have a new equality constraint and previous inequality constraints
-                if (!isUndefValue(lowerExpression.get()) && !isUndefValue(upperExpression.get()) &&
-                        *lowerExpression == *upperExpression) {
+                if (!existingLowerBound && !existingUpperBound && *lowerExpression == *upperExpression) {
                     // if Tuple[level, element] >= <expr1> and we see Tuple[level, element] = <expr2>
                     // need to hoist <expr2> >= <expr1> to the outer loop
-                    if (!isUndefValue(queryPattern.first[element].get())) {
+                    if (!firstLowerBound) {
                         addCondition(mk<Constraint>(getGreaterEqualConstraint(type),
-                                souffle::clone(lowerExpression), std::move(queryPattern.first[element])));
+                                souffle::clone(lowerExpression), std::move(lowerBound)));
                     }
                     // if Tuple[level, element] <= <expr1> and we see Tuple[level, element] = <expr2>
                     // need to hoist <expr2> <= <expr1> to the outer loop
-                    if (!isUndefValue(queryPattern.second[element].get())) {
+                    if (!firstUpperBound) {
                         addCondition(mk<Constraint>(getLessEqualConstraint(type),
-                                souffle::clone(upperExpression), std::move(queryPattern.second[element])));
+                                souffle::clone(upperExpression), std::move(upperBound)));
                     }
                     // finally replace bounds with equality constraint
-                    queryPattern.first[element] = std::move(lowerExpression);
-                    queryPattern.second[element] = std::move(upperExpression);
+                    lowerBound = std::move(lowerExpression);
+                    upperBound = std::move(upperExpression);
                     // if we have a new lower bound
-                } else if (!isUndefValue(lowerExpression.get())) {
+                } else if (!existingLowerBound) {
                     // we want the tightest lower bound so we take the max
                     VecOwn<Expression> maxArguments;
-                    maxArguments.push_back(std::move(queryPattern.first[element]));
+                    maxArguments.push_back(std::move(lowerBound));
                     maxArguments.push_back(std::move(lowerExpression));
 
-                    queryPattern.first[element] =
-                            mk<IntrinsicOperator>(getMaxOp(type), std::move(maxArguments));
+                    lowerBound = mk<IntrinsicOperator>(getMaxOp(type), std::move(maxArguments));
                     // if we have a new upper bound
-                } else if (!isUndefValue(upperExpression.get())) {
+                } else if (!existingUpperBound) {
                     // we want the tightest upper bound so we take the min
                     VecOwn<Expression> minArguments;
-                    minArguments.push_back(std::move(queryPattern.second[element]));
+                    minArguments.push_back(std::move(upperBound));
                     minArguments.push_back(std::move(upperExpression));
 
-                    queryPattern.second[element] =
-                            mk<IntrinsicOperator>(getMinOp(type), std::move(minArguments));
+                    upperBound = mk<IntrinsicOperator>(getMinOp(type), std::move(minArguments));
                 }
             }
         } else {
