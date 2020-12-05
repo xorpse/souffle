@@ -1,0 +1,22 @@
+// Souffle - A Datalog Compiler
+// Copyright (c) 2020, The Souffle Developers. All rights reserved
+// Licensed under the Universal Permissive License v 1.0 as shown at:
+// - https://opensource.org/licenses/UPL
+// - <souffle root>/licenses/SOUFFLE-UPL.txt
+
+// This is simplified to keys x
+.decl rel1(x:symbol, y:symbol) keys (x, x)
+rel1("a", "b").
+rel1("a", "c").
+// This is also simplified to keys x
+.decl rel2(x:symbol, y:symbol) keys x, x, x
+rel2("a", "b").
+rel2("a", "c").
+// This is also simplified to keys (x, y)
+.decl rel3(x:symbol, y:symbol) keys (x, y), (y, x)
+rel3("a", "b").
+rel3("a", "c").
+
+.printsize rel1
+.printsize rel2
+.printsize rel3
