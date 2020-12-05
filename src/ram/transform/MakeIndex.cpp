@@ -253,8 +253,8 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
             bool firstUpperBound = isUndefValue(queryPattern.second[element].get());
             bool firstConstraint = firstLowerBound && firstUpperBound;
 
-            bool existingLowerBound = isUndefValue(lowerExpression.get());
-            bool existingUpperBound = isUndefValue(upperExpression.get());
+            bool newLowerBound = !isUndefValue(lowerExpression.get());
+            bool newUpperBound = !isUndefValue(upperExpression.get());
 
             bool equality = (*lowerExpression == *upperExpression);
             bool inequality = !equality;
@@ -281,11 +281,11 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
                 }
 
                 // if lower bound is undefined and we have a new lower bound then assign it
-            } else if (firstLowerBound && !existingLowerBound && existingUpperBound) {
+            } else if (firstLowerBound && newLowerBound && !newUpperBound) {
                 seenInequality = true;
                 lowerBound = std::move(lowerExpression);
                 // if upper bound is undefined and we have a new upper bound then assign it
-            } else if (firstUpperBound && existingLowerBound && !existingUpperBound) {
+            } else if (firstUpperBound && !newLowerBound && newUpperBound) {
                 seenInequality = true;
                 upperBound = std::move(upperExpression);
                 // if both bounds are defined ...
@@ -293,19 +293,19 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
             } else if (!firstLowerBound && !firstUpperBound && (*(lowerBound) == *(upperBound))) {
                 // new equality constraint i.e. Tuple[level, element] = <expr2>
                 // simply hoist <expr1> = <expr2> to the outer loop
-                if (!existingLowerBound && !existingUpperBound) {
+                if (newLowerBound && newUpperBound) {
                     addCondition(mk<Constraint>(
                             getEqConstraint(type), souffle::clone(lowerBound), std::move(lowerExpression)));
                 }
                 // new lower bound i.e. Tuple[level, element] >= <expr2>
                 // we need to hoist <expr1> >= <expr2> to the outer loop
-                else if (!existingLowerBound && existingUpperBound) {
+                else if (newLowerBound && !newUpperBound) {
                     addCondition(mk<Constraint>(getGreaterEqualConstraint(type), souffle::clone(lowerBound),
                             std::move(lowerExpression)));
                 }
                 // new upper bound i.e. Tuple[level, element] <= <expr2>
                 // we need to hoist <expr1> <= <expr2> to the outer loop
-                else if (existingLowerBound && !existingUpperBound) {
+                else if (!newLowerBound && newUpperBound) {
                     addCondition(mk<Constraint>(getLessEqualConstraint(type), souffle::clone(lowerBound),
                             std::move(upperExpression)));
                 }
@@ -314,7 +314,7 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
                 // first one
             } else if (!firstLowerBound || !firstUpperBound) {
                 // if we have a new equality constraint and previous inequality constraints
-                if (!existingLowerBound && !existingUpperBound && *lowerExpression == *upperExpression) {
+                if (newLowerBound && newUpperBound && *lowerExpression == *upperExpression) {
                     // if Tuple[level, element] >= <expr1> and we see Tuple[level, element] = <expr2>
                     // need to hoist <expr2> >= <expr1> to the outer loop
                     if (!firstLowerBound) {
@@ -331,7 +331,7 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
                     lowerBound = std::move(lowerExpression);
                     upperBound = std::move(upperExpression);
                     // if we have a new lower bound
-                } else if (!existingLowerBound) {
+                } else if (newLowerBound) {
                     // we want the tightest lower bound so we take the max
                     VecOwn<Expression> maxArguments;
                     maxArguments.push_back(std::move(lowerBound));
@@ -339,7 +339,7 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
 
                     lowerBound = mk<IntrinsicOperator>(getMaxOp(type), std::move(maxArguments));
                     // if we have a new upper bound
-                } else if (!existingUpperBound) {
+                } else if (newUpperBound) {
                     // we want the tightest upper bound so we take the min
                     VecOwn<Expression> minArguments;
                     minArguments.push_back(std::move(upperBound));
