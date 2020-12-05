@@ -35,7 +35,8 @@ Own<ram::Condition> ProvenanceClauseTranslator::createCondition(const ast::Claus
 }
 
 // TODO (azreika): this overload doesn't really fit
-Own<ram::Operation> ProvenanceClauseTranslator::createProjection(const ast::Clause& clause) {
+Own<ram::Operation> ProvenanceClauseTranslator::createProjection(
+        const ast::Clause& clause, const ast::Clause& /* originalClause */) {
     VecOwn<ram::Expression> values;
 
     // get all values in the body

@@ -42,9 +42,10 @@
 #include "ram/Conjunction.h"
 #include "ram/Constraint.h"
 #include "ram/EmptinessCheck.h"
-#include "ram/FDExistenceCheck.h"
+#include "ram/ExistenceCheck.h"
 #include "ram/Filter.h"
 #include "ram/FloatConstant.h"
+#include "ram/GuardedProject.h"
 #include "ram/Negation.h"
 #include "ram/NestedIntrinsicOperator.h"
 #include "ram/Project.h"
@@ -93,7 +94,7 @@ Own<ram::Statement> ClauseTranslator::translateClause(
     /* -- create RAM statement -- */
 
     // Create the projection statement
-    Own<ram::Operation> op = createProjection(clause);
+    Own<ram::Operation> op = createProjection(clause, originalClause);
 
     // Set up the main operations in the clause
     op = addVariableBindingConstraints(std::move(op));
@@ -127,9 +128,9 @@ Own<ram::Operation> ClauseTranslator::addVariableBindingConstraints(Own<ram::Ope
     return op;
 }
 
-Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause) {
+Own<ram::Operation> ClauseTranslator::createProjection(
+        const ast::Clause& clause, const ast::Clause& originalClause) {
     const auto head = clause.getHead();
-    const auto headRelation = context.getAtomRelation(head);
     auto headRelationName = getConcreteRelationName(head->getQualifiedName());
 
     VecOwn<ram::Expression> values;
@@ -137,32 +138,39 @@ Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause
         values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, arg));
     }
 
-    Own<ram::Operation> project = mk<ram::Project>(headRelationName, std::move(values));
-
+    VecOwn<ram::Condition> dependencies;
     // Impose the functional dependencies of the relation on each PROJECT
-    if (!headRelation->getFunctionalDependencies().empty()) {
-        Own<ram::Condition> dependencyConditions = nullptr;
-        for (const auto& fd : headRelation->getFunctionalDependencies()) {
-            // For .decl B(x, y) constrains x -> y
-            // B(x,y) :- A(x,y).
-            // Return an existence check for whether x already exists in B.
+    const auto relInfo = context.getRelation(originalClause.getHead()->getQualifiedName());
+    if (!relInfo->getFunctionalDependencies().empty()) {
+        const auto attributes = relInfo->getAttributes();
+        std::vector<const ast::FunctionalConstraint*> addedConstraints;
+        for (const auto& fd : relInfo->getFunctionalDependencies()) {
+            // skip if already has an equivalent constraints added.
+            bool added = false;
+            for (const auto other : addedConstraints) {
+                if (other->equivalentConstraint(*fd)) {
+                    added = true;
+                    break;
+                }
+            }
+            if (added) {
+                continue;
+            } else {
+                addedConstraints.push_back(fd);
+            }
+            // Remove redunatnt attributes within same key.
+            std::set<std::string> keys;
+            for (auto key : fd->getKeys()) {
+                keys.insert(key->getName());
+            }
             VecOwn<ram::Expression> vals;
             VecOwn<ram::Expression> valsCopy;
-            // Populate the values for our functional dependency condition
-            // eg. A(x,y,z) constrains x->y:
-            //  vals should contain (t0.0,⊥,⊥) to be used for the following condition before PROJECT:
-            //  IF (NOT (t0.0,⊥,⊥) ∈ A)
-            for (size_t i = 0; i < head->getArguments().size(); i++) {
-                // Need to add all source arguments of the dependency.
-                // So, for each head argument, we need to check if any of the source arguments match it.
-                bool sourceFound = false;
-                for (size_t j = 0; j < fd->getArity(); j++) {
-                    if (i == fd->getPosition(j)) {
-                        sourceFound = true;
-                    }
-                }
+            for (size_t i = 0; i < attributes.size(); ++i) {
+                const auto attribute = attributes[i];
+                auto found = keys.find(attribute->getName());
+
                 // If this particular source argument matches the head argument, insert it.
-                if (sourceFound) {
+                if (found != keys.end()) {
                     /* vals.push_back(ast2ram::translateValue(head->getArguments()[i], *valueIndex)); */
                     vals.push_back(ValueTranslator::translate(
                             context, symbolTable, *valueIndex, head->getArguments()[i]));
@@ -175,36 +183,28 @@ Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause
                 }
             }
 
-            Own<ram::Condition> currDependencyCondition = nullptr;
-            // If both heads are equal, then we know we are in a non-recursive clause
-            if (*head == *headRelation) {
-                currDependencyCondition =
-                        mk<ram::Negation>(mk<ram::FDExistenceCheck>(headRelationName, std::move(vals)));
-                // Otherwise, if not equal, then in recursive clause, and needing conjunction
+            // if we are in a recursive clause, need to guard both new and original relation.
+            if (isPrefix("@new_", head->getQualifiedName().toString())) {
+                dependencies.push_back(
+                        mk<ram::Negation>(mk<ram::ExistenceCheck>(headRelationName, std::move(vals))));
+                dependencies.push_back(mk<ram::Negation>(mk<ram::ExistenceCheck>(
+                        relInfo->getQualifiedName().toString(), std::move(valsCopy))));
             } else {
-                currDependencyCondition = mk<ram::Conjunction>(
-                        mk<ram::Negation>(mk<ram::FDExistenceCheck>(headRelationName, std::move(valsCopy))),
-                        mk<ram::Negation>(mk<ram::FDExistenceCheck>(headRelationName, std::move(vals))));
-            }
-
-            // Add the current functional dependency condition to the rest
-            if (dependencyConditions == nullptr) {
-                dependencyConditions = std::move(currDependencyCondition);
-            } else {
-                dependencyConditions = mk<ram::Conjunction>(
-                        std::move(dependencyConditions), std::move(currDependencyCondition));
+                dependencies.push_back(
+                        mk<ram::Negation>(mk<ram::ExistenceCheck>(headRelationName, std::move(vals))));
             }
         }
-        // Wrap PROJECT with our functional dependencies 'layer'
-        project = std::make_unique<ram::Filter>(std::move(dependencyConditions), std::move(project));
     }
 
     if (head->getArity() == 0) {
-        project = mk<ram::Filter>(mk<ram::EmptinessCheck>(headRelationName), std::move(project));
+        // TODO: need double check.
+        /* project = mk<ram::Filter>(mk<ram::EmptinessCheck>(headRelationName), std::move(project)); */
+        return mk<ram::Project>(headRelationName, std::move(values));
+    } else if (dependencies.empty()) {
+        return mk<ram::Project>(headRelationName, std::move(values));
+    } else {
+        return mk<ram::GuardedProject>(headRelationName, std::move(values), ram::toCondition(dependencies));
     }
-
-    // build up insertion call
-    return project;  // start with innermost
 }
 
 Own<ram::Operation> ClauseTranslator::buildFinalOperation(

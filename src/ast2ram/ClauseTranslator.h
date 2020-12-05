@@ -66,7 +66,7 @@ protected:
     // current nesting level
     int level = 0;
 
-    virtual Own<ram::Operation> createProjection(const ast::Clause& clause);
+    virtual Own<ram::Operation> createProjection(const ast::Clause& clause, const ast::Clause& originalClause);
     virtual Own<ram::Condition> createCondition(const ast::Clause& originalClause);
 
     /** apply constraint filters to a given operation */
