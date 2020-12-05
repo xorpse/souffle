@@ -413,7 +413,7 @@ Own<ram::Operation> ClauseTranslator::addGeneratorLevels(
 }
 
 Own<ram::Operation> ClauseTranslator::addNegate(
-        const ast::Clause& clause, const ast::Atom* atom, Own<ram::Operation> op, bool isDelta) const {
+        const ast::Atom* atom, Own<ram::Operation> op, bool isDelta) const {
     size_t auxiliaryArity = context.getEvaluationArity(atom);
     assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
     size_t arity = atom->getArity() - auxiliaryArity;
@@ -450,12 +450,12 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
     if (isRecursive()) {
         if (clause.getHead()->getArity() > 0) {
             // also negate the head
-            op = addNegate(clause, clause.getHead(), std::move(op), false);
+            op = addNegate(clause.getHead(), std::move(op), false);
         }
 
         // also add in prev stuff
         for (const auto* prev : prevs) {
-            op = addNegate(clause, prev, std::move(op), true);
+            op = addNegate(prev, std::move(op), true);
         }
     }
 

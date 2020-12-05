@@ -43,9 +43,9 @@ Own<ram::Statement> ProvenanceClauseTranslator::generateClause(const TranslatorC
 }
 
 Own<ram::Operation> ProvenanceClauseTranslator::addNegate(
-        const ast::Clause& clause, const ast::Atom* atom, Own<ram::Operation> op, bool isDelta) const {
+        const ast::Atom* atom, Own<ram::Operation> op, bool isDelta) const {
     if (isDelta) {
-        return ClauseTranslator::addNegate(clause, atom, std::move(op), isDelta);
+        return ClauseTranslator::addNegate(atom, std::move(op), isDelta);
     }
 
     size_t auxiliaryArity = context.getEvaluationArity(atom);

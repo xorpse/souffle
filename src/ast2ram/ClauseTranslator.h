@@ -79,8 +79,7 @@ protected:
 
     std::string getClauseAtomName(const ast::Clause& clause, const ast::Atom* atom) const;
 
-    virtual Own<ram::Operation> addNegate(
-            const ast::Clause& clause, const ast::Atom* atom, Own<ram::Operation> op, bool isDelta) const;
+    virtual Own<ram::Operation> addNegate(const ast::Atom* atom, Own<ram::Operation> op, bool isDelta) const;
 
     // value index to keep track of references in the loop nest
     Own<ValueIndex> valueIndex = mk<ValueIndex>();

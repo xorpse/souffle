@@ -43,7 +43,6 @@ public:
 protected:
     Own<ram::Operation> createProjection(const ast::Clause& clause) const override;
     Own<ram::Condition> createCondition(const ast::Clause& originalClause) const override;
-    Own<ram::Operation> addNegate(const ast::Clause& clause, const ast::Atom* atom, Own<ram::Operation> op,
-            bool isDelta) const override;
+    Own<ram::Operation> addNegate(const ast::Atom* atom, Own<ram::Operation> op, bool isDelta) const override;
 };
 }  // namespace souffle::ast2ram
