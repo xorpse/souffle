@@ -481,9 +481,6 @@ protected:
      */
     void updateSearch(SearchSignature oldSearch, SearchSignature newSearch);
 
-    /** @Brief remove arbitrary extra inequalities */
-    void removeExtraInequalities();
-
     /** @Brief get all nodes which are unmatched from A-> B */
     const SearchSet getUnmatchedKeys(const MaxMatching::Matchings& match, const SearchSet& nodes) {
         SearchSet unmatched;

@@ -225,9 +225,6 @@ void MinIndexSelection::solve() {
         return;
     }
 
-    // discharge multiple inequalities
-    removeExtraInequalities();
-
     // map the signatures of each search to a unique index for the matching problem
     AttributeIndex currentIndex = 1;
     for (auto s : searches) {
@@ -372,27 +369,6 @@ void MinIndexSelection::updateSearch(SearchSignature oldSearch, SearchSignature 
                 search = newSearch;
             }
         }
-    }
-}
-
-void MinIndexSelection::removeExtraInequalities() {
-    for (auto oldSearch : searches) {
-        auto newSearch = oldSearch;
-
-        // find the first inequality (if it exists)
-        auto it = std::find(newSearch.begin(), newSearch.end(), AttributeConstraint::Inequal);
-        // remove all inequalities
-        std::for_each(newSearch.begin(), newSearch.end(), [](auto& constraint) {
-            if (constraint == AttributeConstraint::Inequal) {
-                constraint = AttributeConstraint::None;
-            }
-        });
-        // add back the first inequality (if it exists)
-        if (it != newSearch.end()) {
-            auto index = std::distance(newSearch.begin(), it);
-            newSearch[index] = AttributeConstraint::Inequal;
-        }
-        updateSearch(oldSearch, newSearch);
     }
 }
 

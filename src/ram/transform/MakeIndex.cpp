@@ -220,23 +220,24 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
         }
     };
 
-    std::cout << "     BEFORE    " << std::endl;
-    std::cout << "---------------" << std::endl;
-    for (auto& cond : conditionList) {
-        std::cout << *cond << std::endl;
-    }
-    std::cout << "---------------" << std::endl;
-
     std::sort(conditionList.begin(), conditionList.end(), cmp);
 
-    std::cout << "     AFTER     " << std::endl;
-    std::cout << "---------------" << std::endl;
-    for (auto& cond : conditionList) {
-        std::cout << *cond << std::endl;
-    }
-    std::cout << "---------------" << std::endl;
-
     // Build query pattern and remaining condition
+    bool seenInequality = false;
+
+    size_t arity = queryPattern.first.size();
+    for (size_t i = 0; i < arity; ++i) {
+        // ignore attributes with no constraints
+        if (isUndefValue(queryPattern.first[i].get()) && isUndefValue(queryPattern.second[i].get())) {
+            continue;
+        }
+        // found an inequality
+        if (*queryPattern.first[i] != *queryPattern.second[i]) {
+            seenInequality = true;
+            break;
+        }
+    }
+
     for (auto& cond : conditionList) {
         size_t element = 0;
         Own<Expression> lowerExpression;
@@ -247,19 +248,38 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
         if (!isUndefValue(lowerExpression.get()) || !isUndefValue(upperExpression.get())) {
             // if no previous bounds are set then just assign them, consider both bounds to be set (but not
             // necessarily defined) in all remaining cases
+
+            bool newConstraint = isUndefValue(queryPattern.first[element].get()) &&
+                                 isUndefValue(queryPattern.second[element].get());
+            bool equality = (*lowerExpression == *upperExpression);
+
+            // don't permit multiple inequalities
+            if (newConstraint && !equality && seenInequality) {
+                addCondition(std::move(cond));
+                continue;
+            }
+
             auto type = attributeTypes[element];
             indexable = true;
-            if (isUndefValue(queryPattern.first[element].get()) &&
-                    isUndefValue(queryPattern.second[element].get())) {
+            if (newConstraint) {
+                // equality
                 queryPattern.first[element] = std::move(lowerExpression);
                 queryPattern.second[element] = std::move(upperExpression);
+
+                // seen inequality
+                if (!equality) {
+                    seenInequality = true;
+                }
+
                 // if lower bound is undefined and we have a new lower bound then assign it
             } else if (isUndefValue(queryPattern.first[element].get()) &&
                        !isUndefValue(lowerExpression.get()) && isUndefValue(upperExpression.get())) {
+                seenInequality = true;
                 queryPattern.first[element] = std::move(lowerExpression);
                 // if upper bound is undefined and we have a new upper bound then assign it
             } else if (isUndefValue(queryPattern.second[element].get()) &&
                        isUndefValue(lowerExpression.get()) && !isUndefValue(upperExpression.get())) {
+                seenInequality = true;
                 queryPattern.second[element] = std::move(upperExpression);
                 // if both bounds are defined ...
                 // and equal then we have a previous equality constraint i.e. Tuple[level, element] = <expr1>
@@ -269,7 +289,6 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
                 // new equality constraint i.e. Tuple[level, element] = <expr2>
                 // simply hoist <expr1> = <expr2> to the outer loop
                 if (!isUndefValue(lowerExpression.get()) && !isUndefValue(upperExpression.get())) {
-                    // FIXME: `FEQ` handling; need to know if the expr is a float exp or not
                     addCondition(mk<Constraint>(getEqConstraint(type),
                             souffle::clone(queryPattern.first[element]), std::move(lowerExpression)));
                 }
