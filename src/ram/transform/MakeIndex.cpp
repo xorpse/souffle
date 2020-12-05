@@ -175,6 +175,67 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
     std::transform(toAppend.begin(), toAppend.end(), std::back_inserter(conditionList),
             [](const std::unique_ptr<Condition>& cond) { return clone(cond); });
 
+    // Define a comparator which orders all of the conditions nicely
+    // 1. Equalities come before inequalities
+    // 2. Conditions are ordered by the index of the constraint i.e. t0.0 comes before t0.1
+    auto cmp = [&](auto& c1, auto& c2) -> bool {
+        auto* cond1 = dynamic_cast<Constraint*>(c1.get());
+        auto* cond2 = dynamic_cast<Constraint*>(c2.get());
+        // place non-conditions at the end
+        if (!cond1 && !cond2) {
+            return true;
+        } else if (cond1 && !cond2) {
+            return true;
+        } else if (!cond1 && cond2) {
+            return false;
+        } else {
+            // if it's not indexable place the condition at the end
+            if (!isIndexableConstraint(cond1->getOperator())) {
+                return false;
+            }
+            if (!isIndexableConstraint(cond2->getOperator())) {
+                return true;
+            }
+
+            // eq before ineq otherwise we compare the attribute of the involved relation
+            if (isEqConstraint(cond1->getOperator()) && isIneqConstraint(cond2->getOperator())) {
+                return true;
+            } else if (isIneqConstraint(cond1->getOperator()) && isEqConstraint(cond2->getOperator())) {
+                return false;
+            } else {
+                size_t attr1 = 0;
+                size_t attr2 = 0;
+                const auto p1 = getExpressionPair(cond1, attr1, identifier);
+                const auto p2 = getExpressionPair(cond2, attr2, identifier);
+                // not indexable so we place it to the end
+                if (isUndefValue(p1.first.get()) && isUndefValue(p1.second.get())) {
+                    return false;
+                }
+                if (isUndefValue(p2.first.get()) && isUndefValue(p2.second.get())) {
+                    return true;
+                }
+                // at this point we are guaranteed that attr1 and attr2 are set
+                return attr1 <= attr2;
+            }
+        }
+    };
+
+    std::cout << "     BEFORE    " << std::endl;
+    std::cout << "---------------" << std::endl;
+    for (auto& cond : conditionList) {
+        std::cout << *cond << std::endl;
+    }
+    std::cout << "---------------" << std::endl;
+
+    std::sort(conditionList.begin(), conditionList.end(), cmp);
+
+    std::cout << "     AFTER     " << std::endl;
+    std::cout << "---------------" << std::endl;
+    for (auto& cond : conditionList) {
+        std::cout << *cond << std::endl;
+    }
+    std::cout << "---------------" << std::endl;
+
     // Build query pattern and remaining condition
     for (auto& cond : conditionList) {
         size_t element = 0;

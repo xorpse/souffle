@@ -150,6 +150,14 @@ inline bool isWeakIneqConstraint(const BinaryConstraintOp constraintOp) {
     return false;
 }
 
+inline bool isIneqConstraint(const BinaryConstraintOp constraintOp) {
+    return isStrictIneqConstraint(constraintOp) || isWeakIneqConstraint(constraintOp);
+}
+
+inline bool isIndexableConstraint(const BinaryConstraintOp constraintOp) {
+    return isIneqConstraint(constraintOp) || isEqConstraint(constraintOp);
+}
+
 inline BinaryConstraintOp convertStrictToWeakIneqConstraint(const BinaryConstraintOp constraintOp) {
     assert(isStrictIneqConstraint(constraintOp));
     switch (constraintOp) {

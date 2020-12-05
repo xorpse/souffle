@@ -323,8 +323,8 @@ public:
 
 using SearchSet = std::set<SearchSignature, SearchComparator>;
 // SearchSignatures only have a partial order, however we need to produce a unique ordering of searches
-// when we output the name of the index and therefore we order the SearchSignatures arbitrarily by their
-// hashes
+// when we output the name of the collection of searches and therefore we order the SearchSignatures
+// arbitrarily by their hashes
 
 class MinIndexSelection {
 public:
