@@ -347,11 +347,6 @@ public:
         return orders[idx];
     }
 
-    /** @Brief Get index for a search */
-    int getLexOrderNum(SearchSignature cols) const {
-        return map(cols);
-    }
-
     /** @Brief Get all indexes */
     const OrderCollection getAllOrders() const {
         return orders;
