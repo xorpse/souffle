@@ -461,9 +461,6 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
         } else if (const auto* provExists = dynamic_cast<const ProvenanceExistenceCheck*>(&node)) {
             MinIndexSelection& indexes = getIndexes(provExists->getRelation());
             indexes.addSearch(getSearchSignature(provExists));
-        } else if (const auto* fdExists = dynamic_cast<const FDExistenceCheck*>(&node)) {
-            MinIndexSelection& indexes = getIndexes(fdExists->getRelation());
-            indexes.addSearch(getSearchSignature(fdExists));
         } else if (const auto* ramRel = dynamic_cast<const Relation*>(&node)) {
             MinIndexSelection& indexes = getIndexes(ramRel->getName());
             indexes.addSearch(getSearchSignature(ramRel));
@@ -615,11 +612,6 @@ SearchSignature IndexAnalysis::getSearchSignature(const ProvenanceExistenceCheck
 }
 
 SearchSignature IndexAnalysis::getSearchSignature(const ExistenceCheck* existCheck) const {
-    const Relation* rel = &relAnalysis->lookup(existCheck->getRelation());
-    return searchSignature(rel->getArity(), existCheck->getValues());
-}
-
-SearchSignature IndexAnalysis::getSearchSignature(const FDExistenceCheck* existCheck) const {
     const Relation* rel = &relAnalysis->lookup(existCheck->getRelation());
     return searchSignature(rel->getArity(), existCheck->getValues());
 }

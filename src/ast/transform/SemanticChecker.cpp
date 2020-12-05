@@ -587,39 +587,20 @@ void SemanticCheckerImpl::checkRelationDeclaration(const Relation& relation) {
     }
 }
 
-/* check that each functional dependency argument appears in the relation, and set their positions */
+/* check that each functional dependency (keys) actually appears in the relation */
 void SemanticCheckerImpl::checkRelationDependencies(const Relation& relation) {
+    const auto attributes = relation.getAttributes();
     for (const auto& fd : relation.getFunctionalDependencies()) {
-        // Can have more than one source node (LHS args), so find all before breaking
-        size_t leftFound = 0;
-        bool rightFound = false;
-        // Check that LHS (source) and RHS of FD appear in relation arguments
-        for (size_t i = 0; i < relation.getAttributes().size(); i++) {
-            ast::Attribute* a = relation.getAttributes().at(i);
-            for (size_t j = 0; j < fd->getArity(); j++) {
-                if (a->getName() == fd->getLHS(j)->getName()) {
-                    fd->setPosition(j, i);
-                    leftFound++;
-                }
+        // Check that keys appear in relation arguments
+        const auto keys = fd->getKeys();
+        for (const auto& key : keys) {
+            auto found = std::find_if(
+                    attributes.begin(), attributes.end(), [&key](const ast::Attribute* attribute) {
+                        return key->getName() == attribute->getName();
+                    });
+            if (found == attributes.end()) {
+                report.addError("Key not found in relation definition.", fd->getSrcLoc());
             }
-            if (a->getName() == fd->getRHS()->getName()) {
-                rightFound = true;
-            }
-
-            // Once all LHS (source) and RHS args are found, safely break
-            if (leftFound == fd->getArity() && rightFound) {
-                break;
-            }
-        }
-
-        if (leftFound != fd->getArity()) {
-            report.addError(
-                    "LHS of functional dependency not found in relation definition.", fd->getSrcLoc());
-        }
-        if (!rightFound) {
-            report.addError("RHS of functional dependency not found in relation definition: " +
-                                    fd->getRHS()->getName(),
-                    fd->getSrcLoc());
         }
     }
 }

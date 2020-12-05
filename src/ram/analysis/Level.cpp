@@ -27,7 +27,6 @@
 #include "ram/ExistenceCheck.h"
 #include "ram/Expression.h"
 #include "ram/False.h"
-#include "ram/FDExistenceCheck.h"
 #include "ram/Filter.h"
 #include "ram/IndexAggregate.h"
 #include "ram/IndexChoice.h"
@@ -147,6 +146,16 @@ int LevelAnalysis::getLevel(const Node* node) const {
             return visit(b.getCondition());
         }
 
+        // guarded project
+        int visitGuardedProject(const GuardedProject& guardedProject) override {
+            int level = -1;
+            for (auto& exp : guardedProject.getValues()) {
+                level = std::max(level, visit(exp));
+            }
+            level = std::max(level, visit(guardedProject.getCondition()));
+            return level;
+        }
+
         // project
         int visitProject(const Project& project) override {
             int level = -1;
@@ -235,15 +244,6 @@ int LevelAnalysis::getLevel(const Node* node) const {
         int visitProvenanceExistenceCheck(const ProvenanceExistenceCheck& provExists) override {
             int level = -1;
             for (const auto& cur : provExists.getValues()) {
-                level = std::max(level, visit(cur));
-            }
-            return level;
-        }
-
-        // fd existence check
-        int visitFDExistenceCheck(const FDExistenceCheck& exists) override {
-            int level = INT32_MAX;
-            for (const auto& cur : exists.getValues()) {
                 level = std::max(level, visit(cur));
             }
             return level;
