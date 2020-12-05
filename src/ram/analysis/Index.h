@@ -54,23 +54,27 @@ enum class AttributeConstraint { None, Equal, Inequal };
 class SearchSignature {
 public:
     class Iterator;
+
     explicit SearchSignature(size_t arity);
-    size_t arity() const;
 
     // array subscript operator
     AttributeConstraint& operator[](std::size_t pos);
     const AttributeConstraint& operator[](std::size_t pos) const;
 
     // comparison operators
-    bool operator<(const SearchSignature& other) const;
     bool operator==(const SearchSignature& other) const;
     bool operator!=(const SearchSignature& other) const;
 
+    // helper member functions
     bool empty() const;
+    bool precedes(const SearchSignature& other) const;
+    size_t arity() const;
 
+    // create new signatures from these functions
     static SearchSignature getDelta(const SearchSignature& lhs, const SearchSignature& rhs);
     static SearchSignature getFullSearchSignature(size_t arity);
 
+    // printing
     friend std::ostream& operator<<(std::ostream& out, const SearchSignature& signature);
 
     // hashing class

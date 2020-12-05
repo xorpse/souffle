@@ -38,11 +38,20 @@ namespace souffle::ram::analysis {
 
 SearchSignature::SearchSignature(size_t arity) : constraints(arity, AttributeConstraint::None) {}
 
-size_t SearchSignature::arity() const {
-    return constraints.size();
+bool SearchSignature::operator==(const SearchSignature& other) const {
+    assert(constraints.size() == other.constraints.size());
+    return constraints == other.constraints;
 }
 
-// convenient operator overload
+bool SearchSignature::operator!=(const SearchSignature& other) const {
+    return !(*this == other);
+}
+
+bool SearchSignature::empty() const {
+    return std::all_of(constraints.begin(), constraints.end(),
+            [](AttributeConstraint c) { return c == AttributeConstraint::None; });
+}
+
 AttributeConstraint& SearchSignature::operator[](std::size_t pos) {
     assert(pos < constraints.size());
     return constraints[pos];
@@ -53,8 +62,12 @@ const AttributeConstraint& SearchSignature::operator[](std::size_t pos) const {
     return constraints[pos];
 }
 
+size_t SearchSignature::arity() const {
+    return constraints.size();
+}
+
 // comparison operators
-bool SearchSignature::operator<(const SearchSignature& other) const {
+bool SearchSignature::precedes(const SearchSignature& other) const {
     assert(arity() == other.arity());
     // ignore duplicates
     if (*this == other) {
@@ -80,21 +93,6 @@ bool SearchSignature::operator<(const SearchSignature& other) const {
     }
     return true;
 }
-
-bool SearchSignature::operator==(const SearchSignature& other) const {
-    assert(constraints.size() == other.constraints.size());
-    return constraints == other.constraints;
-}
-
-bool SearchSignature::operator!=(const SearchSignature& other) const {
-    return !(*this == other);
-}
-
-bool SearchSignature::empty() const {
-    return std::all_of(constraints.begin(), constraints.end(),
-            [](AttributeConstraint c) { return c == AttributeConstraint::None; });
-}
-
 SearchSignature SearchSignature::getDelta(const SearchSignature& lhs, const SearchSignature& rhs) {
     assert(lhs.arity() == rhs.arity());
     SearchSignature delta(lhs.arity());
@@ -247,7 +245,7 @@ void MinIndexSelection::solve() {
     // Draw an edge from LHS to RHS if LHS precedes RHS in the partial order
     for (auto left : searches) {
         for (auto right : searches) {
-            if (left < right) {
+            if (left.precedes(right)) {
                 matching.addEdge(signatureToIndexA[left], signatureToIndexB[right]);
             }
         }
