@@ -240,7 +240,7 @@
 %token TRUE                      "true literal constraint"
 %token FALSE                     "false literal constraint"
 %token PLAN                      "plan keyword"
-%token CONSTRAINS                "relational functional dependencies declaration"
+%token KEYS                      "functional dependencies "
 %token IF                        ":-"
 %token DECL                      "relation declaration"
 %token FUNCTOR                   "functor declaration"
@@ -295,7 +295,6 @@
 %token LE                        "<="
 %token GE                        ">="
 %token NE                        "!="
-%token RIGHTARROW                "->"
 %token BW_AND                    "band"
 %token BW_OR                     "bor"
 %token BW_XOR                    "bxor"
@@ -323,7 +322,9 @@
 %type <Mov<Own<ast::Component>>>               component_head
 %type <Mov<RuleBody>>                          conjunction
 %type <Mov<Own<ast::Constraint>>>              constraint
-%type <Mov<VecOwn<ast::FunctionalConstraint>>> dependencies
+%type <Mov<Own<ast::FunctionalConstraint>>>    dependency
+%type <Mov<VecOwn<ast::FunctionalConstraint>>> dependency_list
+%type <Mov<VecOwn<ast::FunctionalConstraint>>> dependency_list_aux
 %type <Mov<RuleBody>>                          disjunction
 %type <Mov<Own<ast::ExecutionOrder>>>          exec_order
 %type <Mov<Own<ast::ExecutionPlan>>>           exec_plan
@@ -455,7 +456,7 @@ sum_branch
 
 /* Relation declaration */
 relation_decl
-  : DECL non_empty_relation_list attributes_list relation_tags {
+  : DECL non_empty_relation_list attributes_list relation_tags dependency_list {
         auto tags             = $relation_tags;
         auto attributes_list  = $attributes_list;
 
@@ -471,26 +472,7 @@ relation_decl
                 }
             }
 
-            rel->setAttributes(clone(attributes_list));
-        }
-    }
-  | DECL non_empty_relation_list attributes_list relation_tags CONSTRAINS dependencies {
-        auto tags             = $relation_tags;
-        auto attributes_list  = $attributes_list;
-
-        $$ = $non_empty_relation_list;
-        for (auto&& rel : $$) {
-            for (auto tag : tags) {
-                if (isRelationQualifierTag(tag)) {
-                    rel->addQualifier(getRelationQualifierFromTag(tag));
-                } else if (isRelationRepresentationTag(tag)) {
-                    rel->setRepresentation(getRelationRepresentationFromTag(tag));
-                } else {
-                    assert(false && "unhandled tag");
-                }
-            }
-
-            for (auto&& fd : $dependencies) {
+            for (auto&& fd : $dependency_list) {
                 rel->addDependency(Own<ast::FunctionalConstraint>(fd->clone()));
             }
 
@@ -556,32 +538,37 @@ non_empty_variables
     }
   ;
 
-/* List of functional dependencies on relation */
-dependencies
-  : IDENT[left] RIGHTARROW IDENT[right] {
-        $$.push_back(mk<ast::FunctionalConstraint>(
-              mk<ast::Variable>($left, @$),
-              mk<ast::Variable>($right, @$),
-              @$));
+/*  a functional dependency on relation */
+dependency
+  : IDENT[key] {
+        $$ = mk<ast::FunctionalConstraint>(mk<ast::Variable>($key, @$), @$);
     }
 
-  | LPAREN non_empty_variables RPAREN RIGHTARROW IDENT[right] {
-        VecOwn<ast::Variable> lhs;
+  | LPAREN non_empty_variables RPAREN {
+        VecOwn<ast::Variable> keys;
         for (std::string s : $non_empty_variables) {
-          lhs.push_back(mk<ast::Variable>(s, @$));
+          keys.push_back(mk<ast::Variable>(s, @$));
         }
-        $$.push_back(mk<ast::FunctionalConstraint>(
-              std::move(lhs),
-              mk<ast::Variable>($right, @$),
-              @$));
+        $$ = mk<ast::FunctionalConstraint>(std::move(keys), @$);
   }
-  | dependencies[curr_list] COMMA IDENT[left] RIGHTARROW IDENT[right] {
-        $$ = $curr_list;
-        $$.push_back(std::move(mk<ast::FunctionalConstraint>(
-              mk<ast::Variable>($left, @$),
-              mk<ast::Variable>($right, @$),
-              @$)));
-    }
+  ;
+
+dependency_list_aux
+  : dependency { $$.push_back($dependency); }
+
+  | dependency_list_aux[list] COMMA dependency[next] { 
+    $$ = std::move($list);
+    $$.push_back(std::move($next));
+  }
+  ;
+
+/*  List of functional dependencies on relation */
+dependency_list 
+  : %empty { }
+    
+  | KEYS dependency_list_aux[list] { 
+    $$ = std::move($list);
+  }
   ;
 
 /**

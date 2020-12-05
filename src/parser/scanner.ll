@@ -130,7 +130,7 @@
 "to_string"                           { return yy::parser::make_TOSTRING(yylloc); }
 "to_unsigned"                         { return yy::parser::make_TOUNSIGNED(yylloc); }
 ".plan"                               { return yy::parser::make_PLAN(yylloc); }
-"constrains"                          { return yy::parser::make_CONSTRAINS(yylloc); }
+"keys"                                { return yy::parser::make_KEYS(yylloc); }
 "|"                                   { return yy::parser::make_PIPE(yylloc); }
 "["                                   { return yy::parser::make_LBRACKET(yylloc); }
 "]"                                   { return yy::parser::make_RBRACKET(yylloc); }
@@ -159,7 +159,6 @@
 "<"                                   { return yy::parser::make_LT(yylloc); }
 ">"                                   { return yy::parser::make_GT(yylloc); }
 ":-"                                  { return yy::parser::make_IF(yylloc); }
-"->"                                  { return yy::parser::make_RIGHTARROW(yylloc); }
 [0-9]+"."[0-9]+"."[0-9]+"."[0-9]+     {
                                         try {
                                         char *token = std::strtok(yytext, ".");
