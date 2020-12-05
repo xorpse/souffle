@@ -40,7 +40,6 @@
 #include "ast/NumericConstant.h"
 #include "ast/Pragma.h"
 #include "ast/Program.h"
-#include "ast/ProvenanceNegation.h"
 #include "ast/RecordInit.h"
 #include "ast/RecordType.h"
 #include "ast/Relation.h"
@@ -124,7 +123,6 @@ struct Visitor : public ast_visitor_tag {
 
         // literals
         FORWARD(Atom)
-        FORWARD(ProvenanceNegation)
         FORWARD(Negation)
         FORWARD(BooleanConstraint)
         FORWARD(BinaryConstraint)
@@ -188,7 +186,6 @@ protected:
 
     // literals
     LINK(Atom, Literal)
-    LINK(ProvenanceNegation, Negation)
     LINK(Negation, Literal)
     LINK(Literal, Node);
 

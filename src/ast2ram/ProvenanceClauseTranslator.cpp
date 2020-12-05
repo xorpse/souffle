@@ -19,7 +19,6 @@
 #include "ast/Atom.h"
 #include "ast/BinaryConstraint.h"
 #include "ast/Clause.h"
-#include "ast/ProvenanceNegation.h"
 #include "ast/utility/Utils.h"
 #include "ast2ram/AstToRamTranslator.h"
 #include "ast2ram/ValueTranslator.h"

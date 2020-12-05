@@ -49,7 +49,6 @@ souffle_sources = \
         ast/Pragma.h                                       \
         ast/Program.cpp                                    \
         ast/Program.h                                      \
-        ast/ProvenanceNegation.h                           \
         ast/QualifiedName.h                                \
         ast/RecordInit.h                                   \
         ast/RecordType.h                                   \

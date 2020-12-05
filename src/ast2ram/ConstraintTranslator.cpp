@@ -48,30 +48,6 @@ Own<ram::Condition> ConstraintTranslator::visitBinaryConstraint(const ast::Binar
     return mk<ram::Constraint>(binRel.getFinalType().value(), std::move(valLHS), std::move(valRHS));
 }
 
-Own<ram::Condition> ConstraintTranslator::visitProvenanceNegation(const ast::ProvenanceNegation& neg) {
-    const auto* atom = neg.getAtom();
-    size_t auxiliaryArity = context.getEvaluationArity(atom);
-    assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
-    size_t arity = atom->getArity() - auxiliaryArity;
-    VecOwn<ram::Expression> values;
-
-    auto args = atom->getArguments();
-    for (size_t i = 0; i < arity; i++) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, index, args[i]));
-    }
-    // we don't care about the provenance columns when doing the existence check
-    if (Global::config().has("provenance")) {
-        // undefined value for rule number
-        values.push_back(mk<ram::UndefValue>());
-        // add the height annotation for provenanceNotExists
-        for (size_t height = 1; height < auxiliaryArity; height++) {
-            values.push_back(ValueTranslator::translate(context, symbolTable, index, args[arity + height]));
-        }
-    }
-    return mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(
-            getConcreteRelationName(atom->getQualifiedName()), std::move(values)));
-}
-
 Own<ram::Condition> ConstraintTranslator::visitNegation(const ast::Negation& neg) {
     const auto* atom = neg.getAtom();
     size_t auxiliaryArity = context.getEvaluationArity(atom);
