@@ -242,6 +242,9 @@ bool isDeltaRelation(const QualifiedName& name);
  */
 Clause* cloneHead(const Clause* clause);
 
+std::vector<ast::Atom*> reorderAtoms(
+        const std::vector<ast::Atom*>& atoms, const std::vector<unsigned int>& newOrder);
+
 /**
  * Reorders the atoms of a clause to be in the given order.
  * Remaining body literals remain in the same order.

@@ -157,11 +157,6 @@ Own<ram::Statement> ClauseTranslator::generateClauseVersion(const std::set<const
 
 Own<ram::Statement> ClauseTranslator::translateClause(
         const ast::Clause& clause, const ast::Clause& originalClause, int version) {
-    if (auto reorderedClause = getReorderedClause(clause, version)) {
-        // Translate reordered clause instead
-        return translateClause(*reorderedClause, originalClause, version);
-    }
-
     // Create the appropriate query
     if (isFact(clause)) {
         return createRamFactQuery(clause);
@@ -200,6 +195,9 @@ Own<ram::Statement> ClauseTranslator::createRamFactQuery(const ast::Clause& clau
 Own<ram::Statement> ClauseTranslator::createRamRuleQuery(
         const ast::Clause& clause, const ast::Clause& originalClause, int version) {
     assert(isRule(clause) && "clause should be rule");
+
+    // Set up atom ordering
+    atomOrder = getAtomOrdering(clause, version);
 
     // Index all variables and generators in the clause
     indexClause(clause);
@@ -538,21 +536,17 @@ Own<ram::Operation> ClauseTranslator::addConstantConstraints(
     return op;
 }
 
-Own<ast::Clause> ClauseTranslator::getReorderedClause(const ast::Clause& clause, const int version) const {
+std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(
+        const ast::Clause& clause, const int version) const {
     const auto& plan = clause.getExecutionPlan();
     if (plan == nullptr) {
-        // no plan, so reorder it according to the internal heuristic
-        if (auto* reorderedClause = ast::transform::ReorderLiteralsTransformer::reorderClauseWithSips(
-                    *context.getSipsMetric(), &clause)) {
-            return Own<ast::Clause>(reorderedClause);
-        }
-        return nullptr;
+        return {};
     }
 
     // check if there's a plan for the current version
     auto orders = plan->getOrders();
     if (!contains(orders, version)) {
-        return nullptr;
+        return {};
     }
 
     // get the imposed order, and change it to start at zero
@@ -561,13 +555,8 @@ Own<ast::Clause> ClauseTranslator::getReorderedClause(const ast::Clause& clause,
     std::transform(order->getOrder().begin(), order->getOrder().end(), newOrder.begin(),
             [](unsigned int i) -> unsigned int { return i - 1; });
 
-    // create a copy and fix order
-    auto reorderedClause = souffle::clone(&clause);
-    reorderedClause.reset(reorderAtoms(reorderedClause.get(), newOrder));
-
-    // clear other order to fix plan
-    reorderedClause->clearExecutionPlan();
-    return reorderedClause;
+    std::vector<ast::Atom*> atoms = ast::getBodyLiterals<ast::Atom>(clause);
+    return reorderAtoms(atoms, newOrder);
 }
 
 int ClauseTranslator::addOperatorLevel(const ast::Node* node) {
