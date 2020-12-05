@@ -28,7 +28,6 @@ class SymbolTable;
 
 namespace souffle::ast {
 class Clause;
-class Program;
 class Relation;
 class TranslationUnit;
 }  // namespace souffle::ast

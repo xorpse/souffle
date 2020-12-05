@@ -16,6 +16,10 @@
 
 #include "ast2ram/AstToRamTranslator.h"
 
+namespace souffle::ast {
+class Program;
+}
+
 namespace souffle::ast2ram {
 
 class ProvenanceTranslator : public AstToRamTranslator {
