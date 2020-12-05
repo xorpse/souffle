@@ -38,9 +38,9 @@
 #include "ram/Expression.h"
 #include "ram/Extend.h"
 #include "ram/False.h"
-#include "ram/FDExistenceCheck.h"
 #include "ram/Filter.h"
 #include "ram/FloatConstant.h"
+#include "ram/GuardedProject.h"
 #include "ram/IO.h"
 #include "ram/IndexAggregate.h"
 #include "ram/IndexChoice.h"
@@ -164,7 +164,6 @@ struct Visitor : public ram_visitor_tag {
         FORWARD(EmptinessCheck);
         FORWARD(ProvenanceExistenceCheck);
         FORWARD(ExistenceCheck);
-        FORWARD(FDExistenceCheck);
         FORWARD(Conjunction);
         FORWARD(Negation);
         FORWARD(Constraint);
@@ -172,6 +171,7 @@ struct Visitor : public ram_visitor_tag {
         // Operations
         FORWARD(Filter);
         FORWARD(Break);
+        FORWARD(GuardedProject);
         FORWARD(Project);
         FORWARD(SubroutineReturn);
         FORWARD(UnpackRecord);
@@ -250,6 +250,7 @@ protected:
     LINK(Statement, Node);
 
     // -- operations --
+    LINK(GuardedProject, Project);
     LINK(Project, Operation);
     LINK(SubroutineReturn, Operation);
     LINK(UnpackRecord, TupleOperation);
@@ -284,7 +285,6 @@ protected:
     LINK(Constraint, Condition);
     LINK(ProvenanceExistenceCheck, AbstractExistenceCheck);
     LINK(ExistenceCheck, AbstractExistenceCheck);
-    LINK(FDExistenceCheck, AbstractExistenceCheck);
     LINK(EmptinessCheck, Condition);
     LINK(AbstractExistenceCheck, Condition);
 

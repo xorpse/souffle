@@ -37,7 +37,6 @@
 #include "ram/Exit.h"
 #include "ram/Extend.h"
 #include "ram/False.h"
-#include "ram/FDExistenceCheck.h"
 #include "ram/Filter.h"
 #include "ram/IO.h"
 #include "ram/IndexAggregate.h"
@@ -814,14 +813,6 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
         FOR_EACH_PROVENANCE(PROVENANCE_EXISTENCE_CHECK)
 #undef PROVENANCE_EXISTENCE_CHECK
 
-#define FD_EXISTENCE_CHECK(Structure, Arity, ...)                 \
-    CASE(FDExistenceCheck, Structure, Arity)                     \
-        return evalFDExistenceCheck<RelType>(shadow, ctxt); \
-    ESAC(FDExistenceCheck)
-
-        FOR_EACH(FD_EXISTENCE_CHECK)
-#undef FD_EXISTENCE_CHECK
-
         CASE(Constraint)
         // clang-format off
 #define COMPARE_NUMERIC(ty, op) return EVAL_LEFT(ty) op EVAL_RIGHT(ty)
@@ -1060,6 +1051,15 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
             }
             return result;
         ESAC(Filter)
+
+#define GUARDED_PROJECT(Structure, Arity, ...)                           \
+    CASE(GuardedProject, Structure, Arity)                              \
+        auto& rel = *static_cast<RelType*>(node->getRelation()); \
+        return evalGuardedProject(rel, shadow, ctxt);                   \
+    ESAC(GuardedProject)
+
+        FOR_EACH(GUARDED_PROJECT)
+#undef GUARDED_PROJECT
 
 #define PROJECT(Structure, Arity, ...)                           \
     CASE(Project, Structure, Arity)                              \
@@ -1326,51 +1326,6 @@ RamDomain Engine::evalProvenanceExistenceCheck(const ProvenanceExistenceCheck& s
 
     // check whether the height is less than the current height
     return (*equalRange.begin())[Arity - 1] <= execute(shadow.getChild(), ctxt);
-}
-
-template <typename Rel>
-RamDomain Engine::evalFDExistenceCheck(const FDExistenceCheck& shadow, Context& ctxt) {
-    constexpr size_t Arity = Rel::Arity;
-    size_t viewPos = shadow.getViewId();
-
-    if (profileEnabled && !shadow.isTemp()) {
-        reads[shadow.getRelationName()]++;
-    }
-
-    const auto& superInfo = shadow.getSuperInst();
-    // for total we use the exists test
-    if (shadow.isTotalSearch()) {
-        souffle::Tuple<RamDomain, Arity> tuple;
-        TUPLE_COPY_FROM(tuple, superInfo.first);
-        /* TupleElement */
-        for (const auto& tupleElement : superInfo.tupleFirst) {
-            tuple[tupleElement[0]] = ctxt[tupleElement[1]][tupleElement[2]];
-        }
-        /* Generic */
-        for (const auto& expr : superInfo.exprFirst) {
-            tuple[expr.first] = execute(expr.second.get(), ctxt);
-        }
-        return Rel::castView(ctxt.getView(viewPos))->contains(tuple);
-    }
-
-    // for partial we search for lower and upper boundaries
-    souffle::Tuple<RamDomain, Arity> low;
-    souffle::Tuple<RamDomain, Arity> high;
-    TUPLE_COPY_FROM(low, superInfo.first);
-    TUPLE_COPY_FROM(high, superInfo.second);
-
-    /* TupleElement */
-    for (const auto& tupleElement : superInfo.tupleFirst) {
-        low[tupleElement[0]] = ctxt[tupleElement[1]][tupleElement[2]];
-        high[tupleElement[0]] = low[tupleElement[0]];
-    }
-    /* Generic */
-    for (const auto& expr : superInfo.exprFirst) {
-        low[expr.first] = execute(expr.second.get(), ctxt);
-        high[expr.first] = low[expr.first];
-    }
-
-    return Rel::castView(ctxt.getView(viewPos))->contains(low, high);
 }
 
 template <typename Rel>
@@ -1729,6 +1684,31 @@ RamDomain Engine::evalIndexAggregate(
 
 template <typename Rel>
 RamDomain Engine::evalProject(Rel& rel, const Project& shadow, Context& ctxt) {
+    constexpr size_t Arity = Rel::Arity;
+    const auto& superInfo = shadow.getSuperInst();
+    souffle::Tuple<RamDomain, Arity> tuple;
+    TUPLE_COPY_FROM(tuple, superInfo.first);
+
+    /* TupleElement */
+    for (const auto& tupleElement : superInfo.tupleFirst) {
+        tuple[tupleElement[0]] = ctxt[tupleElement[1]][tupleElement[2]];
+    }
+    /* Generic */
+    for (const auto& expr : superInfo.exprFirst) {
+        tuple[expr.first] = execute(expr.second.get(), ctxt);
+    }
+
+    // insert in target relation
+    rel.insert(tuple);
+    return true;
+}
+
+template <typename Rel>
+RamDomain Engine::evalGuardedProject(Rel& rel, const GuardedProject& shadow, Context& ctxt) {
+    if (!execute(shadow.getCondition(), ctxt)) {
+        return true;
+    }
+
     constexpr size_t Arity = Rel::Arity;
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> tuple;

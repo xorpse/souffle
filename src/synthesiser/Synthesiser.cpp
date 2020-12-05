@@ -36,7 +36,6 @@
 #include "ram/Expression.h"
 #include "ram/Extend.h"
 #include "ram/False.h"
-#include "ram/FDExistenceCheck.h"
 #include "ram/Filter.h"
 #include "ram/FloatConstant.h"
 #include "ram/IO.h"
@@ -1627,6 +1626,33 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
+        void visitGuardedProject(const GuardedProject& guardedProject, std::ostream& out) override {
+            PRINT_BEGIN_COMMENT(out);
+            const auto* rel = synthesiser.lookup(guardedProject.getRelation());
+            auto arity = rel->getArity();
+            auto relName = synthesiser.getRelationName(rel);
+            auto ctxName = "READ_OP_CONTEXT(" + synthesiser.getOpContextName(*rel) + ")";
+
+            auto condition = guardedProject.getCondition();
+            // guarded conditions
+            out << "if( ";
+            visit(condition, out);
+            out << ") {\n";
+
+            // create projected tuple
+            out << "Tuple<RamDomain," << arity << "> tuple{{" << join(guardedProject.getValues(), ",", rec)
+                << "}};\n";
+
+            // insert tuple
+            out << relName << "->"
+                << "insert(tuple," << ctxName << ");\n";
+
+            // end of conseq body.
+            out << "}\n";
+
+            PRINT_END_COMMENT(out);
+        }
+
         void visitProject(const Project& project, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             const auto* rel = synthesiser.lookup(project.getRelation());
@@ -1864,42 +1890,6 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             visit(*(provExists.getValues()[arity - auxiliaryArity + 1]), out);
             out << ")";
             out << ";}()\n";
-            PRINT_END_COMMENT(out);
-        }
-
-        void visitFDExistenceCheck(const FDExistenceCheck& exists, std::ostream& out) override {
-            PRINT_BEGIN_COMMENT(out);
-            // get some details
-            const auto* rel = synthesiser.lookup(exists.getRelation());
-            auto relName = synthesiser.getRelationName(rel);
-            auto ctxName = "READ_OP_CONTEXT(" + synthesiser.getOpContextName(*rel) + ")";
-            auto arity = rel->getArity();
-            assert(arity > 0 && "AstToRamTranslator failed");
-            std::string after;
-            if (Global::config().has("profile") && !synthesiser.lookup(exists.getRelation())->isTemp()) {
-                out << R"_((reads[)_" << synthesiser.lookupReadIdx(rel->getName()) << R"_(]++,)_";
-                after = ")";
-            }
-
-            // if it is total we use the contains function
-            if (isa->isTotalSignature(&exists)) {
-                out << relName << "->"
-                    << "contains(Tuple<RamDomain," << arity << ">{{" << join(exists.getValues(), ",", rec)
-                    << "}}," << ctxName << ")" << after;
-                PRINT_END_COMMENT(out);
-                return;
-            }
-
-            auto rangePatternLower = exists.getValues();
-            auto rangePatternUpper = exists.getValues();
-
-            auto rangeBounds = getPaddedRangeBounds(*rel, rangePatternLower, rangePatternUpper);
-            // else we conduct a range query
-            out << "!" << relName << "->"
-                << "lowerUpperRange";
-            out << "_" << isa->getSearchSignature(&exists);
-            out << "(" << rangeBounds.first.str() << "," << rangeBounds.second.str() << "," << ctxName
-                << ").empty()" << after;
             PRINT_END_COMMENT(out);
         }
 

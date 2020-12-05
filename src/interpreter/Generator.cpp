@@ -157,21 +157,6 @@ NodePtr NodeGenerator::visitProvenanceExistenceCheck(const ram::ProvenanceExiste
             encodeView(&provExists), std::move(superOp));
 }
 
-NodePtr NodeGenerator::visitFDExistenceCheck(const ram::FDExistenceCheck& fdExists) {
-    SuperInstruction superOp = getExistenceSuperInstInfo(fdExists);
-    // Check if the search signature is a total signature
-    bool isTotal = true;
-    for (const auto& cur : fdExists.getValues()) {
-        if (isUndefValue(cur)) {
-            isTotal = false;
-        }
-    }
-    auto ramRelation = lookup(fdExists.getRelation());
-    NodeType type = constructNodeType("FDExistenceCheck", ramRelation);
-    return mk<FDExistenceCheck>(type, &fdExists, isTotal, encodeView(&fdExists), std::move(superOp),
-            ramRelation.isTemp(), ramRelation.getName());
-}
-
 NodePtr NodeGenerator::visitConstraint(const ram::Constraint& relOp) {
     return mk<Constraint>(I_Constraint, &relOp, visit(relOp.getLHS()), visit(relOp.getRHS()));
 }
@@ -337,6 +322,15 @@ NodePtr NodeGenerator::visitBreak(const ram::Break& breakOp) {
 
 NodePtr NodeGenerator::visitFilter(const ram::Filter& filter) {
     return mk<Filter>(I_Filter, &filter, visit(filter.getCondition()), visit(filter.getOperation()));
+}
+
+NodePtr NodeGenerator::visitGuardedProject(const ram::GuardedProject& guardedProject) {
+    SuperInstruction superOp = getProjectSuperInstInfo(guardedProject);
+    size_t relId = encodeRelation(guardedProject.getRelation());
+    auto rel = getRelationHandle(relId);
+    NodeType type = constructNodeType("GuardedProject", lookup(guardedProject.getRelation()));
+    auto condition = guardedProject.getCondition();
+    return mk<GuardedProject>(type, &guardedProject, rel, std::move(superOp), visit(condition));
 }
 
 NodePtr NodeGenerator::visitProject(const ram::Project& project) {
@@ -648,8 +642,6 @@ SuperInstruction NodeGenerator::getExistenceSuperInstInfo(const ram::AbstractExi
         indexId = encodeIndexPos(*dynamic_cast<const ram::ExistenceCheck*>(&abstractExist));
     } else if (isA<ram::ProvenanceExistenceCheck>(&abstractExist)) {
         indexId = encodeIndexPos(*dynamic_cast<const ram::ProvenanceExistenceCheck*>(&abstractExist));
-    } else if (isA<ram::FDExistenceCheck>(&abstractExist)) {
-        indexId = encodeIndexPos(*dynamic_cast<const ram::FDExistenceCheck*>(&abstractExist));
     } else {
         fatal("Unrecognized ram::AbstractExistenceCheck.");
     }

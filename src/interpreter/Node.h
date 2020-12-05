@@ -69,7 +69,6 @@ struct RelationWrapper;
     FOR_EACH(Expand, RelationSize)\
     FOR_EACH(Expand, ExistenceCheck)\
     FOR_EACH_PROVENANCE(Expand, ProvenanceExistenceCheck)\
-    FOR_EACH(Expand, FDExistenceCheck)\
     Forward(Constraint)\
     Forward(TupleOperation)\
     FOR_EACH(Expand, Scan)\
@@ -87,6 +86,7 @@ struct RelationWrapper;
     FOR_EACH(Expand, ParallelIndexAggregate)\
     Forward(Break)\
     Forward(Filter)\
+    FOR_EACH(Expand, GuardedProject)\
     FOR_EACH(Expand, Project)\
     Forward(SubroutineReturn)\
     Forward(Sequence)\
@@ -552,34 +552,6 @@ public:
 };
 
 /**
- * @class FDxistenceCheck
- */
-class FDExistenceCheck : public Node, public SuperOperation, public ViewOperation {
-public:
-    FDExistenceCheck(enum NodeType ty, const ram::Node* sdw, bool totalSearch, size_t viewId,
-            SuperInstruction superInst, bool tempRelation, std::string relationName)
-            : Node(ty, sdw), SuperOperation(std::move(superInst)), ViewOperation(viewId),
-              totalSearch(totalSearch), tempRelation(tempRelation), relationName(std::move(relationName)) {}
-
-    bool isTotalSearch() const {
-        return totalSearch;
-    }
-
-    bool isTemp() const {
-        return tempRelation;
-    }
-
-    const std::string& getRelationName() const {
-        return relationName;
-    }
-
-private:
-    const bool totalSearch;
-    const bool tempRelation;
-    const std::string relationName;
-};
-
-/**
  * @class Constraint
  */
 class Constraint : public BinaryNode {
@@ -750,6 +722,16 @@ class Project : public Node, public SuperOperation {
 public:
     Project(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle, SuperInstruction superInst)
             : Node(ty, sdw, relHandle), SuperOperation(std::move(superInst)) {}
+};
+
+/**
+ * @class GuardedProject
+ */
+class GuardedProject : public Project, public ConditionalOperation {
+public:
+    GuardedProject(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle,
+            SuperInstruction superInst, Own<Node> condition)
+            : Project(ty, sdw, relHandle, std::move(superInst)), ConditionalOperation(std::move(condition)) {}
 };
 
 /**

@@ -41,7 +41,6 @@
 #include "ram/Expression.h"
 #include "ram/Extend.h"
 #include "ram/False.h"
-#include "ram/FDExistenceCheck.h"
 #include "ram/Filter.h"
 #include "ram/IO.h"
 #include "ram/IndexAggregate.h"
@@ -156,8 +155,6 @@ public:
 
     NodePtr visitProvenanceExistenceCheck(const ram::ProvenanceExistenceCheck& provExists) override;
 
-    NodePtr visitFDExistenceCheck(const ram::FDExistenceCheck& fdExists) override;
-
     NodePtr visitConstraint(const ram::Constraint& relOp) override;
 
     NodePtr visitNestedOperation(const ram::NestedOperation& nested) override;
@@ -193,6 +190,8 @@ public:
     NodePtr visitBreak(const ram::Break& breakOp) override;
 
     NodePtr visitFilter(const ram::Filter& filter) override;
+
+    NodePtr visitGuardedProject(const ram::GuardedProject& guardedPorject) override;
 
     NodePtr visitProject(const ram::Project& project) override;
 

@@ -103,9 +103,6 @@ private:
     RamDomain evalProvenanceExistenceCheck(const ProvenanceExistenceCheck& shadow, Context& ctxt);
 
     template <typename Rel>
-    RamDomain evalFDExistenceCheck(const FDExistenceCheck& shadow, Context& ctxt);
-
-    template <typename Rel>
     RamDomain evalScan(const Rel& rel, const ram::Scan& cur, const Scan& shadow, Context& ctxt);
 
     template <typename Rel>
@@ -147,6 +144,9 @@ private:
 
     template <typename Rel>
     RamDomain evalIndexAggregate(const ram::IndexAggregate& cur, const IndexAggregate& shadow, Context& ctxt);
+
+    template <typename Rel>
+    RamDomain evalGuardedProject(Rel& rel, const GuardedProject& shadow, Context& ctxt);
 
     template <typename Rel>
     RamDomain evalProject(Rel& rel, const Project& shadow, Context& ctxt);
