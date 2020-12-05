@@ -91,7 +91,7 @@ ExpressionPair MakeIndexTransformer::getLowerUpperExpression(
         bool interpreter = !Global::config().has("compile") && !Global::config().has("dl-program") &&
                            !Global::config().has("generate") && !Global::config().has("swig");
         bool provenance = Global::config().has("provenance");
-        bool btree = rep != RelationRepresentation::BTREE && rep != RelationRepresentation::DEFAULT;
+        bool btree = (rep == RelationRepresentation::BTREE || rep == RelationRepresentation::DEFAULT);
         auto op = binRelOp->getOperator();
 
         // don't index FEQ in interpreter mode
@@ -306,11 +306,9 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
 
                 // if lower bound is undefined and we have a new lower bound then assign it
             } else if (firstLowerBound && newLowerBound && !newUpperBound) {
-                seenInequality = true;
                 lowerBound = std::move(lowerExpression);
                 // if upper bound is undefined and we have a new upper bound then assign it
             } else if (firstUpperBound && !newLowerBound && newUpperBound) {
-                seenInequality = true;
                 upperBound = std::move(upperExpression);
                 // if both bounds are defined ...
                 // and equal then we have a previous equality constraint i.e. Tuple[level, element] = <expr1>

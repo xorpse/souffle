@@ -387,9 +387,6 @@ public:
         }
         orders.push_back(std::move(totalOrder));
     }
-    /** Return the attribute position for each indexed operation that should be discharged.
-     */
-    const AttributeSet getAttributesToDischarge(const Relation& rel, const SearchSignature& s) const;
 
     void print(std::ostream& os) {
         /* Print searches */
@@ -419,7 +416,6 @@ public:
 protected:
     SignatureIndexMap signatureToIndexA;  // mapping of a SearchSignature on A to its unique index
     SignatureIndexMap signatureToIndexB;  // mapping of a SearchSignature on B to its unique index
-    DischargeMap dischargedMap;           // mapping of a SearchSignature to the attributes to discharge
     IndexSignatureMap indexToSignature;   // mapping of a unique index to its SearchSignature
     SearchSet searches;                   // set of search patterns on table
     OrderCollection orders;               // collection of lexicographical orders
@@ -475,11 +471,6 @@ protected:
 
     /** @Brief get all chains from the matching */
     const ChainOrderMap getChainsFromMatching(const MaxMatching::Matchings& match, const SearchSet& nodes);
-
-    /** @param OldSearch to be updated
-     *  @param NewSearch to replace the OldSearch
-     */
-    void updateSearch(SearchSignature oldSearch, SearchSignature newSearch);
 
     /** @Brief get all nodes which are unmatched from A-> B */
     const SearchSet getUnmatchedKeys(const MaxMatching::Matchings& match, const SearchSet& nodes) {
@@ -542,10 +533,6 @@ public:
     static constexpr const char* name = "index-analysis";
 
     void run(const TranslationUnit& translationUnit) override;
-
-    const AttributeSet getAttributesToDischarge(const Relation& rel, const SearchSignature& s) const {
-        return minIndexCover.at(rel.getName()).getAttributesToDischarge(rel, s);
-    }
 
     const FinalIndexSelection getIndexSelection(const std::string& relName) const {
         SignatureOrderMap indexSelection = {};

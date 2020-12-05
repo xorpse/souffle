@@ -355,63 +355,6 @@ const ChainOrderMap MinIndexSelection::getChainsFromMatching(
     return chainToOrder;
 }
 
-void MinIndexSelection::updateSearch(SearchSignature oldSearch, SearchSignature newSearch) {
-    auto delta = SearchSignature::getDelta(oldSearch, newSearch);
-    for (size_t i = 0; i < delta.arity(); ++i) {
-        if (delta[i] == AttributeConstraint::Inequal) {
-            dischargedMap[oldSearch].insert(i);
-        }
-    }
-
-    for (auto& chain : chainToOrder) {
-        for (auto& search : chain) {
-            if (search == oldSearch) {
-                search = newSearch;
-            }
-        }
-    }
-}
-
-const AttributeSet MinIndexSelection::getAttributesToDischarge(
-        const Relation& rel, const SearchSignature& s) const {
-    auto dischargedAttributes = dischargedMap.count(s) > 0 ? dischargedMap.at(s) : AttributeSet{};
-
-    // by default we have all attributes w/inequalities discharged
-    AttributeSet allInequalities;
-    for (size_t i = 0; i < s.arity(); ++i) {
-        if (s[i] == AttributeConstraint::Inequal) {
-            allInequalities.insert(i);
-        }
-    }
-
-    // if we don't have a btree then we don't retain any inequalities
-    if (rel.getRepresentation() != RelationRepresentation::BTREE &&
-            rel.getRepresentation() != RelationRepresentation::DEFAULT) {
-        return allInequalities;
-    }
-
-    // do not support indexed inequalities with provenance
-    if (Global::config().has("provenance")) {
-        return allInequalities;
-    }
-
-    // if we are in the interpreter then we only permit signed inequalities
-    // remembering to discharge any excess signed inequalities!
-    AttributeSet interpreterAttributesToDischarge = dischargedAttributes;
-
-    for (size_t i = 0; i < s.arity(); ++i) {
-        if (s[i] == AttributeConstraint::Inequal && rel.getAttributeTypes()[i][0] != 'i') {
-            interpreterAttributesToDischarge.insert(i);
-        }
-    }
-    if (!Global::config().has("compile") && !Global::config().has("dl-program") &&
-            !Global::config().has("generate") && !Global::config().has("swig")) {
-        return interpreterAttributesToDischarge;
-    }
-
-    return dischargedAttributes;
-}
-
 void IndexAnalysis::run(const TranslationUnit& translationUnit) {
     relAnalysis = translationUnit.getAnalysis<RelationAnalysis>();
 
