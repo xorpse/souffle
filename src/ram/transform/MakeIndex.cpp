@@ -85,14 +85,33 @@ ExpressionPair MakeIndexTransformer::getExpressionPair(
 
 // Retrieves the <expr1> <= Tuple[level, element] <= <expr2> part of the constraint as a pair { <expr1>,
 // <expr2> }
-ExpressionPair MakeIndexTransformer::getLowerUpperExpression(Condition* c, size_t& element, int identifier) {
+ExpressionPair MakeIndexTransformer::getLowerUpperExpression(
+        Condition* c, size_t& element, int identifier, RelationRepresentation rep) {
     if (auto* binRelOp = dynamic_cast<Constraint*>(c)) {
         bool interpreter = !Global::config().has("compile") && !Global::config().has("dl-program") &&
                            !Global::config().has("generate") && !Global::config().has("swig");
+        bool provenance = Global::config().has("provenance");
+        bool btree = rep != RelationRepresentation::BTREE && rep != RelationRepresentation::DEFAULT;
+        auto op = binRelOp->getOperator();
+
         // don't index FEQ in interpreter mode
-        if (binRelOp->getOperator() == BinaryConstraintOp::FEQ && interpreter) {
+        if (op == BinaryConstraintOp::FEQ && interpreter) {
             return {mk<UndefValue>(), mk<UndefValue>()};
-        } else if (isEqConstraint(binRelOp->getOperator())) {
+        }
+        // don't index any inequalities that aren't signed
+        if (isIneqConstraint(op) && !isSignedInequalityConstraint(op) && interpreter) {
+            return {mk<UndefValue>(), mk<UndefValue>()};
+        }
+        // don't index inequalities for provenance
+        if (isIneqConstraint(op) && provenance) {
+            return {mk<UndefValue>(), mk<UndefValue>()};
+        }
+        // don't index inequalities if we aren't using a BTREE
+        if (isIneqConstraint(op) && !btree) {
+            return {mk<UndefValue>(), mk<UndefValue>()};
+        }
+
+        if (isEqConstraint(op)) {
             if (const auto* lhs = dynamic_cast<const TupleElement*>(&binRelOp->getLHS())) {
                 const Expression* rhs = &binRelOp->getRHS();
                 if (lhs->getTupleId() == identifier && rla->getLevel(rhs) < identifier) {
@@ -107,7 +126,9 @@ ExpressionPair MakeIndexTransformer::getLowerUpperExpression(Condition* c, size_
                     return {clone(lhs), clone(lhs)};
                 }
             }
-        } else if (isWeakIneqConstraint(binRelOp->getOperator())) {
+        }
+
+        if (isWeakIneqConstraint(op)) {
             return getExpressionPair(binRelOp, element, identifier);
         }
     }
@@ -115,7 +136,8 @@ ExpressionPair MakeIndexTransformer::getLowerUpperExpression(Condition* c, size_
 }
 
 Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::string>& attributeTypes,
-        RamPattern& queryPattern, bool& indexable, VecOwn<Condition> conditionList, int identifier) {
+        RamPattern& queryPattern, bool& indexable, VecOwn<Condition> conditionList, int identifier,
+        RelationRepresentation rep) {
     // Remaining conditions which cannot be handled by an index
     Own<Condition> condition;
     auto addCondition = [&](Own<Condition> c) {
@@ -242,7 +264,8 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
         size_t element = 0;
         Own<Expression> lowerExpression;
         Own<Expression> upperExpression;
-        std::tie(lowerExpression, upperExpression) = getLowerUpperExpression(cond.get(), element, identifier);
+        std::tie(lowerExpression, upperExpression) =
+                getLowerUpperExpression(cond.get(), element, identifier, rep);
 
         // we have new bounds if at least one is defined
         if (!isUndefValue(lowerExpression.get()) || !isUndefValue(upperExpression.get())) {
@@ -263,6 +286,7 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
             auto& upperBound = queryPattern.second[element];
 
             // don't permit multiple inequalities
+            // TODO: @SamArch27 invariant that we have at most one indexed inequality per relation
             if (firstConstraint && inequality && seenInequality) {
                 addCondition(std::move(cond));
                 continue;
@@ -372,7 +396,7 @@ Own<Operation> MakeIndexTransformer::rewriteAggregate(const Aggregate* agg) {
 
         bool indexable = false;
         Own<Condition> condition = constructPattern(rel.getAttributeTypes(), queryPattern, indexable,
-                toConjunctionList(&agg->getCondition()), identifier);
+                toConjunctionList(&agg->getCondition()), identifier, rel.getRepresentation());
         if (indexable) {
             return mk<IndexAggregate>(souffle::clone(&agg->getOperation()), agg->getFunction(),
                     agg->getRelation(), souffle::clone(&agg->getExpression()), std::move(condition),
@@ -394,7 +418,7 @@ Own<Operation> MakeIndexTransformer::rewriteScan(const Scan* scan) {
 
         bool indexable = false;
         Own<Condition> condition = constructPattern(rel.getAttributeTypes(), queryPattern, indexable,
-                toConjunctionList(&filter->getCondition()), identifier);
+                toConjunctionList(&filter->getCondition()), identifier, rel.getRepresentation());
         if (indexable) {
             Own<Operation> op = souffle::clone(&filter->getOperation());
             if (!isTrue(condition.get())) {
@@ -419,7 +443,7 @@ Own<Operation> MakeIndexTransformer::rewriteIndexScan(const IndexScan* iscan) {
         bool indexable = false;
         // strengthen the pattern with construct pattern
         Own<Condition> condition = constructPattern(rel.getAttributeTypes(), strengthenedPattern, indexable,
-                toConjunctionList(&filter->getCondition()), identifier);
+                toConjunctionList(&filter->getCondition()), identifier, rel.getRepresentation());
 
         if (indexable) {
             // Merge Index Pattern here
