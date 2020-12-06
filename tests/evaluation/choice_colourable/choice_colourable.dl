@@ -1,20 +1,18 @@
+// Souffle - A Datalog Compiler
+// Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved
+// Licensed under the Universal Permissive License v 1.0 as shown at:
+// - https://opensource.org/licenses/UPL
+// - <souffle root>/licenses/SOUFFLE-UPL.txt
+
 // Verifies whether a derived node colouring (in node_colour) is a 3-colouring of the graph.
 .decl colour(c:symbol)
 .decl node(n:symbol)
 .input node
 .decl edge(x:symbol, y:symbol)
 .input edge
-.decl node_colour(node:symbol, colour:symbol) constrains node->colour
+.decl node_colour(node:symbol, colour:symbol) keys node
 .decl cannot_colour()
 .decl colourable()
-
-//node("a").
-//node("b").
-//node("c").
-
-//edge("a", "b").
-//edge("a", "c").
-//edge("b", "c").
 
 colour("red").
 colour("green").
@@ -29,4 +27,4 @@ node_colour(n,c) :- node(n), colour(c), edge(n,y), node_colour(y,yc), c != yc.
 cannot_colour() :- edge(x,y), node_colour(x,colour), node_colour(y,colour).
 colourable() :- !cannot_colour().
 
-.output colourable
+.printsize colourable
