@@ -150,6 +150,25 @@ inline bool isWeakIneqConstraint(const BinaryConstraintOp constraintOp) {
     return false;
 }
 
+inline bool isIneqConstraint(const BinaryConstraintOp constraintOp) {
+    return isStrictIneqConstraint(constraintOp) || isWeakIneqConstraint(constraintOp);
+}
+
+inline bool isIndexableConstraint(const BinaryConstraintOp constraintOp) {
+    return isIneqConstraint(constraintOp) || isEqConstraint(constraintOp);
+}
+
+inline bool isSignedInequalityConstraint(const BinaryConstraintOp constraintOp) {
+    switch (constraintOp) {
+        case BinaryConstraintOp::LE:
+        case BinaryConstraintOp::GE:
+        case BinaryConstraintOp::LT:
+        case BinaryConstraintOp::GT: return true;
+        default: break;
+    }
+    return false;
+}
+
 inline BinaryConstraintOp convertStrictToWeakIneqConstraint(const BinaryConstraintOp constraintOp) {
     assert(isStrictIneqConstraint(constraintOp));
     switch (constraintOp) {

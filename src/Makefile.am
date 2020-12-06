@@ -337,8 +337,6 @@ souffle_sources = \
         ram/transform/HoistConditions.h                    \
         ram/transform/IfConversion.cpp                     \
         ram/transform/IfConversion.h                       \
-        ram/transform/IndexedInequality.cpp                \
-        ram/transform/IndexedInequality.h                  \
         ram/transform/Loop.h                               \
         ram/transform/MakeIndex.cpp                        \
         ram/transform/MakeIndex.h                          \
