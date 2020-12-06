@@ -54,23 +54,27 @@ enum class AttributeConstraint { None, Equal, Inequal };
 class SearchSignature {
 public:
     class Iterator;
+
     explicit SearchSignature(size_t arity);
-    size_t arity() const;
 
     // array subscript operator
     AttributeConstraint& operator[](std::size_t pos);
     const AttributeConstraint& operator[](std::size_t pos) const;
 
     // comparison operators
-    bool operator<(const SearchSignature& other) const;
     bool operator==(const SearchSignature& other) const;
     bool operator!=(const SearchSignature& other) const;
 
+    // helper member functions
     bool empty() const;
+    bool precedes(const SearchSignature& other) const;
+    size_t arity() const;
 
+    // create new signatures from these functions
     static SearchSignature getDelta(const SearchSignature& lhs, const SearchSignature& rhs);
     static SearchSignature getFullSearchSignature(size_t arity);
 
+    // printing
     friend std::ostream& operator<<(std::ostream& out, const SearchSignature& signature);
 
     // hashing class
@@ -296,32 +300,34 @@ private:
  *
  */
 
+using AttributeIndex = uint32_t;
+using AttributeSet = std::unordered_set<AttributeIndex>;
+using SignatureMap = std::unordered_map<SearchSignature, SearchSignature, SearchSignature::Hasher>;
+using SignatureIndexMap = std::unordered_map<SearchSignature, AttributeIndex, SearchSignature::Hasher>;
+using IndexSignatureMap = std::unordered_map<AttributeIndex, SearchSignature>;
+using DischargeMap = std::unordered_map<SearchSignature, AttributeSet, SearchSignature::Hasher>;
+using LexOrder = std::vector<AttributeIndex>;
+using OrderCollection = std::vector<LexOrder>;
+using SearchCollection = std::vector<SearchSignature>;
+using Chain = std::vector<SearchSignature>;
+using ChainOrderMap = std::vector<Chain>;
+using SignatureOrderMap = std::unordered_map<SearchSignature, LexOrder, SearchSignature::Hasher>;
+
+class SearchComparator {
+public:
+    bool operator()(const SearchSignature& s1, const SearchSignature& s2) const {
+        auto hasher = SearchSignature::Hasher();
+        return hasher(s1) < hasher(s2);
+    }
+};
+
+using SearchSet = std::set<SearchSignature, SearchComparator>;
+// SearchSignatures only have a partial order, however we need to produce a unique ordering of searches
+// when we output the name of the collection of searches and therefore we order the SearchSignatures
+// arbitrarily by their hashes
+
 class MinIndexSelection {
 public:
-    using AttributeIndex = uint32_t;
-    using AttributeSet = std::unordered_set<AttributeIndex>;
-    using SignatureMap = std::unordered_map<SearchSignature, SearchSignature, SearchSignature::Hasher>;
-    using SignatureIndexMap = std::unordered_map<SearchSignature, AttributeIndex, SearchSignature::Hasher>;
-    using IndexSignatureMap = std::unordered_map<AttributeIndex, SearchSignature>;
-    using DischargeMap = std::unordered_map<SearchSignature, AttributeSet, SearchSignature::Hasher>;
-    using LexOrder = std::vector<AttributeIndex>;
-    using OrderCollection = std::vector<LexOrder>;
-    using Chain = std::vector<SearchSignature>;
-    using ChainOrderMap = std::vector<Chain>;
-
-    class SearchComparator {
-    public:
-        bool operator()(const SearchSignature& s1, const SearchSignature& s2) const {
-            auto hasher = SearchSignature::Hasher();
-            return hasher(s1) < hasher(s2);
-        }
-    };
-
-    using SearchSet = std::set<SearchSignature, SearchComparator>;
-    // SearchSignatures only have a partial order, however we need to produce a unique ordering of searches
-    // when we output the name of the index and therefore we order the SearchSignatures arbitrarily by their
-    // hashes
-
     /** @Brief Add new key to an Index Set */
     inline void addSearch(SearchSignature cols) {
         if (cols.empty()) {
@@ -343,11 +349,6 @@ public:
     const LexOrder& getLexOrder(SearchSignature cols) const {
         int idx = map(cols);
         return orders[idx];
-    }
-
-    /** @Brief Get index for a search */
-    int getLexOrderNum(SearchSignature cols) const {
-        return map(cols);
     }
 
     /** @Brief Get all indexes */
@@ -386,9 +387,6 @@ public:
         }
         orders.push_back(std::move(totalOrder));
     }
-    /** Return the attribute position for each indexed operation that should be discharged.
-     */
-    AttributeSet getAttributesToDischarge(const SearchSignature& s, const Relation& rel);
 
     void print(std::ostream& os) {
         /* Print searches */
@@ -418,7 +416,6 @@ public:
 protected:
     SignatureIndexMap signatureToIndexA;  // mapping of a SearchSignature on A to its unique index
     SignatureIndexMap signatureToIndexB;  // mapping of a SearchSignature on B to its unique index
-    DischargeMap dischargedMap;           // mapping of a SearchSignature to the attributes to discharge
     IndexSignatureMap indexToSignature;   // mapping of a unique index to its SearchSignature
     SearchSet searches;                   // set of search patterns on table
     OrderCollection orders;               // collection of lexicographical orders
@@ -475,14 +472,6 @@ protected:
     /** @Brief get all chains from the matching */
     const ChainOrderMap getChainsFromMatching(const MaxMatching::Matchings& match, const SearchSet& nodes);
 
-    /** @param OldSearch to be updated
-     *  @param NewSearch to replace the OldSearch
-     */
-    void updateSearch(SearchSignature oldSearch, SearchSignature newSearch);
-
-    /** @Brief remove arbitrary extra inequalities */
-    void removeExtraInequalities();
-
     /** @Brief get all nodes which are unmatched from A-> B */
     const SearchSet getUnmatchedKeys(const MaxMatching::Matchings& match, const SearchSet& nodes) {
         SearchSet unmatched;
@@ -498,6 +487,42 @@ protected:
 };
 
 /**
+ * @class FinalIndexSelection
+ * @Brief Encapsulates the result of the IndexAnalysis
+ * i.e. mapping each search (SearchSignature) to a corresponding index (LexOrder)
+ */
+class FinalIndexSelection {
+public:
+    FinalIndexSelection(const SignatureOrderMap& indexSelection, const SearchSet& searchSet,
+            const OrderCollection& orders)
+            : indexSelection(indexSelection), searches(searchSet.begin(), searchSet.end()), orders(orders) {}
+
+    const OrderCollection getAllOrders() const {
+        return orders;
+    }
+    const SearchCollection getSearches() const {
+        return searches;
+    }
+    const LexOrder getLexOrder(SearchSignature cols) const {
+        return indexSelection.at(cols);
+    }
+
+    int getLexOrderNum(SearchSignature cols) const {
+        // get the corresponding order
+        auto order = getLexOrder(cols);
+        // find the order in the collection
+        auto it = std::find(orders.begin(), orders.end(), order);
+        // return its relative index
+        return std::distance(orders.begin(), it);
+    }
+
+private:
+    SignatureOrderMap indexSelection;
+    SearchCollection searches;
+    OrderCollection orders;
+};
+
+/**
  * @class RamIndexAnalyis
  * @Brief Analysis pass computing the index sets of RAM relations
  */
@@ -509,14 +534,14 @@ public:
 
     void run(const TranslationUnit& translationUnit) override;
 
-    void print(std::ostream& os) const override;
-
-    /**
-     * @Brief get the minimal index cover for a relation
-     * @param relation name
-     * @result set of indexes of the minimal index cover
-     */
-    MinIndexSelection& getIndexes(const std::string& relName);
+    const FinalIndexSelection getIndexSelection(const std::string& relName) const {
+        SignatureOrderMap indexSelection = {};
+        const auto& cover = minIndexCover.at(relName);
+        for (const auto& search : cover.getSearches()) {
+            indexSelection.insert({search, cover.getLexOrder(search)});
+        }
+        return FinalIndexSelection(indexSelection, cover.getSearches(), cover.getAllOrders());
+    }
 
     /**
      * @Brief Get index signature for an Ram IndexOperation operation
@@ -554,6 +579,15 @@ public:
      * the existence check.
      */
     bool isTotalSignature(const AbstractExistenceCheck* existCheck) const;
+
+private:
+    /**
+     * @Brief get the minimal index cover for a relation
+     * @param relation name
+     * @result set of indexes of the minimal index cover
+     */
+    MinIndexSelection& getIndexes(const std::string& relName);
+    void print(std::ostream& os) const override;
 
 private:
     /** relation analysis for looking up relations by name */
