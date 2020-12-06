@@ -175,7 +175,6 @@ Own<ram::Operation> ClauseTranslator::createProjection(
 
                 // If this particular source argument matches the head argument, insert it.
                 if (found != keys.end()) {
-                    /* vals.push_back(ast2ram::translateValue(head->getArguments()[i], *valueIndex)); */
                     vals.push_back(ValueTranslator::translate(
                             context, symbolTable, *valueIndex, head->getArguments()[i]));
                     valsCopy.push_back(ValueTranslator::translate(
@@ -201,10 +200,10 @@ Own<ram::Operation> ClauseTranslator::createProjection(
     }
 
     if (head->getArity() == 0) {
-        // TODO: need double check.
-        /* project = mk<ram::Filter>(mk<ram::EmptinessCheck>(headRelationName), std::move(project)); */
-        return mk<ram::Project>(headRelationName, std::move(values));
-    } else if (dependencies.empty()) {
+        return mk<ram::Filter>(mk<ram::EmptinessCheck>(headRelationName),
+                mk<ram::Project>(headRelationName, std::move(values)));
+    }
+    if (dependencies.empty()) {
         return mk<ram::Project>(headRelationName, std::move(values));
     } else {
         return mk<ram::GuardedProject>(headRelationName, std::move(values), ram::toCondition(dependencies));
