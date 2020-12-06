@@ -93,7 +93,7 @@ bool ParallelTransformer::parallelizeOperations(Program& program) {
             return node;
         };
         // guardedProject cannot be parallelized
-        bool isGuardedProject = true;
+        bool isGuardedProject = false;
         visitDepthFirst(query, [&](const GuardedProject&) { isGuardedProject = true; });
         if (isGuardedProject == false) {
             const_cast<Query*>(&query)->apply(makeLambdaRamMapper(parallelRewriter));
