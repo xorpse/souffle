@@ -39,6 +39,7 @@ souffle_sources = \
         ast/ExecutionPlan.h                                \
         ast/Functor.h                                      \
         ast/FunctorDeclaration.h                           \
+        ast/FunctionalConstraint.h                         \
         ast/Directive.h                                    \
         ast/IntrinsicFunctor.h                             \
         ast/Literal.h                                      \
