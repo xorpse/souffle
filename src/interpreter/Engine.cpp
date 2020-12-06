@@ -1052,10 +1052,10 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
             return result;
         ESAC(Filter)
 
-#define GUARDED_PROJECT(Structure, Arity, ...)                           \
-    CASE(GuardedProject, Structure, Arity)                              \
+#define GUARDED_PROJECT(Structure, Arity, ...)                   \
+    CASE(GuardedProject, Structure, Arity)                       \
         auto& rel = *static_cast<RelType*>(node->getRelation()); \
-        return evalGuardedProject(rel, shadow, ctxt);                   \
+        return evalGuardedProject(rel, shadow, ctxt);            \
     ESAC(GuardedProject)
 
         FOR_EACH(GUARDED_PROJECT)

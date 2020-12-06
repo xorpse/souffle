@@ -18,9 +18,9 @@
 
 #include "RelationTag.h"
 #include "ast/Attribute.h"
+#include "ast/FunctionalConstraint.h"
 #include "ast/Node.h"
 #include "ast/QualifiedName.h"
-#include "ast/FunctionalConstraint.h"
 #include "ast/utility/NodeMapper.h"
 #include "parser/SrcLocation.h"
 #include "souffle/utility/ContainerUtil.h"

@@ -1,6 +1,6 @@
 /*
  * Souffle - A Datalog Compiler
- * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved
+ * Copyright (c) 2020 The Souffle Developers. All rights reserved
  * Licensed under the Universal Permissive License v 1.0 as shown at:
  * - https://opensource.org/licenses/UPL
  * - <souffle root>/licenses/SOUFFLE-UPL.txt
@@ -105,18 +105,18 @@ public:
         return true;
     }
 
-    bool equivalentConstraint (const FunctionalConstraint& other) const {
+    bool equivalentConstraint(const FunctionalConstraint& other) const {
         if (this->getArity() != other.getArity()) {
             return false;
         }
         std::set<std::string> keyNames;
-        for (const auto& key : keys){
+        for (const auto& key : keys) {
             keyNames.insert(key->getName());
         }
-        for (const auto& key : other.keys){
+        for (const auto& key : other.keys) {
             if (keyNames.find(key->getName()) == keyNames.end()) {
                 return false;
-            }   
+            }
         }
         return true;
     }

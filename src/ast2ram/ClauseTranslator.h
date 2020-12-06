@@ -65,7 +65,8 @@ protected:
     // value index to keep track of references in the loop nest
     Own<ValueIndex> valueIndex = mk<ValueIndex>();
 
-    virtual Own<ram::Operation> createProjection(const ast::Clause& clause, const ast::Clause& originalClause) const;
+    virtual Own<ram::Operation> createProjection(
+            const ast::Clause& clause, const ast::Clause& originalClause) const;
     virtual Own<ram::Condition> createCondition(const ast::Clause& originalClause) const;
 
 private:
