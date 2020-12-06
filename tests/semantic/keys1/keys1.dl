@@ -1,9 +1,11 @@
 // Souffle - A Datalog Compiler
-// Copyright (c) 2020, The Souffle Developers. All rights reserved
+// Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved
 // Licensed under the Universal Permissive License v 1.0 as shown at:
 // - https://opensource.org/licenses/UPL
 // - <souffle root>/licenses/SOUFFLE-UPL.txt
 
+// Check keys are properly reduced to its simplest form.
+// Also check facts are project into relation with guraded condition.
 // This is simplified to keys x
 .decl rel1(x:symbol, y:symbol) keys (x, x)
 rel1("a", "b").
