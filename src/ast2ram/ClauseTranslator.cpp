@@ -80,17 +80,11 @@ Own<ram::Statement> ClauseTranslator::translateClause(
 
 Own<ram::Statement> ClauseTranslator::createRamFactQuery(const ast::Clause& clause) const {
     assert(isFact(clause) && "clause should be fact");
-    const auto* head = clause.getHead();
 
-    // Translate arguments
-    VecOwn<ram::Expression> values;
-    for (auto& arg : head->getArguments()) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, ValueIndex(), arg));
-    }
+    auto project = createProjection(clause, clause);
 
     // Create a fact statement
-    return mk<ram::Query>(
-            mk<ram::Project>(getConcreteRelationName(head->getQualifiedName()), std::move(values)));
+    return mk<ram::Query>((std::move(project)));
 }
 
 Own<ram::Statement> ClauseTranslator::createRamRuleQuery(
