@@ -53,8 +53,8 @@ class ValueIndex;
 
 class ClauseTranslator {
 public:
-    ClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable)
-            : context(context), symbolTable(symbolTable) {}
+    ClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable);
+    ~ClauseTranslator();
 
     /** Entry points */
 
@@ -82,7 +82,7 @@ protected:
     virtual Own<ram::Operation> addNegate(const ast::Atom* atom, Own<ram::Operation> op, bool isDelta) const;
 
     // value index to keep track of references in the loop nest
-    Own<ValueIndex> valueIndex = mk<ValueIndex>();
+    Own<ValueIndex> valueIndex;
 
     Own<ram::Statement> translateClause(
             const ast::Clause& clause, const ast::Clause& originalClause, int version);

@@ -70,6 +70,11 @@
 
 namespace souffle::ast2ram {
 
+ClauseTranslator::ClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable)
+        : context(context), symbolTable(symbolTable) {}
+
+ClauseTranslator::~ClauseTranslator() = default;
+
 Own<ram::Statement> ClauseTranslator::generateClause(const TranslatorContext& context,
         SymbolTable& symbolTable, const ast::Clause& clause, const ast::Clause& originalClause, int version) {
     return ClauseTranslator(context, symbolTable).translateClause(clause, originalClause, version);
@@ -200,6 +205,7 @@ Own<ram::Statement> ClauseTranslator::createRamRuleQuery(
     atomOrder = getAtomOrdering(clause, version);
 
     // Index all variables and generators in the clause
+    valueIndex = mk<ValueIndex>();
     indexClause(clause);
 
     // Set up the RAM statement bottom-up
