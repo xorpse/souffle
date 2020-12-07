@@ -34,3 +34,17 @@ f(0,[1]).
 f(1,[1]).
 g(x, [x]) :- f(x, [x]).
 record1(x, y) :- g(x, [y]).
+
+
+// small test case for issue #1770
+.decl hnwC(A:float)
+.decl anHG(A:float)
+.decl fydL(A:float) inline
+.decl HhJv(A:float)
+.decl wvhB(A:float)
+.decl lItv(A:float)
+
+fydL(a) :- hnwC(a).
+HhJv(r) :- hnwC(r).
+lItv(e), anHG(dXn) :- wvhB(dXn), hnwC(e), !HhJv(_).
+
