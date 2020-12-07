@@ -368,64 +368,6 @@ Own<ram::Statement> AstToRamTranslator::generateRecursiveStratum(
     return mk<ram::Sequence>(std::move(result));
 }
 
-bool AstToRamTranslator::removeADTs(const TranslatorContext& context, ast::TranslationUnit& tu) {
-    struct ADTsFuneral : public ast::NodeMapper {
-        mutable bool changed{false};
-        const TranslatorContext& context;
-
-        ADTsFuneral(const TranslatorContext& context) : context(context) {}
-
-        Own<ast::Node> operator()(Own<ast::Node> node) const override {
-            // Rewrite sub-expressions first
-            node->apply(*this);
-
-            if (!isA<ast::BranchInit>(node)) {
-                return node;
-            }
-
-            changed = true;
-            auto& adt = *as<ast::BranchInit>(node);
-            auto branchID = context.getADTBranchId(&adt);
-
-            if (context.isADTEnum(&adt)) {
-                auto branchTag = mk<ast::NumericConstant>(branchID);
-                branchTag->setFinalType(ast::NumericConstant::Type::Int);
-                return branchTag;
-            } else {
-                // Collect branch arguments
-                VecOwn<ast::Argument> branchArguments;
-                for (auto* arg : adt.getArguments()) {
-                    branchArguments.emplace_back(arg->clone());
-                }
-
-                // Branch is stored either as [branch_id, [arguments]]
-                // or [branch_id, argument] in case of a single argument.
-                auto branchArgs = [&]() -> Own<ast::Argument> {
-                    if (branchArguments.size() != 1) {
-                        return mk<ast::Argument, ast::RecordInit>(std::move(branchArguments));
-                    } else {
-                        return std::move(branchArguments.at(0));
-                    }
-                }();
-
-                // Arguments for the resulting record [branch_id, branch_args].
-                VecOwn<ast::Argument> finalRecordArgs;
-
-                auto branchTag = mk<ast::NumericConstant>(branchID);
-                branchTag->setFinalType(ast::NumericConstant::Type::Int);
-                finalRecordArgs.push_back(std::move(branchTag));
-                finalRecordArgs.push_back(std::move(branchArgs));
-
-                return mk<ast::RecordInit>(std::move(finalRecordArgs), adt.getSrcLoc());
-            }
-        }
-    };
-
-    ADTsFuneral mapper(context);
-    tu.getProgram().apply(mapper);
-    return mapper.changed;
-}
-
 Own<ram::Statement> AstToRamTranslator::generateLoadRelation(const ast::Relation* relation) const {
     VecOwn<ram::Statement> loadStmts;
     for (const auto* load : context->getLoadDirectives(relation->getQualifiedName())) {
@@ -573,14 +515,6 @@ Own<ram::Sequence> AstToRamTranslator::generateProgram(const ast::TranslationUni
     return mk<ram::Sequence>(std::move(res));
 }
 
-void AstToRamTranslator::preprocessAstProgram(const TranslatorContext& context, ast::TranslationUnit& tu) {
-    // Finalise polymorphic types in the AST
-    finaliseAstTypes(tu);
-
-    // Replace ADTs with record representatives
-    removeADTs(context, tu);
-}
-
 Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit& tu) {
     // Start timer
     auto ram_start = std::chrono::high_resolution_clock::now();
@@ -590,8 +524,8 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
     symbolTable = mk<SymbolTable>();
     context = mk<TranslatorContext>(tu);
 
-    // Run the AST preprocessor
-    preprocessAstProgram(*context, tu);
+    // Finalise polymorphic types in the AST
+    finaliseAstTypes(tu);
 
     /* -- Translation -- */
     // Generate the RAM program code
