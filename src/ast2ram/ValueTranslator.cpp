@@ -120,7 +120,35 @@ Own<ram::Expression> ValueTranslator::visitRecordInit(const ast::RecordInit& ini
 }
 
 Own<ram::Expression> ValueTranslator::visitBranchInit(const ast::BranchInit& adt) {
-    // TODO: fill this out
+    auto branchId = context.getADTBranchId(&adt);
+
+    // Enums are straight forward
+    if (context.isADTEnum(&adt)) {
+        return mk<ram::SignedConstant>(branchId);
+    }
+
+    // Otherwise, will be a record
+    VecOwn<ram::Expression> finalRecordValues;
+
+    // First field is the branch ID
+    finalRecordValues.push_back(mk<ram::SignedConstant>(branchId));
+
+    // Translate branch arguments
+    VecOwn<ram::Expression> branchValues;
+    for (const auto* arg : adt.getArguments()) {
+        branchValues.push_back(translateValue(arg));
+    }
+
+    // Branch is stored either as [branch_id, [arguments]],
+    // or [branch_id, argument] in case of a single argument.
+    if (branchValues.size() != 1) {
+        finalRecordValues.push_back(mk<ram::PackRecord>(std::move(branchValues)));
+    } else {
+        finalRecordValues.push_back(std::move(branchValues.at(0)));
+    }
+
+    // Final result is a pack operation
+    return mk<ram::PackRecord>(std::move(finalRecordValues));
 }
 
 Own<ram::Expression> ValueTranslator::visitAggregator(const ast::Aggregator& agg) {
