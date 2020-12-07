@@ -38,8 +38,16 @@ namespace souffle::ast {
  * @class FunctionalConstraint
  * @brief Functional constraint (choice construct) class
  *
- * Representing a functional dependency (choice construct)
- * For relation (x, y), we have x -> y, a function from x to y, i.e. x uniquely identifies some y value
+ * Representing a functional dependency
+ * Example:
+ * .decl rel(x:symbol, y:symbol, z:number) keys x
+ * The functional constraint "x" makes sure every x in the rel uniquely defines an element.
+ *
+ * .decl rel(x:symbol, y:symbol, z:number) keys x, y
+ * A relation can have more then one key, each key uniquely defines an element in the relation.
+ *
+ * .decl rel(x:symbol, y:symbol, z:number) keys (x, y)
+ * Multiple attributes can serve as a single key, the pair (x,y) uniquely defines an element in the relation.
  */
 class FunctionalConstraint : public Constraint {
 public:
@@ -81,7 +89,7 @@ public:
 
 public:
     void print(std::ostream& os) const override {
-        os << "Keys: ";
+        os << "keys ";
         if (keys.size() > 1) {
             os << "(";
         }
