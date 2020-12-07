@@ -312,6 +312,9 @@ Own<ram::Operation> ClauseTranslator::addVariableIntroductions(
         } else if (const auto* rec = dynamic_cast<const ast::RecordInit*>(curOp)) {
             // add record arguments through an unpack
             op = addRecordUnpack(std::move(op), rec, i);
+        } else if (const auto* adt = dynamic_cast<const ast::BranchInit*>(curOp)) {
+            // add adt arguments through an unpack
+            // TODO: add adt stuff like for records
         } else {
             fatal("Unsupported AST node for creation of scan-level!");
         }
@@ -581,12 +584,17 @@ void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::
         }
 
         // check for nested records
-        if (auto rec = dynamic_cast<const ast::RecordInit*>(arg)) {
+        if (const auto* rec = dynamic_cast<const ast::RecordInit*>(arg)) {
             valueIndex->setRecordDefinition(*rec, nodeLevel, i);
 
             // introduce new nesting level for unpack
             auto unpackLevel = addOperatorLevel(rec);
             indexNodeArguments(unpackLevel, rec->getArguments());
+        }
+
+        // check for nested ADT branches
+        if (const auto* adt = dynamic_cast<const ast::BranchInit*>(arg)) {
+            // TODO: set the required information here, a la record inits
         }
     }
 }

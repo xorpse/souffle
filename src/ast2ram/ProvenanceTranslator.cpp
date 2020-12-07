@@ -131,6 +131,8 @@ Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clau
                     BinaryConstraintOp::EQ, souffle::clone(rec), mk<ast::SubroutineArgument>(i));
             constraint->setFinalType(BinaryConstraintOp::EQ);
             intermediateClause->addToBody(std::move(constraint));
+        } else if (auto adt = dynamic_cast<ast::BranchInit*>(arg)) {
+            // TODO: fill this out like record arguments
         }
     }
 

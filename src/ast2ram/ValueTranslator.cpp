@@ -119,6 +119,10 @@ Own<ram::Expression> ValueTranslator::visitRecordInit(const ast::RecordInit& ini
     return mk<ram::PackRecord>(std::move(values));
 }
 
+Own<ram::Expression> ValueTranslator::visitBranchInit(const ast::BranchInit& adt) {
+    // TODO: fill this out
+}
+
 Own<ram::Expression> ValueTranslator::visitAggregator(const ast::Aggregator& agg) {
     // here we look up the location the aggregation result gets bound
     return makeRamTupleElement(index.getGeneratorLoc(agg));
