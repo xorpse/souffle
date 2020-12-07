@@ -138,8 +138,8 @@ private:
             Own<ram::Operation> op, Own<ram::Expression> lhs, Own<ram::Expression> rhs, bool isFloat) const;
 
     /** Constant translation */
-    static RamDomain getConstantRamRepresentation(SymbolTable& symbolTable, const ast::Constant& constant);
-    static Own<ram::Expression> translateConstant(SymbolTable& symbolTable, const ast::Constant& constant);
+    RamDomain getConstantRamRepresentation(SymbolTable& symbolTable, const ast::Constant& constant) const;
+    Own<ram::Expression> translateConstant(SymbolTable& symbolTable, const ast::Constant& constant) const;
 
     /** Generator instantiation */
     Own<ram::Operation> instantiateAggregator(Own<ram::Operation> op, const ast::Clause& clause,

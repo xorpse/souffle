@@ -58,8 +58,7 @@ Own<ram::Expression> ValueTranslator::visitUnnamedVariable(const ast::UnnamedVar
 }
 
 Own<ram::Expression> ValueTranslator::visitNumericConstant(const ast::NumericConstant& c) {
-    assert(c.getFinalType().has_value() && "constant should have valid type");
-    switch (c.getFinalType().value()) {
+    switch (context.getInferredNumericConstantType(&c)) {
         case ast::NumericConstant::Type::Int:
             return mk<ram::SignedConstant>(RamSignedFromString(c.getConstant(), nullptr, 0));
         case ast::NumericConstant::Type::Uint:

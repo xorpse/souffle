@@ -404,9 +404,9 @@ Own<ram::Operation> ClauseTranslator::instantiateAggregator(
     auto expr = aggExpr ? ValueTranslator::translate(context, symbolTable, *valueIndex, aggExpr) : nullptr;
 
     // add Ram-Aggregation layer
-    return mk<ram::Aggregate>(std::move(op), agg->getFinalType().value(), getClauseAtomName(clause, aggAtom),
-            expr ? std::move(expr) : mk<ram::UndefValue>(), aggCond ? std::move(aggCond) : mk<ram::True>(),
-            curLevel);
+    return mk<ram::Aggregate>(std::move(op), context.getOverloadedAggregatorOperator(agg),
+            getClauseAtomName(clause, aggAtom), expr ? std::move(expr) : mk<ram::UndefValue>(),
+            aggCond ? std::move(aggCond) : mk<ram::True>(), curLevel);
 }
 
 Own<ram::Operation> ClauseTranslator::instantiateMultiResultFunctor(
@@ -507,14 +507,13 @@ Own<ram::Condition> ClauseTranslator::createCondition(const ast::Clause& origina
 }
 
 RamDomain ClauseTranslator::getConstantRamRepresentation(
-        SymbolTable& symbolTable, const ast::Constant& constant) {
+        SymbolTable& symbolTable, const ast::Constant& constant) const {
     if (auto strConstant = dynamic_cast<const ast::StringConstant*>(&constant)) {
         return symbolTable.lookup(strConstant->getConstant());
     } else if (isA<ast::NilConstant>(&constant)) {
         return 0;
     } else if (auto* numConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
-        assert(numConstant->getFinalType().has_value() && "constant should have valid type");
-        switch (numConstant->getFinalType().value()) {
+        switch (context.getInferredNumericConstantType(numConstant)) {
             case ast::NumericConstant::Type::Int:
                 return RamSignedFromString(numConstant->getConstant(), nullptr, 0);
             case ast::NumericConstant::Type::Uint:
@@ -527,10 +526,10 @@ RamDomain ClauseTranslator::getConstantRamRepresentation(
 }
 
 Own<ram::Expression> ClauseTranslator::translateConstant(
-        SymbolTable& symbolTable, const ast::Constant& constant) {
+        SymbolTable& symbolTable, const ast::Constant& constant) const {
     auto rawConstant = getConstantRamRepresentation(symbolTable, constant);
     if (const auto* numericConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
-        switch (numericConstant->getFinalType().value()) {
+        switch (context.getInferredNumericConstantType(numericConstant)) {
             case ast::NumericConstant::Type::Int: return mk<ram::SignedConstant>(rawConstant);
             case ast::NumericConstant::Type::Uint: return mk<ram::UnsignedConstant>(rawConstant);
             case ast::NumericConstant::Type::Float: return mk<ram::FloatConstant>(rawConstant);
@@ -552,10 +551,8 @@ Own<ram::Operation> ClauseTranslator::addConstantConstraints(
     for (size_t i = 0; i < arguments.size(); i++) {
         const auto* argument = arguments.at(i);
         if (const auto* numericConstant = dynamic_cast<const ast::NumericConstant*>(argument)) {
-            const auto& finalType = numericConstant->getFinalType();
-            assert(finalType.has_value() && "numeric constant not bound to a type");
-
-            bool isFloat = finalType.value() == ast::NumericConstant::Type::Float;
+            bool isFloat = context.getInferredNumericConstantType(numericConstant) ==
+                           ast::NumericConstant::Type::Float;
             auto lhs = mk<ram::TupleElement>(curLevel, i);
             auto rhs = translateConstant(symbolTable, *numericConstant);
             op = addEqualityCheck(std::move(op), std::move(lhs), std::move(rhs), isFloat);

@@ -52,22 +52,11 @@ public:
     NumericConstant* clone() const override {
         auto* copy = new NumericConstant(getConstant(), getFixedType());
         copy->setSrcLoc(getSrcLoc());
-        if (finalTranslatorType.has_value()) {
-            copy->setFinalType(finalTranslatorType.value());
-        }
         return copy;
     }
 
     const std::optional<Type>& getFixedType() const {
         return fixedType;
-    }
-
-    void setFinalType(Type newType) {
-        finalTranslatorType = newType;
-    }
-
-    std::optional<Type> getFinalType() const {
-        return finalTranslatorType;
     }
 
 protected:
@@ -78,9 +67,6 @@ protected:
 
 private:
     std::optional<Type> fixedType;
-
-    // TODO (azreika): remove after refactoring translator
-    std::optional<Type> finalTranslatorType;
 };
 
 }  // namespace souffle::ast
