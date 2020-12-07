@@ -126,12 +126,14 @@ private:
             int version, Own<ram::Operation> op);
     Own<ram::Operation> addEntryPoint(const ast::Clause& originalClause, Own<ram::Operation> op) const;
 
-    /** Helper methods */
+    /** Levelling methods */
     Own<ram::Operation> addAtomScan(Own<ram::Operation> op, const ast::Atom* atom, const ast::Clause& clause,
             const ast::Clause& originalClause, int curLevel, int version) const;
     Own<ram::Operation> addRecordUnpack(
             Own<ram::Operation> op, const ast::RecordInit* rec, int curLevel) const;
     Own<ram::Operation> addAdtUnpack(Own<ram::Operation> op, const ast::BranchInit* adt, int curLevel) const;
+
+    /** Helper methods */
     Own<ram::Operation> addConstantConstraints(
             size_t level, const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op) const;
     Own<ram::Operation> addEqualityCheck(
