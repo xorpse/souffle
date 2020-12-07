@@ -37,6 +37,7 @@ namespace souffle::ast::analysis {
 class AuxiliaryArityAnalysis;
 class FunctorAnalysis;
 class IOTypeAnalysis;
+class PolymorphicObjectsAnalysis;
 class RecursiveClausesAnalysis;
 class RelationDetailCacheAnalysis;
 class RelationScheduleAnalysis;
@@ -107,6 +108,7 @@ private:
     const ast::analysis::IOTypeAnalysis* ioType;
     const ast::analysis::TypeEnvironment* typeEnv;
     const ast::analysis::SumTypeBranchesAnalysis* sumTypeBranches;
+    const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis;
     Own<ast::SipsMetric> sipsMetric;
 };
 

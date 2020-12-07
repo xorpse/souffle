@@ -22,6 +22,7 @@
 #include "ast/analysis/AuxArity.h"
 #include "ast/analysis/Functor.h"
 #include "ast/analysis/IOType.h"
+#include "ast/analysis/PolymorphicObjects.h"
 #include "ast/analysis/RecursiveClauses.h"
 #include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/RelationSchedule.h"
@@ -50,6 +51,7 @@ TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
     ioType = tu.getAnalysis<ast::analysis::IOTypeAnalysis>();
     typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
     sumTypeBranches = tu.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>();
+    polyAnalysis = tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
 
     // Set up SIPS metric
     std::string sipsChosen = "all-bound";
