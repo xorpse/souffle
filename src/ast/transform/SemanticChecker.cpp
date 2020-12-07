@@ -63,7 +63,6 @@
 #include "ast/analysis/PrecedenceGraph.h"
 #include "ast/analysis/RecursiveClauses.h"
 #include "ast/analysis/SCCGraph.h"
-#include "ast/analysis/SumTypeBranches.h"
 #include "ast/analysis/Type.h"
 #include "ast/analysis/TypeEnvironment.h"
 #include "ast/analysis/TypeSystem.h"
@@ -108,7 +107,6 @@ private:
     const PrecedenceGraphAnalysis& precedenceGraph = *tu.getAnalysis<PrecedenceGraphAnalysis>();
     const RecursiveClausesAnalysis& recursiveClauses = *tu.getAnalysis<RecursiveClausesAnalysis>();
     const SCCGraphAnalysis& sccGraph = *tu.getAnalysis<SCCGraphAnalysis>();
-    const SumTypeBranchesAnalysis& sumTypesBranches = *tu.getAnalysis<SumTypeBranchesAnalysis>();
 
     const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>()->getTypeEnvironment();
     const Program& program = tu.getProgram();
@@ -125,9 +123,6 @@ private:
     void checkComplexRule(std::set<const Clause*> multiRule);
     void checkRelationDeclaration(const Relation& relation);
     void checkRelation(const Relation& relation);
-
-    /** check if all the branches refer to the existing types. */
-    void checkBranchInits();
 
     void checkNamespaces();
     void checkIO();
@@ -171,8 +166,6 @@ SemanticCheckerImpl::SemanticCheckerImpl(TranslationUnit& tu) : tu(tu) {
             }
         }
     }
-
-    checkBranchInits();
 
     // check rules
     for (auto* rel : program.getRelations()) {
@@ -255,26 +248,6 @@ void SemanticCheckerImpl::checkAtom(const Atom& atom) {
     for (const Argument* arg : atom.getArguments()) {
         checkArgument(*arg);
     }
-}
-
-void SemanticCheckerImpl::checkBranchInits() {
-    visitDepthFirst(program.getClauses(), [&](const BranchInit& adt) {
-        auto* type = sumTypesBranches.getType(adt.getConstructor());
-        if (type == nullptr) {
-            report.addError("Undeclared branch", adt.getSrcLoc());
-            return;
-        }
-
-        size_t declaredArity =
-                as<analysis::AlgebraicDataType>(type)->getBranchTypes(adt.getConstructor()).size();
-        size_t branchArity = adt.getArguments().size();
-        if (declaredArity != branchArity) {
-            report.addError(tfm::format("Invalid arity, the declared arity of %s is %s", adt.getConstructor(),
-                                    declaredArity),
-                    adt.getSrcLoc());
-            return;
-        }
-    });
 }
 
 namespace {
