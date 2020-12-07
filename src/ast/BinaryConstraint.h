@@ -70,11 +70,7 @@ public:
     }
 
     BinaryConstraint* clone() const override {
-        auto* copy = new BinaryConstraint(operation, souffle::clone(lhs), souffle::clone(rhs), getSrcLoc());
-        if (finalTranslatorType.has_value()) {
-            copy->setFinalType(finalTranslatorType.value());
-        }
-        return copy;
+        return new BinaryConstraint(operation, souffle::clone(lhs), souffle::clone(rhs), getSrcLoc());
     }
 
     void apply(const NodeMapper& map) override {
@@ -84,14 +80,6 @@ public:
 
     std::vector<const Node*> getChildNodes() const override {
         return {lhs.get(), rhs.get()};
-    }
-
-    void setFinalType(BinaryConstraintOp newType) {
-        finalTranslatorType = newType;
-    }
-
-    std::optional<BinaryConstraintOp> getFinalType() const {
-        return finalTranslatorType;
     }
 
 protected:
@@ -117,9 +105,6 @@ protected:
 
     /** Right-hand side argument of binary constraint */
     Own<Argument> rhs;
-
-    // TODO (azreika): remove after refactoring translator
-    std::optional<BinaryConstraintOp> finalTranslatorType;
 };
 
 }  // namespace souffle::ast

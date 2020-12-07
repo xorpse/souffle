@@ -108,7 +108,7 @@ Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clau
             // FIXME: float equiv (`FEQ`)
             auto constraint = mk<ast::BinaryConstraint>(
                     BinaryConstraintOp::EQ, souffle::clone(var), mk<ast::SubroutineArgument>(i));
-            constraint->setFinalType(BinaryConstraintOp::EQ);
+            // constraint->setFinalType(BinaryConstraintOp::EQ);
             intermediateClause->addToBody(std::move(constraint));
         } else if (auto func = dynamic_cast<ast::Functor*>(arg)) {
             TypeAttribute returnType;
@@ -124,12 +124,12 @@ Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clau
             auto opEq = returnType == TypeAttribute::Float ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ;
             auto constraint =
                     mk<ast::BinaryConstraint>(opEq, souffle::clone(func), mk<ast::SubroutineArgument>(i));
-            constraint->setFinalType(opEq);
+            // constraint->setFinalType(opEq);
             intermediateClause->addToBody(std::move(constraint));
         } else if (auto rec = dynamic_cast<ast::RecordInit*>(arg)) {
             auto constraint = mk<ast::BinaryConstraint>(
                     BinaryConstraintOp::EQ, souffle::clone(rec), mk<ast::SubroutineArgument>(i));
-            constraint->setFinalType(BinaryConstraintOp::EQ);
+            // constraint->setFinalType(BinaryConstraintOp::EQ);
             intermediateClause->addToBody(std::move(constraint));
         } else if (auto adt = dynamic_cast<ast::BranchInit*>(arg)) {
             // TODO: fill this out like record arguments
@@ -148,7 +148,7 @@ Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clau
             // arity - 1 is the level number in body atoms
             auto constraint = mk<ast::BinaryConstraint>(BinaryConstraintOp::LT,
                     souffle::clone(atomArgs[arity - 1]), mk<ast::SubroutineArgument>(levelIndex));
-            constraint->setFinalType(BinaryConstraintOp::LT);
+            // constraint->setFinalType(BinaryConstraintOp::LT);
             intermediateClause->addToBody(std::move(constraint));
         }
     }
