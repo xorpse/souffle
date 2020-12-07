@@ -34,3 +34,21 @@ f(0,[1]).
 f(1,[1]).
 g(x, [x]) :- f(x, [x]).
 record1(x, y) :- g(x, [y]).
+
+// Another test case (see Issue #1774) 
+
+.decl aX(x:number)
+.decl bX(x:number, y:number)
+.decl cX(x:number)
+.decl dX(A:number, B:number, C:number)
+.decl eX(A:number, B:number)
+.decl fX(A:number)
+.decl outX(A:number)
+
+cX(x)  :- aX(x), y=0.
+dX(q,V,O) :- bX(O,V), aX(q).
+fX(x) :- cX(x).
+outX(Y) :- dX(f,Y,f), fX(c), eX(a,b).
+
+.output outX
+
