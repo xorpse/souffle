@@ -599,8 +599,8 @@ void SemanticCheckerImpl::checkRelationDependencies(const Relation& relation) {
                         return key->getName() == attribute->getName();
                     });
             if (found == attributes.end()) {
-                report.addError(
-                        "Attribute " + key->getName() + " not found in relation definition.", fd->getSrcLoc());
+                report.addError("Attribute " + key->getName() + " not found in relation definition.",
+                        fd->getSrcLoc());
             }
         }
     }
