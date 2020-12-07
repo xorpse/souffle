@@ -316,8 +316,11 @@ bool MinimiseProgramTransformer::reduceSingletonRelations(TranslationUnit& trans
             if (areBijectivelyEquivalent(normedFirst, normedSecond)) {
                 QualifiedName firstName = first->getHead()->getQualifiedName();
                 QualifiedName secondName = second->getHead()->getQualifiedName();
-                redundantClauses.insert(second);
-                canonicalName.insert(std::pair(secondName, firstName));
+                // check whether relations have same definitions
+                if (*getRelation(program, firstName) == *getRelation(program, secondName)) {
+                    redundantClauses.insert(second);
+                    canonicalName.insert(std::pair(secondName, firstName));
+                }
             }
         }
     }
