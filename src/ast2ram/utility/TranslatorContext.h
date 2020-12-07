@@ -14,17 +14,24 @@
 
 #pragma once
 
+#include "AggregateOp.h"
+#include "FunctorOps.h"
+#include "ast/NumericConstant.h"
+#include "souffle/BinaryConstraintOps.h"
 #include "souffle/TypeAttribute.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <cstddef>
 #include <set>
 
 namespace souffle::ast {
+class Aggregator;
 class Atom;
+class BinaryConstraint;
 class BranchInit;
 class Clause;
 class Directive;
 class Functor;
+class IntrinsicFunctor;
 class Program;
 class QualifiedName;
 class Relation;
@@ -87,6 +94,12 @@ public:
     /** ADT methods */
     bool isADTEnum(const ast::BranchInit* adt) const;
     int getADTBranchId(const ast::BranchInit* adt) const;
+
+    /** Polymorphic objects methods */
+    ast::NumericConstant::Type getInferredNumericConstantType(const ast::NumericConstant* nc) const;
+    AggregateOp getOverloadedAggregatorOperator(const ast::Aggregator* aggr) const;
+    BinaryConstraintOp getOverloadedBinaryConstraintOperator(const ast::BinaryConstraint* bc) const;
+    FunctorOp getOverloadedFunctorOp(const ast::IntrinsicFunctor* inf) const;
 
     /** Analyses */
     const ast::SipsMetric* getSipsMetric() const {

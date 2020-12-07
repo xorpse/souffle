@@ -90,10 +90,6 @@ protected:
     Own<ram::Statement> generateMergeRelations(
             const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const;
 
-    /** Finalise the types of polymorphic objects */
-    // TODO (azreika): should be removed once the translator is refactored to avoid cloning
-    void finaliseAstTypes(ast::TranslationUnit& tu);
-
 private:
     std::map<std::string, Own<ram::Statement>> ramSubroutines;
 };

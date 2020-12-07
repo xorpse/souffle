@@ -455,27 +455,6 @@ VecOwn<ram::Relation> AstToRamTranslator::createRamRelations(const std::vector<s
     return ramRelations;
 }
 
-void AstToRamTranslator::finaliseAstTypes(ast::TranslationUnit& tu) {
-    auto& program = tu.getProgram();
-    const auto* polyAnalysis = tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
-    visitDepthFirst(program, [&](const ast::NumericConstant& nc) {
-        const_cast<ast::NumericConstant&>(nc).setFinalType(polyAnalysis->getInferredType(&nc));
-    });
-    visitDepthFirst(program, [&](const ast::Aggregator& aggr) {
-        const_cast<ast::Aggregator&>(aggr).setFinalType(polyAnalysis->getOverloadedOperator(&aggr));
-    });
-    visitDepthFirst(program, [&](const ast::BinaryConstraint& bc) {
-        const_cast<ast::BinaryConstraint&>(bc).setFinalType(polyAnalysis->getOverloadedOperator(&bc));
-    });
-    visitDepthFirst(program, [&](const ast::IntrinsicFunctor& inf) {
-        const_cast<ast::IntrinsicFunctor&>(inf).setFinalOpType(polyAnalysis->getOverloadedFunctionOp(&inf));
-        const_cast<ast::IntrinsicFunctor&>(inf).setFinalReturnType(context->getFunctorReturnType(&inf));
-    });
-    visitDepthFirst(program, [&](const ast::UserDefinedFunctor& udf) {
-        const_cast<ast::UserDefinedFunctor&>(udf).setFinalReturnType(context->getFunctorReturnType(&udf));
-    });
-}
-
 Own<ram::Sequence> AstToRamTranslator::generateProgram(const ast::TranslationUnit& translationUnit) {
     // Check if trivial program
     if (context->getNumberOfSCCs() == 0) {
@@ -516,16 +495,10 @@ Own<ram::Sequence> AstToRamTranslator::generateProgram(const ast::TranslationUni
 }
 
 Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit& tu) {
-    // Start timer
-    auto ram_start = std::chrono::high_resolution_clock::now();
-
     /* -- Set-up -- */
-    // Set up the translator
+    auto ram_start = std::chrono::high_resolution_clock::now();
     symbolTable = mk<SymbolTable>();
     context = mk<TranslatorContext>(tu);
-
-    // Finalise polymorphic types in the AST
-    finaliseAstTypes(tu);
 
     /* -- Translation -- */
     // Generate the RAM program code

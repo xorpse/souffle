@@ -168,6 +168,24 @@ size_t TranslatorContext::getEvaluationArity(const ast::Atom* atom) const {
     return auxArityAnalysis->getArity(originalRelation);
 }
 
+ast::NumericConstant::Type TranslatorContext::getInferredNumericConstantType(
+        const ast::NumericConstant* nc) const {
+    return polyAnalysis->getInferredType(nc);
+}
+
+AggregateOp TranslatorContext::getOverloadedAggregatorOperator(const ast::Aggregator* aggr) const {
+    return polyAnalysis->getOverloadedOperator(aggr);
+}
+
+BinaryConstraintOp TranslatorContext::getOverloadedBinaryConstraintOperator(
+        const ast::BinaryConstraint* bc) const {
+    return polyAnalysis->getOverloadedOperator(bc);
+}
+
+FunctorOp TranslatorContext::getOverloadedFunctorOp(const ast::IntrinsicFunctor* inf) const {
+    return polyAnalysis->getOverloadedFunctionOp(inf);
+}
+
 bool TranslatorContext::isADTEnum(const ast::BranchInit* adt) const {
     return ast::analysis::isADTEnum(sumTypeBranches->unsafeGetType(adt->getConstructor()));
 }
