@@ -18,7 +18,7 @@ colour("red").
 colour("green").
 colour("blue").
 
-node_colour("aaaa","red").
+node_colour("a","red").
 
 edge(x,y) :- edge(y,x).
 // Attempt to match a node with a colour: find any edges from this node, and ensure this node's
