@@ -368,13 +368,12 @@ Own<ram::Statement> AstToRamTranslator::generateRecursiveStratum(
     return mk<ram::Sequence>(std::move(result));
 }
 
-bool AstToRamTranslator::removeADTs(ast::TranslationUnit& tu) {
+bool AstToRamTranslator::removeADTs(const TranslatorContext& context, ast::TranslationUnit& tu) {
     struct ADTsFuneral : public ast::NodeMapper {
         mutable bool changed{false};
-        const ast::analysis::SumTypeBranchesAnalysis& sumTypesBranches;
+        const TranslatorContext& context;
 
-        ADTsFuneral(const ast::TranslationUnit& translationUnit)
-                : sumTypesBranches(*translationUnit.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>()) {}
+        ADTsFuneral(const TranslatorContext& context) : context(context) {}
 
         Own<ast::Node> operator()(Own<ast::Node> node) const override {
             // Rewrite sub-expressions first
@@ -386,21 +385,9 @@ bool AstToRamTranslator::removeADTs(ast::TranslationUnit& tu) {
 
             changed = true;
             auto& adt = *as<ast::BranchInit>(node);
-            auto& type = sumTypesBranches.unsafeGetType(adt.getConstructor());
-            auto& branches = type.getBranches();
+            auto branchID = context.getADTBranchId(&adt);
 
-            // Find branch ID.
-            ast::analysis::AlgebraicDataType::Branch searchDummy{adt.getConstructor(), {}};
-            auto iterToBranch = std::lower_bound(branches.begin(), branches.end(), searchDummy,
-                    [](const ast::analysis::AlgebraicDataType::Branch& left,
-                            const ast::analysis::AlgebraicDataType::Branch& right) {
-                        return left.name < right.name;
-                    });
-
-            // Branch id corresponds to the position in lexicographical ordering.
-            auto branchID = std::distance(std::begin(branches), iterToBranch);
-
-            if (isADTEnum(type)) {
+            if (context.isADTEnum(&adt)) {
                 auto branchTag = mk<ast::NumericConstant>(branchID);
                 branchTag->setFinalType(ast::NumericConstant::Type::Int);
                 return branchTag;
@@ -434,7 +421,7 @@ bool AstToRamTranslator::removeADTs(ast::TranslationUnit& tu) {
         }
     };
 
-    ADTsFuneral mapper(tu);
+    ADTsFuneral mapper(context);
     tu.getProgram().apply(mapper);
     return mapper.changed;
 }
@@ -586,12 +573,12 @@ Own<ram::Sequence> AstToRamTranslator::generateProgram(const ast::TranslationUni
     return mk<ram::Sequence>(std::move(res));
 }
 
-void AstToRamTranslator::preprocessAstProgram(ast::TranslationUnit& tu) {
+void AstToRamTranslator::preprocessAstProgram(const TranslatorContext& context, ast::TranslationUnit& tu) {
     // Finalise polymorphic types in the AST
     finaliseAstTypes(tu);
 
     // Replace ADTs with record representatives
-    removeADTs(tu);
+    removeADTs(context, tu);
 }
 
 Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit& tu) {
@@ -604,7 +591,7 @@ Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit
     context = mk<TranslatorContext>(tu);
 
     // Run the AST preprocessor
-    preprocessAstProgram(tu);
+    preprocessAstProgram(*context, tu);
 
     /* -- Translation -- */
     // Generate the RAM program code

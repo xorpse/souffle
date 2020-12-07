@@ -93,10 +93,10 @@ protected:
     /** -- AST preprocessing -- */
 
     /** Main general preprocessor */
-    virtual void preprocessAstProgram(ast::TranslationUnit& tu);
+    virtual void preprocessAstProgram(const TranslatorContext& context, ast::TranslationUnit& tu);
 
     /** Replace ADTs with special records */
-    bool removeADTs(ast::TranslationUnit& tu);
+    bool removeADTs(const TranslatorContext& context, ast::TranslationUnit& tu);
 
     /** Finalise the types of polymorphic objects */
     // TODO (azreika): should be removed once the translator is refactored to avoid cloning
