@@ -124,7 +124,7 @@ private:
     void checkClause(const Clause& clause);
     void checkComplexRule(std::set<const Clause*> multiRule);
     void checkRelationDeclaration(const Relation& relation);
-    void checkRelationDependencies(const Relation& relation);
+    void checkRelationFunctionalDependencies(const Relation& relation);
     void checkRelation(const Relation& relation);
 
     /** check if all the branches refer to the existing types. */
@@ -588,7 +588,7 @@ void SemanticCheckerImpl::checkRelationDeclaration(const Relation& relation) {
 }
 
 /* check that each functional dependency (keys) actually appears in the relation */
-void SemanticCheckerImpl::checkRelationDependencies(const Relation& relation) {
+void SemanticCheckerImpl::checkRelationFunctionalDependencies(const Relation& relation) {
     const auto attributes = relation.getAttributes();
     for (const auto& fd : relation.getFunctionalDependencies()) {
         // Check that keys appear in relation arguments
@@ -627,7 +627,7 @@ void SemanticCheckerImpl::checkRelation(const Relation& relation) {
     checkRelationDeclaration(relation);
 
     // check dependencies of relation are valid (i.e. attribute names occur in relation)
-    checkRelationDependencies(relation);
+    checkRelationFunctionalDependencies(relation);
 
     // check whether this relation is empty
     if (getClauses(program, relation).empty() && !ioTypes.isInput(&relation) &&
