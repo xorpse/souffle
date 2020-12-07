@@ -66,8 +66,6 @@ public:
     bool isSomethingDefinedOn(int level) const;
     void print(std::ostream& out) const;
 
-    // TODO: add definition point information for adts
-
 private:
     // Map from variable name to use-points
     std::map<std::string, std::set<Location>> varReferencePoints;
