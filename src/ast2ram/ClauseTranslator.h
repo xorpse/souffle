@@ -29,6 +29,7 @@ namespace souffle::ast {
 class Aggregator;
 class Argument;
 class Atom;
+class BranchInit;
 class Clause;
 class Constant;
 class IntrinsicFunctor;
@@ -130,6 +131,7 @@ private:
             const ast::Clause& originalClause, int curLevel, int version) const;
     Own<ram::Operation> addRecordUnpack(
             Own<ram::Operation> op, const ast::RecordInit* rec, int curLevel) const;
+    Own<ram::Operation> addAdtUnpack(Own<ram::Operation> op, const ast::BranchInit* adt, int curLevel) const;
     Own<ram::Operation> addConstantConstraints(
             size_t level, const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op) const;
     Own<ram::Operation> addEqualityCheck(

@@ -18,6 +18,7 @@
 #include "Global.h"
 #include "LogStatement.h"
 #include "ast/Aggregator.h"
+#include "ast/BranchInit.h"
 #include "ast/Clause.h"
 #include "ast/Constant.h"
 #include "ast/IntrinsicFunctor.h"
@@ -308,6 +309,29 @@ Own<ram::Operation> ClauseTranslator::addRecordUnpack(
     return op;
 }
 
+Own<ram::Operation> ClauseTranslator::addAdtUnpack(
+        Own<ram::Operation> op, const ast::BranchInit* adt, int curLevel) const {
+    assert(!context.isADTEnum(adt) && "ADT enums should not be unpacked");
+
+    // set branch tag constraint
+    op = addEqualityCheck(std::move(op), mk<ram::TupleElement>(curLevel, 0),
+            mk<ram::SignedConstant>(context.getADTBranchId(adt)), false);
+
+    // add remaining constant constraints
+    auto dummyArg = mk<ast::UnnamedVariable>();
+    std::vector<ast::Argument*> branchArguments;
+    branchArguments.push_back(dummyArg.get());
+    for (auto* arg : adt->getArguments()) {
+        branchArguments.push_back(arg);
+    }
+    op = addConstantConstraints(curLevel, branchArguments, std::move(op));
+
+    // add an unpack level
+    const Location& loc = valueIndex->getDefinitionPoint(*adt);
+    op = mk<ram::UnpackRecord>(std::move(op), curLevel, makeRamTupleElement(loc), branchArguments.size());
+    return op;
+}
+
 Own<ram::Operation> ClauseTranslator::addVariableIntroductions(
         const ast::Clause& clause, const ast::Clause& originalClause, int version, Own<ram::Operation> op) {
     for (int i = operators.size() - 1; i >= 0; i--) {
@@ -320,7 +344,7 @@ Own<ram::Operation> ClauseTranslator::addVariableIntroductions(
             op = addRecordUnpack(std::move(op), rec, i);
         } else if (const auto* adt = dynamic_cast<const ast::BranchInit*>(curOp)) {
             // add adt arguments through an unpack
-            // TODO: add adt stuff like for records
+            op = addAdtUnpack(std::move(op), adt, i);
         } else {
             fatal("Unsupported AST node for creation of scan-level!");
         }
@@ -600,7 +624,18 @@ void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::
 
         // check for nested ADT branches
         if (const auto* adt = dynamic_cast<const ast::BranchInit*>(arg)) {
-            // TODO: set the required information here, a la record inits
+            valueIndex->setAdtDefinition(*adt, nodeLevel, i);
+
+            // introduce new nesting level for unpack
+            auto unpackLevel = addOperatorLevel(adt);
+
+            auto dummyArg = mk<ast::UnnamedVariable>();
+            std::vector<ast::Argument*> arguments;
+            arguments.push_back(dummyArg.get());
+            for (auto* arg : adt->getArguments()) {
+                arguments.push_back(arg);
+            }
+            indexNodeArguments(unpackLevel, arguments);
         }
     }
 }
