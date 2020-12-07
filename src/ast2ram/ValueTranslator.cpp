@@ -91,7 +91,7 @@ Own<ram::Expression> ValueTranslator::visitIntrinsicFunctor(const ast::Intrinsic
     if (ast::analysis::FunctorAnalysis::isMultiResult(inf)) {
         return makeRamTupleElement(index.getGeneratorLoc(inf));
     } else {
-        return mk<ram::IntrinsicOperator>(inf.getFinalOpType().value(), std::move(values));
+        return mk<ram::IntrinsicOperator>(context.getOverloadedFunctorOp(&inf), std::move(values));
     }
 }
 

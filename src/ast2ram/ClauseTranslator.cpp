@@ -417,7 +417,7 @@ Own<ram::Operation> ClauseTranslator::instantiateMultiResultFunctor(
     }
 
     auto func_op = [&]() -> ram::NestedIntrinsicOp {
-        switch (inf->getFinalOpType().value()) {
+        switch (context.getOverloadedFunctorOp(inf)) {
             case FunctorOp::RANGE: return ram::NestedIntrinsicOp::RANGE;
             case FunctorOp::URANGE: return ram::NestedIntrinsicOp::URANGE;
             case FunctorOp::FRANGE: return ram::NestedIntrinsicOp::FRANGE;

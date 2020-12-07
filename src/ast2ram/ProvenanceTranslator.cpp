@@ -113,11 +113,9 @@ Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clau
         } else if (auto func = dynamic_cast<ast::Functor*>(arg)) {
             TypeAttribute returnType;
             if (auto* inf = dynamic_cast<ast::IntrinsicFunctor*>(func)) {
-                assert(inf->getFinalReturnType().has_value() && "functor has missing return type");
-                returnType = inf->getFinalReturnType().value();
+                returnType = context->getFunctorReturnType(inf);
             } else if (auto* udf = dynamic_cast<ast::UserDefinedFunctor*>(func)) {
-                assert(udf->getFinalReturnType().has_value() && "functor has missing return type");
-                returnType = udf->getFinalReturnType().value();
+                returnType = context->getFunctorReturnType(udf);
             } else {
                 assert(false && "unexpected functor type");
             }
