@@ -15,6 +15,7 @@
 #include "ast2ram/utility/TranslatorContext.h"
 #include "Global.h"
 #include "ast/Atom.h"
+#include "ast/BranchInit.h"
 #include "ast/Directive.h"
 #include "ast/QualifiedName.h"
 #include "ast/TranslationUnit.h"
@@ -25,6 +26,7 @@
 #include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/RelationSchedule.h"
 #include "ast/analysis/SCCGraph.h"
+#include "ast/analysis/SumTypeBranches.h"
 #include "ast/analysis/TypeEnvironment.h"
 #include "ast/analysis/TypeSystem.h"
 #include "ast/utility/SipsMetric.h"
@@ -47,6 +49,7 @@ TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
     relationDetail = tu.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
     ioType = tu.getAnalysis<ast::analysis::IOTypeAnalysis>();
     typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
+    sumTypeBranches = tu.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>();
 
     // Set up SIPS metric
     std::string sipsChosen = "all-bound";
@@ -161,6 +164,22 @@ size_t TranslatorContext::getEvaluationArity(const ast::Atom* atom) const {
 
     const auto* originalRelation = getRelation(ast::QualifiedName(relName));
     return auxArityAnalysis->getArity(originalRelation);
+}
+
+bool TranslatorContext::isADTEnum(const ast::BranchInit* adt) const {
+    return ast::analysis::isADTEnum(sumTypeBranches->unsafeGetType(adt->getConstructor()));
+}
+
+int TranslatorContext::getADTBranchId(const ast::BranchInit* adt) const {
+    const auto& type = sumTypeBranches->unsafeGetType(adt->getConstructor());
+    const auto& branches = type.getBranches();
+    ast::analysis::AlgebraicDataType::Branch searchDummy{adt->getConstructor(), {}};
+    auto iterToBranch = std::lower_bound(branches.begin(), branches.end(), searchDummy,
+            [](const ast::analysis::AlgebraicDataType::Branch& left,
+                    const ast::analysis::AlgebraicDataType::Branch& right) {
+                return left.name < right.name;
+            });
+    return std::distance(std::begin(branches), iterToBranch);
 }
 
 }  // namespace souffle::ast2ram

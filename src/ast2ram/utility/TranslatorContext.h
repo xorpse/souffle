@@ -21,6 +21,7 @@
 
 namespace souffle::ast {
 class Atom;
+class BranchInit;
 class Clause;
 class Directive;
 class Functor;
@@ -39,6 +40,7 @@ class IOTypeAnalysis;
 class RecursiveClausesAnalysis;
 class RelationDetailCacheAnalysis;
 class RelationScheduleAnalysis;
+class SumTypeBranchesAnalysis;
 class SCCGraphAnalysis;
 class TypeEnvironment;
 }  // namespace souffle::ast::analysis
@@ -81,6 +83,10 @@ public:
     const std::vector<TypeAttribute>& getFunctorArgTypes(const ast::UserDefinedFunctor& udf) const;
     bool isStatefulFunctor(const ast::UserDefinedFunctor* functor) const;
 
+    /** ADT methods */
+    bool isADTEnum(const ast::BranchInit* adt) const;
+    int getADTBranchId(const ast::BranchInit* adt) const;
+
     /** Analyses */
     const ast::SipsMetric* getSipsMetric() const {
         return sipsMetric.get();
@@ -100,6 +106,7 @@ private:
     const ast::analysis::FunctorAnalysis* functorAnalysis;
     const ast::analysis::IOTypeAnalysis* ioType;
     const ast::analysis::TypeEnvironment* typeEnv;
+    const ast::analysis::SumTypeBranchesAnalysis* sumTypeBranches;
     Own<ast::SipsMetric> sipsMetric;
 };
 
