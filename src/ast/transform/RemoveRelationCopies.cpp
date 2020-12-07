@@ -47,7 +47,8 @@ bool RemoveRelationCopiesTransformer::removeRelationCopies(TranslationUnit& tran
 
     // search for relations only defined by a single rule ..
     for (Relation* rel : program.getRelations()) {
-        if (rel->getFunctionalDependencies().empty() == false) {
+        // skip relations with functional dependencies
+        if (!rel->getFunctionalDependencies().empty()) {
             continue;
         }
         const auto& clauses = getClauses(program, *rel);
