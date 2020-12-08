@@ -39,6 +39,7 @@ souffle_sources = \
         ast/ExecutionPlan.h                                \
         ast/Functor.h                                      \
         ast/FunctorDeclaration.h                           \
+        ast/FunctionalConstraint.h                         \
         ast/Directive.h                                    \
         ast/IntrinsicFunctor.h                             \
         ast/Literal.h                                      \
@@ -264,6 +265,7 @@ souffle_sources = \
         ram/False.h                                        \
         ram/Filter.h                                       \
         ram/FloatConstant.h                                \
+        ram/GuardedProject.h                               \
         ram/IO.h                                           \
         ram/IndexAggregate.h                               \
         ram/IndexChoice.h                                  \
@@ -336,8 +338,6 @@ souffle_sources = \
         ram/transform/HoistConditions.h                    \
         ram/transform/IfConversion.cpp                     \
         ram/transform/IfConversion.h                       \
-        ram/transform/IndexedInequality.cpp                \
-        ram/transform/IndexedInequality.h                  \
         ram/transform/Loop.h                               \
         ram/transform/MakeIndex.cpp                        \
         ram/transform/MakeIndex.h                          \

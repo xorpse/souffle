@@ -574,19 +574,26 @@ void TypeConstraintsAnalysis::visitBranchInit(const BranchInit& adt) {
     // Constraint on the whole branch. $Branch(...) <: ADTtype
     addConstraint(isSubtypeOf(getVar(adt), *correspondingType));
 
-    // Constraints on arguments
-    auto branchTypes = as<AlgebraicDataType>(correspondingType)->getBranchTypes(adt.getConstructor());
-    auto branchArgs = adt.getArguments();
+    // Even if the branch was declared,
+    // it could be that the corresponding branch doesn't exist in the type environment.
+    // This can happen when the branch was declared over the invalid type.
+    try {
+        // Constraints on arguments
+        auto branchTypes = as<AlgebraicDataType>(correspondingType)->getBranchTypes(adt.getConstructor());
+        auto branchArgs = adt.getArguments();
 
-    if (branchTypes.size() != branchArgs.size()) {
-        // invalid program - handled by semantic checker later.
-        return;
-    }
+        if (branchTypes.size() != branchArgs.size()) {
+            // invalid program - handled by semantic checker later.
+            return;
+        }
 
-    // Add constraints for each of the branch arguments.
-    for (size_t i = 0; i < branchArgs.size(); ++i) {
-        auto argVar = getVar(branchArgs[i]);
-        addConstraint(isSubtypeOf(argVar, *branchTypes[i]));
+        // Add constraints for each of the branch arguments.
+        for (size_t i = 0; i < branchArgs.size(); ++i) {
+            auto argVar = getVar(branchArgs[i]);
+            addConstraint(isSubtypeOf(argVar, *branchTypes[i]));
+        }
+    } catch (...) {
+        // malformed program - reported by semantic checker.
     }
 }
 

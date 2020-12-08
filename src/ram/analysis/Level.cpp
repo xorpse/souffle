@@ -146,6 +146,16 @@ int LevelAnalysis::getLevel(const Node* node) const {
             return visit(b.getCondition());
         }
 
+        // guarded project
+        int visitGuardedProject(const GuardedProject& guardedProject) override {
+            int level = -1;
+            for (auto& exp : guardedProject.getValues()) {
+                level = std::max(level, visit(exp));
+            }
+            level = std::max(level, visit(guardedProject.getCondition()));
+            return level;
+        }
+
         // project
         int visitProject(const Project& project) override {
             int level = -1;

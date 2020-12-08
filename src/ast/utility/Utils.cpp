@@ -117,6 +117,8 @@ void removeRelationClauses(TranslationUnit& tu, const QualifiedName& name) {
     for (const auto& clause : clausesToRemove) {
         program.removeClause(clause.get());
     }
+
+    tu.invalidateAnalyses();
 }
 
 void removeRelationIOs(TranslationUnit& tu, const QualifiedName& name) {

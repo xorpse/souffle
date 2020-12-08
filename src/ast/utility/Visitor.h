@@ -31,6 +31,7 @@
 #include "ast/Constant.h"
 #include "ast/Constraint.h"
 #include "ast/Counter.h"
+#include "ast/FunctionalConstraint.h"
 #include "ast/Functor.h"
 #include "ast/IntrinsicFunctor.h"
 #include "ast/Literal.h"
@@ -126,6 +127,7 @@ struct Visitor : public ast_visitor_tag {
         FORWARD(Negation)
         FORWARD(BooleanConstraint)
         FORWARD(BinaryConstraint)
+        FORWARD(FunctionalConstraint)
 
         // components
         FORWARD(ComponentType);
@@ -191,6 +193,7 @@ protected:
 
     LINK(BooleanConstraint, Constraint)
     LINK(BinaryConstraint, Constraint)
+    LINK(FunctionalConstraint, Constraint)
     LINK(Constraint, Literal)
 
     // components

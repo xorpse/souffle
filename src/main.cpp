@@ -73,7 +73,6 @@
 #include "ram/transform/HoistAggregate.h"
 #include "ram/transform/HoistConditions.h"
 #include "ram/transform/IfConversion.h"
-#include "ram/transform/IndexedInequality.h"
 #include "ram/transform/Loop.h"
 #include "ram/transform/MakeIndex.h"
 #include "ram/transform/Parallel.h"
@@ -595,8 +594,8 @@ int main(int argc, char** argv) {
         Own<Transformer> ramTransform = mk<TransformerSequence>(
                 mk<LoopTransformer>(mk<TransformerSequence>(mk<ExpandFilterTransformer>(),
                         mk<HoistConditionsTransformer>(), mk<MakeIndexTransformer>())),
-                mk<LoopTransformer>(mk<IndexedInequalityTransformer>()), mk<IfConversionTransformer>(),
-                mk<ChoiceConversionTransformer>(), mk<CollapseFiltersTransformer>(), mk<TupleIdTransformer>(),
+                mk<IfConversionTransformer>(), mk<ChoiceConversionTransformer>(),
+                mk<CollapseFiltersTransformer>(), mk<TupleIdTransformer>(),
                 mk<LoopTransformer>(
                         mk<TransformerSequence>(mk<HoistAggregateTransformer>(), mk<TupleIdTransformer>())),
                 mk<ExpandFilterTransformer>(), mk<HoistConditionsTransformer>(),

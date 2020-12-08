@@ -50,6 +50,10 @@ std::string getRelationName(const ast::QualifiedName& name) {
     return toString(join(name.getQualifiers(), "."));
 }
 
+std::string getBaseRelationName(const ast::QualifiedName& name) {
+    return stripPrefix("@new_", stripPrefix("@delta_", stripPrefix("@info_", name.toString())));
+}
+
 void appendStmt(VecOwn<ram::Statement>& stmtList, Own<ram::Statement> stmt) {
     if (stmt) {
         stmtList.push_back(std::move(stmt));

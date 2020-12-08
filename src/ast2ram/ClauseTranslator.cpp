@@ -49,6 +49,7 @@
 #include "ram/ExistenceCheck.h"
 #include "ram/Filter.h"
 #include "ram/FloatConstant.h"
+#include "ram/GuardedProject.h"
 #include "ram/LogRelationTimer.h"
 #include "ram/LogSize.h"
 #include "ram/LogTimer.h"
@@ -186,16 +187,11 @@ std::string ClauseTranslator::getClauseAtomName(const ast::Clause& clause, const
 Own<ram::Statement> ClauseTranslator::createRamFactQuery(const ast::Clause& clause) const {
     assert(isFact(clause) && "clause should be fact");
     assert(!isRecursive() && "recursive clauses cannot have facts");
-    const auto* head = clause.getHead();
 
-    // Translate arguments
-    VecOwn<ram::Expression> values;
-    for (auto& arg : head->getArguments()) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, ValueIndex(), arg));
-    }
+    auto project = createProjection(clause, clause);
 
     // Create a fact statement
-    return mk<ram::Query>(mk<ram::Project>(getClauseAtomName(clause, head), std::move(values)));
+    return mk<ram::Query>((std::move(project)));
 }
 
 Own<ram::Statement> ClauseTranslator::createRamRuleQuery(
@@ -210,7 +206,7 @@ Own<ram::Statement> ClauseTranslator::createRamRuleQuery(
     indexClause(clause);
 
     // Set up the RAM statement bottom-up
-    auto op = createProjection(clause);
+    auto op = createProjection(clause, originalClause);
     op = addVariableBindingConstraints(std::move(op));
     op = addBodyLiteralConstraints(clause, std::move(op));
     op = addGeneratorLevels(std::move(op), clause);
@@ -241,23 +237,27 @@ Own<ram::Operation> ClauseTranslator::addVariableBindingConstraints(Own<ram::Ope
     return op;
 }
 
-Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause) const {
+Own<ram::Operation> ClauseTranslator::createProjection(
+        const ast::Clause& clause, const ast::Clause& originalClause) const {
     const auto head = clause.getHead();
     auto headRelationName = getClauseAtomName(clause, head);
+    const auto relInfo = context.getRelation(originalClause.getHead()->getQualifiedName());
 
     VecOwn<ram::Expression> values;
     for (const auto* arg : head->getArguments()) {
         values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, arg));
     }
 
-    Own<ram::Operation> project = mk<ram::Project>(headRelationName, std::move(values));
+    auto guardedConditions = getFunctionalDependencies(clause, relInfo);
 
     if (head->getArity() == 0) {
-        project = mk<ram::Filter>(mk<ram::EmptinessCheck>(headRelationName), std::move(project));
+        return mk<ram::Filter>(mk<ram::EmptinessCheck>(headRelationName),
+                mk<ram::Project>(headRelationName, std::move(values)));
     }
-
-    // build up insertion call
-    return project;  // start with innermost
+    if (guardedConditions == nullptr) {
+        return mk<ram::Project>(headRelationName, std::move(values));
+    }
+    return mk<ram::GuardedProject>(headRelationName, std::move(values), std::move(guardedConditions));
 }
 
 Own<ram::Operation> ClauseTranslator::addAtomScan(Own<ram::Operation> op, const ast::Atom* atom,
@@ -564,6 +564,69 @@ Own<ram::Operation> ClauseTranslator::addConstantConstraints(
     }
 
     return op;
+}
+
+Own<ram::Condition> ClauseTranslator::getFunctionalDependencies(
+        const ast::Clause& clause, const ast::Relation* relation) const {
+    const auto head = clause.getHead();
+    auto headRelationName = getConcreteRelationName(head->getQualifiedName());
+    VecOwn<ram::Condition> dependencies;
+    // Impose the functional dependencies of the relation on each PROJECT
+    if (!relation->getFunctionalDependencies().empty()) {
+        const auto attributes = relation->getAttributes();
+        std::vector<const ast::FunctionalConstraint*> addedConstraints;
+        for (const auto& fd : relation->getFunctionalDependencies()) {
+            // skip if already has an equivalent constraints added.
+            bool added = false;
+            for (const auto other : addedConstraints) {
+                if (other->equivalentConstraint(*fd)) {
+                    added = true;
+                    break;
+                }
+            }
+            if (added) {
+                continue;
+            } else {
+                addedConstraints.push_back(fd);
+            }
+            // Remove redunatnt attributes within same key.
+            std::set<std::string> keys;
+            for (auto key : fd->getKeys()) {
+                keys.insert(key->getName());
+            }
+            VecOwn<ram::Expression> vals;
+            VecOwn<ram::Expression> valsCopy;
+            for (size_t i = 0; i < attributes.size(); ++i) {
+                const auto attribute = attributes[i];
+                auto found = keys.find(attribute->getName());
+
+                // If this particular source argument matches the head argument, insert it.
+                if (found != keys.end()) {
+                    vals.push_back(ValueTranslator::translate(
+                            context, symbolTable, *valueIndex, head->getArguments()[i]));
+                    valsCopy.push_back(ValueTranslator::translate(
+                            context, symbolTable, *valueIndex, head->getArguments()[i]));
+                    // Otherwise insert ⊥
+                } else {
+                    vals.push_back(mk<ram::UndefValue>());
+                    valsCopy.push_back(mk<ram::UndefValue>());
+                }
+            }
+
+            // if we are in a recursive clause, need to guard both new and original relation.
+            if (isPrefix("@new_", head->getQualifiedName().toString())) {
+                dependencies.push_back(
+                        mk<ram::Negation>(mk<ram::ExistenceCheck>(headRelationName, std::move(vals))));
+                dependencies.push_back(mk<ram::Negation>(mk<ram::ExistenceCheck>(
+                        relation->getQualifiedName().toString(), std::move(valsCopy))));
+            } else {
+                dependencies.push_back(
+                        mk<ram::Negation>(mk<ram::ExistenceCheck>(headRelationName, std::move(vals))));
+            }
+        }
+    }
+
+    return ram::toCondition(dependencies);
 }
 
 std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(

@@ -30,6 +30,7 @@
 #include "ast/IntrinsicFunctor.h"
 #include "ast/analysis/Functor.h"
 #include "ast/analysis/PolymorphicObjects.h"
+#include "ast/analysis/SumTypeBranches.h"
 #include "ast/analysis/Type.h"
 #include "ast/analysis/TypeEnvironment.h"
 #include "ast/analysis/TypeSystem.h"
@@ -83,6 +84,8 @@ private:
     const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>()->getTypeEnvironment();
     const FunctorAnalysis& functorAnalysis = *tu.getAnalysis<FunctorAnalysis>();
     const PolymorphicObjectsAnalysis& polyAnalysis = *tu.getAnalysis<PolymorphicObjectsAnalysis>();
+    const SumTypeBranchesAnalysis& sumTypesBranches = *tu.getAnalysis<SumTypeBranchesAnalysis>();
+
     const Program& program = tu.getProgram();
 
     std::unordered_set<const Atom*> negatedAtoms;
@@ -422,6 +425,11 @@ void TypeCheckerImpl::visitRecordInit(const RecordInit& rec) {
 void TypeCheckerImpl::visitBranchInit(const BranchInit& adt) {
     TypeSet types = typeAnalysis.getTypes(&adt);
 
+    if (sumTypesBranches.getType(adt.getConstructor()) == nullptr) {
+        report.addError("Undeclared branch", adt.getSrcLoc());
+        return;
+    }
+
     if (!isOfKind(types, TypeAttribute::ADT) || types.isAll() || types.size() != 1) {
         report.addError("Ambiguous branch", adt.getSrcLoc());
         return;
@@ -431,10 +439,13 @@ void TypeCheckerImpl::visitBranchInit(const BranchInit& adt) {
     auto& sumType = *as<analysis::AlgebraicDataType>(*types.begin());
 
     auto& argsDeclaredTypes = sumType.getBranchTypes(adt.getConstructor());
+
     auto args = adt.getArguments();
 
     if (argsDeclaredTypes.size() != args.size()) {
-        // Invalid branchInit arity, handled by checkBranchInits.
+        report.addError(tfm::format("Invalid arity, the declared arity of %s is %s", adt.getConstructor(),
+                                argsDeclaredTypes.size()),
+                adt.getSrcLoc());
         return;
     }
 

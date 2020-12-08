@@ -63,7 +63,6 @@
 #include "ast/analysis/PrecedenceGraph.h"
 #include "ast/analysis/RecursiveClauses.h"
 #include "ast/analysis/SCCGraph.h"
-#include "ast/analysis/SumTypeBranches.h"
 #include "ast/analysis/Type.h"
 #include "ast/analysis/TypeEnvironment.h"
 #include "ast/analysis/TypeSystem.h"
@@ -108,7 +107,6 @@ private:
     const PrecedenceGraphAnalysis& precedenceGraph = *tu.getAnalysis<PrecedenceGraphAnalysis>();
     const RecursiveClausesAnalysis& recursiveClauses = *tu.getAnalysis<RecursiveClausesAnalysis>();
     const SCCGraphAnalysis& sccGraph = *tu.getAnalysis<SCCGraphAnalysis>();
-    const SumTypeBranchesAnalysis& sumTypesBranches = *tu.getAnalysis<SumTypeBranchesAnalysis>();
 
     const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>()->getTypeEnvironment();
     const Program& program = tu.getProgram();
@@ -124,10 +122,8 @@ private:
     void checkClause(const Clause& clause);
     void checkComplexRule(std::set<const Clause*> multiRule);
     void checkRelationDeclaration(const Relation& relation);
+    void checkRelationFunctionalDependencies(const Relation& relation);
     void checkRelation(const Relation& relation);
-
-    /** check if all the branches refer to the existing types. */
-    void checkBranchInits();
 
     void checkNamespaces();
     void checkIO();
@@ -171,8 +167,6 @@ SemanticCheckerImpl::SemanticCheckerImpl(TranslationUnit& tu) : tu(tu) {
             }
         }
     }
-
-    checkBranchInits();
 
     // check rules
     for (auto* rel : program.getRelations()) {
@@ -255,26 +249,6 @@ void SemanticCheckerImpl::checkAtom(const Atom& atom) {
     for (const Argument* arg : atom.getArguments()) {
         checkArgument(*arg);
     }
-}
-
-void SemanticCheckerImpl::checkBranchInits() {
-    visitDepthFirst(program.getClauses(), [&](const BranchInit& adt) {
-        auto* type = sumTypesBranches.getType(adt.getConstructor());
-        if (type == nullptr) {
-            report.addError("Undeclared branch", adt.getSrcLoc());
-            return;
-        }
-
-        size_t declaredArity =
-                as<analysis::AlgebraicDataType>(type)->getBranchTypes(adt.getConstructor()).size();
-        size_t branchArity = adt.getArguments().size();
-        if (declaredArity != branchArity) {
-            report.addError(tfm::format("Invalid arity, the declared arity of %s is %s", adt.getConstructor(),
-                                    declaredArity),
-                    adt.getSrcLoc());
-            return;
-        }
-    });
 }
 
 namespace {
@@ -586,6 +560,25 @@ void SemanticCheckerImpl::checkRelationDeclaration(const Relation& relation) {
     }
 }
 
+/* check that each functional dependency (keys) actually appears in the relation */
+void SemanticCheckerImpl::checkRelationFunctionalDependencies(const Relation& relation) {
+    const auto attributes = relation.getAttributes();
+    for (const auto& fd : relation.getFunctionalDependencies()) {
+        // Check that keys appear in relation arguments
+        const auto keys = fd->getKeys();
+        for (const auto& key : keys) {
+            auto found = std::find_if(
+                    attributes.begin(), attributes.end(), [&key](const ast::Attribute* attribute) {
+                        return key->getName() == attribute->getName();
+                    });
+            if (found == attributes.end()) {
+                report.addError("Attribute " + key->getName() + " not found in relation definition.",
+                        fd->getSrcLoc());
+            }
+        }
+    }
+}
+
 void SemanticCheckerImpl::checkRelation(const Relation& relation) {
     if (relation.getRepresentation() == RelationRepresentation::EQREL) {
         if (relation.getArity() == 2) {
@@ -605,6 +598,9 @@ void SemanticCheckerImpl::checkRelation(const Relation& relation) {
 
     // start with declaration
     checkRelationDeclaration(relation);
+
+    // check dependencies of relation are valid (i.e. attribute names occur in relation)
+    checkRelationFunctionalDependencies(relation);
 
     // check whether this relation is empty
     if (getClauses(program, relation).empty() && !ioTypes.isInput(&relation) &&

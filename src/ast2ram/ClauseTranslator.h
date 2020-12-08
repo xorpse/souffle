@@ -88,7 +88,8 @@ protected:
     Own<ram::Statement> translateClause(
             const ast::Clause& clause, const ast::Clause& originalClause, int version);
 
-    virtual Own<ram::Operation> createProjection(const ast::Clause& clause) const;
+    virtual Own<ram::Operation> createProjection(
+            const ast::Clause& clause, const ast::Clause& originalClause) const;
     virtual Own<ram::Condition> createCondition(const ast::Clause& originalClause) const;
 
 private:
@@ -138,6 +139,8 @@ private:
             size_t level, const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op) const;
     Own<ram::Operation> addEqualityCheck(
             Own<ram::Operation> op, Own<ram::Expression> lhs, Own<ram::Expression> rhs, bool isFloat) const;
+    Own<ram::Condition> getFunctionalDependencies(
+            const ast::Clause& clause, const ast::Relation* targetRelation) const;
 
     /** Constant translation */
     RamDomain getConstantRamRepresentation(SymbolTable& symbolTable, const ast::Constant& constant) const;

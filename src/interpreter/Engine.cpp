@@ -1052,6 +1052,15 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
             return result;
         ESAC(Filter)
 
+#define GUARDED_PROJECT(Structure, Arity, ...)                   \
+    CASE(GuardedProject, Structure, Arity)                       \
+        auto& rel = *static_cast<RelType*>(node->getRelation()); \
+        return evalGuardedProject(rel, shadow, ctxt);            \
+    ESAC(GuardedProject)
+
+        FOR_EACH(GUARDED_PROJECT)
+#undef GUARDED_PROJECT
+
 #define PROJECT(Structure, Arity, ...)                           \
     CASE(Project, Structure, Arity)                              \
         auto& rel = *static_cast<RelType*>(node->getRelation()); \
@@ -1675,6 +1684,31 @@ RamDomain Engine::evalIndexAggregate(
 
 template <typename Rel>
 RamDomain Engine::evalProject(Rel& rel, const Project& shadow, Context& ctxt) {
+    constexpr size_t Arity = Rel::Arity;
+    const auto& superInfo = shadow.getSuperInst();
+    souffle::Tuple<RamDomain, Arity> tuple;
+    TUPLE_COPY_FROM(tuple, superInfo.first);
+
+    /* TupleElement */
+    for (const auto& tupleElement : superInfo.tupleFirst) {
+        tuple[tupleElement[0]] = ctxt[tupleElement[1]][tupleElement[2]];
+    }
+    /* Generic */
+    for (const auto& expr : superInfo.exprFirst) {
+        tuple[expr.first] = execute(expr.second.get(), ctxt);
+    }
+
+    // insert in target relation
+    rel.insert(tuple);
+    return true;
+}
+
+template <typename Rel>
+RamDomain Engine::evalGuardedProject(Rel& rel, const GuardedProject& shadow, Context& ctxt) {
+    if (!execute(shadow.getCondition(), ctxt)) {
+        return true;
+    }
+
     constexpr size_t Arity = Rel::Arity;
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> tuple;

@@ -54,23 +54,27 @@ enum class AttributeConstraint { None, Equal, Inequal };
 class SearchSignature {
 public:
     class Iterator;
+
     explicit SearchSignature(size_t arity);
-    size_t arity() const;
 
     // array subscript operator
     AttributeConstraint& operator[](std::size_t pos);
     const AttributeConstraint& operator[](std::size_t pos) const;
 
     // comparison operators
-    bool operator<(const SearchSignature& other) const;
     bool operator==(const SearchSignature& other) const;
     bool operator!=(const SearchSignature& other) const;
 
+    // helper member functions
     bool empty() const;
+    bool precedes(const SearchSignature& other) const;
+    size_t arity() const;
 
+    // create new signatures from these functions
     static SearchSignature getDelta(const SearchSignature& lhs, const SearchSignature& rhs);
     static SearchSignature getFullSearchSignature(size_t arity);
 
+    // printing
     friend std::ostream& operator<<(std::ostream& out, const SearchSignature& signature);
 
     // hashing class
@@ -319,8 +323,8 @@ public:
 
 using SearchSet = std::set<SearchSignature, SearchComparator>;
 // SearchSignatures only have a partial order, however we need to produce a unique ordering of searches
-// when we output the name of the index and therefore we order the SearchSignatures arbitrarily by their
-// hashes
+// when we output the name of the collection of searches and therefore we order the SearchSignatures
+// arbitrarily by their hashes
 
 class MinIndexSelection {
 public:
@@ -345,11 +349,6 @@ public:
     const LexOrder& getLexOrder(SearchSignature cols) const {
         int idx = map(cols);
         return orders[idx];
-    }
-
-    /** @Brief Get index for a search */
-    int getLexOrderNum(SearchSignature cols) const {
-        return map(cols);
     }
 
     /** @Brief Get all indexes */
@@ -388,9 +387,6 @@ public:
         }
         orders.push_back(std::move(totalOrder));
     }
-    /** Return the attribute position for each indexed operation that should be discharged.
-     */
-    const AttributeSet getAttributesToDischarge(const Relation& rel, const SearchSignature& s) const;
 
     void print(std::ostream& os) {
         /* Print searches */
@@ -420,7 +416,6 @@ public:
 protected:
     SignatureIndexMap signatureToIndexA;  // mapping of a SearchSignature on A to its unique index
     SignatureIndexMap signatureToIndexB;  // mapping of a SearchSignature on B to its unique index
-    DischargeMap dischargedMap;           // mapping of a SearchSignature to the attributes to discharge
     IndexSignatureMap indexToSignature;   // mapping of a unique index to its SearchSignature
     SearchSet searches;                   // set of search patterns on table
     OrderCollection orders;               // collection of lexicographical orders
@@ -476,14 +471,6 @@ protected:
 
     /** @Brief get all chains from the matching */
     const ChainOrderMap getChainsFromMatching(const MaxMatching::Matchings& match, const SearchSet& nodes);
-
-    /** @param OldSearch to be updated
-     *  @param NewSearch to replace the OldSearch
-     */
-    void updateSearch(SearchSignature oldSearch, SearchSignature newSearch);
-
-    /** @Brief remove arbitrary extra inequalities */
-    void removeExtraInequalities();
 
     /** @Brief get all nodes which are unmatched from A-> B */
     const SearchSet getUnmatchedKeys(const MaxMatching::Matchings& match, const SearchSet& nodes) {
@@ -546,10 +533,6 @@ public:
     static constexpr const char* name = "index-analysis";
 
     void run(const TranslationUnit& translationUnit) override;
-
-    const AttributeSet getAttributesToDischarge(const Relation& rel, const SearchSignature& s) const {
-        return minIndexCover.at(rel.getName()).getAttributesToDischarge(rel, s);
-    }
 
     const FinalIndexSelection getIndexSelection(const std::string& relName) const {
         SignatureOrderMap indexSelection = {};
