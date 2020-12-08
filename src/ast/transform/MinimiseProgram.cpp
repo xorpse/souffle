@@ -138,7 +138,8 @@ bool MinimiseProgramTransformer::existsValidPermutation(const NormalisedClause& 
     return false;
 }
 
-bool MinimiseProgramTransformer::areEquivalentRelations(Relation* firstRelation, Relation* secondRelation) {
+bool MinimiseProgramTransformer::areEquivalentRelations(
+        const Relation* firstRelation, const Relation* secondRelation) {
     // check whether relations have same qualifiers, representation, and attribute types
     if (firstRelation->getQualifiers() == secondRelation->getQualifiers() &&
             firstRelation->getRepresentation() == secondRelation->getRepresentation()) {
@@ -458,4 +459,4 @@ bool MinimiseProgramTransformer::transform(TranslationUnit& translationUnit) {
     return changed;
 }
 
-}  // namespace souffle::ast::transform
+}
