@@ -83,7 +83,7 @@ Own<ram::Statement> ClauseTranslator::generateClause(
 }
 
 VecOwn<ram::Statement> ClauseTranslator::generateClauseVersions(const TranslatorContext& context,
-        SymbolTable& symbolTable, const std::set<const ast::Relation*>& scc, const ast::Clause* clause) {
+        SymbolTable& symbolTable, const ast::Clause* clause, const std::set<const ast::Relation*>& scc) {
     VecOwn<ram::Statement> clauseVersions;
 
     // Create each version

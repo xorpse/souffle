@@ -65,7 +65,7 @@ public:
 
     /** Generate RAM code for a recursive clause */
     static VecOwn<ram::Statement> generateClauseVersions(const TranslatorContext& context,
-            SymbolTable& symbolTable, const std::set<const ast::Relation*>& scc, const ast::Clause* clause);
+            SymbolTable& symbolTable, const ast::Clause* clause, const std::set<const ast::Relation*>& scc);
 
 protected:
     const TranslatorContext& context;
