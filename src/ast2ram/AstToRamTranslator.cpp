@@ -118,7 +118,8 @@ Own<ram::Statement> AstToRamTranslator::generateNonRecursiveRelation(const ast::
         }
 
         // Translate clause
-        Own<ram::Statement> rule = ClauseTranslator::generateClause(*context, *symbolTable, *clause);
+        Own<ram::Statement> rule =
+                ClauseTranslator::translateNonRecursiveClause(*context, *symbolTable, *clause);
 
         // Add logging
         if (Global::config().has("profile")) {
@@ -236,7 +237,7 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
             continue;
         }
 
-        auto clauseVersions = ClauseTranslator::generateClauseVersions(*context, *symbolTable, cl, scc);
+        auto clauseVersions = ClauseTranslator::translateRecursiveClause(*context, *symbolTable, cl, scc);
         for (auto& clauseVersion : clauseVersions) {
             appendStmt(result, std::move(clauseVersion));
         }

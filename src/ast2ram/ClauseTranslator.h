@@ -58,13 +58,10 @@ public:
     ~ClauseTranslator();
 
     /** Entry points */
+    static Own<ram::Statement> translateNonRecursiveClause(
+            const TranslatorContext& context, SymbolTable& symbolTable, const ast::Clause& clause);
 
-    /** Generate RAM code for a non-recursive clause */
-    static Own<ram::Statement> generateClause(const TranslatorContext& context, SymbolTable& symbolTable,
-            const ast::Clause& clause, size_t version = 0);
-
-    /** Generate RAM code for a recursive clause */
-    static VecOwn<ram::Statement> generateClauseVersions(const TranslatorContext& context,
+    static VecOwn<ram::Statement> translateRecursiveClause(const TranslatorContext& context,
             SymbolTable& symbolTable, const ast::Clause* clause, const std::set<const ast::Relation*>& scc);
 
 protected:
@@ -85,7 +82,7 @@ protected:
     // value index to keep track of references in the loop nest
     Own<ValueIndex> valueIndex;
 
-    Own<ram::Statement> translateClause(const ast::Clause& clause, size_t version);
+    Own<ram::Statement> translateClause(const ast::Clause& clause, size_t version = 0);
 
     virtual Own<ram::Operation> createProjection(const ast::Clause& clause) const;
     virtual Own<ram::Condition> createCondition(const ast::Clause& clause) const;

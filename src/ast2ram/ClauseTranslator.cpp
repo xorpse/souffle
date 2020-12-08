@@ -77,12 +77,12 @@ ClauseTranslator::ClauseTranslator(const TranslatorContext& context, SymbolTable
 
 ClauseTranslator::~ClauseTranslator() = default;
 
-Own<ram::Statement> ClauseTranslator::generateClause(const TranslatorContext& context,
-        SymbolTable& symbolTable, const ast::Clause& clause, size_t version) {
-    return ClauseTranslator(context, symbolTable).translateClause(clause, version);
+Own<ram::Statement> ClauseTranslator::translateNonRecursiveClause(
+        const TranslatorContext& context, SymbolTable& symbolTable, const ast::Clause& clause) {
+    return ClauseTranslator(context, symbolTable).translateClause(clause);
 }
 
-VecOwn<ram::Statement> ClauseTranslator::generateClauseVersions(const TranslatorContext& context,
+VecOwn<ram::Statement> ClauseTranslator::translateRecursiveClause(const TranslatorContext& context,
         SymbolTable& symbolTable, const ast::Clause* clause, const std::set<const ast::Relation*>& scc) {
     const auto& sccAtoms = filter(ast::getBodyLiterals<ast::Atom>(*clause),
             [&](const ast::Atom* atom) { return contains(scc, context.getAtomRelation(atom)); });
