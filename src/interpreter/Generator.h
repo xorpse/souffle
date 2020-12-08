@@ -191,6 +191,8 @@ public:
 
     NodePtr visitFilter(const ram::Filter& filter) override;
 
+    NodePtr visitGuardedProject(const ram::GuardedProject& guardedPorject) override;
+
     NodePtr visitProject(const ram::Project& project) override;
 
     NodePtr visitSubroutineReturn(const ram::SubroutineReturn& ret) override;

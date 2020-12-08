@@ -324,6 +324,15 @@ NodePtr NodeGenerator::visitFilter(const ram::Filter& filter) {
     return mk<Filter>(I_Filter, &filter, visit(filter.getCondition()), visit(filter.getOperation()));
 }
 
+NodePtr NodeGenerator::visitGuardedProject(const ram::GuardedProject& guardedProject) {
+    SuperInstruction superOp = getProjectSuperInstInfo(guardedProject);
+    size_t relId = encodeRelation(guardedProject.getRelation());
+    auto rel = getRelationHandle(relId);
+    NodeType type = constructNodeType("GuardedProject", lookup(guardedProject.getRelation()));
+    auto condition = guardedProject.getCondition();
+    return mk<GuardedProject>(type, &guardedProject, rel, std::move(superOp), visit(condition));
+}
+
 NodePtr NodeGenerator::visitProject(const ram::Project& project) {
     SuperInstruction superOp = getProjectSuperInstInfo(project);
     size_t relId = encodeRelation(project.getRelation());

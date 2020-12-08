@@ -51,6 +51,7 @@
     #include "ast/Counter.h"
     #include "ast/ExecutionOrder.h"
     #include "ast/ExecutionPlan.h"
+    #include "ast/FunctionalConstraint.h"
     #include "ast/FunctorDeclaration.h"
     #include "ast/Directive.h"
     #include "ast/IntrinsicFunctor.h"
@@ -239,6 +240,7 @@
 %token TRUE                      "true literal constraint"
 %token FALSE                     "false literal constraint"
 %token PLAN                      "plan keyword"
+%token KEYS                      "functional dependencies "
 %token IF                        ":-"
 %token DECL                      "relation declaration"
 %token FUNCTOR                   "functor declaration"
@@ -320,6 +322,9 @@
 %type <Mov<Own<ast::Component>>>               component_head
 %type <Mov<RuleBody>>                          conjunction
 %type <Mov<Own<ast::Constraint>>>              constraint
+%type <Mov<Own<ast::FunctionalConstraint>>>    dependency
+%type <Mov<VecOwn<ast::FunctionalConstraint>>> dependency_list
+%type <Mov<VecOwn<ast::FunctionalConstraint>>> dependency_list_aux
 %type <Mov<RuleBody>>                          disjunction
 %type <Mov<Own<ast::ExecutionOrder>>>          exec_order
 %type <Mov<Own<ast::ExecutionPlan>>>           exec_plan
@@ -338,6 +343,7 @@
 %type <Mov<VecOwn<ast::Argument>>>             non_empty_arg_list
 %type <Mov<Own<ast::Attribute>>>               attribute
 %type <Mov<VecOwn<ast::Attribute>>>            non_empty_attributes
+%type <Mov<std::vector<std::string>>>          non_empty_variables
 %type <Mov<ast::ExecutionOrder::ExecOrder>>    non_empty_exec_order_list
 %type <Mov<std::vector<TypeAttribute>>>        non_empty_functor_arg_type_list
 %type <Mov<std::vector<std::pair
@@ -450,7 +456,7 @@ sum_branch
 
 /* Relation declaration */
 relation_decl
-  : DECL non_empty_relation_list attributes_list relation_tags {
+  : DECL non_empty_relation_list attributes_list relation_tags dependency_list {
         auto tags             = $relation_tags;
         auto attributes_list  = $attributes_list;
 
@@ -466,9 +472,14 @@ relation_decl
                 }
             }
 
+            for (auto&& fd : $dependency_list) {
+                rel->addDependency(Own<ast::FunctionalConstraint>(fd->clone()));
+            }
+
             rel->setAttributes(clone(attributes_list));
         }
     }
+  ;
   ;
 
 /* List of relation names to declare */
@@ -513,6 +524,51 @@ relation_tags
   | relation_tags        BRIE_QUALIFIER { $$ = driver.addReprTag(RelationTag::BRIE    , @2, $1); }
   | relation_tags       BTREE_QUALIFIER { $$ = driver.addReprTag(RelationTag::BTREE   , @2, $1); }
   | relation_tags       EQREL_QUALIFIER { $$ = driver.addReprTag(RelationTag::EQREL   , @2, $1); }
+  ;
+
+  /* List of variables */
+non_empty_variables
+  : IDENT {
+        $$.push_back($IDENT);
+  }
+
+  | non_empty_variables[curr_var_list] COMMA IDENT {
+        $$ = $curr_var_list;
+        $$.push_back($IDENT);
+    }
+  ;
+
+/*  a functional dependency on relation */
+dependency
+  : IDENT[key] {
+        $$ = mk<ast::FunctionalConstraint>(mk<ast::Variable>($key, @$), @$);
+    }
+
+  | LPAREN non_empty_variables RPAREN {
+        VecOwn<ast::Variable> keys;
+        for (std::string s : $non_empty_variables) {
+          keys.push_back(mk<ast::Variable>(s, @$));
+        }
+        $$ = mk<ast::FunctionalConstraint>(std::move(keys), @$);
+  }
+  ;
+
+dependency_list_aux
+  : dependency { $$.push_back($dependency); }
+
+  | dependency_list_aux[list] COMMA dependency[next] { 
+    $$ = std::move($list);
+    $$.push_back(std::move($next));
+  }
+  ;
+
+/*  List of functional dependencies on relation */
+dependency_list 
+  : %empty { }
+    
+  | KEYS dependency_list_aux[list] { 
+    $$ = std::move($list);
+  }
   ;
 
 /**

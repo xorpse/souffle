@@ -122,6 +122,7 @@ private:
     void checkClause(const Clause& clause);
     void checkComplexRule(std::set<const Clause*> multiRule);
     void checkRelationDeclaration(const Relation& relation);
+    void checkRelationFunctionalDependencies(const Relation& relation);
     void checkRelation(const Relation& relation);
 
     void checkNamespaces();
@@ -559,6 +560,25 @@ void SemanticCheckerImpl::checkRelationDeclaration(const Relation& relation) {
     }
 }
 
+/* check that each functional dependency (keys) actually appears in the relation */
+void SemanticCheckerImpl::checkRelationFunctionalDependencies(const Relation& relation) {
+    const auto attributes = relation.getAttributes();
+    for (const auto& fd : relation.getFunctionalDependencies()) {
+        // Check that keys appear in relation arguments
+        const auto keys = fd->getKeys();
+        for (const auto& key : keys) {
+            auto found = std::find_if(
+                    attributes.begin(), attributes.end(), [&key](const ast::Attribute* attribute) {
+                        return key->getName() == attribute->getName();
+                    });
+            if (found == attributes.end()) {
+                report.addError("Attribute " + key->getName() + " not found in relation definition.",
+                        fd->getSrcLoc());
+            }
+        }
+    }
+}
+
 void SemanticCheckerImpl::checkRelation(const Relation& relation) {
     if (relation.getRepresentation() == RelationRepresentation::EQREL) {
         if (relation.getArity() == 2) {
@@ -578,6 +598,9 @@ void SemanticCheckerImpl::checkRelation(const Relation& relation) {
 
     // start with declaration
     checkRelationDeclaration(relation);
+
+    // check dependencies of relation are valid (i.e. attribute names occur in relation)
+    checkRelationFunctionalDependencies(relation);
 
     // check whether this relation is empty
     if (getClauses(program, relation).empty() && !ioTypes.isInput(&relation) &&

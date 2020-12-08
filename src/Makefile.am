@@ -39,6 +39,7 @@ souffle_sources = \
         ast/ExecutionPlan.h                                \
         ast/Functor.h                                      \
         ast/FunctorDeclaration.h                           \
+        ast/FunctionalConstraint.h                         \
         ast/Directive.h                                    \
         ast/IntrinsicFunctor.h                             \
         ast/Literal.h                                      \
@@ -265,6 +266,7 @@ souffle_sources = \
         ram/False.h                                        \
         ram/Filter.h                                       \
         ram/FloatConstant.h                                \
+        ram/GuardedProject.h                               \
         ram/IO.h                                           \
         ram/IndexAggregate.h                               \
         ram/IndexChoice.h                                  \

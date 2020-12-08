@@ -162,6 +162,13 @@ std::set<QualifiedName> MagicSetTransformer::getWeaklyIgnoredRelations(const Tra
         }
     }
 
+    // - Any relation with functional dependencies
+    for (auto* rel : program.getRelations()) {
+        if (!rel->getFunctionalDependencies().empty()) {
+            weaklyIgnoredRelations.insert(rel->getQualifiedName());
+        }
+    }
+
     // - Any relation with execution plans
     for (auto* clause : program.getClauses()) {
         if (clause->getExecutionPlan() != nullptr) {

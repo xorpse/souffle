@@ -146,6 +146,9 @@ private:
     RamDomain evalIndexAggregate(const ram::IndexAggregate& cur, const IndexAggregate& shadow, Context& ctxt);
 
     template <typename Rel>
+    RamDomain evalGuardedProject(Rel& rel, const GuardedProject& shadow, Context& ctxt);
+
+    template <typename Rel>
     RamDomain evalProject(Rel& rel, const Project& shadow, Context& ctxt);
 
     /** If profile is enable in this program */
