@@ -68,12 +68,10 @@ protected:
     const TranslatorContext& context;
     SymbolTable& symbolTable;
 
-    const ast::Atom* deltaAtom = nullptr;
-    std::vector<const ast::Atom*> prevs{};
+    size_t version{0};
+    std::vector<ast::Atom*> sccAtoms{};
 
-    bool isRecursive() const {
-        return deltaAtom != nullptr;
-    }
+    bool isRecursive() const;
 
     std::string getClauseAtomName(const ast::Clause& clause, const ast::Atom* atom) const;
 

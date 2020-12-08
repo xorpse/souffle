@@ -77,6 +77,10 @@ ClauseTranslator::ClauseTranslator(const TranslatorContext& context, SymbolTable
 
 ClauseTranslator::~ClauseTranslator() = default;
 
+bool ClauseTranslator::isRecursive() const {
+    return !sccAtoms.empty();
+}
+
 Own<ram::Statement> ClauseTranslator::translateNonRecursiveClause(
         const TranslatorContext& context, SymbolTable& symbolTable, const ast::Clause& clause) {
     return ClauseTranslator(context, symbolTable).translateClause(clause);
@@ -110,15 +114,11 @@ VecOwn<ram::Statement> ClauseTranslator::translateRecursiveClause(const Translat
 Own<ram::Statement> ClauseTranslator::generateClauseVersion(
         const std::set<const ast::Relation*>& scc, const ast::Clause* clause, size_t version) {
     // TODO: nameUnnamedVariables(clause) to reduce indices
-    const auto& sccAtoms = filter(ast::getBodyLiterals<ast::Atom>(*clause),
-            [&](const ast::Atom* atom) { return contains(scc, context.getAtomRelation(atom)); });
 
     // Update version config
-    deltaAtom = sccAtoms.at(version);
-    prevs.clear();
-    for (size_t i = version + 1; i < sccAtoms.size(); i++) {
-        prevs.push_back(sccAtoms.at(i));
-    }
+    sccAtoms = filter(ast::getBodyLiterals<ast::Atom>(*clause),
+            [&](const ast::Atom* atom) { return contains(scc, context.getAtomRelation(atom)); });
+    this->version = version;
 
     // Translate the resultant clause as would be done normally
     Own<ram::Statement> rule = translateClause(*clause, version);
@@ -161,7 +161,7 @@ std::string ClauseTranslator::getClauseAtomName(const ast::Clause& clause, const
     if (clause.getHead() == atom) {
         return getNewRelationName(atom->getQualifiedName());
     }
-    if (deltaAtom == atom) {
+    if (sccAtoms.at(version) == atom) {
         return getDeltaRelationName(atom->getQualifiedName());
     }
     return getConcreteRelationName(atom->getQualifiedName());
@@ -464,8 +464,8 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
         }
 
         // also add in prev stuff
-        for (const auto* prev : prevs) {
-            op = addNegate(prev, std::move(op), true);
+        for (size_t i = version + 1; i < sccAtoms.size(); i++) {
+            op = addNegate(sccAtoms.at(i), std::move(op), true);
         }
     }
 
