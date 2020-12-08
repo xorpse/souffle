@@ -1,0 +1,14 @@
+// Tests that constraints should be totally ordered
+
+.decl A(A:number, B:number)
+.decl B(A:number, B:number)
+.decl C(A:number, B:number, C:number) inline
+.decl D(A:number)
+.decl E(A:number)
+
+A(-25, -6).
+B(-17, -3).
+
+D(A) :- B(A,B), B = strlen("Zldfh").
+C(V,V,Z) :- D(Z), B(V,V), !A(V,_), Z != V, Z = V - max J : { D(J)}.
+E(C) :- C(_,B,C), C(C,B,C),  C(_,B,C), C(_,B,_), C(C,_,C), C(_,B,_).
