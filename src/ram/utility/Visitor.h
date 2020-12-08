@@ -40,6 +40,7 @@
 #include "ram/False.h"
 #include "ram/Filter.h"
 #include "ram/FloatConstant.h"
+#include "ram/GuardedProject.h"
 #include "ram/IO.h"
 #include "ram/IndexAggregate.h"
 #include "ram/IndexChoice.h"
@@ -170,6 +171,7 @@ struct Visitor : public ram_visitor_tag {
         // Operations
         FORWARD(Filter);
         FORWARD(Break);
+        FORWARD(GuardedProject);
         FORWARD(Project);
         FORWARD(SubroutineReturn);
         FORWARD(UnpackRecord);
@@ -248,6 +250,7 @@ protected:
     LINK(Statement, Node);
 
     // -- operations --
+    LINK(GuardedProject, Project);
     LINK(Project, Operation);
     LINK(SubroutineReturn, Operation);
     LINK(UnpackRecord, TupleOperation);

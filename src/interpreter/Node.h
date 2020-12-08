@@ -86,6 +86,7 @@ struct RelationWrapper;
     FOR_EACH(Expand, ParallelIndexAggregate)\
     Forward(Break)\
     Forward(Filter)\
+    FOR_EACH(Expand, GuardedProject)\
     FOR_EACH(Expand, Project)\
     Forward(SubroutineReturn)\
     Forward(Sequence)\
@@ -721,6 +722,16 @@ class Project : public Node, public SuperOperation {
 public:
     Project(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle, SuperInstruction superInst)
             : Node(ty, sdw, relHandle), SuperOperation(std::move(superInst)) {}
+};
+
+/**
+ * @class GuardedProject
+ */
+class GuardedProject : public Project, public ConditionalOperation {
+public:
+    GuardedProject(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle,
+            SuperInstruction superInst, Own<Node> condition)
+            : Project(ty, sdw, relHandle, std::move(superInst)), ConditionalOperation(std::move(condition)) {}
 };
 
 /**

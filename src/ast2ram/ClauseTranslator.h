@@ -34,6 +34,7 @@ class Constant;
 class IntrinsicFunctor;
 class Node;
 class RecordInit;
+class Relation;
 }  // namespace souffle::ast
 
 namespace souffle::ram {
@@ -65,7 +66,8 @@ protected:
     // value index to keep track of references in the loop nest
     Own<ValueIndex> valueIndex = mk<ValueIndex>();
 
-    virtual Own<ram::Operation> createProjection(const ast::Clause& clause) const;
+    virtual Own<ram::Operation> createProjection(
+            const ast::Clause& clause, const ast::Clause& originalClause) const;
     virtual Own<ram::Condition> createCondition(const ast::Clause& originalClause) const;
 
 private:
@@ -109,6 +111,8 @@ private:
             size_t level, const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op) const;
     Own<ram::Operation> addEqualityCheck(
             Own<ram::Operation> op, Own<ram::Expression> lhs, Own<ram::Expression> rhs, bool isFloat) const;
+    Own<ram::Condition> getFunctionalDependencies(
+            const ast::Clause& clause, const ast::Relation* targetRelation) const;
 
     /** Constant translation */
     static RamDomain getConstantRamRepresentation(SymbolTable& symbolTable, const ast::Constant& constant);

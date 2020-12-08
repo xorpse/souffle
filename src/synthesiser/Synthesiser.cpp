@@ -1626,6 +1626,33 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
+        void visitGuardedProject(const GuardedProject& guardedProject, std::ostream& out) override {
+            PRINT_BEGIN_COMMENT(out);
+            const auto* rel = synthesiser.lookup(guardedProject.getRelation());
+            auto arity = rel->getArity();
+            auto relName = synthesiser.getRelationName(rel);
+            auto ctxName = "READ_OP_CONTEXT(" + synthesiser.getOpContextName(*rel) + ")";
+
+            auto condition = guardedProject.getCondition();
+            // guarded conditions
+            out << "if( ";
+            visit(condition, out);
+            out << ") {\n";
+
+            // create projected tuple
+            out << "Tuple<RamDomain," << arity << "> tuple{{" << join(guardedProject.getValues(), ",", rec)
+                << "}};\n";
+
+            // insert tuple
+            out << relName << "->"
+                << "insert(tuple," << ctxName << ");\n";
+
+            // end of conseq body.
+            out << "}\n";
+
+            PRINT_END_COMMENT(out);
+        }
+
         void visitProject(const Project& project, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             const auto* rel = synthesiser.lookup(project.getRelation());

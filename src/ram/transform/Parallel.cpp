@@ -92,7 +92,12 @@ bool ParallelTransformer::parallelizeOperations(Program& program) {
             node->apply(makeLambdaRamMapper(parallelRewriter));
             return node;
         };
-        const_cast<Query*>(&query)->apply(makeLambdaRamMapper(parallelRewriter));
+        // guardedProject cannot be parallelized
+        bool isGuardedProject = false;
+        visitDepthFirst(query, [&](const GuardedProject&) { isGuardedProject = true; });
+        if (isGuardedProject == false) {
+            const_cast<Query*>(&query)->apply(makeLambdaRamMapper(parallelRewriter));
+        }
     });
     return changed;
 }
