@@ -29,6 +29,7 @@
 #include "ram/Filter.h"
 #include "ram/Negation.h"
 #include "ram/ProvenanceExistenceCheck.h"
+#include "ram/Query.h"
 #include "ram/Relation.h"
 #include "ram/SignedConstant.h"
 #include "ram/Statement.h"
@@ -74,13 +75,30 @@ Own<ram::Operation> ProvenanceClauseTranslator::addNegate(
             std::move(op));
 }
 
-// TODO (azreika): should change these to a ram query overload!!!
-
-Own<ram::Condition> ProvenanceClauseTranslator::createCondition(const ast::Clause& /* clause */) const {
-    return nullptr;
+Own<ram::Statement> ProvenanceClauseTranslator::createRamFactQuery(const ast::Clause& clause) const {
+    assert(isFact(clause) && "clause should be fact");
+    assert(!isRecursive() && "recursive clauses cannot have facts");
+    return mk<ram::Query>(createValueSubroutine(clause));
 }
 
-Own<ram::Operation> ProvenanceClauseTranslator::createProjection(const ast::Clause& clause) const {
+Own<ram::Statement> ProvenanceClauseTranslator::createRamRuleQuery(
+        const ast::Clause& clause, size_t version) {
+    assert(isRule(clause) && "clause should be rule");
+
+    // Index all variables and generators in the clause
+    valueIndex = mk<ValueIndex>();
+    indexClause(clause, version);
+
+    // Set up the RAM statement bottom-up
+    auto op = createValueSubroutine(clause);
+    op = addVariableBindingConstraints(std::move(op));
+    op = addBodyLiteralConstraints(clause, std::move(op));
+    op = addGeneratorLevels(std::move(op), clause);
+    op = addVariableIntroductions(clause, version, std::move(op));
+    return mk<ram::Query>(std::move(op));
+}
+
+Own<ram::Operation> ProvenanceClauseTranslator::createValueSubroutine(const ast::Clause& clause) const {
     VecOwn<ram::Expression> values;
 
     // get all values in the body

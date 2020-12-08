@@ -77,25 +77,20 @@ protected:
 
     virtual Own<ram::Operation> addNegate(const ast::Atom* atom, Own<ram::Operation> op, bool isDelta) const;
 
-    // value index to keep track of references in the loop nest
     Own<ValueIndex> valueIndex;
 
     Own<ram::Statement> translateClause(const ast::Clause& clause, size_t version = 0);
 
+    /** Main clause translation */
+    virtual Own<ram::Statement> createRamFactQuery(const ast::Clause& clause) const;
+    virtual Own<ram::Statement> createRamRuleQuery(const ast::Clause& clause, size_t version);
+
     virtual Own<ram::Operation> createProjection(const ast::Clause& clause) const;
     virtual Own<ram::Condition> createCondition(const ast::Clause& clause) const;
-
-private:
-    std::vector<const ast::Argument*> generators;
-    std::vector<const ast::Node*> operators;
 
     Own<ram::Statement> generateClauseVersion(
             const std::set<const ast::Relation*>& scc, const ast::Clause* cl, size_t version);
     std::vector<ast::Atom*> getAtomOrdering(const ast::Clause& clause, size_t version) const;
-
-    /** Operation levelling */
-    int addGeneratorLevel(const ast::Argument* arg);
-    int addOperatorLevel(const ast::Node* node);
 
     /** Indexing */
     void indexClause(const ast::Clause& clause, size_t version);
@@ -105,10 +100,6 @@ private:
     void indexNodeArguments(int nodeLevel, const std::vector<ast::Argument*>& nodeArgs);
     void indexAggregatorBody(const ast::Aggregator& agg);
     void indexGenerator(const ast::Argument& arg);
-
-    /** Main clause translation */
-    Own<ram::Statement> createRamFactQuery(const ast::Clause& clause) const;
-    Own<ram::Statement> createRamRuleQuery(const ast::Clause& clause, size_t version);
 
     /** Core clause translation stages */
     Own<ram::Operation> addVariableBindingConstraints(Own<ram::Operation> op) const;
@@ -141,6 +132,14 @@ private:
             const ast::Aggregator* agg, int curLevel) const;
     Own<ram::Operation> instantiateMultiResultFunctor(
             Own<ram::Operation> op, const ast::IntrinsicFunctor* inf, int curLevel) const;
+
+private:
+    std::vector<const ast::Argument*> generators;
+    std::vector<const ast::Node*> operators;
+
+    /** Operation levelling */
+    int addGeneratorLevel(const ast::Argument* arg);
+    int addOperatorLevel(const ast::Node* node);
 };
 
 }  // namespace souffle::ast2ram
