@@ -86,4 +86,4 @@ private:
     static bool reduceSingletonRelations(TranslationUnit& translationUnit);
 };
 
-}
+}  // namespace souffle::ast::transform

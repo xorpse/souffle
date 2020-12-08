@@ -380,7 +380,7 @@ bool MinimiseProgramTransformer::reduceSingletonRelations(TranslationUnit& trans
 
     // Program was changed iff a relation was replaced
     return !canonicalName.empty();
-}  // namespace souffle::ast::transform
+}
 
 bool MinimiseProgramTransformer::removeRedundantClauses(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
@@ -459,4 +459,4 @@ bool MinimiseProgramTransformer::transform(TranslationUnit& translationUnit) {
     return changed;
 }
 
-}
+}  // namespace souffle::ast::transform
