@@ -95,7 +95,6 @@ protected:
 private:
     std::vector<const ast::Argument*> generators;
     std::vector<const ast::Node*> operators;
-    std::vector<ast::Atom*> atomOrder;
 
     Own<ram::Statement> generateClauseVersion(const std::set<const ast::Relation*>& scc,
             const ast::Clause* cl, size_t deltaAtomIdx, size_t version);
@@ -106,8 +105,8 @@ private:
     int addOperatorLevel(const ast::Node* node);
 
     /** Indexing */
-    void indexClause(const ast::Clause& clause);
-    void indexAtoms(const ast::Clause& clause);
+    void indexClause(const ast::Clause& clause, int version);
+    void indexAtoms(const ast::Clause& clause, int version);
     void indexAggregators(const ast::Clause& clause);
     void indexMultiResultFunctors(const ast::Clause& clause);
     void indexNodeArguments(int nodeLevel, const std::vector<ast::Argument*>& nodeArgs);

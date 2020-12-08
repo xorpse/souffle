@@ -197,12 +197,9 @@ Own<ram::Statement> ClauseTranslator::createRamRuleQuery(
         const ast::Clause& clause, const ast::Clause& originalClause, int version) {
     assert(isRule(clause) && "clause should be rule");
 
-    // Set up atom ordering
-    atomOrder = getAtomOrdering(clause, version);
-
     // Index all variables and generators in the clause
     valueIndex = mk<ValueIndex>();
-    indexClause(clause);
+    indexClause(clause, version);
 
     // Set up the RAM statement bottom-up
     auto op = createProjection(clause, originalClause);
@@ -704,8 +701,8 @@ void ClauseTranslator::indexGenerator(const ast::Argument& arg) {
     valueIndex->setGeneratorLoc(arg, Location({aggLoc, 0}));
 }
 
-void ClauseTranslator::indexAtoms(const ast::Clause& clause) {
-    for (const auto* atom : atomOrder) {
+void ClauseTranslator::indexAtoms(const ast::Clause& clause, int version) {
+    for (const auto* atom : getAtomOrdering(clause, version)) {
         // give the atom the current level
         int scanLevel = addOperatorLevel(atom);
         indexNodeArguments(scanLevel, atom->getArguments());
@@ -767,8 +764,8 @@ void ClauseTranslator::indexMultiResultFunctors(const ast::Clause& clause) {
     });
 }
 
-void ClauseTranslator::indexClause(const ast::Clause& clause) {
-    indexAtoms(clause);
+void ClauseTranslator::indexClause(const ast::Clause& clause, int version) {
+    indexAtoms(clause, version);
     indexAggregators(clause);
     indexMultiResultFunctors(clause);
 }
