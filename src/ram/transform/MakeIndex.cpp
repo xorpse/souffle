@@ -205,41 +205,60 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
         auto* cond2 = dynamic_cast<Constraint*>(c2.get());
         // place non-conditions at the end
         if (!cond1 && !cond2) {
-            return true;
-        } else if (cond1 && !cond2) {
-            return true;
-        } else if (!cond1 && cond2) {
-            return false;
-        } else {
-            // if it's not indexable place the condition at the end
-            if (!isIndexableConstraint(cond1->getOperator())) {
-                return false;
-            }
-            if (!isIndexableConstraint(cond2->getOperator())) {
-                return true;
-            }
-
-            // eq before ineq otherwise we compare the attribute of the involved relation
-            if (isEqConstraint(cond1->getOperator()) && isIneqConstraint(cond2->getOperator())) {
-                return true;
-            } else if (isIneqConstraint(cond1->getOperator()) && isEqConstraint(cond2->getOperator())) {
-                return false;
-            } else {
-                size_t attr1 = 0;
-                size_t attr2 = 0;
-                const auto p1 = getExpressionPair(cond1, attr1, identifier);
-                const auto p2 = getExpressionPair(cond2, attr2, identifier);
-                // not indexable so we place it to the end
-                if (isUndefValue(p1.first.get()) && isUndefValue(p1.second.get())) {
-                    return false;
-                }
-                if (isUndefValue(p2.first.get()) && isUndefValue(p2.second.get())) {
-                    return true;
-                }
-                // at this point we are guaranteed that attr1 and attr2 are set
-                return attr1 <= attr2;
-            }
+            return c1.get() < c2.get();
         }
+        if (cond1 && !cond2) {
+            return true;
+        }
+
+        if (!cond1 && cond2) {
+            return false;
+        }
+        // if it's not indexable place the condition at the end
+        bool lhsIndexable = isIndexableConstraint(cond1->getOperator());
+        bool rhsIndexable = isIndexableConstraint(cond2->getOperator());
+
+        if (!lhsIndexable && !rhsIndexable) {
+            return c1.get() < c2.get();
+        }
+        if (lhsIndexable && !rhsIndexable) {
+            return true;
+        }
+        if (!lhsIndexable && rhsIndexable) {
+            return false;
+        }
+
+        // eq before ineq otherwise we compare the attribute of the involved relation
+        if (isEqConstraint(cond1->getOperator()) && isIneqConstraint(cond2->getOperator())) {
+            return true;
+        }
+        if (isIneqConstraint(cond1->getOperator()) && isEqConstraint(cond2->getOperator())) {
+            return false;
+        }
+
+        size_t attr1 = 0;
+        size_t attr2 = 0;
+        const auto p1 = getExpressionPair(cond1, attr1, identifier);
+        const auto p2 = getExpressionPair(cond2, attr2, identifier);
+
+        // check if the constraint is of the right form
+        bool lhsUndefined = isUndefValue(p1.first.get()) && isUndefValue(p1.second.get());
+        bool rhsUndefined = isUndefValue(p2.first.get()) && isUndefValue(p2.second.get());
+
+        if (lhsUndefined && rhsUndefined) {
+            return c1.get() < c2.get();
+        }
+
+        if (!lhsUndefined && rhsUndefined) {
+            return true;
+        }
+
+        if (lhsUndefined && !rhsUndefined) {
+            return false;
+        }
+
+        // at this point we are guaranteed that attr1 and attr2 are set
+        return attr1 <= attr2;
     };
 
     std::sort(conditionList.begin(), conditionList.end(), cmp);
@@ -288,7 +307,8 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
             // don't permit multiple inequalities
             // TODO: @SamArch27 invariant that we have at most one indexed inequality per relation
             if (firstConstraint && inequality && seenInequality) {
-                addCondition(Own<Condition>(clone(cond)));
+                // addCondition(Own<Condition>(clone(cond)));
+                addCondition(std::move(cond));
                 continue;
             }
 
