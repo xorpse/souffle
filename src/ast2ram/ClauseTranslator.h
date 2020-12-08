@@ -94,8 +94,8 @@ private:
     std::vector<const ast::Argument*> generators;
     std::vector<const ast::Node*> operators;
 
-    Own<ram::Statement> generateClauseVersion(const std::set<const ast::Relation*>& scc,
-            const ast::Clause* cl, size_t deltaAtomIdx, size_t version);
+    Own<ram::Statement> generateClauseVersion(
+            const std::set<const ast::Relation*>& scc, const ast::Clause* cl, size_t version);
     std::vector<ast::Atom*> getAtomOrdering(const ast::Clause& clause, const int version) const;
 
     /** Operation levelling */

@@ -84,55 +84,40 @@ Own<ram::Statement> ClauseTranslator::generateClause(
 
 VecOwn<ram::Statement> ClauseTranslator::generateClauseVersions(const TranslatorContext& context,
         SymbolTable& symbolTable, const ast::Clause* clause, const std::set<const ast::Relation*>& scc) {
-    VecOwn<ram::Statement> clauseVersions;
+    const auto& sccAtoms = filter(ast::getBodyLiterals<ast::Atom>(*clause),
+            [&](const ast::Atom* atom) { return contains(scc, context.getAtomRelation(atom)); });
 
     // Create each version
-    int version = 0;
-    const auto& atoms = ast::getBodyLiterals<ast::Atom>(*clause);
-    for (size_t i = 0; i < atoms.size(); i++) {
-        const auto* atom = atoms[i];
-
-        // Only interested in atoms within the same SCC
-        if (!contains(scc, context.getAtomRelation(atom))) {
-            continue;
-        }
-
-        // Replace wildcards with variables to reduce indices
-        // nameUnnamedVariables(clause);
-
+    VecOwn<ram::Statement> clauseVersions;
+    for (size_t version = 0; version < sccAtoms.size(); version++) {
         auto translatedClause =
-                ClauseTranslator(context, symbolTable).generateClauseVersion(scc, clause, i, version);
+                ClauseTranslator(context, symbolTable).generateClauseVersion(scc, clause, version);
         appendStmt(clauseVersions, std::move(translatedClause));
-
-        // increment version counter
-        version++;
     }
 
     // Check that the correct number of versions have been created
     if (clause->getExecutionPlan() != nullptr) {
         int maxVersion = -1;
-        for (auto const& cur : clause->getExecutionPlan()->getOrders()) {
+        for (const auto& cur : clause->getExecutionPlan()->getOrders()) {
             maxVersion = std::max(cur.first, maxVersion);
         }
-        assert(version > maxVersion && "missing clause versions");
+        assert((int)sccAtoms.size() > maxVersion && "missing clause versions");
     }
 
     return clauseVersions;
 }
 
-Own<ram::Statement> ClauseTranslator::generateClauseVersion(const std::set<const ast::Relation*>& scc,
-        const ast::Clause* clause, size_t deltaAtomIdx, size_t version) {
-    // Update delta atom
-    const auto& atoms = ast::getBodyLiterals<ast::Atom>(*clause);
-    deltaAtom = atoms.at(deltaAtomIdx);
+Own<ram::Statement> ClauseTranslator::generateClauseVersion(
+        const std::set<const ast::Relation*>& scc, const ast::Clause* clause, size_t version) {
+    // TODO: nameUnnamedVariables(clause) to reduce indices
+    const auto& sccAtoms = filter(ast::getBodyLiterals<ast::Atom>(*clause),
+            [&](const ast::Atom* atom) { return contains(scc, context.getAtomRelation(atom)); });
 
-    // Update prevs list
+    // Update version config
+    deltaAtom = sccAtoms.at(version);
     prevs.clear();
-    for (size_t j = deltaAtomIdx + 1; j < atoms.size(); j++) {
-        const auto* atomRelation = context.getAtomRelation(atoms[j]);
-        if (contains(scc, atomRelation)) {
-            prevs.push_back(atoms[j]);
-        }
+    for (size_t i = version + 1; i < sccAtoms.size(); i++) {
+        prevs.push_back(sccAtoms.at(i));
     }
 
     // Translate the resultant clause as would be done normally
