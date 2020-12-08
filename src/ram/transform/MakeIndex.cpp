@@ -288,7 +288,7 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
             // don't permit multiple inequalities
             // TODO: @SamArch27 invariant that we have at most one indexed inequality per relation
             if (firstConstraint && inequality && seenInequality) {
-                addCondition(std::move(cond));
+                addCondition(Own<Condition>(clone(cond)));
                 continue;
             }
 
