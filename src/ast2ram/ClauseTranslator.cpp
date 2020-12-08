@@ -95,7 +95,7 @@ VecOwn<ram::Statement> ClauseTranslator::translateRecursiveClause(const Translat
     VecOwn<ram::Statement> clauseVersions;
     for (size_t version = 0; version < sccAtoms.size(); version++) {
         auto translatedClause =
-                ClauseTranslator(context, symbolTable).generateClauseVersion(scc, clause, version);
+                ClauseTranslator(context, symbolTable).generateClauseVersion(*clause, scc, version);
         appendStmt(clauseVersions, std::move(translatedClause));
     }
 
@@ -112,46 +112,46 @@ VecOwn<ram::Statement> ClauseTranslator::translateRecursiveClause(const Translat
 }
 
 Own<ram::Statement> ClauseTranslator::generateClauseVersion(
-        const std::set<const ast::Relation*>& scc, const ast::Clause* clause, size_t version) {
+        const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version) {
     // TODO: nameUnnamedVariables(clause) to reduce indices
 
     // Update version config
-    sccAtoms = filter(ast::getBodyLiterals<ast::Atom>(*clause),
+    sccAtoms = filter(ast::getBodyLiterals<ast::Atom>(clause),
             [&](const ast::Atom* atom) { return contains(scc, context.getAtomRelation(atom)); });
     this->version = version;
 
     // Translate the resultant clause as would be done normally
-    Own<ram::Statement> rule = translateClause(*clause, version);
+    Own<ram::Statement> rule = translateClause(clause);
 
     // Add logging
     if (Global::config().has("profile")) {
-        const std::string& relationName = toString(clause->getHead()->getQualifiedName());
-        const auto& srcLocation = clause->getSrcLoc();
-        const std::string clauseText = stringify(toString(*clause));
+        const std::string& relationName = toString(clause.getHead()->getQualifiedName());
+        const auto& srcLocation = clause.getSrcLoc();
+        const std::string clauseText = stringify(toString(clause));
         const std::string logTimerStatement =
                 LogStatement::tRecursiveRule(relationName, version, srcLocation, clauseText);
         const std::string logSizeStatement =
                 LogStatement::nRecursiveRule(relationName, version, srcLocation, clauseText);
-        rule = mk<ram::LogRelationTimer>(std::move(rule), logTimerStatement,
-                getNewRelationName(clause->getHead()->getQualifiedName()));
+        rule = mk<ram::LogRelationTimer>(
+                std::move(rule), logTimerStatement, getNewRelationName(clause.getHead()->getQualifiedName()));
     }
 
     // Add debug info
     std::ostringstream ds;
-    ds << toString(*clause) << "\nin file ";
-    ds << clause->getSrcLoc();
+    ds << toString(clause) << "\nin file ";
+    ds << clause.getSrcLoc();
     rule = mk<ram::DebugInfo>(std::move(rule), ds.str());
 
     // Add to loop body
     return mk<ram::Sequence>(std::move(rule));
 }
 
-Own<ram::Statement> ClauseTranslator::translateClause(const ast::Clause& clause, size_t version) {
+Own<ram::Statement> ClauseTranslator::translateClause(const ast::Clause& clause) {
     // Create the appropriate query
     if (isFact(clause)) {
         return createRamFactQuery(clause);
     }
-    return createRamRuleQuery(clause, version);
+    return createRamRuleQuery(clause);
 }
 
 std::string ClauseTranslator::getClauseAtomName(const ast::Clause& clause, const ast::Atom* atom) const {
@@ -175,19 +175,19 @@ Own<ram::Statement> ClauseTranslator::createRamFactQuery(const ast::Clause& clau
     return mk<ram::Query>(createProjection(clause));
 }
 
-Own<ram::Statement> ClauseTranslator::createRamRuleQuery(const ast::Clause& clause, size_t version) {
+Own<ram::Statement> ClauseTranslator::createRamRuleQuery(const ast::Clause& clause) {
     assert(isRule(clause) && "clause should be rule");
 
     // Index all variables and generators in the clause
     valueIndex = mk<ValueIndex>();
-    indexClause(clause, version);
+    indexClause(clause);
 
     // Set up the RAM statement bottom-up
     auto op = createProjection(clause);
     op = addVariableBindingConstraints(std::move(op));
     op = addBodyLiteralConstraints(clause, std::move(op));
     op = addGeneratorLevels(std::move(op), clause);
-    op = addVariableIntroductions(clause, version, std::move(op));
+    op = addVariableIntroductions(clause, std::move(op));
     op = addEntryPoint(clause, std::move(op));
     return mk<ram::Query>(std::move(op));
 }
@@ -237,8 +237,8 @@ Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause
     return mk<ram::Project>(headRelationName, std::move(values));
 }
 
-Own<ram::Operation> ClauseTranslator::addAtomScan(Own<ram::Operation> op, const ast::Atom* atom,
-        const ast::Clause& clause, int curLevel, size_t version) const {
+Own<ram::Operation> ClauseTranslator::addAtomScan(
+        Own<ram::Operation> op, const ast::Atom* atom, const ast::Clause& clause, int curLevel) const {
     const ast::Atom* head = clause.getHead();
 
     // add constraints
@@ -310,12 +310,12 @@ Own<ram::Operation> ClauseTranslator::addAdtUnpack(
 }
 
 Own<ram::Operation> ClauseTranslator::addVariableIntroductions(
-        const ast::Clause& clause, size_t version, Own<ram::Operation> op) {
+        const ast::Clause& clause, Own<ram::Operation> op) {
     for (int i = operators.size() - 1; i >= 0; i--) {
         const auto* curOp = operators.at(i);
         if (const auto* atom = dynamic_cast<const ast::Atom*>(curOp)) {
             // add atom arguments through a scan
-            op = addAtomScan(std::move(op), atom, clause, i, version);
+            op = addAtomScan(std::move(op), atom, clause, i);
         } else if (const auto* rec = dynamic_cast<const ast::RecordInit*>(curOp)) {
             // add record arguments through an unpack
             op = addRecordUnpack(std::move(op), rec, i);
@@ -609,8 +609,7 @@ Own<ram::Condition> ClauseTranslator::getFunctionalDependencies(const ast::Claus
     return ram::toCondition(dependencies);
 }
 
-std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(
-        const ast::Clause& clause, const size_t version) const {
+std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& clause) const {
     auto atoms = ast::getBodyLiterals<ast::Atom>(clause);
 
     const auto& plan = clause.getExecutionPlan();
@@ -685,8 +684,8 @@ void ClauseTranslator::indexGenerator(const ast::Argument& arg) {
     valueIndex->setGeneratorLoc(arg, Location({aggLoc, 0}));
 }
 
-void ClauseTranslator::indexAtoms(const ast::Clause& clause, size_t version) {
-    for (const auto* atom : getAtomOrdering(clause, version)) {
+void ClauseTranslator::indexAtoms(const ast::Clause& clause) {
+    for (const auto* atom : getAtomOrdering(clause)) {
         // give the atom the current level
         int scanLevel = addOperatorLevel(atom);
         indexNodeArguments(scanLevel, atom->getArguments());
@@ -748,8 +747,8 @@ void ClauseTranslator::indexMultiResultFunctors(const ast::Clause& clause) {
     });
 }
 
-void ClauseTranslator::indexClause(const ast::Clause& clause, size_t version) {
-    indexAtoms(clause, version);
+void ClauseTranslator::indexClause(const ast::Clause& clause) {
+    indexAtoms(clause);
     indexAggregators(clause);
     indexMultiResultFunctors(clause);
 }

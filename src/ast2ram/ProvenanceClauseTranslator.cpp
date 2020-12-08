@@ -39,8 +39,8 @@
 namespace souffle::ast2ram {
 
 Own<ram::Statement> ProvenanceClauseTranslator::generateClause(
-        const TranslatorContext& context, SymbolTable& symbolTable, const ast::Clause& clause, int version) {
-    return ProvenanceClauseTranslator(context, symbolTable).translateClause(clause, version);
+        const TranslatorContext& context, SymbolTable& symbolTable, const ast::Clause& clause, int /* version */) {
+    return ProvenanceClauseTranslator(context, symbolTable).translateClause(clause);
 }
 
 Own<ram::Operation> ProvenanceClauseTranslator::addNegate(
@@ -78,27 +78,27 @@ Own<ram::Operation> ProvenanceClauseTranslator::addNegate(
 Own<ram::Statement> ProvenanceClauseTranslator::createRamFactQuery(const ast::Clause& clause) const {
     assert(isFact(clause) && "clause should be fact");
     assert(!isRecursive() && "recursive clauses cannot have facts");
-    return mk<ram::Query>(createValueSubroutine(clause));
+    return mk<ram::Query>(generateReturnInstantiatedValues(clause));
 }
 
-Own<ram::Statement> ProvenanceClauseTranslator::createRamRuleQuery(
-        const ast::Clause& clause, size_t version) {
+Own<ram::Statement> ProvenanceClauseTranslator::createRamRuleQuery(const ast::Clause& clause) {
     assert(isRule(clause) && "clause should be rule");
 
     // Index all variables and generators in the clause
     valueIndex = mk<ValueIndex>();
-    indexClause(clause, version);
+    indexClause(clause);
 
     // Set up the RAM statement bottom-up
-    auto op = createValueSubroutine(clause);
+    auto op = generateReturnInstantiatedValues(clause);
     op = addVariableBindingConstraints(std::move(op));
     op = addBodyLiteralConstraints(clause, std::move(op));
     op = addGeneratorLevels(std::move(op), clause);
-    op = addVariableIntroductions(clause, version, std::move(op));
+    op = addVariableIntroductions(clause, std::move(op));
     return mk<ram::Query>(std::move(op));
 }
 
-Own<ram::Operation> ProvenanceClauseTranslator::createValueSubroutine(const ast::Clause& clause) const {
+Own<ram::Operation> ProvenanceClauseTranslator::generateReturnInstantiatedValues(
+        const ast::Clause& clause) const {
     VecOwn<ram::Expression> values;
 
     // get all values in the body

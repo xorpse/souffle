@@ -42,8 +42,8 @@ public:
 
 protected:
     Own<ram::Statement> createRamFactQuery(const ast::Clause& clause) const override;
-    Own<ram::Statement> createRamRuleQuery(const ast::Clause& clause, size_t version) override;
-    Own<ram::Operation> createValueSubroutine(const ast::Clause& clause) const;
+    Own<ram::Statement> createRamRuleQuery(const ast::Clause& clause) override;
+    Own<ram::Operation> generateReturnInstantiatedValues(const ast::Clause& clause) const;
     Own<ram::Operation> addNegate(const ast::Atom* atom, Own<ram::Operation> op, bool isDelta) const override;
 };
 }  // namespace souffle::ast2ram

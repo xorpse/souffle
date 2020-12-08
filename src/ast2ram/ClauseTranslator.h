@@ -79,22 +79,22 @@ protected:
 
     Own<ValueIndex> valueIndex;
 
-    Own<ram::Statement> translateClause(const ast::Clause& clause, size_t version = 0);
+    Own<ram::Statement> translateClause(const ast::Clause& clause);
 
     /** Main clause translation */
     virtual Own<ram::Statement> createRamFactQuery(const ast::Clause& clause) const;
-    virtual Own<ram::Statement> createRamRuleQuery(const ast::Clause& clause, size_t version);
+    virtual Own<ram::Statement> createRamRuleQuery(const ast::Clause& clause);
 
     virtual Own<ram::Operation> createProjection(const ast::Clause& clause) const;
     virtual Own<ram::Condition> createCondition(const ast::Clause& clause) const;
 
     Own<ram::Statement> generateClauseVersion(
-            const std::set<const ast::Relation*>& scc, const ast::Clause* cl, size_t version);
-    std::vector<ast::Atom*> getAtomOrdering(const ast::Clause& clause, size_t version) const;
+            const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version);
+    std::vector<ast::Atom*> getAtomOrdering(const ast::Clause& clause) const;
 
     /** Indexing */
-    void indexClause(const ast::Clause& clause, size_t version);
-    void indexAtoms(const ast::Clause& clause, size_t version);
+    void indexClause(const ast::Clause& clause);
+    void indexAtoms(const ast::Clause& clause);
     void indexAggregators(const ast::Clause& clause);
     void indexMultiResultFunctors(const ast::Clause& clause);
     void indexNodeArguments(int nodeLevel, const std::vector<ast::Argument*>& nodeArgs);
@@ -105,13 +105,12 @@ protected:
     Own<ram::Operation> addVariableBindingConstraints(Own<ram::Operation> op) const;
     Own<ram::Operation> addBodyLiteralConstraints(const ast::Clause& clause, Own<ram::Operation> op) const;
     Own<ram::Operation> addGeneratorLevels(Own<ram::Operation> op, const ast::Clause& clause) const;
-    Own<ram::Operation> addVariableIntroductions(
-            const ast::Clause& clause, size_t version, Own<ram::Operation> op);
+    Own<ram::Operation> addVariableIntroductions(const ast::Clause& clause, Own<ram::Operation> op);
     Own<ram::Operation> addEntryPoint(const ast::Clause& clause, Own<ram::Operation> op) const;
 
     /** Levelling methods */
-    Own<ram::Operation> addAtomScan(Own<ram::Operation> op, const ast::Atom* atom, const ast::Clause& clause,
-            int curLevel, size_t version) const;
+    Own<ram::Operation> addAtomScan(
+            Own<ram::Operation> op, const ast::Atom* atom, const ast::Clause& clause, int curLevel) const;
     Own<ram::Operation> addRecordUnpack(
             Own<ram::Operation> op, const ast::RecordInit* rec, int curLevel) const;
     Own<ram::Operation> addAdtUnpack(Own<ram::Operation> op, const ast::BranchInit* adt, int curLevel) const;
