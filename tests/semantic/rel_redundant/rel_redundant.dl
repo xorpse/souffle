@@ -35,8 +35,19 @@ f(1,[1]).
 g(x, [x]) :- f(x, [x]).
 record1(x, y) :- g(x, [y]).
 
-// Another test case (see Issue #1774)
+// small test case for issue #1770
+.decl hnwC(A:float)
+.decl anHG(A:float)
+.decl fydL(A:float) inline
+.decl HhJv(A:float)
+.decl wvhB(A:float)
+.decl lItv(A:float)
 
+fydL(a) :- hnwC(a).
+HhJv(r) :- hnwC(r).
+lItv(e), anHG(dXn) :- wvhB(dXn), hnwC(e), !HhJv(_).
+
+// Another test case (see Issue #1774)
 .decl aX(x:number)
 .decl bX(x:number, y:number)
 .decl cX(x:number)
@@ -51,4 +62,3 @@ fX(x) :- cX(x).
 outX(Y) :- dX(f,Y,f), fX(c), eX(a,b).
 
 .output outX
-
