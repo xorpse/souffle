@@ -150,7 +150,7 @@ Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clau
             intermediateClause->addToBody(std::move(constraint));
         }
     }
-    return ProvenanceClauseTranslator::generateClause(*context, *symbolTable, *intermediateClause, clause);
+    return ProvenanceClauseTranslator::generateClause(*context, *symbolTable, *intermediateClause);
 }
 
 /** make a subroutine to search for subproofs for the non-existence of a tuple */

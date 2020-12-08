@@ -38,12 +38,11 @@ public:
             : ClauseTranslator(context, symbolTable) {}
 
     static Own<ram::Statement> generateClause(const TranslatorContext& context, SymbolTable& symbolTable,
-            const ast::Clause& clause, const ast::Clause& originalClause, int version = 0);
+            const ast::Clause& clause, int version = 0);
 
 protected:
-    Own<ram::Operation> createProjection(
-            const ast::Clause& clause, const ast::Clause& originalClause) const override;
-    Own<ram::Condition> createCondition(const ast::Clause& originalClause) const override;
+    Own<ram::Operation> createProjection(const ast::Clause& clause) const override;
+    Own<ram::Condition> createCondition(const ast::Clause& clause) const override;
     Own<ram::Operation> addNegate(const ast::Atom* atom, Own<ram::Operation> op, bool isDelta) const override;
 };
 }  // namespace souffle::ast2ram

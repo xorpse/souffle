@@ -118,7 +118,7 @@ Own<ram::Statement> AstToRamTranslator::generateNonRecursiveRelation(const ast::
         }
 
         // Translate clause
-        Own<ram::Statement> rule = ClauseTranslator::generateClause(*context, *symbolTable, *clause, *clause);
+        Own<ram::Statement> rule = ClauseTranslator::generateClause(*context, *symbolTable, *clause);
 
         // Add logging
         if (Global::config().has("profile")) {

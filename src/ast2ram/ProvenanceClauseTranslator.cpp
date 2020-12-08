@@ -37,9 +37,9 @@
 
 namespace souffle::ast2ram {
 
-Own<ram::Statement> ProvenanceClauseTranslator::generateClause(const TranslatorContext& context,
-        SymbolTable& symbolTable, const ast::Clause& clause, const ast::Clause& originalClause, int version) {
-    return ProvenanceClauseTranslator(context, symbolTable).translateClause(clause, originalClause, version);
+Own<ram::Statement> ProvenanceClauseTranslator::generateClause(
+        const TranslatorContext& context, SymbolTable& symbolTable, const ast::Clause& clause, int version) {
+    return ProvenanceClauseTranslator(context, symbolTable).translateClause(clause, version);
 }
 
 Own<ram::Operation> ProvenanceClauseTranslator::addNegate(
@@ -76,13 +76,11 @@ Own<ram::Operation> ProvenanceClauseTranslator::addNegate(
 
 // TODO (azreika): should change these to a ram query overload!!!
 
-Own<ram::Condition> ProvenanceClauseTranslator::createCondition(
-        const ast::Clause& /* originalClause */) const {
+Own<ram::Condition> ProvenanceClauseTranslator::createCondition(const ast::Clause& /* clause */) const {
     return nullptr;
 }
 
-Own<ram::Operation> ProvenanceClauseTranslator::createProjection(
-        const ast::Clause& clause, const ast::Clause& /* originalClause */) const {
+Own<ram::Operation> ProvenanceClauseTranslator::createProjection(const ast::Clause& clause) const {
     VecOwn<ram::Expression> values;
 
     // get all values in the body

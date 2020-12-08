@@ -77,9 +77,9 @@ ClauseTranslator::ClauseTranslator(const TranslatorContext& context, SymbolTable
 
 ClauseTranslator::~ClauseTranslator() = default;
 
-Own<ram::Statement> ClauseTranslator::generateClause(const TranslatorContext& context,
-        SymbolTable& symbolTable, const ast::Clause& clause, const ast::Clause& originalClause, int version) {
-    return ClauseTranslator(context, symbolTable).translateClause(clause, originalClause, version);
+Own<ram::Statement> ClauseTranslator::generateClause(
+        const TranslatorContext& context, SymbolTable& symbolTable, const ast::Clause& clause, int version) {
+    return ClauseTranslator(context, symbolTable).translateClause(clause, version);
 }
 
 VecOwn<ram::Statement> ClauseTranslator::generateClauseVersions(const TranslatorContext& context,
@@ -136,7 +136,7 @@ Own<ram::Statement> ClauseTranslator::generateClauseVersion(const std::set<const
     }
 
     // Translate the resultant clause as would be done normally
-    Own<ram::Statement> rule = translateClause(*clause, *clause, version);
+    Own<ram::Statement> rule = translateClause(*clause, version);
 
     // Add loging
     if (Global::config().has("profile")) {
@@ -161,13 +161,12 @@ Own<ram::Statement> ClauseTranslator::generateClauseVersion(const std::set<const
     return mk<ram::Sequence>(std::move(rule));
 }
 
-Own<ram::Statement> ClauseTranslator::translateClause(
-        const ast::Clause& clause, const ast::Clause& originalClause, int version) {
+Own<ram::Statement> ClauseTranslator::translateClause(const ast::Clause& clause, int version) {
     // Create the appropriate query
     if (isFact(clause)) {
         return createRamFactQuery(clause);
     }
-    return createRamRuleQuery(clause, originalClause, version);
+    return createRamRuleQuery(clause, version);
 }
 
 std::string ClauseTranslator::getClauseAtomName(const ast::Clause& clause, const ast::Atom* atom) const {
@@ -187,14 +186,11 @@ Own<ram::Statement> ClauseTranslator::createRamFactQuery(const ast::Clause& clau
     assert(isFact(clause) && "clause should be fact");
     assert(!isRecursive() && "recursive clauses cannot have facts");
 
-    auto project = createProjection(clause, clause);
-
     // Create a fact statement
-    return mk<ram::Query>((std::move(project)));
+    return mk<ram::Query>(createProjection(clause));
 }
 
-Own<ram::Statement> ClauseTranslator::createRamRuleQuery(
-        const ast::Clause& clause, const ast::Clause& originalClause, int version) {
+Own<ram::Statement> ClauseTranslator::createRamRuleQuery(const ast::Clause& clause, int version) {
     assert(isRule(clause) && "clause should be rule");
 
     // Index all variables and generators in the clause
@@ -202,18 +198,17 @@ Own<ram::Statement> ClauseTranslator::createRamRuleQuery(
     indexClause(clause, version);
 
     // Set up the RAM statement bottom-up
-    auto op = createProjection(clause, originalClause);
+    auto op = createProjection(clause);
     op = addVariableBindingConstraints(std::move(op));
     op = addBodyLiteralConstraints(clause, std::move(op));
     op = addGeneratorLevels(std::move(op), clause);
-    op = addVariableIntroductions(clause, originalClause, version, std::move(op));
-    op = addEntryPoint(originalClause, std::move(op));
+    op = addVariableIntroductions(clause, version, std::move(op));
+    op = addEntryPoint(clause, std::move(op));
     return mk<ram::Query>(std::move(op));
 }
 
-Own<ram::Operation> ClauseTranslator::addEntryPoint(
-        const ast::Clause& originalClause, Own<ram::Operation> op) const {
-    auto cond = createCondition(originalClause);
+Own<ram::Operation> ClauseTranslator::addEntryPoint(const ast::Clause& clause, Own<ram::Operation> op) const {
+    auto cond = createCondition(clause);
     return cond != nullptr ? mk<ram::Filter>(std::move(cond), std::move(op)) : std::move(op);
 }
 
@@ -233,11 +228,10 @@ Own<ram::Operation> ClauseTranslator::addVariableBindingConstraints(Own<ram::Ope
     return op;
 }
 
-Own<ram::Operation> ClauseTranslator::createProjection(
-        const ast::Clause& clause, const ast::Clause& originalClause) const {
+Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause) const {
     const auto head = clause.getHead();
     auto headRelationName = getClauseAtomName(clause, head);
-    const auto relInfo = context.getRelation(originalClause.getHead()->getQualifiedName());
+    const auto relInfo = context.getRelation(clause.getHead()->getQualifiedName());
 
     VecOwn<ram::Expression> values;
     for (const auto* arg : head->getArguments()) {
@@ -257,7 +251,7 @@ Own<ram::Operation> ClauseTranslator::createProjection(
 }
 
 Own<ram::Operation> ClauseTranslator::addAtomScan(Own<ram::Operation> op, const ast::Atom* atom,
-        const ast::Clause& clause, const ast::Clause& originalClause, int curLevel, int version) const {
+        const ast::Clause& clause, int curLevel, int version) const {
     const ast::Atom* head = clause.getHead();
 
     // add constraints
@@ -281,11 +275,11 @@ Own<ram::Operation> ClauseTranslator::addAtomScan(Own<ram::Operation> op, const 
         std::stringstream ss;
         if (Global::config().has("profile")) {
             ss << "@frequency-atom" << ';';
-            ss << originalClause.getHead()->getQualifiedName() << ';';
+            ss << clause.getHead()->getQualifiedName() << ';';
             ss << version << ';';
             ss << stringify(toString(clause)) << ';';
             ss << stringify(toString(*atom)) << ';';
-            ss << stringify(toString(originalClause)) << ';';
+            ss << stringify(toString(clause)) << ';';
             ss << curLevel << ';';
         }
         op = mk<ram::Scan>(getClauseAtomName(clause, atom), curLevel, std::move(op), ss.str());
@@ -329,12 +323,12 @@ Own<ram::Operation> ClauseTranslator::addAdtUnpack(
 }
 
 Own<ram::Operation> ClauseTranslator::addVariableIntroductions(
-        const ast::Clause& clause, const ast::Clause& originalClause, int version, Own<ram::Operation> op) {
+        const ast::Clause& clause, int version, Own<ram::Operation> op) {
     for (int i = operators.size() - 1; i >= 0; i--) {
         const auto* curOp = operators.at(i);
         if (const auto* atom = dynamic_cast<const ast::Atom*>(curOp)) {
             // add atom arguments through a scan
-            op = addAtomScan(std::move(op), atom, clause, originalClause, i, version);
+            op = addAtomScan(std::move(op), atom, clause, i, version);
         } else if (const auto* rec = dynamic_cast<const ast::RecordInit*>(curOp)) {
             // add record arguments through an unpack
             op = addRecordUnpack(std::move(op), rec, i);
@@ -491,13 +485,13 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
     return op;
 }
 
-Own<ram::Condition> ClauseTranslator::createCondition(const ast::Clause& originalClause) const {
-    const auto head = originalClause.getHead();
+Own<ram::Condition> ClauseTranslator::createCondition(const ast::Clause& clause) const {
+    const auto head = clause.getHead();
 
     // add stopping criteria for nullary relations
     // (if it contains already the null tuple, don't re-compute)
     if (head->getArity() == 0) {
-        return mk<ram::EmptinessCheck>(getClauseAtomName(originalClause, head));
+        return mk<ram::EmptinessCheck>(getClauseAtomName(clause, head));
     }
     return nullptr;
 }
