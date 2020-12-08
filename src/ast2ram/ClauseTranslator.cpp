@@ -122,9 +122,8 @@ VecOwn<ram::Statement> ClauseTranslator::generateClauseVersions(const Translator
 
 Own<ram::Statement> ClauseTranslator::generateClauseVersion(const std::set<const ast::Relation*>& scc,
         const ast::Clause* clause, size_t deltaAtomIdx, size_t version) {
-    const auto& atoms = ast::getBodyLiterals<ast::Atom>(*clause);
-
     // Update delta atom
+    const auto& atoms = ast::getBodyLiterals<ast::Atom>(*clause);
     deltaAtom = atoms.at(deltaAtomIdx);
 
     // Update prevs list
@@ -631,15 +630,17 @@ Own<ram::Condition> ClauseTranslator::getFunctionalDependencies(
 
 std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(
         const ast::Clause& clause, const int version) const {
+    auto atoms = ast::getBodyLiterals<ast::Atom>(clause);
+
     const auto& plan = clause.getExecutionPlan();
     if (plan == nullptr) {
-        return {};
+        return atoms;
     }
 
     // check if there's a plan for the current version
     auto orders = plan->getOrders();
     if (!contains(orders, version)) {
-        return {};
+        return atoms;
     }
 
     // get the imposed order, and change it to start at zero
@@ -647,8 +648,6 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(
     std::vector<unsigned int> newOrder(order->getOrder().size());
     std::transform(order->getOrder().begin(), order->getOrder().end(), newOrder.begin(),
             [](unsigned int i) -> unsigned int { return i - 1; });
-
-    std::vector<ast::Atom*> atoms = ast::getBodyLiterals<ast::Atom>(clause);
     return reorderAtoms(atoms, newOrder);
 }
 
@@ -706,7 +705,7 @@ void ClauseTranslator::indexGenerator(const ast::Argument& arg) {
 }
 
 void ClauseTranslator::indexAtoms(const ast::Clause& clause) {
-    for (const auto* atom : ast::getBodyLiterals<ast::Atom>(clause)) {
+    for (const auto* atom : atomOrder) {
         // give the atom the current level
         int scanLevel = addOperatorLevel(atom);
         indexNodeArguments(scanLevel, atom->getArguments());
