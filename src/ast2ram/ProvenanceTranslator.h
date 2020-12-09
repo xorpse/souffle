@@ -35,6 +35,8 @@ class SubroutineReturn;
 
 namespace souffle::ast2ram {
 
+class ValueIndex;
+
 class ProvenanceTranslator : public AstToRamTranslator {
 public:
     ProvenanceTranslator() = default;
@@ -54,8 +56,8 @@ private:
 
     void addProvenanceClauseSubroutines(const ast::Program* program);
 
-    Own<ram::ExistenceCheck> makeRamAtomExistenceCheck(
-            ast::Atom* atom, const std::vector<const ast::Variable*>& vars) const;
+    Own<ram::ExistenceCheck> makeRamAtomExistenceCheck(ast::Atom* atom,
+            const std::map<int, const ast::Variable*>& idToVar, ValueIndex& valueIndex) const;
     Own<ram::SubroutineReturn> makeRamReturnTrue() const;
     Own<ram::SubroutineReturn> makeRamReturnFalse() const;
     void transformVariablesToSubroutineArgs(

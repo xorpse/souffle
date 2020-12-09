@@ -86,31 +86,18 @@ Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clau
 }
 
 Own<ram::ExistenceCheck> ProvenanceTranslator::makeRamAtomExistenceCheck(
-        ast::Atom* atom, const std::vector<const ast::Variable*>& vars) const {
+        ast::Atom* atom, const std::map<int, const ast::Variable*>& idToVar, ValueIndex& valueIndex) const {
     auto relName = getConcreteRelationName(atom->getQualifiedName());
     size_t auxiliaryArity = context->getAuxiliaryArity(atom);
-
-    // translate variables to subroutine arguments
-    // transformVariablesToSubroutineArgs(atom, vars);
 
     // construct a query
     VecOwn<ram::Expression> query;
     auto atomArgs = atom->getArguments();
 
     // add each value (subroutine argument) to the search query
-    int count = 0;
-    std::map<int, const ast::Variable*> idToVar;
-    auto dummyValueIndex = mk<ValueIndex>();
-    for (const auto* var : vars) {
-        if (!dummyValueIndex->isDefined(*var)) {
-            idToVar[count] = var;
-            dummyValueIndex->addVarReference(*var, count++, 0);
-        }
-    }
-
     for (size_t i = 0; i < atom->getArity() - auxiliaryArity; i++) {
         auto arg = atomArgs.at(i);
-        auto translatedValue = ValueTranslator::translate(*context, *symbolTable, *dummyValueIndex, arg);
+        auto translatedValue = ValueTranslator::translate(*context, *symbolTable, valueIndex, arg);
         transformVariablesToSubroutineArgs(translatedValue.get(), idToVar);
         query.push_back(std::move(translatedValue));
     }
@@ -240,6 +227,16 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
         }
     });
 
+    int count = 0;
+    std::map<int, const ast::Variable*> idToVar;
+    auto dummyValueIndex = mk<ValueIndex>();
+    for (const auto* var : uniqueVariables) {
+        if (!dummyValueIndex->isDefined(*var)) {
+            idToVar[count] = var;
+            dummyValueIndex->addVarReference(*var, count++, 0);
+        }
+    }
+
     // the structure of this subroutine is a sequence where each nested statement is a search in each
     // relation
     VecOwn<ram::Statement> searchSequence;
@@ -248,18 +245,18 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
     size_t litNumber = 0;
     for (const auto& lit : clauseReplacedAggregates->getBodyLiterals()) {
         if (auto atom = dynamic_cast<ast::Atom*>(lit)) {
-            auto existenceCheck = makeRamAtomExistenceCheck(atom, uniqueVariables);
+            auto existenceCheck = makeRamAtomExistenceCheck(atom, idToVar, *dummyValueIndex);
             auto ifStatement =
                     makeIfStatement(std::move(existenceCheck), makeRamReturnTrue(), makeRamReturnFalse());
             appendStmt(searchSequence, std::move(ifStatement));
         } else if (auto neg = dynamic_cast<ast::Negation*>(lit)) {
-            auto existenceCheck = makeRamAtomExistenceCheck(neg->getAtom(), uniqueVariables);
+            auto existenceCheck = makeRamAtomExistenceCheck(neg->getAtom(), idToVar, *dummyValueIndex);
             auto ifStatement =
                     makeIfStatement(std::move(existenceCheck), makeRamReturnFalse(), makeRamReturnTrue());
             appendStmt(searchSequence, std::move(ifStatement));
         } else if (auto con = dynamic_cast<ast::Constraint*>(lit)) {
-            // transformVariablesToSubroutineArgs(con, uniqueVariables);
             auto condition = ConstraintTranslator::translate(*context, *symbolTable, ValueIndex(), con);
+            transformVariablesToSubroutineArgs(condition.get(), idToVar);
             auto ifStatement =
                     makeIfStatement(std::move(condition), makeRamReturnTrue(), makeRamReturnFalse());
             appendStmt(searchSequence, std::move(ifStatement));
