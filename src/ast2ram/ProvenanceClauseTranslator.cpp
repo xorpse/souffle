@@ -103,8 +103,36 @@ Own<ram::Operation> ProvenanceClauseTranslator::addBodyLiteralConstraints(
     }
 
     // index of level argument in argument list
+    const auto* head = clause.getHead();
+    const auto& headArgs = head->getArguments();
     size_t auxiliaryArity = context.getAuxiliaryArity(clause.getHead());
     size_t levelIndex = clause.getHead()->getArguments().size() - auxiliaryArity;
+    for (size_t i = 0; i < head->getArity() - auxiliaryArity; i++) {
+        auto arg = headArgs.at(i);
+        if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
+            // FIXME: float equiv (`FEQ`)
+            auto lhs = ValueTranslator::translate(context, symbolTable, *valueIndex, var);
+            auto constraint = mk<ram::Constraint>(
+                    BinaryConstraintOp::EQ, std::move(lhs), mk<ram::SubroutineArgument>(i));
+            op = mk<ram::Filter>(std::move(constraint), std::move(op));
+        } else if (const auto* func = dynamic_cast<const ast::Functor*>(arg)) {
+            TypeAttribute returnType = context.getFunctorReturnType(func);
+            auto opEq = returnType == TypeAttribute::Float ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ;
+            auto lhs = ValueTranslator::translate(context, symbolTable, *valueIndex, func);
+            auto constraint = mk<ram::Constraint>(opEq, std::move(lhs), mk<ram::SubroutineArgument>(i));
+            op = mk<ram::Filter>(std::move(constraint), std::move(op));
+        } else if (const auto* rec = dynamic_cast<const ast::RecordInit*>(arg)) {
+            auto lhs = ValueTranslator::translate(context, symbolTable, *valueIndex, rec);
+            auto constraint = mk<ram::Constraint>(
+                    BinaryConstraintOp::EQ, std::move(lhs), mk<ram::SubroutineArgument>(i));
+            op = mk<ram::Filter>(std::move(constraint), std::move(op));
+        } else if (const auto* adt = dynamic_cast<const ast::BranchInit*>(arg)) {
+            // TODO: fill this out like record arguments
+            assert(false && adt && "unhandled");
+        }
+    }
+
+    // add constraint for each argument in head of atom
 
     // add level constraints, i.e., that each body literal has height less than that of the head atom
     for (const auto* lit : clause.getBodyLiterals()) {

@@ -97,33 +97,6 @@ Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clau
         intermediateClause->addToBody(souffle::clone(bodyLit));
     }
 
-    // add constraint for each argument in head of atom
-    ast::Atom* head = intermediateClause->getHead();
-    size_t auxiliaryArity = context->getAuxiliaryArity(head);
-    auto args = head->getArguments();
-    for (size_t i = 0; i < head->getArity() - auxiliaryArity; i++) {
-        auto arg = args[i];
-        if (auto var = dynamic_cast<ast::Variable*>(arg)) {
-            // FIXME: float equiv (`FEQ`)
-            auto constraint = mk<ast::BinaryConstraint>(
-                    BinaryConstraintOp::EQ, souffle::clone(var), mk<ast::SubroutineArgument>(i));
-            intermediateClause->addToBody(std::move(constraint));
-        } else if (auto func = dynamic_cast<ast::Functor*>(arg)) {
-            TypeAttribute returnType = context->getFunctorReturnType(func);
-            auto opEq = returnType == TypeAttribute::Float ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ;
-            auto constraint =
-                    mk<ast::BinaryConstraint>(opEq, souffle::clone(func), mk<ast::SubroutineArgument>(i));
-            intermediateClause->addToBody(std::move(constraint));
-        } else if (auto rec = dynamic_cast<ast::RecordInit*>(arg)) {
-            auto constraint = mk<ast::BinaryConstraint>(
-                    BinaryConstraintOp::EQ, souffle::clone(rec), mk<ast::SubroutineArgument>(i));
-            intermediateClause->addToBody(std::move(constraint));
-        } else if (auto adt = dynamic_cast<ast::BranchInit*>(arg)) {
-            // TODO: fill this out like record arguments
-            assert(false && adt && "unhandled");
-        }
-    }
-
     return ProvenanceClauseTranslator::generateClause(*context, *symbolTable, *intermediateClause);
 }
 
