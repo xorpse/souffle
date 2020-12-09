@@ -45,7 +45,6 @@
 #include "ast/RecordType.h"
 #include "ast/Relation.h"
 #include "ast/StringConstant.h"
-#include "ast/SubroutineArgument.h"
 #include "ast/SubsetType.h"
 #include "ast/Term.h"
 #include "ast/Type.h"
@@ -120,7 +119,6 @@ struct Visitor : public ast_visitor_tag {
         FORWARD(RecordInit)
         FORWARD(BranchInit)
         FORWARD(Aggregator)
-        FORWARD(SubroutineArgument)
 
         // literals
         FORWARD(Atom)
@@ -166,7 +164,6 @@ protected:
     LINK(UnnamedVariable, Argument)
     LINK(Counter, Argument)
     LINK(TypeCast, Argument)
-    LINK(SubroutineArgument, Argument)
     LINK(BranchInit, Argument)
 
     LINK(NumericConstant, Constant)

@@ -155,8 +155,4 @@ Own<ram::Expression> ValueTranslator::visitAggregator(const ast::Aggregator& agg
     return makeRamTupleElement(index.getGeneratorLoc(agg));
 }
 
-Own<ram::Expression> ValueTranslator::visitSubroutineArgument(const ast::SubroutineArgument& subArg) {
-    return mk<ram::SubroutineArgument>(subArg.getNumber());
-}
-
 }  // namespace souffle::ast2ram

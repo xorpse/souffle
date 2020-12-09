@@ -55,7 +55,6 @@ souffle_sources = \
         ast/RecordType.h                                   \
         ast/Relation.h                                     \
         ast/StringConstant.h                               \
-        ast/SubroutineArgument.h                           \
         ast/SubsetType.h                                   \
         ast/Term.h                                         \
         ast/TranslationUnit.h                              \

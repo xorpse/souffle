@@ -65,7 +65,6 @@ public:
     Own<ram::Expression> visitRecordInit(const ast::RecordInit& init) override;
     Own<ram::Expression> visitBranchInit(const ast::BranchInit& init) override;
     Own<ram::Expression> visitAggregator(const ast::Aggregator& agg) override;
-    Own<ram::Expression> visitSubroutineArgument(const ast::SubroutineArgument& subArg) override;
 
 private:
     const TranslatorContext& context;

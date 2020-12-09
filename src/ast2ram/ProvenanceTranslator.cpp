@@ -16,7 +16,6 @@
 #include "ast/BinaryConstraint.h"
 #include "ast/Clause.h"
 #include "ast/Constraint.h"
-#include "ast/SubroutineArgument.h"
 #include "ast/analysis/AuxArity.h"
 #include "ast/analysis/RelationDetailCache.h"
 #include "ast/utility/Utils.h"
