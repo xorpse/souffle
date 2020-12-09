@@ -28,6 +28,7 @@
 #include "ast2ram/utility/Utils.h"
 #include "ast2ram/utility/ValueIndex.h"
 #include "ram/ExistenceCheck.h"
+#include "ram/Expression.h"
 #include "ram/Filter.h"
 #include "ram/Negation.h"
 #include "ram/Query.h"
@@ -142,6 +143,78 @@ Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clau
     return ProvenanceClauseTranslator::generateClause(*context, *symbolTable, *intermediateClause);
 }
 
+Own<ram::ExistenceCheck> ProvenanceTranslator::makeRamAtomExistenceCheck(
+        ast::Atom* atom, const std::vector<const ast::Variable*>& vars) const {
+    auto relName = getConcreteRelationName(atom->getQualifiedName());
+    size_t auxiliaryArity = context->getAuxiliaryArity(atom);
+
+    // translate variables to subroutine arguments
+    transformVariablesToSubroutineArgs(atom, vars);
+
+    // construct a query
+    VecOwn<ram::Expression> query;
+    auto atomArgs = atom->getArguments();
+
+    // add each value (subroutine argument) to the search query
+    for (size_t i = 0; i < atom->getArity() - auxiliaryArity; i++) {
+        auto arg = atomArgs[i];
+        query.push_back(ValueTranslator::translate(*context, *symbolTable, ValueIndex(), arg));
+    }
+
+    // fill up query with nullptrs for the provenance columns
+    for (size_t i = 0; i < auxiliaryArity; i++) {
+        query.push_back(mk<ram::UndefValue>());
+    }
+
+    // ensure the length of query tuple is correct
+    assert(query.size() == atom->getArity() && "wrong query tuple size");
+
+    // create existence checks to check if the tuple exists or not
+    return mk<ram::ExistenceCheck>(relName, std::move(query));
+}
+
+Own<ram::SubroutineReturn> ProvenanceTranslator::makeRamReturnTrue() const {
+    VecOwn<ram::Expression> returnTrue;
+    returnTrue.push_back(mk<ram::SignedConstant>(1));
+    return mk<ram::SubroutineReturn>(std::move(returnTrue));
+}
+
+Own<ram::SubroutineReturn> ProvenanceTranslator::makeRamReturnFalse() const {
+    VecOwn<ram::Expression> returnFalse;
+    returnFalse.push_back(mk<ram::SignedConstant>(0));
+    return mk<ram::SubroutineReturn>(std::move(returnFalse));
+}
+
+void ProvenanceTranslator::transformVariablesToSubroutineArgs(
+        ast::Node* node, const std::vector<const ast::Variable*>& vars) const {
+    // a mapper to replace variables with subroutine arguments
+    struct VariablesToArguments : public ast::NodeMapper {
+        const std::vector<const ast::Variable*>& uniqueVariables;
+
+        VariablesToArguments(const std::vector<const ast::Variable*>& uniqueVariables)
+                : uniqueVariables(uniqueVariables) {}
+
+        Own<ast::Node> operator()(Own<ast::Node> node) const override {
+            if (const auto* var = dynamic_cast<const ast::Variable*>(node.get())) {
+                if (isPrefix("@level_num", var->getName())) {
+                    return mk<ast::UnnamedVariable>();
+                }
+                size_t argNum = std::find_if(uniqueVariables.begin(), uniqueVariables.end(),
+                                        [&](const ast::Variable* v) { return *v == *var; }) -
+                                uniqueVariables.begin();
+                return mk<ast::SubroutineArgument>(argNum);
+            }
+
+            // Apply recursive
+            node->apply(*this);
+            return node;
+        }
+    };
+
+    VariablesToArguments varsToArgs(vars);
+    node->apply(varsToArgs);
+}
+
 /** make a subroutine to search for subproofs for the non-existence of a tuple */
 Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const ast::Clause& clause) {
     // TODO (taipan-snake): Currently we only deal with atoms (no constraints or negations or aggregates
@@ -203,72 +276,6 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
         }
     });
 
-    // a mapper to replace variables with subroutine arguments
-    struct VariablesToArguments : public ast::NodeMapper {
-        const std::vector<const ast::Variable*>& uniqueVariables;
-
-        VariablesToArguments(const std::vector<const ast::Variable*>& uniqueVariables)
-                : uniqueVariables(uniqueVariables) {}
-
-        Own<ast::Node> operator()(Own<ast::Node> node) const override {
-            if (const auto* var = dynamic_cast<const ast::Variable*>(node.get())) {
-                if (isPrefix("@level_num", var->getName())) {
-                    return mk<ast::UnnamedVariable>();
-                }
-                size_t argNum = std::find_if(uniqueVariables.begin(), uniqueVariables.end(),
-                                        [&](const ast::Variable* v) { return *v == *var; }) -
-                                uniqueVariables.begin();
-                return mk<ast::SubroutineArgument>(argNum);
-            }
-
-            // Apply recursive
-            node->apply(*this);
-            return node;
-        }
-    };
-
-    auto makeRamAtomExistenceCheck = [&](ast::Atom* atom) {
-        auto relName = getConcreteRelationName(atom->getQualifiedName());
-        size_t auxiliaryArity = context->getAuxiliaryArity(atom);
-
-        // translate variables to subroutine arguments
-        VariablesToArguments varsToArgs(uniqueVariables);
-        atom->apply(varsToArgs);
-
-        // construct a query
-        VecOwn<ram::Expression> query;
-        auto atomArgs = atom->getArguments();
-
-        // add each value (subroutine argument) to the search query
-        for (size_t i = 0; i < atom->getArity() - auxiliaryArity; i++) {
-            auto arg = atomArgs[i];
-            query.push_back(ValueTranslator::translate(*context, *symbolTable, ValueIndex(), arg));
-        }
-
-        // fill up query with nullptrs for the provenance columns
-        for (size_t i = 0; i < auxiliaryArity; i++) {
-            query.push_back(mk<ram::UndefValue>());
-        }
-
-        // ensure the length of query tuple is correct
-        assert(query.size() == atom->getArity() && "wrong query tuple size");
-
-        // create existence checks to check if the tuple exists or not
-        return mk<ram::ExistenceCheck>(relName, std::move(query));
-    };
-
-    auto makeRamReturnTrue = [&]() {
-        VecOwn<ram::Expression> returnTrue;
-        returnTrue.push_back(mk<ram::SignedConstant>(1));
-        return mk<ram::SubroutineReturn>(std::move(returnTrue));
-    };
-
-    auto makeRamReturnFalse = [&]() {
-        VecOwn<ram::Expression> returnFalse;
-        returnFalse.push_back(mk<ram::SignedConstant>(0));
-        return mk<ram::SubroutineReturn>(std::move(returnFalse));
-    };
-
     // the structure of this subroutine is a sequence where each nested statement is a search in each
     // relation
     VecOwn<ram::Statement> searchSequence;
@@ -277,7 +284,7 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
     size_t litNumber = 0;
     for (const auto& lit : clauseReplacedAggregates->getBodyLiterals()) {
         if (auto atom = dynamic_cast<ast::Atom*>(lit)) {
-            auto existenceCheck = makeRamAtomExistenceCheck(atom);
+            auto existenceCheck = makeRamAtomExistenceCheck(atom, uniqueVariables);
             auto negativeExistenceCheck = mk<ram::Negation>(souffle::clone(existenceCheck));
 
             // create a ram::Query to return true/false
@@ -287,7 +294,7 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
                     mk<ram::Query>(mk<ram::Filter>(std::move(negativeExistenceCheck), makeRamReturnFalse())));
         } else if (auto neg = dynamic_cast<ast::Negation*>(lit)) {
             auto atom = neg->getAtom();
-            auto existenceCheck = makeRamAtomExistenceCheck(atom);
+            auto existenceCheck = makeRamAtomExistenceCheck(atom, uniqueVariables);
             auto negativeExistenceCheck = mk<ram::Negation>(souffle::clone(existenceCheck));
 
             // create a ram::Query to return true/false
@@ -296,8 +303,7 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
             appendStmt(searchSequence,
                     mk<ram::Query>(mk<ram::Filter>(std::move(negativeExistenceCheck), makeRamReturnTrue())));
         } else if (auto con = dynamic_cast<ast::Constraint*>(lit)) {
-            VariablesToArguments varsToArgs(uniqueVariables);
-            con->apply(varsToArgs);
+            transformVariablesToSubroutineArgs(con, uniqueVariables);
 
             // translate to a ram::Condition
             auto condition = ConstraintTranslator::translate(*context, *symbolTable, ValueIndex(), con);

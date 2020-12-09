@@ -17,8 +17,18 @@
 #include "ast2ram/AstToRamTranslator.h"
 
 namespace souffle::ast {
+class Atom;
+class Node;
 class Program;
-}
+class Variable;
+}  // namespace souffle::ast
+
+namespace souffle::ram {
+class ExistenceCheck;
+class Expression;
+class Statement;
+class SubroutineReturn;
+}  // namespace souffle::ram
 
 namespace souffle::ast2ram {
 
@@ -40,5 +50,12 @@ private:
     Own<ram::Statement> makeNegationSubproofSubroutine(const ast::Clause& clause);
 
     void addProvenanceClauseSubroutines(const ast::Program* program);
+
+    Own<ram::ExistenceCheck> makeRamAtomExistenceCheck(
+            ast::Atom* atom, const std::vector<const ast::Variable*>& vars) const;
+    Own<ram::SubroutineReturn> makeRamReturnTrue() const;
+    Own<ram::SubroutineReturn> makeRamReturnFalse() const;
+    void transformVariablesToSubroutineArgs(
+            ast::Node* node, const std::vector<const ast::Variable*>& vars) const;
 };
 }  // namespace souffle::ast2ram
