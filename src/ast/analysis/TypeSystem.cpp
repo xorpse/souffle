@@ -346,7 +346,7 @@ bool haveCommonSupertype(const Type& a, const Type& b) {
 
 TypeAttribute getTypeAttribute(const Type& type) {
     for (auto typeAttribute : {TypeAttribute::Signed, TypeAttribute::Unsigned, TypeAttribute::Float,
-                 TypeAttribute::Record, TypeAttribute::Symbol}) {
+                 TypeAttribute::Record, TypeAttribute::Symbol, TypeAttribute::ADT}) {
         if (isOfKind(type, typeAttribute)) {
             return typeAttribute;
         }
