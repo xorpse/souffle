@@ -79,25 +79,8 @@ void ProvenanceTranslator::addProvenanceClauseSubroutines(const ast::Program* pr
 
 /** make a subroutine to search for subproofs */
 Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clause& clause) {
-    // name unnamed variables
     // nameUnnamedVariables(intermediateClause.get());
-
-    auto intermediateClause = mk<ast::Clause>(souffle::clone(clause.getHead()));
-
-    // create a clone where all the constraints are moved to the end
-    for (auto bodyLit : clause.getBodyLiterals()) {
-        // first add all the things that are not constraints
-        if (!isA<ast::Constraint>(bodyLit)) {
-            intermediateClause->addToBody(souffle::clone(bodyLit));
-        }
-    }
-
-    // now add all constraints
-    for (auto bodyLit : ast::getBodyLiterals<ast::Constraint>(clause)) {
-        intermediateClause->addToBody(souffle::clone(bodyLit));
-    }
-
-    return ProvenanceClauseTranslator::generateClause(*context, *symbolTable, *intermediateClause);
+    return ProvenanceClauseTranslator::generateClause(*context, *symbolTable, clause);
 }
 
 Own<ram::ExistenceCheck> ProvenanceTranslator::makeRamAtomExistenceCheck(

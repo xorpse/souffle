@@ -95,9 +95,21 @@ Own<ram::Statement> ProvenanceClauseTranslator::createRamRuleQuery(const ast::Cl
 
 Own<ram::Operation> ProvenanceClauseTranslator::addBodyLiteralConstraints(
         const ast::Clause& clause, Own<ram::Operation> op) const {
+    // Add all non-constraints, and then constraints
+    std::vector<const ast::Constraint*> constraints;
     for (const auto* lit : clause.getBodyLiterals()) {
-        // constraints become literals
+        if (const auto* con = dynamic_cast<const ast::Constraint*>(lit)) {
+            constraints.push_back(con);
+            continue;
+        }
+
         if (auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
+            op = mk<ram::Filter>(std::move(condition), std::move(op));
+        }
+    }
+
+    for (const auto* con : constraints) {
+        if (auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, con)) {
             op = mk<ram::Filter>(std::move(condition), std::move(op));
         }
     }
