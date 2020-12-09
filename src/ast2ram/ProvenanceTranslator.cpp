@@ -212,30 +212,16 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
     AggregatesToVariables aggToVar;
     clauseReplacedAggregates->apply(aggToVar);
 
-    // build a vector of unique variables
-    std::vector<const ast::Variable*> uniqueVariables;
-
-    visitDepthFirst(*clauseReplacedAggregates, [&](const ast::Variable& var) {
-        if (isPrefix("@level_num", var.getName())) {
-            return;
-        }
-        // use find_if since uniqueVariables stores pointers, and we need to dereference the pointer to
-        // check equality
-        if (std::find_if(uniqueVariables.begin(), uniqueVariables.end(),
-                    [&](const ast::Variable* v) { return *v == var; }) == uniqueVariables.end()) {
-            uniqueVariables.push_back(&var);
-        }
-    });
-
-    int count = 0;
+    size_t count = 0;
     std::map<int, const ast::Variable*> idToVar;
     auto dummyValueIndex = mk<ValueIndex>();
-    for (const auto* var : uniqueVariables) {
-        if (!dummyValueIndex->isDefined(*var)) {
-            idToVar[count] = var;
-            dummyValueIndex->addVarReference(*var, count++, 0);
+    visitDepthFirst(*clauseReplacedAggregates, [&](const ast::Variable& var) {
+        if (dummyValueIndex->isDefined(var)) {
+            return;
         }
-    }
+        idToVar[count] = &var;
+        dummyValueIndex->addVarReference(var, count++, 0);
+    });
 
     // the structure of this subroutine is a sequence where each nested statement is a search in each
     // relation
