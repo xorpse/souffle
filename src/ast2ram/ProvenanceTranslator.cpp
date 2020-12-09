@@ -59,20 +59,19 @@ Own<ram::Statement> ProvenanceTranslator::generateClearExpiredRelations(
 
 void ProvenanceTranslator::addProvenanceClauseSubroutines(const ast::Program* program) {
     visitDepthFirst(*program, [&](const ast::Clause& clause) {
-        std::stringstream relName;
-        relName << clause.getHead()->getQualifiedName();
+        std::string relName = toString(clause.getHead()->getQualifiedName());
 
         // do not add subroutines for info relations or facts
-        if (isPrefix("info", relName.str()) || clause.getBodyLiterals().empty()) {
+        if (isPrefix("info", relName) || isFact(clause)) {
             return;
         }
 
         std::string subroutineLabel =
-                relName.str() + "_" + std::to_string(getClauseNum(program, &clause)) + "_subproof";
+                relName + "_" + std::to_string(getClauseNum(program, &clause)) + "_subproof";
         addRamSubroutine(subroutineLabel, makeSubproofSubroutine(clause));
 
         std::string negationSubroutineLabel =
-                relName.str() + "_" + std::to_string(getClauseNum(program, &clause)) + "_negation_subproof";
+                relName + "_" + std::to_string(getClauseNum(program, &clause)) + "_negation_subproof";
         addRamSubroutine(negationSubroutineLabel, makeNegationSubproofSubroutine(clause));
     });
 }
@@ -108,26 +107,16 @@ Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clau
             // FIXME: float equiv (`FEQ`)
             auto constraint = mk<ast::BinaryConstraint>(
                     BinaryConstraintOp::EQ, souffle::clone(var), mk<ast::SubroutineArgument>(i));
-            // constraint->setFinalType(BinaryConstraintOp::EQ);
             intermediateClause->addToBody(std::move(constraint));
         } else if (auto func = dynamic_cast<ast::Functor*>(arg)) {
-            TypeAttribute returnType;
-            if (auto* inf = dynamic_cast<ast::IntrinsicFunctor*>(func)) {
-                returnType = context->getFunctorReturnType(inf);
-            } else if (auto* udf = dynamic_cast<ast::UserDefinedFunctor*>(func)) {
-                returnType = context->getFunctorReturnType(udf);
-            } else {
-                assert(false && "unexpected functor type");
-            }
+            TypeAttribute returnType = context->getFunctorReturnType(func);
             auto opEq = returnType == TypeAttribute::Float ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ;
             auto constraint =
                     mk<ast::BinaryConstraint>(opEq, souffle::clone(func), mk<ast::SubroutineArgument>(i));
-            // constraint->setFinalType(opEq);
             intermediateClause->addToBody(std::move(constraint));
         } else if (auto rec = dynamic_cast<ast::RecordInit*>(arg)) {
             auto constraint = mk<ast::BinaryConstraint>(
                     BinaryConstraintOp::EQ, souffle::clone(rec), mk<ast::SubroutineArgument>(i));
-            // constraint->setFinalType(BinaryConstraintOp::EQ);
             intermediateClause->addToBody(std::move(constraint));
         } else if (auto adt = dynamic_cast<ast::BranchInit*>(arg)) {
             // TODO: fill this out like record arguments
@@ -203,13 +192,14 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
     std::vector<const ast::Variable*> uniqueVariables;
 
     visitDepthFirst(*clauseReplacedAggregates, [&](const ast::Variable& var) {
-        if (var.getName().find("@level_num") == std::string::npos) {
-            // use find_if since uniqueVariables stores pointers, and we need to dereference the pointer to
-            // check equality
-            if (std::find_if(uniqueVariables.begin(), uniqueVariables.end(),
-                        [&](const ast::Variable* v) { return *v == var; }) == uniqueVariables.end()) {
-                uniqueVariables.push_back(&var);
-            }
+        if (isPrefix("@level_num", var.getName())) {
+            return;
+        }
+        // use find_if since uniqueVariables stores pointers, and we need to dereference the pointer to
+        // check equality
+        if (std::find_if(uniqueVariables.begin(), uniqueVariables.end(),
+                    [&](const ast::Variable* v) { return *v == var; }) == uniqueVariables.end()) {
+            uniqueVariables.push_back(&var);
         }
     });
 
@@ -221,23 +211,18 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
                 : uniqueVariables(uniqueVariables) {}
 
         Own<ast::Node> operator()(Own<ast::Node> node) const override {
-            // replace unknown variables
-            if (auto varPtr = dynamic_cast<const ast::Variable*>(node.get())) {
-                if (varPtr->getName().find("@level_num") == std::string::npos) {
-                    size_t argNum = std::find_if(uniqueVariables.begin(), uniqueVariables.end(),
-                                            [&](const ast::Variable* v) { return *v == *varPtr; }) -
-                                    uniqueVariables.begin();
-
-                    return mk<ast::SubroutineArgument>(argNum);
-                } else {
+            if (const auto* var = dynamic_cast<const ast::Variable*>(node.get())) {
+                if (isPrefix("@level_num", var->getName())) {
                     return mk<ast::UnnamedVariable>();
                 }
+                size_t argNum = std::find_if(uniqueVariables.begin(), uniqueVariables.end(),
+                                        [&](const ast::Variable* v) { return *v == *var; }) -
+                                uniqueVariables.begin();
+                return mk<ast::SubroutineArgument>(argNum);
             }
 
-            // apply recursive
+            // Apply recursive
             node->apply(*this);
-
-            // otherwise nothing
             return node;
         }
     };
@@ -288,12 +273,9 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
     // relation
     VecOwn<ram::Statement> searchSequence;
 
-    // make a copy so that when we mutate clause, pointers to objects in newClause are not affected
-    auto newClause = souffle::clone(clauseReplacedAggregates);
-
     // go through each body atom and create a return
     size_t litNumber = 0;
-    for (const auto& lit : newClause->getBodyLiterals()) {
+    for (const auto& lit : clauseReplacedAggregates->getBodyLiterals()) {
         if (auto atom = dynamic_cast<ast::Atom*>(lit)) {
             auto existenceCheck = makeRamAtomExistenceCheck(atom);
             auto negativeExistenceCheck = mk<ram::Negation>(souffle::clone(existenceCheck));
