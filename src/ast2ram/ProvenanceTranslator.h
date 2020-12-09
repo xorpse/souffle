@@ -24,8 +24,10 @@ class Variable;
 }  // namespace souffle::ast
 
 namespace souffle::ram {
+class Condition;
 class ExistenceCheck;
 class Expression;
+class Operation;
 class Statement;
 class SubroutineReturn;
 }  // namespace souffle::ram
@@ -57,5 +59,7 @@ private:
     Own<ram::SubroutineReturn> makeRamReturnFalse() const;
     void transformVariablesToSubroutineArgs(
             ast::Node* node, const std::vector<const ast::Variable*>& vars) const;
+    Own<ram::Sequence> makeIfStatement(
+            Own<ram::Condition> condition, Own<ram::Operation> trueOp, Own<ram::Operation> falseOp) const;
 };
 }  // namespace souffle::ast2ram

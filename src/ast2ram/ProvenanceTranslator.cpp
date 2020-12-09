@@ -215,6 +215,16 @@ void ProvenanceTranslator::transformVariablesToSubroutineArgs(
     node->apply(varsToArgs);
 }
 
+Own<ram::Sequence> ProvenanceTranslator::makeIfStatement(
+        Own<ram::Condition> condition, Own<ram::Operation> trueOp, Own<ram::Operation> falseOp) const {
+    auto negatedCondition = mk<ram::Negation>(souffle::clone(condition));
+
+    auto trueBranch = mk<ram::Query>(mk<ram::Filter>(std::move(condition), std::move(trueOp)));
+    auto falseBranch = mk<ram::Query>(mk<ram::Filter>(std::move(negatedCondition), std::move(falseOp)));
+
+    return mk<ram::Sequence>(std::move(trueBranch), std::move(falseBranch));
+}
+
 /** make a subroutine to search for subproofs for the non-existence of a tuple */
 Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const ast::Clause& clause) {
     // TODO (taipan-snake): Currently we only deal with atoms (no constraints or negations or aggregates
@@ -285,34 +295,20 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
     for (const auto& lit : clauseReplacedAggregates->getBodyLiterals()) {
         if (auto atom = dynamic_cast<ast::Atom*>(lit)) {
             auto existenceCheck = makeRamAtomExistenceCheck(atom, uniqueVariables);
-            auto negativeExistenceCheck = mk<ram::Negation>(souffle::clone(existenceCheck));
-
-            // create a ram::Query to return true/false
-            appendStmt(searchSequence,
-                    mk<ram::Query>(mk<ram::Filter>(std::move(existenceCheck), makeRamReturnTrue())));
-            appendStmt(searchSequence,
-                    mk<ram::Query>(mk<ram::Filter>(std::move(negativeExistenceCheck), makeRamReturnFalse())));
+            auto ifStatement =
+                    makeIfStatement(std::move(existenceCheck), makeRamReturnTrue(), makeRamReturnFalse());
+            appendStmt(searchSequence, std::move(ifStatement));
         } else if (auto neg = dynamic_cast<ast::Negation*>(lit)) {
-            auto atom = neg->getAtom();
-            auto existenceCheck = makeRamAtomExistenceCheck(atom, uniqueVariables);
-            auto negativeExistenceCheck = mk<ram::Negation>(souffle::clone(existenceCheck));
-
-            // create a ram::Query to return true/false
-            appendStmt(searchSequence,
-                    mk<ram::Query>(mk<ram::Filter>(std::move(existenceCheck), makeRamReturnFalse())));
-            appendStmt(searchSequence,
-                    mk<ram::Query>(mk<ram::Filter>(std::move(negativeExistenceCheck), makeRamReturnTrue())));
+            auto existenceCheck = makeRamAtomExistenceCheck(neg->getAtom(), uniqueVariables);
+            auto ifStatement =
+                    makeIfStatement(std::move(existenceCheck), makeRamReturnFalse(), makeRamReturnTrue());
+            appendStmt(searchSequence, std::move(ifStatement));
         } else if (auto con = dynamic_cast<ast::Constraint*>(lit)) {
             transformVariablesToSubroutineArgs(con, uniqueVariables);
-
-            // translate to a ram::Condition
             auto condition = ConstraintTranslator::translate(*context, *symbolTable, ValueIndex(), con);
-            auto negativeCondition = mk<ram::Negation>(souffle::clone(condition));
-
-            appendStmt(searchSequence,
-                    mk<ram::Query>(mk<ram::Filter>(std::move(condition), makeRamReturnTrue())));
-            appendStmt(searchSequence,
-                    mk<ram::Query>(mk<ram::Filter>(std::move(negativeCondition), makeRamReturnFalse())));
+            auto ifStatement =
+                    makeIfStatement(std::move(condition), makeRamReturnTrue(), makeRamReturnFalse());
+            appendStmt(searchSequence, std::move(ifStatement));
         }
 
         litNumber++;
