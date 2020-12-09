@@ -21,11 +21,13 @@
 #include "ast/Clause.h"
 #include "ast/utility/Utils.h"
 #include "ast2ram/AstToRamTranslator.h"
+#include "ast2ram/ConstraintTranslator.h"
 #include "ast2ram/ValueTranslator.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ast2ram/utility/ValueIndex.h"
 #include "ram/Condition.h"
+#include "ram/Constraint.h"
 #include "ram/Filter.h"
 #include "ram/Negation.h"
 #include "ram/ProvenanceExistenceCheck.h"
@@ -33,6 +35,7 @@
 #include "ram/Relation.h"
 #include "ram/SignedConstant.h"
 #include "ram/Statement.h"
+#include "ram/SubroutineArgument.h"
 #include "ram/SubroutineReturn.h"
 #include "ram/UndefValue.h"
 
@@ -88,6 +91,50 @@ Own<ram::Statement> ProvenanceClauseTranslator::createRamRuleQuery(const ast::Cl
     op = addGeneratorLevels(std::move(op), clause);
     op = addVariableIntroductions(clause, std::move(op));
     return mk<ram::Query>(std::move(op));
+}
+
+Own<ram::Operation> ProvenanceClauseTranslator::addBodyLiteralConstraints(
+        const ast::Clause& clause, Own<ram::Operation> op) const {
+    for (const auto* lit : clause.getBodyLiterals()) {
+        // constraints become literals
+        if (auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
+            op = mk<ram::Filter>(std::move(condition), std::move(op));
+        }
+    }
+
+    // index of level argument in argument list
+    size_t auxiliaryArity = context.getAuxiliaryArity(clause.getHead());
+    size_t levelIndex = clause.getHead()->getArguments().size() - auxiliaryArity;
+
+    // add level constraints, i.e., that each body literal has height less than that of the head atom
+    for (const auto* lit : clause.getBodyLiterals()) {
+        if (const auto* atom = dynamic_cast<const ast::Atom*>(lit)) {
+            // arity - 1 is the level number in body atoms
+            auto arity = atom->getArity();
+            auto atomArgs = atom->getArguments();
+            auto valLHS =
+                    ValueTranslator::translate(context, symbolTable, *valueIndex, atomArgs.at(arity - 1));
+
+            // add the constraint
+            auto constraint = mk<ram::Constraint>(
+                    BinaryConstraintOp::LT, std::move(valLHS), mk<ram::SubroutineArgument>(levelIndex));
+            op = mk<ram::Filter>(std::move(constraint), std::move(op));
+        }
+    }
+
+    if (isRecursive()) {
+        if (clause.getHead()->getArity() > 0) {
+            // also negate the head
+            op = addNegatedAtom(std::move(op), clause.getHead());
+        }
+
+        // also add in prev stuff
+        for (size_t i = version + 1; i < sccAtoms.size(); i++) {
+            op = addNegatedDeltaAtom(std::move(op), sccAtoms.at(i));
+        }
+    }
+
+    return op;
 }
 
 Own<ram::Operation> ProvenanceClauseTranslator::generateReturnInstantiatedValues(

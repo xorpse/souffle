@@ -79,6 +79,9 @@ void ProvenanceTranslator::addProvenanceClauseSubroutines(const ast::Program* pr
 
 /** make a subroutine to search for subproofs */
 Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clause& clause) {
+    // name unnamed variables
+    // nameUnnamedVariables(intermediateClause.get());
+
     auto intermediateClause = mk<ast::Clause>(souffle::clone(clause.getHead()));
 
     // create a clone where all the constraints are moved to the end
@@ -94,16 +97,12 @@ Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clau
         intermediateClause->addToBody(souffle::clone(bodyLit));
     }
 
-    // name unnamed variables
-    nameUnnamedVariables(intermediateClause.get());
-
     // add constraint for each argument in head of atom
     ast::Atom* head = intermediateClause->getHead();
     size_t auxiliaryArity = context->getAuxiliaryArity(head);
     auto args = head->getArguments();
     for (size_t i = 0; i < head->getArity() - auxiliaryArity; i++) {
         auto arg = args[i];
-
         if (auto var = dynamic_cast<ast::Variable*>(arg)) {
             // FIXME: float equiv (`FEQ`)
             auto constraint = mk<ast::BinaryConstraint>(
@@ -121,25 +120,10 @@ Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clau
             intermediateClause->addToBody(std::move(constraint));
         } else if (auto adt = dynamic_cast<ast::BranchInit*>(arg)) {
             // TODO: fill this out like record arguments
+            assert(false && adt && "unhandled");
         }
     }
 
-    // index of level argument in argument list
-    size_t levelIndex = head->getArguments().size() - auxiliaryArity;
-
-    // add level constraints, i.e., that each body literal has height less than that of the head atom
-    const auto& bodyLiterals = intermediateClause->getBodyLiterals();
-    for (auto lit : bodyLiterals) {
-        if (auto atom = dynamic_cast<ast::Atom*>(lit)) {
-            auto arity = atom->getArity();
-            auto atomArgs = atom->getArguments();
-            // arity - 1 is the level number in body atoms
-            auto constraint = mk<ast::BinaryConstraint>(BinaryConstraintOp::LT,
-                    souffle::clone(atomArgs[arity - 1]), mk<ast::SubroutineArgument>(levelIndex));
-            // constraint->setFinalType(BinaryConstraintOp::LT);
-            intermediateClause->addToBody(std::move(constraint));
-        }
-    }
     return ProvenanceClauseTranslator::generateClause(*context, *symbolTable, *intermediateClause);
 }
 

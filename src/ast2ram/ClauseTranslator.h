@@ -104,7 +104,8 @@ protected:
 
     /** Core clause translation stages */
     Own<ram::Operation> addVariableBindingConstraints(Own<ram::Operation> op) const;
-    Own<ram::Operation> addBodyLiteralConstraints(const ast::Clause& clause, Own<ram::Operation> op) const;
+    virtual Own<ram::Operation> addBodyLiteralConstraints(
+            const ast::Clause& clause, Own<ram::Operation> op) const;
     Own<ram::Operation> addGeneratorLevels(Own<ram::Operation> op, const ast::Clause& clause) const;
     Own<ram::Operation> addVariableIntroductions(const ast::Clause& clause, Own<ram::Operation> op);
     Own<ram::Operation> addEntryPoint(const ast::Clause& clause, Own<ram::Operation> op) const;

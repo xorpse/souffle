@@ -45,5 +45,7 @@ protected:
     Own<ram::Statement> createRamRuleQuery(const ast::Clause& clause) override;
     Own<ram::Operation> addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const override;
     Own<ram::Operation> generateReturnInstantiatedValues(const ast::Clause& clause) const;
+    Own<ram::Operation> addBodyLiteralConstraints(
+            const ast::Clause& clause, Own<ram::Operation> op) const override;
 };
 }  // namespace souffle::ast2ram
