@@ -24,6 +24,7 @@
 #include "ast2ram/ConstraintTranslator.h"
 #include "ast2ram/ProvenanceClauseTranslator.h"
 #include "ast2ram/ValueTranslator.h"
+#include "ast2ram/utility/Location.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ast2ram/utility/ValueIndex.h"
@@ -34,7 +35,9 @@
 #include "ram/Query.h"
 #include "ram/Sequence.h"
 #include "ram/SignedConstant.h"
+#include "ram/SubroutineArgument.h"
 #include "ram/SubroutineReturn.h"
+#include "ram/TupleElement.h"
 #include "ram/UndefValue.h"
 #include "souffle/BinaryConstraintOps.h"
 #include "souffle/utility/StringUtil.h"
@@ -89,16 +92,28 @@ Own<ram::ExistenceCheck> ProvenanceTranslator::makeRamAtomExistenceCheck(
     size_t auxiliaryArity = context->getAuxiliaryArity(atom);
 
     // translate variables to subroutine arguments
-    transformVariablesToSubroutineArgs(atom, vars);
+    // transformVariablesToSubroutineArgs(atom, vars);
 
     // construct a query
     VecOwn<ram::Expression> query;
     auto atomArgs = atom->getArguments();
 
     // add each value (subroutine argument) to the search query
+    int count = 0;
+    std::map<int, const ast::Variable*> idToVar;
+    auto dummyValueIndex = mk<ValueIndex>();
+    for (const auto* var : vars) {
+        if (!dummyValueIndex->isDefined(*var)) {
+            idToVar[count] = var;
+            dummyValueIndex->addVarReference(*var, count++, 0);
+        }
+    }
+
     for (size_t i = 0; i < atom->getArity() - auxiliaryArity; i++) {
-        auto arg = atomArgs[i];
-        query.push_back(ValueTranslator::translate(*context, *symbolTable, ValueIndex(), arg));
+        auto arg = atomArgs.at(i);
+        auto translatedValue = ValueTranslator::translate(*context, *symbolTable, *dummyValueIndex, arg);
+        transformVariablesToSubroutineArgs(translatedValue.get(), idToVar);
+        query.push_back(std::move(translatedValue));
     }
 
     // fill up query with nullptrs for the provenance columns
@@ -126,23 +141,23 @@ Own<ram::SubroutineReturn> ProvenanceTranslator::makeRamReturnFalse() const {
 }
 
 void ProvenanceTranslator::transformVariablesToSubroutineArgs(
-        ast::Node* node, const std::vector<const ast::Variable*>& vars) const {
+        ram::Node* node, const std::map<int, const ast::Variable*>& idToVar) const {
     // a mapper to replace variables with subroutine arguments
-    struct VariablesToArguments : public ast::NodeMapper {
-        const std::vector<const ast::Variable*>& uniqueVariables;
+    struct VariablesToArguments : public ram::NodeMapper {
+        const std::map<int, const ast::Variable*>& idToVar;
 
-        VariablesToArguments(const std::vector<const ast::Variable*>& uniqueVariables)
-                : uniqueVariables(uniqueVariables) {}
+        VariablesToArguments(const std::map<int, const ast::Variable*>& idToVar) : idToVar(idToVar) {}
 
-        Own<ast::Node> operator()(Own<ast::Node> node) const override {
-            if (const auto* var = dynamic_cast<const ast::Variable*>(node.get())) {
+        Own<ram::Node> operator()(Own<ram::Node> node) const override {
+            if (const auto* tuple = dynamic_cast<const ram::TupleElement*>(node.get())) {
+                const auto* var = idToVar.at(tuple->getTupleId());
                 if (isPrefix("@level_num", var->getName())) {
-                    return mk<ast::UnnamedVariable>();
+                    return mk<ram::UndefValue>();
                 }
-                size_t argNum = std::find_if(uniqueVariables.begin(), uniqueVariables.end(),
-                                        [&](const ast::Variable* v) { return *v == *var; }) -
-                                uniqueVariables.begin();
-                return mk<ast::SubroutineArgument>(argNum);
+                // size_t argNum = std::find_if(uniqueVariables.begin(), uniqueVariables.end(),
+                //                         [&](const ast::Variable* v) { return *v == *var; }) -
+                //                 uniqueVariables.begin();
+                return mk<ram::SubroutineArgument>(tuple->getTupleId());
             }
 
             // Apply recursive
@@ -151,7 +166,7 @@ void ProvenanceTranslator::transformVariablesToSubroutineArgs(
         }
     };
 
-    VariablesToArguments varsToArgs(vars);
+    VariablesToArguments varsToArgs(idToVar);
     node->apply(varsToArgs);
 }
 
@@ -244,7 +259,7 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
                     makeIfStatement(std::move(existenceCheck), makeRamReturnFalse(), makeRamReturnTrue());
             appendStmt(searchSequence, std::move(ifStatement));
         } else if (auto con = dynamic_cast<ast::Constraint*>(lit)) {
-            transformVariablesToSubroutineArgs(con, uniqueVariables);
+            // transformVariablesToSubroutineArgs(con, uniqueVariables);
             auto condition = ConstraintTranslator::translate(*context, *symbolTable, ValueIndex(), con);
             auto ifStatement =
                     makeIfStatement(std::move(condition), makeRamReturnTrue(), makeRamReturnFalse());
