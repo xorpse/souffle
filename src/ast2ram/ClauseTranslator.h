@@ -75,7 +75,8 @@ protected:
 
     std::string getClauseAtomName(const ast::Clause& clause, const ast::Atom* atom) const;
 
-    virtual Own<ram::Operation> addNegate(const ast::Atom* atom, Own<ram::Operation> op, bool isDelta) const;
+    virtual Own<ram::Operation> addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const;
+    virtual Own<ram::Operation> addNegatedDeltaAtom(Own<ram::Operation> op, const ast::Atom* atom) const;
 
     Own<ValueIndex> valueIndex;
 

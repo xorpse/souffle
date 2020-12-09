@@ -422,13 +422,36 @@ Own<ram::Operation> ClauseTranslator::addGeneratorLevels(
     return op;
 }
 
-Own<ram::Operation> ClauseTranslator::addNegate(
-        const ast::Atom* atom, Own<ram::Operation> op, bool isDelta) const {
+Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
+        Own<ram::Operation> op, const ast::Atom* atom) const {
     size_t auxiliaryArity = context.getEvaluationArity(atom);
     assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
     size_t arity = atom->getArity() - auxiliaryArity;
-    std::string name = isDelta ? getDeltaRelationName(atom->getQualifiedName())
-                               : getConcreteRelationName(atom->getQualifiedName());
+    std::string name = getDeltaRelationName(atom->getQualifiedName());
+
+    if (arity == 0) {
+        // for a nullary, negation is a simple emptiness check
+        return mk<ram::Filter>(mk<ram::EmptinessCheck>(name), std::move(op));
+    }
+
+    // else, we construct the atom and create a negation
+    VecOwn<ram::Expression> values;
+    auto args = atom->getArguments();
+    for (size_t i = 0; i < arity; i++) {
+        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[i]));
+    }
+    for (size_t i = 0; i < auxiliaryArity; i++) {
+        values.push_back(mk<ram::UndefValue>());
+    }
+    return mk<ram::Filter>(
+            mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
+}
+
+Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const {
+    size_t auxiliaryArity = context.getEvaluationArity(atom);
+    assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
+    size_t arity = atom->getArity() - auxiliaryArity;
+    std::string name = getConcreteRelationName(atom->getQualifiedName());
 
     if (arity == 0) {
         // for a nullary, negation is a simple emptiness check
@@ -460,12 +483,12 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
     if (isRecursive()) {
         if (clause.getHead()->getArity() > 0) {
             // also negate the head
-            op = addNegate(clause.getHead(), std::move(op), false);
+            op = addNegatedAtom(std::move(op), clause.getHead());
         }
 
         // also add in prev stuff
         for (size_t i = version + 1; i < sccAtoms.size(); i++) {
-            op = addNegate(sccAtoms.at(i), std::move(op), true);
+            op = addNegatedDeltaAtom(std::move(op), sccAtoms.at(i));
         }
     }
 

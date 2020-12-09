@@ -38,17 +38,13 @@
 
 namespace souffle::ast2ram {
 
-Own<ram::Statement> ProvenanceClauseTranslator::generateClause(
-        const TranslatorContext& context, SymbolTable& symbolTable, const ast::Clause& clause, int /* version */) {
+Own<ram::Statement> ProvenanceClauseTranslator::generateClause(const TranslatorContext& context,
+        SymbolTable& symbolTable, const ast::Clause& clause, int /* version */) {
     return ProvenanceClauseTranslator(context, symbolTable).translateClause(clause);
 }
 
-Own<ram::Operation> ProvenanceClauseTranslator::addNegate(
-        const ast::Atom* atom, Own<ram::Operation> op, bool isDelta) const {
-    if (isDelta) {
-        return ClauseTranslator::addNegate(atom, std::move(op), isDelta);
-    }
-
+Own<ram::Operation> ProvenanceClauseTranslator::addNegatedAtom(
+        Own<ram::Operation> op, const ast::Atom* atom) const {
     size_t auxiliaryArity = context.getEvaluationArity(atom);
     assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
     size_t arity = atom->getArity() - auxiliaryArity;
@@ -60,16 +56,13 @@ Own<ram::Operation> ProvenanceClauseTranslator::addNegate(
         values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[i]));
     }
 
-    // we don't care about the provenance columns when doing the existence check
-    if (Global::config().has("provenance")) {
-        // undefined value for rule number
-        values.push_back(mk<ram::UndefValue>());
-        // add the height annotation for provenanceNotExists
-        for (size_t height = 1; height < auxiliaryArity; height++) {
-            values.push_back(
-                    ValueTranslator::translate(context, symbolTable, *valueIndex, args[arity + height]));
-        }
+    // undefined value for rule number
+    values.push_back(mk<ram::UndefValue>());
+    // add the height annotation for provenanceNotExists
+    for (size_t height = 1; height < auxiliaryArity; height++) {
+        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[arity + height]));
     }
+
     return mk<ram::Filter>(mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(
                                    getConcreteRelationName(atom->getQualifiedName()), std::move(values))),
             std::move(op));
