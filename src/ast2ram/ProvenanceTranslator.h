@@ -56,7 +56,7 @@ private:
 
     void addProvenanceClauseSubroutines(const ast::Program* program);
 
-    Own<ram::ExistenceCheck> makeRamAtomExistenceCheck(ast::Atom* atom,
+    Own<ram::ExistenceCheck> makeRamAtomExistenceCheck(const ast::Atom* atom,
             const std::map<int, const ast::Variable*>& idToVar, ValueIndex& valueIndex) const;
     Own<ram::SubroutineReturn> makeRamReturnTrue() const;
     Own<ram::SubroutineReturn> makeRamReturnFalse() const;

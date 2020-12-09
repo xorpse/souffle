@@ -86,7 +86,7 @@ Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clau
 }
 
 Own<ram::ExistenceCheck> ProvenanceTranslator::makeRamAtomExistenceCheck(
-        ast::Atom* atom, const std::map<int, const ast::Variable*>& idToVar, ValueIndex& valueIndex) const {
+        const ast::Atom* atom, const std::map<int, const ast::Variable*>& idToVar, ValueIndex& valueIndex) const {
     auto relName = getConcreteRelationName(atom->getQualifiedName());
     size_t auxiliaryArity = context->getAuxiliaryArity(atom);
 
@@ -178,44 +178,41 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
     //   return 0
     // ...
 
-    // clone clause for mutation, rearranging constraints to be at the end
-    auto clauseReplacedAggregates = mk<ast::Clause>(souffle::clone(clause.getHead()));
-
-    // create a clone where all the constraints are moved to the end
-    for (auto bodyLit : clause.getBodyLiterals()) {
+    std::vector<const ast::Literal*> lits;
+    for (const auto* bodyLit : clause.getBodyLiterals()) {
         // first add all the things that are not constraints
         if (!isA<ast::Constraint>(bodyLit)) {
-            clauseReplacedAggregates->addToBody(souffle::clone(bodyLit));
+            lits.push_back(bodyLit);
         }
     }
 
     // now add all constraints
-    for (auto bodyLit : ast::getBodyLiterals<ast::Constraint>(clause)) {
-        clauseReplacedAggregates->addToBody(souffle::clone(bodyLit));
+    for (const auto* bodyLit : ast::getBodyLiterals<ast::Constraint>(clause)) {
+        lits.push_back(bodyLit);
     }
 
-    struct AggregatesToVariables : public ast::NodeMapper {
-        mutable int aggNumber{0};
+    // struct AggregatesToVariables : public ast::NodeMapper {
+    //     mutable int aggNumber{0};
 
-        AggregatesToVariables() = default;
+    //     AggregatesToVariables() = default;
 
-        Own<ast::Node> operator()(Own<ast::Node> node) const override {
-            if (dynamic_cast<ast::Aggregator*>(node.get()) != nullptr) {
-                return mk<ast::Variable>("agg_" + std::to_string(aggNumber++));
-            }
+    //     Own<ast::Node> operator()(Own<ast::Node> node) const override {
+    //         if (dynamic_cast<ast::Aggregator*>(node.get()) != nullptr) {
+    //             return mk<ast::Variable>("agg_" + std::to_string(aggNumber++));
+    //         }
 
-            node->apply(*this);
-            return node;
-        }
-    };
+    //         node->apply(*this);
+    //         return node;
+    //     }
+    // };
 
-    AggregatesToVariables aggToVar;
-    clauseReplacedAggregates->apply(aggToVar);
+    // AggregatesToVariables aggToVar;
+    // clauseReplacedAggregates->apply(aggToVar);
 
     size_t count = 0;
     std::map<int, const ast::Variable*> idToVar;
     auto dummyValueIndex = mk<ValueIndex>();
-    visitDepthFirst(*clauseReplacedAggregates, [&](const ast::Variable& var) {
+    visitDepthFirst(clause, [&](const ast::Variable& var) {
         if (dummyValueIndex->isDefined(var)) {
             return;
         }
@@ -229,18 +226,18 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
 
     // go through each body atom and create a return
     size_t litNumber = 0;
-    for (const auto& lit : clauseReplacedAggregates->getBodyLiterals()) {
-        if (auto atom = dynamic_cast<ast::Atom*>(lit)) {
+    for (const auto* lit : lits) {
+        if (const auto* atom = dynamic_cast<const ast::Atom*>(lit)) {
             auto existenceCheck = makeRamAtomExistenceCheck(atom, idToVar, *dummyValueIndex);
             auto ifStatement =
                     makeIfStatement(std::move(existenceCheck), makeRamReturnTrue(), makeRamReturnFalse());
             appendStmt(searchSequence, std::move(ifStatement));
-        } else if (auto neg = dynamic_cast<ast::Negation*>(lit)) {
+        } else if (const auto* neg = dynamic_cast<const ast::Negation*>(lit)) {
             auto existenceCheck = makeRamAtomExistenceCheck(neg->getAtom(), idToVar, *dummyValueIndex);
             auto ifStatement =
                     makeIfStatement(std::move(existenceCheck), makeRamReturnFalse(), makeRamReturnTrue());
             appendStmt(searchSequence, std::move(ifStatement));
-        } else if (auto con = dynamic_cast<ast::Constraint*>(lit)) {
+        } else if (const auto* con = dynamic_cast<const ast::Constraint*>(lit)) {
             auto condition = ConstraintTranslator::translate(*context, *symbolTable, ValueIndex(), con);
             transformVariablesToSubroutineArgs(condition.get(), idToVar);
             auto ifStatement =
