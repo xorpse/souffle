@@ -85,8 +85,8 @@ Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clau
     return ProvenanceClauseTranslator::generateClause(*context, *symbolTable, clause);
 }
 
-Own<ram::ExistenceCheck> ProvenanceTranslator::makeRamAtomExistenceCheck(
-        const ast::Atom* atom, const std::map<int, const ast::Variable*>& idToVar, ValueIndex& valueIndex) const {
+Own<ram::ExistenceCheck> ProvenanceTranslator::makeRamAtomExistenceCheck(const ast::Atom* atom,
+        const std::map<int, const ast::Variable*>& idToVar, ValueIndex& valueIndex) const {
     auto relName = getConcreteRelationName(atom->getQualifiedName());
     size_t auxiliaryArity = context->getAuxiliaryArity(atom);
 
@@ -140,9 +140,6 @@ void ProvenanceTranslator::transformVariablesToSubroutineArgs(
                 if (isPrefix("@level_num", var->getName())) {
                     return mk<ram::UndefValue>();
                 }
-                // size_t argNum = std::find_if(uniqueVariables.begin(), uniqueVariables.end(),
-                //                         [&](const ast::Variable* v) { return *v == *var; }) -
-                //                 uniqueVariables.begin();
                 return mk<ram::SubroutineArgument>(tuple->getTupleId());
             }
 
@@ -229,16 +226,18 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
     for (const auto* lit : lits) {
         if (const auto* atom = dynamic_cast<const ast::Atom*>(lit)) {
             auto existenceCheck = makeRamAtomExistenceCheck(atom, idToVar, *dummyValueIndex);
+            transformVariablesToSubroutineArgs(existenceCheck.get(), idToVar);
             auto ifStatement =
                     makeIfStatement(std::move(existenceCheck), makeRamReturnTrue(), makeRamReturnFalse());
             appendStmt(searchSequence, std::move(ifStatement));
         } else if (const auto* neg = dynamic_cast<const ast::Negation*>(lit)) {
             auto existenceCheck = makeRamAtomExistenceCheck(neg->getAtom(), idToVar, *dummyValueIndex);
+            transformVariablesToSubroutineArgs(existenceCheck.get(), idToVar);
             auto ifStatement =
                     makeIfStatement(std::move(existenceCheck), makeRamReturnFalse(), makeRamReturnTrue());
             appendStmt(searchSequence, std::move(ifStatement));
         } else if (const auto* con = dynamic_cast<const ast::Constraint*>(lit)) {
-            auto condition = ConstraintTranslator::translate(*context, *symbolTable, ValueIndex(), con);
+            auto condition = ConstraintTranslator::translate(*context, *symbolTable, *dummyValueIndex, con);
             transformVariablesToSubroutineArgs(condition.get(), idToVar);
             auto ifStatement =
                     makeIfStatement(std::move(condition), makeRamReturnTrue(), makeRamReturnFalse());
