@@ -52,13 +52,14 @@ TEST(Matching, StaticTest_1) {
     size_t arity = 5;
 
     uint64_t patterns[] = {1, 3, 5, 7, 15, 23, 31};
+    SearchSet searches;
     for (auto pattern : patterns) {
         SearchSignature search = setBits(arity, pattern);
-        order.addSearch(search);
+        searches.insert(search);
         nodes.insert(search);
     }
 
-    order.solve();
+    order.solve(searches);
     int num = order.getNumMatchings();
 
     EXPECT_EQ(num, 5);
@@ -71,13 +72,14 @@ TEST(Matching, StaticTest_2) {
     size_t arity = 7;
 
     uint64_t patterns[] = {7, 11, 23, 32, 33, 39, 49, 53, 104, 121};
+    SearchSet searches;
     for (auto pattern : patterns) {
         SearchSignature search = setBits(arity, pattern);
-        order.addSearch(search);
+        searches.insert(search);
         nodes.insert(search);
     }
 
-    order.solve();
+    order.solve(searches);
     int num = order.getNumMatchings();
 
     EXPECT_EQ(num, 5);
@@ -117,13 +119,8 @@ TEST(Matching, TestOver64BitSignature) {
     nodes.insert(fourth);
     nodes.insert(fifth);
 
-    order.addSearch(first);
-    order.addSearch(second);
-    order.addSearch(third);
-    order.addSearch(fourth);
-    order.addSearch(fifth);
-
-    order.solve();
+    SearchSet searches = {first, second, third, fourth, fifth};
+    order.solve(searches);
     int num = order.getNumMatchings();
 
     EXPECT_EQ(num, 3);

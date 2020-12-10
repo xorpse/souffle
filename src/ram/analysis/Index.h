@@ -328,15 +328,6 @@ using SearchSet = std::set<SearchSignature, SearchComparator>;
 
 class MinIndexSelection {
 public:
-    /** @Brief Add new key to an Index Set */
-    inline void addSearch(SearchSignature cols) {
-        if (cols.empty()) {
-            return;
-        }
-
-        searches.insert(cols);
-    }
-
     MinIndexSelection() = default;
     ~MinIndexSelection() = default;
 
@@ -371,7 +362,7 @@ public:
     }
 
     /** @Brief map the keys in the key set to lexicographical order */
-    void solve();
+    void solve(const SearchSet& searches);
 
     /** @Brief insert a total order index
      *  @param size of the index
@@ -535,7 +526,7 @@ public:
     void run(const TranslationUnit& translationUnit) override;
 
     const FinalIndexSelection getIndexSelection(const std::string& relName) const {
-        SignatureOrderMap indexSelection = {};
+        SignatureOrderMap indexSelection;
         const auto& cover = minIndexCover.at(relName);
         for (const auto& search : cover.getSearches()) {
             indexSelection.insert({search, cover.getLexOrder(search)});
@@ -597,6 +588,7 @@ private:
      * minimal index cover for relations, i.e., maps a relation to a set of indexes
      */
     std::map<std::string, MinIndexSelection> minIndexCover;
+    std::map<std::string, SearchSet> relationToSearches;
 };
 
 }  // namespace souffle::ram::analysis
