@@ -471,8 +471,9 @@ int main(int argc, char** argv) {
                     mk<ast::transform::ReplaceSingletonVariablesTransformer>());
 
     // Provenance pipeline
-    auto provenancePipeline = mk<ast::transform::ConditionalTransformer>(
-            Global::config().has("provenance"), mk<ast::transform::ProvenanceTransformer>());
+    auto provenancePipeline = mk<ast::transform::ConditionalTransformer>(Global::config().has("provenance"),
+            mk<ast::transform::PipelineTransformer>(mk<ast::transform::ProvenanceTransformer>(),
+                    mk<ast::transform::NameUnnamedVariablesTransformer>()));
 
     // Main pipeline
     auto pipeline = mk<ast::transform::PipelineTransformer>(mk<ast::transform::ComponentChecker>(),
@@ -508,8 +509,7 @@ int main(int argc, char** argv) {
             mk<ast::transform::RemoveEmptyRelationsTransformer>(),
             mk<ast::transform::AddNullariesToAtomlessAggregatesTransformer>(),
             mk<ast::transform::ReorderLiteralsTransformer>(), mk<ast::transform::ExecutionPlanChecker>(),
-            std::move(provenancePipeline), mk<ast::transform::NameUnnamedVariablesTransformer>(),
-            mk<ast::transform::IOAttributesTransformer>());
+            std::move(provenancePipeline), mk<ast::transform::IOAttributesTransformer>());
 
     // Disable unwanted transformations
     if (Global::config().has("disable-transformers")) {
