@@ -210,7 +210,7 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
     std::map<int, const ast::Variable*> idToVar;
     auto dummyValueIndex = mk<ValueIndex>();
     visitDepthFirst(clause, [&](const ast::Variable& var) {
-        if (dummyValueIndex->isDefined(var)) {
+        if (dummyValueIndex->isDefined(var) || isPrefix("@level_num", var.getName())) {
             return;
         }
         idToVar[count] = &var;

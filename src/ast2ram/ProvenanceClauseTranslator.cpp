@@ -191,10 +191,12 @@ Own<ram::Operation> ProvenanceClauseTranslator::generateReturnInstantiatedValues
             for (ast::Argument* arg : neg->getAtom()->getArguments()) {
                 values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, arg));
             }
-        } else if (auto con = dynamic_cast<ast::BinaryConstraint*>(lit)) {
-            values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, con->getLHS()));
-            values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, con->getRHS()));
         }
+    }
+
+    for (const auto* con : ast::getBodyLiterals<const ast::BinaryConstraint>(clause)) {
+        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, con->getLHS()));
+        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, con->getRHS()));
     }
 
     // final provenance negation
@@ -207,6 +209,37 @@ Own<ram::Operation> ProvenanceClauseTranslator::generateReturnInstantiatedValues
         }
         for (size_t i = 0; i < auxiliaryArity; ++i) {
             values.push_back(mk<ram::SignedConstant>(-1));
+        }
+    }
+
+    const auto* head = clause.getHead();
+    const auto& headArgs = head->getArguments();
+    size_t auxiliaryArity = context.getAuxiliaryArity(clause.getHead());
+    size_t levelIndex = clause.getHead()->getArguments().size() - auxiliaryArity;
+    for (size_t i = 0; i < head->getArity() - auxiliaryArity; i++) {
+        auto arg = headArgs.at(i);
+        if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
+            values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, var));
+            values.push_back(mk<ram::SubroutineArgument>(i));
+        } else if (const auto* func = dynamic_cast<const ast::Functor*>(arg)) {
+            values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, func));
+            values.push_back(mk<ram::SubroutineArgument>(i));
+        } else if (const auto* rec = dynamic_cast<const ast::RecordInit*>(arg)) {
+            values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, rec));
+            values.push_back(mk<ram::SubroutineArgument>(i));
+        } else if (const auto* adt = dynamic_cast<const ast::BranchInit*>(arg)) {
+            // TODO: fill this out like record arguments
+            assert(false && adt && "unhandled");
+        }
+    }
+
+    for (const auto* lit : clause.getBodyLiterals()) {
+        if (const auto* atom = dynamic_cast<const ast::Atom*>(lit)) {
+            auto arity = atom->getArity();
+            auto atomArgs = atom->getArguments();
+            values.push_back(
+                    ValueTranslator::translate(context, symbolTable, *valueIndex, atomArgs.at(arity - 1)));
+            values.push_back(mk<ram::SubroutineArgument>(levelIndex));
         }
     }
 

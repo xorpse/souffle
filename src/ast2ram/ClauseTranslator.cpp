@@ -56,6 +56,7 @@
 #include "ram/Negation.h"
 #include "ram/NestedIntrinsicOperator.h"
 #include "ram/Project.h"
+#include "ram/ProvenanceExistenceCheck.h"
 #include "ram/Query.h"
 #include "ram/Relation.h"
 #include "ram/Scan.h"
@@ -443,32 +444,63 @@ Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
     for (size_t i = 0; i < auxiliaryArity; i++) {
         values.push_back(mk<ram::UndefValue>());
     }
-    return mk<ram::Filter>(
-            mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
+
+    if (Global::config().has("provenance")) {
+        return mk<ram::Filter>(
+                mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(name, std::move(values))), std::move(op));
+    } else {
+        return mk<ram::Filter>(
+                mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
+    }
 }
 
 Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const {
-    size_t auxiliaryArity = context.getEvaluationArity(atom);
-    assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
-    size_t arity = atom->getArity() - auxiliaryArity;
-    std::string name = getConcreteRelationName(atom->getQualifiedName());
+    if (Global::config().has("provenance")) {
+        size_t auxiliaryArity = context.getEvaluationArity(atom);
+        assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
+        size_t arity = atom->getArity() - auxiliaryArity;
 
-    if (arity == 0) {
-        // for a nullary, negation is a simple emptiness check
-        return mk<ram::Filter>(mk<ram::EmptinessCheck>(name), std::move(op));
-    }
+        VecOwn<ram::Expression> values;
 
-    // else, we construct the atom and create a negation
-    VecOwn<ram::Expression> values;
-    auto args = atom->getArguments();
-    for (size_t i = 0; i < arity; i++) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[i]));
-    }
-    for (size_t i = 0; i < auxiliaryArity; i++) {
+        auto args = atom->getArguments();
+        for (size_t i = 0; i < arity; i++) {
+            values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[i]));
+        }
+
+        // undefined value for rule number
         values.push_back(mk<ram::UndefValue>());
+        // add the height annotation for provenanceNotExists
+        for (size_t height = 1; height < auxiliaryArity; height++) {
+            values.push_back(
+                    ValueTranslator::translate(context, symbolTable, *valueIndex, args[arity + height]));
+        }
+
+        return mk<ram::Filter>(mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(
+                                       getConcreteRelationName(atom->getQualifiedName()), std::move(values))),
+                std::move(op));
+    } else {
+        size_t auxiliaryArity = context.getEvaluationArity(atom);
+        assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
+        size_t arity = atom->getArity() - auxiliaryArity;
+        std::string name = getConcreteRelationName(atom->getQualifiedName());
+
+        if (arity == 0) {
+            // for a nullary, negation is a simple emptiness check
+            return mk<ram::Filter>(mk<ram::EmptinessCheck>(name), std::move(op));
+        }
+
+        // else, we construct the atom and create a negation
+        VecOwn<ram::Expression> values;
+        auto args = atom->getArguments();
+        for (size_t i = 0; i < arity; i++) {
+            values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[i]));
+        }
+        for (size_t i = 0; i < auxiliaryArity; i++) {
+            values.push_back(mk<ram::UndefValue>());
+        }
+        return mk<ram::Filter>(
+                mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
     }
-    return mk<ram::Filter>(
-            mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
 }
 
 Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(

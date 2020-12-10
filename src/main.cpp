@@ -508,7 +508,8 @@ int main(int argc, char** argv) {
             mk<ast::transform::RemoveEmptyRelationsTransformer>(),
             mk<ast::transform::AddNullariesToAtomlessAggregatesTransformer>(),
             mk<ast::transform::ReorderLiteralsTransformer>(), mk<ast::transform::ExecutionPlanChecker>(),
-            std::move(provenancePipeline), mk<ast::transform::IOAttributesTransformer>());
+            std::move(provenancePipeline), mk<ast::transform::NameUnnamedVariablesTransformer>(),
+            mk<ast::transform::IOAttributesTransformer>());
 
     // Disable unwanted transformations
     if (Global::config().has("disable-transformers")) {
