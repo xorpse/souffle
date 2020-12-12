@@ -303,8 +303,8 @@ private:
 using AttributeIndex = uint32_t;
 using AttributeSet = std::unordered_set<AttributeIndex>;
 using SignatureMap = std::unordered_map<SearchSignature, SearchSignature, SearchSignature::Hasher>;
-using SignatureIndexMap = std::unordered_map<SearchSignature, AttributeIndex, SearchSignature::Hasher>;
-using IndexSignatureMap = std::unordered_map<AttributeIndex, SearchSignature>;
+using SearchNodeMap = std::unordered_map<SearchSignature, AttributeIndex, SearchSignature::Hasher>;
+using NodeSearchMap = std::unordered_map<AttributeIndex, SearchSignature>;
 using DischargeMap = std::unordered_map<SearchSignature, AttributeSet, SearchSignature::Hasher>;
 using LexOrder = std::vector<AttributeIndex>;
 using OrderCollection = std::vector<LexOrder>;
@@ -328,6 +328,37 @@ using SearchSet = std::set<SearchSignature, SearchComparator>;
 
 class FinalIndexSelection;
 
+class SearchBipartiteMap {
+public:
+    void addSearch(SearchSignature s) {
+        // Map the signature to its node in the left and right bi-partitions
+        signatureToNodeA.insert({s, currentIndex});
+        signatureToNodeB.insert({s, currentIndex + 1});
+        // Map each index back to the search signature
+        nodeToSignature.insert({currentIndex, s});
+        nodeToSignature.insert({currentIndex + 1, s});
+        currentIndex += 2;
+    }
+
+    AttributeIndex getLeftNode(SearchSignature s) const {
+        return signatureToNodeA.at(s);
+    }
+
+    AttributeIndex getRightNode(SearchSignature s) const {
+        return signatureToNodeB.at(s);
+    }
+
+    SearchSignature getSearch(AttributeIndex node) const {
+        return nodeToSignature.at(node);
+    }
+
+private:
+    AttributeIndex currentIndex = 1;
+    SearchNodeMap signatureToNodeA;
+    SearchNodeMap signatureToNodeB;
+    NodeSearchMap nodeToSignature;
+};
+
 class MinIndexSelection {
 public:
     MinIndexSelection() = default;
@@ -337,11 +368,6 @@ public:
     FinalIndexSelection solve(const SearchSet& searches);
 
 protected:
-    SignatureIndexMap signatureToIndexA;  // mapping of a SearchSignature on A to its unique index
-    SignatureIndexMap signatureToIndexB;  // mapping of a SearchSignature on B to its unique index
-    IndexSignatureMap indexToSignature;   // mapping of a unique index to its SearchSignature
-    MaxMatching matching;                 // matching problem for finding minimal number of orders
-
     /** @Brief maps a provided search to its corresponding lexicographical ordering **/
     size_t map(SearchSignature cols, const OrderCollection& orders, const ChainOrderMap& chainToOrder) const {
         assert(orders.size() == chainToOrder.size() && "Order and Chain Sizes do not match!!");
@@ -381,19 +407,21 @@ protected:
      * we follow it from set B until it cannot be matched from B
      * if not matched from B then umn is a chain.
      */
-    Chain getChain(const SearchSignature umn, const MaxMatching::Matchings& match) const;
+    Chain getChain(const SearchSignature umn, const MaxMatching::Matchings& match,
+            const SearchBipartiteMap& mapping) const;
 
     /** @Brief get all chains from the matching */
-    const ChainOrderMap getChainsFromMatching(
-            const MaxMatching::Matchings& match, const SearchSet& nodes) const;
+    const ChainOrderMap getChainsFromMatching(const MaxMatching::Matchings& match, const SearchSet& nodes,
+            const SearchBipartiteMap& mapping) const;
 
     /** @Brief get all nodes which are unmatched from A-> B */
-    const SearchSet getUnmatchedKeys(const MaxMatching::Matchings& match, const SearchSet& nodes) const {
+    const SearchSet getUnmatchedKeys(const MaxMatching::Matchings& match, const SearchSet& nodes,
+            const SearchBipartiteMap& mapping) const {
         SearchSet unmatched;
 
         // For all nodes n such that n is not in match
         for (auto node : nodes) {
-            if (match.find(signatureToIndexA.at(node)) == match.end()) {
+            if (match.find(mapping.getLeftNode(node)) == match.end()) {
                 unmatched.insert(node);
             }
         }

@@ -220,40 +220,36 @@ const MaxMatching::Matchings& MaxMatching::solve() {
 }
 
 FinalIndexSelection MinIndexSelection::solve(const SearchSet& searches) {
-    OrderCollection orders;  // collection of lexicographical orders
+    OrderCollection orders;
+    SignatureOrderMap indexSelection;
 
-    // if there are no orders then the arity of the relation is zero
+    // If there are no orders then the arity of the relation is zero
     // this is because every non-nullary relation has an existence check
     if (searches.empty()) {
-        SignatureOrderMap indexSelection;
         auto search = SearchSignature::getFullSearchSignature(0);
         LexOrder emptyOrder;
+        orders.push_back(emptyOrder);
         indexSelection.insert({search, emptyOrder});
-        return FinalIndexSelection(indexSelection, {search}, {emptyOrder});
+        return FinalIndexSelection(indexSelection, {search}, orders);
     }
 
-    // map the signatures of each search to a unique index for the matching problem
-    AttributeIndex currentIndex = 1;
+    // Map the signatures of each search to a unique node in each bipartition for the matching problem
+    SearchBipartiteMap mapping;
     for (auto s : searches) {
-        // map the signature to its unique index in each set
-        signatureToIndexA.insert({s, currentIndex});
-        signatureToIndexB.insert({s, currentIndex + 1});
-        // map each index back to the search signature
-        indexToSignature.insert({currentIndex, s});
-        indexToSignature.insert({currentIndex + 1, s});
-        currentIndex += 2;
+        mapping.addSearch(s);
     }
 
     // Construct the matching poblem
     // For each pair of search sets
     // Draw an edge from LHS to RHS if LHS precedes RHS in the partial order
+    MaxMatching matching;
     for (auto left : searches) {
         for (auto right : searches) {
             if (left == right) {
                 continue;
             }
             if (left.precedes(right)) {
-                matching.addEdge(signatureToIndexA[left], signatureToIndexB[right]);
+                matching.addEdge(mapping.getLeftNode(left), mapping.getRightNode(right));
             }
         }
     }
@@ -264,7 +260,7 @@ FinalIndexSelection MinIndexSelection::solve(const SearchSet& searches) {
     const MaxMatching::Matchings& matchings = matching.solve();
 
     // Extract the chains given the nodes and matchings
-    auto chains = getChainsFromMatching(matchings, searches);
+    auto chains = getChainsFromMatching(matchings, searches, mapping);
 
     // Should never get no chains back as we never call calculate on an empty graph
     assert(!chains.empty());
@@ -274,7 +270,7 @@ FinalIndexSelection MinIndexSelection::solve(const SearchSet& searches) {
         SearchSignature initDelta = *(chain.begin());
         insertIndex(ids, initDelta);
 
-        // build the lex-order
+        // Build the lex-order
         for (auto iit = chain.begin(); next(iit) != chain.end(); ++iit) {
             SearchSignature delta = SearchSignature::getDelta(*next(iit), *iit);
             insertIndex(ids, delta);
@@ -289,17 +285,17 @@ FinalIndexSelection MinIndexSelection::solve(const SearchSet& searches) {
         for (auto search : chain) {
             int idx = map(search, orders, chains);
 
-            // rebuild the search from the order
+            // Rebuild the search from the order
             SearchSignature k(search.arity());
             size_t numConstraints = std::count_if(
                     search.begin(), search.end(), [](auto c) { return c != AttributeConstraint::None; });
 
-            // map the k-th prefix of the order to a search
+            // Map the k-th prefix of the order to a search
             for (size_t i = 0; i < numConstraints; i++) {
                 k[orders[idx][i]] = AttributeConstraint::Equal;
             }
 
-            // validate that the prefix concides with the original search (ignoring inequalities)
+            // Validate that the prefix concides with the original search (ignoring inequalities)
             for (size_t i = 0; i < search.arity(); ++i) {
                 if (k[i] == AttributeConstraint::None && search[i] != AttributeConstraint::None) {
                     assert("incorrect lexicographical order");
@@ -312,7 +308,6 @@ FinalIndexSelection MinIndexSelection::solve(const SearchSet& searches) {
     }
 
     // Return the index selection
-    SignatureOrderMap indexSelection;
     for (const auto& search : searches) {
         size_t orderIndex = map(search, orders, chains);
         indexSelection.insert({search, orders.at(orderIndex)});
@@ -321,16 +316,17 @@ FinalIndexSelection MinIndexSelection::solve(const SearchSet& searches) {
     return FinalIndexSelection(indexSelection, searches, orders);
 }
 
-Chain MinIndexSelection::getChain(const SearchSignature umn, const MaxMatching::Matchings& match) const {
+Chain MinIndexSelection::getChain(const SearchSignature umn, const MaxMatching::Matchings& match,
+        const SearchBipartiteMap& mapping) const {
     SearchSignature start = umn;  // start at an unmatched node
     Chain chain;
     // given an unmapped node from set A we follow it from set B until it cannot be matched from B
-    //  if not mateched from B then umn is a chain
+    //  if not matched from B then umn is a chain
     //
     // Assume : no circular mappings, i.e. a in A -> b in B -> ........ -> a in A is not allowed.
     // Given this, the loop will terminate
     while (true) {
-        auto mit = match.find(signatureToIndexB.at(start));  // we start from B side
+        auto mit = match.find(mapping.getRightNode(start));  // we start from B side
         // on each iteration we swap sides when collecting the chain so we use the corresponding index map
         if (std::find(chain.begin(), chain.end(), start) == chain.end()) {
             chain.push_back(start);
@@ -341,7 +337,7 @@ Chain MinIndexSelection::getChain(const SearchSignature umn, const MaxMatching::
             return chain;
         }
 
-        SearchSignature a = indexToSignature.at(mit->second);
+        SearchSignature a = mapping.getSearch(mit->second);
         if (std::find(chain.begin(), chain.end(), a) == chain.end()) {
             chain.push_back(a);
         }
@@ -349,13 +345,13 @@ Chain MinIndexSelection::getChain(const SearchSignature umn, const MaxMatching::
     }
 }
 
-const ChainOrderMap MinIndexSelection::getChainsFromMatching(
-        const MaxMatching::Matchings& match, const SearchSet& nodes) const {
+const ChainOrderMap MinIndexSelection::getChainsFromMatching(const MaxMatching::Matchings& match,
+        const SearchSet& nodes, const SearchBipartiteMap& mapping) const {
     assert(!nodes.empty());
     ChainOrderMap chainToOrder;
 
     // Get all unmatched nodes from A
-    const SearchSet& umKeys = getUnmatchedKeys(match, nodes);
+    const SearchSet& umKeys = getUnmatchedKeys(match, nodes, mapping);
     // Case: if no unmatched nodes then we have an anti-chain
     if (umKeys.empty()) {
         for (auto node : nodes) {
@@ -372,7 +368,7 @@ const ChainOrderMap MinIndexSelection::getChainsFromMatching(
 
     // Case: nodes < umKeys or if nodes == umKeys then anti chain - this is handled by this loop
     for (auto umKey : umKeys) {
-        auto c = getChain(umKey, match);
+        auto c = getChain(umKey, match, mapping);
         assert(!c.empty());
         chainToOrder.push_back(c);
     }
