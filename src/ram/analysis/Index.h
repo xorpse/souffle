@@ -343,17 +343,6 @@ protected:
     SearchSet searches;                   // set of search patterns on table
     MaxMatching matching;                 // matching problem for finding minimal number of orders
 
-    /** @Brief count the number of constraints in key */
-    static size_t card(SearchSignature cols) {
-        size_t sz = 0;
-        for (size_t i = 0; i < cols.arity(); i++) {
-            if (cols[i] != AttributeConstraint::None) {
-                sz++;
-            }
-        }
-        return sz;
-    }
-
     /** @Brief maps a provided search to its corresponding lexicographical ordering **/
     size_t map(SearchSignature cols, const OrderCollection& orders, const ChainOrderMap& chainToOrder) const {
         assert(orders.size() == chainToOrder.size() && "Order and Chain Sizes do not match!!");

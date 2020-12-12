@@ -291,10 +291,17 @@ FinalIndexSelection MinIndexSelection::solve(const SearchSet& givenSearches) {
         for (auto search : chain) {
             int idx = map(search, orders, chains);
 
+            // rebuild the search from the order
             SearchSignature k(search.arity());
-            for (size_t i = 0; i < card(search); i++) {
+            size_t numConstraints = std::count_if(
+                    search.begin(), search.end(), [](auto c) { return c != AttributeConstraint::None; });
+
+            // map the k-th prefix of the order to a search
+            for (size_t i = 0; i < numConstraints; i++) {
                 k[orders[idx][i]] = AttributeConstraint::Equal;
             }
+
+            // validate that the prefix concides with the original search (ignoring inequalities)
             for (size_t i = 0; i < search.arity(); ++i) {
                 if (k[i] == AttributeConstraint::None && search[i] != AttributeConstraint::None) {
                     assert("incorrect lexicographical order");
