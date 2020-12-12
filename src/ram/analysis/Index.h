@@ -333,38 +333,6 @@ public:
     MinIndexSelection() = default;
     ~MinIndexSelection() = default;
 
-private:
-    /** @Brief Get searches **/
-    const SearchSet& getSearches() const {
-        return searches;
-    }
-
-public:
-    /** @Brief Get index for a search */
-    const LexOrder& getLexOrder(SearchSignature cols) const {
-        int idx = map(cols);
-        return orders[idx];
-    }
-
-    /** @Brief Get all indexes */
-    const OrderCollection getAllOrders() const {
-        return orders;
-    }
-
-    /** @Brief Get all chains */
-    const ChainOrderMap getAllChains() const {
-        return chainToOrder;
-    }
-
-    /**
-     * Check whether number of constraints in k is not equal to number of columns in lexicographical
-     * order
-     * */
-    bool isSubset(SearchSignature cols) const {
-        int idx = map(cols);
-        return card(cols) < orders[idx].size();
-    }
-
     /** @Brief map the keys in the key set to lexicographical order */
     FinalIndexSelection solve(const SearchSet& searches);
 
@@ -373,8 +341,6 @@ protected:
     SignatureIndexMap signatureToIndexB;  // mapping of a SearchSignature on B to its unique index
     IndexSignatureMap indexToSignature;   // mapping of a unique index to its SearchSignature
     SearchSet searches;                   // set of search patterns on table
-    OrderCollection orders;               // collection of lexicographical orders
-    ChainOrderMap chainToOrder;           // maps order index to set of searches covered by chain
     MaxMatching matching;                 // matching problem for finding minimal number of orders
 
     /** @Brief count the number of constraints in key */
@@ -388,13 +354,13 @@ protected:
         return sz;
     }
 
-    /** @Brief maps search columns to an lexicographical order (labeled by a number) */
-    int map(SearchSignature cols) const {
+    /** @Brief maps a provided search to its corresponding lexicographical ordering **/
+    size_t map(SearchSignature cols, const OrderCollection& orders, const ChainOrderMap& chainToOrder) const {
         assert(orders.size() == chainToOrder.size() && "Order and Chain Sizes do not match!!");
-        int i = 0;
+        size_t i = 0;
         for (auto it = chainToOrder.begin(); it != chainToOrder.end(); ++it, ++i) {
             if (std::find(it->begin(), it->end(), cols) != it->end()) {
-                assert((size_t)i < orders.size());
+                assert(i < orders.size());
                 return i;
             }
         }

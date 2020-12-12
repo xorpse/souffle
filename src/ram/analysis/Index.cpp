@@ -220,6 +220,8 @@ const MaxMatching::Matchings& MaxMatching::solve() {
 }
 
 FinalIndexSelection MinIndexSelection::solve(const SearchSet& givenSearches) {
+    OrderCollection orders;  // collection of lexicographical orders
+
     searches = givenSearches;
 
     // if there are no orders then the arity of the relation is zero
@@ -287,7 +289,7 @@ FinalIndexSelection MinIndexSelection::solve(const SearchSet& givenSearches) {
     // Validate the lex-order
     for (auto chain : chains) {
         for (auto search : chain) {
-            int idx = map(search);
+            size_t idx = map(search, orders, chains);
 
             SearchSignature k(search.arity());
             for (size_t i = 0; i < card(search); i++) {
@@ -307,7 +309,8 @@ FinalIndexSelection MinIndexSelection::solve(const SearchSet& givenSearches) {
     // Return the index selection
     SignatureOrderMap indexSelection;
     for (const auto& search : searches) {
-        indexSelection.insert({search, getLexOrder(search)});
+        size_t orderIndex = map(search, orders, chains);
+        indexSelection.insert({search, orders.at(orderIndex)});
     }
 
     return FinalIndexSelection(indexSelection, searches, orders);
@@ -344,6 +347,7 @@ Chain MinIndexSelection::getChain(const SearchSignature umn, const MaxMatching::
 const ChainOrderMap MinIndexSelection::getChainsFromMatching(
         const MaxMatching::Matchings& match, const SearchSet& nodes) {
     assert(!nodes.empty());
+    ChainOrderMap chainToOrder;
 
     // Get all unmatched nodes from A
     const SearchSet& umKeys = getUnmatchedKeys(match, nodes);
