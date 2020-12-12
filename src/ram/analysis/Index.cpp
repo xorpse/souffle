@@ -219,10 +219,8 @@ const MaxMatching::Matchings& MaxMatching::solve() {
     return match;
 }
 
-FinalIndexSelection MinIndexSelection::solve(const SearchSet& givenSearches) {
+FinalIndexSelection MinIndexSelection::solve(const SearchSet& searches) {
     OrderCollection orders;  // collection of lexicographical orders
-
-    searches = givenSearches;
 
     // if there are no orders then the arity of the relation is zero
     // this is because every non-nullary relation has an existence check

@@ -340,7 +340,6 @@ protected:
     SignatureIndexMap signatureToIndexA;  // mapping of a SearchSignature on A to its unique index
     SignatureIndexMap signatureToIndexB;  // mapping of a SearchSignature on B to its unique index
     IndexSignatureMap indexToSignature;   // mapping of a unique index to its SearchSignature
-    SearchSet searches;                   // set of search patterns on table
     MaxMatching matching;                 // matching problem for finding minimal number of orders
 
     /** @Brief maps a provided search to its corresponding lexicographical ordering **/
