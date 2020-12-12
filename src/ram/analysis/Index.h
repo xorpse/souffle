@@ -328,6 +328,10 @@ using SearchSet = std::set<SearchSignature, SearchComparator>;
 
 class FinalIndexSelection;
 
+/**
+ * @class SearchBipartiteMap
+ * @Brief Represents the mapping between searches and their nodes in bipartitions A and B of the graph
+ */
 class SearchBipartiteMap {
 public:
     void addSearch(SearchSignature s) {

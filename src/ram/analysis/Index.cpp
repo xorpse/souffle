@@ -436,7 +436,6 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
 
     // find optimal indexes for relations
     for (auto& relToSearch : relationToSearches) {
-        solver = MinIndexSelection();
         const std::string& relation = relToSearch.first;
         auto& searches = relToSearch.second;
         indexCover.insert({relation, solver.solve(searches)});

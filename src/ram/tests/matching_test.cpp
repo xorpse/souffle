@@ -27,10 +27,6 @@ using namespace analysis;
 class TestAutoIndex : public MinIndexSelection {
 public:
     TestAutoIndex() : MinIndexSelection() {}
-    /** returns number of unique matchings */
-    int getNumMatchings() {
-        return matching.getNumMatchings();
-    }
 };
 
 using Nodes = SearchSet;
@@ -78,10 +74,8 @@ TEST(Matching, StaticTest_2) {
         searches.insert(search);
         nodes.insert(search);
     }
-
-    order.solve(searches);
-    int num = order.getNumMatchings();
-
+    auto selection = order.solve(searches);
+    size_t num = selection.getAllOrders().size();
     EXPECT_EQ(num, 5);
 }
 
@@ -120,9 +114,8 @@ TEST(Matching, TestOver64BitSignature) {
     nodes.insert(fifth);
 
     SearchSet searches = {first, second, third, fourth, fifth};
-    order.solve(searches);
-    int num = order.getNumMatchings();
-
+    auto selection = order.solve(searches);
+    size_t num = selection.getAllOrders().size();
     EXPECT_EQ(num, 3);
 }
 
