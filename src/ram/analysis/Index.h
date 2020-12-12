@@ -485,7 +485,8 @@ private:
  */
 class IndexAnalysis : public Analysis {
 public:
-    IndexAnalysis(const char* id) : Analysis(id), relAnalysis(nullptr) {}
+    IndexAnalysis(const char* id)
+            : Analysis(id), relAnalysis(nullptr), solver(mk<MinIndexSelectionStrategy>()) {}
 
     static constexpr const char* name = "index-analysis";
 
@@ -539,7 +540,7 @@ private:
     /**
      * minimal index cover for relations, i.e., maps a relation to a set of indexes
      */
-    MinIndexSelectionStrategy solver;
+    Own<IndexSelectionStrategy> solver;
     std::map<std::string, FinalIndexSelection> indexCover;
     std::map<std::string, SearchSet> relationToSearches;
 };

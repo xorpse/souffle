@@ -438,7 +438,7 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
     for (auto& relToSearch : relationToSearches) {
         const std::string& relation = relToSearch.first;
         auto& searches = relToSearch.second;
-        indexCover.insert({relation, solver.solve(searches)});
+        indexCover.insert({relation, solver->solve(searches)});
     }
 }
 
