@@ -55,10 +55,9 @@ TEST(Matching, StaticTest_1) {
         nodes.insert(search);
     }
 
-    order.solve(searches);
-    int num = order.getNumMatchings();
-
-    EXPECT_EQ(num, 5);
+    auto selection = order.solve(searches);
+    size_t num = selection.getAllOrders().size();
+    EXPECT_EQ(num, 2);
 }
 
 TEST(Matching, StaticTest_2) {
@@ -116,7 +115,7 @@ TEST(Matching, TestOver64BitSignature) {
     SearchSet searches = {first, second, third, fourth, fifth};
     auto selection = order.solve(searches);
     size_t num = selection.getAllOrders().size();
-    EXPECT_EQ(num, 3);
+    EXPECT_EQ(num, 2);
 }
 
 }  // namespace souffle::ram
