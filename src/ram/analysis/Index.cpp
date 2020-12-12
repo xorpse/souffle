@@ -289,7 +289,7 @@ FinalIndexSelection MinIndexSelection::solve(const SearchSet& givenSearches) {
     // Validate the lex-order
     for (auto chain : chains) {
         for (auto search : chain) {
-            size_t idx = map(search, orders, chains);
+            int idx = map(search, orders, chains);
 
             SearchSignature k(search.arity());
             for (size_t i = 0; i < card(search); i++) {
@@ -316,7 +316,7 @@ FinalIndexSelection MinIndexSelection::solve(const SearchSet& givenSearches) {
     return FinalIndexSelection(indexSelection, searches, orders);
 }
 
-Chain MinIndexSelection::getChain(const SearchSignature umn, const MaxMatching::Matchings& match) {
+Chain MinIndexSelection::getChain(const SearchSignature umn, const MaxMatching::Matchings& match) const {
     SearchSignature start = umn;  // start at an unmatched node
     Chain chain;
     // given an unmapped node from set A we follow it from set B until it cannot be matched from B
@@ -325,7 +325,7 @@ Chain MinIndexSelection::getChain(const SearchSignature umn, const MaxMatching::
     // Assume : no circular mappings, i.e. a in A -> b in B -> ........ -> a in A is not allowed.
     // Given this, the loop will terminate
     while (true) {
-        auto mit = match.find(signatureToIndexB[start]);  // we start from B side
+        auto mit = match.find(signatureToIndexB.at(start));  // we start from B side
         // on each iteration we swap sides when collecting the chain so we use the corresponding index map
         if (std::find(chain.begin(), chain.end(), start) == chain.end()) {
             chain.push_back(start);
@@ -345,7 +345,7 @@ Chain MinIndexSelection::getChain(const SearchSignature umn, const MaxMatching::
 }
 
 const ChainOrderMap MinIndexSelection::getChainsFromMatching(
-        const MaxMatching::Matchings& match, const SearchSet& nodes) {
+        const MaxMatching::Matchings& match, const SearchSet& nodes) const {
     assert(!nodes.empty());
     ChainOrderMap chainToOrder;
 

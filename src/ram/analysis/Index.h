@@ -373,7 +373,7 @@ protected:
     }
 
     /** @Brief insert an index based on the delta */
-    void insertIndex(LexOrder& ids, SearchSignature delta) {
+    void insertIndex(LexOrder& ids, SearchSignature delta) const {
         LexOrder backlog;  // add inequalities at the end
         for (size_t pos = 0; pos < delta.arity(); pos++) {
             if (delta[pos] == AttributeConstraint::Equal) {
@@ -393,18 +393,19 @@ protected:
      * we follow it from set B until it cannot be matched from B
      * if not matched from B then umn is a chain.
      */
-    Chain getChain(const SearchSignature umn, const MaxMatching::Matchings& match);
+    Chain getChain(const SearchSignature umn, const MaxMatching::Matchings& match) const;
 
     /** @Brief get all chains from the matching */
-    const ChainOrderMap getChainsFromMatching(const MaxMatching::Matchings& match, const SearchSet& nodes);
+    const ChainOrderMap getChainsFromMatching(
+            const MaxMatching::Matchings& match, const SearchSet& nodes) const;
 
     /** @Brief get all nodes which are unmatched from A-> B */
-    const SearchSet getUnmatchedKeys(const MaxMatching::Matchings& match, const SearchSet& nodes) {
+    const SearchSet getUnmatchedKeys(const MaxMatching::Matchings& match, const SearchSet& nodes) const {
         SearchSet unmatched;
 
         // For all nodes n such that n is not in match
         for (auto node : nodes) {
-            if (match.find(signatureToIndexA[node]) == match.end()) {
+            if (match.find(signatureToIndexA.at(node)) == match.end()) {
                 unmatched.insert(node);
             }
         }
