@@ -219,10 +219,10 @@ public:
     using Matchings = std::unordered_map<Node, Node>;
 
     /* Node constant representing no match */
-    const Node NullVertex = 0;
+    Node NullVertex = 0;
 
     /* Infinite distance */
-    const Distance InfiniteDistance = -1;
+    Distance InfiniteDistance = -1;
 
     /**
      * @Brief solve the maximum matching problem
@@ -326,16 +326,20 @@ using SearchSet = std::set<SearchSignature, SearchComparator>;
 // when we output the name of the collection of searches and therefore we order the SearchSignatures
 // arbitrarily by their hashes
 
+class FinalIndexSelection;
+
 class MinIndexSelection {
 public:
     MinIndexSelection() = default;
     ~MinIndexSelection() = default;
 
+private:
     /** @Brief Get searches **/
     const SearchSet& getSearches() const {
         return searches;
     }
 
+public:
     /** @Brief Get index for a search */
     const LexOrder& getLexOrder(SearchSignature cols) const {
         int idx = map(cols);
@@ -362,47 +366,7 @@ public:
     }
 
     /** @Brief map the keys in the key set to lexicographical order */
-    void solve(const SearchSet& searches);
-
-    /** @Brief insert a total order index
-     *  @param size of the index
-     */
-    void insertDefaultTotalIndex(size_t arity) {
-        Chain chain = std::vector<SearchSignature>();
-        SearchSignature fullIndexKey = SearchSignature::getFullSearchSignature(arity);
-        chain.push_back(fullIndexKey);
-        chainToOrder.push_back(std::move(chain));
-        LexOrder totalOrder;
-        for (size_t i = 0; i < arity; ++i) {
-            totalOrder.push_back(i);
-        }
-        orders.push_back(std::move(totalOrder));
-    }
-
-    void print(std::ostream& os) {
-        /* Print searches */
-        os << "\tNumber of Searches: " << getSearches().size() << "\n";
-
-        /* Print searches */
-        for (auto& search : getSearches()) {
-            os << "\t\t";
-            os << search;
-            os << "\n";
-        }
-
-        /* Print chains */
-        for (auto& chain : getAllChains()) {
-            os << join(chain, "-->") << "\n";
-        }
-        os << "\n";
-
-        os << "\tNumber of Indexes: " << getAllOrders().size() << "\n";
-        for (auto& order : getAllOrders()) {
-            os << "\t\t";
-            os << join(order, "<") << "\n";
-            os << "\n";
-        }
-    }
+    FinalIndexSelection solve(const SearchSet& searches);
 
 protected:
     SignatureIndexMap signatureToIndexA;  // mapping of a SearchSignature on A to its unique index
@@ -526,12 +490,7 @@ public:
     void run(const TranslationUnit& translationUnit) override;
 
     const FinalIndexSelection getIndexSelection(const std::string& relName) const {
-        SignatureOrderMap indexSelection;
-        const auto& cover = minIndexCover.at(relName);
-        for (const auto& search : cover.getSearches()) {
-            indexSelection.insert({search, cover.getLexOrder(search)});
-        }
-        return FinalIndexSelection(indexSelection, cover.getSearches(), cover.getAllOrders());
+        return indexCover.at(relName);
     }
 
     /**
@@ -572,22 +531,14 @@ public:
     bool isTotalSignature(const AbstractExistenceCheck* existCheck) const;
 
 private:
-    /**
-     * @Brief get the minimal index cover for a relation
-     * @param relation name
-     * @result set of indexes of the minimal index cover
-     */
-    MinIndexSelection& getIndexes(const std::string& relName);
-    void print(std::ostream& os) const override;
-
-private:
     /** relation analysis for looking up relations by name */
     RelationAnalysis* relAnalysis;
 
     /**
      * minimal index cover for relations, i.e., maps a relation to a set of indexes
      */
-    std::map<std::string, MinIndexSelection> minIndexCover;
+    MinIndexSelection solver;
+    std::map<std::string, FinalIndexSelection> indexCover;
     std::map<std::string, SearchSet> relationToSearches;
 };
 

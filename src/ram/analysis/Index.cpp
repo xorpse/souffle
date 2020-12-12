@@ -219,12 +219,17 @@ const MaxMatching::Matchings& MaxMatching::solve() {
     return match;
 }
 
-void MinIndexSelection::solve(const SearchSet& givenSearches) {
+FinalIndexSelection MinIndexSelection::solve(const SearchSet& givenSearches) {
     searches = givenSearches;
 
-    // map the keys in the key set to lexicographical order
+    // if there are no orders then the arity of the relation is zero
+    // this is because every non-nullary relation has an existence check
     if (searches.empty()) {
-        return;
+        SignatureOrderMap indexSelection;
+        auto search = SearchSignature::getFullSearchSignature(0);
+        LexOrder emptyOrder;
+        indexSelection.insert({search, emptyOrder});
+        return FinalIndexSelection(indexSelection, {search}, {emptyOrder});
     }
 
     // map the signatures of each search to a unique index for the matching problem
@@ -244,6 +249,9 @@ void MinIndexSelection::solve(const SearchSet& givenSearches) {
     // Draw an edge from LHS to RHS if LHS precedes RHS in the partial order
     for (auto left : searches) {
         for (auto right : searches) {
+            if (left == right) {
+                continue;
+            }
             if (left.precedes(right)) {
                 matching.addEdge(signatureToIndexA[left], signatureToIndexB[right]);
             }
@@ -295,6 +303,14 @@ void MinIndexSelection::solve(const SearchSet& givenSearches) {
             }
         }
     }
+
+    // Return the index selection
+    SignatureOrderMap indexSelection;
+    for (const auto& search : searches) {
+        indexSelection.insert({search, getLexOrder(search)});
+    }
+
+    return FinalIndexSelection(indexSelection, searches, orders);
 }
 
 Chain MinIndexSelection::getChain(const SearchSignature umn, const MaxMatching::Matchings& match) {
@@ -334,8 +350,7 @@ const ChainOrderMap MinIndexSelection::getChainsFromMatching(
     // Case: if no unmatched nodes then we have an anti-chain
     if (umKeys.empty()) {
         for (auto node : nodes) {
-            Chain a;
-            a.push_back(node);
+            Chain a = {node};
             chainToOrder.push_back(a);
             return chainToOrder;
         }
@@ -416,59 +431,10 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
 
     // find optimal indexes for relations
     for (auto& relToSearch : relationToSearches) {
+        solver = MinIndexSelection();
         const std::string& relation = relToSearch.first;
         auto& searches = relToSearch.second;
-        minIndexCover[relation].solve(searches);
-    }
-
-    // Only case where indexSet is still empty is when relation has arity == 0
-    for (auto& cur : minIndexCover) {
-        MinIndexSelection& indexes = cur.second;
-        if (indexes.getAllOrders().empty()) {
-            indexes.insertDefaultTotalIndex(0);
-        }
-    }
-}
-
-MinIndexSelection& IndexAnalysis::getIndexes(const std::string& relName) {
-    auto pos = minIndexCover.find(relName);
-    if (pos != minIndexCover.end()) {
-        return pos->second;
-    } else {
-        auto ret = minIndexCover.insert(std::make_pair(relName, MinIndexSelection()));
-        assert(ret.second);
-        return ret.first->second;
-    }
-}
-
-void IndexAnalysis::print(std::ostream& os) const {
-    for (auto& cur : minIndexCover) {
-        const std::string& relName = cur.first;
-        const MinIndexSelection& indexes = cur.second;
-
-        /* Print searches */
-        os << "Relation " << relName << "\n";
-        os << "\tNumber of Searches: " << indexes.getSearches().size() << "\n";
-
-        /* print searches */
-        for (auto& search : indexes.getSearches()) {
-            os << "\t\t";
-            os << search;
-            os << "\n";
-        }
-
-        /* print chains */
-        for (auto& chain : indexes.getAllChains()) {
-            os << join(chain, "-->") << "\n";
-        }
-        os << "\n";
-
-        os << "\tNumber of Indexes: " << indexes.getAllOrders().size() << "\n";
-        for (auto& order : indexes.getAllOrders()) {
-            os << "\t\t";
-            os << join(order, "<") << "\n";
-            os << "\n";
-        }
+        indexCover.insert({relation, solver.solve(searches)});
     }
 }
 
