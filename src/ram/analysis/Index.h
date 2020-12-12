@@ -357,14 +357,19 @@ protected:
     /** @Brief maps a provided search to its corresponding lexicographical ordering **/
     size_t map(SearchSignature cols, const OrderCollection& orders, const ChainOrderMap& chainToOrder) const {
         assert(orders.size() == chainToOrder.size() && "Order and Chain Sizes do not match!!");
-        size_t i = 0;
-        for (auto it = chainToOrder.begin(); it != chainToOrder.end(); ++it, ++i) {
-            if (std::find(it->begin(), it->end(), cols) != it->end()) {
-                assert(i < orders.size());
-                return i;
-            }
+
+        // find the chain which contains the search
+        auto it = std::find_if(chainToOrder.begin(), chainToOrder.end(), [cols](const Chain& chain) {
+            return std::find(chain.begin(), chain.end(), cols) != chain.end();
+        });
+
+        // ensure we have a matching lex-order
+        if (it == chainToOrder.end()) {
+            fatal("cannot find matching lexicographical order");
         }
-        fatal("cannot find matching lexicographical order");
+
+        // return its index
+        return std::distance(chainToOrder.begin(), it);
     }
 
     /** @Brief insert an index based on the delta */
