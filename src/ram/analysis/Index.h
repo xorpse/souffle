@@ -288,7 +288,7 @@ private:
 };
 
 /**
- * @class MinIndexSelection
+ * @class MinIndexSelectionStrategy
  * @Brief computes the minimal index cover for a relation
  *        in a RAM Program.
  *
@@ -363,13 +363,23 @@ private:
     NodeSearchMap nodeToSignature;
 };
 
-class MinIndexSelection {
+/**
+ * @class IndexSelectionStrategy
+ * @brief Abstracts selection strategy for index analysis
+ */
+class IndexSelectionStrategy {
 public:
-    MinIndexSelection() = default;
-    ~MinIndexSelection() = default;
+    /** @brief Run analysis for a RAM translation unit */
+    virtual FinalIndexSelection solve(const SearchSet& searches) const = 0;
+};
+
+class MinIndexSelectionStrategy : public IndexSelectionStrategy {
+public:
+    MinIndexSelectionStrategy() = default;
+    ~MinIndexSelectionStrategy() = default;
 
     /** @Brief map the keys in the key set to lexicographical order */
-    FinalIndexSelection solve(const SearchSet& searches);
+    FinalIndexSelection solve(const SearchSet& searches) const override;
 
 protected:
     /** @Brief maps a provided search to its corresponding lexicographical ordering **/
@@ -529,7 +539,7 @@ private:
     /**
      * minimal index cover for relations, i.e., maps a relation to a set of indexes
      */
-    MinIndexSelection solver;
+    MinIndexSelectionStrategy solver;
     std::map<std::string, FinalIndexSelection> indexCover;
     std::map<std::string, SearchSet> relationToSearches;
 };

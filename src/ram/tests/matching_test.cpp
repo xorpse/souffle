@@ -24,9 +24,9 @@
 namespace souffle::ram {
 using namespace analysis;
 
-class TestAutoIndex : public MinIndexSelection {
+class TestAutoIndex : public MinIndexSelectionStrategy {
 public:
-    TestAutoIndex() : MinIndexSelection() {}
+    TestAutoIndex() : MinIndexSelectionStrategy() {}
 };
 
 using Nodes = SearchSet;

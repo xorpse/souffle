@@ -43,7 +43,7 @@ public:
     }
 
     /** Get list of indices used for relation,
-     * guaranteed that original indices in analysis::MinIndexSelection
+     * guaranteed that original indices in analysis::MinIndexSelectionStrategy
      * come before any generated indices */
     ram::analysis::OrderCollection getIndices() const {
         return computedIndices;

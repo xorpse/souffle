@@ -219,7 +219,7 @@ const MaxMatching::Matchings& MaxMatching::solve() {
     return match;
 }
 
-FinalIndexSelection MinIndexSelection::solve(const SearchSet& searches) {
+FinalIndexSelection MinIndexSelectionStrategy::solve(const SearchSet& searches) const {
     OrderCollection orders;
     SignatureOrderMap indexSelection;
 
@@ -316,7 +316,7 @@ FinalIndexSelection MinIndexSelection::solve(const SearchSet& searches) {
     return FinalIndexSelection(indexSelection, searches, orders);
 }
 
-Chain MinIndexSelection::getChain(const SearchSignature umn, const MaxMatching::Matchings& match,
+Chain MinIndexSelectionStrategy::getChain(const SearchSignature umn, const MaxMatching::Matchings& match,
         const SearchBipartiteMap& mapping) const {
     SearchSignature start = umn;  // start at an unmatched node
     Chain chain;
@@ -345,7 +345,7 @@ Chain MinIndexSelection::getChain(const SearchSignature umn, const MaxMatching::
     }
 }
 
-const ChainOrderMap MinIndexSelection::getChainsFromMatching(const MaxMatching::Matchings& match,
+const ChainOrderMap MinIndexSelectionStrategy::getChainsFromMatching(const MaxMatching::Matchings& match,
         const SearchSet& nodes, const SearchBipartiteMap& mapping) const {
     assert(!nodes.empty());
     ChainOrderMap chainToOrder;
