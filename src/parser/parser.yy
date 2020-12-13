@@ -240,7 +240,7 @@
 %token TRUE                      "true literal constraint"
 %token FALSE                     "false literal constraint"
 %token PLAN                      "plan keyword"
-%token KEYS                      "functional dependencies "
+%token CHOICEKEYS                "choice keys"
 %token IF                        ":-"
 %token DECL                      "relation declaration"
 %token FUNCTOR                   "functor declaration"
@@ -566,7 +566,7 @@ dependency_list_aux
 dependency_list 
   : %empty { }
     
-  | KEYS dependency_list_aux[list] { 
+  | CHOICEKEYS dependency_list_aux[list] { 
     $$ = std::move($list);
   }
   ;
