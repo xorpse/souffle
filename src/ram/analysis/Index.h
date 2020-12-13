@@ -492,6 +492,8 @@ public:
 
     void run(const TranslationUnit& translationUnit) override;
 
+    void print(std::ostream& os) const override;
+
     const FinalIndexSelection getIndexSelection(const std::string& relName) const {
         return indexCover.at(relName);
     }

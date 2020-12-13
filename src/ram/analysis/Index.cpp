@@ -442,6 +442,31 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
     }
 }
 
+void IndexAnalysis::print(std::ostream& os) const {
+    for (auto& cur : indexCover) {
+        const std::string& relName = cur.first;
+        const auto& selection = cur.second;
+
+        os << "Relation " << relName << "\n";
+
+        /* print searches */
+        os << "\tNumber of Searches: " << selection.getSearches().size() << "\n";
+        for (auto& search : selection.getSearches()) {
+            os << "\t\t";
+            os << search;
+            os << "\n";
+        }
+
+        /* print indexes */
+        os << "\tNumber of Indexes: " << selection.getAllOrders().size() << "\n";
+        for (auto& order : selection.getAllOrders()) {
+            os << "\t\t";
+            os << join(order, "<") << "\n";
+            os << "\n";
+        }
+    }
+}
+
 namespace {
 // handles equality constraints
 template <typename Iter>
