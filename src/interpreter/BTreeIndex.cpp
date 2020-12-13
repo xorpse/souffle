@@ -28,7 +28,7 @@ namespace souffle::interpreter {
     }
 
 Own<RelationWrapper> createBTreeRelation(
-        const ram::Relation& id, const ram::analysis::FinalIndexSelection& indexSelection) {
+        const ram::Relation& id, const ram::analysis::IndexCluster& indexSelection) {
     switch (id.getArity()) {
         FOR_EACH_BTREE(CREATE_BTREE_REL);
 

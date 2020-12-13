@@ -180,8 +180,8 @@ public:
     /**
      * Creates a relation, build all necessary indexes.
      */
-    Relation(size_t auxiliaryArity, const std::string& name,
-            const ram::analysis::FinalIndexSelection& indexSelection)
+    Relation(
+            size_t auxiliaryArity, const std::string& name, const ram::analysis::IndexCluster& indexSelection)
             : RelationWrapper(Arity, auxiliaryArity, name) {
         for (const auto& order : indexSelection.getAllOrders()) {
             ram::analysis::LexOrder fullOrder = order;
@@ -415,19 +415,19 @@ public:
 
 // The type of relation factory functions.
 using RelationFactory = Own<RelationWrapper> (*)(
-        const ram::Relation& id, const ram::analysis::FinalIndexSelection& indexSelection);
+        const ram::Relation& id, const ram::analysis::IndexCluster& indexSelection);
 
 // A factory for BTree based relation.
 Own<RelationWrapper> createBTreeRelation(
-        const ram::Relation& id, const ram::analysis::FinalIndexSelection& indexSelection);
+        const ram::Relation& id, const ram::analysis::IndexCluster& indexSelection);
 
 // A factory for BTree provenance index.
 Own<RelationWrapper> createProvenanceRelation(
-        const ram::Relation& id, const ram::analysis::FinalIndexSelection& indexSelection);
+        const ram::Relation& id, const ram::analysis::IndexCluster& indexSelection);
 // A factory for Brie based index.
 Own<RelationWrapper> createBrieRelation(
-        const ram::Relation& id, const ram::analysis::FinalIndexSelection& indexSelection);
+        const ram::Relation& id, const ram::analysis::IndexCluster& indexSelection);
 // A factory for Eqrel index.
 Own<RelationWrapper> createEqrelRelation(
-        const ram::Relation& id, const ram::analysis::FinalIndexSelection& indexSelection);
+        const ram::Relation& id, const ram::analysis::IndexCluster& indexSelection);
 }  // namespace souffle::interpreter

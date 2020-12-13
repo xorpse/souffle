@@ -25,7 +25,7 @@ namespace souffle::interpreter {
     }
 
 Own<RelationWrapper> createProvenanceRelation(
-        const ram::Relation& id, const ram::analysis::FinalIndexSelection& indexSelection) {
+        const ram::Relation& id, const ram::analysis::IndexCluster& indexSelection) {
     switch (id.getArity()) {
         FOR_EACH_PROVENANCE(CREATE_PROVENANCE_REL);
 

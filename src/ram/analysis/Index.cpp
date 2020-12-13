@@ -219,7 +219,7 @@ const MaxMatching::Matchings& MaxMatching::solve() {
     return match;
 }
 
-FinalIndexSelection MinIndexSelectionStrategy::solve(const SearchSet& searches) const {
+IndexCluster MinIndexSelectionStrategy::solve(const SearchSet& searches) const {
     OrderCollection orders;
     SignatureOrderMap indexSelection;
 
@@ -230,7 +230,7 @@ FinalIndexSelection MinIndexSelectionStrategy::solve(const SearchSet& searches) 
         LexOrder emptyOrder;
         orders.push_back(emptyOrder);
         indexSelection.insert({search, emptyOrder});
-        return FinalIndexSelection(indexSelection, {search}, orders);
+        return IndexCluster(indexSelection, {search}, orders);
     }
 
     // Map the signatures of each search to a unique node in each bipartition for the matching problem
@@ -313,7 +313,7 @@ FinalIndexSelection MinIndexSelectionStrategy::solve(const SearchSet& searches) 
         indexSelection.insert({search, orders.at(orderIndex)});
     }
 
-    return FinalIndexSelection(indexSelection, searches, orders);
+    return IndexCluster(indexSelection, searches, orders);
 }
 
 Chain MinIndexSelectionStrategy::getChain(const SearchSignature umn, const MaxMatching::Matchings& match,

@@ -326,7 +326,7 @@ using SearchSet = std::set<SearchSignature, SearchComparator>;
 // when we output the name of the collection of searches and therefore we order the SearchSignatures
 // arbitrarily by their hashes
 
-class FinalIndexSelection;
+class IndexCluster;
 
 /**
  * @class SearchBipartiteMap
@@ -370,7 +370,7 @@ private:
 class IndexSelectionStrategy {
 public:
     /** @brief Run analysis for a RAM translation unit */
-    virtual FinalIndexSelection solve(const SearchSet& searches) const = 0;
+    virtual IndexCluster solve(const SearchSet& searches) const = 0;
 };
 
 class MinIndexSelectionStrategy : public IndexSelectionStrategy {
@@ -379,7 +379,7 @@ public:
     ~MinIndexSelectionStrategy() = default;
 
     /** @Brief map the keys in the key set to lexicographical order */
-    FinalIndexSelection solve(const SearchSet& searches) const override;
+    IndexCluster solve(const SearchSet& searches) const override;
 
 protected:
     /** @Brief maps a provided search to its corresponding lexicographical ordering **/
@@ -444,13 +444,13 @@ protected:
 };
 
 /**
- * @class FinalIndexSelection
+ * @class IndexCluster
  * @Brief Encapsulates the result of the IndexAnalysis
  * i.e. mapping each search (SearchSignature) to a corresponding index (LexOrder)
  */
-class FinalIndexSelection {
+class IndexCluster {
 public:
-    FinalIndexSelection(const SignatureOrderMap& indexSelection, const SearchSet& searchSet,
+    IndexCluster(const SignatureOrderMap& indexSelection, const SearchSet& searchSet,
             const OrderCollection& orders)
             : indexSelection(indexSelection), searches(searchSet.begin(), searchSet.end()), orders(orders) {}
 
@@ -494,7 +494,7 @@ public:
 
     void print(std::ostream& os) const override;
 
-    const FinalIndexSelection getIndexSelection(const std::string& relName) const {
+    const IndexCluster getIndexSelection(const std::string& relName) const {
         return indexCover.at(relName);
     }
 
@@ -543,7 +543,7 @@ private:
      * minimal index cover for relations, i.e., maps a relation to a set of indexes
      */
     Own<IndexSelectionStrategy> solver;
-    std::map<std::string, FinalIndexSelection> indexCover;
+    std::map<std::string, IndexCluster> indexCover;
     std::map<std::string, SearchSet> relationToSearches;
 };
 
