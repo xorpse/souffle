@@ -42,8 +42,8 @@ std::string Relation::getTypeAttributeString(const std::vector<std::string>& att
     return type.str();
 }
 
-Own<Relation> Relation::getSynthesiserRelation(const ram::Relation& ramRel,
-        const ram::analysis::FinalIndexSelection& indexSelection, bool isProvenance) {
+Own<Relation> Relation::getSynthesiserRelation(
+        const ram::Relation& ramRel, const ram::analysis::IndexCluster& indexSelection, bool isProvenance) {
     Relation* rel;
 
     // Handle the qualifier in souffle code
