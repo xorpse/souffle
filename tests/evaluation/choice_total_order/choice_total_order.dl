@@ -7,7 +7,7 @@
 // Build an arbitrary order for the domain.
 .decl domain(x:symbol)
 .input domain
-.decl list(prev:symbol, data:symbol) keys prev, data
+.decl list(prev:symbol, data:symbol) choice-domain prev, data
 .decl notTotalOrder()
 .printsize notTotalOrder
 
