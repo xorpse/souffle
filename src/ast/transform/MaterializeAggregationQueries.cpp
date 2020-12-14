@@ -309,20 +309,10 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
                 // cur will point us to a particular argument
                 // that is found in the aggClause
                 auto const curArgType = argTypes[cur];
-                auto const isOfKind = [&](TypeAttribute ta) { return analysis::isOfKind(curArgType, ta); };
-
-                auto const typeName =
-                        isOfKind(TypeAttribute::Signed)
-                                ? "number"
-                                : isOfKind(TypeAttribute::Unsigned)
-                                          ? "unsigned"
-                                          : isOfKind(TypeAttribute::Float)
-                                                    ? "float"
-                                                    : isOfKind(TypeAttribute::Symbol) ? "symbol" : nullptr;
-
-                assert(typeName && "Unrecognised type while creating aggregate clause head");
-                aggRel->addAttribute(mk<Attribute>(toString(*cur), typeName));
+                assert(!curArgType.empty() && "unexpected empty typeset");
+                aggRel->addAttribute(mk<Attribute>(toString(*cur), curArgType.begin()->getName()));
             }
+
             // Set up the aggregate body atom that will represent the materialised relation we just created
             // and slip in place of the unrestricted literal(s) body.
             // Now it's time to update the aggregate body atom. We can now
