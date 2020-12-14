@@ -27,7 +27,7 @@ namespace souffle::interpreter {
     }
 
 Own<RelationWrapper> createBrieRelation(
-        const ram::Relation& id, const ram::analysis::FinalIndexSelection& /* orderSet */) {
+        const ram::Relation& id, const ram::analysis::IndexCluster& /* orderSet */) {
     switch (id.getArity()) {
         FOR_EACH_BRIE(CREATE_BRIE_REL);
 

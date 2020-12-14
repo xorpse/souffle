@@ -10,7 +10,7 @@
 .input node
 .decl edge(x:symbol, y:symbol)
 .input edge
-.decl node_colour(node:symbol, colour:symbol) keys node
+.decl node_colour(node:symbol, colour:symbol) choice-domain node
 .decl cannot_colour()
 .decl colourable()
 

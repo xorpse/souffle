@@ -4,18 +4,18 @@
 // - https://opensource.org/licenses/UPL
 // - <souffle root>/licenses/SOUFFLE-UPL.txt
 
-// Check keys are properly reduced to its simplest form.
+// Check choice-domain are properly reduced to its simplest form.
 // Also check facts are project into relation with guraded condition.
-// This is simplified to keys x
-.decl rel1(x:symbol, y:symbol) keys (x, x)
+// This is simplified to choice-domain x
+.decl rel1(x:symbol, y:symbol) choice-domain (x, x)
 rel1("a", "b").
 rel1("a", "c").
-// This is also simplified to keys x
-.decl rel2(x:symbol, y:symbol) keys x, x, x
+// This is also simplified to choice-domain x
+.decl rel2(x:symbol, y:symbol) choice-domain x, x, x
 rel2("a", "b").
 rel2("a", "c").
-// This is also simplified to keys (x, y)
-.decl rel3(x:symbol, y:symbol) keys (x, y), (y, x)
+// This is also simplified to choice-domain (x, y)
+.decl rel3(x:symbol, y:symbol) choice-domain (x, y), (y, x)
 rel3("a", "b").
 rel3("a", "c").
 

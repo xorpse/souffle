@@ -9,7 +9,7 @@
 // Returns the highest mark for both male and female in each grade.
 .decl mark(student:symbol, mark:number, grade:number, sex:symbol)
 .input mark
-.decl highest_mark(student:symbol, mark:number, grade:number, sex:symbol) keys (grade, sex)
+.decl highest_mark(student:symbol, mark:number, grade:number, sex:symbol) choice-domain (grade, sex)
 .decl solution(student:symbol, mark:number, grade:number, sex:symbol)
 .decl incorrect()
 
