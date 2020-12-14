@@ -5,8 +5,8 @@
 // - <souffle root>/licenses/SOUFFLE-UPL.txt
 
 // ok
-.decl rel1(x:symbol, y:symbol) keys x, y
+.decl rel1(x:symbol, y:symbol) choice-domain x, y
 // ok
-.decl rel2(x:symbol, y:symbol) btree keys x, y
+.decl rel2(x:symbol, y:symbol) btree choice-domain x, y
 // not ok
-.decl rel3(x:symbol, y:symbol) keys x,y btree
+.decl rel3(x:symbol, y:symbol) choice-domain x,y btree

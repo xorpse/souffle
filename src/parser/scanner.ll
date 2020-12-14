@@ -130,7 +130,7 @@
 "to_string"                           { return yy::parser::make_TOSTRING(yylloc); }
 "to_unsigned"                         { return yy::parser::make_TOUNSIGNED(yylloc); }
 ".plan"                               { return yy::parser::make_PLAN(yylloc); }
-"choice-keys"                         { return yy::parser::make_CHOICEKEYS(yylloc); }
+"choice-domain"                       { return yy::parser::make_CHOICEDOMAIN(yylloc); }
 "|"                                   { return yy::parser::make_PIPE(yylloc); }
 "["                                   { return yy::parser::make_LBRACKET(yylloc); }
 "]"                                   { return yy::parser::make_RBRACKET(yylloc); }
