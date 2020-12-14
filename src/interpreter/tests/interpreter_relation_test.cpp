@@ -28,7 +28,7 @@
 namespace souffle::interpreter::test {
 
 using ::souffle::ram::analysis::AttributeConstraint;
-using ::souffle::ram::analysis::FinalIndexSelection;
+using ::souffle::ram::analysis::IndexCluster;
 using ::souffle::ram::analysis::LexOrder;
 using ::souffle::ram::analysis::OrderCollection;
 using ::souffle::ram::analysis::SearchSet;
@@ -44,7 +44,7 @@ TEST(Relation0, Construction) {
     SearchSet searches;
     LexOrder emptyOrder;
     OrderCollection orders = {emptyOrder};
-    FinalIndexSelection indexSelection(mapping, searches, orders);
+    IndexCluster indexSelection(mapping, searches, orders);
 
     Relation<0, interpreter::Btree> rel(0, "test", indexSelection);
 
@@ -66,7 +66,7 @@ TEST(Relation0, Iteration) {
     SearchSet searches;
     LexOrder emptyOrder;
     OrderCollection orders = {emptyOrder};
-    FinalIndexSelection indexSelection(mapping, searches, orders);
+    IndexCluster indexSelection(mapping, searches, orders);
 
     Relation<0, interpreter::Btree> rel(0, "test", indexSelection);
     RelationWrapper* wrapper = &rel;
@@ -93,7 +93,7 @@ TEST(Relation1, Construction) {
     LexOrder fullOrder = {0};
     OrderCollection orders = {fullOrder};
     mapping.insert({existenceCheck, fullOrder});
-    FinalIndexSelection indexSelection(mapping, searches, orders);
+    IndexCluster indexSelection(mapping, searches, orders);
 
     Relation<1, interpreter::Btree> rel(0, "test", indexSelection);
     RelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
@@ -122,7 +122,7 @@ TEST(Basic, Iteration) {
     LexOrder fullOrder = {0};
     OrderCollection orders = {fullOrder};
     mapping.insert({existenceCheck, fullOrder});
-    FinalIndexSelection indexSelection(mapping, searches, orders);
+    IndexCluster indexSelection(mapping, searches, orders);
 
     Relation<1, interpreter::Btree> rel(0, "test", indexSelection);
     RelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
@@ -157,7 +157,7 @@ TEST(Independence, Iteration) {
     LexOrder fullOrder = {0};
     OrderCollection orders = {fullOrder};
     mapping.insert({existenceCheck, fullOrder});
-    FinalIndexSelection indexSelection(mapping, searches, orders);
+    IndexCluster indexSelection(mapping, searches, orders);
 
     Relation<1, interpreter::Btree> rel(0, "test", indexSelection);
     RelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
@@ -193,7 +193,7 @@ TEST(IndependentMoving, Iteration) {
     LexOrder fullOrder = {0};
     OrderCollection orders = {fullOrder};
     mapping.insert({existenceCheck, fullOrder});
-    FinalIndexSelection indexSelection(mapping, searches, orders);
+    IndexCluster indexSelection(mapping, searches, orders);
 
     Relation<1, interpreter::Btree> rel(0, "test", indexSelection);
     RelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
@@ -224,7 +224,7 @@ TEST(IndependentCopying, Iteration) {
     LexOrder fullOrder = {0};
     OrderCollection orders = {fullOrder};
     mapping.insert({existenceCheck, fullOrder});
-    FinalIndexSelection indexSelection(mapping, searches, orders);
+    IndexCluster indexSelection(mapping, searches, orders);
 
     Relation<1, interpreter::Btree> rel(0, "test", indexSelection);
     RelInterface relInt(rel, symbolTable, "test", {"i"}, {"i"}, 0);
@@ -256,7 +256,7 @@ TEST(Reordering, Iteration) {
     LexOrder fullOrder = {0, 2, 1};
     OrderCollection orders = {fullOrder};
     mapping.insert({existenceCheck, fullOrder});
-    FinalIndexSelection indexSelection(mapping, searches, orders);
+    IndexCluster indexSelection(mapping, searches, orders);
 
     Relation<3, interpreter::Btree> rel(0, "test", indexSelection);
     souffle::Tuple<RamDomain, 3> tuple{0, 1, 2};

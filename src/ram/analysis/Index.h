@@ -219,10 +219,10 @@ public:
     using Matchings = std::unordered_map<Node, Node>;
 
     /* Node constant representing no match */
-    const Node NullVertex = 0;
+    Node NullVertex = 0;
 
     /* Infinite distance */
-    const Distance InfiniteDistance = -1;
+    Distance InfiniteDistance = -1;
 
     /**
      * @Brief solve the maximum matching problem
@@ -288,7 +288,7 @@ private:
 };
 
 /**
- * @class MinIndexSelection
+ * @class MinIndexSelectionStrategy
  * @Brief computes the minimal index cover for a relation
  *        in a RAM Program.
  *
@@ -303,8 +303,8 @@ private:
 using AttributeIndex = uint32_t;
 using AttributeSet = std::unordered_set<AttributeIndex>;
 using SignatureMap = std::unordered_map<SearchSignature, SearchSignature, SearchSignature::Hasher>;
-using SignatureIndexMap = std::unordered_map<SearchSignature, AttributeIndex, SearchSignature::Hasher>;
-using IndexSignatureMap = std::unordered_map<AttributeIndex, SearchSignature>;
+using SearchNodeMap = std::unordered_map<SearchSignature, AttributeIndex, SearchSignature::Hasher>;
+using NodeSearchMap = std::unordered_map<AttributeIndex, SearchSignature>;
 using DischargeMap = std::unordered_map<SearchSignature, AttributeSet, SearchSignature::Hasher>;
 using LexOrder = std::vector<AttributeIndex>;
 using OrderCollection = std::vector<LexOrder>;
@@ -326,128 +326,82 @@ using SearchSet = std::set<SearchSignature, SearchComparator>;
 // when we output the name of the collection of searches and therefore we order the SearchSignatures
 // arbitrarily by their hashes
 
-class MinIndexSelection {
+class IndexCluster;
+
+/**
+ * @class SearchBipartiteMap
+ * @Brief Represents the mapping between searches and their nodes in bipartitions A and B of the graph
+ */
+class SearchBipartiteMap {
 public:
-    /** @Brief Add new key to an Index Set */
-    inline void addSearch(SearchSignature cols) {
-        if (cols.empty()) {
-            return;
-        }
-
-        searches.insert(cols);
+    void addSearch(SearchSignature s) {
+        // Map the signature to its node in the left and right bi-partitions
+        signatureToNodeA.insert({s, currentIndex});
+        signatureToNodeB.insert({s, currentIndex + 1});
+        // Map each index back to the search signature
+        nodeToSignature.insert({currentIndex, s});
+        nodeToSignature.insert({currentIndex + 1, s});
+        currentIndex += 2;
     }
 
-    MinIndexSelection() = default;
-    ~MinIndexSelection() = default;
-
-    /** @Brief Get searches **/
-    const SearchSet& getSearches() const {
-        return searches;
+    AttributeIndex getLeftNode(SearchSignature s) const {
+        return signatureToNodeA.at(s);
     }
 
-    /** @Brief Get index for a search */
-    const LexOrder& getLexOrder(SearchSignature cols) const {
-        int idx = map(cols);
-        return orders[idx];
+    AttributeIndex getRightNode(SearchSignature s) const {
+        return signatureToNodeB.at(s);
     }
 
-    /** @Brief Get all indexes */
-    const OrderCollection getAllOrders() const {
-        return orders;
+    SearchSignature getSearch(AttributeIndex node) const {
+        return nodeToSignature.at(node);
     }
 
-    /** @Brief Get all chains */
-    const ChainOrderMap getAllChains() const {
-        return chainToOrder;
-    }
+private:
+    AttributeIndex currentIndex = 1;
+    SearchNodeMap signatureToNodeA;
+    SearchNodeMap signatureToNodeB;
+    NodeSearchMap nodeToSignature;
+};
 
-    /**
-     * Check whether number of constraints in k is not equal to number of columns in lexicographical
-     * order
-     * */
-    bool isSubset(SearchSignature cols) const {
-        int idx = map(cols);
-        return card(cols) < orders[idx].size();
-    }
+/**
+ * @class IndexSelectionStrategy
+ * @brief Abstracts selection strategy for index analysis
+ */
+class IndexSelectionStrategy {
+public:
+    /** @brief Run analysis for a RAM translation unit */
+    virtual IndexCluster solve(const SearchSet& searches) const = 0;
+};
+
+class MinIndexSelectionStrategy : public IndexSelectionStrategy {
+public:
+    MinIndexSelectionStrategy() = default;
+    ~MinIndexSelectionStrategy() = default;
 
     /** @Brief map the keys in the key set to lexicographical order */
-    void solve();
-
-    /** @Brief insert a total order index
-     *  @param size of the index
-     */
-    void insertDefaultTotalIndex(size_t arity) {
-        Chain chain = std::vector<SearchSignature>();
-        SearchSignature fullIndexKey = SearchSignature::getFullSearchSignature(arity);
-        chain.push_back(fullIndexKey);
-        chainToOrder.push_back(std::move(chain));
-        LexOrder totalOrder;
-        for (size_t i = 0; i < arity; ++i) {
-            totalOrder.push_back(i);
-        }
-        orders.push_back(std::move(totalOrder));
-    }
-
-    void print(std::ostream& os) {
-        /* Print searches */
-        os << "\tNumber of Searches: " << getSearches().size() << "\n";
-
-        /* Print searches */
-        for (auto& search : getSearches()) {
-            os << "\t\t";
-            os << search;
-            os << "\n";
-        }
-
-        /* Print chains */
-        for (auto& chain : getAllChains()) {
-            os << join(chain, "-->") << "\n";
-        }
-        os << "\n";
-
-        os << "\tNumber of Indexes: " << getAllOrders().size() << "\n";
-        for (auto& order : getAllOrders()) {
-            os << "\t\t";
-            os << join(order, "<") << "\n";
-            os << "\n";
-        }
-    }
+    IndexCluster solve(const SearchSet& searches) const override;
 
 protected:
-    SignatureIndexMap signatureToIndexA;  // mapping of a SearchSignature on A to its unique index
-    SignatureIndexMap signatureToIndexB;  // mapping of a SearchSignature on B to its unique index
-    IndexSignatureMap indexToSignature;   // mapping of a unique index to its SearchSignature
-    SearchSet searches;                   // set of search patterns on table
-    OrderCollection orders;               // collection of lexicographical orders
-    ChainOrderMap chainToOrder;           // maps order index to set of searches covered by chain
-    MaxMatching matching;                 // matching problem for finding minimal number of orders
-
-    /** @Brief count the number of constraints in key */
-    static size_t card(SearchSignature cols) {
-        size_t sz = 0;
-        for (size_t i = 0; i < cols.arity(); i++) {
-            if (cols[i] != AttributeConstraint::None) {
-                sz++;
-            }
-        }
-        return sz;
-    }
-
-    /** @Brief maps search columns to an lexicographical order (labeled by a number) */
-    int map(SearchSignature cols) const {
+    /** @Brief maps a provided search to its corresponding lexicographical ordering **/
+    size_t map(SearchSignature cols, const OrderCollection& orders, const ChainOrderMap& chainToOrder) const {
         assert(orders.size() == chainToOrder.size() && "Order and Chain Sizes do not match!!");
-        int i = 0;
-        for (auto it = chainToOrder.begin(); it != chainToOrder.end(); ++it, ++i) {
-            if (std::find(it->begin(), it->end(), cols) != it->end()) {
-                assert((size_t)i < orders.size());
-                return i;
-            }
+
+        // find the chain which contains the search
+        auto it = std::find_if(chainToOrder.begin(), chainToOrder.end(), [cols](const Chain& chain) {
+            return std::find(chain.begin(), chain.end(), cols) != chain.end();
+        });
+
+        // ensure we have a matching lex-order
+        if (it == chainToOrder.end()) {
+            fatal("cannot find matching lexicographical order");
         }
-        fatal("cannot find matching lexicographical order");
+
+        // return its index
+        return std::distance(chainToOrder.begin(), it);
     }
 
     /** @Brief insert an index based on the delta */
-    void insertIndex(LexOrder& ids, SearchSignature delta) {
+    void insertIndex(LexOrder& ids, SearchSignature delta) const {
         LexOrder backlog;  // add inequalities at the end
         for (size_t pos = 0; pos < delta.arity(); pos++) {
             if (delta[pos] == AttributeConstraint::Equal) {
@@ -467,18 +421,21 @@ protected:
      * we follow it from set B until it cannot be matched from B
      * if not matched from B then umn is a chain.
      */
-    Chain getChain(const SearchSignature umn, const MaxMatching::Matchings& match);
+    Chain getChain(const SearchSignature umn, const MaxMatching::Matchings& match,
+            const SearchBipartiteMap& mapping) const;
 
     /** @Brief get all chains from the matching */
-    const ChainOrderMap getChainsFromMatching(const MaxMatching::Matchings& match, const SearchSet& nodes);
+    const ChainOrderMap getChainsFromMatching(const MaxMatching::Matchings& match, const SearchSet& nodes,
+            const SearchBipartiteMap& mapping) const;
 
     /** @Brief get all nodes which are unmatched from A-> B */
-    const SearchSet getUnmatchedKeys(const MaxMatching::Matchings& match, const SearchSet& nodes) {
+    const SearchSet getUnmatchedKeys(const MaxMatching::Matchings& match, const SearchSet& nodes,
+            const SearchBipartiteMap& mapping) const {
         SearchSet unmatched;
 
         // For all nodes n such that n is not in match
         for (auto node : nodes) {
-            if (match.find(signatureToIndexA[node]) == match.end()) {
+            if (match.find(mapping.getLeftNode(node)) == match.end()) {
                 unmatched.insert(node);
             }
         }
@@ -487,13 +444,13 @@ protected:
 };
 
 /**
- * @class FinalIndexSelection
+ * @class IndexCluster
  * @Brief Encapsulates the result of the IndexAnalysis
  * i.e. mapping each search (SearchSignature) to a corresponding index (LexOrder)
  */
-class FinalIndexSelection {
+class IndexCluster {
 public:
-    FinalIndexSelection(const SignatureOrderMap& indexSelection, const SearchSet& searchSet,
+    IndexCluster(const SignatureOrderMap& indexSelection, const SearchSet& searchSet,
             const OrderCollection& orders)
             : indexSelection(indexSelection), searches(searchSet.begin(), searchSet.end()), orders(orders) {}
 
@@ -528,19 +485,17 @@ private:
  */
 class IndexAnalysis : public Analysis {
 public:
-    IndexAnalysis(const char* id) : Analysis(id), relAnalysis(nullptr) {}
+    IndexAnalysis(const char* id)
+            : Analysis(id), relAnalysis(nullptr), solver(mk<MinIndexSelectionStrategy>()) {}
 
     static constexpr const char* name = "index-analysis";
 
     void run(const TranslationUnit& translationUnit) override;
 
-    const FinalIndexSelection getIndexSelection(const std::string& relName) const {
-        SignatureOrderMap indexSelection = {};
-        const auto& cover = minIndexCover.at(relName);
-        for (const auto& search : cover.getSearches()) {
-            indexSelection.insert({search, cover.getLexOrder(search)});
-        }
-        return FinalIndexSelection(indexSelection, cover.getSearches(), cover.getAllOrders());
+    void print(std::ostream& os) const override;
+
+    const IndexCluster getIndexSelection(const std::string& relName) const {
+        return indexCover.at(relName);
     }
 
     /**
@@ -581,22 +536,15 @@ public:
     bool isTotalSignature(const AbstractExistenceCheck* existCheck) const;
 
 private:
-    /**
-     * @Brief get the minimal index cover for a relation
-     * @param relation name
-     * @result set of indexes of the minimal index cover
-     */
-    MinIndexSelection& getIndexes(const std::string& relName);
-    void print(std::ostream& os) const override;
-
-private:
     /** relation analysis for looking up relations by name */
     RelationAnalysis* relAnalysis;
 
     /**
      * minimal index cover for relations, i.e., maps a relation to a set of indexes
      */
-    std::map<std::string, MinIndexSelection> minIndexCover;
+    Own<IndexSelectionStrategy> solver;
+    std::map<std::string, IndexCluster> indexCover;
+    std::map<std::string, SearchSet> relationToSearches;
 };
 
 }  // namespace souffle::ram::analysis
