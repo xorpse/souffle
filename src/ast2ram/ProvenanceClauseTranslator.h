@@ -10,23 +10,21 @@
  *
  * @file ProvenanceClauseTranslator.h
  *
- * Clause translator when provenance is used
- *
  ***********************************************************************/
-
-#pragma once
 
 #include "ast2ram/ClauseTranslator.h"
 
+namespace souffle {
+class SymbolTable;
+}
+
 namespace souffle::ast {
-class Clause;
+class Atom;
 }
 
 namespace souffle::ram {
-class Condition;
 class Operation;
-class Statement;
-}  // namespace souffle::ram
+}
 
 namespace souffle::ast2ram {
 
@@ -37,15 +35,9 @@ public:
     ProvenanceClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable)
             : ClauseTranslator(context, symbolTable) {}
 
-    static Own<ram::Statement> generateClause(const TranslatorContext& context, SymbolTable& symbolTable,
-            const ast::Clause& clause, int version = 0);
-
 protected:
-    Own<ram::Statement> createRamFactQuery(const ast::Clause& clause) const override;
-    Own<ram::Statement> createRamRuleQuery(const ast::Clause& clause) override;
+    Own<ram::Operation> addNegatedDeltaAtom(Own<ram::Operation> op, const ast::Atom* atom) const override;
     Own<ram::Operation> addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const override;
-    Own<ram::Operation> generateReturnInstantiatedValues(const ast::Clause& clause) const;
-    Own<ram::Operation> addBodyLiteralConstraints(
-            const ast::Clause& clause, Own<ram::Operation> op) const override;
 };
+
 }  // namespace souffle::ast2ram

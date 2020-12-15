@@ -21,7 +21,7 @@
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
 #include "ast2ram/ConstraintTranslator.h"
-#include "ast2ram/ProvenanceClauseTranslator.h"
+#include "ast2ram/ProvenanceSubproofGenerator.h"
 #include "ast2ram/ValueTranslator.h"
 #include "ast2ram/utility/Location.h"
 #include "ast2ram/utility/TranslatorContext.h"
@@ -82,7 +82,7 @@ void ProvenanceTranslator::addProvenanceClauseSubroutines(const ast::Program* pr
 /** make a subroutine to search for subproofs */
 Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clause& clause) {
     // nameUnnamedVariables(intermediateClause.get());
-    return ProvenanceClauseTranslator::generateClause(*context, *symbolTable, clause);
+    return ProvenanceSubproofGenerator::generateSubproof(*context, *symbolTable, clause);
 }
 
 Own<ram::ExistenceCheck> ProvenanceTranslator::makeRamAtomExistenceCheck(const ast::Atom* atom,
@@ -210,11 +210,19 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
     std::map<int, const ast::Variable*> idToVar;
     auto dummyValueIndex = mk<ValueIndex>();
     visitDepthFirst(clause, [&](const ast::Variable& var) {
-        if (dummyValueIndex->isDefined(var) || isPrefix("@level_num", var.getName())) {
+        if (dummyValueIndex->isDefined(var) || isPrefix("@level_num", var.getName()) ||
+                isPrefix("+underscore", var.getName())) {
             return;
         }
         idToVar[count] = &var;
         dummyValueIndex->addVarReference(var, count++, 0);
+    });
+
+    visitDepthFirst(clause, [&](const ast::Variable& var) {
+        if (isPrefix("+underscore", var.getName())) {
+            idToVar[count] = &var;
+            dummyValueIndex->addVarReference(var, count++, 0);
+        }
     });
 
     // the structure of this subroutine is a sequence where each nested statement is a search in each

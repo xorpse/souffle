@@ -201,6 +201,8 @@ souffle_sources = \
         ast2ram/ConstraintTranslator.h                     \
         ast2ram/ProvenanceClauseTranslator.cpp             \
         ast2ram/ProvenanceClauseTranslator.h               \
+        ast2ram/ProvenanceSubproofGenerator.cpp            \
+        ast2ram/ProvenanceSubproofGenerator.h              \
         ast2ram/ProvenanceTranslator.cpp                   \
         ast2ram/ProvenanceTranslator.h                     \
         ast2ram/utility/Location.h                         \

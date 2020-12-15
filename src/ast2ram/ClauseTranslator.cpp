@@ -35,6 +35,7 @@
 #include "ast/utility/Visitor.h"
 #include "ast2ram/AstToRamTranslator.h"
 #include "ast2ram/ConstraintTranslator.h"
+#include "ast2ram/ProvenanceClauseTranslator.h"
 #include "ast2ram/ValueTranslator.h"
 #include "ast2ram/utility/Location.h"
 #include "ast2ram/utility/TranslatorContext.h"
@@ -56,7 +57,6 @@
 #include "ram/Negation.h"
 #include "ram/NestedIntrinsicOperator.h"
 #include "ram/Project.h"
-#include "ram/ProvenanceExistenceCheck.h"
 #include "ram/Query.h"
 #include "ram/Relation.h"
 #include "ram/Scan.h"
@@ -82,8 +82,12 @@ bool ClauseTranslator::isRecursive() const {
     return !sccAtoms.empty();
 }
 
+// TODO (azreika): create abstract factory to get rid of provenance config checks
 Own<ram::Statement> ClauseTranslator::translateNonRecursiveClause(
         const TranslatorContext& context, SymbolTable& symbolTable, const ast::Clause& clause) {
+    if (Global::config().has("provenance")) {
+        return ProvenanceClauseTranslator(context, symbolTable).translateClause(clause);
+    }
     return ClauseTranslator(context, symbolTable).translateClause(clause);
 }
 
@@ -95,9 +99,14 @@ VecOwn<ram::Statement> ClauseTranslator::translateRecursiveClause(const Translat
     // Create each version
     VecOwn<ram::Statement> clauseVersions;
     for (size_t version = 0; version < sccAtoms.size(); version++) {
-        auto translatedClause =
-                ClauseTranslator(context, symbolTable).generateClauseVersion(*clause, scc, version);
-        appendStmt(clauseVersions, std::move(translatedClause));
+        if (Global::config().has("provenance")) {
+            appendStmt(clauseVersions, ProvenanceClauseTranslator(context, symbolTable)
+                                               .generateClauseVersion(*clause, scc, version));
+        } else {
+            auto translatedClause =
+                    ClauseTranslator(context, symbolTable).generateClauseVersion(*clause, scc, version);
+            appendStmt(clauseVersions, std::move(translatedClause));
+        }
     }
 
     // Check that the correct number of versions have been created
@@ -445,62 +454,32 @@ Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
         values.push_back(mk<ram::UndefValue>());
     }
 
-    if (Global::config().has("provenance")) {
-        return mk<ram::Filter>(
-                mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(name, std::move(values))), std::move(op));
-    } else {
-        return mk<ram::Filter>(
-                mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
-    }
+    return mk<ram::Filter>(
+            mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
 }
 
 Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const {
-    if (Global::config().has("provenance")) {
-        size_t auxiliaryArity = context.getEvaluationArity(atom);
-        assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
-        size_t arity = atom->getArity() - auxiliaryArity;
+    size_t auxiliaryArity = context.getEvaluationArity(atom);
+    assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
+    size_t arity = atom->getArity() - auxiliaryArity;
+    std::string name = getConcreteRelationName(atom->getQualifiedName());
 
-        VecOwn<ram::Expression> values;
-
-        auto args = atom->getArguments();
-        for (size_t i = 0; i < arity; i++) {
-            values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[i]));
-        }
-
-        // undefined value for rule number
-        values.push_back(mk<ram::UndefValue>());
-        // add the height annotation for provenanceNotExists
-        for (size_t height = 1; height < auxiliaryArity; height++) {
-            values.push_back(
-                    ValueTranslator::translate(context, symbolTable, *valueIndex, args[arity + height]));
-        }
-
-        return mk<ram::Filter>(mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(
-                                       getConcreteRelationName(atom->getQualifiedName()), std::move(values))),
-                std::move(op));
-    } else {
-        size_t auxiliaryArity = context.getEvaluationArity(atom);
-        assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
-        size_t arity = atom->getArity() - auxiliaryArity;
-        std::string name = getConcreteRelationName(atom->getQualifiedName());
-
-        if (arity == 0) {
-            // for a nullary, negation is a simple emptiness check
-            return mk<ram::Filter>(mk<ram::EmptinessCheck>(name), std::move(op));
-        }
-
-        // else, we construct the atom and create a negation
-        VecOwn<ram::Expression> values;
-        auto args = atom->getArguments();
-        for (size_t i = 0; i < arity; i++) {
-            values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[i]));
-        }
-        for (size_t i = 0; i < auxiliaryArity; i++) {
-            values.push_back(mk<ram::UndefValue>());
-        }
-        return mk<ram::Filter>(
-                mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
+    if (arity == 0) {
+        // for a nullary, negation is a simple emptiness check
+        return mk<ram::Filter>(mk<ram::EmptinessCheck>(name), std::move(op));
     }
+
+    // else, we construct the atom and create a negation
+    VecOwn<ram::Expression> values;
+    auto args = atom->getArguments();
+    for (size_t i = 0; i < arity; i++) {
+        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[i]));
+    }
+    for (size_t i = 0; i < auxiliaryArity; i++) {
+        values.push_back(mk<ram::UndefValue>());
+    }
+    return mk<ram::Filter>(
+            mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
 }
 
 Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
