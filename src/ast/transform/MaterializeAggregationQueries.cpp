@@ -38,6 +38,7 @@
 #include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StringUtil.h"
 #include <algorithm>
+#include <cassert>
 #include <map>
 #include <memory>
 #include <set>
@@ -307,9 +308,11 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
             for (const auto& cur : aggClauseHead->getArguments()) {
                 // cur will point us to a particular argument
                 // that is found in the aggClause
-                aggRel->addAttribute(mk<Attribute>(toString(*cur),
-                        (analysis::isOfKind(argTypes[cur], TypeAttribute::Signed)) ? "number" : "symbol"));
+                auto const curArgType = argTypes[cur];
+                assert(!curArgType.empty() && "unexpected empty typeset");
+                aggRel->addAttribute(mk<Attribute>(toString(*cur), curArgType.begin()->getName()));
             }
+
             // Set up the aggregate body atom that will represent the materialised relation we just created
             // and slip in place of the unrestricted literal(s) body.
             // Now it's time to update the aggregate body atom. We can now

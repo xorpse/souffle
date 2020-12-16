@@ -10,7 +10,7 @@
 .input student ()
 .decl professor(p:symbol, majr:symbol)
 .input professor ()
-.decl advisor(s:symbol, p:symbol) keys s
+.decl advisor(s:symbol, p:symbol) choice-domain s
 .decl violateFD()
 .printsize violateFD
 

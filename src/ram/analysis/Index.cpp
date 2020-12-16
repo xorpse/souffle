@@ -219,31 +219,37 @@ const MaxMatching::Matchings& MaxMatching::solve() {
     return match;
 }
 
-void MinIndexSelection::solve() {
-    // map the keys in the key set to lexicographical order
+IndexCluster MinIndexSelectionStrategy::solve(const SearchSet& searches) const {
+    OrderCollection orders;
+    SignatureOrderMap indexSelection;
+
+    // If there are no orders then the arity of the relation is zero
+    // this is because every non-nullary relation has an existence check
     if (searches.empty()) {
-        return;
+        auto search = SearchSignature::getFullSearchSignature(0);
+        LexOrder emptyOrder;
+        orders.push_back(emptyOrder);
+        indexSelection.insert({search, emptyOrder});
+        return IndexCluster(indexSelection, {search}, orders);
     }
 
-    // map the signatures of each search to a unique index for the matching problem
-    AttributeIndex currentIndex = 1;
+    // Map the signatures of each search to a unique node in each bipartition for the matching problem
+    SearchBipartiteMap mapping;
     for (auto s : searches) {
-        // map the signature to its unique index in each set
-        signatureToIndexA.insert({s, currentIndex});
-        signatureToIndexB.insert({s, currentIndex + 1});
-        // map each index back to the search signature
-        indexToSignature.insert({currentIndex, s});
-        indexToSignature.insert({currentIndex + 1, s});
-        currentIndex += 2;
+        mapping.addSearch(s);
     }
 
     // Construct the matching poblem
     // For each pair of search sets
     // Draw an edge from LHS to RHS if LHS precedes RHS in the partial order
+    MaxMatching matching;
     for (auto left : searches) {
         for (auto right : searches) {
+            if (left == right) {
+                continue;
+            }
             if (left.precedes(right)) {
-                matching.addEdge(signatureToIndexA[left], signatureToIndexB[right]);
+                matching.addEdge(mapping.getLeftNode(left), mapping.getRightNode(right));
             }
         }
     }
@@ -254,7 +260,7 @@ void MinIndexSelection::solve() {
     const MaxMatching::Matchings& matchings = matching.solve();
 
     // Extract the chains given the nodes and matchings
-    auto chains = getChainsFromMatching(matchings, searches);
+    auto chains = getChainsFromMatching(matchings, searches, mapping);
 
     // Should never get no chains back as we never call calculate on an empty graph
     assert(!chains.empty());
@@ -264,7 +270,7 @@ void MinIndexSelection::solve() {
         SearchSignature initDelta = *(chain.begin());
         insertIndex(ids, initDelta);
 
-        // build the lex-order
+        // Build the lex-order
         for (auto iit = chain.begin(); next(iit) != chain.end(); ++iit) {
             SearchSignature delta = SearchSignature::getDelta(*next(iit), *iit);
             insertIndex(ids, delta);
@@ -277,12 +283,19 @@ void MinIndexSelection::solve() {
     // Validate the lex-order
     for (auto chain : chains) {
         for (auto search : chain) {
-            int idx = map(search);
+            int idx = map(search, orders, chains);
 
+            // Rebuild the search from the order
             SearchSignature k(search.arity());
-            for (size_t i = 0; i < card(search); i++) {
+            size_t numConstraints = std::count_if(
+                    search.begin(), search.end(), [](auto c) { return c != AttributeConstraint::None; });
+
+            // Map the k-th prefix of the order to a search
+            for (size_t i = 0; i < numConstraints; i++) {
                 k[orders[idx][i]] = AttributeConstraint::Equal;
             }
+
+            // Validate that the prefix concides with the original search (ignoring inequalities)
             for (size_t i = 0; i < search.arity(); ++i) {
                 if (k[i] == AttributeConstraint::None && search[i] != AttributeConstraint::None) {
                     assert("incorrect lexicographical order");
@@ -293,18 +306,27 @@ void MinIndexSelection::solve() {
             }
         }
     }
+
+    // Return the index selection
+    for (const auto& search : searches) {
+        size_t orderIndex = map(search, orders, chains);
+        indexSelection.insert({search, orders.at(orderIndex)});
+    }
+
+    return IndexCluster(indexSelection, searches, orders);
 }
 
-Chain MinIndexSelection::getChain(const SearchSignature umn, const MaxMatching::Matchings& match) {
+Chain MinIndexSelectionStrategy::getChain(const SearchSignature umn, const MaxMatching::Matchings& match,
+        const SearchBipartiteMap& mapping) const {
     SearchSignature start = umn;  // start at an unmatched node
     Chain chain;
     // given an unmapped node from set A we follow it from set B until it cannot be matched from B
-    //  if not mateched from B then umn is a chain
+    //  if not matched from B then umn is a chain
     //
     // Assume : no circular mappings, i.e. a in A -> b in B -> ........ -> a in A is not allowed.
     // Given this, the loop will terminate
     while (true) {
-        auto mit = match.find(signatureToIndexB[start]);  // we start from B side
+        auto mit = match.find(mapping.getRightNode(start));  // we start from B side
         // on each iteration we swap sides when collecting the chain so we use the corresponding index map
         if (std::find(chain.begin(), chain.end(), start) == chain.end()) {
             chain.push_back(start);
@@ -315,7 +337,7 @@ Chain MinIndexSelection::getChain(const SearchSignature umn, const MaxMatching::
             return chain;
         }
 
-        SearchSignature a = indexToSignature.at(mit->second);
+        SearchSignature a = mapping.getSearch(mit->second);
         if (std::find(chain.begin(), chain.end(), a) == chain.end()) {
             chain.push_back(a);
         }
@@ -323,17 +345,17 @@ Chain MinIndexSelection::getChain(const SearchSignature umn, const MaxMatching::
     }
 }
 
-const ChainOrderMap MinIndexSelection::getChainsFromMatching(
-        const MaxMatching::Matchings& match, const SearchSet& nodes) {
+const ChainOrderMap MinIndexSelectionStrategy::getChainsFromMatching(const MaxMatching::Matchings& match,
+        const SearchSet& nodes, const SearchBipartiteMap& mapping) const {
     assert(!nodes.empty());
+    ChainOrderMap chainToOrder;
 
     // Get all unmatched nodes from A
-    const SearchSet& umKeys = getUnmatchedKeys(match, nodes);
+    const SearchSet& umKeys = getUnmatchedKeys(match, nodes, mapping);
     // Case: if no unmatched nodes then we have an anti-chain
     if (umKeys.empty()) {
         for (auto node : nodes) {
-            Chain a;
-            a.push_back(node);
+            Chain a = {node};
             chainToOrder.push_back(a);
             return chainToOrder;
         }
@@ -346,7 +368,7 @@ const ChainOrderMap MinIndexSelection::getChainsFromMatching(
 
     // Case: nodes < umKeys or if nodes == umKeys then anti chain - this is handled by this loop
     for (auto umKey : umKeys) {
-        auto c = getChain(umKey, match);
+        auto c = getChain(umKey, match, mapping);
         assert(!c.empty());
         chainToOrder.push_back(c);
     }
@@ -372,17 +394,13 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
     // visit all nodes to collect searches of each relation
     visitDepthFirst(translationUnit.getProgram(), [&](const Node& node) {
         if (const auto* indexSearch = dynamic_cast<const IndexOperation*>(&node)) {
-            MinIndexSelection& indexes = getIndexes(indexSearch->getRelation());
-            indexes.addSearch(getSearchSignature(indexSearch));
+            relationToSearches[indexSearch->getRelation()].insert(getSearchSignature(indexSearch));
         } else if (const auto* exists = dynamic_cast<const ExistenceCheck*>(&node)) {
-            MinIndexSelection& indexes = getIndexes(exists->getRelation());
-            indexes.addSearch(getSearchSignature(exists));
+            relationToSearches[exists->getRelation()].insert(getSearchSignature(exists));
         } else if (const auto* provExists = dynamic_cast<const ProvenanceExistenceCheck*>(&node)) {
-            MinIndexSelection& indexes = getIndexes(provExists->getRelation());
-            indexes.addSearch(getSearchSignature(provExists));
+            relationToSearches[provExists->getRelation()].insert(getSearchSignature(provExists));
         } else if (const auto* ramRel = dynamic_cast<const Relation*>(&node)) {
-            MinIndexSelection& indexes = getIndexes(ramRel->getName());
-            indexes.addSearch(getSearchSignature(ramRel));
+            relationToSearches[ramRel->getName()].insert(getSearchSignature(ramRel));
         }
     });
 
@@ -396,69 +414,52 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
         // Currently RAM does not have such situation.
         const std::string& relA = swap.getFirstRelation();
         const std::string& relB = swap.getSecondRelation();
-        MinIndexSelection& indexesA = getIndexes(relA);
-        MinIndexSelection& indexesB = getIndexes(relB);
-        // Add all searchSignature of A into B
-        for (const auto& signature : indexesA.getSearches()) {
-            indexesB.addSearch(signature);
-        }
 
-        // Add all searchSignature of B into A
-        for (const auto& signature : indexesB.getSearches()) {
-            indexesA.addSearch(signature);
-        }
+        const auto searchesA = relationToSearches[relA];
+        const auto searchesB = relationToSearches[relB];
+
+        relationToSearches[relA].insert(searchesB.begin(), searchesB.end());
+        relationToSearches[relB].insert(searchesA.begin(), searchesA.end());
     });
 
-    // find optimal indexes for relations
-    for (auto& cur : minIndexCover) {
-        MinIndexSelection& indexes = cur.second;
-        indexes.solve();
-    }
-
-    // Only case where indexSet is still empty is when relation has arity == 0
-    for (auto& cur : minIndexCover) {
-        MinIndexSelection& indexes = cur.second;
-        if (indexes.getAllOrders().empty()) {
-            indexes.insertDefaultTotalIndex(0);
+    // remove all empty searches
+    for (auto& relToSearch : relationToSearches) {
+        auto& searches = relToSearch.second;
+        for (auto it = searches.begin(); it != searches.end();) {
+            if (it->empty()) {
+                it = searches.erase(it);
+            } else {
+                ++it;
+            }
         }
     }
-}
 
-MinIndexSelection& IndexAnalysis::getIndexes(const std::string& relName) {
-    auto pos = minIndexCover.find(relName);
-    if (pos != minIndexCover.end()) {
-        return pos->second;
-    } else {
-        auto ret = minIndexCover.insert(std::make_pair(relName, MinIndexSelection()));
-        assert(ret.second);
-        return ret.first->second;
+    // find optimal indexes for relations
+    for (auto& relToSearch : relationToSearches) {
+        const std::string& relation = relToSearch.first;
+        auto& searches = relToSearch.second;
+        indexCover.insert({relation, solver->solve(searches)});
     }
 }
 
 void IndexAnalysis::print(std::ostream& os) const {
-    for (auto& cur : minIndexCover) {
+    for (auto& cur : indexCover) {
         const std::string& relName = cur.first;
-        const MinIndexSelection& indexes = cur.second;
+        const auto& selection = cur.second;
 
-        /* Print searches */
         os << "Relation " << relName << "\n";
-        os << "\tNumber of Searches: " << indexes.getSearches().size() << "\n";
 
         /* print searches */
-        for (auto& search : indexes.getSearches()) {
+        os << "\tNumber of Searches: " << selection.getSearches().size() << "\n";
+        for (auto& search : selection.getSearches()) {
             os << "\t\t";
             os << search;
             os << "\n";
         }
 
-        /* print chains */
-        for (auto& chain : indexes.getAllChains()) {
-            os << join(chain, "-->") << "\n";
-        }
-        os << "\n";
-
-        os << "\tNumber of Indexes: " << indexes.getAllOrders().size() << "\n";
-        for (auto& order : indexes.getAllOrders()) {
+        /* print indexes */
+        os << "\tNumber of Indexes: " << selection.getAllOrders().size() << "\n";
+        for (auto& order : selection.getAllOrders()) {
             os << "\t\t";
             os << join(order, "<") << "\n";
             os << "\n";
