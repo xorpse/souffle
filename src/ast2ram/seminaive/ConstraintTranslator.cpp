@@ -12,7 +12,7 @@
  *
  ***********************************************************************/
 
-#include "ast2ram/ConstraintTranslator.h"
+#include "ast2ram/seminaive/ConstraintTranslator.h"
 #include "ast/Atom.h"
 #include "ast/BinaryConstraint.h"
 #include "ast/TranslationUnit.h"
@@ -29,7 +29,7 @@
 #include "ram/ProvenanceExistenceCheck.h"
 #include "ram/UndefValue.h"
 
-namespace souffle::ast2ram {
+namespace souffle::ast2ram::seminaive {
 
 Own<ram::Condition> ConstraintTranslator::translate(const TranslatorContext& context,
         SymbolTable& symbolTable, const ValueIndex& index, const ast::Literal* lit) {
@@ -71,4 +71,4 @@ Own<ram::Condition> ConstraintTranslator::visitNegation(const ast::Negation& neg
     return mk<ram::Negation>(
             mk<ram::ExistenceCheck>(getConcreteRelationName(atom->getQualifiedName()), std::move(values)));
 }
-}  // namespace souffle::ast2ram
+}  // namespace souffle::ast2ram::seminaive
