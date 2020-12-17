@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "ast/utility/Visitor.h"
 #include "souffle/utility/ContainerUtil.h"
 
 namespace souffle::ast {
@@ -29,7 +30,7 @@ class Condition;
 
 namespace souffle::ast2ram {
 
-class ConstraintTranslator {
+class ConstraintTranslator : public ast::Visitor<Own<ram::Condition>> {
 public:
     virtual Own<ram::Condition> translateConstraint(const ast::Literal* lit) = 0;
 };
