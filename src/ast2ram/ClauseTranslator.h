@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "souffle/utility/ContainerUtil.h"
+
 namespace souffle {
 class SymbolTable;
 }

@@ -32,6 +32,8 @@
 #include "ast/analysis/TypeSystem.h"
 #include "ast/utility/SipsMetric.h"
 #include "ast/utility/Utils.h"
+#include "ast2ram/provenance/TranslationStrategy.h"
+#include "ast2ram/seminaive/TranslationStrategy.h"
 #include "souffle/utility/FunctionalUtil.h"
 #include "souffle/utility/StringUtil.h"
 #include <set>
@@ -59,6 +61,13 @@ TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
         sipsChosen = Global::config().get("RamSIPS");
     }
     sipsMetric = ast::SipsMetric::create(sipsChosen, tu);
+
+    // Set up the correct strategy
+    if (Global::config().has("provenance")) {
+        translationStrategy = mk<provenance::TranslationStrategy>();
+    } else {
+        translationStrategy = mk<seminaive::TranslationStrategy>();
+    }
 }
 
 TranslatorContext::~TranslatorContext() = default;
@@ -200,6 +209,11 @@ int TranslatorContext::getADTBranchId(const ast::BranchInit* adt) const {
                 return left.name < right.name;
             });
     return std::distance(std::begin(branches), iterToBranch);
+}
+
+Own<ram::Expression> TranslatorContext::translateValue(
+        SymbolTable& symbolTable, const ValueIndex& index, const ast::Argument* arg) {
+    return translationStrategy->createValueTranslator(*this, symbolTable, index)->translate(arg);
 }
 
 }  // namespace souffle::ast2ram

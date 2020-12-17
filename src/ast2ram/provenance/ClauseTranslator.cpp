@@ -41,7 +41,7 @@ Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
     VecOwn<ram::Expression> values;
     auto args = atom->getArguments();
     for (size_t i = 0; i < arity; i++) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[i]));
+        values.push_back(context->translateValue(context, symbolTable, *valueIndex, args[i]));
     }
     for (size_t i = 0; i < auxiliaryArity; i++) {
         values.push_back(mk<ram::UndefValue>());
@@ -60,14 +60,14 @@ Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, con
 
     auto args = atom->getArguments();
     for (size_t i = 0; i < arity; i++) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[i]));
+        values.push_back(context->translateValue(context, symbolTable, *valueIndex, args[i]));
     }
 
     // undefined value for rule number
     values.push_back(mk<ram::UndefValue>());
     // add the height annotation for provenanceNotExists
     for (size_t height = 1; height < auxiliaryArity; height++) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[arity + height]));
+        values.push_back(context->translateValue(context, symbolTable, *valueIndex, args[arity + height]));
     }
 
     return mk<ram::Filter>(mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(

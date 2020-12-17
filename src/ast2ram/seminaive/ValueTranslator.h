@@ -40,7 +40,6 @@ class Expression;
 }
 
 namespace souffle::ast2ram {
-class AstToRamTranslator;
 class TranslatorContext;
 class ValueIndex;
 }  // namespace souffle::ast2ram

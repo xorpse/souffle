@@ -33,7 +33,7 @@
 #include "ast/transform/ReorderLiterals.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
-#include "ast2ram/ProvenanceClauseTranslator.h"
+#include "ast2ram/provenance/ClauseTranslator.h"
 #include "ast2ram/seminaive/ConstraintTranslator.h"
 #include "ast2ram/seminaive/ValueTranslator.h"
 #include "ast2ram/utility/Location.h"

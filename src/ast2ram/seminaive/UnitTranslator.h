@@ -48,7 +48,7 @@ class UnitTranslator : public ast2ram::UnitTranslator {
 public:
     UnitTranslator() : ast2ram::UnitTranslator() {}
 
-    Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu) override;
+    Own<ram::TranslationUnit> translateUnit(const ast::TranslationUnit& tu) override;
 
 protected:
     void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);

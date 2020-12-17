@@ -29,7 +29,7 @@ class Argument;
 }
 
 namespace souffle::ram {
-class Condition;
+class Expression;
 }
 
 namespace souffle::ast2ram {

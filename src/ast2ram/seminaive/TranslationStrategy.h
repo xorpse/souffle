@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ast2ram/TranslationStrategy.h"
 #include "souffle/utility/ContainerUtil.h"
 
 namespace souffle {

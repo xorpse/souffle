@@ -110,6 +110,10 @@ public:
     size_t getAuxiliaryArity(const ast::Relation* relation) const;
     size_t getEvaluationArity(const ast::Atom* atom) const;
 
+    /** Translation strategy */
+    Own<ram::Expression> translateValue(
+            SymbolTable& symbolTable, const ValueIndex& index, const ast::Argument* arg);
+
 private:
     const ast::Program* program;
     const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis;
@@ -123,6 +127,7 @@ private:
     const ast::analysis::SumTypeBranchesAnalysis* sumTypeBranches;
     const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis;
     Own<ast::SipsMetric> sipsMetric;
+    Own<TranslationStrategy> translationStrategy;
 };
 
 }  // namespace souffle::ast2ram

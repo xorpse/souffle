@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "ast2ram/UnitTranslator.h"
+#include "ast2ram/seminaive/UnitTranslator.h"
 
 namespace souffle::ast {
 class Atom;
@@ -41,7 +41,7 @@ namespace souffle::ast2ram::provenance {
 
 class UnitTranslator : public ast2ram::seminaive::UnitTranslator {
 public:
-    ProvenanceTranslator() : ast2ram::seminaive::UnitTranslator() {}
+    UnitTranslator() : ast2ram::seminaive::UnitTranslator() {}
 
 protected:
     Own<ram::Sequence> generateProgram(const ast::TranslationUnit& translationUnit) override;
