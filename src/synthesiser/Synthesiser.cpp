@@ -2048,10 +2048,21 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 UNARY_OP_INTEGRAL(LNOT, (RamDomain)!)
 
                 /** numeric coersions follow C++ semantics. */
+                // identities
+                case FunctorOp::F2F:
+                case FunctorOp::I2I:
+                case FunctorOp::U2U:
+                case FunctorOp::S2S: {
+                    visit(args[0], out);
+                    break;
+                }
+
                 UNARY_OP(F2I, RamFloat   , static_cast<RamSigned>)
                 UNARY_OP(F2U, RamFloat   , static_cast<RamUnsigned>)
+
                 UNARY_OP(I2U, RamSigned  , static_cast<RamUnsigned>)
                 UNARY_OP(I2F, RamSigned  , static_cast<RamFloat>)
+
                 UNARY_OP(U2I, RamUnsigned, static_cast<RamSigned>)
                 UNARY_OP(U2F, RamUnsigned, static_cast<RamFloat>)
 
