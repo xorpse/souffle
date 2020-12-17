@@ -193,20 +193,27 @@ souffle_sources = \
         ast/utility/Utils.cpp                              \
         ast/utility/Utils.h                                \
         ast/utility/Visitor.h                              \
-        ast2ram/AstToRamTranslator.cpp                     \
-        ast2ram/AstToRamTranslator.h                       \
-        ast2ram/ClauseTranslator.cpp                       \
         ast2ram/ClauseTranslator.h                         \
-        ast2ram/ConstraintTranslator.cpp                   \
         ast2ram/ConstraintTranslator.h                     \
-        ast2ram/ProvenanceClauseTranslator.cpp             \
-        ast2ram/ProvenanceClauseTranslator.h               \
-        ast2ram/ProvenanceSubproofGenerator.cpp            \
-        ast2ram/ProvenanceSubproofGenerator.h              \
-        ast2ram/ProvenanceTranslator.cpp                   \
-        ast2ram/ProvenanceTranslator.h                     \
         ast2ram/TranslationStrategy.h                      \
         ast2ram/UnitTranslator.h                           \
+        ast2ram/ValueTranslator.h                          \
+        ast2ram/provenance/ClauseTranslator.cpp            \
+        ast2ram/provenance/ClauseTranslator.h              \
+        ast2ram/provenance/TranslationStrategy.cpp         \
+        ast2ram/provenance/TranslationStrategy.h           \
+        ast2ram/provenance/UnitTranslator.cpp              \
+        ast2ram/provenance/UnitTranslator.h                \
+        ast2ram/seminaive/ClauseTranslator.cpp             \
+        ast2ram/seminaive/ClauseTranslator.h               \
+        ast2ram/seminaive/ConstraintTranslator.cpp         \
+        ast2ram/seminaive/ConstraintTranslator.h           \
+        ast2ram/seminaive/TranslationStrategy.cpp          \
+        ast2ram/seminaive/TranslationStrategy.h            \
+        ast2ram/seminaive/UnitTranslator.cpp               \
+        ast2ram/seminaive/UnitTranslator.h                 \
+        ast2ram/seminaive/ValueTranslator.cpp              \
+        ast2ram/seminaive/ValueTranslator.h                \
         ast2ram/utility/Location.h                         \
         ast2ram/utility/Utils.cpp                          \
         ast2ram/utility/Utils.h                            \
@@ -214,8 +221,6 @@ souffle_sources = \
         ast2ram/utility/TranslatorContext.h                \
         ast2ram/utility/ValueIndex.cpp                     \
         ast2ram/utility/ValueIndex.h                       \
-        ast2ram/ValueTranslator.cpp                        \
-        ast2ram/ValueTranslator.h                          \
         interpreter/Context.h                              \
         interpreter/Engine.cpp                             \
         interpreter/Engine.h                               \
