@@ -11,7 +11,7 @@
  * @file UnitTranslator.h
  *
  * Abstract class providing an interface for translating an
- * ast::TranslationUnit into a ram::TranslationUnit.
+ * ast::TranslationUnit into an equivalent ram::TranslationUnit.
  *
  ***********************************************************************/
 
