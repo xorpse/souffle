@@ -8,14 +8,13 @@
 
 /************************************************************************
  *
- * @file AstToRamTranslator.h
- *
- * Translator from AST into RAM
+ * @file UnitTranslator.h
  *
  ***********************************************************************/
 
 #pragma once
 
+#include "ast2ram/UnitTranslator.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <map>
 #include <set>
@@ -40,21 +39,18 @@ class TranslationUnit;
 }  // namespace souffle::ram
 
 namespace souffle::ast2ram {
-
 class TranslatorContext;
+}
 
-class AstToRamTranslator {
+namespace souffle::ast2ram::seminaive {
+
+class UnitTranslator : public ast2ram::UnitTranslator {
 public:
-    AstToRamTranslator();
-    ~AstToRamTranslator();
+    UnitTranslator() : ast2ram::UnitTranslator() {}
 
-    /** Translates an AST program into a corresponding RAM program */
-    Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
+    Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu) override;
 
 protected:
-    Own<TranslatorContext> context;
-    Own<SymbolTable> symbolTable;
-
     void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
     Own<ram::Relation> createRamRelation(
             const ast::Relation* baseRelation, std::string ramRelationName) const;
@@ -94,4 +90,4 @@ private:
     std::map<std::string, Own<ram::Statement>> ramSubroutines;
 };
 
-}  // namespace souffle::ast2ram
+}  // namespace souffle::ast2ram::seminaive
