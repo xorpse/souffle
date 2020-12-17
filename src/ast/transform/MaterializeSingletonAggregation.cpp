@@ -86,7 +86,7 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
         auto aggHead = mk<Atom>();
         auto aggClause = mk<Clause>();
 
-        std::string aggRelName = analysis::findUniqueRelationName(program, "__agg");
+        std::string aggRelName = analysis::findUniqueRelationName(program, "__agg_single");
         aggRel->setQualifiedName(aggRelName);
         aggHead->setQualifiedName(aggRelName);
 
@@ -94,17 +94,23 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
         std::string variableName = analysis::findUniqueVariableName(*clause, "z");
         auto variable = mk<ast::Variable>(variableName);
 
-        // __agg_rel_0(z) :- ...
+        // Infer types
+        auto argTypes = analysis::TypeAnalysis::analyseTypes(translationUnit, *clause);
+        auto const curArgType = argTypes[pair.first];
+        assert(!curArgType.empty() && "unexpected empty typeset");
+
+        // __agg_single(z) :- ...
         aggHead->addArgument(souffle::clone(variable));
-        aggRel->addAttribute(mk<Attribute>(variableName, "number"));
+        aggRel->addAttribute(mk<Attribute>(variableName, curArgType.begin()->getName()));
         aggClause->setHead(souffle::clone(aggHead));
 
         //    A(x) :- x = sum .., B(x).
-        // -> A(x) :- x = z, B(x), __agg_rel_0(z).
+        // -> A(x) :- x = z, B(x), __agg_single(z).
         auto equalityLiteral = mk<BinaryConstraint>(
                 BinaryConstraintOp::EQ, souffle::clone(variable), souffle::clone(aggregate));
-        // __agg_rel_0(z) :- z = sum ...
+        // __agg_single(z) :- z = sum ...
         aggClause->addToBody(std::move(equalityLiteral));
+
         program.addRelation(std::move(aggRel));
         program.addClause(std::move(aggClause));
 
