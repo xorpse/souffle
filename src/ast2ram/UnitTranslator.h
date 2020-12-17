@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "souffle/utility/ContainerUtil.h"
+
 namespace souffle::ast {
 class TranslationUnit;
 }
@@ -29,6 +31,8 @@ namespace souffle::ast2ram {
 
 class UnitTranslator {
 public:
+    UnitTranslator() = default;
+
     virtual Own<ram::TranslationUnit> translateUnit(const ast::TranslationUnit& tu) = 0;
 };
 

@@ -17,6 +17,10 @@
 
 #pragma once
 
+namespace souffle {
+class SymbolTable;
+}
+
 namespace souffle::ast {
 class Clause;
 }
@@ -27,9 +31,18 @@ class Statement;
 
 namespace souffle::ast2ram {
 
+class TranslatorContext;
+
 class ClauseTranslator {
 public:
+    ClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable)
+            : context(context), symbolTable(symbolTable) {}
+
     virtual Own<ram::Statement> translateClause(const ast::Clause& clause) = 0;
+
+protected:
+    const TranslatorContext& context;
+    SymbolTable& symbolTable;
 };
 
 }  // namespace souffle::ast2ram
