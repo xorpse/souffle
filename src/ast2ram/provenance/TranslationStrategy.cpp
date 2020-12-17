@@ -14,9 +14,9 @@
 
 #include "ast2ram/provenance/TranslationStrategy.h"
 #include "ast2ram/provenance/ClauseTranslator.h"
-#include "ast2ram/provenance/ConstraintTranslator.h"
 #include "ast2ram/provenance/UnitTranslator.h"
-#include "ast2ram/provenance/ValueTranslator.h"
+#include "ast2ram/seminaive/ConstraintTranslator.h"
+#include "ast2ram/seminaive/ValueTranslator.h"
 
 namespace souffle::ast2ram::provenance {
 
@@ -31,12 +31,12 @@ Own<ClauseTranslator> createClauseTranslator(
 
 Own<ConstraintTranslator> createConstraintTranslator(
         const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index) const {
-    return mk<ConstraintTranslator>(context, symbolTable, index);
+    return mk<ast2ram::seminaive::ConstraintTranslator>(context, symbolTable, index);
 }
 
 Own<ValueTranslator> createValueTranslator(
         const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index) const {
-    return mk<ValueTranslator>(context, symbolTable, index);
+    return mk<ast2ram::seminaive::ValueTranslator>(context, symbolTable, index);
 }
 
 }  // namespace souffle::ast2ram::provenance
