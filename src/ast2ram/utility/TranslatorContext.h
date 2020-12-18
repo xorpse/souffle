@@ -46,7 +46,8 @@ class UserDefinedFunctor;
 
 namespace souffle::ram {
 class Expression;
-}
+class Statement;
+}  // namespace souffle::ram
 
 namespace souffle::ast::analysis {
 class AuxiliaryArityAnalysis;
@@ -122,6 +123,10 @@ public:
     size_t getEvaluationArity(const ast::Atom* atom) const;
 
     /** Translation strategy */
+    Own<ram::Statement> translateClause(SymbolTable& symbolTable, const ast::Clause& clause) const;
+    // TODO: get rid of this one
+    Own<ram::Statement> generateClauseVersion(SymbolTable& symbolTable, const ast::Clause& clause,
+            const std::set<const ast::Relation*>& scc, size_t version) const;
     Own<ram::Expression> translateValue(
             SymbolTable& symbolTable, const ValueIndex& index, const ast::Argument* arg) const;
 

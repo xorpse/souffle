@@ -34,7 +34,6 @@
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
 #include "ast2ram/ClauseTranslator.h"
-#include "ast2ram/provenance/ClauseTranslator.h"
 #include "ast2ram/seminaive/ConstraintTranslator.h"
 #include "ast2ram/seminaive/ValueTranslator.h"
 #include "ast2ram/utility/Location.h"
@@ -82,13 +81,9 @@ bool ClauseTranslator::isRecursive() const {
     return !sccAtoms.empty();
 }
 
-// TODO (azreika): create abstract factory to get rid of provenance config checks
 Own<ram::Statement> ClauseTranslator::translateNonRecursiveClause(
         const TranslatorContext& context, SymbolTable& symbolTable, const ast::Clause& clause) {
-    if (Global::config().has("provenance")) {
-        return ProvenanceClauseTranslator(context, symbolTable).translateClause(clause);
-    }
-    return ClauseTranslator(context, symbolTable).translateClause(clause);
+    return context.translateClause(symbolTable, clause);
 }
 
 VecOwn<ram::Statement> ClauseTranslator::translateRecursiveClause(const TranslatorContext& context,
@@ -99,14 +94,7 @@ VecOwn<ram::Statement> ClauseTranslator::translateRecursiveClause(const Translat
     // Create each version
     VecOwn<ram::Statement> clauseVersions;
     for (size_t version = 0; version < sccAtoms.size(); version++) {
-        if (Global::config().has("provenance")) {
-            appendStmt(clauseVersions, ProvenanceClauseTranslator(context, symbolTable)
-                                               .generateClauseVersion(*clause, scc, version));
-        } else {
-            auto translatedClause =
-                    ClauseTranslator(context, symbolTable).generateClauseVersion(*clause, scc, version);
-            appendStmt(clauseVersions, std::move(translatedClause));
-        }
+        appendStmt(clauseVersions, context.generateClauseVersion(symbolTable, *clause, scc, version);
     }
 
     // Check that the correct number of versions have been created

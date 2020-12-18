@@ -33,6 +33,8 @@
 #include "ast/utility/SipsMetric.h"
 #include "ast/utility/Utils.h"
 #include "ast2ram/ValueTranslator.h"
+#include "ast2ram/provenance/TranslationStrategy.h"
+#include "ast2ram/seminaive/TranslationStrategy.h"
 #include "souffle/utility/FunctionalUtil.h"
 #include "souffle/utility/StringUtil.h"
 #include <set>
@@ -208,6 +210,17 @@ int TranslatorContext::getADTBranchId(const ast::BranchInit* adt) const {
                 return left.name < right.name;
             });
     return std::distance(std::begin(branches), iterToBranch);
+}
+
+Own<ram::Statement> TranslatorContext::translateClause(
+        SymbolTable& symbolTable, const ast::Clause& clause) const {
+    return translationStrategy->createClauseTranslator(*this, symbolTable)->translateClause(clause);
+}
+
+Own<ram::Statement> TranslatorContext::generateClauseVersion(SymbolTable& symbolTable,
+        const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version) const {
+    return translationStrategy->createClauseTranslator(*this, symbolTable)
+            ->generateClauseVersion(clause, scc, version);
 }
 
 Own<ram::Expression> TranslatorContext::translateValue(
