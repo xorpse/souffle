@@ -92,6 +92,10 @@
 
 namespace souffle::ast2ram::seminaive {
 
+UnitTranslator::UnitTranslator() : ast2ram::UnitTranslator() {}
+
+UnitTranslator::~UnitTranslator() = default;
+
 void UnitTranslator::addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine) {
     assert(!contains(ramSubroutines, subroutineID) && "subroutine ID should not already exist");
     ramSubroutines[subroutineID] = std::move(subroutine);

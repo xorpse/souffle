@@ -46,7 +46,8 @@ namespace souffle::ast2ram::seminaive {
 
 class UnitTranslator : public ast2ram::UnitTranslator {
 public:
-    UnitTranslator() : ast2ram::UnitTranslator() {}
+    UnitTranslator();
+    ~UnitTranslator();
 
     Own<ram::TranslationUnit> translateUnit(const ast::TranslationUnit& tu) override;
 

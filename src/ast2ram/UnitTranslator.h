@@ -19,6 +19,10 @@
 
 #include "souffle/utility/ContainerUtil.h"
 
+namespace souffle {
+class SymbolTable;
+}
+
 namespace souffle::ast {
 class TranslationUnit;
 }
@@ -29,11 +33,17 @@ class TranslationUnit;
 
 namespace souffle::ast2ram {
 
+class TranslatorContext;
+
 class UnitTranslator {
 public:
     UnitTranslator() = default;
 
     virtual Own<ram::TranslationUnit> translateUnit(const ast::TranslationUnit& tu) = 0;
+
+protected:
+    Own<TranslatorContext> context;
+    Own<SymbolTable> symbolTable;
 };
 
 }  // namespace souffle::ast2ram
