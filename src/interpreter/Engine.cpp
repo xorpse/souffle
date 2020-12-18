@@ -503,10 +503,20 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
                     // clang-format off
                 /** numeric coersions follow C++ semantics. */
+
+                // Identity overloads
+                case FunctorOp::F2F:
+                case FunctorOp::I2I:
+                case FunctorOp::U2U:
+                case FunctorOp::S2S:
+                    return execute(shadow.getChild(0), ctxt);
+
                 UNARY_OP(F2I, RamFloat   , static_cast<RamSigned>)
                 UNARY_OP(F2U, RamFloat   , static_cast<RamUnsigned>)
+
                 UNARY_OP(I2U, RamSigned  , static_cast<RamUnsigned>)
                 UNARY_OP(I2F, RamSigned  , static_cast<RamFloat>)
+
                 UNARY_OP(U2I, RamUnsigned, static_cast<RamSigned>)
                 UNARY_OP(U2F, RamUnsigned, static_cast<RamFloat>)
 
