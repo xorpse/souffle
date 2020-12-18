@@ -200,6 +200,8 @@ souffle_sources = \
         ast2ram/ValueTranslator.h                          \
         ast2ram/provenance/ClauseTranslator.cpp            \
         ast2ram/provenance/ClauseTranslator.h              \
+        ast2ram/provenance/SubproofGenerator.cpp           \
+        ast2ram/provenance/SubproofGenerator.h             \
         ast2ram/provenance/TranslationStrategy.cpp         \
         ast2ram/provenance/TranslationStrategy.h           \
         ast2ram/provenance/UnitTranslator.cpp              \

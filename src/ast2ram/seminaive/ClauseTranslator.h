@@ -66,6 +66,10 @@ public:
     static VecOwn<ram::Statement> translateRecursiveClause(const TranslatorContext& context,
             SymbolTable& symbolTable, const ast::Clause* clause, const std::set<const ast::Relation*>& scc);
 
+    Own<ram::Statement> translateClause(const ast::Clause& clause);
+    Own<ram::Statement> generateClauseVersion(
+            const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version);
+
 protected:
     size_t version{0};
     std::vector<ast::Atom*> sccAtoms{};
@@ -79,8 +83,6 @@ protected:
 
     Own<ValueIndex> valueIndex;
 
-    Own<ram::Statement> translateClause(const ast::Clause& clause);
-
     /** Main clause translation */
     virtual Own<ram::Statement> createRamFactQuery(const ast::Clause& clause) const;
     virtual Own<ram::Statement> createRamRuleQuery(const ast::Clause& clause);
@@ -88,8 +90,6 @@ protected:
     virtual Own<ram::Operation> createProjection(const ast::Clause& clause) const;
     virtual Own<ram::Condition> createCondition(const ast::Clause& clause) const;
 
-    Own<ram::Statement> generateClauseVersion(
-            const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version);
     std::vector<ast::Atom*> getAtomOrdering(const ast::Clause& clause) const;
 
     /** Indexing */

@@ -20,6 +20,7 @@
 #include "ast/utility/Utils.h"
 #include "ast2ram/ConstraintTranslator.h"
 #include "ast2ram/ValueTranslator.h"
+#include "ast2ram/seminaive/ClauseTranslator.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ast2ram/utility/ValueIndex.h"
@@ -36,12 +37,12 @@
 #include "ram/SubroutineReturn.h"
 #include "ram/UndefValue.h"
 
-namespace souffle::ast2ram {
+namespace souffle::ast2ram::provenance {
 
-Own<ram::Statement> SubproofGenerator::generateSubproof(const TranslatorContext& context,
-        SymbolTable& symbolTable, const ast::Clause& clause, int /* version */) {
-    return SubproofGenerator(context, symbolTable).translateClause(clause);
-}
+SubproofGenerator::SubproofGenerator(const TranslatorContext& context, SymbolTable& symbolTable)
+        : ast2ram::seminaive::ClauseTranslator(context, symbolTable) {}
+
+SubproofGenerator::~SubproofGenerator() = default;
 
 Own<ram::Operation> SubproofGenerator::addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const {
     size_t auxiliaryArity = context.getEvaluationArity(atom);
@@ -52,14 +53,14 @@ Own<ram::Operation> SubproofGenerator::addNegatedAtom(Own<ram::Operation> op, co
 
     auto args = atom->getArguments();
     for (size_t i = 0; i < arity; i++) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[i]));
+        values.push_back(context.translateValue(symbolTable, *valueIndex, args[i]));
     }
 
     // undefined value for rule number
     values.push_back(mk<ram::UndefValue>());
     // add the height annotation for provenanceNotExists
     for (size_t height = 1; height < auxiliaryArity; height++) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[arity + height]));
+        values.push_back(context.translateValue(symbolTable, *valueIndex, args[arity + height]));
     }
 
     return mk<ram::Filter>(mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(
@@ -99,13 +100,13 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
             continue;
         }
 
-        if (auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
+        if (auto condition = context.translateConstraint(symbolTable, *valueIndex, lit)) {
             op = mk<ram::Filter>(std::move(condition), std::move(op));
         }
     }
 
     for (const auto* con : constraints) {
-        if (auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, con)) {
+        if (auto condition = context.translateConstraint(symbolTable, *valueIndex, con)) {
             op = mk<ram::Filter>(std::move(condition), std::move(op));
         }
     }
@@ -119,18 +120,18 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
         auto arg = headArgs.at(i);
         if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
             // FIXME: float equiv (`FEQ`)
-            auto lhs = ValueTranslator::translate(context, symbolTable, *valueIndex, var);
+            auto lhs = context.translateValue(symbolTable, *valueIndex, var);
             auto constraint = mk<ram::Constraint>(
                     BinaryConstraintOp::EQ, std::move(lhs), mk<ram::SubroutineArgument>(i));
             op = mk<ram::Filter>(std::move(constraint), std::move(op));
         } else if (const auto* func = dynamic_cast<const ast::Functor*>(arg)) {
             TypeAttribute returnType = context.getFunctorReturnType(func);
             auto opEq = returnType == TypeAttribute::Float ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ;
-            auto lhs = ValueTranslator::translate(context, symbolTable, *valueIndex, func);
+            auto lhs = context.translateValue(symbolTable, *valueIndex, func);
             auto constraint = mk<ram::Constraint>(opEq, std::move(lhs), mk<ram::SubroutineArgument>(i));
             op = mk<ram::Filter>(std::move(constraint), std::move(op));
         } else if (const auto* rec = dynamic_cast<const ast::RecordInit*>(arg)) {
-            auto lhs = ValueTranslator::translate(context, symbolTable, *valueIndex, rec);
+            auto lhs = context.translateValue(symbolTable, *valueIndex, rec);
             auto constraint = mk<ram::Constraint>(
                     BinaryConstraintOp::EQ, std::move(lhs), mk<ram::SubroutineArgument>(i));
             op = mk<ram::Filter>(std::move(constraint), std::move(op));
@@ -148,8 +149,7 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
             // arity - 1 is the level number in body atoms
             auto arity = atom->getArity();
             auto atomArgs = atom->getArguments();
-            auto valLHS =
-                    ValueTranslator::translate(context, symbolTable, *valueIndex, atomArgs.at(arity - 1));
+            auto valLHS = context.translateValue(symbolTable, *valueIndex, atomArgs.at(arity - 1));
 
             // add the constraint
             auto constraint = mk<ram::Constraint>(
@@ -180,18 +180,18 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
     for (ast::Literal* lit : clause.getBodyLiterals()) {
         if (auto atom = dynamic_cast<ast::Atom*>(lit)) {
             for (ast::Argument* arg : atom->getArguments()) {
-                values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, arg));
+                values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
             }
         } else if (auto neg = dynamic_cast<ast::Negation*>(lit)) {
             for (ast::Argument* arg : neg->getAtom()->getArguments()) {
-                values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, arg));
+                values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
             }
         }
     }
 
     for (const auto* con : ast::getBodyLiterals<const ast::BinaryConstraint>(clause)) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, con->getLHS()));
-        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, con->getRHS()));
+        values.push_back(context.translateValue(symbolTable, *valueIndex, con->getLHS()));
+        values.push_back(context.translateValue(symbolTable, *valueIndex, con->getRHS()));
     }
 
     // final provenance negation
@@ -200,7 +200,7 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
         size_t auxiliaryArity = context.getEvaluationArity(head);
         for (size_t i = 0; i < head->getArguments().size() - auxiliaryArity; i++) {
             auto arg = head->getArguments().at(i);
-            values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, arg));
+            values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
         }
         for (size_t i = 0; i < auxiliaryArity; ++i) {
             values.push_back(mk<ram::SignedConstant>(-1));
@@ -214,13 +214,13 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
     for (size_t i = 0; i < head->getArity() - auxiliaryArity; i++) {
         auto arg = headArgs.at(i);
         if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
-            values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, var));
+            values.push_back(context.translateValue(symbolTable, *valueIndex, var));
             values.push_back(mk<ram::SubroutineArgument>(i));
         } else if (const auto* func = dynamic_cast<const ast::Functor*>(arg)) {
-            values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, func));
+            values.push_back(context.translateValue(symbolTable, *valueIndex, func));
             values.push_back(mk<ram::SubroutineArgument>(i));
         } else if (const auto* rec = dynamic_cast<const ast::RecordInit*>(arg)) {
-            values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, rec));
+            values.push_back(context.translateValue(symbolTable, *valueIndex, rec));
             values.push_back(mk<ram::SubroutineArgument>(i));
         } else if (const auto* adt = dynamic_cast<const ast::BranchInit*>(arg)) {
             // TODO: fill this out like record arguments
@@ -232,8 +232,7 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
         if (const auto* atom = dynamic_cast<const ast::Atom*>(lit)) {
             auto arity = atom->getArity();
             auto atomArgs = atom->getArguments();
-            values.push_back(
-                    ValueTranslator::translate(context, symbolTable, *valueIndex, atomArgs.at(arity - 1)));
+            values.push_back(context.translateValue(symbolTable, *valueIndex, atomArgs.at(arity - 1)));
             values.push_back(mk<ram::SubroutineArgument>(levelIndex));
         }
     }
@@ -241,4 +240,4 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
     return mk<ram::SubroutineReturn>(std::move(values));
 }
 
-}  // namespace souffle::ast2ram
+}  // namespace souffle::ast2ram::provenance

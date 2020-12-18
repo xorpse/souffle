@@ -34,10 +34,8 @@ namespace souffle::ast2ram::provenance {
 
 class SubproofGenerator : public ast2ram::seminaive::ClauseTranslator {
 public:
-    SubproofGenerator(const TranslatorContext& context, SymbolTable& symbolTable)
-            : ast2ram::seminaive::ClauseTranslator(context, symbolTable) {}
-
-    Own<ram::Statement> translateClause(const ast::Clause& clause) override;
+    SubproofGenerator(const TranslatorContext& context, SymbolTable& symbolTable);
+    ~SubproofGenerator();
 
 protected:
     Own<ram::Statement> createRamFactQuery(const ast::Clause& clause) const override;
