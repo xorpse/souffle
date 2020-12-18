@@ -22,6 +22,7 @@ class SymbolTable;
 }
 
 namespace souffle::ast {
+class Argument;
 class Aggregator;
 class Counter;
 class IntrinsicFunctor;
@@ -51,8 +52,7 @@ public:
     ValueTranslator(const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index)
             : ast2ram::ValueTranslator(context, symbolTable, index) {}
 
-    static Own<ram::Expression> translate(const TranslatorContext& context, SymbolTable& symbolTable,
-            const ValueIndex& index, const ast::Argument* arg);
+    Own<ram::Expression> translateValue(const ast::Argument* arg) override;
 
     /** -- Visitors -- */
     Own<ram::Expression> visitVariable(const ast::Variable& var) override;
@@ -67,9 +67,6 @@ public:
     Own<ram::Expression> visitRecordInit(const ast::RecordInit& init) override;
     Own<ram::Expression> visitBranchInit(const ast::BranchInit& init) override;
     Own<ram::Expression> visitAggregator(const ast::Aggregator& agg) override;
-
-private:
-    Own<ram::Expression> translateValue(const ast::Argument* arg) const;
 };
 
 }  // namespace souffle::ast2ram::seminaive
