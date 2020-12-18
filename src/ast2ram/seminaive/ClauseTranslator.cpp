@@ -217,7 +217,7 @@ Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause
 
     VecOwn<ram::Expression> values;
     for (const auto* arg : head->getArguments()) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, arg));
+        values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
     }
 
     // Propositions
@@ -343,7 +343,7 @@ Own<ram::Operation> ClauseTranslator::instantiateAggregator(
     // translate constraints of sub-clause
     for (const auto* lit : agg->getBodyLiterals()) {
         // literal becomes a constraint
-        if (auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
+        if (auto condition = context.translateConstraint(symbolTable, *valueIndex, lit)) {
             aggCond = addConjunctiveTerm(std::move(aggCond), std::move(condition));
         }
     }
@@ -369,14 +369,14 @@ Own<ram::Operation> ClauseTranslator::instantiateAggregator(
             }
         } else {
             assert(arg != nullptr && "aggregator argument cannot be nullptr");
-            auto value = ValueTranslator::translate(context, symbolTable, *valueIndex, arg);
+            auto value = context.translateValue(symbolTable, *valueIndex, arg);
             aggCond = addAggEqCondition(std::move(aggCond), std::move(value), i);
         }
     }
 
     // translate aggregate expression
     const auto* aggExpr = agg->getTargetExpression();
-    auto expr = aggExpr ? ValueTranslator::translate(context, symbolTable, *valueIndex, aggExpr) : nullptr;
+    auto expr = aggExpr ? context.translateValue(symbolTable, *valueIndex, aggExpr) : nullptr;
 
     // add Ram-Aggregation layer
     return mk<ram::Aggregate>(std::move(op), context.getOverloadedAggregatorOperator(agg),
@@ -388,7 +388,7 @@ Own<ram::Operation> ClauseTranslator::instantiateMultiResultFunctor(
         Own<ram::Operation> op, const ast::IntrinsicFunctor* inf, int curLevel) const {
     VecOwn<ram::Expression> args;
     for (auto&& x : inf->getArguments()) {
-        args.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, x));
+        args.push_back(context.translateValue(symbolTable, *valueIndex, x));
     }
 
     auto func_op = [&]() -> ram::NestedIntrinsicOp {
@@ -436,7 +436,7 @@ Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
     VecOwn<ram::Expression> values;
     auto args = atom->getArguments();
     for (size_t i = 0; i < arity; i++) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[i]));
+        values.push_back(context.translateValue(symbolTable, *valueIndex, args[i]));
     }
     for (size_t i = 0; i < auxiliaryArity; i++) {
         values.push_back(mk<ram::UndefValue>());
@@ -461,7 +461,7 @@ Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, con
     VecOwn<ram::Expression> values;
     auto args = atom->getArguments();
     for (size_t i = 0; i < arity; i++) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[i]));
+        values.push_back(context.translateValue(symbolTable, *valueIndex, args[i]));
     }
     for (size_t i = 0; i < auxiliaryArity; i++) {
         values.push_back(mk<ram::UndefValue>());
@@ -474,7 +474,7 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
         const ast::Clause& clause, Own<ram::Operation> op) const {
     for (const auto* lit : clause.getBodyLiterals()) {
         // constraints become literals
-        if (auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
+        if (auto condition = context.translateConstraint(symbolTable, *valueIndex, lit)) {
             op = mk<ram::Filter>(std::move(condition), std::move(op));
         }
     }
@@ -606,9 +606,8 @@ Own<ram::Condition> ClauseTranslator::getFunctionalDependencies(const ast::Claus
             const auto attribute = attributes[i];
             if (contains(keys, attribute->getName())) {
                 // If this particular source argument matches the head argument, insert it.
-                vals.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, headArgs.at(i)));
-                valsCopy.push_back(
-                        ValueTranslator::translate(context, symbolTable, *valueIndex, headArgs.at(i)));
+                vals.push_back(context.translateValue(symbolTable, *valueIndex, headArgs.at(i)));
+                valsCopy.push_back(context.translateValue(symbolTable, *valueIndex, headArgs.at(i)));
             } else {
                 // Otherwise insert ⊥
                 vals.push_back(mk<ram::UndefValue>());
