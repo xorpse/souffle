@@ -230,4 +230,10 @@ Own<ram::Expression> TranslatorContext::translateValue(
     return translationStrategy->createValueTranslator(*this, symbolTable, index)->translateValue(arg);
 }
 
+Own<ram::Condition> TranslatorContext::translateConstraint(
+        SymbolTable& symbolTable, const ValueIndex& index, const ast::Literal* lit) const {
+    return translationStrategy->createConstraintTranslator(*this, symbolTable, index)
+            ->translateConstraint(lit);
+}
+
 }  // namespace souffle::ast2ram

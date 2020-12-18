@@ -36,6 +36,7 @@ class Clause;
 class Directive;
 class Functor;
 class IntrinsicFunctor;
+class Literal;
 class Program;
 class QualifiedName;
 class Relation;
@@ -45,6 +46,7 @@ class UserDefinedFunctor;
 }  // namespace souffle::ast
 
 namespace souffle::ram {
+class Condition;
 class Expression;
 class Statement;
 }  // namespace souffle::ram
@@ -127,6 +129,10 @@ public:
     // TODO: get rid of this one
     Own<ram::Statement> generateClauseVersion(SymbolTable& symbolTable, const ast::Clause& clause,
             const std::set<const ast::Relation*>& scc, size_t version) const;
+
+    Own<ram::Condition> translateConstraint(
+            SymbolTable& symbolTable, const ValueIndex& index, const ast::Literal* lit) const;
+
     Own<ram::Expression> translateValue(
             SymbolTable& symbolTable, const ValueIndex& index, const ast::Argument* arg) const;
 

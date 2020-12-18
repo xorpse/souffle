@@ -245,7 +245,7 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
                     makeIfStatement(std::move(existenceCheck), makeRamReturnFalse(), makeRamReturnTrue());
             appendStmt(searchSequence, std::move(ifStatement));
         } else if (const auto* con = dynamic_cast<const ast::Constraint*>(lit)) {
-            auto condition = ConstraintTranslator::translate(*context, *symbolTable, *dummyValueIndex, con);
+            auto condition = context->translateConstraint(*symbolTable, *dummyValueIndex, con);
             transformVariablesToSubroutineArgs(condition.get(), idToVar);
             auto ifStatement =
                     makeIfStatement(std::move(condition), makeRamReturnTrue(), makeRamReturnFalse());

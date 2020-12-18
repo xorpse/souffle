@@ -61,8 +61,7 @@ Own<ram::Condition> ConstraintTranslator::visitNegation(const ast::Negation& neg
     VecOwn<ram::Expression> values;
     auto args = atom->getArguments();
     for (size_t i = 0; i < arity; i++) {
-        auto ramVal = mk<ValueTranslator>(context, symbolTable, index)->translateValue(args[i]);
-        values.push_back(std::move(ramVal));
+        values.push_back(context.translateValue(symbolTable, index, args[i]));
     }
     for (size_t i = 0; i < auxiliaryArity; i++) {
         values.push_back(mk<ram::UndefValue>());
