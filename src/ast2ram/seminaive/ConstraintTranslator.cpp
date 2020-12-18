@@ -40,8 +40,8 @@ Own<ram::Condition> ConstraintTranslator::visitAtom(const ast::Atom&) {
 }
 
 Own<ram::Condition> ConstraintTranslator::visitBinaryConstraint(const ast::BinaryConstraint& binRel) {
-    auto valLHS = mk<ValueTranslator>(context, symbolTable, index)->translateValue(binRel.getLHS());
-    auto valRHS = mk<ValueTranslator>(context, symbolTable, index)->translateValue(binRel.getRHS());
+    auto valLHS = context.translateValue(symbolTable, index, binRel.getLHS());
+    auto valRHS = context.translateValue(symbolTable, index, binRel.getRHS());
     return mk<ram::Constraint>(
             context.getOverloadedBinaryConstraintOperator(&binRel), std::move(valLHS), std::move(valRHS));
 }

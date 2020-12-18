@@ -82,7 +82,7 @@ void UnitTranslator::addProvenanceClauseSubroutines(const ast::Program* program)
 /** make a subroutine to search for subproofs */
 Own<ram::Statement> UnitTranslator::makeSubproofSubroutine(const ast::Clause& clause) {
     // nameUnnamedVariables(intermediateClause.get());
-    return ProvenanceSubproofGenerator::generateSubproof(*context, *symbolTable, clause);
+    return SubproofGenerator(*context, *symbolTable).translateClause(clause);
 }
 
 Own<ram::ExistenceCheck> UnitTranslator::makeRamAtomExistenceCheck(const ast::Atom* atom,
@@ -97,7 +97,7 @@ Own<ram::ExistenceCheck> UnitTranslator::makeRamAtomExistenceCheck(const ast::At
     // add each value (subroutine argument) to the search query
     for (size_t i = 0; i < atom->getArity() - auxiliaryArity; i++) {
         auto arg = atomArgs.at(i);
-        auto translatedValue = ValueTranslator::translate(*context, *symbolTable, valueIndex, arg);
+        auto translatedValue = context->translateValue(*symbolTable, valueIndex, arg);
         transformVariablesToSubroutineArgs(translatedValue.get(), idToVar);
         query.push_back(std::move(translatedValue));
     }

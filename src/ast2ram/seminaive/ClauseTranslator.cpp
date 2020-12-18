@@ -94,7 +94,7 @@ VecOwn<ram::Statement> ClauseTranslator::translateRecursiveClause(const Translat
     // Create each version
     VecOwn<ram::Statement> clauseVersions;
     for (size_t version = 0; version < sccAtoms.size(); version++) {
-        appendStmt(clauseVersions, context.generateClauseVersion(symbolTable, *clause, scc, version);
+        appendStmt(clauseVersions, context.generateClauseVersion(symbolTable, *clause, scc, version));
     }
 
     // Check that the correct number of versions have been created

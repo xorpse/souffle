@@ -17,8 +17,13 @@
 #include "ast2ram/seminaive/ConstraintTranslator.h"
 #include "ast2ram/seminaive/UnitTranslator.h"
 #include "ast2ram/seminaive/ValueTranslator.h"
+#include "ast2ram/utility/TranslatorContext.h"
+#include "souffle/SymbolTable.h"
 
 namespace souffle::ast2ram::seminaive {
+
+TranslationStrategy::TranslationStrategy() = default;
+TranslationStrategy::~TranslationStrategy() = default;
 
 Own<ast2ram::UnitTranslator> TranslationStrategy::createUnitTranslator() const {
     return mk<UnitTranslator>();

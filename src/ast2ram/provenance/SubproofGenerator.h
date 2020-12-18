@@ -37,8 +37,7 @@ public:
     SubproofGenerator(const TranslatorContext& context, SymbolTable& symbolTable)
             : ast2ram::seminaive::ClauseTranslator(context, symbolTable) {}
 
-    static Own<ram::Statement> generateSubproof(const TranslatorContext& context, SymbolTable& symbolTable,
-            const ast::Clause& clause, int version = 0);
+    Own<ram::Statement> translateClause(const ast::Clause& clause) override;
 
 protected:
     Own<ram::Statement> createRamFactQuery(const ast::Clause& clause) const override;
