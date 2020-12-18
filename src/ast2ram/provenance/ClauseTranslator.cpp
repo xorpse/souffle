@@ -17,6 +17,7 @@
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ram/EmptinessCheck.h"
+#include "ram/ExistenceCheck.h"
 #include "ram/Filter.h"
 #include "ram/Negation.h"
 #include "ram/Operation.h"
@@ -48,7 +49,7 @@ Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
     }
 
     return mk<ram::Filter>(
-            mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(name, std::move(values))), std::move(op));
+            mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
 }
 
 Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const {
