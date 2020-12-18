@@ -212,7 +212,7 @@ int TranslatorContext::getADTBranchId(const ast::BranchInit* adt) const {
 }
 
 Own<ram::Expression> TranslatorContext::translateValue(
-        SymbolTable& symbolTable, const ValueIndex& index, const ast::Argument* arg) {
+        SymbolTable& symbolTable, const ValueIndex& index, const ast::Argument* arg) const {
     return translationStrategy->createValueTranslator(*this, symbolTable, index)->translate(arg);
 }
 

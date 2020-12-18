@@ -33,6 +33,7 @@
 #include "ast/transform/ReorderLiterals.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
+#include "ast2ram/ClauseTranslator.h"
 #include "ast2ram/provenance/ClauseTranslator.h"
 #include "ast2ram/seminaive/ConstraintTranslator.h"
 #include "ast2ram/seminaive/ValueTranslator.h"
@@ -73,7 +74,7 @@
 namespace souffle::ast2ram::seminaive {
 
 ClauseTranslator::ClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable)
-        : context(context), symbolTable(symbolTable) {}
+        : ast2ram::ClauseTranslator(context, symbolTable) {}
 
 ClauseTranslator::~ClauseTranslator() = default;
 

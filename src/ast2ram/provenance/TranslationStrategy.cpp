@@ -24,17 +24,17 @@ Own<UnitTranslator> TranslationStrategy::createUnitTranslator() const {
     return mk<UnitTranslator>();
 }
 
-Own<ClauseTranslator> createClauseTranslator(
+Own<ClauseTranslator> TranslationStrategy::createClauseTranslator(
         const TranslatorContext& context, SymbolTable& symbolTable) const {
     return mk<ClauseTranslator>(context, symbolTable);
 }
 
-Own<ConstraintTranslator> createConstraintTranslator(
+Own<ConstraintTranslator> TranslationStrategy::createConstraintTranslator(
         const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index) const {
     return mk<ast2ram::seminaive::ConstraintTranslator>(context, symbolTable, index);
 }
 
-Own<ValueTranslator> createValueTranslator(
+Own<ValueTranslator> TranslationStrategy::createValueTranslator(
         const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index) const {
     return mk<ast2ram::seminaive::ValueTranslator>(context, symbolTable, index);
 }

@@ -24,17 +24,17 @@ Own<UnitTranslator> TranslationStrategy::createUnitTranslator() const {
     return mk<UnitTranslator>();
 }
 
-Own<ClauseTranslator> createClauseTranslator(
+Own<ClauseTranslator> TranslatorStrategy::createClauseTranslator(
         const TranslatorContext& context, SymbolTable& symbolTable) const {
     return mk<ClauseTranslator>(context, symbolTable);
 }
 
-Own<ConstraintTranslator> createConstraintTranslator(
+Own<ConstraintTranslator> TranslatorStrategy::createConstraintTranslator(
         const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index) const {
     return mk<ConstraintTranslator>(context, symbolTable, index);
 }
 
-Own<ValueTranslator> createValueTranslator(
+Own<ValueTranslator> TranslatorStrategy::createValueTranslator(
         const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index) const {
     return mk<ValueTranslator>(context, symbolTable, index);
 }

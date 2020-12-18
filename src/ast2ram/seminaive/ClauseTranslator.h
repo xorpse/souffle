@@ -56,8 +56,8 @@ namespace souffle::ast2ram::seminaive {
 
 class ClauseTranslator : public ast2ram::ClauseTranslator {
 public:
-    ClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable)
-            : ast2ram::ClauseTranslator(context, symbolTable) {}
+    ClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable);
+    ~ClauseTranslator();
 
     /** Entry points */
     static Own<ram::Statement> translateNonRecursiveClause(

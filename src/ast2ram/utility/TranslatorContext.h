@@ -23,6 +23,10 @@
 #include <cstddef>
 #include <set>
 
+namespace souffle {
+class SymbolTable;
+}
+
 namespace souffle::ast {
 class Aggregator;
 class Atom;
@@ -40,6 +44,10 @@ class TranslationUnit;
 class UserDefinedFunctor;
 }  // namespace souffle::ast
 
+namespace souffle::ram {
+class Expression;
+}
+
 namespace souffle::ast::analysis {
 class AuxiliaryArityAnalysis;
 class FunctorAnalysis;
@@ -54,6 +62,9 @@ class TypeEnvironment;
 }  // namespace souffle::ast::analysis
 
 namespace souffle::ast2ram {
+
+class TranslationStrategy;
+class ValueIndex;
 
 class TranslatorContext {
 public:
@@ -112,7 +123,7 @@ public:
 
     /** Translation strategy */
     Own<ram::Expression> translateValue(
-            SymbolTable& symbolTable, const ValueIndex& index, const ast::Argument* arg);
+            SymbolTable& symbolTable, const ValueIndex& index, const ast::Argument* arg) const;
 
 private:
     const ast::Program* program;
