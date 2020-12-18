@@ -10,22 +10,21 @@
  *
  * @file ProvenanceClauseTranslator.h
  *
- * Clause translator when provenance is used
- *
  ***********************************************************************/
-
-#pragma once
 
 #include "ast2ram/ClauseTranslator.h"
 
+namespace souffle {
+class SymbolTable;
+}
+
 namespace souffle::ast {
-class Clause;
+class Atom;
 }
 
 namespace souffle::ram {
-class Condition;
 class Operation;
-}  // namespace souffle::ram
+}
 
 namespace souffle::ast2ram {
 
@@ -37,8 +36,8 @@ public:
             : ClauseTranslator(context, symbolTable) {}
 
 protected:
-    Own<ram::Operation> createProjection(
-            const ast::Clause& clause, const ast::Clause& originalClause) const override;
-    Own<ram::Condition> createCondition(const ast::Clause& originalClause) const override;
+    Own<ram::Operation> addNegatedDeltaAtom(Own<ram::Operation> op, const ast::Atom* atom) const override;
+    Own<ram::Operation> addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const override;
 };
+
 }  // namespace souffle::ast2ram

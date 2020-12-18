@@ -50,19 +50,7 @@ public:
     }
 
     UserDefinedFunctor* clone() const override {
-        auto res = new UserDefinedFunctor(name, souffle::clone(args), getSrcLoc());
-        if (finalTranslatorReturnType.has_value()) {
-            res->setFinalReturnType(finalTranslatorReturnType.value());
-        }
-        return res;
-    }
-
-    void setFinalReturnType(TypeAttribute newType) {
-        finalTranslatorReturnType = newType;
-    }
-
-    std::optional<TypeAttribute> getFinalReturnType() const {
-        return finalTranslatorReturnType;
+        return new UserDefinedFunctor(name, souffle::clone(args), getSrcLoc());
     }
 
 protected:
@@ -77,9 +65,6 @@ protected:
 
     /** Name */
     const std::string name;
-
-    // TODO (azreika): remove after refactoring translator
-    std::optional<TypeAttribute> finalTranslatorReturnType;
 };
 
 }  // namespace souffle::ast

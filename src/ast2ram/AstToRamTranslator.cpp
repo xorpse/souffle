@@ -19,15 +19,12 @@
 #include "LogStatement.h"
 #include "ast/Aggregator.h"
 #include "ast/Argument.h"
-#include "ast/Atom.h"
 #include "ast/BinaryConstraint.h"
 #include "ast/BranchInit.h"
 #include "ast/Clause.h"
 #include "ast/Directive.h"
-#include "ast/Negation.h"
 #include "ast/Node.h"
 #include "ast/NumericConstant.h"
-#include "ast/Program.h"
 #include "ast/RecordInit.h"
 #include "ast/Relation.h"
 #include "ast/TranslationUnit.h"
@@ -40,7 +37,6 @@
 #include "ast2ram/ClauseTranslator.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
-#include "ast2ram/utility/ValueIndex.h"
 #include "ram/Call.h"
 #include "ram/Clear.h"
 #include "ram/Condition.h"
@@ -122,7 +118,8 @@ Own<ram::Statement> AstToRamTranslator::generateNonRecursiveRelation(const ast::
         }
 
         // Translate clause
-        Own<ram::Statement> rule = ClauseTranslator(*context, *symbolTable).translateClause(*clause, *clause);
+        Own<ram::Statement> rule =
+                ClauseTranslator::translateNonRecursiveClause(*context, *symbolTable, *clause);
 
         // Add logging
         if (Global::config().has("profile")) {
@@ -228,73 +225,6 @@ Own<ram::Statement> AstToRamTranslator::generateMergeRelations(
     return stmt;
 }
 
-Own<ast::Clause> AstToRamTranslator::createDeltaClause(
-        const ast::Clause* original, size_t recursiveAtomIdx) const {
-    auto recursiveVersion = souffle::clone(original);
-
-    // @new :- ...
-    const auto* headAtom = original->getHead();
-    recursiveVersion->getHead()->setQualifiedName(getNewRelationName(headAtom->getQualifiedName()));
-
-    // ... :- ..., @delta, ...
-    auto* recursiveAtom = ast::getBodyLiterals<ast::Atom>(*recursiveVersion).at(recursiveAtomIdx);
-    recursiveAtom->setQualifiedName(getDeltaRelationName(recursiveAtom->getQualifiedName()));
-
-    // ... :- ..., !head.
-    if (headAtom->getArity() > 0) {
-        recursiveVersion->addToBody(mk<ast::Negation>(souffle::clone(headAtom)));
-    }
-
-    return recursiveVersion;
-}
-
-Own<ram::Statement> AstToRamTranslator::generateClauseVersion(const std::set<const ast::Relation*>& scc,
-        const ast::Clause* cl, size_t deltaAtomIdx, size_t version) const {
-    const auto& atoms = ast::getBodyLiterals<ast::Atom>(*cl);
-
-    // Modify the processed rule to use delta relation and write to new relation
-    auto fixedClause = createDeltaClause(cl, deltaAtomIdx);
-
-    // Replace wildcards with variables to reduce indices
-    nameUnnamedVariables(fixedClause.get());
-
-    // Add in negated deltas for later recursive relations to simulate prev construct
-    for (size_t j = deltaAtomIdx + 1; j < atoms.size(); j++) {
-        const auto* atomRelation = context->getAtomRelation(atoms[j]);
-        if (contains(scc, atomRelation)) {
-            auto deltaAtom = souffle::clone(ast::getBodyLiterals<ast::Atom>(*fixedClause)[j]);
-            deltaAtom->setQualifiedName(getDeltaRelationName(atomRelation->getQualifiedName()));
-            fixedClause->addToBody(mk<ast::Negation>(std::move(deltaAtom)));
-        }
-    }
-
-    // Translate the resultant clause as would be done normally
-    Own<ram::Statement> rule =
-            ClauseTranslator(*context, *symbolTable).translateClause(*fixedClause, *cl, version);
-
-    // Add loging
-    if (Global::config().has("profile")) {
-        const std::string& relationName = toString(cl->getHead()->getQualifiedName());
-        const auto& srcLocation = cl->getSrcLoc();
-        const std::string clauseText = stringify(toString(*cl));
-        const std::string logTimerStatement =
-                LogStatement::tRecursiveRule(relationName, version, srcLocation, clauseText);
-        const std::string logSizeStatement =
-                LogStatement::nRecursiveRule(relationName, version, srcLocation, clauseText);
-        rule = mk<ram::LogRelationTimer>(
-                std::move(rule), logTimerStatement, getNewRelationName(cl->getHead()->getQualifiedName()));
-    }
-
-    // Add debug info
-    std::ostringstream ds;
-    ds << toString(*cl) << "\nin file ";
-    ds << cl->getSrcLoc();
-    rule = mk<ram::DebugInfo>(std::move(rule), ds.str());
-
-    // Add to loop body
-    return mk<ram::Sequence>(std::move(rule));
-}
-
 Own<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
         const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const {
     assert(contains(scc, rel) && "relation should belong to scc");
@@ -307,30 +237,9 @@ Own<ram::Statement> AstToRamTranslator::translateRecursiveClauses(
             continue;
         }
 
-        // Create each version
-        int version = 0;
-        const auto& atoms = ast::getBodyLiterals<ast::Atom>(*cl);
-        for (size_t i = 0; i < atoms.size(); i++) {
-            const auto* atom = atoms[i];
-
-            // Only interested in atoms within the same SCC
-            if (!contains(scc, context->getAtomRelation(atom))) {
-                continue;
-            }
-
-            appendStmt(result, generateClauseVersion(scc, cl, i, version));
-
-            // increment version counter
-            version++;
-        }
-
-        // Check that the correct number of versions have been created
-        if (cl->getExecutionPlan() != nullptr) {
-            int maxVersion = -1;
-            for (auto const& cur : cl->getExecutionPlan()->getOrders()) {
-                maxVersion = std::max(cur.first, maxVersion);
-            }
-            assert(version > maxVersion && "missing clause versions");
+        auto clauseVersions = ClauseTranslator::translateRecursiveClause(*context, *symbolTable, cl, scc);
+        for (auto& clauseVersion : clauseVersions) {
+            appendStmt(result, std::move(clauseVersion));
         }
     }
 
@@ -460,77 +369,6 @@ Own<ram::Statement> AstToRamTranslator::generateRecursiveStratum(
     return mk<ram::Sequence>(std::move(result));
 }
 
-bool AstToRamTranslator::removeADTs(ast::TranslationUnit& tu) {
-    struct ADTsFuneral : public ast::NodeMapper {
-        mutable bool changed{false};
-        const ast::analysis::SumTypeBranchesAnalysis& sumTypesBranches;
-
-        ADTsFuneral(const ast::TranslationUnit& translationUnit)
-                : sumTypesBranches(*translationUnit.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>()) {}
-
-        Own<ast::Node> operator()(Own<ast::Node> node) const override {
-            // Rewrite sub-expressions first
-            node->apply(*this);
-
-            if (!isA<ast::BranchInit>(node)) {
-                return node;
-            }
-
-            changed = true;
-            auto& adt = *as<ast::BranchInit>(node);
-            auto& type = sumTypesBranches.unsafeGetType(adt.getConstructor());
-            auto& branches = type.getBranches();
-
-            // Find branch ID.
-            ast::analysis::AlgebraicDataType::Branch searchDummy{adt.getConstructor(), {}};
-            auto iterToBranch = std::lower_bound(branches.begin(), branches.end(), searchDummy,
-                    [](const ast::analysis::AlgebraicDataType::Branch& left,
-                            const ast::analysis::AlgebraicDataType::Branch& right) {
-                        return left.name < right.name;
-                    });
-
-            // Branch id corresponds to the position in lexicographical ordering.
-            auto branchID = std::distance(std::begin(branches), iterToBranch);
-
-            if (isADTEnum(type)) {
-                auto branchTag = mk<ast::NumericConstant>(branchID);
-                branchTag->setFinalType(ast::NumericConstant::Type::Int);
-                return branchTag;
-            } else {
-                // Collect branch arguments
-                VecOwn<ast::Argument> branchArguments;
-                for (auto* arg : adt.getArguments()) {
-                    branchArguments.emplace_back(arg->clone());
-                }
-
-                // Branch is stored either as [branch_id, [arguments]]
-                // or [branch_id, argument] in case of a single argument.
-                auto branchArgs = [&]() -> Own<ast::Argument> {
-                    if (branchArguments.size() != 1) {
-                        return mk<ast::Argument, ast::RecordInit>(std::move(branchArguments));
-                    } else {
-                        return std::move(branchArguments.at(0));
-                    }
-                }();
-
-                // Arguments for the resulting record [branch_id, branch_args].
-                VecOwn<ast::Argument> finalRecordArgs;
-
-                auto branchTag = mk<ast::NumericConstant>(branchID);
-                branchTag->setFinalType(ast::NumericConstant::Type::Int);
-                finalRecordArgs.push_back(std::move(branchTag));
-                finalRecordArgs.push_back(std::move(branchArgs));
-
-                return mk<ast::RecordInit>(std::move(finalRecordArgs), adt.getSrcLoc());
-            }
-        }
-    };
-
-    ADTsFuneral mapper(tu);
-    tu.getProgram().apply(mapper);
-    return mapper.changed;
-}
-
 Own<ram::Statement> AstToRamTranslator::generateLoadRelation(const ast::Relation* relation) const {
     VecOwn<ram::Statement> loadStmts;
     for (const auto* load : context->getLoadDirectives(relation->getQualifiedName())) {
@@ -618,27 +456,6 @@ VecOwn<ram::Relation> AstToRamTranslator::createRamRelations(const std::vector<s
     return ramRelations;
 }
 
-void AstToRamTranslator::finaliseAstTypes(ast::TranslationUnit& tu) {
-    auto& program = tu.getProgram();
-    const auto* polyAnalysis = tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
-    visitDepthFirst(program, [&](const ast::NumericConstant& nc) {
-        const_cast<ast::NumericConstant&>(nc).setFinalType(polyAnalysis->getInferredType(&nc));
-    });
-    visitDepthFirst(program, [&](const ast::Aggregator& aggr) {
-        const_cast<ast::Aggregator&>(aggr).setFinalType(polyAnalysis->getOverloadedOperator(&aggr));
-    });
-    visitDepthFirst(program, [&](const ast::BinaryConstraint& bc) {
-        const_cast<ast::BinaryConstraint&>(bc).setFinalType(polyAnalysis->getOverloadedOperator(&bc));
-    });
-    visitDepthFirst(program, [&](const ast::IntrinsicFunctor& inf) {
-        const_cast<ast::IntrinsicFunctor&>(inf).setFinalOpType(polyAnalysis->getOverloadedFunctionOp(&inf));
-        const_cast<ast::IntrinsicFunctor&>(inf).setFinalReturnType(context->getFunctorReturnType(&inf));
-    });
-    visitDepthFirst(program, [&](const ast::UserDefinedFunctor& udf) {
-        const_cast<ast::UserDefinedFunctor&>(udf).setFinalReturnType(context->getFunctorReturnType(&udf));
-    });
-}
-
 Own<ram::Sequence> AstToRamTranslator::generateProgram(const ast::TranslationUnit& translationUnit) {
     // Check if trivial program
     if (context->getNumberOfSCCs() == 0) {
@@ -678,25 +495,11 @@ Own<ram::Sequence> AstToRamTranslator::generateProgram(const ast::TranslationUni
     return mk<ram::Sequence>(std::move(res));
 }
 
-void AstToRamTranslator::preprocessAstProgram(ast::TranslationUnit& tu) {
-    // Finalise polymorphic types in the AST
-    finaliseAstTypes(tu);
-
-    // Replace ADTs with record representatives
-    removeADTs(tu);
-}
-
 Own<ram::TranslationUnit> AstToRamTranslator::translateUnit(ast::TranslationUnit& tu) {
-    // Start timer
-    auto ram_start = std::chrono::high_resolution_clock::now();
-
     /* -- Set-up -- */
-    // Set up the translator
+    auto ram_start = std::chrono::high_resolution_clock::now();
     symbolTable = mk<SymbolTable>();
     context = mk<TranslatorContext>(tu);
-
-    // Run the AST preprocessor
-    preprocessAstProgram(tu);
 
     /* -- Translation -- */
     // Generate the RAM program code

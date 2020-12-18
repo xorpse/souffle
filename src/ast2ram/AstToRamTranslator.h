@@ -28,7 +28,6 @@ class SymbolTable;
 
 namespace souffle::ast {
 class Clause;
-class Program;
 class Relation;
 class TranslationUnit;
 }  // namespace souffle::ast
@@ -60,7 +59,6 @@ protected:
     Own<ram::Relation> createRamRelation(
             const ast::Relation* baseRelation, std::string ramRelationName) const;
     VecOwn<ram::Relation> createRamRelations(const std::vector<size_t>& sccOrdering) const;
-    virtual Own<ast::Clause> createDeltaClause(const ast::Clause* original, size_t recursiveAtomIdx) const;
     Own<ram::Statement> generateClauseVersion(const std::set<const ast::Relation*>& scc,
             const ast::Clause* cl, size_t deltaAtomIdx, size_t version) const;
     Own<ram::Statement> translateRecursiveClauses(
@@ -91,18 +89,6 @@ protected:
     Own<ram::Statement> generateClearRelation(const ast::Relation* relation) const;
     Own<ram::Statement> generateMergeRelations(
             const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const;
-
-    /** -- AST preprocessing -- */
-
-    /** Main general preprocessor */
-    virtual void preprocessAstProgram(ast::TranslationUnit& tu);
-
-    /** Replace ADTs with special records */
-    bool removeADTs(ast::TranslationUnit& tu);
-
-    /** Finalise the types of polymorphic objects */
-    // TODO (azreika): should be removed once the translator is refactored to avoid cloning
-    void finaliseAstTypes(ast::TranslationUnit& tu);
 
 private:
     std::map<std::string, Own<ram::Statement>> ramSubroutines;

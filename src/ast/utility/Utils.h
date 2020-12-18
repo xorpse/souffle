@@ -264,6 +264,14 @@ Clause* cloneHead(const Clause* clause);
 Clause* reorderAtoms(const Clause* clause, const std::vector<unsigned int>& newOrder);
 
 /**
+ * Reorders a vector of atoms to be in the given order.
+ *
+ * @param atoms atoms to reorder
+ * @param newOrder new order of atoms; atoms[i] = atoms[newOrder[i]]
+ */
+std::vector<Atom*> reorderAtoms(const std::vector<Atom*>& atoms, const std::vector<unsigned int>& newOrder);
+
+/**
  * Negate an ast constraint
  *
  * @param constraint constraint that will be negated

@@ -50,13 +50,11 @@ souffle_sources = \
         ast/Pragma.h                                       \
         ast/Program.cpp                                    \
         ast/Program.h                                      \
-        ast/ProvenanceNegation.h                           \
         ast/QualifiedName.h                                \
         ast/RecordInit.h                                   \
         ast/RecordType.h                                   \
         ast/Relation.h                                     \
         ast/StringConstant.h                               \
-        ast/SubroutineArgument.h                           \
         ast/SubsetType.h                                   \
         ast/Term.h                                         \
         ast/TranslationUnit.h                              \
@@ -203,6 +201,8 @@ souffle_sources = \
         ast2ram/ConstraintTranslator.h                     \
         ast2ram/ProvenanceClauseTranslator.cpp             \
         ast2ram/ProvenanceClauseTranslator.h               \
+        ast2ram/ProvenanceSubproofGenerator.cpp            \
+        ast2ram/ProvenanceSubproofGenerator.h              \
         ast2ram/ProvenanceTranslator.cpp                   \
         ast2ram/ProvenanceTranslator.h                     \
         ast2ram/utility/Location.h                         \

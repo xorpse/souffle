@@ -83,12 +83,8 @@ public:
     }
 
     Aggregator* clone() const override {
-        auto* copy = new Aggregator(
+        return new Aggregator(
                 baseOperator, souffle::clone(targetExpression), souffle::clone(body), getSrcLoc());
-        if (finalTranslatorType.has_value()) {
-            copy->setFinalType(finalTranslatorType.value());
-        }
-        return copy;
     }
 
     void apply(const NodeMapper& map) override {
@@ -98,14 +94,6 @@ public:
         for (auto& cur : body) {
             cur = map(std::move(cur));
         }
-    }
-
-    void setFinalType(AggregateOp newType) {
-        finalTranslatorType = newType;
-    }
-
-    std::optional<AggregateOp> getFinalType() const {
-        return finalTranslatorType;
     }
 
 protected:
@@ -132,9 +120,6 @@ private:
 
     /** Body literal of sub-query */
     VecOwn<Literal> body;
-
-    // TODO (azreika): remove after refactoring translator
-    std::optional<AggregateOp> finalTranslatorType;
 };
 
 }  // namespace souffle::ast

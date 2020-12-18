@@ -29,6 +29,7 @@ namespace souffle::ast {
 class Aggregator;
 class Argument;
 class Atom;
+class BranchInit;
 class Clause;
 class Constant;
 class IntrinsicFunctor;
@@ -47,38 +48,52 @@ class Statement;
 
 namespace souffle::ast2ram {
 
+class AstToRamTranslator;
 class TranslatorContext;
 class ValueIndex;
 
 class ClauseTranslator {
 public:
-    ClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable)
-            : context(context), symbolTable(symbolTable) {}
+    ClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable);
+    ~ClauseTranslator();
 
-    /** Generate RAM code for a clause */
-    Own<ram::Statement> translateClause(
-            const ast::Clause& clause, const ast::Clause& originalClause, int version = 0);
+    /** Entry points */
+    static Own<ram::Statement> translateNonRecursiveClause(
+            const TranslatorContext& context, SymbolTable& symbolTable, const ast::Clause& clause);
+
+    static VecOwn<ram::Statement> translateRecursiveClause(const TranslatorContext& context,
+            SymbolTable& symbolTable, const ast::Clause* clause, const std::set<const ast::Relation*>& scc);
 
 protected:
     const TranslatorContext& context;
     SymbolTable& symbolTable;
 
-    // value index to keep track of references in the loop nest
-    Own<ValueIndex> valueIndex = mk<ValueIndex>();
+    size_t version{0};
+    std::vector<ast::Atom*> sccAtoms{};
 
-    virtual Own<ram::Operation> createProjection(
-            const ast::Clause& clause, const ast::Clause& originalClause) const;
-    virtual Own<ram::Condition> createCondition(const ast::Clause& originalClause) const;
+    bool isRecursive() const;
 
-private:
-    std::vector<const ast::Argument*> generators;
-    std::vector<const ast::Node*> operators;
+    std::string getClauseString(const ast::Clause& clause) const;
 
-    Own<ast::Clause> getReorderedClause(const ast::Clause& clause, const int version) const;
+    std::string getClauseAtomName(const ast::Clause& clause, const ast::Atom* atom) const;
 
-    /** Operation levelling */
-    int addGeneratorLevel(const ast::Argument* arg);
-    int addOperatorLevel(const ast::Node* node);
+    virtual Own<ram::Operation> addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const;
+    virtual Own<ram::Operation> addNegatedDeltaAtom(Own<ram::Operation> op, const ast::Atom* atom) const;
+
+    Own<ValueIndex> valueIndex;
+
+    Own<ram::Statement> translateClause(const ast::Clause& clause);
+
+    /** Main clause translation */
+    virtual Own<ram::Statement> createRamFactQuery(const ast::Clause& clause) const;
+    virtual Own<ram::Statement> createRamRuleQuery(const ast::Clause& clause);
+
+    virtual Own<ram::Operation> createProjection(const ast::Clause& clause) const;
+    virtual Own<ram::Condition> createCondition(const ast::Clause& clause) const;
+
+    Own<ram::Statement> generateClauseVersion(
+            const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version);
+    std::vector<ast::Atom*> getAtomOrdering(const ast::Clause& clause) const;
 
     /** Indexing */
     void indexClause(const ast::Clause& clause);
@@ -89,40 +104,45 @@ private:
     void indexAggregatorBody(const ast::Aggregator& agg);
     void indexGenerator(const ast::Argument& arg);
 
-    /** Main clause translation */
-    Own<ram::Statement> createRamFactQuery(const ast::Clause& clause) const;
-    Own<ram::Statement> createRamRuleQuery(
-            const ast::Clause& clause, const ast::Clause& originalClause, int version);
-
     /** Core clause translation stages */
     Own<ram::Operation> addVariableBindingConstraints(Own<ram::Operation> op) const;
-    Own<ram::Operation> addBodyLiteralConstraints(const ast::Clause& clause, Own<ram::Operation> op) const;
-    Own<ram::Operation> addGeneratorLevels(Own<ram::Operation> op) const;
-    Own<ram::Operation> addVariableIntroductions(const ast::Clause& clause, const ast::Clause& originalClause,
-            int version, Own<ram::Operation> op);
-    Own<ram::Operation> addEntryPoint(const ast::Clause& originalClause, Own<ram::Operation> op) const;
+    virtual Own<ram::Operation> addBodyLiteralConstraints(
+            const ast::Clause& clause, Own<ram::Operation> op) const;
+    Own<ram::Operation> addGeneratorLevels(Own<ram::Operation> op, const ast::Clause& clause) const;
+    Own<ram::Operation> addVariableIntroductions(const ast::Clause& clause, Own<ram::Operation> op);
+    Own<ram::Operation> addEntryPoint(const ast::Clause& clause, Own<ram::Operation> op) const;
 
-    /** Helper methods */
-    Own<ram::Operation> addAtomScan(Own<ram::Operation> op, const ast::Atom* atom, const ast::Clause& clause,
-            const ast::Clause& originalClause, int curLevel, int version) const;
+    /** Levelling methods */
+    Own<ram::Operation> addAtomScan(
+            Own<ram::Operation> op, const ast::Atom* atom, const ast::Clause& clause, int curLevel) const;
     Own<ram::Operation> addRecordUnpack(
             Own<ram::Operation> op, const ast::RecordInit* rec, int curLevel) const;
+    Own<ram::Operation> addAdtUnpack(Own<ram::Operation> op, const ast::BranchInit* adt, int curLevel) const;
+
+    /** Helper methods */
     Own<ram::Operation> addConstantConstraints(
             size_t level, const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op) const;
     Own<ram::Operation> addEqualityCheck(
             Own<ram::Operation> op, Own<ram::Expression> lhs, Own<ram::Expression> rhs, bool isFloat) const;
-    Own<ram::Condition> getFunctionalDependencies(
-            const ast::Clause& clause, const ast::Relation* targetRelation) const;
+    Own<ram::Condition> getFunctionalDependencies(const ast::Clause& clause) const;
 
     /** Constant translation */
-    static RamDomain getConstantRamRepresentation(SymbolTable& symbolTable, const ast::Constant& constant);
-    static Own<ram::Expression> translateConstant(SymbolTable& symbolTable, const ast::Constant& constant);
+    RamDomain getConstantRamRepresentation(SymbolTable& symbolTable, const ast::Constant& constant) const;
+    Own<ram::Expression> translateConstant(SymbolTable& symbolTable, const ast::Constant& constant) const;
 
     /** Generator instantiation */
-    Own<ram::Operation> instantiateAggregator(
-            Own<ram::Operation> op, const ast::Aggregator* agg, int curLevel) const;
+    Own<ram::Operation> instantiateAggregator(Own<ram::Operation> op, const ast::Clause& clause,
+            const ast::Aggregator* agg, int curLevel) const;
     Own<ram::Operation> instantiateMultiResultFunctor(
             Own<ram::Operation> op, const ast::IntrinsicFunctor* inf, int curLevel) const;
+
+private:
+    std::vector<const ast::Argument*> generators;
+    std::vector<const ast::Node*> operators;
+
+    /** Operation levelling */
+    int addGeneratorLevel(const ast::Argument* arg);
+    int addOperatorLevel(const ast::Node* node);
 };
 
 }  // namespace souffle::ast2ram

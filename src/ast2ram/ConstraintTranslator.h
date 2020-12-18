@@ -25,7 +25,6 @@ namespace souffle::ast {
 class Atom;
 class BinaryConstraint;
 class Negation;
-class ProvenanceNegation;
 }  // namespace souffle::ast
 
 namespace souffle::ram {
@@ -48,7 +47,6 @@ public:
     /** -- Visitors -- */
     Own<ram::Condition> visitAtom(const ast::Atom&) override;
     Own<ram::Condition> visitBinaryConstraint(const ast::BinaryConstraint& binRel) override;
-    Own<ram::Condition> visitProvenanceNegation(const ast::ProvenanceNegation& neg) override;
     Own<ram::Condition> visitNegation(const ast::Negation& neg) override;
 
 private:
