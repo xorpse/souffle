@@ -499,8 +499,8 @@ Own<ram::Condition> ClauseTranslator::createCondition(const ast::Clause& clause)
 
     // add stopping criteria for nullary relations
     // (if it contains already the null tuple, don't re-compute)
-    if (head->getArity() == 0) {
-        return mk<ram::EmptinessCheck>(getClauseAtomName(clause, head));
+    if (isRecursive() && head->getArity() == 0) {
+        return mk<ram::EmptinessCheck>(getConcreteRelationName(head->getQualifiedName()));
     }
     return nullptr;
 }

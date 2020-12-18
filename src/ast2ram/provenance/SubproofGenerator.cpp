@@ -95,8 +95,8 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
     // Add all non-constraints, and then constraints
     std::vector<const ast::Constraint*> constraints;
     for (const auto* lit : clause.getBodyLiterals()) {
-        if (const auto* con = dynamic_cast<const ast::Constraint*>(lit)) {
-            constraints.push_back(con);
+        if (const auto* constraint = dynamic_cast<const ast::Constraint*>(lit)) {
+            constraints.push_back(constraint);
             continue;
         }
 
@@ -105,8 +105,8 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
         }
     }
 
-    for (const auto* con : constraints) {
-        if (auto condition = context.translateConstraint(symbolTable, *valueIndex, con)) {
+    for (const auto* constraint : constraints) {
+        if (auto condition = context.translateConstraint(symbolTable, *valueIndex, constraint)) {
             op = mk<ram::Filter>(std::move(condition), std::move(op));
         }
     }
@@ -136,7 +136,7 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
                     BinaryConstraintOp::EQ, std::move(lhs), mk<ram::SubroutineArgument>(i));
             op = mk<ram::Filter>(std::move(constraint), std::move(op));
         } else if (const auto* adt = dynamic_cast<const ast::BranchInit*>(arg)) {
-            // TODO: fill this out like record arguments
+            // TODO (azreika): fill this out like record arguments
             assert(false && adt && "unhandled");
         }
     }
@@ -189,9 +189,9 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
         }
     }
 
-    for (const auto* con : ast::getBodyLiterals<const ast::BinaryConstraint>(clause)) {
-        values.push_back(context.translateValue(symbolTable, *valueIndex, con->getLHS()));
-        values.push_back(context.translateValue(symbolTable, *valueIndex, con->getRHS()));
+    for (const auto* constraint : ast::getBodyLiterals<const ast::BinaryConstraint>(clause)) {
+        values.push_back(context.translateValue(symbolTable, *valueIndex, constraint->getLHS()));
+        values.push_back(context.translateValue(symbolTable, *valueIndex, constraint->getRHS()));
     }
 
     // final provenance negation
@@ -223,7 +223,7 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
             values.push_back(context.translateValue(symbolTable, *valueIndex, rec));
             values.push_back(mk<ram::SubroutineArgument>(i));
         } else if (const auto* adt = dynamic_cast<const ast::BranchInit*>(arg)) {
-            // TODO: fill this out like record arguments
+            // TODO (azreika): fill this out like record arguments
             assert(false && adt && "unhandled");
         }
     }
