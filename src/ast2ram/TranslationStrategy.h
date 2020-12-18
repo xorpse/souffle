@@ -34,18 +34,18 @@ class ValueTranslator;
 class TranslationStrategy {
 public:
     /** AST translation unit -> RAM translation unit translator */
-    virtual Own<UnitTranslator> createUnitTranslator() const = 0;
+    virtual UnitTranslator* createUnitTranslator() const = 0;
 
     /** AST clause -> RAM statement translator */
-    virtual Own<ClauseTranslator> createClauseTranslator(
+    virtual ClauseTranslator* createClauseTranslator(
             const TranslatorContext& context, SymbolTable& symbolTable) const = 0;
 
     /** AST literal -> RAM condition translator */
-    virtual Own<ConstraintTranslator> createConstraintTranslator(
+    virtual ConstraintTranslator* createConstraintTranslator(
             const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index) const = 0;
 
     /** AST argument -> RAM expression translator */
-    virtual Own<ValueTranslator> createValueTranslator(
+    virtual ValueTranslator* createValueTranslator(
             const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index) const = 0;
 };
 

@@ -40,6 +40,7 @@ class ClauseTranslator {
 public:
     ClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable)
             : context(context), symbolTable(symbolTable) {}
+    virtual ~ClauseTranslator() = default;
 
     virtual Own<ram::Statement> translateClause(const ast::Clause& clause) = 0;
     virtual Own<ram::Statement> generateClauseVersion(

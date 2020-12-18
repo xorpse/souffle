@@ -24,23 +24,23 @@
 
 namespace souffle::ast2ram::provenance {
 
-Own<ast2ram::UnitTranslator> TranslationStrategy::createUnitTranslator() const {
-    return mk<UnitTranslator>();
+ast2ram::UnitTranslator* TranslationStrategy::createUnitTranslator() const {
+    return new UnitTranslator();
 }
 
-Own<ast2ram::ClauseTranslator> TranslationStrategy::createClauseTranslator(
+ast2ram::ClauseTranslator* TranslationStrategy::createClauseTranslator(
         const TranslatorContext& context, SymbolTable& symbolTable) const {
-    return mk<ClauseTranslator>(context, symbolTable);
+    return new ClauseTranslator(context, symbolTable);
 }
 
-Own<ast2ram::ConstraintTranslator> TranslationStrategy::createConstraintTranslator(
+ast2ram::ConstraintTranslator* TranslationStrategy::createConstraintTranslator(
         const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index) const {
-    return mk<ast2ram::seminaive::ConstraintTranslator>(context, symbolTable, index);
+    return new ast2ram::seminaive::ConstraintTranslator(context, symbolTable, index);
 }
 
-Own<ast2ram::ValueTranslator> TranslationStrategy::createValueTranslator(
+ast2ram::ValueTranslator* TranslationStrategy::createValueTranslator(
         const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index) const {
-    return mk<ast2ram::seminaive::ValueTranslator>(context, symbolTable, index);
+    return new ast2ram::seminaive::ValueTranslator(context, symbolTable, index);
 }
 
 }  // namespace souffle::ast2ram::provenance

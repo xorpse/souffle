@@ -219,24 +219,30 @@ int TranslatorContext::getADTBranchId(const ast::BranchInit* adt) const {
 
 Own<ram::Statement> TranslatorContext::translateClause(
         SymbolTable& symbolTable, const ast::Clause& clause) const {
-    return translationStrategy->createClauseTranslator(*this, symbolTable)->translateClause(clause);
+    auto clauseTranslator =
+            Own<ClauseTranslator>(translationStrategy->createClauseTranslator(*this, symbolTable));
+    return clauseTranslator->translateClause(clause);
 }
 
 Own<ram::Statement> TranslatorContext::generateClauseVersion(SymbolTable& symbolTable,
         const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version) const {
-    return translationStrategy->createClauseTranslator(*this, symbolTable)
-            ->generateClauseVersion(clause, scc, version);
+    auto clauseTranslator =
+            Own<ClauseTranslator>(translationStrategy->createClauseTranslator(*this, symbolTable));
+    return clauseTranslator->generateClauseVersion(clause, scc, version);
 }
 
 Own<ram::Expression> TranslatorContext::translateValue(
         SymbolTable& symbolTable, const ValueIndex& index, const ast::Argument* arg) const {
-    return translationStrategy->createValueTranslator(*this, symbolTable, index)->translateValue(arg);
+    auto valueTranslator =
+            Own<ValueTranslator>(translationStrategy->createValueTranslator(*this, symbolTable, index));
+    return valueTranslator->translateValue(arg);
 }
 
 Own<ram::Condition> TranslatorContext::translateConstraint(
         SymbolTable& symbolTable, const ValueIndex& index, const ast::Literal* lit) const {
-    return translationStrategy->createConstraintTranslator(*this, symbolTable, index)
-            ->translateConstraint(lit);
+    auto constraintTranslator = Own<ConstraintTranslator>(
+            translationStrategy->createConstraintTranslator(*this, symbolTable, index));
+    return constraintTranslator->translateConstraint(lit);
 }
 
 }  // namespace souffle::ast2ram

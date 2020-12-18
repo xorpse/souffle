@@ -36,12 +36,12 @@ namespace souffle::ast2ram::seminaive {
 
 class TranslationStrategy : public ast2ram::TranslationStrategy {
 public:
-    Own<ast2ram::UnitTranslator> createUnitTranslator() const override;
-    Own<ast2ram::ClauseTranslator> createClauseTranslator(
+    ast2ram::UnitTranslator* createUnitTranslator() const override;
+    ast2ram::ClauseTranslator* createClauseTranslator(
             const TranslatorContext& context, SymbolTable& symbolTable) const override;
-    Own<ast2ram::ConstraintTranslator> createConstraintTranslator(const TranslatorContext& context,
+    ast2ram::ConstraintTranslator* createConstraintTranslator(const TranslatorContext& context,
             SymbolTable& symbolTable, const ValueIndex& index) const override;
-    Own<ast2ram::ValueTranslator> createValueTranslator(const TranslatorContext& context,
+    ast2ram::ValueTranslator* createValueTranslator(const TranslatorContext& context,
             SymbolTable& symbolTable, const ValueIndex& index) const override;
 };
 

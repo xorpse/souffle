@@ -38,6 +38,7 @@ class TranslatorContext;
 class UnitTranslator {
 public:
     UnitTranslator() = default;
+    virtual ~UnitTranslator() = default;
 
     virtual Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu) = 0;
 

@@ -41,6 +41,7 @@ class ConstraintTranslator : public ast::Visitor<Own<ram::Condition>> {
 public:
     ConstraintTranslator(const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index)
             : context(context), symbolTable(symbolTable), index(index) {}
+    virtual ~ConstraintTranslator() = default;
 
     virtual Own<ram::Condition> translateConstraint(const ast::Literal* lit) = 0;
 

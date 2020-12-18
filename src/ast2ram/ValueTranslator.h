@@ -41,6 +41,7 @@ class ValueTranslator : public ast::Visitor<Own<ram::Expression>> {
 public:
     ValueTranslator(const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index)
             : context(context), symbolTable(symbolTable), index(index) {}
+    virtual ~ValueTranslator() = default;
 
     virtual Own<ram::Expression> translateValue(const ast::Argument* arg) = 0;
 
