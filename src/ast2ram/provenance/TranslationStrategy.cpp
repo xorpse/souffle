@@ -20,21 +20,21 @@
 
 namespace souffle::ast2ram::provenance {
 
-Own<UnitTranslator> TranslationStrategy::createUnitTranslator() const {
+Own<ast2ram::UnitTranslator> TranslationStrategy::createUnitTranslator() const {
     return mk<UnitTranslator>();
 }
 
-Own<ClauseTranslator> TranslationStrategy::createClauseTranslator(
+Own<ast2ram::ClauseTranslator> TranslationStrategy::createClauseTranslator(
         const TranslatorContext& context, SymbolTable& symbolTable) const {
     return mk<ClauseTranslator>(context, symbolTable);
 }
 
-Own<ConstraintTranslator> TranslationStrategy::createConstraintTranslator(
+Own<ast2ram::ConstraintTranslator> TranslationStrategy::createConstraintTranslator(
         const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index) const {
     return mk<ast2ram::seminaive::ConstraintTranslator>(context, symbolTable, index);
 }
 
-Own<ValueTranslator> TranslationStrategy::createValueTranslator(
+Own<ast2ram::ValueTranslator> TranslationStrategy::createValueTranslator(
         const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index) const {
     return mk<ast2ram::seminaive::ValueTranslator>(context, symbolTable, index);
 }

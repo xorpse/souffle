@@ -20,21 +20,21 @@
 
 namespace souffle::ast2ram::seminaive {
 
-Own<UnitTranslator> TranslationStrategy::createUnitTranslator() const {
+Own<ast2ram::UnitTranslator> TranslationStrategy::createUnitTranslator() const {
     return mk<UnitTranslator>();
 }
 
-Own<ClauseTranslator> TranslatorStrategy::createClauseTranslator(
+Own<ast2ram::ClauseTranslator> TranslationStrategy::createClauseTranslator(
         const TranslatorContext& context, SymbolTable& symbolTable) const {
     return mk<ClauseTranslator>(context, symbolTable);
 }
 
-Own<ConstraintTranslator> TranslatorStrategy::createConstraintTranslator(
+Own<ast2ram::ConstraintTranslator> TranslationStrategy::createConstraintTranslator(
         const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index) const {
     return mk<ConstraintTranslator>(context, symbolTable, index);
 }
 
-Own<ValueTranslator> TranslatorStrategy::createValueTranslator(
+Own<ast2ram::ValueTranslator> TranslationStrategy::createValueTranslator(
         const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index) const {
     return mk<ValueTranslator>(context, symbolTable, index);
 }
