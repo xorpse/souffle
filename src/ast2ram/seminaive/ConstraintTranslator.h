@@ -44,8 +44,7 @@ public:
     ConstraintTranslator(const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index)
             : ast2ram::ConstraintTranslator(context, symbolTable, index) {}
 
-    static Own<ram::Condition> translate(const TranslatorContext& context, SymbolTable& symbolTable,
-            const ValueIndex& index, const ast::Literal* lit);
+    Own<ram::Condition> translateConstraint(const ast::Literal* lit) override;
 
     /** -- Visitors -- */
     Own<ram::Condition> visitAtom(const ast::Atom&) override;

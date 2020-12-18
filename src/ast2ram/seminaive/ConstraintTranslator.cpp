@@ -30,8 +30,7 @@
 
 namespace souffle::ast2ram::seminaive {
 
-Own<ram::Condition> ConstraintTranslator::translate(const TranslatorContext& context,
-        SymbolTable& symbolTable, const ValueIndex& index, const ast::Literal* lit) {
+Own<ram::Condition> ConstraintTranslator::translateConstraint(const ast::Literal* lit) {
     assert(lit != nullptr && "literal should be defined");
     return ConstraintTranslator(context, symbolTable, index)(*lit);
 }
