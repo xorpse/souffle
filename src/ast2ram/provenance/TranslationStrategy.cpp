@@ -24,9 +24,6 @@
 
 namespace souffle::ast2ram::provenance {
 
-TranslationStrategy::TranslationStrategy() = default;
-TranslationStrategy::~TranslationStrategy() = default;
-
 Own<ast2ram::UnitTranslator> TranslationStrategy::createUnitTranslator() const {
     return mk<UnitTranslator>();
 }

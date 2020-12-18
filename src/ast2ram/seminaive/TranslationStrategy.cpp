@@ -24,8 +24,7 @@
 
 namespace souffle::ast2ram::seminaive {
 
-TranslationStrategy::TranslationStrategy() = default;
-TranslationStrategy::~TranslationStrategy() = default;
+// TODO: check this overload
 
 Own<ast2ram::UnitTranslator> TranslationStrategy::createUnitTranslator() const {
     return mk<UnitTranslator>();

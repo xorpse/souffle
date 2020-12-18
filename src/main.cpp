@@ -587,8 +587,8 @@ int main(int argc, char** argv) {
     /* translate AST to RAM */
     debugReport.startSection();
     // TODO: add in provenance
-    auto ramTranslationUnit = ast2ram::seminaive::TranslationStrategy().createUnitTranslator()->translateUnit(
-            *astTranslationUnit);
+    auto unitTranslator = ast2ram::seminaive::UnitTranslator();
+    auto ramTranslationUnit = unitTranslator.translateUnit(*astTranslationUnit);
     debugReport.endSection("ast-to-ram", "Translate AST to RAM");
 
     // Apply RAM transforms
