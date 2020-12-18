@@ -32,6 +32,8 @@
 #include "ast/analysis/TypeSystem.h"
 #include "ast/utility/SipsMetric.h"
 #include "ast/utility/Utils.h"
+#include "ast2ram/ClauseTranslator.h"
+#include "ast2ram/ConstraintTranslator.h"
 #include "ast2ram/ValueTranslator.h"
 #include "ast2ram/provenance/TranslationStrategy.h"
 #include "ast2ram/seminaive/TranslationStrategy.h"

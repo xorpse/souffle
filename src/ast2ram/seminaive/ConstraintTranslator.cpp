@@ -40,8 +40,8 @@ Own<ram::Condition> ConstraintTranslator::visitAtom(const ast::Atom&) {
 }
 
 Own<ram::Condition> ConstraintTranslator::visitBinaryConstraint(const ast::BinaryConstraint& binRel) {
-    auto valLHS = ValueTranslator::translate(context, symbolTable, index, binRel.getLHS());
-    auto valRHS = ValueTranslator::translate(context, symbolTable, index, binRel.getRHS());
+    auto valLHS = mk<ValueTranslator>(context, symbolTable, index)->translateValue(binRel.getLHS());
+    auto valRHS = mk<ValueTranslator>(context, symbolTable, index)->translateValue(binRel.getRHS());
     return mk<ram::Constraint>(
             context.getOverloadedBinaryConstraintOperator(&binRel), std::move(valLHS), std::move(valRHS));
 }
@@ -61,7 +61,8 @@ Own<ram::Condition> ConstraintTranslator::visitNegation(const ast::Negation& neg
     VecOwn<ram::Expression> values;
     auto args = atom->getArguments();
     for (size_t i = 0; i < arity; i++) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, index, args[i]));
+        auto ramVal = mk<ValueTranslator>(context, symbolTable, index)->translateValue(args[i]);
+        values.push_back(std::move(ramVal));
     }
     for (size_t i = 0; i < auxiliaryArity; i++) {
         values.push_back(mk<ram::UndefValue>());

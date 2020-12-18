@@ -12,7 +12,7 @@
  *
  ***********************************************************************/
 
-#include "ast2ram/ValueTranslator.h"
+#include "ast2ram/seminaive/ValueTranslator.h"
 #include "ast/IntrinsicFunctor.h"
 #include "ast/NumericConstant.h"
 #include "ast/RecordInit.h"
