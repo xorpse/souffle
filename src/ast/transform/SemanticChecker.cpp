@@ -383,9 +383,8 @@ void SemanticCheckerImpl::checkArgument(const Argument& arg) {
         }
 
         if (auto const* udFunc = dynamic_cast<UserDefinedFunctor const*>(func)) {
-
-            auto const & name = udFunc->getName();
-            auto const * udfd = getFunctorDeclaration(program, name);
+            auto const& name = udFunc->getName();
+            auto const* udfd = getFunctorDeclaration(program, name);
 
             if (udfd == nullptr) {
                 report.addError("Undefined user-defined functor " + name, udFunc->getSrcLoc());
