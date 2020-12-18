@@ -46,7 +46,7 @@ namespace souffle::ast2ram::provenance {
 
 Own<ram::Sequence> UnitTranslator::generateProgram(const ast::TranslationUnit& translationUnit) {
     // do the regular translation
-    auto ramProgram = AstToRamTranslator::generateProgram(translationUnit);
+    auto ramProgram = seminaive::UnitTranslator::generateProgram(translationUnit);
 
     // add subroutines for each clause
     addProvenanceClauseSubroutines(context->getProgram());
