@@ -32,8 +32,7 @@
 #include "ast/analysis/TypeSystem.h"
 #include "ast/utility/SipsMetric.h"
 #include "ast/utility/Utils.h"
-#include "ast2ram/provenance/TranslationStrategy.h"
-#include "ast2ram/seminaive/TranslationStrategy.h"
+#include "ast2ram/ValueTranslator.h"
 #include "souffle/utility/FunctionalUtil.h"
 #include "souffle/utility/StringUtil.h"
 #include <set>
@@ -213,7 +212,7 @@ int TranslatorContext::getADTBranchId(const ast::BranchInit* adt) const {
 
 Own<ram::Expression> TranslatorContext::translateValue(
         SymbolTable& symbolTable, const ValueIndex& index, const ast::Argument* arg) const {
-    return translationStrategy->createValueTranslator(*this, symbolTable, index)->translate(arg);
+    return translationStrategy->createValueTranslator(*this, symbolTable, index)->translateValue(arg);
 }
 
 }  // namespace souffle::ast2ram

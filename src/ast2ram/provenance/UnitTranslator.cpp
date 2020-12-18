@@ -42,7 +42,7 @@
 #include "souffle/utility/StringUtil.h"
 #include <sstream>
 
-namespace souffle::ast2ram {
+namespace souffle::ast2ram::provenance {
 
 Own<ram::Sequence> UnitTranslator::generateProgram(const ast::TranslationUnit& translationUnit) {
     // do the regular translation
@@ -258,4 +258,4 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
     return mk<ram::Sequence>(std::move(searchSequence));
 }
 
-}  // namespace souffle::ast2ram
+}  // namespace souffle::ast2ram::provenance

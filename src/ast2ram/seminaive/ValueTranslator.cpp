@@ -36,7 +36,7 @@
 #include "souffle/SymbolTable.h"
 #include "souffle/utility/StringUtil.h"
 
-namespace souffle::ast2ram {
+namespace souffle::ast2ram::seminaive {
 
 Own<ram::Expression> ValueTranslator::translateValue(const ast::Argument* arg) {
     assert(arg != nullptr && "arg should be defined");
@@ -150,4 +150,4 @@ Own<ram::Expression> ValueTranslator::visitAggregator(const ast::Aggregator& agg
     return makeRamTupleElement(index.getGeneratorLoc(agg));
 }
 
-}  // namespace souffle::ast2ram
+}  // namespace souffle::ast2ram::seminaive
