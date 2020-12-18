@@ -18,6 +18,8 @@
 #include "ast2ram/seminaive/ConstraintTranslator.h"
 #include "ast2ram/seminaive/ValueTranslator.h"
 #include "ast2ram/utility/TranslatorContext.h"
+#include "ram/Condition.h"
+#include "ram/Expression.h"
 #include "souffle/SymbolTable.h"
 
 namespace souffle::ast2ram::provenance {

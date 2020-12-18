@@ -37,6 +37,9 @@
 #include "ast2ram/ValueTranslator.h"
 #include "ast2ram/provenance/TranslationStrategy.h"
 #include "ast2ram/seminaive/TranslationStrategy.h"
+#include "ram/Condition.h"
+#include "ram/Expression.h"
+#include "ram/Statement.h"
 #include "souffle/utility/FunctionalUtil.h"
 #include "souffle/utility/StringUtil.h"
 #include <set>

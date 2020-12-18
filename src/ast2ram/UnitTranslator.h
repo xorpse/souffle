@@ -39,7 +39,7 @@ class UnitTranslator {
 public:
     UnitTranslator() = default;
 
-    virtual Own<ram::TranslationUnit> translateUnit(const ast::TranslationUnit& tu) = 0;
+    virtual Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu) = 0;
 
 protected:
     Own<TranslatorContext> context;
