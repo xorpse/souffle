@@ -121,6 +121,27 @@ VecOwn<ram::Statement> ClauseTranslator::translateRecursiveClause(const Translat
     return clauseVersions;
 }
 
+std::string ClauseTranslator::getClauseString(const ast::Clause& clause) const {
+    auto renamedClone = souffle::clone(&clause);
+
+    // Update the head atom
+    renamedClone->getHead()->setQualifiedName(getClauseAtomName(clause, clause.getHead()));
+
+    // Update the body atoms
+    const auto& cloneAtoms = ast::getBodyLiterals<ast::Atom>(*renamedClone);
+    const auto& originalAtoms = ast::getBodyLiterals<ast::Atom>(clause);
+    assert(originalAtoms.size() == cloneAtoms.size() && "clone should have same atoms");
+    for (size_t i = 0; i < cloneAtoms.size(); i++) {
+        auto cloneAtom = cloneAtoms.at(i);
+        const auto* originalAtom = originalAtoms.at(i);
+        assert(originalAtom->getQualifiedName() == cloneAtom->getQualifiedName() &&
+                "atom sequence in clone should match");
+        cloneAtom->setQualifiedName(getClauseAtomName(clause, originalAtom));
+    }
+
+    return toString(*renamedClone);
+}
+
 Own<ram::Statement> ClauseTranslator::generateClauseVersion(
         const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version) {
     // TODO: nameUnnamedVariables(clause) to reduce indices
@@ -135,7 +156,7 @@ Own<ram::Statement> ClauseTranslator::generateClauseVersion(
 
     // Add logging
     if (Global::config().has("profile")) {
-        const std::string& relationName = toString(clause.getHead()->getQualifiedName());
+        const std::string& relationName = getConcreteRelationName(clause.getHead()->getQualifiedName());
         const auto& srcLocation = clause.getSrcLoc();
         const std::string clauseText = stringify(toString(clause));
         const std::string logTimerStatement =
@@ -274,8 +295,8 @@ Own<ram::Operation> ClauseTranslator::addAtomScan(
             ss << "@frequency-atom" << ';';
             ss << clause.getHead()->getQualifiedName() << ';';
             ss << version << ';';
-            ss << stringify(toString(clause)) << ';';
-            ss << stringify(toString(*atom)) << ';';
+            ss << stringify(getClauseString(clause)) << ';';
+            ss << stringify(getClauseAtomName(clause, atom)) << ';';
             ss << stringify(toString(clause)) << ';';
             ss << curLevel << ';';
         }
