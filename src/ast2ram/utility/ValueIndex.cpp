@@ -17,6 +17,7 @@
 
 #include "ast2ram/utility/ValueIndex.h"
 #include "ast/Aggregator.h"
+#include "ast/BranchInit.h"
 #include "ast/Variable.h"
 #include "ast2ram/utility/Location.h"
 #include "ram/Relation.h"
@@ -71,6 +72,15 @@ void ValueIndex::setRecordDefinition(const ast::RecordInit& init, int ident, int
 const Location& ValueIndex::getDefinitionPoint(const ast::RecordInit& init) const {
     assert(contains(recordDefinitionPoints, &init) && "undefined record");
     return recordDefinitionPoints.at(&init);
+}
+
+void ValueIndex::setAdtDefinition(const ast::BranchInit& adt, int ident, int pos) {
+    adtDefinitionPoints.insert({&adt, Location({ident, pos})});
+}
+
+const Location& ValueIndex::getDefinitionPoint(const ast::BranchInit& adt) const {
+    assert(contains(adtDefinitionPoints, &adt) && "undefined adt");
+    return adtDefinitionPoints.at(&adt);
 }
 
 bool ValueIndex::isGenerator(const int level) const {

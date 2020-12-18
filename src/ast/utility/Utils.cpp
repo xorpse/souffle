@@ -263,6 +263,23 @@ Clause* cloneHead(const Clause* clause) {
     return clone;
 }
 
+std::vector<Atom*> reorderAtoms(const std::vector<Atom*>& atoms, const std::vector<unsigned int>& newOrder) {
+    // Validate given order
+    assert(newOrder.size() == atoms.size());
+    std::vector<unsigned int> nopOrder;
+    for (unsigned int i = 0; i < atoms.size(); i++) {
+        nopOrder.push_back(i);
+    }
+    assert(std::is_permutation(nopOrder.begin(), nopOrder.end(), newOrder.begin()));
+
+    // Create the result
+    std::vector<Atom*> result(atoms.size());
+    for (size_t i = 0; i < atoms.size(); i++) {
+        result[i] = atoms[newOrder[i]];
+    }
+    return result;
+}
+
 Clause* reorderAtoms(const Clause* clause, const std::vector<unsigned int>& newOrder) {
     // Find all atom positions
     std::vector<unsigned int> atomPositions;

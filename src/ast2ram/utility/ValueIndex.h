@@ -25,6 +25,7 @@
 
 namespace souffle::ast {
 class Argument;
+class BranchInit;
 class RecordInit;
 class Variable;
 }  // namespace souffle::ast
@@ -52,6 +53,10 @@ public:
     void setRecordDefinition(const ast::RecordInit& init, int ident, int pos);
     const Location& getDefinitionPoint(const ast::RecordInit& init) const;
 
+    // -- adts --
+    void setAdtDefinition(const ast::BranchInit& adt, int ident, int pos);
+    const Location& getDefinitionPoint(const ast::BranchInit& adt) const;
+
     // -- generators (aggregates & some functors) --
     void setGeneratorLoc(const ast::Argument& arg, const Location& loc);
     const Location& getGeneratorLoc(const ast::Argument& arg) const;
@@ -67,6 +72,9 @@ private:
 
     // Map from record inits to definition point (i.e. bounding point)
     std::map<const ast::RecordInit*, Location> recordDefinitionPoints;
+
+    // Map from ADTs to definition point
+    std::map<const ast::BranchInit*, Location> adtDefinitionPoints;
 
     // Map from generative arguments to definition point
     std::map<const ast::Argument*, Location> generatorDefinitionPoints;

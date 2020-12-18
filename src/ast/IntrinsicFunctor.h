@@ -62,30 +62,7 @@ public:
     }
 
     IntrinsicFunctor* clone() const override {
-        auto* copy = new IntrinsicFunctor(function, souffle::clone(args), getSrcLoc());
-        if (finalTranslatorOpType.has_value()) {
-            copy->setFinalOpType(finalTranslatorOpType.value());
-        }
-        if (finalTranslatorReturnType.has_value()) {
-            copy->setFinalReturnType(finalTranslatorReturnType.value());
-        }
-        return copy;
-    }
-
-    void setFinalOpType(FunctorOp newType) {
-        finalTranslatorOpType = newType;
-    }
-
-    void setFinalReturnType(TypeAttribute newType) {
-        finalTranslatorReturnType = newType;
-    }
-
-    std::optional<FunctorOp> getFinalOpType() const {
-        return finalTranslatorOpType;
-    }
-
-    std::optional<TypeAttribute> getFinalReturnType() const {
-        return finalTranslatorReturnType;
+        return new IntrinsicFunctor(function, souffle::clone(args), getSrcLoc());
     }
 
 protected:
@@ -110,10 +87,6 @@ protected:
 
     /** Function */
     std::string function;
-
-    // TODO (azreika): remove after refactoring translator
-    std::optional<FunctorOp> finalTranslatorOpType;
-    std::optional<TypeAttribute> finalTranslatorReturnType;
 };
 
 }  // namespace souffle::ast
