@@ -118,6 +118,15 @@ std::vector<Clause*> getClauses(const Program& program, const Relation& rel);
 Relation* getRelation(const Program& program, const QualifiedName& name);
 
 /**
+ * Returns the functor declaration with the given name in the program.
+ *
+ * @param program the program
+ * @param name the name of the functor to search for
+ * @return the functor declaration if it exists; nullptr otherwise
+ */
+FunctorDeclaration* getFunctorDeclaration(const Program& program, const std::string& name);
+
+/**
  * Returns the set of directives associated with a given relation in a program.
  *
  * @param program the program

@@ -96,6 +96,11 @@ Relation* getRelation(const Program& program, const QualifiedName& name) {
     return getIf(program.getRelations(), [&](const Relation* r) { return r->getQualifiedName() == name; });
 }
 
+FunctorDeclaration* getFunctorDeclaration(const Program& program, const std::string& name) {
+    return getIf(program.getFunctorDeclarations(),
+            [&](const FunctorDeclaration* r) { return r->getName() == name; });
+}
+
 void removeRelation(TranslationUnit& tu, const QualifiedName& name) {
     Program& program = tu.getProgram();
     if (getRelation(program, name) != nullptr) {
