@@ -56,8 +56,13 @@
 #include "ast/transform/SemanticChecker.h"
 #include "ast/transform/SimplifyAggregateTargetExpression.h"
 #include "ast/transform/UniqueAggregationVariables.h"
-#include "ast2ram/AstToRamTranslator.h"
-#include "ast2ram/ProvenanceTranslator.h"
+#include "ast2ram/TranslationStrategy.h"
+#include "ast2ram/UnitTranslator.h"
+#include "ast2ram/provenance/TranslationStrategy.h"
+#include "ast2ram/provenance/UnitTranslator.h"
+#include "ast2ram/seminaive/TranslationStrategy.h"
+#include "ast2ram/seminaive/UnitTranslator.h"
+#include "ast2ram/utility/TranslatorContext.h"
 #include "config.h"
 #include "interpreter/Engine.h"
 #include "interpreter/ProgInterface.h"
@@ -584,9 +589,12 @@ int main(int argc, char** argv) {
     // ------- execution -------------
     /* translate AST to RAM */
     debugReport.startSection();
-    auto ramTranslationUnit = Global::config().has("provenance")
-                                      ? ast2ram::ProvenanceTranslator().translateUnit(*astTranslationUnit)
-                                      : ast2ram::AstToRamTranslator().translateUnit(*astTranslationUnit);
+    auto translationStrategy =
+            Global::config().has("provenance")
+                    ? mk<ast2ram::TranslationStrategy, ast2ram::provenance::TranslationStrategy>()
+                    : mk<ast2ram::TranslationStrategy, ast2ram::seminaive::TranslationStrategy>();
+    auto unitTranslator = Own<ast2ram::UnitTranslator>(translationStrategy->createUnitTranslator());
+    auto ramTranslationUnit = unitTranslator->translateUnit(*astTranslationUnit);
     debugReport.endSection("ast-to-ram", "Translate AST to RAM");
 
     // Apply RAM transforms

@@ -12,7 +12,7 @@
  *
  ***********************************************************************/
 
-#include "ast2ram/ValueTranslator.h"
+#include "ast2ram/seminaive/ValueTranslator.h"
 #include "ast/IntrinsicFunctor.h"
 #include "ast/NumericConstant.h"
 #include "ast/RecordInit.h"
@@ -36,16 +36,11 @@
 #include "souffle/SymbolTable.h"
 #include "souffle/utility/StringUtil.h"
 
-namespace souffle::ast2ram {
+namespace souffle::ast2ram::seminaive {
 
-Own<ram::Expression> ValueTranslator::translate(const TranslatorContext& context, SymbolTable& symbolTable,
-        const ValueIndex& index, const ast::Argument* arg) {
+Own<ram::Expression> ValueTranslator::translateValue(const ast::Argument* arg) {
     assert(arg != nullptr && "arg should be defined");
     return ValueTranslator(context, symbolTable, index)(*arg);
-}
-
-Own<ram::Expression> ValueTranslator::translateValue(const ast::Argument* arg) const {
-    return ValueTranslator::translate(context, symbolTable, index, arg);
 }
 
 Own<ram::Expression> ValueTranslator::visitVariable(const ast::Variable& var) {
@@ -155,4 +150,4 @@ Own<ram::Expression> ValueTranslator::visitAggregator(const ast::Aggregator& agg
     return makeRamTupleElement(index.getGeneratorLoc(agg));
 }
 
-}  // namespace souffle::ast2ram
+}  // namespace souffle::ast2ram::seminaive

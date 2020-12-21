@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "ast2ram/AstToRamTranslator.h"
+#include "ast2ram/seminaive/UnitTranslator.h"
 
 namespace souffle::ast {
 class Atom;
@@ -34,13 +34,14 @@ class SubroutineReturn;
 }  // namespace souffle::ram
 
 namespace souffle::ast2ram {
-
 class ValueIndex;
+}
 
-class ProvenanceTranslator : public AstToRamTranslator {
+namespace souffle::ast2ram::provenance {
+
+class UnitTranslator : public ast2ram::seminaive::UnitTranslator {
 public:
-    ProvenanceTranslator() = default;
-    ~ProvenanceTranslator() = default;
+    UnitTranslator() : ast2ram::seminaive::UnitTranslator() {}
 
 protected:
     Own<ram::Sequence> generateProgram(const ast::TranslationUnit& translationUnit) override;
@@ -65,4 +66,5 @@ private:
     Own<ram::Sequence> makeIfStatement(
             Own<ram::Condition> condition, Own<ram::Operation> trueOp, Own<ram::Operation> falseOp) const;
 };
-}  // namespace souffle::ast2ram
+
+}  // namespace souffle::ast2ram::provenance

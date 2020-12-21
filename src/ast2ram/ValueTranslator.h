@@ -10,29 +10,23 @@
  *
  * @file ValueTranslator.h
  *
+ * Abstract class providing an interface for translating an
+ * ast::Argument into an equivalent ram::Expression.
+ *
  ***********************************************************************/
 
 #pragma once
 
 #include "ast/utility/Visitor.h"
+#include "souffle/utility/ContainerUtil.h"
 
 namespace souffle {
 class SymbolTable;
 }
 
 namespace souffle::ast {
-class Aggregator;
-class Counter;
-class IntrinsicFunctor;
-class NilConstant;
-class NumericConstant;
-class RecordInit;
-class StringConstant;
-class SubroutineArgument;
-class UnnamedVariable;
-class UserDefinedFunctor;
-class Variable;
-}  // namespace souffle::ast
+class Argument;
+}
 
 namespace souffle::ram {
 class Expression;
@@ -40,7 +34,6 @@ class Expression;
 
 namespace souffle::ast2ram {
 
-class AstToRamTranslator;
 class TranslatorContext;
 class ValueIndex;
 
@@ -48,30 +41,14 @@ class ValueTranslator : public ast::Visitor<Own<ram::Expression>> {
 public:
     ValueTranslator(const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index)
             : context(context), symbolTable(symbolTable), index(index) {}
+    virtual ~ValueTranslator() = default;
 
-    static Own<ram::Expression> translate(const TranslatorContext& context, SymbolTable& symbolTable,
-            const ValueIndex& index, const ast::Argument* arg);
+    virtual Own<ram::Expression> translateValue(const ast::Argument* arg) = 0;
 
-    /** -- Visitors -- */
-    Own<ram::Expression> visitVariable(const ast::Variable& var) override;
-    Own<ram::Expression> visitUnnamedVariable(const ast::UnnamedVariable& var) override;
-    Own<ram::Expression> visitNumericConstant(const ast::NumericConstant& c) override;
-    Own<ram::Expression> visitStringConstant(const ast::StringConstant& c) override;
-    Own<ram::Expression> visitNilConstant(const ast::NilConstant& c) override;
-    Own<ram::Expression> visitTypeCast(const ast::TypeCast& typeCast) override;
-    Own<ram::Expression> visitIntrinsicFunctor(const ast::IntrinsicFunctor& inf) override;
-    Own<ram::Expression> visitUserDefinedFunctor(const ast::UserDefinedFunctor& udf) override;
-    Own<ram::Expression> visitCounter(const ast::Counter& ctr) override;
-    Own<ram::Expression> visitRecordInit(const ast::RecordInit& init) override;
-    Own<ram::Expression> visitBranchInit(const ast::BranchInit& init) override;
-    Own<ram::Expression> visitAggregator(const ast::Aggregator& agg) override;
-
-private:
+protected:
     const TranslatorContext& context;
     SymbolTable& symbolTable;
     const ValueIndex& index;
-
-    Own<ram::Expression> translateValue(const ast::Argument* arg) const;
 };
 
 }  // namespace souffle::ast2ram

@@ -8,13 +8,12 @@
 
 /************************************************************************
  *
- * @file ProvenanceClauseTranslator.cpp
+ * @file ClauseTranslator.cpp
  *
  ***********************************************************************/
 
-#include "ast2ram/ProvenanceClauseTranslator.h"
+#include "ast2ram/provenance/ClauseTranslator.h"
 #include "ast/Atom.h"
-#include "ast2ram/ValueTranslator.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ram/EmptinessCheck.h"
@@ -25,9 +24,9 @@
 #include "ram/ProvenanceExistenceCheck.h"
 #include "ram/UndefValue.h"
 
-namespace souffle::ast2ram {
+namespace souffle::ast2ram::provenance {
 
-Own<ram::Operation> ProvenanceClauseTranslator::addNegatedDeltaAtom(
+Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
         Own<ram::Operation> op, const ast::Atom* atom) const {
     size_t auxiliaryArity = context.getEvaluationArity(atom);
     assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
@@ -43,7 +42,7 @@ Own<ram::Operation> ProvenanceClauseTranslator::addNegatedDeltaAtom(
     VecOwn<ram::Expression> values;
     auto args = atom->getArguments();
     for (size_t i = 0; i < arity; i++) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[i]));
+        values.push_back(context.translateValue(symbolTable, *valueIndex, args[i]));
     }
     for (size_t i = 0; i < auxiliaryArity; i++) {
         values.push_back(mk<ram::UndefValue>());
@@ -53,8 +52,7 @@ Own<ram::Operation> ProvenanceClauseTranslator::addNegatedDeltaAtom(
             mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
 }
 
-Own<ram::Operation> ProvenanceClauseTranslator::addNegatedAtom(
-        Own<ram::Operation> op, const ast::Atom* atom) const {
+Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const {
     size_t auxiliaryArity = context.getEvaluationArity(atom);
     assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
     size_t arity = atom->getArity() - auxiliaryArity;
@@ -63,14 +61,14 @@ Own<ram::Operation> ProvenanceClauseTranslator::addNegatedAtom(
 
     auto args = atom->getArguments();
     for (size_t i = 0; i < arity; i++) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[i]));
+        values.push_back(context.translateValue(symbolTable, *valueIndex, args[i]));
     }
 
     // undefined value for rule number
     values.push_back(mk<ram::UndefValue>());
     // add the height annotation for provenanceNotExists
     for (size_t height = 1; height < auxiliaryArity; height++) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[arity + height]));
+        values.push_back(context.translateValue(symbolTable, *valueIndex, args[arity + height]));
     }
 
     return mk<ram::Filter>(mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(
@@ -78,4 +76,4 @@ Own<ram::Operation> ProvenanceClauseTranslator::addNegatedAtom(
             std::move(op));
 }
 
-}  // namespace souffle::ast2ram
+}  // namespace souffle::ast2ram::provenance

@@ -14,7 +14,7 @@
  *
  ***********************************************************************/
 
-#include "ast2ram/ClauseTranslator.h"
+#include "ast2ram/seminaive/ClauseTranslator.h"
 #include "Global.h"
 #include "LogStatement.h"
 #include "ast/Aggregator.h"
@@ -33,10 +33,9 @@
 #include "ast/transform/ReorderLiterals.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
-#include "ast2ram/AstToRamTranslator.h"
-#include "ast2ram/ConstraintTranslator.h"
-#include "ast2ram/ProvenanceClauseTranslator.h"
-#include "ast2ram/ValueTranslator.h"
+#include "ast2ram/ClauseTranslator.h"
+#include "ast2ram/seminaive/ConstraintTranslator.h"
+#include "ast2ram/seminaive/ValueTranslator.h"
 #include "ast2ram/utility/Location.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
@@ -71,54 +70,15 @@
 #include <map>
 #include <vector>
 
-namespace souffle::ast2ram {
+namespace souffle::ast2ram::seminaive {
 
 ClauseTranslator::ClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable)
-        : context(context), symbolTable(symbolTable) {}
+        : ast2ram::ClauseTranslator(context, symbolTable) {}
 
 ClauseTranslator::~ClauseTranslator() = default;
 
 bool ClauseTranslator::isRecursive() const {
     return !sccAtoms.empty();
-}
-
-// TODO (azreika): create abstract factory to get rid of provenance config checks
-Own<ram::Statement> ClauseTranslator::translateNonRecursiveClause(
-        const TranslatorContext& context, SymbolTable& symbolTable, const ast::Clause& clause) {
-    if (Global::config().has("provenance")) {
-        return ProvenanceClauseTranslator(context, symbolTable).translateClause(clause);
-    }
-    return ClauseTranslator(context, symbolTable).translateClause(clause);
-}
-
-VecOwn<ram::Statement> ClauseTranslator::translateRecursiveClause(const TranslatorContext& context,
-        SymbolTable& symbolTable, const ast::Clause* clause, const std::set<const ast::Relation*>& scc) {
-    const auto& sccAtoms = filter(ast::getBodyLiterals<ast::Atom>(*clause),
-            [&](const ast::Atom* atom) { return contains(scc, context.getAtomRelation(atom)); });
-
-    // Create each version
-    VecOwn<ram::Statement> clauseVersions;
-    for (size_t version = 0; version < sccAtoms.size(); version++) {
-        if (Global::config().has("provenance")) {
-            appendStmt(clauseVersions, ProvenanceClauseTranslator(context, symbolTable)
-                                               .generateClauseVersion(*clause, scc, version));
-        } else {
-            auto translatedClause =
-                    ClauseTranslator(context, symbolTable).generateClauseVersion(*clause, scc, version);
-            appendStmt(clauseVersions, std::move(translatedClause));
-        }
-    }
-
-    // Check that the correct number of versions have been created
-    if (clause->getExecutionPlan() != nullptr) {
-        int maxVersion = -1;
-        for (const auto& cur : clause->getExecutionPlan()->getOrders()) {
-            maxVersion = std::max(cur.first, maxVersion);
-        }
-        assert((int)sccAtoms.size() > maxVersion && "missing clause versions");
-    }
-
-    return clauseVersions;
 }
 
 std::string ClauseTranslator::getClauseString(const ast::Clause& clause) const {
@@ -142,17 +102,15 @@ std::string ClauseTranslator::getClauseString(const ast::Clause& clause) const {
     return toString(*renamedClone);
 }
 
-Own<ram::Statement> ClauseTranslator::generateClauseVersion(
+Own<ram::Statement> ClauseTranslator::translateRecursiveClause(
         const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version) {
-    // TODO: nameUnnamedVariables(clause) to reduce indices
-
     // Update version config
     sccAtoms = filter(ast::getBodyLiterals<ast::Atom>(clause),
             [&](const ast::Atom* atom) { return contains(scc, context.getAtomRelation(atom)); });
     this->version = version;
 
     // Translate the resultant clause as would be done normally
-    Own<ram::Statement> rule = translateClause(clause);
+    Own<ram::Statement> rule = translateNonRecursiveClause(clause);
 
     // Add logging
     if (Global::config().has("profile")) {
@@ -177,7 +135,7 @@ Own<ram::Statement> ClauseTranslator::generateClauseVersion(
     return mk<ram::Sequence>(std::move(rule));
 }
 
-Own<ram::Statement> ClauseTranslator::translateClause(const ast::Clause& clause) {
+Own<ram::Statement> ClauseTranslator::translateNonRecursiveClause(const ast::Clause& clause) {
     // Create the appropriate query
     if (isFact(clause)) {
         return createRamFactQuery(clause);
@@ -250,7 +208,7 @@ Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause
 
     VecOwn<ram::Expression> values;
     for (const auto* arg : head->getArguments()) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, arg));
+        values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
     }
 
     // Propositions
@@ -376,7 +334,7 @@ Own<ram::Operation> ClauseTranslator::instantiateAggregator(
     // translate constraints of sub-clause
     for (const auto* lit : agg->getBodyLiterals()) {
         // literal becomes a constraint
-        if (auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
+        if (auto condition = context.translateConstraint(symbolTable, *valueIndex, lit)) {
             aggCond = addConjunctiveTerm(std::move(aggCond), std::move(condition));
         }
     }
@@ -402,14 +360,14 @@ Own<ram::Operation> ClauseTranslator::instantiateAggregator(
             }
         } else {
             assert(arg != nullptr && "aggregator argument cannot be nullptr");
-            auto value = ValueTranslator::translate(context, symbolTable, *valueIndex, arg);
+            auto value = context.translateValue(symbolTable, *valueIndex, arg);
             aggCond = addAggEqCondition(std::move(aggCond), std::move(value), i);
         }
     }
 
     // translate aggregate expression
     const auto* aggExpr = agg->getTargetExpression();
-    auto expr = aggExpr ? ValueTranslator::translate(context, symbolTable, *valueIndex, aggExpr) : nullptr;
+    auto expr = aggExpr ? context.translateValue(symbolTable, *valueIndex, aggExpr) : nullptr;
 
     // add Ram-Aggregation layer
     return mk<ram::Aggregate>(std::move(op), context.getOverloadedAggregatorOperator(agg),
@@ -421,7 +379,7 @@ Own<ram::Operation> ClauseTranslator::instantiateMultiResultFunctor(
         Own<ram::Operation> op, const ast::IntrinsicFunctor* inf, int curLevel) const {
     VecOwn<ram::Expression> args;
     for (auto&& x : inf->getArguments()) {
-        args.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, x));
+        args.push_back(context.translateValue(symbolTable, *valueIndex, x));
     }
 
     auto func_op = [&]() -> ram::NestedIntrinsicOp {
@@ -469,7 +427,7 @@ Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
     VecOwn<ram::Expression> values;
     auto args = atom->getArguments();
     for (size_t i = 0; i < arity; i++) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[i]));
+        values.push_back(context.translateValue(symbolTable, *valueIndex, args[i]));
     }
     for (size_t i = 0; i < auxiliaryArity; i++) {
         values.push_back(mk<ram::UndefValue>());
@@ -494,7 +452,7 @@ Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, con
     VecOwn<ram::Expression> values;
     auto args = atom->getArguments();
     for (size_t i = 0; i < arity; i++) {
-        values.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, args[i]));
+        values.push_back(context.translateValue(symbolTable, *valueIndex, args[i]));
     }
     for (size_t i = 0; i < auxiliaryArity; i++) {
         values.push_back(mk<ram::UndefValue>());
@@ -507,7 +465,7 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
         const ast::Clause& clause, Own<ram::Operation> op) const {
     for (const auto* lit : clause.getBodyLiterals()) {
         // constraints become literals
-        if (auto condition = ConstraintTranslator::translate(context, symbolTable, *valueIndex, lit)) {
+        if (auto condition = context.translateConstraint(symbolTable, *valueIndex, lit)) {
             op = mk<ram::Filter>(std::move(condition), std::move(op));
         }
     }
@@ -639,9 +597,8 @@ Own<ram::Condition> ClauseTranslator::getFunctionalDependencies(const ast::Claus
             const auto attribute = attributes[i];
             if (contains(keys, attribute->getName())) {
                 // If this particular source argument matches the head argument, insert it.
-                vals.push_back(ValueTranslator::translate(context, symbolTable, *valueIndex, headArgs.at(i)));
-                valsCopy.push_back(
-                        ValueTranslator::translate(context, symbolTable, *valueIndex, headArgs.at(i)));
+                vals.push_back(context.translateValue(symbolTable, *valueIndex, headArgs.at(i)));
+                valsCopy.push_back(context.translateValue(symbolTable, *valueIndex, headArgs.at(i)));
             } else {
                 // Otherwise insert ⊥
                 vals.push_back(mk<ram::UndefValue>());
@@ -808,4 +765,4 @@ void ClauseTranslator::indexClause(const ast::Clause& clause) {
     indexMultiResultFunctors(clause);
 }
 
-}  // namespace souffle::ast2ram
+}  // namespace souffle::ast2ram::seminaive

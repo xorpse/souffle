@@ -8,10 +8,10 @@
 
 /************************************************************************
  *
- * @file ClauseTranslator.h
+ * @file UnitTranslator.h
  *
  * Abstract class providing an interface for translating an
- * ast::Clause into an equivalent ram::Statement.
+ * ast::TranslationUnit into an equivalent ram::TranslationUnit.
  *
  ***********************************************************************/
 
@@ -24,31 +24,27 @@ class SymbolTable;
 }
 
 namespace souffle::ast {
-class Clause;
-class Relation;
-}  // namespace souffle::ast
+class TranslationUnit;
+}
 
 namespace souffle::ram {
-class Statement;
+class TranslationUnit;
 }
 
 namespace souffle::ast2ram {
 
 class TranslatorContext;
 
-class ClauseTranslator {
+class UnitTranslator {
 public:
-    ClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable)
-            : context(context), symbolTable(symbolTable) {}
-    virtual ~ClauseTranslator() = default;
+    UnitTranslator() = default;
+    virtual ~UnitTranslator() = default;
 
-    virtual Own<ram::Statement> translateNonRecursiveClause(const ast::Clause& clause) = 0;
-    virtual Own<ram::Statement> translateRecursiveClause(
-            const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version) = 0;
+    virtual Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu) = 0;
 
 protected:
-    const TranslatorContext& context;
-    SymbolTable& symbolTable;
+    Own<TranslatorContext> context;
+    Own<SymbolTable> symbolTable;
 };
 
 }  // namespace souffle::ast2ram

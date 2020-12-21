@@ -10,14 +10,12 @@
  *
  * @file ConstraintTranslator.h
  *
- * Abstract class providing an interface for translating an
- * ast::Literal into an equivalent ram::Condition.
- *
  ***********************************************************************/
 
 #pragma once
 
 #include "ast/utility/Visitor.h"
+#include "ast2ram/ConstraintTranslator.h"
 #include "souffle/utility/ContainerUtil.h"
 
 namespace souffle {
@@ -25,30 +23,33 @@ class SymbolTable;
 }
 
 namespace souffle::ast {
-class Literal;
-}
+class Atom;
+class BinaryConstraint;
+class Negation;
+}  // namespace souffle::ast
 
 namespace souffle::ram {
 class Condition;
 }
 
 namespace souffle::ast2ram {
-
 class TranslatorContext;
 class ValueIndex;
+}  // namespace souffle::ast2ram
 
-class ConstraintTranslator : public ast::Visitor<Own<ram::Condition>> {
+namespace souffle::ast2ram::seminaive {
+
+class ConstraintTranslator : public ast2ram::ConstraintTranslator {
 public:
     ConstraintTranslator(const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index)
-            : context(context), symbolTable(symbolTable), index(index) {}
-    virtual ~ConstraintTranslator() = default;
+            : ast2ram::ConstraintTranslator(context, symbolTable, index) {}
 
-    virtual Own<ram::Condition> translateConstraint(const ast::Literal* lit) = 0;
+    Own<ram::Condition> translateConstraint(const ast::Literal* lit) override;
 
-protected:
-    const TranslatorContext& context;
-    SymbolTable& symbolTable;
-    const ValueIndex& index;
+    /** -- Visitors -- */
+    Own<ram::Condition> visitAtom(const ast::Atom&) override;
+    Own<ram::Condition> visitBinaryConstraint(const ast::BinaryConstraint& binRel) override;
+    Own<ram::Condition> visitNegation(const ast::Negation& neg) override;
 };
 
-}  // namespace souffle::ast2ram
+}  // namespace souffle::ast2ram::seminaive

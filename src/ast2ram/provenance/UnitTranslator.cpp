@@ -8,11 +8,11 @@
 
 /************************************************************************
  *
- * @file ProvenanceTranslator.h
+ * @file UnitTranslator.h
  *
  ***********************************************************************/
 
-#include "ast2ram/ProvenanceTranslator.h"
+#include "ast2ram/provenance/UnitTranslator.h"
 #include "ast/BinaryConstraint.h"
 #include "ast/Clause.h"
 #include "ast/Constraint.h"
@@ -21,8 +21,8 @@
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
 #include "ast2ram/ConstraintTranslator.h"
-#include "ast2ram/ProvenanceSubproofGenerator.h"
 #include "ast2ram/ValueTranslator.h"
+#include "ast2ram/provenance/SubproofGenerator.h"
 #include "ast2ram/utility/Location.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
@@ -42,11 +42,11 @@
 #include "souffle/utility/StringUtil.h"
 #include <sstream>
 
-namespace souffle::ast2ram {
+namespace souffle::ast2ram::provenance {
 
-Own<ram::Sequence> ProvenanceTranslator::generateProgram(const ast::TranslationUnit& translationUnit) {
+Own<ram::Sequence> UnitTranslator::generateProgram(const ast::TranslationUnit& translationUnit) {
     // do the regular translation
-    auto ramProgram = AstToRamTranslator::generateProgram(translationUnit);
+    auto ramProgram = seminaive::UnitTranslator::generateProgram(translationUnit);
 
     // add subroutines for each clause
     addProvenanceClauseSubroutines(context->getProgram());
@@ -54,13 +54,13 @@ Own<ram::Sequence> ProvenanceTranslator::generateProgram(const ast::TranslationU
     return ramProgram;
 }
 
-Own<ram::Statement> ProvenanceTranslator::generateClearExpiredRelations(
+Own<ram::Statement> UnitTranslator::generateClearExpiredRelations(
         const std::set<const ast::Relation*>& /* expiredRelations */) const {
     // relations should be preserved if provenance is enabled
     return mk<ram::Sequence>();
 }
 
-void ProvenanceTranslator::addProvenanceClauseSubroutines(const ast::Program* program) {
+void UnitTranslator::addProvenanceClauseSubroutines(const ast::Program* program) {
     visitDepthFirst(*program, [&](const ast::Clause& clause) {
         std::string relName = toString(clause.getHead()->getQualifiedName());
 
@@ -80,12 +80,11 @@ void ProvenanceTranslator::addProvenanceClauseSubroutines(const ast::Program* pr
 }
 
 /** make a subroutine to search for subproofs */
-Own<ram::Statement> ProvenanceTranslator::makeSubproofSubroutine(const ast::Clause& clause) {
-    // nameUnnamedVariables(intermediateClause.get());
-    return ProvenanceSubproofGenerator::generateSubproof(*context, *symbolTable, clause);
+Own<ram::Statement> UnitTranslator::makeSubproofSubroutine(const ast::Clause& clause) {
+    return SubproofGenerator(*context, *symbolTable).translateNonRecursiveClause(clause);
 }
 
-Own<ram::ExistenceCheck> ProvenanceTranslator::makeRamAtomExistenceCheck(const ast::Atom* atom,
+Own<ram::ExistenceCheck> UnitTranslator::makeRamAtomExistenceCheck(const ast::Atom* atom,
         const std::map<int, const ast::Variable*>& idToVar, ValueIndex& valueIndex) const {
     auto relName = getConcreteRelationName(atom->getQualifiedName());
     size_t auxiliaryArity = context->getAuxiliaryArity(atom);
@@ -97,7 +96,7 @@ Own<ram::ExistenceCheck> ProvenanceTranslator::makeRamAtomExistenceCheck(const a
     // add each value (subroutine argument) to the search query
     for (size_t i = 0; i < atom->getArity() - auxiliaryArity; i++) {
         auto arg = atomArgs.at(i);
-        auto translatedValue = ValueTranslator::translate(*context, *symbolTable, valueIndex, arg);
+        auto translatedValue = context->translateValue(*symbolTable, valueIndex, arg);
         transformVariablesToSubroutineArgs(translatedValue.get(), idToVar);
         query.push_back(std::move(translatedValue));
     }
@@ -114,19 +113,19 @@ Own<ram::ExistenceCheck> ProvenanceTranslator::makeRamAtomExistenceCheck(const a
     return mk<ram::ExistenceCheck>(relName, std::move(query));
 }
 
-Own<ram::SubroutineReturn> ProvenanceTranslator::makeRamReturnTrue() const {
+Own<ram::SubroutineReturn> UnitTranslator::makeRamReturnTrue() const {
     VecOwn<ram::Expression> returnTrue;
     returnTrue.push_back(mk<ram::SignedConstant>(1));
     return mk<ram::SubroutineReturn>(std::move(returnTrue));
 }
 
-Own<ram::SubroutineReturn> ProvenanceTranslator::makeRamReturnFalse() const {
+Own<ram::SubroutineReturn> UnitTranslator::makeRamReturnFalse() const {
     VecOwn<ram::Expression> returnFalse;
     returnFalse.push_back(mk<ram::SignedConstant>(0));
     return mk<ram::SubroutineReturn>(std::move(returnFalse));
 }
 
-void ProvenanceTranslator::transformVariablesToSubroutineArgs(
+void UnitTranslator::transformVariablesToSubroutineArgs(
         ram::Node* node, const std::map<int, const ast::Variable*>& idToVar) const {
     // a mapper to replace variables with subroutine arguments
     struct VariablesToArguments : public ram::NodeMapper {
@@ -153,7 +152,7 @@ void ProvenanceTranslator::transformVariablesToSubroutineArgs(
     node->apply(varsToArgs);
 }
 
-Own<ram::Sequence> ProvenanceTranslator::makeIfStatement(
+Own<ram::Sequence> UnitTranslator::makeIfStatement(
         Own<ram::Condition> condition, Own<ram::Operation> trueOp, Own<ram::Operation> falseOp) const {
     auto negatedCondition = mk<ram::Negation>(souffle::clone(condition));
 
@@ -164,7 +163,7 @@ Own<ram::Sequence> ProvenanceTranslator::makeIfStatement(
 }
 
 /** make a subroutine to search for subproofs for the non-existence of a tuple */
-Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const ast::Clause& clause) {
+Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Clause& clause) {
     // TODO (taipan-snake): Currently we only deal with atoms (no constraints or negations or aggregates
     // or anything else...)
     //
@@ -245,7 +244,7 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
                     makeIfStatement(std::move(existenceCheck), makeRamReturnFalse(), makeRamReturnTrue());
             appendStmt(searchSequence, std::move(ifStatement));
         } else if (const auto* con = dynamic_cast<const ast::Constraint*>(lit)) {
-            auto condition = ConstraintTranslator::translate(*context, *symbolTable, *dummyValueIndex, con);
+            auto condition = context->translateConstraint(*symbolTable, *dummyValueIndex, con);
             transformVariablesToSubroutineArgs(condition.get(), idToVar);
             auto ifStatement =
                     makeIfStatement(std::move(condition), makeRamReturnTrue(), makeRamReturnFalse());
@@ -258,4 +257,4 @@ Own<ram::Statement> ProvenanceTranslator::makeNegationSubproofSubroutine(const a
     return mk<ram::Sequence>(std::move(searchSequence));
 }
 
-}  // namespace souffle::ast2ram
+}  // namespace souffle::ast2ram::provenance

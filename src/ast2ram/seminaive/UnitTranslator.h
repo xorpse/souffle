@@ -8,14 +8,13 @@
 
 /************************************************************************
  *
- * @file AstToRamTranslator.h
- *
- * Translator from AST into RAM
+ * @file UnitTranslator.h
  *
  ***********************************************************************/
 
 #pragma once
 
+#include "ast2ram/UnitTranslator.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <map>
 #include <set>
@@ -40,29 +39,27 @@ class TranslationUnit;
 }  // namespace souffle::ram
 
 namespace souffle::ast2ram {
-
 class TranslatorContext;
+}
 
-class AstToRamTranslator {
+namespace souffle::ast2ram::seminaive {
+
+class UnitTranslator : public ast2ram::UnitTranslator {
 public:
-    AstToRamTranslator();
-    ~AstToRamTranslator();
+    UnitTranslator();
+    ~UnitTranslator();
 
-    /** Translates an AST program into a corresponding RAM program */
-    Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu);
+    Own<ram::TranslationUnit> translateUnit(ast::TranslationUnit& tu) override;
 
 protected:
-    Own<TranslatorContext> context;
-    Own<SymbolTable> symbolTable;
-
     void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
     Own<ram::Relation> createRamRelation(
             const ast::Relation* baseRelation, std::string ramRelationName) const;
     VecOwn<ram::Relation> createRamRelations(const std::vector<size_t>& sccOrdering) const;
-    Own<ram::Statement> generateClauseVersion(const std::set<const ast::Relation*>& scc,
-            const ast::Clause* cl, size_t deltaAtomIdx, size_t version) const;
     Own<ram::Statement> translateRecursiveClauses(
             const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const;
+    VecOwn<ram::Statement> generateClauseVersions(
+            const ast::Clause* clause, const std::set<const ast::Relation*>& scc) const;
 
     /** -- Generation methods -- */
 
@@ -94,4 +91,4 @@ private:
     std::map<std::string, Own<ram::Statement>> ramSubroutines;
 };
 
-}  // namespace souffle::ast2ram
+}  // namespace souffle::ast2ram::seminaive

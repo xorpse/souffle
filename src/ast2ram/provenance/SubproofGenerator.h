@@ -8,13 +8,13 @@
 
 /************************************************************************
  *
- * @file ProvenanceSubproofGenerator.h
+ * @file SubproofGenerator.h
  *
  ***********************************************************************/
 
 #pragma once
 
-#include "ast2ram/ClauseTranslator.h"
+#include "ast2ram/seminaive/ClauseTranslator.h"
 
 namespace souffle::ast {
 class Clause;
@@ -27,16 +27,15 @@ class Statement;
 }  // namespace souffle::ram
 
 namespace souffle::ast2ram {
-
 class TranslatorContext;
+}
 
-class ProvenanceSubproofGenerator : public ClauseTranslator {
+namespace souffle::ast2ram::provenance {
+
+class SubproofGenerator : public ast2ram::seminaive::ClauseTranslator {
 public:
-    ProvenanceSubproofGenerator(const TranslatorContext& context, SymbolTable& symbolTable)
-            : ClauseTranslator(context, symbolTable) {}
-
-    static Own<ram::Statement> generateSubproof(const TranslatorContext& context, SymbolTable& symbolTable,
-            const ast::Clause& clause, int version = 0);
+    SubproofGenerator(const TranslatorContext& context, SymbolTable& symbolTable);
+    ~SubproofGenerator();
 
 protected:
     Own<ram::Statement> createRamFactQuery(const ast::Clause& clause) const override;
@@ -46,4 +45,4 @@ protected:
     Own<ram::Operation> addBodyLiteralConstraints(
             const ast::Clause& clause, Own<ram::Operation> op) const override;
 };
-}  // namespace souffle::ast2ram
+}  // namespace souffle::ast2ram::provenance
