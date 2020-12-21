@@ -498,13 +498,12 @@ void TypeCheckerImpl::visitUserDefinedFunctor(const UserDefinedFunctor& fun) {
     // check type of result
     const TypeSet& resultType = typeAnalysis.getTypes(&fun);
 
-    TypeAttribute returnType;
-    try {
-        returnType = functorAnalysis.getReturnType(&fun);
-    } catch (...) {
-        report.addError("Undeclared user functor", fun.getSrcLoc());
+    auto const* udfd = getFunctorDeclaration(program, fun.getName());
+    if (udfd == nullptr) {
         return;
     }
+
+    TypeAttribute returnType = functorAnalysis.getReturnType(&fun);
 
     if (!isOfKind(resultType, returnType)) {
         switch (returnType) {
