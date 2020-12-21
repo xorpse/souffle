@@ -37,7 +37,6 @@ public:
 
 private:
     bool transform(TranslationUnit& translationUnit) override;
-    bool transformMaxHeight(TranslationUnit& translationUnit);
 };
 
 }  // namespace souffle::ast::transform

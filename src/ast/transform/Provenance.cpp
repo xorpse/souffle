@@ -261,7 +261,7 @@ Own<Argument> getNextLevelNumber(const std::vector<Argument*>& levels) {
 }
 }  // namespace
 
-bool ProvenanceTransformer::transformMaxHeight(TranslationUnit& translationUnit) {
+bool ProvenanceTransformer::transform(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
 
     for (auto relation : program.getRelations()) {
@@ -341,10 +341,6 @@ bool ProvenanceTransformer::transformMaxHeight(TranslationUnit& translationUnit)
         }
     }
     return true;
-}
-
-bool ProvenanceTransformer::transform(TranslationUnit& translationUnit) {
-    return ProvenanceTransformer::transformMaxHeight(translationUnit);
 }
 
 }  // namespace souffle::ast::transform
