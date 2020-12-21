@@ -591,8 +591,8 @@ int main(int argc, char** argv) {
     debugReport.startSection();
     auto translationStrategy =
             Global::config().has("provenance")
-                    ? Own<ast2ram::TranslationStrategy>(mk<ast2ram::provenance::TranslationStrategy>())
-                    : Own<ast2ram::TranslationStrategy>(mk<ast2ram::seminaive::TranslationStrategy>());
+                    ? mk<ast2ram::TranslationStrategy, ast2ram::provenance::TranslationStrategy>()
+                    : mk<ast2ram::TranslationStrategy, ast2ram::seminaive::TranslationStrategy>();
     auto unitTranslator = Own<ast2ram::UnitTranslator>(translationStrategy->createUnitTranslator());
     auto ramTranslationUnit = unitTranslator->translateUnit(*astTranslationUnit);
     debugReport.endSection("ast-to-ram", "Translate AST to RAM");
