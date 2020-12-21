@@ -477,7 +477,8 @@ int main(int argc, char** argv) {
 
     // Provenance pipeline
     auto provenancePipeline = mk<ast::transform::ConditionalTransformer>(Global::config().has("provenance"),
-            mk<ast::transform::PipelineTransformer>(mk<ast::transform::ProvenanceTransformer>(),
+            mk<ast::transform::PipelineTransformer>(mk<ast::transform::ExpandEqrelsTransformer>(),
+                    mk<ast::transform::ProvenanceTransformer>(),
                     mk<ast::transform::NameUnnamedVariablesTransformer>()));
 
     // Main pipeline

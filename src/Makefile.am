@@ -120,6 +120,8 @@ souffle_sources = \
         ast/transform/DebugReporter.h                      \
         ast/transform/ExecutionPlanChecker.cpp             \
         ast/transform/ExecutionPlanChecker.h               \
+        ast/transform/ExpandEqrels.cpp                     \
+        ast/transform/ExpandEqrels.h                       \
         ast/transform/Fixpoint.h                           \
         ast/transform/FoldAnonymousRecords.cpp             \
         ast/transform/FoldAnonymousRecords.h               \
