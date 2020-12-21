@@ -55,23 +55,11 @@
 
 namespace souffle::ast::transform {
 
-/**
- * Helper functions
- */
-inline QualifiedName makeRelationName(const QualifiedName& orig, const std::string& type, int num = -1) {
-    QualifiedName newName(toString(orig));
-    newName.append(type);
-    if (num != -1) {
-        newName.append((const std::string&)std::to_string(num));
-    }
-
-    return newName;
-}
-
 Own<Relation> makeInfoRelation(
         Clause& originalClause, size_t originalClauseNum, TranslationUnit& translationUnit) {
-    QualifiedName name =
-            makeRelationName(originalClause.getHead()->getQualifiedName(), "@info", originalClauseNum);
+    QualifiedName name = originalClause.getHead()->getQualifiedName();
+    name.append("@info");
+    name.append(toString(originalClauseNum));
 
     // initialise info relation
     auto infoRelation = new Relation();
