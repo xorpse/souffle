@@ -81,11 +81,6 @@ bool ClauseTranslator::isRecursive() const {
     return !sccAtoms.empty();
 }
 
-Own<ram::Statement> ClauseTranslator::translateNonRecursiveClause(
-        const TranslatorContext& context, SymbolTable& symbolTable, const ast::Clause& clause) {
-    return context.translateClause(symbolTable, clause);
-}
-
 VecOwn<ram::Statement> ClauseTranslator::translateRecursiveClause(const TranslatorContext& context,
         SymbolTable& symbolTable, const ast::Clause* clause, const std::set<const ast::Relation*>& scc) {
     const auto& sccAtoms = filter(ast::getBodyLiterals<ast::Atom>(*clause),

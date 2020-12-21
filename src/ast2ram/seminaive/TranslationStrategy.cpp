@@ -24,8 +24,6 @@
 
 namespace souffle::ast2ram::seminaive {
 
-// TODO: check this overload
-
 ast2ram::UnitTranslator* TranslationStrategy::createUnitTranslator() const {
     return new UnitTranslator();
 }
