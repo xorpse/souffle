@@ -39,6 +39,8 @@ private:
     bool transform(TranslationUnit& translationUnit) override;
 
     static Own<Argument> getNextLevelNumber(const std::vector<Argument*>& levels);
+    static void makeInfoRelation(
+            const Clause& originalClause, size_t originalClauseNum, TranslationUnit& translationUnit);
 };
 
 }  // namespace souffle::ast::transform

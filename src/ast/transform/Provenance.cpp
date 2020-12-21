@@ -55,7 +55,8 @@
 
 namespace souffle::ast::transform {
 
-void makeInfoRelation(Clause& originalClause, size_t originalClauseNum, TranslationUnit& translationUnit) {
+void ProvenanceTransformer::makeInfoRelation(
+        const Clause& originalClause, size_t originalClauseNum, TranslationUnit& translationUnit) {
     QualifiedName name = originalClause.getHead()->getQualifiedName();
     name.append("@info");
     name.append(toString(originalClauseNum));
