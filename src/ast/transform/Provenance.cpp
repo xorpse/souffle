@@ -190,8 +190,7 @@ Own<Relation> makeInfoRelation(
     return Own<Relation>(infoRelation);
 }
 
-namespace {
-Own<Argument> getNextLevelNumber(const std::vector<Argument*>& levels) {
+Own<Argument> ProvenanceTransformer::getNextLevelNumber(const std::vector<Argument*>& levels) {
     if (levels.empty()) return mk<NumericConstant>(0);
 
     auto max = levels.size() == 1
@@ -200,7 +199,6 @@ Own<Argument> getNextLevelNumber(const std::vector<Argument*>& levels) {
 
     return mk<IntrinsicFunctor>("+", std::move(max), mk<NumericConstant>(1));
 }
-}  // namespace
 
 bool ProvenanceTransformer::transform(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();

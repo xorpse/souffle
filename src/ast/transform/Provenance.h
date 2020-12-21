@@ -37,6 +37,8 @@ public:
 
 private:
     bool transform(TranslationUnit& translationUnit) override;
+
+    static Own<Argument> getNextLevelNumber(const std::vector<Argument*>& levels);
 };
 
 }  // namespace souffle::ast::transform
