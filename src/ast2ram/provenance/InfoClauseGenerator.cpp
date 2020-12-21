@@ -13,7 +13,11 @@
  ***********************************************************************/
 
 #include "ast2ram/provenance/InfoClauseGenerator.h"
+#include "ast/Clause.h"
 #include "ast2ram/provenance/ClauseTranslator.h"
+#include "ast2ram/utility/TranslatorContext.h"
+#include "ram/Statement.h"
+#include "souffle/SymbolTable.h"
 
 namespace souffle::ast2ram::provenance {
 

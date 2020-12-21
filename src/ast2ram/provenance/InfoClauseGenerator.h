@@ -30,6 +30,10 @@ class InfoClauseGenerator : public ast2ram::provenance::ClauseTranslator {
 public:
     InfoClauseGenerator(const TranslatorContext& context, SymbolTable& symbolTable);
     ~InfoClauseGenerator();
+
+protected:
+    Own<ram::Statement> createRamFactQuery(const ast::Clause& clause) const;
+    Own<ram::Statement> createRamRuleQuery(const ast::Clause& clause);
 };
 
 }  // namespace souffle::ast2ram::provenance

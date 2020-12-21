@@ -12,6 +12,8 @@
  *
  ***********************************************************************/
 
+#pragma once
+
 #include "ast2ram/seminaive/ClauseTranslator.h"
 
 namespace souffle {
