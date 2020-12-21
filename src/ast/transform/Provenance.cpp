@@ -55,24 +55,20 @@
 
 namespace souffle::ast::transform {
 
-Own<Relation> makeInfoRelation(
-        Clause& originalClause, size_t originalClauseNum, TranslationUnit& translationUnit) {
+void makeInfoRelation(Clause& originalClause, size_t originalClauseNum, TranslationUnit& translationUnit) {
     QualifiedName name = originalClause.getHead()->getQualifiedName();
     name.append("@info");
     name.append(toString(originalClauseNum));
 
     // initialise info relation
-    auto infoRelation = new Relation();
-    infoRelation->setQualifiedName(name);
-    // set qualifier to INFO_RELATION
+    auto infoRelation = mk<Relation>(name);
     infoRelation->setRepresentation(RelationRepresentation::INFO);
 
     // create new clause containing a single fact
-    auto infoClause = new Clause();
-    auto infoClauseHead = new Atom();
-    infoClauseHead->setQualifiedName(name);
+    auto infoClause = mk<Clause>();
+    auto infoClauseHead = mk<Atom>(name);
 
-    // (darth_tytus): Can this be unsigned?
+    // add clause num attribute
     infoRelation->addAttribute(mk<Attribute>("clause_num", QualifiedName("number")));
     infoClauseHead->addArgument(mk<NumericConstant>(originalClauseNum));
 
@@ -153,29 +149,23 @@ Own<Relation> makeInfoRelation(
     }
 
     // visit all body constraints and add to info clause head
-    for (size_t i = 0; i < originalClause.getBodyLiterals().size(); i++) {
-        auto lit = originalClause.getBodyLiterals()[i];
-
-        if (auto con = dynamic_cast<BinaryConstraint*>(lit)) {
-            // for a constraint, add the constraint symbol and LHS and RHS
-            std::string constraintDescription = toBinaryConstraintSymbol(con->getBaseOperator());
-
-            constraintDescription.append("," + getArgInfo(con->getLHS()));
-            constraintDescription.append("," + getArgInfo(con->getRHS()));
-
-            infoClauseHead->addArgument(mk<StringConstant>(constraintDescription));
-        }
+    for (const auto* con : getBodyLiterals<BinaryConstraint>(originalClause)) {
+        std::stringstream constraintDescription;
+        constraintDescription << toBinaryConstraintSymbol(con->getBaseOperator());
+        constraintDescription << "," << getArgInfo(con->getLHS());
+        constraintDescription << "," << getArgInfo(con->getRHS());
+        infoClauseHead->addArgument(mk<StringConstant>(constraintDescription.str()));
     }
 
     infoRelation->addAttribute(mk<Attribute>("clause_repr", QualifiedName("symbol")));
     infoClauseHead->addArgument(mk<StringConstant>(toString(originalClause)));
 
     // set clause head and add clause to info relation
-    infoClause->setHead(Own<Atom>(infoClauseHead));
-    Program& program = translationUnit.getProgram();
-    program.addClause(Own<Clause>(infoClause));
+    infoClause->setHead(std::move(infoClauseHead));
 
-    return Own<Relation>(infoRelation);
+    Program& program = translationUnit.getProgram();
+    program.addClause(std::move(infoClause));
+    program.addRelation(std::move(infoRelation));
 }
 
 Own<Argument> ProvenanceTransformer::getNextLevelNumber(const std::vector<Argument*>& levels) {
@@ -198,8 +188,7 @@ bool ProvenanceTransformer::transform(TranslationUnit& translationUnit) {
         for (auto clause : getClauses(program, *relation)) {
             if (!isFact(*clause)) {
                 // add info relation
-                program.addRelation(
-                        makeInfoRelation(*clause, getClauseNum(&program, clause), translationUnit));
+                makeInfoRelation(*clause, getClauseNum(&program, clause), translationUnit);
             }
         }
 
