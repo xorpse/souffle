@@ -42,8 +42,8 @@ public:
             : context(context), symbolTable(symbolTable) {}
     virtual ~ClauseTranslator() = default;
 
-    virtual Own<ram::Statement> translateClause(const ast::Clause& clause) = 0;
-    virtual Own<ram::Statement> generateClauseVersion(
+    virtual Own<ram::Statement> translateNonRecursiveClause(const ast::Clause& clause) = 0;
+    virtual Own<ram::Statement> translateRecursiveClause(
             const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version) = 0;
 
 protected:

@@ -125,9 +125,9 @@ public:
     size_t getEvaluationArity(const ast::Atom* atom) const;
 
     /** Translation strategy */
-    Own<ram::Statement> translateClause(SymbolTable& symbolTable, const ast::Clause& clause) const;
-    // TODO: get rid of this one
-    Own<ram::Statement> generateClauseVersion(SymbolTable& symbolTable, const ast::Clause& clause,
+    Own<ram::Statement> translateNonRecursiveClause(
+            SymbolTable& symbolTable, const ast::Clause& clause) const;
+    Own<ram::Statement> translateRecursiveClause(SymbolTable& symbolTable, const ast::Clause& clause,
             const std::set<const ast::Relation*>& scc, size_t version) const;
 
     Own<ram::Condition> translateConstraint(

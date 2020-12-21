@@ -60,8 +60,8 @@ public:
     ~ClauseTranslator();
 
     /** Entry points */
-    Own<ram::Statement> translateClause(const ast::Clause& clause);
-    Own<ram::Statement> generateClauseVersion(
+    Own<ram::Statement> translateNonRecursiveClause(const ast::Clause& clause);
+    Own<ram::Statement> translateRecursiveClause(
             const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version);
 
 protected:

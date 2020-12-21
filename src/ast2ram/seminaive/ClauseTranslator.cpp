@@ -102,7 +102,7 @@ std::string ClauseTranslator::getClauseString(const ast::Clause& clause) const {
     return toString(*renamedClone);
 }
 
-Own<ram::Statement> ClauseTranslator::generateClauseVersion(
+Own<ram::Statement> ClauseTranslator::translateRecursiveClause(
         const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version) {
     // TODO: nameUnnamedVariables(clause) to reduce indices
 
@@ -112,7 +112,7 @@ Own<ram::Statement> ClauseTranslator::generateClauseVersion(
     this->version = version;
 
     // Translate the resultant clause as would be done normally
-    Own<ram::Statement> rule = translateClause(clause);
+    Own<ram::Statement> rule = translateNonRecursiveClause(clause);
 
     // Add logging
     if (Global::config().has("profile")) {
@@ -137,7 +137,7 @@ Own<ram::Statement> ClauseTranslator::generateClauseVersion(
     return mk<ram::Sequence>(std::move(rule));
 }
 
-Own<ram::Statement> ClauseTranslator::translateClause(const ast::Clause& clause) {
+Own<ram::Statement> ClauseTranslator::translateNonRecursiveClause(const ast::Clause& clause) {
     // Create the appropriate query
     if (isFact(clause)) {
         return createRamFactQuery(clause);

@@ -117,7 +117,7 @@ Own<ram::Statement> UnitTranslator::generateNonRecursiveRelation(const ast::Rela
         }
 
         // Translate clause
-        Own<ram::Statement> rule = context->translateClause(*symbolTable, *clause);
+        Own<ram::Statement> rule = context->translateNonRecursiveClause(*symbolTable, *clause);
 
         // Add logging
         if (Global::config().has("profile")) {
@@ -252,7 +252,7 @@ VecOwn<ram::Statement> UnitTranslator::generateClauseVersions(
     // Create each version
     VecOwn<ram::Statement> clauseVersions;
     for (size_t version = 0; version < sccAtoms.size(); version++) {
-        appendStmt(clauseVersions, context->generateClauseVersion(*symbolTable, *clause, scc, version));
+        appendStmt(clauseVersions, context->translateRecursiveClause(*symbolTable, *clause, scc, version));
     }
 
     // Check that the correct number of versions have been created

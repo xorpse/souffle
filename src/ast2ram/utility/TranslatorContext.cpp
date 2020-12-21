@@ -217,18 +217,18 @@ int TranslatorContext::getADTBranchId(const ast::BranchInit* adt) const {
     return std::distance(std::begin(branches), iterToBranch);
 }
 
-Own<ram::Statement> TranslatorContext::translateClause(
+Own<ram::Statement> TranslatorContext::translateNonRecursiveClause(
         SymbolTable& symbolTable, const ast::Clause& clause) const {
     auto clauseTranslator =
             Own<ClauseTranslator>(translationStrategy->createClauseTranslator(*this, symbolTable));
-    return clauseTranslator->translateClause(clause);
+    return clauseTranslator->translateNonRecursiveClause(clause);
 }
 
-Own<ram::Statement> TranslatorContext::generateClauseVersion(SymbolTable& symbolTable,
+Own<ram::Statement> TranslatorContext::translateRecursiveClause(SymbolTable& symbolTable,
         const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version) const {
     auto clauseTranslator =
             Own<ClauseTranslator>(translationStrategy->createClauseTranslator(*this, symbolTable));
-    return clauseTranslator->generateClauseVersion(clause, scc, version);
+    return clauseTranslator->translateRecursiveClause(clause, scc, version);
 }
 
 Own<ram::Expression> TranslatorContext::translateValue(
