@@ -60,9 +60,6 @@ public:
     ~ClauseTranslator();
 
     /** Entry points */
-    static VecOwn<ram::Statement> translateRecursiveClause(const TranslatorContext& context,
-            SymbolTable& symbolTable, const ast::Clause* clause, const std::set<const ast::Relation*>& scc);
-
     Own<ram::Statement> translateClause(const ast::Clause& clause);
     Own<ram::Statement> generateClauseVersion(
             const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version);

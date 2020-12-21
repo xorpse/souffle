@@ -56,10 +56,10 @@ protected:
     Own<ram::Relation> createRamRelation(
             const ast::Relation* baseRelation, std::string ramRelationName) const;
     VecOwn<ram::Relation> createRamRelations(const std::vector<size_t>& sccOrdering) const;
-    Own<ram::Statement> generateClauseVersion(const std::set<const ast::Relation*>& scc,
-            const ast::Clause* cl, size_t deltaAtomIdx, size_t version) const;
     Own<ram::Statement> translateRecursiveClauses(
             const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const;
+    VecOwn<ram::Statement> generateClauseVersions(
+            const ast::Clause* clause, const std::set<const ast::Relation*>& scc) const;
 
     /** -- Generation methods -- */
 

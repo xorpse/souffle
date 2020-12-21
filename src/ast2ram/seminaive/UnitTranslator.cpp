@@ -229,19 +229,42 @@ Own<ram::Statement> UnitTranslator::translateRecursiveClauses(
     VecOwn<ram::Statement> result;
 
     // Translate each recursive clasue
-    for (const auto& cl : context->getClauses(rel->getQualifiedName())) {
+    for (const auto* cl : context->getClauses(rel->getQualifiedName())) {
         // Skip non-recursive clauses
         if (!context->isRecursiveClause(cl)) {
             continue;
         }
 
-        auto clauseVersions = ClauseTranslator::translateRecursiveClause(*context, *symbolTable, cl, scc);
+        auto clauseVersions = generateClauseVersions(cl, scc);
         for (auto& clauseVersion : clauseVersions) {
             appendStmt(result, std::move(clauseVersion));
         }
     }
 
     return mk<ram::Sequence>(std::move(result));
+}
+
+VecOwn<ram::Statement> UnitTranslator::generateClauseVersions(
+        const ast::Clause* clause, const std::set<const ast::Relation*>& scc) const {
+    const auto& sccAtoms = filter(ast::getBodyLiterals<ast::Atom>(*clause),
+            [&](const ast::Atom* atom) { return contains(scc, context->getAtomRelation(atom)); });
+
+    // Create each version
+    VecOwn<ram::Statement> clauseVersions;
+    for (size_t version = 0; version < sccAtoms.size(); version++) {
+        appendStmt(clauseVersions, context->generateClauseVersion(*symbolTable, *clause, scc, version));
+    }
+
+    // Check that the correct number of versions have been created
+    if (clause->getExecutionPlan() != nullptr) {
+        int maxVersion = -1;
+        for (const auto& cur : clause->getExecutionPlan()->getOrders()) {
+            maxVersion = std::max(cur.first, maxVersion);
+        }
+        assert((int)sccAtoms.size() > maxVersion && "missing clause versions");
+    }
+
+    return clauseVersions;
 }
 
 Own<ram::Statement> UnitTranslator::generateStratumPreamble(const std::set<const ast::Relation*>& scc) const {

@@ -81,29 +81,6 @@ bool ClauseTranslator::isRecursive() const {
     return !sccAtoms.empty();
 }
 
-VecOwn<ram::Statement> ClauseTranslator::translateRecursiveClause(const TranslatorContext& context,
-        SymbolTable& symbolTable, const ast::Clause* clause, const std::set<const ast::Relation*>& scc) {
-    const auto& sccAtoms = filter(ast::getBodyLiterals<ast::Atom>(*clause),
-            [&](const ast::Atom* atom) { return contains(scc, context.getAtomRelation(atom)); });
-
-    // Create each version
-    VecOwn<ram::Statement> clauseVersions;
-    for (size_t version = 0; version < sccAtoms.size(); version++) {
-        appendStmt(clauseVersions, context.generateClauseVersion(symbolTable, *clause, scc, version));
-    }
-
-    // Check that the correct number of versions have been created
-    if (clause->getExecutionPlan() != nullptr) {
-        int maxVersion = -1;
-        for (const auto& cur : clause->getExecutionPlan()->getOrders()) {
-            maxVersion = std::max(cur.first, maxVersion);
-        }
-        assert((int)sccAtoms.size() > maxVersion && "missing clause versions");
-    }
-
-    return clauseVersions;
-}
-
 std::string ClauseTranslator::getClauseString(const ast::Clause& clause) const {
     auto renamedClone = souffle::clone(&clause);
 
