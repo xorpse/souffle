@@ -26,6 +26,7 @@
 #include "ast/transform/ComponentInstantiation.h"
 #include "ast/transform/Conditional.h"
 #include "ast/transform/ExecutionPlanChecker.h"
+#include "ast/transform/ExpandEqrels.h"
 #include "ast/transform/Fixpoint.h"
 #include "ast/transform/FoldAnonymousRecords.h"
 #include "ast/transform/GroundWitnesses.h"

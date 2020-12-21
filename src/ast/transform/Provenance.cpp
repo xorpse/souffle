@@ -190,65 +190,6 @@ Own<Relation> makeInfoRelation(
     return Own<Relation>(infoRelation);
 }
 
-/** Transform eqrel relations to explicitly define equivalence relations */
-void transformEqrelRelation(Program& program, Relation& rel) {
-    assert(rel.getRepresentation() == RelationRepresentation::EQREL &&
-            "attempting to transform non-eqrel relation");
-    assert(rel.getArity() == 2 && "eqrel relation not binary");
-
-    rel.setRepresentation(RelationRepresentation::BTREE);
-
-    // transitivity
-    // transitive clause: A(x, z) :- A(x, y), A(y, z).
-    auto transitiveClause = new Clause();
-    auto transitiveClauseHead = new Atom(rel.getQualifiedName());
-    transitiveClauseHead->addArgument(mk<ast::Variable>("x"));
-    transitiveClauseHead->addArgument(mk<ast::Variable>("z"));
-
-    auto transitiveClauseBody = new Atom(rel.getQualifiedName());
-    transitiveClauseBody->addArgument(mk<ast::Variable>("x"));
-    transitiveClauseBody->addArgument(mk<ast::Variable>("y"));
-
-    auto transitiveClauseBody2 = new Atom(rel.getQualifiedName());
-    transitiveClauseBody2->addArgument(mk<ast::Variable>("y"));
-    transitiveClauseBody2->addArgument(mk<ast::Variable>("z"));
-
-    transitiveClause->setHead(Own<Atom>(transitiveClauseHead));
-    transitiveClause->addToBody(Own<Literal>(transitiveClauseBody));
-    transitiveClause->addToBody(Own<Literal>(transitiveClauseBody2));
-    program.addClause(Own<Clause>(transitiveClause));
-
-    // symmetric
-    // symmetric clause: A(x, y) :- A(y, x).
-    auto symClause = new Clause();
-    auto symClauseHead = new Atom(rel.getQualifiedName());
-    symClauseHead->addArgument(mk<ast::Variable>("x"));
-    symClauseHead->addArgument(mk<ast::Variable>("y"));
-
-    auto symClauseBody = new Atom(rel.getQualifiedName());
-    symClauseBody->addArgument(mk<ast::Variable>("y"));
-    symClauseBody->addArgument(mk<ast::Variable>("x"));
-
-    symClause->setHead(Own<Atom>(symClauseHead));
-    symClause->addToBody(Own<Literal>(symClauseBody));
-    program.addClause(Own<Clause>(symClause));
-
-    // reflexivity
-    // reflexive clause: A(x, x) :- A(x, _).
-    auto reflexiveClause = new Clause();
-    auto reflexiveClauseHead = new Atom(rel.getQualifiedName());
-    reflexiveClauseHead->addArgument(mk<ast::Variable>("x"));
-    reflexiveClauseHead->addArgument(mk<ast::Variable>("x"));
-
-    auto reflexiveClauseBody = new Atom(rel.getQualifiedName());
-    reflexiveClauseBody->addArgument(mk<ast::Variable>("x"));
-    reflexiveClauseBody->addArgument(mk<UnnamedVariable>());
-
-    reflexiveClause->setHead(Own<Atom>(reflexiveClauseHead));
-    reflexiveClause->addToBody(Own<Literal>(reflexiveClauseBody));
-    program.addClause(Own<Clause>(reflexiveClause));
-}
-
 namespace {
 Own<Argument> getNextLevelNumber(const std::vector<Argument*>& levels) {
     if (levels.empty()) return mk<NumericConstant>(0);
@@ -263,13 +204,6 @@ Own<Argument> getNextLevelNumber(const std::vector<Argument*>& levels) {
 
 bool ProvenanceTransformer::transform(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
-
-    for (auto relation : program.getRelations()) {
-        if (relation->getRepresentation() == RelationRepresentation::EQREL) {
-            // Explicitly expand eqrel relation
-            transformEqrelRelation(program, *relation);
-        }
-    }
 
     for (auto relation : program.getRelations()) {
         // generate info relations for each clause
