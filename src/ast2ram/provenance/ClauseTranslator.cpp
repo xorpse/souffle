@@ -14,14 +14,18 @@
 
 #include "ast2ram/provenance/ClauseTranslator.h"
 #include "ast/Atom.h"
+#include "ast/Clause.h"
+#include "ast/utility/Utils.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ram/EmptinessCheck.h"
 #include "ram/ExistenceCheck.h"
 #include "ram/Filter.h"
+#include "ram/GuardedProject.h"
 #include "ram/Negation.h"
 #include "ram/Operation.h"
 #include "ram/ProvenanceExistenceCheck.h"
+#include "ram/SignedConstant.h"
 #include "ram/UndefValue.h"
 
 namespace souffle::ast2ram::provenance {
@@ -74,6 +78,30 @@ Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, con
     return mk<ram::Filter>(mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(
                                    getConcreteRelationName(atom->getQualifiedName()), std::move(values))),
             std::move(op));
+}
+
+Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause) const {
+    const auto head = clause.getHead();
+    auto headRelationName = getClauseAtomName(clause, head);
+
+    VecOwn<ram::Expression> values;
+    for (const auto* arg : head->getArguments()) {
+        values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
+    }
+
+    // add rule number + level number
+    if (isFact(clause)) {
+        values.push_back(mk<ram::SignedConstant>(0));
+        values.push_back(mk<ram::SignedConstant>(0));
+    }
+
+    // Relations with functional dependency constraints
+    if (auto guardedConditions = getFunctionalDependencies(clause)) {
+        return mk<ram::GuardedProject>(headRelationName, std::move(values), std::move(guardedConditions));
+    }
+
+    // Everything else
+    return mk<ram::Project>(headRelationName, std::move(values));
 }
 
 }  // namespace souffle::ast2ram::provenance

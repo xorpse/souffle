@@ -216,11 +216,7 @@ bool ProvenanceTransformer::transform(TranslationUnit& translationUnit) {
             // add unnamed vars to each atom nested in arguments of head
             clause->getHead()->apply(M());
 
-            // if fact, level number is 0
-            if (isFact(*clause)) {
-                clause->getHead()->addArgument(mk<NumericConstant>(0));
-                clause->getHead()->addArgument(mk<NumericConstant>(0));
-            } else {
+            if (!isFact(*clause)) {
                 std::vector<Argument*> bodyLevels;
 
                 for (size_t i = 0; i < clause->getBodyLiterals().size(); i++) {
