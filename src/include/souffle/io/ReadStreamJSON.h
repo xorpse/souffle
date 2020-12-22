@@ -39,7 +39,7 @@
 namespace souffle {
 class RecordTable;
 
-template<typename... T>
+template <typename... T>
 [[noreturn]] static void throwError(T const&... t) {
     std::ostringstream out;
     (out << ... << t);
@@ -82,7 +82,7 @@ protected:
             }
 
             if (jsonSource.array_items().empty()) {
-                //No tuples defined
+                // No tuples defined
                 return nullptr;
             }
 
