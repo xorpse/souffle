@@ -169,16 +169,6 @@ void ProvenanceTransformer::makeInfoRelation(
     program.addRelation(std::move(infoRelation));
 }
 
-Own<Argument> ProvenanceTransformer::getNextLevelNumber(const std::vector<Argument*>& levels) {
-    if (levels.empty()) return mk<NumericConstant>(0);
-
-    auto max = levels.size() == 1
-                       ? Own<Argument>(levels[0])
-                       : mk<IntrinsicFunctor>("max", map(levels, [](auto&& x) { return Own<Argument>(x); }));
-
-    return mk<IntrinsicFunctor>("+", std::move(max), mk<NumericConstant>(1));
-}
-
 bool ProvenanceTransformer::transform(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
 
@@ -194,8 +184,6 @@ bool ProvenanceTransformer::transform(TranslationUnit& translationUnit) {
         }
 
         for (auto clause : getClauses(program, *relation)) {
-            size_t clauseNum = getClauseNum(&program, clause);
-
             // mapper to add two provenance columns to atoms
             struct M : public NodeMapper {
                 using NodeMapper::operator();
@@ -217,8 +205,6 @@ bool ProvenanceTransformer::transform(TranslationUnit& translationUnit) {
             clause->getHead()->apply(M());
 
             if (!isFact(*clause)) {
-                std::vector<Argument*> bodyLevels;
-
                 for (size_t i = 0; i < clause->getBodyLiterals().size(); i++) {
                     auto lit = clause->getBodyLiterals()[i];
 
@@ -229,13 +215,8 @@ bool ProvenanceTransformer::transform(TranslationUnit& translationUnit) {
                     if (auto atom = dynamic_cast<Atom*>(lit)) {
                         atom->addArgument(mk<UnnamedVariable>());
                         atom->addArgument(mk<ast::Variable>("@level_num_" + std::to_string(i)));
-                        bodyLevels.push_back(new ast::Variable("@level_num_" + std::to_string(i)));
                     }
                 }
-
-                // add two provenance columns to head lit
-                clause->getHead()->addArgument(mk<NumericConstant>(clauseNum));
-                clause->getHead()->addArgument(getNextLevelNumber(bodyLevels));
             }
         }
     }

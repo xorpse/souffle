@@ -13,8 +13,12 @@
  ***********************************************************************/
 
 #include "ast2ram/provenance/ClauseTranslator.h"
+#include "ast/Argument.h"
 #include "ast/Atom.h"
 #include "ast/Clause.h"
+#include "ast/IntrinsicFunctor.h"
+#include "ast/NumericConstant.h"
+#include "ast/Variable.h"
 #include "ast/utility/Utils.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
@@ -80,6 +84,16 @@ Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, con
             std::move(op));
 }
 
+Own<ast::Argument> ClauseTranslator::getNextLevelNumber(const std::vector<ast::Argument*>& levels) {
+    if (levels.empty()) return mk<ast::NumericConstant>(0);
+
+    auto max = levels.size() == 1 ? Own<ast::Argument>(levels[0])
+                                  : mk<ast::IntrinsicFunctor>("max",
+                                            map(levels, [](auto&& x) { return Own<ast::Argument>(x); }));
+
+    return mk<ast::IntrinsicFunctor>("+", std::move(max), mk<ast::NumericConstant>(1));
+}
+
 Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause) const {
     const auto head = clause.getHead();
     auto headRelationName = getClauseAtomName(clause, head);
@@ -93,6 +107,18 @@ Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause
     if (isFact(clause)) {
         values.push_back(mk<ram::SignedConstant>(0));
         values.push_back(mk<ram::SignedConstant>(0));
+    } else {
+        values.push_back(mk<ram::SignedConstant>(ast::getClauseNum(context.getProgram(), &clause)));
+        std::vector<ast::Argument*> bodyLevels;
+        const auto& bodyLiterals = clause.getBodyLiterals();
+        for (size_t i = 0; i < bodyLiterals.size(); i++) {
+            const auto* lit = bodyLiterals.at(i);
+            if (isA<ast::Atom>(lit)) {
+                bodyLevels.push_back(new ast::Variable("@level_num_" + std::to_string(i)));
+            }
+        }
+        auto levelNumber = getNextLevelNumber(bodyLevels);
+        values.push_back(context.translateValue(symbolTable, *valueIndex, levelNumber.get()));
     }
 
     // Relations with functional dependency constraints
