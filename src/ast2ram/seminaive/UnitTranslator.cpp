@@ -110,7 +110,7 @@ Own<ram::Statement> UnitTranslator::generateNonRecursiveRelation(const ast::Rela
     std::string relName = getConcreteRelationName(rel.getQualifiedName());
 
     // Iterate over all non-recursive clauses that belong to the relation
-    for (ast::Clause* clause : context->getClauses(rel.getQualifiedName())) {
+    for (const auto* clause : context->getClauses(rel.getQualifiedName())) {
         // Skip recursive rules
         if (context->isRecursiveClause(clause)) {
             continue;
@@ -227,13 +227,13 @@ Own<ram::Statement> UnitTranslator::translateRecursiveClauses(
     VecOwn<ram::Statement> result;
 
     // Translate each recursive clasue
-    for (const auto* cl : context->getClauses(rel->getQualifiedName())) {
+    for (const auto* clause : context->getClauses(rel->getQualifiedName())) {
         // Skip non-recursive clauses
-        if (!context->isRecursiveClause(cl)) {
+        if (!context->isRecursiveClause(clause)) {
             continue;
         }
 
-        auto clauseVersions = generateClauseVersions(cl, scc);
+        auto clauseVersions = generateClauseVersions(clause, scc);
         for (auto& clauseVersion : clauseVersions) {
             appendStmt(result, std::move(clauseVersion));
         }
