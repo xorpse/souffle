@@ -208,10 +208,6 @@ bool ProvenanceTransformer::transform(TranslationUnit& translationUnit) {
                     if (auto atom = dynamic_cast<Atom*>(node.get())) {
                         atom->addArgument(mk<UnnamedVariable>());
                         atom->addArgument(mk<UnnamedVariable>());
-                    } else if (auto neg = dynamic_cast<Negation*>(node.get())) {
-                        auto atom = neg->getAtom();
-                        atom->addArgument(mk<UnnamedVariable>());
-                        atom->addArgument(mk<UnnamedVariable>());
                     }
 
                     // otherwise - apply mapper recursively
