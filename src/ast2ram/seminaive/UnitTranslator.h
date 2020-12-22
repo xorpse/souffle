@@ -53,7 +53,7 @@ public:
 
 protected:
     void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
-    Own<ram::Relation> createRamRelation(
+    virtual Own<ram::Relation> createRamRelation(
             const ast::Relation* baseRelation, std::string ramRelationName) const;
     VecOwn<ram::Relation> createRamRelations(const std::vector<size_t>& sccOrdering) const;
     Own<ram::Statement> translateRecursiveClauses(

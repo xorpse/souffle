@@ -47,6 +47,8 @@ protected:
     Own<ram::Sequence> generateProgram(const ast::TranslationUnit& translationUnit) override;
     Own<ram::Statement> generateClearExpiredRelations(
             const std::set<const ast::Relation*>& expiredRelations) const override;
+    Own<ram::Relation> createRamRelation(
+            const ast::Relation* baseRelation, std::string ramRelationName) const override;
 
 private:
     /** translate RAM code for subroutine to get subproofs */

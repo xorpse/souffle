@@ -57,6 +57,30 @@ Own<ram::Sequence> UnitTranslator::generateProgram(const ast::TranslationUnit& t
     return ramProgram;
 }
 
+Own<ram::Relation> UnitTranslator::createRamRelation(
+        const ast::Relation* baseRelation, std::string ramRelationName) const {
+    auto arity = baseRelation->getArity();
+    auto representation = baseRelation->getRepresentation();
+
+    // add in base relation information
+    std::vector<std::string> attributeNames;
+    std::vector<std::string> attributeTypeQualifiers;
+    for (const auto& attribute : baseRelation->getAttributes()) {
+        attributeNames.push_back(attribute->getName());
+        attributeTypeQualifiers.push_back(context->getAttributeTypeQualifier(attribute->getTypeName()));
+    }
+
+    // add in provenance information
+    attributeNames.push_back("@rule_number");
+    attributeTypeQualifiers.push_back("i");
+
+    attributeNames.push_back("@level_number");
+    attributeTypeQualifiers.push_back("i");
+
+    return mk<ram::Relation>(
+            ramRelationName, arity + 2, 2, attributeNames, attributeTypeQualifiers, representation);
+}
+
 Own<ram::Statement> UnitTranslator::generateClearExpiredRelations(
         const std::set<const ast::Relation*>& /* expiredRelations */) const {
     // relations should be preserved if provenance is enabled

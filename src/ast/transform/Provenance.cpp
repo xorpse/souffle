@@ -193,9 +193,6 @@ bool ProvenanceTransformer::transform(TranslationUnit& translationUnit) {
             }
         }
 
-        relation->addAttribute(mk<Attribute>(std::string("@rule_number"), QualifiedName("number")));
-        relation->addAttribute(mk<Attribute>(std::string("@level_number"), QualifiedName("number")));
-
         for (auto clause : getClauses(program, *relation)) {
             size_t clauseNum = getClauseNum(&program, clause);
 
