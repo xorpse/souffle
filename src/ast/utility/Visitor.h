@@ -76,13 +76,13 @@ struct ast_visitor_tag {};
  * @tparam R the result type produced by a visit call
  * @tparam Params extra parameters to be passed to the visit call
  */
-template <typename R = void, typename... Params>
+template <typename R = void, typename NodeType = Node const, typename... Params>
 struct Visitor : public ast_visitor_tag {
     /** A virtual destructor */
     virtual ~Visitor() = default;
 
     /** The main entry for the user allowing visitors to be utilized as functions */
-    R operator()(const Node& node, Params... args) {
+    R operator()(NodeType& node, Params const&... args) {
         return visit(node, args...);
     }
 
@@ -94,11 +94,11 @@ struct Visitor : public ast_visitor_tag {
      * @param node the node to be visited
      * @param args a list of extra parameters to be forwarded
      */
-    virtual R visit(const Node& node, Params... args) {
+    virtual R visit(NodeType& node, Params const&... args) {
         // dispatch node processing based on dynamic type
 
 #define FORWARD(Kind) \
-    if (const auto* n = dynamic_cast<const Kind*>(&node)) return visit##Kind(*n, args...);
+    if (auto* n = as<Kind>(node)) return visit##Kind(*n, args...);
 
         // types
         FORWARD(SubsetType);
@@ -146,10 +146,9 @@ struct Visitor : public ast_visitor_tag {
         fatal("unsupported type: %s", typeid(node).name());
     }
 
-protected:
-#define LINK(Node, Parent)                                 \
-    virtual R visit##Node(const Node& n, Params... args) { \
-        return visit##Parent(n, args...);                  \
+#define LINK(Kind, Parent)                                   \
+    virtual R visit##Kind(copy_const_t<NodeType, Kind>& n, Params const&... args) { \
+        return visit##Parent(n, args...);                     \
     }
 
     // -- types --
@@ -208,10 +207,16 @@ protected:
 #undef LINK
 
     /** The base case for all visitors -- if no more specific overload was defined */
-    virtual R visitNode(const Node& /*node*/, Params... /*args*/) {
+    virtual R visitNode(const Node& /*node*/, Params const&... /*args*/) {
         return R();
     }
 };
+
+namespace detail {
+template <typename T>
+using EnableIfNode =
+        std::enable_if_t<std::is_base_of_v<Node, std::remove_const_t<std::remove_reference_t<T>>>>;
+}
 
 /**
  * A utility function visiting all nodes within the ast rooted by the given node
@@ -222,8 +227,9 @@ protected:
  * @param visitor the visitor to be applied on each node
  * @param args a list of extra parameters to be forwarded to the visitor
  */
-template <typename R, typename... Ps, typename... Args>
-void visitDepthFirstPreOrder(const Node& root, Visitor<R, Ps...>& visitor, Args&... args) {
+template <class NodeType, typename... Ts, typename... Args>
+detail::EnableIfNode<NodeType> visitDepthFirstPreOrder(
+        NodeType&& root, Visitor<Ts...>& visitor, Args const&... args) {
     visitor(root, args...);
     for (const Node* cur : root.getChildNodes()) {
         if (cur != nullptr) {
@@ -241,8 +247,9 @@ void visitDepthFirstPreOrder(const Node& root, Visitor<R, Ps...>& visitor, Args&
  * @param visitor the visitor to be applied on each node
  * @param args a list of extra parameters to be forwarded to the visitor
  */
-template <typename R, typename... Ps, typename... Args>
-void visitDepthFirstPostOrder(const Node& root, Visitor<R, Ps...>& visitor, Args&... args) {
+template <class NodeType, typename R, typename... Ps, typename... Args>
+detail::EnableIfNode<NodeType> visitDepthFirstPostOrder(
+        NodeType&& root, Visitor<R, Ps...>& visitor, Args const&... args) {
     for (const Node* cur : root.getChildNodes()) {
         if (cur != nullptr) {
             visitDepthFirstPostOrder(*cur, visitor, args...);
@@ -260,8 +267,9 @@ void visitDepthFirstPostOrder(const Node& root, Visitor<R, Ps...>& visitor, Args
  * @param visitor the visitor to be applied on each node
  * @param args a list of extra parameters to be forwarded to the visitor
  */
-template <typename R, typename... Ps, typename... Args>
-void visitDepthFirst(const Node& root, Visitor<R, Ps...>& visitor, Args&... args) {
+template <class NodeType, typename R, typename... Ps, typename... Args>
+detail::EnableIfNode<NodeType> visitDepthFirst(
+        NodeType&& root, Visitor<R, Ps...>& visitor, Args const&... args) {
     visitDepthFirstPreOrder(root, visitor, args...);
 }
 
@@ -271,23 +279,32 @@ namespace detail {
  * A specialized visitor wrapping a lambda function -- an auxiliary type required
  * for visitor convenience functions.
  */
-template <typename R, typename N>
+template <class NodeToVisit, typename NodeType = Node const, typename F = std::function<void(NodeType&)>>
 struct LambdaVisitor : public Visitor<void> {
-    std::function<R(const N&)> lambda;
-    LambdaVisitor(std::function<R(const N&)> lambda) : lambda(std::move(lambda)) {}
-    void visit(const Node& node) override {
-        if (const auto* n = dynamic_cast<const N*>(&node)) {
+    F lambda;
+    LambdaVisitor(F lam) : lambda(std::move(lam)) {}
+    void visit(NodeType& node) override {
+        if (const auto* n = as<NodeToVisit>(node)) {
             lambda(*n);
         }
     }
 };
 
+// Only used for deduction
+template <typename R, typename T>
+T& getNodeTypeHelper(std::function<R(T&)>);
+
+template <typename F>
+typename lambda_traits<F>::arg0_type& getNodeTypeHelper(F const&);
+
 /**
  * A factory function for creating LambdaVisitor instances.
  */
-template <typename R, typename N>
-LambdaVisitor<R, N> makeLambdaVisitor(const std::function<R(const N&)>& fun) {
-    return LambdaVisitor<R, N>(fun);
+template <typename F>
+auto makeLambdaVisitor(F&& f) {
+    using NodeToVisit = std::remove_reference_t<decltype(getNodeTypeHelper(f))>;
+    using NodeType = typename std::conditional<std::is_const_v<NodeToVisit>, Node const, Node>::type;
+    return LambdaVisitor<NodeToVisit, NodeType, std::remove_reference_t<F>>(std::forward<F>(f));
 }
 
 /**
@@ -314,10 +331,11 @@ struct is_ast_visitor<T&> : public is_ast_visitor<T> {};
  * @param fun the function to be applied
  * @param args a list of extra parameters to be forwarded to the visitor
  */
-template <typename R, typename N>
-void visitDepthFirst(const Node& root, const std::function<R(const N&)>& fun) {
-    auto visitor = detail::makeLambdaVisitor(fun);
-    visitDepthFirst<void>(root, visitor);
+template <class NodeType, typename F, typename... Args>
+std::enable_if_t<!detail::is_ast_visitor<F>::value> visitDepthFirst(
+        NodeType&& root, F&& fun, Args const&... args) {
+    auto visitor = detail::makeLambdaVisitor(std::forward<F>(fun));
+    visitDepthFirst(root, visitor, args...);
 }
 
 /**
@@ -329,12 +347,14 @@ void visitDepthFirst(const Node& root, const std::function<R(const N&)>& fun) {
  * @param fun the function to be applied
  * @param args a list of extra parameters to be forwarded to the visitor
  */
+/* FIXME: tomp
 template <typename Lambda, typename R = typename lambda_traits<Lambda>::result_type,
         typename N = typename lambda_traits<Lambda>::arg0_type>
 typename std::enable_if<!detail::is_ast_visitor<Lambda>::value, void>::type visitDepthFirst(
         const Node& root, const Lambda& fun) {
     visitDepthFirst(root, std::function<R(const N&)>(fun));
 }
+*/
 
 /**
  * A utility function visiting all nodes within a given list of AST root nodes
@@ -345,10 +365,10 @@ typename std::enable_if<!detail::is_ast_visitor<Lambda>::value, void>::type visi
  * @param fun the function to be applied
  * @param args a list of extra parameters to be forwarded to the visitor
  */
-template <typename T, typename Lambda>
-void visitDepthFirst(const std::vector<T*>& list, const Lambda& fun) {
+template <typename T, typename F, typename... Args>
+void visitDepthFirst(const std::vector<T*>& list, F&& fun, Args const&... args) {
     for (const auto& cur : list) {
-        visitDepthFirst(*cur, fun);
+        visitDepthFirst(*cur, std::forward<F>(fun), args...);
     }
 }
 
@@ -361,10 +381,10 @@ void visitDepthFirst(const std::vector<T*>& list, const Lambda& fun) {
  * @param fun the function to be applied
  * @param args a list of extra parameters to be forwarded to the visitor
  */
-template <typename T, typename Lambda>
-void visitDepthFirst(const VecOwn<T>& list, const Lambda& fun) {
+template <typename T, typename F, typename... Args>
+void visitDepthFirst(const VecOwn<T>& list, F&& fun, Args const&... args) {
     for (const auto& cur : list) {
-        visitDepthFirst(*cur, fun);
+        visitDepthFirst(*cur, std::forward<F>(fun), args...);
     }
 }
 
@@ -377,10 +397,10 @@ void visitDepthFirst(const VecOwn<T>& list, const Lambda& fun) {
  * @param fun the function to be applied
  * @param args a list of extra parameters to be forwarded to the visitor
  */
-template <typename R, typename N>
-void visitDepthFirstPostOrder(const Node& root, const std::function<R(const N&)>& fun) {
-    auto visitor = detail::makeLambdaVisitor(fun);
-    visitDepthFirstPostOrder<void>(root, visitor);
+template <class NodeType, typename F, typename... Args>
+detail::EnableIfNode<NodeType> visitDepthFirstPostOrder(NodeType&& root, F&& fun, Args const&... args) {
+    auto visitor = detail::makeLambdaVisitor(std::forward<F>(fun), args...);
+    visitDepthFirstPostOrder(root, visitor);
 }
 
 /**
@@ -392,11 +412,13 @@ void visitDepthFirstPostOrder(const Node& root, const std::function<R(const N&)>
  * @param fun the function to be applied
  * @param args a list of extra parameters to be forwarded to the visitor
  */
+/*
 template <typename Lambda, typename R = typename lambda_traits<Lambda>::result_type,
         typename N = typename lambda_traits<Lambda>::arg0_type>
 typename std::enable_if<!detail::is_ast_visitor<Lambda>::value, void>::type visitDepthFirstPostOrder(
         const Node& root, const Lambda& fun) {
     visitDepthFirstPostOrder(root, std::function<R(const N&)>(fun));
 }
+*/
 
 }  // namespace souffle::ast
