@@ -126,8 +126,6 @@ Own<ram::Statement> UnitTranslator::generateNonRecursiveRelation(const ast::Rela
             const std::string clauseText = stringify(toString(*clause));
             const std::string logTimerStatement =
                     LogStatement::tNonrecursiveRule(relationName, srcLocation, clauseText);
-            const std::string logSizeStatement =
-                    LogStatement::nNonrecursiveRule(relationName, srcLocation, clauseText);
             rule = mk<ram::LogRelationTimer>(std::move(rule), logTimerStatement, relName);
         }
 
@@ -326,7 +324,6 @@ Own<ram::Statement> UnitTranslator::generateStratumLoopBody(const std::set<const
             const std::string& relationName = toString(rel->getQualifiedName());
             const auto& srcLocation = rel->getSrcLoc();
             const std::string logTimerStatement = LogStatement::tRecursiveRelation(relationName, srcLocation);
-            const std::string logSizeStatement = LogStatement::nRecursiveRelation(relationName, srcLocation);
             relClauses = mk<ram::LogRelationTimer>(mk<ram::Sequence>(std::move(relClauses)),
                     logTimerStatement, getNewRelationName(rel->getQualifiedName()));
         }
