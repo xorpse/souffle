@@ -56,6 +56,7 @@ private:
     Own<ram::Statement> makeNegationSubproofSubroutine(const ast::Clause& clause);
 
     void addProvenanceClauseSubroutines(const ast::Program* program);
+    void addInfoClauses(const ast::Program* program);
 
     Own<ram::ExistenceCheck> makeRamAtomExistenceCheck(const ast::Atom* atom,
             const std::map<int, const ast::Variable*>& idToVar, ValueIndex& valueIndex) const;

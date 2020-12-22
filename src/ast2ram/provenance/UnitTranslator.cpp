@@ -48,6 +48,9 @@ Own<ram::Sequence> UnitTranslator::generateProgram(const ast::TranslationUnit& t
     // do the regular translation
     auto ramProgram = seminaive::UnitTranslator::generateProgram(translationUnit);
 
+    // add in info clauses
+    addInfoClauses(context->getProgram());
+
     // add subroutines for each clause
     addProvenanceClauseSubroutines(context->getProgram());
 
@@ -79,7 +82,14 @@ void UnitTranslator::addProvenanceClauseSubroutines(const ast::Program* program)
     });
 }
 
-/** make a subroutine to search for subproofs */
+void UnitTranslator::addInfoClauses(const ast::Program* program) {
+    for (const auto* clause : program->getClauses()) {
+        if (!isFact(*clause)) {
+            // TODO: Add info clause
+        }
+    }
+}
+
 Own<ram::Statement> UnitTranslator::makeSubproofSubroutine(const ast::Clause& clause) {
     return SubproofGenerator(*context, *symbolTable).translateNonRecursiveClause(clause);
 }
