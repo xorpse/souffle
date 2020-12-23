@@ -45,23 +45,18 @@ SubproofGenerator::SubproofGenerator(const TranslatorContext& context, SymbolTab
 SubproofGenerator::~SubproofGenerator() = default;
 
 Own<ram::Operation> SubproofGenerator::addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const {
-    size_t auxiliaryArity = context.getEvaluationArity(atom);
-    assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
-    size_t arity = atom->getArity() - auxiliaryArity;
-
+    // Add direct values
     VecOwn<ram::Expression> values;
-
-    auto args = atom->getArguments();
-    for (size_t i = 0; i < arity; i++) {
-        values.push_back(context.translateValue(symbolTable, *valueIndex, args[i]));
+    for (const auto* arg : atom->getArguments()) {
+        values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
     }
 
-    // undefined value for rule number
+    // Undefined value for rule number
     values.push_back(mk<ram::UndefValue>());
-    // add the height annotation for provenanceNotExists
-    for (size_t height = 1; height < auxiliaryArity; height++) {
-        values.push_back(context.translateValue(symbolTable, *valueIndex, args[arity + height]));
-    }
+
+    // Height annotation for provenanceNotExists
+    // TODO: get the correct height here this is not correct
+    values.push_back(mk<ram::UndefValue>());
 
     return mk<ram::Filter>(mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(
                                    getConcreteRelationName(atom->getQualifiedName()), std::move(values))),
@@ -114,9 +109,8 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
     // index of level argument in argument list
     const auto* head = clause.getHead();
     const auto& headArgs = head->getArguments();
-    size_t auxiliaryArity = context.getAuxiliaryArity(clause.getHead());
-    size_t levelIndex = clause.getHead()->getArguments().size() - auxiliaryArity;
-    for (size_t i = 0; i < head->getArity() - auxiliaryArity; i++) {
+    size_t levelIndex = clause.getHead()->getArguments().size();
+    for (size_t i = 0; i < head->getArity(); i++) {
         auto arg = headArgs.at(i);
         if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
             // FIXME: float equiv (`FEQ`)
@@ -197,21 +191,18 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
     // final provenance negation
     if (isRecursive()) {
         const auto* head = clause.getHead();
-        size_t auxiliaryArity = context.getEvaluationArity(head);
-        for (size_t i = 0; i < head->getArguments().size() - auxiliaryArity; i++) {
+        for (size_t i = 0; i < head->getArguments().size(); i++) {
             auto arg = head->getArguments().at(i);
             values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
         }
-        for (size_t i = 0; i < auxiliaryArity; ++i) {
-            values.push_back(mk<ram::SignedConstant>(-1));
-        }
+        values.push_back(mk<ram::SignedConstant>(-1));
+        values.push_back(mk<ram::SignedConstant>(-1));
     }
 
     const auto* head = clause.getHead();
     const auto& headArgs = head->getArguments();
-    size_t auxiliaryArity = context.getAuxiliaryArity(clause.getHead());
-    size_t levelIndex = clause.getHead()->getArguments().size() - auxiliaryArity;
-    for (size_t i = 0; i < head->getArity() - auxiliaryArity; i++) {
+    size_t levelIndex = clause.getHead()->getArguments().size();
+    for (size_t i = 0; i < head->getArity(); i++) {
         auto arg = headArgs.at(i);
         if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
             values.push_back(context.translateValue(symbolTable, *valueIndex, var));
