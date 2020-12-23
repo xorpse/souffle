@@ -146,9 +146,9 @@ struct Visitor : public ast_visitor_tag {
         fatal("unsupported type: %s", typeid(node).name());
     }
 
-#define LINK(Kind, Parent)                                   \
+#define LINK(Kind, Parent)                                                          \
     virtual R visit##Kind(copy_const_t<NodeType, Kind>& n, Params const&... args) { \
-        return visit##Parent(n, args...);                     \
+        return visit##Parent(n, args...);                                           \
     }
 
     // -- types --
