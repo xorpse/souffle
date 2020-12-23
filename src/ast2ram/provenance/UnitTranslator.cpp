@@ -121,27 +121,20 @@ Own<ram::Statement> UnitTranslator::makeSubproofSubroutine(const ast::Clause& cl
 Own<ram::ExistenceCheck> UnitTranslator::makeRamAtomExistenceCheck(const ast::Atom* atom,
         const std::map<int, const ast::Variable*>& idToVar, ValueIndex& valueIndex) const {
     auto relName = getConcreteRelationName(atom->getQualifiedName());
-    size_t auxiliaryArity = context->getAuxiliaryArity(atom);
 
     // construct a query
     VecOwn<ram::Expression> query;
-    auto atomArgs = atom->getArguments();
 
     // add each value (subroutine argument) to the search query
-    for (size_t i = 0; i < atom->getArity() - auxiliaryArity; i++) {
-        auto arg = atomArgs.at(i);
+    for (const auto* arg : atom->getArguments()) {
         auto translatedValue = context->translateValue(*symbolTable, valueIndex, arg);
         transformVariablesToSubroutineArgs(translatedValue.get(), idToVar);
         query.push_back(std::move(translatedValue));
     }
 
     // fill up query with nullptrs for the provenance columns
-    for (size_t i = 0; i < auxiliaryArity; i++) {
-        query.push_back(mk<ram::UndefValue>());
-    }
-
-    // ensure the length of query tuple is correct
-    assert(query.size() == atom->getArity() && "wrong query tuple size");
+    query.push_back(mk<ram::UndefValue>());
+    query.push_back(mk<ram::UndefValue>());
 
     // create existence checks to check if the tuple exists or not
     return mk<ram::ExistenceCheck>(relName, std::move(query));
