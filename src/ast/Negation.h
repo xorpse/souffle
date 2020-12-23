@@ -58,7 +58,7 @@ public:
         atom = map(std::move(atom));
     }
 
-    std::vector<const Node*> getChildNodes() const override {
+    std::vector<const Node*> getChildNodesImpl() const override {
         return {atom.get()};
     }
 

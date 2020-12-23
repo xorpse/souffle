@@ -82,7 +82,7 @@ public:
         }
     }
 
-    std::vector<const Node*> getChildNodes() const override {
+    std::vector<const Node*> getChildNodesImpl() const override {
         std::vector<const Node*> res;
         for (auto& cur : arguments) {
             res.push_back(cur.get());

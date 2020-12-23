@@ -17,6 +17,8 @@
 #pragma once
 
 #include "parser/SrcLocation.h"
+#include "souffle/utility/ContainerUtil.h"
+
 #include <iosfwd>
 #include <string>
 #include <typeinfo>
@@ -72,9 +74,57 @@ public:
     /** Apply the mapper to all child nodes */
     virtual void apply(const NodeMapper& /* mapper */) {}
 
+    using ConstChildNodes = std::vector<Node const*>;
+    /**
+     * This wraps the ChildNodes container, and does the const-casting
+     * in place.  This allows us to move all the uses to be const-correct,
+     * while it's confined to a single location.
+     * It also saves the user from having to write getChildNodes()
+     * and getChildNodes() const
+     */
+    class ChildNodes {
+    private:
+        auto caster() const {
+            return [](Node const* node) { return const_cast<Node*>(node); };
+        }
+
+    public:
+        ChildNodes(ConstChildNodes&& cn) : childNodes(std::move(cn)) {}
+
+        auto begin() const {
+            return makeTransformIter(childNodes.begin(), caster());
+        }
+
+        auto cbegin() const {
+            return makeTransformIter(childNodes.cbegin(), caster());
+        }
+
+        auto end() const {
+            return makeTransformIter(childNodes.end(), caster());
+        }
+
+        auto cend() const {
+            return makeTransformIter(childNodes.cend(), caster());
+        }
+
+        auto size() const {
+            return childNodes.size();
+        }
+        auto operator[](std::size_t ii) const {
+            return childNodes[ii];
+        }
+
+    private:
+        ConstChildNodes childNodes;
+    };
+
     /** Obtain a list of all embedded AST child nodes */
-    virtual std::vector<const Node*> getChildNodes() const {
-        return {};
+    ConstChildNodes getChildNodes() const {
+        return getChildNodesImpl();
+    }
+
+    ChildNodes getChildNodes() {
+        return ChildNodes(getChildNodesImpl());
     }
 
     /** Print node onto an output stream */
@@ -90,6 +140,10 @@ protected:
     /** Abstract equality check for two AST nodes */
     virtual bool equal(const Node& /* other */) const {
         return true;
+    }
+
+    virtual ConstChildNodes getChildNodesImpl() const {
+        return {};
     }
 
 private:

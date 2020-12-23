@@ -231,7 +231,7 @@ template <class NodeType, typename... Ts, typename... Args>
 detail::EnableIfNode<NodeType> visitDepthFirstPreOrder(
         NodeType&& root, Visitor<Ts...>& visitor, Args const&... args) {
     visitor(root, args...);
-    for (const Node* cur : root.getChildNodes()) {
+    for (auto* cur : root.getChildNodes()) {
         if (cur != nullptr) {
             visitDepthFirstPreOrder(*cur, visitor, args...);
         }
@@ -247,10 +247,10 @@ detail::EnableIfNode<NodeType> visitDepthFirstPreOrder(
  * @param visitor the visitor to be applied on each node
  * @param args a list of extra parameters to be forwarded to the visitor
  */
-template <class NodeType, typename R, typename... Ps, typename... Args>
+template <class NodeType, typename... Ts, typename... Args>
 detail::EnableIfNode<NodeType> visitDepthFirstPostOrder(
-        NodeType&& root, Visitor<R, Ps...>& visitor, Args const&... args) {
-    for (const Node* cur : root.getChildNodes()) {
+        NodeType&& root, Visitor<Ts...>& visitor, Args const&... args) {
+    for (auto* cur : root.getChildNodes()) {
         if (cur != nullptr) {
             visitDepthFirstPostOrder(*cur, visitor, args...);
         }
@@ -267,9 +267,9 @@ detail::EnableIfNode<NodeType> visitDepthFirstPostOrder(
  * @param visitor the visitor to be applied on each node
  * @param args a list of extra parameters to be forwarded to the visitor
  */
-template <class NodeType, typename R, typename... Ps, typename... Args>
+template <class NodeType, typename... Ts, typename... Args>
 detail::EnableIfNode<NodeType> visitDepthFirst(
-        NodeType&& root, Visitor<R, Ps...>& visitor, Args const&... args) {
+        NodeType&& root, Visitor<Ts...>& visitor, Args const&... args) {
     visitDepthFirstPreOrder(root, visitor, args...);
 }
 
@@ -279,12 +279,12 @@ namespace detail {
  * A specialized visitor wrapping a lambda function -- an auxiliary type required
  * for visitor convenience functions.
  */
-template <class NodeToVisit, typename NodeType = Node const, typename F = std::function<void(NodeType&)>>
-struct LambdaVisitor : public Visitor<void> {
+template <class NodeToVisit, typename F = std::function<void(NodeToVisit&)>>
+struct LambdaVisitor : public Visitor<void, copy_const_t<NodeToVisit, Node>> {
     F lambda;
     LambdaVisitor(F lam) : lambda(std::move(lam)) {}
-    void visit(NodeType& node) override {
-        if (const auto* n = as<NodeToVisit>(node)) {
+    void visit(copy_const_t<NodeToVisit, Node>& node) override {
+        if (auto* n = as<NodeToVisit>(node)) {
             lambda(*n);
         }
     }
@@ -303,8 +303,7 @@ typename lambda_traits<F>::arg0_type& getNodeTypeHelper(F const&);
 template <typename F>
 auto makeLambdaVisitor(F&& f) {
     using NodeToVisit = std::remove_reference_t<decltype(getNodeTypeHelper(f))>;
-    using NodeType = typename std::conditional<std::is_const_v<NodeToVisit>, Node const, Node>::type;
-    return LambdaVisitor<NodeToVisit, NodeType, std::remove_reference_t<F>>(std::forward<F>(f));
+    return LambdaVisitor<NodeToVisit, std::remove_reference_t<F>>(std::forward<F>(f));
 }
 
 /**
@@ -367,7 +366,7 @@ typename std::enable_if<!detail::is_ast_visitor<Lambda>::value, void>::type visi
  */
 template <typename T, typename F, typename... Args>
 void visitDepthFirst(const std::vector<T*>& list, F&& fun, Args const&... args) {
-    for (const auto& cur : list) {
+    for (auto&& cur : list) {
         visitDepthFirst(*cur, std::forward<F>(fun), args...);
     }
 }
@@ -383,7 +382,7 @@ void visitDepthFirst(const std::vector<T*>& list, F&& fun, Args const&... args) 
  */
 template <typename T, typename F, typename... Args>
 void visitDepthFirst(const VecOwn<T>& list, F&& fun, Args const&... args) {
-    for (const auto& cur : list) {
+    for (auto&& cur : list) {
         visitDepthFirst(*cur, std::forward<F>(fun), args...);
     }
 }
