@@ -72,10 +72,10 @@ Own<ram::Relation> UnitTranslator::createRamRelation(
 
     // add in provenance information
     attributeNames.push_back("@rule_number");
-    attributeTypeQualifiers.push_back("i");
+    attributeTypeQualifiers.push_back("i:number");
 
     attributeNames.push_back("@level_number");
-    attributeTypeQualifiers.push_back("i");
+    attributeTypeQualifiers.push_back("i:number");
 
     return mk<ram::Relation>(
             ramRelationName, arity + 2, 2, attributeNames, attributeTypeQualifiers, representation);
