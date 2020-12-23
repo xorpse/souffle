@@ -61,6 +61,10 @@ public:
         return targetExpression.get();
     }
 
+    Argument* getTargetExpression() {
+        return targetExpression.get();
+    }
+
     /** Return body literals */
     std::vector<Literal*> getBodyLiterals() const {
         return toPtrVector(body);

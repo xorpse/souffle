@@ -817,11 +817,11 @@ bool NegativeLabellingTransformer::transform(TranslationUnit& translationUnit) {
         atom->setQualifiedName(getNegativeLabel(relName));
         relationsToLabel.insert(relName);
     });
-    visitDepthFirst(program, [&](const Aggregator& aggr) {
-        visitDepthFirst(aggr, [&](const Atom& atom) {
+    visitDepthFirst(program, [&](Aggregator& aggr) {
+        visitDepthFirst(aggr, [&](Atom& atom) {
             auto relName = atom.getQualifiedName();
             if (contains(relationsToNotLabel, relName)) return;
-            const_cast<Atom&>(atom).setQualifiedName(getNegativeLabel(relName));
+            atom.setQualifiedName(getNegativeLabel(relName));
             relationsToLabel.insert(relName);
         });
     });

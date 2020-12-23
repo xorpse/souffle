@@ -182,6 +182,18 @@ auto clone(const std::vector<std::unique_ptr<A>>& xs) {
     return ys;
 }
 
+namespace detail {
+
+// This is a helper in the cases when the lambda is stateless
+template <typename F>
+F const& makeFun() {
+    // Even thought the lambda is stateless, it has no default ctor
+    // Is this gross?  Yes, yes it is.
+    typename std::aligned_storage<sizeof(F)>::type fakeLam;
+    return reinterpret_cast<F const&>(fakeLam);
+}
+}  // namespace detail
+
 // -------------------------------------------------------------
 //                            Iterators
 // -------------------------------------------------------------
@@ -198,19 +210,33 @@ class TransformIterator {
     using iter_t = std::iterator_traits<Iter>;
     using difference_type = typename iter_t::difference_type;
     using result_type = decltype(std::declval<F&>()(*std::declval<Iter>()));
+    static_assert(std::is_empty_v<F>, "Function object must be stateless");
 
 public:
     // some constructors
-    TransformIterator() = default;
+    template <typename It>
+    TransformIterator(It iter, std::enable_if_t<std::is_empty_v<F>, void*> = nullptr)
+            : iter(std::move(iter)), fun(detail::makeFun<F>()) {}
     TransformIterator(Iter iter, F f) : iter(std::move(iter)), fun(std::move(f)) {}
 
     // defaulted copy and move constructors
-    TransformIterator(const TransformIterator&) = default;
-    TransformIterator(TransformIterator&&) = default;
+    TransformIterator(const TransformIterator& other) : iter(other.iter), fun(other.fun) {}
+    TransformIterator(TransformIterator&& other) : iter(std::move(other.iter)), fun(std::move(other.fun)) {}
 
     // default assignment operators
-    TransformIterator& operator=(const TransformIterator&) = default;
-    TransformIterator& operator=(TransformIterator&&) = default;
+    TransformIterator& operator=(const TransformIterator& other) {
+        if (this != &other) {
+            iter = other.iter;
+        }
+        return *this;
+    }
+
+    TransformIterator& operator=(TransformIterator&& other) {
+        if (this != &other) {
+            iter = std::move(other.iter);
+        }
+        return *this;
+    }
 
     /* The equality operator as required by the iterator concept. */
     bool operator==(const TransformIterator& other) const {
@@ -255,7 +281,7 @@ public:
         return res;
     }
 
-    auto operator[](difference_type ii) const {
+    auto operator[](difference_type ii) const -> result_type {
         return f(iter[ii]);
     }
 
@@ -267,7 +293,7 @@ private:
 
 template <typename Iter, typename F>
 auto makeTransformIter(Iter&& iter, F&& f) {
-    return TransformIterator<std::remove_reference_t<Iter>, std::remove_reference_t<F>>(
+    return TransformIterator<std::remove_const_t<std::remove_reference_t<Iter>>, std::remove_reference_t<F>>(
             std::forward<Iter>(iter), std::forward<F>(f));
 }
 
@@ -378,6 +404,17 @@ struct range {
 template <typename Iter>
 range<Iter> make_range(const Iter& a, const Iter& b) {
     return range<Iter>(a, b);
+}
+
+template <typename Iter, typename F>
+auto makeTransformRange(Iter&& begin, Iter&& end, F const& f) {
+    return make_range(
+            makeTransformIter(std::forward<Iter>(begin), f), transformIter(std::forward<Iter>(end), f));
+}
+
+template <typename Iter>
+auto makeDerefRange(Iter&& begin, Iter&& end) {
+    return make_range(derefIter(std::forward<Iter>(begin)), derefIter(std::forward<Iter>(end)));
 }
 
 // -------------------------------------------------------------------------------
