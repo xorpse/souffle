@@ -22,6 +22,7 @@
 #include "ast/utility/Utils.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
+#include "ast2ram/utility/ValueIndex.h"
 #include "ram/EmptinessCheck.h"
 #include "ram/ExistenceCheck.h"
 #include "ram/Filter.h"
@@ -84,6 +85,19 @@ Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, con
             std::move(op));
 }
 
+void ClauseTranslator::indexAtoms(const ast::Clause& clause) {
+    size_t atomIdx = 0;
+    for (const auto* atom : getAtomOrdering(clause)) {
+        // give the atom the current level
+        int scanLevel = addOperatorLevel(atom);
+        indexNodeArguments(scanLevel, atom->getArguments());
+
+        // add level num variable
+        auto tmpVar = mk<ast::Variable>("@level_num_" + std::to_string(atomIdx++));
+        valueIndex->addVarReference(*tmpVar);
+    }
+}
+
 Own<ast::Argument> ClauseTranslator::getNextLevelNumber(const std::vector<ast::Argument*>& levels) {
     if (levels.empty()) return mk<ast::NumericConstant>(0);
 
@@ -109,13 +123,9 @@ Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause
         values.push_back(mk<ram::SignedConstant>(0));
     } else {
         values.push_back(mk<ram::SignedConstant>(ast::getClauseNum(context.getProgram(), &clause)));
-        std::vector<ast::Argument*> bodyLevels;
-        const auto& bodyLiterals = clause.getBodyLiterals();
-        for (size_t i = 0; i < bodyLiterals.size(); i++) {
-            const auto* lit = bodyLiterals.at(i);
-            if (isA<ast::Atom>(lit)) {
-                bodyLevels.push_back(new ast::Variable("@level_num_" + std::to_string(i)));
-            }
+        const auto& bodyAtoms = getAtomOrdering(clause);
+        for (size_t i = 0; i < bodyAtoms.size(); i++) {
+            bodyLevels.push_back(new ast::Variable("@level_num_" + std::to_string(i)));
         }
         auto levelNumber = getNextLevelNumber(bodyLevels);
         values.push_back(context.translateValue(symbolTable, *valueIndex, levelNumber.get()));

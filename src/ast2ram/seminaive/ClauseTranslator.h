@@ -90,7 +90,7 @@ protected:
 
     /** Indexing */
     void indexClause(const ast::Clause& clause);
-    void indexAtoms(const ast::Clause& clause);
+    virtual void indexAtoms(const ast::Clause& clause);
     void indexAggregators(const ast::Clause& clause);
     void indexMultiResultFunctors(const ast::Clause& clause);
     void indexNodeArguments(int nodeLevel, const std::vector<ast::Argument*>& nodeArgs);
@@ -129,13 +129,13 @@ protected:
     Own<ram::Operation> instantiateMultiResultFunctor(
             Own<ram::Operation> op, const ast::IntrinsicFunctor* inf, int curLevel) const;
 
-private:
-    std::vector<const ast::Argument*> generators;
-    std::vector<const ast::Node*> operators;
-
     /** Operation levelling */
     int addGeneratorLevel(const ast::Argument* arg);
     int addOperatorLevel(const ast::Node* node);
+
+private:
+    std::vector<const ast::Argument*> generators;
+    std::vector<const ast::Node*> operators;
 };
 
 }  // namespace souffle::ast2ram::seminaive

@@ -182,44 +182,8 @@ bool ProvenanceTransformer::transform(TranslationUnit& translationUnit) {
                 makeInfoRelation(*clause, getClauseNum(&program, clause), translationUnit);
             }
         }
-
-        for (auto clause : getClauses(program, *relation)) {
-            // mapper to add two provenance columns to atoms
-            struct M : public NodeMapper {
-                using NodeMapper::operator();
-
-                Own<Node> operator()(Own<Node> node) const override {
-                    // add provenance columns
-                    if (auto atom = dynamic_cast<Atom*>(node.get())) {
-                        atom->addArgument(mk<UnnamedVariable>());
-                        atom->addArgument(mk<UnnamedVariable>());
-                    }
-
-                    // otherwise - apply mapper recursively
-                    node->apply(*this);
-                    return node;
-                }
-            };
-
-            // add unnamed vars to each atom nested in arguments of head
-            clause->getHead()->apply(M());
-
-            if (!isFact(*clause)) {
-                for (size_t i = 0; i < clause->getBodyLiterals().size(); i++) {
-                    auto lit = clause->getBodyLiterals()[i];
-
-                    // add unnamed vars to each atom nested in arguments of lit
-                    lit->apply(M());
-
-                    // add two provenance columns to lit; first is rule num, second is level num
-                    if (auto atom = dynamic_cast<Atom*>(lit)) {
-                        atom->addArgument(mk<UnnamedVariable>());
-                        atom->addArgument(mk<ast::Variable>("@level_num_" + std::to_string(i)));
-                    }
-                }
-            }
-        }
     }
+
     return true;
 }
 
