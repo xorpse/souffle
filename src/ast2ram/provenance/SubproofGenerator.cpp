@@ -171,15 +171,20 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
     VecOwn<ram::Expression> values;
 
     // get all values in the body
-    for (ast::Literal* lit : clause.getBodyLiterals()) {
-        if (auto atom = dynamic_cast<ast::Atom*>(lit)) {
-            for (ast::Argument* arg : atom->getArguments()) {
+    for (const auto* lit : clause.getBodyLiterals()) {
+        if (auto atom = dynamic_cast<const ast::Atom*>(lit)) {
+            for (const auto* arg : atom->getArguments()) {
                 values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
             }
-        } else if (auto neg = dynamic_cast<ast::Negation*>(lit)) {
+            // TODO: either this or neg shouldnt be undef (think its this)
+            values.push_back(mk<ram::UndefValue>());
+            values.push_back(mk<ram::UndefValue>());
+        } else if (auto neg = dynamic_cast<const ast::Negation*>(lit)) {
             for (ast::Argument* arg : neg->getAtom()->getArguments()) {
                 values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
             }
+            values.push_back(mk<ram::UndefValue>());
+            values.push_back(mk<ram::UndefValue>());
         }
     }
 
