@@ -27,6 +27,7 @@
 #include "ram/ExistenceCheck.h"
 #include "ram/Filter.h"
 #include "ram/GuardedProject.h"
+#include "ram/IntrinsicOperator.h"
 #include "ram/Negation.h"
 #include "ram/Operation.h"
 #include "ram/ProvenanceExistenceCheck.h"
@@ -94,18 +95,25 @@ void ClauseTranslator::indexAtoms(const ast::Clause& clause) {
 
         // add level num variable
         auto tmpVar = mk<ast::Variable>("@level_num_" + std::to_string(atomIdx++));
-        valueIndex->addVarReference(*tmpVar);
+        valueIndex->addVarReference(*tmpVar, scanLevel, atom->getArity() + 1);
     }
 }
 
-Own<ast::Argument> ClauseTranslator::getNextLevelNumber(const std::vector<ast::Argument*>& levels) {
-    if (levels.empty()) return mk<ast::NumericConstant>(0);
+Own<ram::Expression> ClauseTranslator::getLevelNumber(const ast::Clause& clause) const {
+    auto getLevelVariable = [&](size_t atomIdx) { return "@level_num_" + std::to_string(atomIdx); };
 
-    auto max = levels.size() == 1 ? Own<ast::Argument>(levels[0])
-                                  : mk<ast::IntrinsicFunctor>("max",
-                                            map(levels, [](auto&& x) { return Own<ast::Argument>(x); }));
-
-    return mk<ast::IntrinsicFunctor>("+", std::move(max), mk<ast::NumericConstant>(1));
+    const auto& bodyAtoms = getAtomOrdering(clause);
+    if (bodyAtoms.empty()) return mk<ram::SignedConstant>(0);
+    if (bodyAtoms.size() == 1) {
+        auto levelVar = mk<ast::Variable>(getLevelVariable(0));
+        return context.translateValue(symbolTable, *valueIndex, levelVar.get());
+    }
+    VecOwn<ram::Expression> values;
+    for (size_t i = 0; i < bodyAtoms.size(); i++) {
+        auto levelVar = mk<ast::Variable>(getLevelVariable(i));
+        values.push_back(context.translateValue(symbolTable, *valueIndex, levelVar.get()));
+    }
+    return mk<ram::IntrinsicOperator>(FunctorOp::MAX, std::move(values));
 }
 
 Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause) const {
@@ -123,12 +131,7 @@ Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause
         values.push_back(mk<ram::SignedConstant>(0));
     } else {
         values.push_back(mk<ram::SignedConstant>(ast::getClauseNum(context.getProgram(), &clause)));
-        const auto& bodyAtoms = getAtomOrdering(clause);
-        for (size_t i = 0; i < bodyAtoms.size(); i++) {
-            bodyLevels.push_back(new ast::Variable("@level_num_" + std::to_string(i)));
-        }
-        auto levelNumber = getNextLevelNumber(bodyLevels);
-        values.push_back(context.translateValue(symbolTable, *valueIndex, levelNumber.get()));
+        values.push_back(getLevelNumber(clause));
     }
 
     // Relations with functional dependency constraints

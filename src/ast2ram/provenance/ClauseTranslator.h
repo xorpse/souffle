@@ -49,7 +49,7 @@ protected:
     void indexAtoms(const ast::Clause& clause) override;
 
 private:
-    static Own<ast::Argument> getNextLevelNumber(const std::vector<ast::Argument*>& levels);
+    Own<ram::Expression> getLevelNumber(const ast::Clause& clause) const;
 };
 
 }  // namespace souffle::ast2ram::provenance
