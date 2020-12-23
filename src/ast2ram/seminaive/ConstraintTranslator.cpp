@@ -48,9 +48,7 @@ Own<ram::Condition> ConstraintTranslator::visitBinaryConstraint(const ast::Binar
 
 Own<ram::Condition> ConstraintTranslator::visitNegation(const ast::Negation& neg) {
     const auto* atom = neg.getAtom();
-    size_t auxiliaryArity = context.getEvaluationArity(atom);
-    assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
-    size_t arity = atom->getArity() - auxiliaryArity;
+    size_t arity = atom->getArity();
 
     if (arity == 0) {
         // for a nullary, negation is a simple emptiness check
@@ -59,12 +57,8 @@ Own<ram::Condition> ConstraintTranslator::visitNegation(const ast::Negation& neg
 
     // else, we construct the atom and create a negation
     VecOwn<ram::Expression> values;
-    auto args = atom->getArguments();
-    for (size_t i = 0; i < arity; i++) {
-        values.push_back(context.translateValue(symbolTable, index, args[i]));
-    }
-    for (size_t i = 0; i < auxiliaryArity; i++) {
-        values.push_back(mk<ram::UndefValue>());
+    for (const auto* arg : atom->getArguments()) {
+        values.push_back(context.translateValue(symbolTable, index, arg));
     }
     return mk<ram::Negation>(
             mk<ram::ExistenceCheck>(getConcreteRelationName(atom->getQualifiedName()), std::move(values)));
