@@ -24,7 +24,7 @@ class SymbolTable;
 
 namespace souffle::ast {
 class Negation;
-}  // namespace souffle::ast
+}
 
 namespace souffle::ram {
 class Condition;
@@ -35,15 +35,15 @@ class TranslatorContext;
 class ValueIndex;
 }  // namespace souffle::ast2ram
 
-namespace souffle::ast2ram::seminaive {
+namespace souffle::ast2ram::provenance {
 
 class ConstraintTranslator : public ast2ram::seminaive::ConstraintTranslator {
 public:
     ConstraintTranslator(const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index)
-            : ast2ram::seminaive::ConstraintTranslator(context, symbolTable, valueIndex) {}
+            : ast2ram::seminaive::ConstraintTranslator(context, symbolTable, index) {}
 
     /** -- Visitors -- */
     Own<ram::Condition> visitNegation(const ast::Negation& neg) override;
 };
 
-}  // namespace souffle::ast2ram::seminaive
+}  // namespace souffle::ast2ram::provenance
