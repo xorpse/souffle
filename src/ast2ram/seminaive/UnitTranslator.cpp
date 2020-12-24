@@ -434,7 +434,6 @@ Own<ram::Statement> UnitTranslator::generateStoreRelation(const ast::Relation* r
 Own<ram::Relation> UnitTranslator::createRamRelation(
         const ast::Relation* baseRelation, std::string ramRelationName) const {
     auto arity = baseRelation->getArity();
-    auto auxiliaryArity = context->getAuxiliaryArity(baseRelation);
     auto representation = baseRelation->getRepresentation();
 
     std::vector<std::string> attributeNames;
@@ -445,7 +444,7 @@ Own<ram::Relation> UnitTranslator::createRamRelation(
     }
 
     return mk<ram::Relation>(
-            ramRelationName, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
+            ramRelationName, arity, 0, attributeNames, attributeTypeQualifiers, representation);
 }
 
 VecOwn<ram::Relation> UnitTranslator::createRamRelations(const std::vector<size_t>& sccOrdering) const {

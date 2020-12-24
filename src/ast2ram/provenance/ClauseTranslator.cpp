@@ -39,9 +39,7 @@ namespace souffle::ast2ram::provenance {
 
 Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
         Own<ram::Operation> op, const ast::Atom* atom) const {
-    size_t auxiliaryArity = context.getEvaluationArity(atom);
-    assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
-    size_t arity = atom->getArity() - auxiliaryArity;
+    size_t arity = atom->getArity();
     std::string name = getDeltaRelationName(atom->getQualifiedName());
 
     if (arity == 0) {
@@ -52,35 +50,29 @@ Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
     // else, we construct the atom and create a negation
     VecOwn<ram::Expression> values;
     auto args = atom->getArguments();
-    for (size_t i = 0; i < arity; i++) {
-        values.push_back(context.translateValue(symbolTable, *valueIndex, args[i]));
+    for (const auto* arg : args) {
+        values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
     }
-    for (size_t i = 0; i < auxiliaryArity; i++) {
-        values.push_back(mk<ram::UndefValue>());
-    }
+    values.push_back(mk<ram::UndefValue>());
+    values.push_back(mk<ram::UndefValue>());
 
     return mk<ram::Filter>(
             mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
 }
 
 Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const {
-    size_t auxiliaryArity = context.getEvaluationArity(atom);
-    assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
-    size_t arity = atom->getArity() - auxiliaryArity;
-
     VecOwn<ram::Expression> values;
 
     auto args = atom->getArguments();
-    for (size_t i = 0; i < arity; i++) {
-        values.push_back(context.translateValue(symbolTable, *valueIndex, args[i]));
+    for (const auto* arg : args) {
+        values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
     }
 
     // undefined value for rule number
     values.push_back(mk<ram::UndefValue>());
-    // add the height annotation for provenanceNotExists
-    for (size_t height = 1; height < auxiliaryArity; height++) {
-        values.push_back(context.translateValue(symbolTable, *valueIndex, args[arity + height]));
-    }
+
+    // TODO: should height be added here?
+    values.push_back(mk<ram::UndefValue>());
 
     return mk<ram::Filter>(mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(
                                    getConcreteRelationName(atom->getQualifiedName()), std::move(values))),
