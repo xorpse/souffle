@@ -239,9 +239,17 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
 
     for (const auto* lit : clause.getBodyLiterals()) {
         if (const auto* atom = dynamic_cast<const ast::Atom*>(lit)) {
-            auto arity = atom->getArity();
-            auto atomArgs = atom->getArguments();
-            values.push_back(context.translateValue(symbolTable, *valueIndex, atomArgs.at(arity - 1)));
+            size_t levelNumber = 0;
+            while (getAtomOrdering(clause).at(levelNumber) != atom) {
+                levelNumber++;
+                assert(levelNumber < getAtomOrdering(clause).size());
+            }
+            auto levelVarRepr = mk<ast::Variable>("@level_num_" + std::to_string(levelNumber));
+            auto ruleNumRepr = mk<ast::Variable>("@rule_num_" + std::to_string(levelNumber));
+            auto level = context.translateValue(symbolTable, *valueIndex, levelVarRepr.get());
+            auto ruleNum = context.translateValue(symbolTable, *valueIndex, ruleNumRepr.get());
+
+            values.push_back(std::move(level));
             values.push_back(mk<ram::SubroutineArgument>(levelIndex));
         }
     }
