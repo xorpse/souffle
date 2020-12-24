@@ -140,8 +140,13 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
     // add level constraints, i.e., that each body literal has height less than that of the head atom
     for (const auto* lit : clause.getBodyLiterals()) {
         if (const auto* atom = dynamic_cast<const ast::Atom*>(lit)) {
-            // TODO: get the  correct level number
-            auto valLHS = mk<ram::SignedConstant>(-1);
+            size_t levelNumber = 0;
+            while (getAtomOrdering(clause).at(levelNumber) != atom) {
+                levelNumber++;
+                assert(levelNumber < getAtomOrdering(clause).size());
+            }
+            auto varRepr = mk<ast::Variable>("@level_num_" + std::to_string(levelNumber));
+            auto valLHS = context.translateValue(symbolTable, *valueIndex, varRepr.get());
 
             // add the constraint
             auto constraint = mk<ram::Constraint>(
