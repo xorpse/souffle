@@ -30,6 +30,11 @@
 
 namespace souffle::ast2ram::provenance {
 
+Own<ram::Condition> ConstraintTranslator::translateConstraint(const ast::Literal* lit) {
+    assert(lit != nullptr && "literal should be defined");
+    return ConstraintTranslator(context, symbolTable, index)(*lit);
+}
+
 Own<ram::Condition> ConstraintTranslator::visitNegation(const ast::Negation& neg) {
     // construct the atom and create a negation
     const auto* atom = neg.getAtom();

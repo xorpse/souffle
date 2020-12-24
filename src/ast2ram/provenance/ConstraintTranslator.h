@@ -42,6 +42,8 @@ public:
     ConstraintTranslator(const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index)
             : ast2ram::seminaive::ConstraintTranslator(context, symbolTable, index) {}
 
+    Own<ram::Condition> translateConstraint(const ast::Literal* lit) override;
+
     /** -- Visitors -- */
     Own<ram::Condition> visitNegation(const ast::Negation& neg) override;
 };
