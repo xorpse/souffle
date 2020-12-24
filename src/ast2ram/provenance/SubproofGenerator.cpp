@@ -179,9 +179,19 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
             for (const auto* arg : atom->getArguments()) {
                 values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
             }
-            // TODO: either this or neg shouldnt be undef (think its this)
-            values.push_back(mk<ram::UndefValue>());
-            values.push_back(mk<ram::UndefValue>());
+            // TODO: put helper methods for these variables
+            size_t levelNumber = 0;
+            while (getAtomOrdering(clause).at(levelNumber) != atom) {
+                levelNumber++;
+                assert(levelNumber < getAtomOrdering(clause).size());
+            }
+            auto levelVarRepr = mk<ast::Variable>("@level_num_" + std::to_string(levelNumber));
+            auto ruleNumRepr = mk<ast::Variable>("@rule_num_" + std::to_string(levelNumber));
+            auto level = context.translateValue(symbolTable, *valueIndex, levelVarRepr.get());
+            auto ruleNum = context.translateValue(symbolTable, *valueIndex, ruleNumRepr.get());
+
+            values.push_back(std::move(ruleNum));
+            values.push_back(std::move(level));
         } else if (auto neg = dynamic_cast<const ast::Negation*>(lit)) {
             for (ast::Argument* arg : neg->getAtom()->getArguments()) {
                 values.push_back(context.translateValue(symbolTable, *valueIndex, arg));

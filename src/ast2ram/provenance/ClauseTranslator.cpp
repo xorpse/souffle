@@ -94,9 +94,15 @@ void ClauseTranslator::indexAtoms(const ast::Clause& clause) {
         int scanLevel = addOperatorLevel(atom);
         indexNodeArguments(scanLevel, atom->getArguments());
 
+        // add rule num variable
+        auto ruleNumVar = mk<ast::Variable>("@rule_num_" + std::to_string(atomIdx));
+        valueIndex->addVarReference(*ruleNumVar, scanLevel, atom->getArity());
+
         // add level num variable
-        auto tmpVar = mk<ast::Variable>("@level_num_" + std::to_string(atomIdx++));
-        valueIndex->addVarReference(*tmpVar, scanLevel, atom->getArity() + 1);
+        auto levelVar = mk<ast::Variable>("@level_num_" + std::to_string(atomIdx));
+        valueIndex->addVarReference(*levelVar, scanLevel, atom->getArity() + 1);
+
+        atomIdx++;
     }
 }
 
