@@ -25,6 +25,7 @@
 #include "ast2ram/utility/ValueIndex.h"
 #include "ram/EmptinessCheck.h"
 #include "ram/ExistenceCheck.h"
+#include "ram/Expression.h"
 #include "ram/Filter.h"
 #include "ram/GuardedProject.h"
 #include "ram/IntrinsicOperator.h"
@@ -113,7 +114,12 @@ Own<ram::Expression> ClauseTranslator::getLevelNumber(const ast::Clause& clause)
         auto levelVar = mk<ast::Variable>(getLevelVariable(i));
         values.push_back(context.translateValue(symbolTable, *valueIndex, levelVar.get()));
     }
-    return mk<ram::IntrinsicOperator>(FunctorOp::MAX, std::move(values));
+    auto maxLevel = mk<ram::IntrinsicOperator>(FunctorOp::MAX, std::move(values));
+
+    VecOwn<ram::Expression> addArgs;
+    addArgs.push_back(std::move(maxLevel));
+    addArgs.push_back(mk<ram::SignedConstant>(1));
+    return mk<ram::IntrinsicOperator>(FunctorOp::ADD, std::move(addArgs));
 }
 
 Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause) const {
