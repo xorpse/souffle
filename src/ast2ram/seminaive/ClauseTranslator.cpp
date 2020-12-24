@@ -413,9 +413,7 @@ Own<ram::Operation> ClauseTranslator::addGeneratorLevels(
 
 Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
         Own<ram::Operation> op, const ast::Atom* atom) const {
-    size_t auxiliaryArity = context.getEvaluationArity(atom);
-    assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
-    size_t arity = atom->getArity() - auxiliaryArity;
+    size_t arity = atom->getArity();
     std::string name = getDeltaRelationName(atom->getQualifiedName());
 
     if (arity == 0) {
@@ -429,18 +427,13 @@ Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
     for (size_t i = 0; i < arity; i++) {
         values.push_back(context.translateValue(symbolTable, *valueIndex, args[i]));
     }
-    for (size_t i = 0; i < auxiliaryArity; i++) {
-        values.push_back(mk<ram::UndefValue>());
-    }
 
     return mk<ram::Filter>(
             mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
 }
 
 Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const {
-    size_t auxiliaryArity = context.getEvaluationArity(atom);
-    assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
-    size_t arity = atom->getArity() - auxiliaryArity;
+    size_t arity = atom->getArity();
     std::string name = getConcreteRelationName(atom->getQualifiedName());
 
     if (arity == 0) {
@@ -453,9 +446,6 @@ Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, con
     auto args = atom->getArguments();
     for (size_t i = 0; i < arity; i++) {
         values.push_back(context.translateValue(symbolTable, *valueIndex, args[i]));
-    }
-    for (size_t i = 0; i < auxiliaryArity; i++) {
-        values.push_back(mk<ram::UndefValue>());
     }
     return mk<ram::Filter>(
             mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
