@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "ast2ram/seminaive/ClauseTranslator.h"
+#include "ast2ram/provenance/ClauseTranslator.h"
 
 namespace souffle::ast {
 class Clause;
@@ -32,7 +32,7 @@ class TranslatorContext;
 
 namespace souffle::ast2ram::provenance {
 
-class SubproofGenerator : public ast2ram::seminaive::ClauseTranslator {
+class SubproofGenerator : public ast2ram::provenance::ClauseTranslator {
 public:
     SubproofGenerator(const TranslatorContext& context, SymbolTable& symbolTable);
     ~SubproofGenerator();

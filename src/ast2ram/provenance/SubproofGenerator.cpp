@@ -20,7 +20,7 @@
 #include "ast/utility/Utils.h"
 #include "ast2ram/ConstraintTranslator.h"
 #include "ast2ram/ValueTranslator.h"
-#include "ast2ram/seminaive/ClauseTranslator.h"
+#include "ast2ram/provenance/ClauseTranslator.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ast2ram/utility/ValueIndex.h"
@@ -40,7 +40,7 @@
 namespace souffle::ast2ram::provenance {
 
 SubproofGenerator::SubproofGenerator(const TranslatorContext& context, SymbolTable& symbolTable)
-        : ast2ram::seminaive::ClauseTranslator(context, symbolTable) {}
+        : ast2ram::provenance::ClauseTranslator(context, symbolTable) {}
 
 SubproofGenerator::~SubproofGenerator() = default;
 
@@ -140,10 +140,8 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
     // add level constraints, i.e., that each body literal has height less than that of the head atom
     for (const auto* lit : clause.getBodyLiterals()) {
         if (const auto* atom = dynamic_cast<const ast::Atom*>(lit)) {
-            // arity - 1 is the level number in body atoms
-            auto arity = atom->getArity();
-            auto atomArgs = atom->getArguments();
-            auto valLHS = context.translateValue(symbolTable, *valueIndex, atomArgs.at(arity - 1));
+            // TODO: get the  correct level number
+            auto valLHS = mk<ram::SignedConstant>(-1);
 
             // add the constraint
             auto constraint = mk<ram::Constraint>(
