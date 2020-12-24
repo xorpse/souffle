@@ -57,14 +57,6 @@ namespace souffle::ast::transform {
 
 void ProvenanceTransformer::makeInfoRelation(
         const Clause& originalClause, size_t originalClauseNum, TranslationUnit& translationUnit) {
-    QualifiedName name = originalClause.getHead()->getQualifiedName();
-    name.append("@info");
-    name.append(toString(originalClauseNum));
-
-    // initialise info relation
-    auto infoRelation = mk<Relation>(name);
-    infoRelation->setRepresentation(RelationRepresentation::INFO);
-
     // create new clause containing a single fact
     auto infoClause = mk<Clause>();
     auto infoClauseHead = mk<Atom>(name);
@@ -164,27 +156,13 @@ void ProvenanceTransformer::makeInfoRelation(
     // set clause head and add clause to info relation
     infoClause->setHead(std::move(infoClauseHead));
 
-    Program& program = translationUnit.getProgram();
-    program.addClause(std::move(infoClause));
-    program.addRelation(std::move(infoRelation));
+    // Program& program = translationUnit.getProgram();
+    // program.addClause(std::move(infoClause));
+    // program.addRelation(std::move(infoRelation));
 }
 
 bool ProvenanceTransformer::transform(TranslationUnit& translationUnit) {
-    Program& program = translationUnit.getProgram();
-
-    for (auto relation : program.getRelations()) {
-        // generate info relations for each clause
-        // do this before all other transformations so that we record
-        // the original rule without any instrumentation
-        for (auto clause : getClauses(program, *relation)) {
-            if (!isFact(*clause)) {
-                // add info relation
-                makeInfoRelation(*clause, getClauseNum(&program, clause), translationUnit);
-            }
-        }
-    }
-
-    return true;
+    return false;
 }
 
 }  // namespace souffle::ast::transform

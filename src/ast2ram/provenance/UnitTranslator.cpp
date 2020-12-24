@@ -107,9 +107,39 @@ void UnitTranslator::addProvenanceClauseSubroutines(const ast::Program* program)
 
 void UnitTranslator::addInfoClauses(const ast::Program* program) {
     for (const auto* clause : program->getClauses()) {
-        if (!isFact(*clause)) {
-            // TODO: Add info clause
+        if (isFact(*clause)) {
+            continue;
         }
+
+        // generate the info fact clause
+        // size_t clauseNum = getClauseNum(&program, clause);
+        auto infoRelName = clause->getHead()->getQualifiedName();
+        infoRelName.append("@info");
+        // infoRelName.append(toString(clauseNum));
+
+        // TODO: generate relation
+        // TODO: set representation to be info
+        // // initialise info relation
+        // auto infoRelation = mk<Relation>(name);
+        // infoRelation->setRepresentation(RelationRepresentation::INFO);
+
+        // TODO: generate clause type
+        // attributes:
+        // - clause_num:number
+        // - head_vars:symbol
+        // - for all atoms + negs + bcs
+        //      - rel_<i>:symbol
+        // - clause_repr:symbol
+
+        // TODO: generate clause head
+        // - clauseNum
+        // - toString(join(headVariables, ","))
+        // - for all atoms || negs:
+        //      - atoms: atomDescription<<arginfo>>
+        //      - negs: !relName
+        // - for all bcs:
+        //      - constraintDescription<<arginfo>>
+        // - toString(originalClause)
     }
 }
 
