@@ -55,38 +55,6 @@
 
 namespace souffle::ast::transform {
 
-void ProvenanceTransformer::makeInfoRelation(const Clause& originalClause) {
-    // create new clause containing a single fact
-    static size_t c = 0;
-    auto infoRelation = mk<Relation>("@test_" + toString(c++));
-
-    // add clause num attribute
-    infoRelation->addAttribute(mk<Attribute>("clause_num", QualifiedName("number")));
-
-    // add an attribute to infoRelation for the head of clause
-    infoRelation->addAttribute(mk<Attribute>(std::string("head_vars"), QualifiedName("symbol")));
-
-    // visit all body literals and add to info clause head
-    size_t i = 0;
-    for (const auto* lit : originalClause.getBodyLiterals()) {
-        const Atom* atom = nullptr;
-        if (isA<Atom>(lit)) {
-            atom = static_cast<const Atom*>(lit);
-        } else if (isA<Negation>(lit)) {
-            atom = static_cast<const Negation*>(lit)->getAtom();
-        }
-
-        // add an attribute for atoms and binary constraints
-        if (atom != nullptr || isA<BinaryConstraint>(lit)) {
-            infoRelation->addAttribute(
-                    mk<Attribute>(std::string("rel_") + std::to_string(i), QualifiedName("symbol")));
-        }
-        i++;
-    }
-
-    infoRelation->addAttribute(mk<Attribute>("clause_repr", QualifiedName("symbol")));
-}
-
 bool ProvenanceTransformer::transform(TranslationUnit& /* translationUnit */) {
     return false;
 }

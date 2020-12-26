@@ -145,19 +145,34 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
             infoRelQualifiedName.append(toString(clauseID));
             std::string infoRelName = getConcreteRelationName(infoRelQualifiedName);
 
-            // TODO: generate relation
-            // TODO: set representation to be info
-            // // initialise info relation
-            // auto infoRelation = mk<Relation>(name);
-            // infoRelation->setRepresentation(RelationRepresentation::INFO);
+            /* -- Relation -- */
+            std::vector<std::string> attributeNames;
+            std::vector<std::string> attributeTypeQualifiers;
 
-            // TODO: generate clause type
-            // attributes:
-            // - clause_num:number
-            // - head_vars:symbol
-            // - for all atoms + negs + bcs
-            //      - rel_<i>:symbol
-            // - clause_repr:symbol
+            // (1) Clause ID
+            attributeNames.push_back("clause_num");
+            attributeTypeQualifiers.push_back("i:number");
+
+            // (2) Head variable string
+            attributeNames.push_back("head_vars");
+            attributeTypeQualifiers.push_back("s:symbol");
+
+            // (3) For all atoms + negs + bcs: rel_<i>:symbol
+            for (size_t i = 0; i < clause->getBodyLiterals().size(); i++) {
+                const auto* literal = clause->getBodyLiterals().at(i);
+                if (isA<ast::Atom>(literal) || isA<ast::Negation>(literal) ||
+                        isA<ast::BinaryConstraint>(literal)) {
+                    attributeNames.push_back("rel_" + std::to_string(i));
+                    attributeTypeQualifiers.push_back("s:symbol");
+                }
+            }
+
+            // (4) Clause representation
+            attributeNames.push_back("clause_repr");
+            attributeTypeQualifiers.push_back("s:symbol");
+
+            auto infoRelation = mk<ram::Relation>(infoRelName, attributeNames.size(), 0, attributeNames,
+                    attributeTypeQualifiers, RelationRepresentation::INFO);
 
             /* -- Clause Fact Arguments -- */
             // Generate clause head arguments
