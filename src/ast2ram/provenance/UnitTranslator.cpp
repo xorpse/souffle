@@ -26,6 +26,7 @@
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ast2ram/utility/ValueIndex.h"
+#include "ram/Call.h"
 #include "ram/ExistenceCheck.h"
 #include "ram/Expression.h"
 #include "ram/Filter.h"
@@ -161,8 +162,9 @@ void UnitTranslator::addProvenanceClauseSubroutines(const ast::Program* program)
 }
 
 Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* program) {
-    VecOwn<ram::Statement> infoClauses;
+    VecOwn<ram::Statement> infoClauseCalls;
 
+    size_t stratumCount = 0;
     for (const auto* relation : program->getRelations()) {
         size_t clauseID = 1;
         for (const auto* clause : context->getClauses(relation->getQualifiedName())) {
@@ -247,13 +249,17 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
             /* -- Finalising -- */
             // Push in the final clause
             auto factProjection = mk<ram::Project>(infoRelName, std::move(factArguments));
-            infoClauses.push_back(mk<ram::Query>(std::move(factProjection)));
+            auto infoClause = mk<ram::Query>(std::move(factProjection));
 
+            std::string stratumID = "@info_stratum_" + toString(stratumCount++);
+            addRamSubroutine(stratumID, std::move(infoClause));
             clauseID++;
+
+            infoClauseCalls.push_back(mk<ram::Call>(stratumID));
         }
     }
 
-    return mk<ram::Sequence>(std::move(infoClauses));
+    return mk<ram::Sequence>(std::move(infoClauseCalls));
 }
 
 Own<ram::Statement> UnitTranslator::makeSubproofSubroutine(const ast::Clause& clause) {
