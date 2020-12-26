@@ -191,10 +191,21 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
                 }
             }
 
-            // - for all bcs:
-            //      - constraintDescription<<arginfo>>
-            // - toString(originalClause)
+            // (4) for all bcs:
+            //      - symbol,lhs arg info,rhs arg info
+            for (const auto* binaryConstraint : ast::getBodyLiterals<ast::BinaryConstraint>(*clause)) {
+                std::stringstream constraintDescription;
+                constraintDescription << toBinaryConstraintSymbol(binaryConstraint->getBaseOperator());
+                constraintDescription << "," << getArgInfo(binaryConstraint->getLHS());
+                constraintDescription << "," << getArgInfo(binaryConstraint->getRHS());
+                factArguments.push_back(
+                        mk<ram::SignedConstant>(symbolTable->lookup(constraintDescription.str())));
+            }
 
+            // (5) the actual clause
+            factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup(toString(*clause))));
+
+            // Push in the final clause
             auto factProjection = mk<ram::Project>(infoRelName, std::move(factArguments));
             infoClauses.push_back(mk<ram::Query>(std::move(factProjection)));
 
