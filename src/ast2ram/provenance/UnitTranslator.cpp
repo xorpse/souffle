@@ -174,10 +174,23 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
             headVariableInfo << join(headVariables, ",");
             factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup(headVariableInfo.str())));
 
-            // - toString(join(headVariables, ","))
-            // - for all atoms || negs:
-            //      - atoms: atomDescription<<arginfo>>
+            // (3) for all atoms || negs:
+            //      - atoms: relName,{atom arg info}
             //      - negs: !relName
+            for (const auto* literal : clause->getBodyLiterals()) {
+                if (const auto* atom = dynamic_cast<const ast::Atom*>(literal)) {
+                    std::string atomDescription = toString(atom->getQualifiedName());
+                    for (const auto* arg : atom->getArguments()) {
+                        atomDescription.append("," + getArgInfo(arg));
+                    }
+                    factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup(atomDescription)));
+                } else if (const auto* neg = dynamic_cast<const ast::Negation*>(literal)) {
+                    const auto* atom = neg->getAtom();
+                    std::string relName = toString(atom->getQualifiedName());
+                    factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup("!" + relName)));
+                }
+            }
+
             // - for all bcs:
             //      - constraintDescription<<arginfo>>
             // - toString(originalClause)
