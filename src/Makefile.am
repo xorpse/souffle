@@ -153,8 +153,6 @@ souffle_sources = \
         ast/transform/Pipeline.h                           \
         ast/transform/PragmaChecker.cpp                    \
         ast/transform/PragmaChecker.h                      \
-        ast/transform/Provenance.cpp                       \
-        ast/transform/Provenance.h                         \
         ast/transform/ReduceExistentials.cpp               \
         ast/transform/ReduceExistentials.h                 \
         ast/transform/RemoveBooleanConstraints.cpp         \
