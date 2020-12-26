@@ -159,13 +159,14 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
             //      - rel_<i>:symbol
             // - clause_repr:symbol
 
+            /* -- Clause Fact Arguments -- */
             // Generate clause head arguments
             VecOwn<ram::Expression> factArguments;
 
-            // (1) clauseNum
+            // (1) Clause ID
             factArguments.push_back(mk<ram::SignedConstant>(clauseID));
 
-            // (2) head variables
+            // (2) Head variables
             std::vector<std::string> headVariables;
             for (const auto* arg : clause->getHead()->getArguments()) {
                 headVariables.push_back(getArgInfo(arg));
@@ -174,7 +175,7 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
             headVariableInfo << join(headVariables, ",");
             factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup(headVariableInfo.str())));
 
-            // (3) for all atoms || negs:
+            // (3) For all atoms || negs:
             //      - atoms: relName,{atom arg info}
             //      - negs: !relName
             for (const auto* literal : clause->getBodyLiterals()) {
@@ -191,7 +192,7 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
                 }
             }
 
-            // (4) for all bcs:
+            // (4) For all bcs:
             //      - symbol,lhs arg info,rhs arg info
             for (const auto* binaryConstraint : ast::getBodyLiterals<ast::BinaryConstraint>(*clause)) {
                 std::stringstream constraintDescription;
@@ -202,9 +203,10 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
                         mk<ram::SignedConstant>(symbolTable->lookup(constraintDescription.str())));
             }
 
-            // (5) the actual clause
+            // (5) The actual clause
             factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup(toString(*clause))));
 
+            /* -- Finalising -- */
             // Push in the final clause
             auto factProjection = mk<ram::Project>(infoRelName, std::move(factArguments));
             infoClauses.push_back(mk<ram::Query>(std::move(factProjection)));

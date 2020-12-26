@@ -38,7 +38,7 @@ public:
 private:
     bool transform(TranslationUnit& translationUnit) override;
 
-    static void makeInfoRelation(const Clause& originalClause, size_t originalClauseNum);
+    static void makeInfoRelation(const Clause& originalClause);
 };
 
 }  // namespace souffle::ast::transform
