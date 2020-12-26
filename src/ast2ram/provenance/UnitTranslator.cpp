@@ -13,6 +13,8 @@
  ***********************************************************************/
 
 #include "ast2ram/provenance/UnitTranslator.h"
+#include "Global.h"
+#include "LogStatement.h"
 #include "ast/BinaryConstraint.h"
 #include "ast/Clause.h"
 #include "ast/Constraint.h"
@@ -27,14 +29,17 @@
 #include "ast2ram/utility/Utils.h"
 #include "ast2ram/utility/ValueIndex.h"
 #include "ram/Call.h"
+#include "ram/DebugInfo.h"
 #include "ram/ExistenceCheck.h"
 #include "ram/Expression.h"
 #include "ram/Filter.h"
+#include "ram/LogRelationTimer.h"
 #include "ram/Negation.h"
 #include "ram/Project.h"
 #include "ram/Query.h"
 #include "ram/Sequence.h"
 #include "ram/SignedConstant.h"
+#include "ram/Statement.h"
 #include "ram/SubroutineArgument.h"
 #include "ram/SubroutineReturn.h"
 #include "ram/TupleElement.h"
@@ -249,10 +254,28 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
             /* -- Finalising -- */
             // Push in the final clause
             auto factProjection = mk<ram::Project>(infoRelName, std::move(factArguments));
-            auto infoClause = mk<ram::Query>(std::move(factProjection));
+            auto infoClause = mk<ram::Statement, ram::Query>(std::move(factProjection));
+
+            // Add logging
+            if (Global::config().has("profile")) {
+                std::stringstream clauseText;
+                clauseText << "@info.clause[" << stringify(toString(*clause)) << "]";
+                const std::string logTimerStatement =
+                        LogStatement::tNonrecursiveRule(infoRelName, clause->getSrcLoc(), clauseText.str());
+                infoClause = mk<ram::LogRelationTimer>(std::move(infoClause), logTimerStatement, infoRelName);
+            }
+
+            // Add debug info
+            std::ostringstream ds;
+            ds << "@info.clause[";
+            ds << toString(*clause) << "]"
+               << "\nin file ";
+            ds << clause->getSrcLoc();
+            infoClause = mk<ram::DebugInfo>(std::move(infoClause), ds.str());
 
             std::string stratumID = "@info_stratum_" + toString(stratumCount++);
             addRamSubroutine(stratumID, std::move(infoClause));
+
             clauseID++;
 
             infoClauseCalls.push_back(mk<ram::Call>(stratumID));
