@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "souffle/utility/MiscUtil.h"
+
 #include <algorithm>
 #include <functional>
 #include <iterator>
@@ -154,30 +156,6 @@ auto map(const std::vector<A>& xs, F&& f) {
     ys.reserve(xs.size());
     for (auto&& x : xs) {
         ys.emplace_back(f(x));
-    }
-    return ys;
-}
-
-// -------------------------------------------------------------------------------
-//                             Cloning Utilities
-// -------------------------------------------------------------------------------
-
-template <typename A>
-auto clone(const std::vector<A*>& xs) {
-    std::vector<std::unique_ptr<A>> ys;
-    ys.reserve(xs.size());
-    for (auto&& x : xs) {
-        ys.emplace_back(x ? std::unique_ptr<A>(x->clone()) : nullptr);
-    }
-    return ys;
-}
-
-template <typename A>
-auto clone(const std::vector<std::unique_ptr<A>>& xs) {
-    std::vector<std::unique_ptr<A>> ys;
-    ys.reserve(xs.size());
-    for (auto&& x : xs) {
-        ys.emplace_back(x ? std::unique_ptr<A>(x->clone()) : nullptr);
     }
     return ys;
 }
@@ -429,8 +407,8 @@ auto makeDerefRange(Iter&& begin, Iter&& end) {
  */
 template <typename toType, typename baseType>
 bool castEq(const baseType* left, const baseType* right) {
-    if (auto castedLeft = dynamic_cast<const toType*>(left)) {
-        if (auto castedRight = dynamic_cast<const toType*>(right)) {
+    if (auto castedLeft = as<toType>(left)) {
+        if (auto castedRight = as<toType>(right)) {
             return castedLeft == castedRight;
         }
     }

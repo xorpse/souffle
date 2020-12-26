@@ -68,11 +68,11 @@ Own<Clause> TypeAnalysis::createAnnotatedClause(
         TypeAnnotator(const std::map<const Argument*, TypeSet>& types) : types(types) {}
 
         Own<Node> operator()(Own<Node> node) const override {
-            if (auto* var = dynamic_cast<ast::Variable*>(node.get())) {
+            if (auto* var = as<ast::Variable>(node)) {
                 std::stringstream newVarName;
                 newVarName << var->getName() << "&isin;" << types.find(var)->second;
                 return mk<ast::Variable>(newVarName.str());
-            } else if (auto* var = dynamic_cast<UnnamedVariable*>(node.get())) {
+            } else if (auto* var = as<UnnamedVariable>(node)) {
                 std::stringstream newVarName;
                 newVarName << "_"
                            << "&isin;" << types.find(var)->second;
@@ -183,13 +183,13 @@ bool TypeAnalysis::isMultiResultFunctor(const Functor& functor) {
 std::set<TypeAttribute> TypeAnalysis::getTypeAttributes(const Argument* arg) const {
     std::set<TypeAttribute> typeAttributes;
 
-    if (const auto* inf = dynamic_cast<const IntrinsicFunctor*>(arg)) {
+    if (const auto* inf = as<IntrinsicFunctor>(arg)) {
         // intrinsic functor type is its return type if its set
         if (hasValidTypeInfo(inf)) {
             typeAttributes.insert(getFunctorReturnType(inf));
             return typeAttributes;
         }
-    } else if (const auto* udf = dynamic_cast<const UserDefinedFunctor*>(arg)) {
+    } else if (const auto* udf = as<UserDefinedFunctor>(arg)) {
         if (hasValidTypeInfo(udf)) {
             typeAttributes.insert(getFunctorReturnType(udf));
             return typeAttributes;

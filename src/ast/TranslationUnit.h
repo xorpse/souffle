@@ -62,8 +62,8 @@ public:
             if (debug) {
                 std::stringstream ss;
                 analyses[name]->print(ss);
-                if (!isA<analysis::PrecedenceGraphAnalysis>(analyses[name].get()) &&
-                        !isA<analysis::SCCGraphAnalysis>(analyses[name].get())) {
+                if (!isA<analysis::PrecedenceGraphAnalysis>(analyses[name]) &&
+                        !isA<analysis::SCCGraphAnalysis>(analyses[name])) {
                     debugReport.addSection(name, "Ast Analysis [" + name + "]", ss.str());
                 } else {
                     debugReport.addSection(
@@ -71,7 +71,7 @@ public:
                 }
             }
         }
-        return dynamic_cast<Analysis*>(analyses[name].get());
+        return as<Analysis>(analyses[name]);
     }
 
     /** Return the program */

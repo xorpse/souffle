@@ -38,10 +38,10 @@ bool RemoveRedundantSumsTransformer::transform(TranslationUnit& translationUnit)
         Own<Node> operator()(Own<Node> node) const override {
             // Apply to all aggregates of the form
             // sum k : { .. } where k is a constant
-            if (auto* agg = dynamic_cast<Aggregator*>(node.get())) {
+            if (auto* agg = as<Aggregator>(node)) {
                 if (agg->getBaseOperator() == AggregateOp::SUM) {
                     if (const auto* constant =
-                                    dynamic_cast<const NumericConstant*>(agg->getTargetExpression())) {
+                                    as<NumericConstant>(agg->getTargetExpression())) {
                         changed = true;
                         // Then construct the new thing to replace it with
                         auto count = mk<Aggregator>(AggregateOp::COUNT);

@@ -375,14 +375,14 @@ void SemanticCheckerImpl::checkAggregator(const Aggregator& aggregator) {
 }
 
 void SemanticCheckerImpl::checkArgument(const Argument& arg) {
-    if (const auto* agg = dynamic_cast<const Aggregator*>(&arg)) {
+    if (const auto* agg = as<Aggregator>(arg)) {
         checkAggregator(*agg);
-    } else if (const auto* func = dynamic_cast<const Functor*>(&arg)) {
+    } else if (const auto* func = as<Functor>(arg)) {
         for (auto arg : func->getArguments()) {
             checkArgument(*arg);
         }
 
-        if (auto const* udFunc = dynamic_cast<UserDefinedFunctor const*>(func)) {
+        if (auto const* udFunc = as<UserDefinedFunctor const>(func)) {
             auto const& name = udFunc->getName();
             auto const* udfd = getFunctorDeclaration(program, name);
 
@@ -659,7 +659,7 @@ static const std::vector<SrcLocation> usesInvalidWitness(
     struct InnerAggregateMasker : public NodeMapper {
         mutable int numReplaced = 0;
         Own<Node> operator()(Own<Node> node) const override {
-            if (isA<Aggregator>(node.get())) {
+            if (isA<Aggregator>(node)) {
                 std::string newVariableName = "+aggr_var_" + toString(numReplaced++);
                 return mk<Variable>(newVariableName);
             }

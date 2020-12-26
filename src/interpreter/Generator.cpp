@@ -35,13 +35,13 @@ NodePtr NodeGenerator::generateTree(const ram::Node& root) {
         if (isA<ram::Query>(&node)) {
             newQueryBlock();
         }
-        if (const auto* indexSearch = dynamic_cast<const ram::IndexOperation*>(&node)) {
+        if (const auto* indexSearch = as<ram::IndexOperation>(node)) {
             encodeIndexPos(*indexSearch);
             encodeView(indexSearch);
-        } else if (const auto* exists = dynamic_cast<const ram::ExistenceCheck*>(&node)) {
+        } else if (const auto* exists = as<ram::ExistenceCheck>(node)) {
             encodeIndexPos(*exists);
             encodeView(exists);
-        } else if (const auto* provExists = dynamic_cast<const ram::ProvenanceExistenceCheck*>(&node)) {
+        } else if (const auto* provExists = as<ram::ProvenanceExistenceCheck>(node)) {
             encodeIndexPos(*provExists);
             encodeView(provExists);
         }
@@ -426,7 +426,7 @@ NodePtr NodeGenerator::visitQuery(const ram::Query& query) {
     // do not require a view
     const ram::Operation* next = &query.getOperation();
     std::vector<const ram::Condition*> freeOfView;
-    if (const auto* filter = dynamic_cast<const ram::Filter*>(&query.getOperation())) {
+    if (const auto* filter = as<ram::Filter>(query.getOperation())) {
         next = &filter->getOperation();
         // Check terms of outer filter operation whether they can be pushed before
         // the view-generation for speed improvements
@@ -556,9 +556,9 @@ bool NodeGenerator::requireView(const ram::Node* node) {
 }
 
 const std::string& NodeGenerator::getViewRelation(const ram::Node* node) {
-    if (const auto* exist = dynamic_cast<const ram::AbstractExistenceCheck*>(node)) {
+    if (const auto* exist = as<ram::AbstractExistenceCheck>(node)) {
         return exist->getRelation();
-    } else if (const auto* index = dynamic_cast<const ram::IndexOperation*>(node)) {
+    } else if (const auto* index = as<ram::IndexOperation>(node)) {
         return index->getRelation();
     }
 
@@ -585,13 +585,13 @@ SuperInstruction NodeGenerator::getIndexSuperInstInfo(const ram::IndexOperation&
 
         // Constant
         if (isA<ram::Constant>(low)) {
-            indexOperation.first[i] = dynamic_cast<ram::Constant*>(low)->getConstant();
+            indexOperation.first[i] = as<ram::Constant>(low)->getConstant();
             continue;
         }
 
         // TupleElement
         if (isA<ram::TupleElement>(low)) {
-            auto lowTuple = dynamic_cast<ram::TupleElement*>(low);
+            auto lowTuple = as<ram::TupleElement>(low);
             size_t tupleId = lowTuple->getTupleId();
             size_t elementId = lowTuple->getElement();
             size_t newElementId = orderingContext.mapOrder(tupleId, elementId);
@@ -614,13 +614,13 @@ SuperInstruction NodeGenerator::getIndexSuperInstInfo(const ram::IndexOperation&
 
         // Constant
         if (isA<ram::Constant>(hig)) {
-            indexOperation.second[i] = dynamic_cast<ram::Constant*>(hig)->getConstant();
+            indexOperation.second[i] = as<ram::Constant>(hig)->getConstant();
             continue;
         }
 
         // TupleElement
         if (isA<ram::TupleElement>(hig)) {
-            auto highTuple = dynamic_cast<ram::TupleElement*>(hig);
+            auto highTuple = as<ram::TupleElement>(hig);
             size_t tupleId = highTuple->getTupleId();
             size_t elementId = highTuple->getElement();
             size_t newElementId = orderingContext.mapOrder(tupleId, elementId);
@@ -638,9 +638,9 @@ SuperInstruction NodeGenerator::getExistenceSuperInstInfo(const ram::AbstractExi
     auto interpreterRel = encodeRelation(abstractExist.getRelation());
     size_t indexId = 0;
     if (isA<ram::ExistenceCheck>(&abstractExist)) {
-        indexId = encodeIndexPos(*dynamic_cast<const ram::ExistenceCheck*>(&abstractExist));
+        indexId = encodeIndexPos(*as<ram::ExistenceCheck>(abstractExist));
     } else if (isA<ram::ProvenanceExistenceCheck>(&abstractExist)) {
-        indexId = encodeIndexPos(*dynamic_cast<const ram::ProvenanceExistenceCheck*>(&abstractExist));
+        indexId = encodeIndexPos(*as<ram::ProvenanceExistenceCheck>(abstractExist));
     } else {
         fatal("Unrecognized ram::AbstractExistenceCheck.");
     }
@@ -660,14 +660,14 @@ SuperInstruction NodeGenerator::getExistenceSuperInstInfo(const ram::AbstractExi
 
         // Constant
         if (isA<ram::Constant>(child)) {
-            superOp.first[i] = dynamic_cast<ram::Constant*>(child)->getConstant();
+            superOp.first[i] = as<ram::Constant>(child)->getConstant();
             superOp.second[i] = superOp.first[i];
             continue;
         }
 
         // TupleElement
         if (isA<ram::TupleElement>(child)) {
-            auto tuple = dynamic_cast<ram::TupleElement*>(child);
+            auto tuple = as<ram::TupleElement>(child);
             size_t tupleId = tuple->getTupleId();
             size_t elementId = tuple->getElement();
             size_t newElementId = orderingContext.mapOrder(tupleId, elementId);
@@ -689,13 +689,13 @@ SuperInstruction NodeGenerator::getProjectSuperInstInfo(const ram::Project& exis
         auto& child = children[i];
         // Constant
         if (isA<ram::Constant>(child)) {
-            superOp.first[i] = dynamic_cast<ram::Constant*>(child)->getConstant();
+            superOp.first[i] = as<ram::Constant>(child)->getConstant();
             continue;
         }
 
         // TupleElement
         if (isA<ram::TupleElement>(child)) {
-            auto tuple = dynamic_cast<ram::TupleElement*>(child);
+            auto tuple = as<ram::TupleElement>(child);
             size_t tupleId = tuple->getTupleId();
             size_t elementId = tuple->getElement();
             size_t newElementId = orderingContext.mapOrder(tupleId, elementId);

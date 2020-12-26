@@ -87,7 +87,7 @@ bool RemoveEmptyRelationsTransformer::removeEmptyRelationUses(
 
         bool removed = false;
         for (Literal* lit : cl->getBodyLiterals()) {
-            if (auto* arg = dynamic_cast<Atom*>(lit)) {
+            if (auto* arg = as<Atom>(lit)) {
                 if (arg->getQualifiedName() == emptyRelationName) {
                     program.removeClause(cl);
                     removed = true;
@@ -102,7 +102,7 @@ bool RemoveEmptyRelationsTransformer::removeEmptyRelationUses(
 
             bool rewrite = false;
             for (Literal* lit : cl->getBodyLiterals()) {
-                if (auto* neg = dynamic_cast<Negation*>(lit)) {
+                if (auto* neg = as<Negation>(lit)) {
                     if (neg->getAtom()->getQualifiedName() == emptyRelationName) {
                         rewrite = true;
                         break;
@@ -116,7 +116,7 @@ bool RemoveEmptyRelationsTransformer::removeEmptyRelationUses(
                 auto res = Own<Clause>(cloneHead(cl));
 
                 for (Literal* lit : cl->getBodyLiterals()) {
-                    if (auto* neg = dynamic_cast<Negation*>(lit)) {
+                    if (auto* neg = as<Negation>(lit)) {
                         if (neg->getAtom()->getQualifiedName() != emptyRelationName) {
                             res->addToBody(souffle::clone(lit));
                         }

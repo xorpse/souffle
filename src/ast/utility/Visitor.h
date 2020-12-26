@@ -284,7 +284,8 @@ struct LambdaVisitor : public Visitor<void, copy_const_t<NodeToVisit, Node>> {
     F lambda;
     LambdaVisitor(F lam) : lambda(std::move(lam)) {}
     void visit(copy_const_t<NodeToVisit, Node>& node) override {
-        if (auto* n = as<NodeToVisit>(node)) {
+        // Don't use as<> to allow cross-casting to mixins
+        if (const auto* n = dynamic_cast<NodeToVisit*>(&node)) {
             lambda(*n);
         }
     }

@@ -57,7 +57,7 @@ void BindingStore::generateBindingDependencies(const Clause* clause) {
 
 void BindingStore::processEqualityBindings(const Argument* lhs, const Argument* rhs) {
     // Only care about equalities affecting the bound status of variables
-    const auto* var = dynamic_cast<const Variable*>(lhs);
+    const auto* var = as<Variable>(lhs);
     if (var == nullptr) return;
 
     // If all variables on the rhs are bound, then lhs is also bound
@@ -66,9 +66,9 @@ void BindingStore::processEqualityBindings(const Argument* lhs, const Argument* 
     addBindingDependency(var->getName(), depSet);
 
     // If the lhs is bound, then all args in the rec on the rhs are also bound
-    if (const auto* rec = dynamic_cast<const RecordInit*>(rhs)) {
+    if (const auto* rec = as<RecordInit>(rhs)) {
         for (const auto* arg : rec->getArguments()) {
-            const auto* subVar = dynamic_cast<const Variable*>(arg);
+            const auto* subVar = as<Variable>(arg);
             assert(subVar != nullptr && "expected args to be variables");
             addBindingDependency(subVar->getName(), BindingStore::ConjBindingSet({var->getName()}));
         }
@@ -140,9 +140,9 @@ bool BindingStore::reduceDependencies() {
 }
 
 bool BindingStore::isBound(const Argument* arg) const {
-    if (const auto* var = dynamic_cast<const Variable*>(arg)) {
+    if (const auto* var = as<Variable>(arg)) {
         return isBound(var->getName());
-    } else if (const auto* term = dynamic_cast<const Term*>(arg)) {
+    } else if (const auto* term = as<Term>(arg)) {
         for (const auto* subArg : term->getArguments()) {
             if (!isBound(subArg)) {
                 return false;

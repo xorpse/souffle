@@ -97,7 +97,7 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
         replace_aggregators(const std::map<const Aggregator*, Aggregator*>& oldToNew) : oldToNew(oldToNew) {}
 
         std::unique_ptr<Node> operator()(std::unique_ptr<Node> node) const override {
-            if (auto* aggregator = dynamic_cast<Aggregator*>(node.get())) {
+            if (auto* aggregator = as<Aggregator>(node)) {
                 if (contains(oldToNew, aggregator)) {
                     return Own<Aggregator>(oldToNew.at(aggregator));
                 }

@@ -100,11 +100,11 @@ VecOwn<ast::Clause> RuleBody::toClauseBodies() const {
             // negate if necessary
             if (lit.negated) {
                 // negate
-                if (auto* atom = dynamic_cast<ast::Atom*>(&*base)) {
+                if (auto* atom = as<ast::Atom>(*base)) {
                     base.release();
                     base = mk<ast::Negation>(Own<ast::Atom>(atom));
                     base->setSrcLoc(atom->getSrcLoc());
-                } else if (auto* cstr = dynamic_cast<ast::Constraint*>(&*base)) {
+                } else if (auto* cstr = as<ast::Constraint>(*base)) {
                     negateConstraintInPlace(*cstr);
                 }
             }

@@ -556,17 +556,17 @@ dependency
 dependency_list_aux
   : dependency { $$.push_back($dependency); }
 
-  | dependency_list_aux[list] COMMA dependency[next] { 
+  | dependency_list_aux[list] COMMA dependency[next] {
     $$ = std::move($list);
     $$.push_back(std::move($next));
   }
   ;
 
 /*  List of functional dependencies on relation */
-dependency_list 
+dependency_list
   : %empty { }
-    
-  | CHOICEDOMAIN dependency_list_aux[list] { 
+
+  | CHOICEDOMAIN dependency_list_aux[list] {
     $$ = std::move($list);
   }
   ;
@@ -752,7 +752,7 @@ arg
   | MINUS arg[nested_arg] %prec NEG {
         // If we have a constant that is not already negated we just negate the constant value.
         auto nested_arg = *$nested_arg;
-        const auto* asNumeric = dynamic_cast<const ast::NumericConstant*>(&*nested_arg);
+        const auto* asNumeric = as<ast::NumericConstant>(*nested_arg);
         if (asNumeric && !isPrefix("-", asNumeric->getConstant())) {
             $$ = mk<ast::NumericConstant>("-" + asNumeric->getConstant(), asNumeric->getFixedType(), @nested_arg);
         } else { // Otherwise, create a functor.
@@ -976,7 +976,7 @@ non_empty_key_value_pairs
 kvp_value
   : STRING  { $$ = $STRING; }
   | IDENT   { $$ = $IDENT; }
-  | NUMBER  { $$ = $NUMBER; } 
+  | NUMBER  { $$ = $NUMBER; }
   | TRUE    { $$ = "true"; }
   | FALSE   { $$ = "false"; }
   ;

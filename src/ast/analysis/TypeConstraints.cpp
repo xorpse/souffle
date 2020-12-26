@@ -112,7 +112,7 @@ static TypeConstraint hasSuperTypeInSet(const TypeVar& var, TypeSet values) {
 }
 
 static const Type& getBaseType(const Type* type) {
-    while (auto subset = dynamic_cast<const SubsetType*>(type)) {
+    while (auto subset = as<SubsetType>(type)) {
         type = &subset->getBaseType();
     };
     assert((isA<ConstantType>(type) || isA<RecordType>(type)) &&

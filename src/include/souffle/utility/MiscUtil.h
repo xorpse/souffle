@@ -108,10 +108,31 @@ std::unique_ptr<A> clone(const std::unique_ptr<A>& node) {
     return node ? std::unique_ptr<A>(node->clone()) : nullptr;
 }
 
+template <typename A>
+auto clone(const std::vector<A*>& xs) {
+    std::vector<std::unique_ptr<A>> ys;
+    ys.reserve(xs.size());
+    for (auto&& x : xs) {
+        ys.emplace_back(x ? std::unique_ptr<A>(x->clone()) : nullptr);
+    }
+    return ys;
+}
+
+template <typename A>
+auto clone(const std::vector<std::unique_ptr<A>>& xs) {
+    std::vector<std::unique_ptr<A>> ys;
+    ys.reserve(xs.size());
+    for (auto&& x : xs) {
+        ys.emplace_back(x ? std::unique_ptr<A>(x->clone()) : nullptr);
+    }
+    return ys;
+}
+
 template <typename A, typename B>
 auto clone(const std::pair<A, B>& p) {
     return std::make_pair(clone(p.first), clone(p.second));
 }
+
 
 // -------------------------------------------------------------------------------
 //                             Comparison Utilities
@@ -151,11 +172,11 @@ using copy_const_t = typename copy_const<A, B>::type;
 
 /**
  * Helpers for `dynamic_cast`ing without having to specify redundant type qualifiers.
- * e.g. `as<AstLiteral>(p)` instead of `dynamic_cast<const AstLiteral*>(p.get())`.
+ * e.g. `as<AstLiteral>(p)` instead of `as<AstLiteral>(p)`.
  */
 template <typename B, typename A>
 auto as(A* x) {
-    static_assert(std::is_base_of_v<A, B>,
+    static_assert(std::is_base_of_v<std::remove_const_t<A>, std::remove_const_t<B>>,
             "`as<B, A>` does not allow cross-type dyn casts. "
             "(i.e. `as<B, A>` where `B <: A` is not true.) "
             "Such a cast is likely a mistake or typo.");
@@ -163,13 +184,28 @@ auto as(A* x) {
 }
 
 template <typename B, typename A>
-std::enable_if_t<std::is_base_of_v<A, B>, copy_const_t<A, B>*> as(A& x) {
+auto as(A& x) {
     return as<B>(&x);
 }
 
 template <typename B, typename A>
-B* as(const std::unique_ptr<A>& x) {
+auto as(std::unique_ptr<A>& x) {
     return as<B>(x.get());
+}
+
+template <typename B, typename A>
+auto as(const std::unique_ptr<A>& x) {
+    return as<B>(x.get());
+}
+
+/**
+ * Down-casts and checks the cast has succeeded
+ */
+template <typename B, typename A>
+auto& asAssert(A&& a) {
+    auto* cast = as<B>(std::forward<A>(a));
+    assert(cast && "Invalid cast");
+    return *cast;
 }
 
 /**
@@ -177,11 +213,12 @@ B* as(const std::unique_ptr<A>& x) {
  */
 template <typename B, typename A>
 bool isA(A* x) {
+    // Dont't forward onto as<> - need to check cross-casting
     return dynamic_cast<copy_const_t<A, B>*>(x) != nullptr;
 }
 
 template <typename B, typename A>
-std::enable_if_t<std::is_base_of_v<A, B>, bool> isA(A& x) {
+auto isA(A& x) {
     return isA<B>(&x);
 }
 
@@ -190,6 +227,10 @@ bool isA(const std::unique_ptr<A>& x) {
     return isA<B>(x.get());
 }
 
+template <typename B, typename A>
+bool isA(std::unique_ptr<A>& x) {
+    return isA<B>(x.get());
+}
 // -------------------------------------------------------------------------------
 //                               Error Utilities
 // -------------------------------------------------------------------------------

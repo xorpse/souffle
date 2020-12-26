@@ -167,12 +167,12 @@ bool ReduceExistentialsTransformer::transform(TranslationUnit& translationUnit) 
         renameExistentials(std::set<QualifiedName>& relations) : relations(relations) {}
 
         Own<Node> operator()(Own<Node> node) const override {
-            if (auto* clause = dynamic_cast<Clause*>(node.get())) {
+            if (auto* clause = as<Clause>(node)) {
                 if (relations.find(clause->getHead()->getQualifiedName()) != relations.end()) {
                     // Clause is going to be removed, so don't rename it
                     return node;
                 }
-            } else if (auto* atom = dynamic_cast<Atom*>(node.get())) {
+            } else if (auto* atom = as<Atom>(node)) {
                 if (relations.find(atom->getQualifiedName()) != relations.end()) {
                     // Relation is now existential, so rename it
                     std::stringstream newName;

@@ -107,7 +107,7 @@ bool normaliseInlinedHeads(Program& program) {
 
             // Set up the head arguments in the new clause
             for (Argument* arg : clause->getHead()->getArguments()) {
-                if (auto* constant = dynamic_cast<Constant*>(arg)) {
+                if (auto* constant = as<Constant>(arg)) {
                     // Found a constant in the head, so replace it with a variable
                     std::stringstream newVar;
                     newVar << "<new_var_" << newVarCount++ << ">";
@@ -151,7 +151,7 @@ bool nameInlinedUnderscores(Program& program) {
 
             if (!replaceUnderscores) {
                 // Check if we should start replacing underscores for this node's subnodes
-                if (auto* atom = dynamic_cast<Atom*>(node.get())) {
+                if (auto* atom = as<Atom>(node)) {
                     if (inlinedRelations.find(atom->getQualifiedName()) != inlinedRelations.end()) {
                         // Atom associated with an inlined relation, so replace the underscores
                         // in all of its subnodes with named variables.
@@ -161,7 +161,7 @@ bool nameInlinedUnderscores(Program& program) {
                         return node;
                     }
                 }
-            } else if (isA<UnnamedVariable>(node.get())) {
+            } else if (isA<UnnamedVariable>(node)) {
                 // Give a unique name to the underscored variable
                 // TODO (azreika): need a more consistent way of handling internally generated variables in
                 // general
@@ -312,7 +312,7 @@ std::pair<NullableVector<Literal*>, std::vector<BinaryConstraint*>> inlineBodyLi
         int varnum;
         VariableRenamer(int varnum) : varnum(varnum) {}
         Own<Node> operator()(Own<Node> node) const override {
-            if (auto* var = dynamic_cast<ast::Variable*>(node.get())) {
+            if (auto* var = as<ast::Variable>(node)) {
                 // Rename the variable
                 auto newVar = souffle::clone(var);
                 std::stringstream newName;
@@ -357,13 +357,13 @@ std::pair<NullableVector<Literal*>, std::vector<BinaryConstraint*>> inlineBodyLi
  * Returns the negated version of a given literal
  */
 Literal* negateLiteral(Literal* lit) {
-    if (auto* atom = dynamic_cast<Atom*>(lit)) {
+    if (auto* atom = as<Atom>(lit)) {
         auto* neg = new Negation(souffle::clone(atom));
         return neg;
-    } else if (auto* neg = dynamic_cast<Negation*>(lit)) {
+    } else if (auto* neg = as<Negation>(lit)) {
         Atom* atom = neg->getAtom()->clone();
         return atom;
-    } else if (auto* cons = dynamic_cast<Constraint*>(lit)) {
+    } else if (auto* cons = as<Constraint>(lit)) {
         Constraint* newCons = cons->clone();
         negateConstraintInPlace(*newCons);
         return newCons;
@@ -493,7 +493,7 @@ void renameVariables(Argument* arg) {
         int varnum;
         M(int varnum) : varnum(varnum) {}
         Own<Node> operator()(Own<Node> node) const override {
-            if (auto* var = dynamic_cast<ast::Variable*>(node.get())) {
+            if (auto* var = as<ast::Variable>(node)) {
                 auto newVar = souffle::clone(var);
                 std::stringstream newName;
                 newName << var->getName() << "-v" << varnum;
@@ -540,7 +540,7 @@ NullableVector<Argument*> getInlinedArgument(Program& program, const Argument* a
 
     // Each argument has to be handled differently - essentially, want to go down to
     // nested aggregators, and inline their bodies if needed.
-    if (const auto* aggr = dynamic_cast<const Aggregator*>(arg)) {
+    if (const auto* aggr = as<Aggregator>(arg)) {
         // First try inlining the target expression if necessary
         if (aggr->getTargetExpression() != nullptr) {
             NullableVector<Argument*> argumentVersions =
@@ -635,7 +635,7 @@ NullableVector<Argument*> getInlinedArgument(Program& program, const Argument* a
                 }
             }
         }
-    } else if (const auto* functor = dynamic_cast<const Functor*>(arg)) {
+    } else if (const auto* functor = as<Functor>(arg)) {
         size_t i = 0;
         for (auto funArg : functor->getArguments()) {
             // TODO (azreika): use unique pointers
@@ -655,12 +655,12 @@ NullableVector<Argument*> getInlinedArgument(Program& program, const Argument* a
                         }
                         ++j;
                     }
-                    if (const auto* intrFunc = dynamic_cast<const IntrinsicFunctor*>(arg)) {
+                    if (const auto* intrFunc = as<IntrinsicFunctor>(arg)) {
                         auto* newFunctor =
                                 new IntrinsicFunctor(intrFunc->getBaseFunctionOp(), std::move(argsCopy));
                         newFunctor->setSrcLoc(functor->getSrcLoc());
                         versions.push_back(newFunctor);
-                    } else if (const auto* userFunc = dynamic_cast<const UserDefinedFunctor*>(arg)) {
+                    } else if (const auto* userFunc = as<UserDefinedFunctor>(arg)) {
                         auto* newFunctor = new UserDefinedFunctor(userFunc->getName(), std::move(argsCopy));
                         newFunctor->setSrcLoc(userFunc->getSrcLoc());
                         versions.push_back(newFunctor);
@@ -671,7 +671,7 @@ NullableVector<Argument*> getInlinedArgument(Program& program, const Argument* a
             }
             ++i;
         }
-    } else if (const auto* cast = dynamic_cast<const ast::TypeCast*>(arg)) {
+    } else if (const auto* cast = as<ast::TypeCast>(arg)) {
         NullableVector<Argument*> argumentVersions = getInlinedArgument(program, cast->getValue());
         if (argumentVersions.isValid()) {
             changed = true;
@@ -680,7 +680,7 @@ NullableVector<Argument*> getInlinedArgument(Program& program, const Argument* a
                 versions.push_back(newTypeCast);
             }
         }
-    } else if (const auto* record = dynamic_cast<const RecordInit*>(arg)) {
+    } else if (const auto* record = as<RecordInit>(arg)) {
         std::vector<Argument*> recordArguments = record->getArguments();
         for (size_t i = 0; i < recordArguments.size(); i++) {
             Argument* currentRecArg = recordArguments[i];
@@ -783,7 +783,7 @@ NullableVector<std::vector<Literal*>> getInlinedLiteral(Program& program, Litera
     std::vector<std::vector<Literal*>> addedBodyLiterals;
     std::vector<Literal*> versions;
 
-    if (auto* atom = dynamic_cast<Atom*>(lit)) {
+    if (auto* atom = as<Atom>(lit)) {
         // Check if this atom is meant to be inlined
         Relation* rel = getRelation(program, atom->getQualifiedName());
 
@@ -827,7 +827,7 @@ NullableVector<std::vector<Literal*>> getInlinedLiteral(Program& program, Litera
                 }
             }
         }
-    } else if (auto neg = dynamic_cast<Negation*>(lit)) {
+    } else if (auto neg = as<Negation>(lit)) {
         // For negations, check the corresponding atom
         Atom* atom = neg->getAtom();
         NullableVector<std::vector<Literal*>> atomVersions = getInlinedLiteral(program, atom);
@@ -858,7 +858,7 @@ NullableVector<std::vector<Literal*>> getInlinedLiteral(Program& program, Litera
                 }
             }
         }
-    } else if (auto* constraint = dynamic_cast<BinaryConstraint*>(lit)) {
+    } else if (auto* constraint = as<BinaryConstraint>(lit)) {
         NullableVector<Argument*> lhsVersions = getInlinedArgument(program, constraint->getLHS());
         if (lhsVersions.isValid()) {
             changed = true;

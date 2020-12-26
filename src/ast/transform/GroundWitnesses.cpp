@@ -93,7 +93,7 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
             TargetVariableReplacer(Aggregator* agg, std::string target)
                     : aggregate(agg), targetVariable(std::move(target)) {}
             std::unique_ptr<Node> operator()(std::unique_ptr<Node> node) const override {
-                if (auto* variable = dynamic_cast<Variable*>(node.get())) {
+                if (auto* variable = as<Variable>(node)) {
                     if (variable->getName() == targetVariable) {
                         auto replacement = souffle::clone(aggregate);
                         return replacement;
@@ -103,7 +103,7 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
                 return node;
             }
         };
-        const auto* targetVariable = dynamic_cast<const Variable*>(agg->getTargetExpression());
+        const auto* targetVariable = as<Variable>(agg->getTargetExpression());
         std::string targetVariableName = targetVariable->getName();
         TargetVariableReplacer replacer(agg, targetVariableName);
         for (std::unique_ptr<Literal>& literal : aggregateLiterals) {

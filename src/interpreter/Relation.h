@@ -260,7 +260,7 @@ public:
         }
 
         bool equal(const RelationWrapper::iterator_base& other) const override {
-            if (auto* o = dynamic_cast<const iterator_base*>(&other)) {
+            if (auto* o = as<iterator_base>(other)) {
                 return iter == o->iter;
             }
             return false;

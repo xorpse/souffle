@@ -97,9 +97,9 @@ Own<Relation> makeInfoRelation(
     int functorNumber = 0;
     int aggregateNumber = 0;
     auto getArgInfo = [&](Argument* arg) -> std::string {
-        if (auto* var = dynamic_cast<ast::Variable*>(arg)) {
+        if (auto* var = as<ast::Variable>(arg)) {
             return toString(*var);
-        } else if (auto* constant = dynamic_cast<Constant*>(arg)) {
+        } else if (auto* constant = as<Constant>(arg)) {
             return toString(*constant);
         }
         if (isA<UnnamedVariable>(arg)) {
@@ -168,7 +168,7 @@ Own<Relation> makeInfoRelation(
     for (size_t i = 0; i < originalClause.getBodyLiterals().size(); i++) {
         auto lit = originalClause.getBodyLiterals()[i];
 
-        if (auto con = dynamic_cast<BinaryConstraint*>(lit)) {
+        if (auto con = as<BinaryConstraint>(lit)) {
             // for a constraint, add the constraint symbol and LHS and RHS
             std::string constraintDescription = toBinaryConstraintSymbol(con->getBaseOperator());
 
@@ -295,10 +295,10 @@ bool ProvenanceTransformer::transformMaxHeight(TranslationUnit& translationUnit)
 
                 Own<Node> operator()(Own<Node> node) const override {
                     // add provenance columns
-                    if (auto atom = dynamic_cast<Atom*>(node.get())) {
+                    if (auto atom = as<Atom>(node)) {
                         atom->addArgument(mk<UnnamedVariable>());
                         atom->addArgument(mk<UnnamedVariable>());
-                    } else if (auto neg = dynamic_cast<Negation*>(node.get())) {
+                    } else if (auto neg = as<Negation>(node)) {
                         auto atom = neg->getAtom();
                         atom->addArgument(mk<UnnamedVariable>());
                         atom->addArgument(mk<UnnamedVariable>());
@@ -327,7 +327,7 @@ bool ProvenanceTransformer::transformMaxHeight(TranslationUnit& translationUnit)
                     lit->apply(M());
 
                     // add two provenance columns to lit; first is rule num, second is level num
-                    if (auto atom = dynamic_cast<Atom*>(lit)) {
+                    if (auto atom = as<Atom>(lit)) {
                         atom->addArgument(mk<UnnamedVariable>());
                         atom->addArgument(mk<ast::Variable>("@level_num_" + std::to_string(i)));
                         bodyLevels.push_back(new ast::Variable("@level_num_" + std::to_string(i)));

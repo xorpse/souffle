@@ -61,7 +61,7 @@ Own<Operation> IfConversionTransformer::rewriteIndexScan(const IndexScan* indexS
 
         // check if there is a break statement nested in the Scan - if so, remove it
         Operation* newOp;
-        if (const auto* breakOp = dynamic_cast<const Break*>(&indexScan->getOperation())) {
+        if (const auto* breakOp = as<Break>(indexScan->getOperation())) {
             newOp = breakOp->getOperation().clone();
         } else {
             newOp = indexScan->getOperation().clone();
@@ -77,7 +77,7 @@ bool IfConversionTransformer::convertIndexScans(Program& program) {
     bool changed = false;
     visitDepthFirst(program, [&](const Query& query) {
         std::function<Own<Node>(Own<Node>)> scanRewriter = [&](Own<Node> node) -> Own<Node> {
-            if (const IndexScan* scan = dynamic_cast<IndexScan*>(node.get())) {
+            if (const IndexScan* scan = as<IndexScan>(node)) {
                 if (Own<Operation> op = rewriteIndexScan(scan)) {
                     changed = true;
                     node = std::move(op);

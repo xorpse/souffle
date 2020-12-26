@@ -95,7 +95,7 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
     // Add all non-constraints, and then constraints
     std::vector<const ast::Constraint*> constraints;
     for (const auto* lit : clause.getBodyLiterals()) {
-        if (const auto* constraint = dynamic_cast<const ast::Constraint*>(lit)) {
+        if (const auto* constraint = as<ast::Constraint>(lit)) {
             constraints.push_back(constraint);
             continue;
         }
@@ -118,24 +118,24 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
     size_t levelIndex = clause.getHead()->getArguments().size() - auxiliaryArity;
     for (size_t i = 0; i < head->getArity() - auxiliaryArity; i++) {
         auto arg = headArgs.at(i);
-        if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
+        if (const auto* var = as<ast::Variable>(arg)) {
             // FIXME: float equiv (`FEQ`)
             auto lhs = context.translateValue(symbolTable, *valueIndex, var);
             auto constraint = mk<ram::Constraint>(
                     BinaryConstraintOp::EQ, std::move(lhs), mk<ram::SubroutineArgument>(i));
             op = mk<ram::Filter>(std::move(constraint), std::move(op));
-        } else if (const auto* func = dynamic_cast<const ast::Functor*>(arg)) {
+        } else if (const auto* func = as<ast::Functor>(arg)) {
             TypeAttribute returnType = context.getFunctorReturnType(func);
             auto opEq = returnType == TypeAttribute::Float ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ;
             auto lhs = context.translateValue(symbolTable, *valueIndex, func);
             auto constraint = mk<ram::Constraint>(opEq, std::move(lhs), mk<ram::SubroutineArgument>(i));
             op = mk<ram::Filter>(std::move(constraint), std::move(op));
-        } else if (const auto* rec = dynamic_cast<const ast::RecordInit*>(arg)) {
+        } else if (const auto* rec = as<ast::RecordInit>(arg)) {
             auto lhs = context.translateValue(symbolTable, *valueIndex, rec);
             auto constraint = mk<ram::Constraint>(
                     BinaryConstraintOp::EQ, std::move(lhs), mk<ram::SubroutineArgument>(i));
             op = mk<ram::Filter>(std::move(constraint), std::move(op));
-        } else if (const auto* adt = dynamic_cast<const ast::BranchInit*>(arg)) {
+        } else if (const auto* adt = as<ast::BranchInit>(arg)) {
             // TODO (azreika): fill this out like record arguments
             assert(false && adt && "unhandled");
         }
@@ -145,7 +145,7 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
 
     // add level constraints, i.e., that each body literal has height less than that of the head atom
     for (const auto* lit : clause.getBodyLiterals()) {
-        if (const auto* atom = dynamic_cast<const ast::Atom*>(lit)) {
+        if (const auto* atom = as<ast::Atom>(lit)) {
             // arity - 1 is the level number in body atoms
             auto arity = atom->getArity();
             auto atomArgs = atom->getArguments();
@@ -178,11 +178,11 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
 
     // get all values in the body
     for (ast::Literal* lit : clause.getBodyLiterals()) {
-        if (auto atom = dynamic_cast<ast::Atom*>(lit)) {
+        if (auto atom = as<ast::Atom>(lit)) {
             for (ast::Argument* arg : atom->getArguments()) {
                 values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
             }
-        } else if (auto neg = dynamic_cast<ast::Negation*>(lit)) {
+        } else if (auto neg = as<ast::Negation>(lit)) {
             for (ast::Argument* arg : neg->getAtom()->getArguments()) {
                 values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
             }
@@ -213,23 +213,23 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
     size_t levelIndex = clause.getHead()->getArguments().size() - auxiliaryArity;
     for (size_t i = 0; i < head->getArity() - auxiliaryArity; i++) {
         auto arg = headArgs.at(i);
-        if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
+        if (const auto* var = as<ast::Variable>(arg)) {
             values.push_back(context.translateValue(symbolTable, *valueIndex, var));
             values.push_back(mk<ram::SubroutineArgument>(i));
-        } else if (const auto* func = dynamic_cast<const ast::Functor*>(arg)) {
+        } else if (const auto* func = as<ast::Functor>(arg)) {
             values.push_back(context.translateValue(symbolTable, *valueIndex, func));
             values.push_back(mk<ram::SubroutineArgument>(i));
-        } else if (const auto* rec = dynamic_cast<const ast::RecordInit*>(arg)) {
+        } else if (const auto* rec = as<ast::RecordInit>(arg)) {
             values.push_back(context.translateValue(symbolTable, *valueIndex, rec));
             values.push_back(mk<ram::SubroutineArgument>(i));
-        } else if (const auto* adt = dynamic_cast<const ast::BranchInit*>(arg)) {
+        } else if (const auto* adt = as<ast::BranchInit>(arg)) {
             // TODO (azreika): fill this out like record arguments
             assert(false && adt && "unhandled");
         }
     }
 
     for (const auto* lit : clause.getBodyLiterals()) {
-        if (const auto* atom = dynamic_cast<const ast::Atom*>(lit)) {
+        if (const auto* atom = as<ast::Atom>(lit)) {
             auto arity = atom->getArity();
             auto atomArgs = atom->getArguments();
             values.push_back(context.translateValue(symbolTable, *valueIndex, atomArgs.at(arity - 1)));

@@ -122,7 +122,7 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
             replaceAggregate(const Aggregator& aggregate, Own<ast::Variable> variable)
                     : aggregate(aggregate), variable(std::move(variable)) {}
             Own<Node> operator()(Own<Node> node) const override {
-                if (auto* current = dynamic_cast<Aggregator*>(node.get())) {
+                if (auto* current = as<Aggregator>(node)) {
                     if (*current == aggregate) {
                         auto replacement = souffle::clone(variable);
                         assert(replacement != nullptr);
