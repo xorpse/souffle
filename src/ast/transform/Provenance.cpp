@@ -55,11 +55,12 @@
 
 namespace souffle::ast::transform {
 
-void ProvenanceTransformer::makeInfoRelation(
-        const Clause& originalClause, size_t originalClauseNum, TranslationUnit& translationUnit) {
+void ProvenanceTransformer::makeInfoRelation(const Clause& originalClause, size_t originalClauseNum) {
     // create new clause containing a single fact
+    static size_t c = 0;
     auto infoClause = mk<Clause>();
-    auto infoClauseHead = mk<Atom>(name);
+    auto infoClauseHead = mk<Atom>("@test");
+    auto infoRelation = mk<Relation>("@test_" + toString(c++));
 
     // add clause num attribute
     infoRelation->addAttribute(mk<Attribute>("clause_num", QualifiedName("number")));
@@ -161,7 +162,7 @@ void ProvenanceTransformer::makeInfoRelation(
     // program.addRelation(std::move(infoRelation));
 }
 
-bool ProvenanceTransformer::transform(TranslationUnit& translationUnit) {
+bool ProvenanceTransformer::transform(TranslationUnit& /* translationUnit */) {
     return false;
 }
 

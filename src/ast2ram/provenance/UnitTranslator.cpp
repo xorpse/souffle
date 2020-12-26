@@ -30,6 +30,7 @@
 #include "ram/Expression.h"
 #include "ram/Filter.h"
 #include "ram/Negation.h"
+#include "ram/Project.h"
 #include "ram/Query.h"
 #include "ram/Sequence.h"
 #include "ram/SignedConstant.h"
@@ -48,7 +49,7 @@ Own<ram::Sequence> UnitTranslator::generateProgram(const ast::TranslationUnit& t
     auto ramProgram = seminaive::UnitTranslator::generateProgram(translationUnit);
 
     // add in info clauses
-    addInfoClauses(context->getProgram());
+    auto infoClauses = generateInfoClauses(context->getProgram());
 
     // add subroutines for each clause
     addProvenanceClauseSubroutines(context->getProgram());
@@ -105,7 +106,9 @@ void UnitTranslator::addProvenanceClauseSubroutines(const ast::Program* program)
     });
 }
 
-void UnitTranslator::addInfoClauses(const ast::Program* program) {
+Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* program) {
+    VecOwn<ram::Statement> infoClauses;
+
     for (const auto* clause : program->getClauses()) {
         if (isFact(*clause)) {
             continue;
@@ -113,9 +116,10 @@ void UnitTranslator::addInfoClauses(const ast::Program* program) {
 
         // generate the info fact clause
         // size_t clauseNum = getClauseNum(&program, clause);
-        auto infoRelName = clause->getHead()->getQualifiedName();
-        infoRelName.append("@info");
+        auto infoRelQualifiedName = clause->getHead()->getQualifiedName();
+        infoRelQualifiedName.append("@info");
         // infoRelName.append(toString(clauseNum));
+        std::string infoRelName = getConcreteRelationName(infoRelQualifiedName);
 
         // TODO: generate relation
         // TODO: set representation to be info
@@ -132,6 +136,7 @@ void UnitTranslator::addInfoClauses(const ast::Program* program) {
         // - clause_repr:symbol
 
         // TODO: generate clause head
+        VecOwn<ram::Expression> factArguments;
         // - clauseNum
         // - toString(join(headVariables, ","))
         // - for all atoms || negs:
@@ -140,7 +145,12 @@ void UnitTranslator::addInfoClauses(const ast::Program* program) {
         // - for all bcs:
         //      - constraintDescription<<arginfo>>
         // - toString(originalClause)
+
+        auto factProjection = mk<ram::Project>(infoRelName, std::move(factArguments));
+        infoClauses.push_back(mk<ram::Query>(std::move(factProjection)));
     }
+
+    return mk<ram::Sequence>(std::move(infoClauses));
 }
 
 Own<ram::Statement> UnitTranslator::makeSubproofSubroutine(const ast::Clause& clause) {
