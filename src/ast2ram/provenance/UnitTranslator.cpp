@@ -39,6 +39,7 @@
 #include "ram/TupleElement.h"
 #include "ram/UndefValue.h"
 #include "souffle/BinaryConstraintOps.h"
+#include "souffle/SymbolTable.h"
 #include "souffle/utility/StringUtil.h"
 #include <sstream>
 
@@ -109,45 +110,83 @@ void UnitTranslator::addProvenanceClauseSubroutines(const ast::Program* program)
 Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* program) {
     VecOwn<ram::Statement> infoClauses;
 
-    for (const auto* clause : program->getClauses()) {
-        if (isFact(*clause)) {
-            continue;
+    for (const auto* relation : program->getRelations()) {
+        size_t clauseID = 1;
+        for (const auto* clause : context->getClauses(relation->getQualifiedName())) {
+            if (isFact(*clause)) {
+                continue;
+            }
+
+            // Argument info generator
+            int functorNumber = 0;
+            int aggregateNumber = 0;
+            auto getArgInfo = [&](const ast::Argument* arg) -> std::string {
+                if (auto* var = dynamic_cast<const ast::Variable*>(arg)) {
+                    return toString(*var);
+                } else if (auto* constant = dynamic_cast<const ast::Constant*>(arg)) {
+                    return toString(*constant);
+                }
+                if (isA<ast::UnnamedVariable>(arg)) {
+                    return "_";
+                }
+                if (isA<ast::Functor>(arg)) {
+                    return tfm::format("functor_%d", functorNumber++);
+                }
+                if (isA<ast::Aggregator>(arg)) {
+                    return tfm::format("agg_%d", aggregateNumber++);
+                }
+
+                fatal("Unhandled argument type");
+            };
+
+            // Construct info relation name for the clause
+            auto infoRelQualifiedName = clause->getHead()->getQualifiedName();
+            infoRelQualifiedName.append("@info");
+            infoRelQualifiedName.append(toString(clauseID));
+            std::string infoRelName = getConcreteRelationName(infoRelQualifiedName);
+
+            // TODO: generate relation
+            // TODO: set representation to be info
+            // // initialise info relation
+            // auto infoRelation = mk<Relation>(name);
+            // infoRelation->setRepresentation(RelationRepresentation::INFO);
+
+            // TODO: generate clause type
+            // attributes:
+            // - clause_num:number
+            // - head_vars:symbol
+            // - for all atoms + negs + bcs
+            //      - rel_<i>:symbol
+            // - clause_repr:symbol
+
+            // Generate clause head arguments
+            VecOwn<ram::Expression> factArguments;
+
+            // (1) clauseNum
+            factArguments.push_back(mk<ram::SignedConstant>(clauseID));
+
+            // (2) head variables
+            std::vector<std::string> headVariables;
+            for (const auto* arg : clause->getHead()->getArguments()) {
+                headVariables.push_back(getArgInfo(arg));
+            }
+            std::stringstream headVariableInfo;
+            headVariableInfo << join(headVariables, ",");
+            factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup(headVariableInfo.str())));
+
+            // - toString(join(headVariables, ","))
+            // - for all atoms || negs:
+            //      - atoms: atomDescription<<arginfo>>
+            //      - negs: !relName
+            // - for all bcs:
+            //      - constraintDescription<<arginfo>>
+            // - toString(originalClause)
+
+            auto factProjection = mk<ram::Project>(infoRelName, std::move(factArguments));
+            infoClauses.push_back(mk<ram::Query>(std::move(factProjection)));
+
+            clauseID++;
         }
-
-        // generate the info fact clause
-        // size_t clauseNum = getClauseNum(&program, clause);
-        auto infoRelQualifiedName = clause->getHead()->getQualifiedName();
-        infoRelQualifiedName.append("@info");
-        // infoRelName.append(toString(clauseNum));
-        std::string infoRelName = getConcreteRelationName(infoRelQualifiedName);
-
-        // TODO: generate relation
-        // TODO: set representation to be info
-        // // initialise info relation
-        // auto infoRelation = mk<Relation>(name);
-        // infoRelation->setRepresentation(RelationRepresentation::INFO);
-
-        // TODO: generate clause type
-        // attributes:
-        // - clause_num:number
-        // - head_vars:symbol
-        // - for all atoms + negs + bcs
-        //      - rel_<i>:symbol
-        // - clause_repr:symbol
-
-        // TODO: generate clause head
-        VecOwn<ram::Expression> factArguments;
-        // - clauseNum
-        // - toString(join(headVariables, ","))
-        // - for all atoms || negs:
-        //      - atoms: atomDescription<<arginfo>>
-        //      - negs: !relName
-        // - for all bcs:
-        //      - constraintDescription<<arginfo>>
-        // - toString(originalClause)
-
-        auto factProjection = mk<ram::Project>(infoRelName, std::move(factArguments));
-        infoClauses.push_back(mk<ram::Query>(std::move(factProjection)));
     }
 
     return mk<ram::Sequence>(std::move(infoClauses));
