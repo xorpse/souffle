@@ -52,7 +52,6 @@ class Statement;
 }  // namespace souffle::ram
 
 namespace souffle::ast::analysis {
-class AuxiliaryArityAnalysis;
 class FunctorAnalysis;
 class IOTypeAnalysis;
 class PolymorphicObjectsAnalysis;
@@ -120,10 +119,6 @@ public:
         return sipsMetric.get();
     }
 
-    size_t getAuxiliaryArity(const ast::Atom* atom) const;
-    size_t getAuxiliaryArity(const ast::Relation* relation) const;
-    size_t getEvaluationArity(const ast::Atom* atom) const;
-
     /** Translation strategy */
     Own<ram::Statement> translateNonRecursiveClause(
             SymbolTable& symbolTable, const ast::Clause& clause) const;
@@ -138,7 +133,6 @@ public:
 
 private:
     const ast::Program* program;
-    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis;
     const ast::analysis::RecursiveClausesAnalysis* recursiveClauses;
     const ast::analysis::RelationScheduleAnalysis* relationSchedule;
     const ast::analysis::SCCGraphAnalysis* sccGraph;

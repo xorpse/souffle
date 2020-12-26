@@ -19,7 +19,6 @@
 #include "ast/Directive.h"
 #include "ast/QualifiedName.h"
 #include "ast/TranslationUnit.h"
-#include "ast/analysis/AuxArity.h"
 #include "ast/analysis/Functor.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/PolymorphicObjects.h"
@@ -50,7 +49,6 @@ TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
     program = &tu.getProgram();
 
     // Set up analyses
-    auxArityAnalysis = tu.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
     functorAnalysis = tu.getAnalysis<ast::analysis::FunctorAnalysis>();
     recursiveClauses = tu.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
     sccGraph = tu.getAnalysis<ast::analysis::SCCGraphAnalysis>();
@@ -158,29 +156,6 @@ const std::vector<TypeAttribute>& TranslatorContext::getFunctorArgTypes(
 
 bool TranslatorContext::isStatefulFunctor(const ast::UserDefinedFunctor* udf) const {
     return functorAnalysis->isStateful(udf);
-}
-
-size_t TranslatorContext::getAuxiliaryArity(const ast::Atom* atom) const {
-    return auxArityAnalysis->getArity(atom);
-}
-
-size_t TranslatorContext::getAuxiliaryArity(const ast::Relation* relation) const {
-    return auxArityAnalysis->getArity(relation);
-}
-
-size_t TranslatorContext::getEvaluationArity(const ast::Atom* atom) const {
-    std::string relName = atom->getQualifiedName().toString();
-    if (isPrefix("@info_", relName)) return 0;
-
-    // Get the original relation name
-    if (isPrefix("@delta_", relName)) {
-        relName = stripPrefix("@delta_", relName);
-    } else if (isPrefix("@new_", relName)) {
-        relName = stripPrefix("@new_", relName);
-    }
-
-    const auto* originalRelation = getRelation(ast::QualifiedName(relName));
-    return auxArityAnalysis->getArity(originalRelation);
 }
 
 ast::NumericConstant::Type TranslatorContext::getInferredNumericConstantType(
