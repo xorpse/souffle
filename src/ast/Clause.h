@@ -124,7 +124,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Clause&>(node);
+        const auto& other = asAssert<Clause>(node);
         return equal_ptr(head, other.head) && equal_targets(bodyLiterals, other.bodyLiterals) &&
                equal_ptr(plan, other.plan);
     }

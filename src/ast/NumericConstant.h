@@ -20,6 +20,7 @@
 #include "ast/Node.h"
 #include "parser/SrcLocation.h"
 #include "souffle/RamTypes.h"
+#include "souffle/utility/MiscUtil.h"
 #include <cassert>
 #include <optional>
 #include <string>
@@ -61,7 +62,7 @@ public:
 
 protected:
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const NumericConstant&>(node);
+        const auto& other = asAssert<NumericConstant>(node);
         return Constant::equal(node) && fixedType == other.fixedType;
     }
 

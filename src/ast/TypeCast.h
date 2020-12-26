@@ -77,7 +77,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const TypeCast&>(node);
+        const auto& other = asAssert<TypeCast>(node);
         return type == other.type && equal_ptr(value, other.value);
     }
 

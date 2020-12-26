@@ -18,7 +18,7 @@
 
 #include "parser/SrcLocation.h"
 #include "souffle/utility/ContainerUtil.h"
-
+#include "souffle/utility/MiscUtil.h"
 #include <iosfwd>
 #include <string>
 #include <typeinfo>

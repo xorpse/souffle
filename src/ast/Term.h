@@ -21,6 +21,7 @@
 #include "ast/utility/NodeMapper.h"
 #include "parser/SrcLocation.h"
 #include "souffle/utility/ContainerUtil.h"
+#include "souffle/utility/MiscUtil.h"
 #include <algorithm>
 #include <memory>
 #include <string>
@@ -72,7 +73,7 @@ public:
 
 protected:
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Term&>(node);
+        const auto& other = asAssert<Term>(node);
         return equal_targets(args, other.args);
     }
 

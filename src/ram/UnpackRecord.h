@@ -86,7 +86,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const UnpackRecord&>(node);
+        const auto& other = asAssert<UnpackRecord>(node);
         return TupleOperation::equal(other) && equal_ptr(expression, other.expression) &&
                arity == other.arity;
     }

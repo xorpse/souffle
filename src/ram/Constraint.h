@@ -89,7 +89,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Constraint&>(node);
+        const auto& other = asAssert<Constraint>(node);
         return op == other.op && equal_ptr(lhs, other.lhs) && equal_ptr(rhs, other.rhs);
     }
 

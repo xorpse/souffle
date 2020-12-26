@@ -20,6 +20,7 @@
 #include "ram/analysis/Index.h"
 #include "souffle/RamTypes.h"
 #include "souffle/SouffleInterface.h"
+#include "souffle/utility/MiscUtil.h"
 #include <cstddef>
 #include <cstdint>
 #include <deque>

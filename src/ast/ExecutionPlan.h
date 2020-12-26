@@ -20,6 +20,7 @@
 #include "ast/Node.h"
 #include "ast/utility/NodeMapper.h"
 #include "souffle/utility/ContainerUtil.h"
+#include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include <algorithm>
 #include <map>
@@ -91,7 +92,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const ExecutionPlan&>(node);
+        const auto& other = asAssert<ExecutionPlan>(node);
         return equal_targets(plans, other.plans);
     }
 

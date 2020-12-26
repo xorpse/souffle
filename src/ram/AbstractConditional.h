@@ -60,7 +60,7 @@ public:
 
 protected:
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const AbstractConditional&>(node);
+        const auto& other = asAssert<AbstractConditional>(node);
         return NestedOperation::equal(node) && equal_ptr(condition, other.condition);
     }
 

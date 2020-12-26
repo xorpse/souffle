@@ -78,7 +78,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const NestedOperation&>(node);
+        const auto& other = asAssert<NestedOperation>(node);
         return equal_ptr(nestedOperation, other.nestedOperation) && profileText == other.profileText;
     }
 

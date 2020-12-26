@@ -20,6 +20,7 @@
 #include "ram/AbstractOperator.h"
 #include "ram/Expression.h"
 #include "ram/Node.h"
+#include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include "souffle/utility/tinyformat.h"
 #include <memory>
@@ -64,7 +65,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const IntrinsicOperator&>(node);
+        const auto& other = asAssert<IntrinsicOperator>(node);
         return AbstractOperator::equal(node) && operation == other.operation;
     }
 

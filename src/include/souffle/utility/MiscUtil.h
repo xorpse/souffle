@@ -133,7 +133,6 @@ auto clone(const std::pair<A, B>& p) {
     return std::make_pair(clone(p.first), clone(p.second));
 }
 
-
 // -------------------------------------------------------------------------------
 //                             Comparison Utilities
 // -------------------------------------------------------------------------------
@@ -171,39 +170,47 @@ template <typename A, typename B>
 using copy_const_t = typename copy_const<A, B>::type;
 
 /**
+ * This class is used to tell as<> that cross-casting is allowed.
+ * I use a named type rather than just a bool to make the code stand out.
+ */
+class AllowCrossCast {};
+
+/**
  * Helpers for `dynamic_cast`ing without having to specify redundant type qualifiers.
  * e.g. `as<AstLiteral>(p)` instead of `as<AstLiteral>(p)`.
  */
-template <typename B, typename A>
+template <typename B, typename CastType = void, typename A>
 auto as(A* x) {
-    static_assert(std::is_base_of_v<std::remove_const_t<A>, std::remove_const_t<B>>,
-            "`as<B, A>` does not allow cross-type dyn casts. "
-            "(i.e. `as<B, A>` where `B <: A` is not true.) "
-            "Such a cast is likely a mistake or typo.");
+    if constexpr (!std::is_same_v<CastType, AllowCrossCast>) {
+        static_assert(std::is_base_of_v<std::remove_const_t<A>, std::remove_const_t<B>>,
+                "`as<B, A>` does not allow cross-type dyn casts. "
+                "(i.e. `as<B, A>` where `B <: A` is not true.) "
+                "Such a cast is likely a mistake or typo.");
+    }
     return dynamic_cast<copy_const_t<A, B>*>(x);
 }
 
-template <typename B, typename A>
+template <typename B, typename CastType = void, typename A>
 auto as(A& x) {
-    return as<B>(&x);
+    return as<B, CastType>(&x);
 }
 
-template <typename B, typename A>
+template <typename B, typename CastType = void, typename A>
 auto as(std::unique_ptr<A>& x) {
-    return as<B>(x.get());
+    return as<B, CastType>(x.get());
 }
 
-template <typename B, typename A>
+template <typename B, typename CastType = void, typename A>
 auto as(const std::unique_ptr<A>& x) {
-    return as<B>(x.get());
+    return as<B, CastType>(x.get());
 }
 
 /**
  * Down-casts and checks the cast has succeeded
  */
-template <typename B, typename A>
+template <typename B, typename CastType = void, typename A>
 auto& asAssert(A&& a) {
-    auto* cast = as<B>(std::forward<A>(a));
+    auto* cast = as<B, CastType>(std::forward<A>(a));
     assert(cast && "Invalid cast");
     return *cast;
 }

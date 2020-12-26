@@ -41,7 +41,7 @@ bool HoistAggregateTransformer::hoistAggregate(Program& program) {
         Own<NestedOperation> newAgg;
         bool priorTupleOp = false;
         std::function<Own<Node>(Own<Node>)> aggRewriter = [&](Own<Node> node) -> Own<Node> {
-            if (isA<Aggregate>(node.get())) {
+            if (isA<Aggregate>(node)) {
                 auto* tupleOp = as<TupleOperation>(node);
                 assert(tupleOp != nullptr && "aggregate conversion to tuple operation failed");
                 if (rla->getLevel(tupleOp) == -1 && !priorTupleOp) {

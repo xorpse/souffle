@@ -109,7 +109,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Directive&>(node);
+        const auto& other = asAssert<Directive>(node);
         return other.type == type && other.name == name && other.parameters == parameters;
     }
 

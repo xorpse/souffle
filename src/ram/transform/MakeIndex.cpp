@@ -154,7 +154,7 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
     std::vector<Own<Condition>> toAppend;
     auto it = conditionList.begin();
     while (it != conditionList.end()) {
-        auto* binRelOp = as<Constraint>(it->get());
+        auto* binRelOp = as<Constraint>(*it);
         if (binRelOp == nullptr) {
             ++it;
             continue;

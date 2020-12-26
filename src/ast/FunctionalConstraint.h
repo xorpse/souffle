@@ -100,8 +100,7 @@ public:
     }
 
     bool equal(const Node& node) const override {
-        assert(nullptr != as<FunctionalConstraint>(node));
-        const auto& other = static_cast<const FunctionalConstraint&>(node);
+        const auto& other = asAssert<FunctionalConstraint>(node);
         if (keys.size() != other.keys.size()) {
             return false;
         }

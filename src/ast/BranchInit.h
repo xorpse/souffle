@@ -21,6 +21,7 @@
 #include "ast/Term.h"
 #include "parser/SrcLocation.h"
 #include "souffle/utility/ContainerUtil.h"
+#include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include "souffle/utility/tinyformat.h"
 #include <iosfwd>
@@ -60,7 +61,7 @@ protected:
 
     /** Implements the node comparison for this node type */
     bool equal(const Node& node) const override {
-        const auto& other = dynamic_cast<const BranchInit&>(node);
+        const auto& other = asAssert<BranchInit>(node);
         return (constructor == other.constructor) && equal_targets(args, other.args);
     }
 

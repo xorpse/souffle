@@ -19,6 +19,7 @@
 #include "ast/Argument.h"
 #include "ast/Node.h"
 #include "parser/SrcLocation.h"
+#include "souffle/utility/MiscUtil.h"
 #include <ostream>
 #include <string>
 #include <utility>
@@ -53,7 +54,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Variable&>(node);
+        const auto& other = asAssert<Variable>(node);
         return name == other.name;
     }
 

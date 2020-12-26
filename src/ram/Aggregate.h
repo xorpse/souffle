@@ -85,7 +85,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Aggregate&>(node);
+        const auto& other = asAssert<Aggregate>(node);
         return RelationOperation::equal(other) && AbstractAggregate::equal(node);
     }
 };
