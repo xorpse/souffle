@@ -82,6 +82,56 @@ Own<ram::Relation> UnitTranslator::createRamRelation(
             ramRelationName, arity + 2, 2, attributeNames, attributeTypeQualifiers, representation);
 }
 
+VecOwn<ram::Relation> UnitTranslator::createRamRelations(const std::vector<size_t>& sccOrdering) const {
+    // Regular relations
+    auto ramRelations = seminaive::UnitTranslator::createRamRelations(sccOrdering);
+
+    // Info relations
+    for (const auto* relation : context->getProgram()->getRelations()) {
+        size_t clauseID = 1;
+        for (const auto* clause : context->getClauses(relation->getQualifiedName())) {
+            if (isFact(*clause)) {
+                continue;
+            }
+
+            auto infoRelQualifiedName = clause->getHead()->getQualifiedName();
+            infoRelQualifiedName.append("@info");
+            infoRelQualifiedName.append(toString(clauseID));
+            std::string infoRelName = getConcreteRelationName(infoRelQualifiedName);
+
+            std::vector<std::string> attributeNames;
+            std::vector<std::string> attributeTypeQualifiers;
+
+            // (1) Clause ID
+            attributeNames.push_back("clause_num");
+            attributeTypeQualifiers.push_back("i:number");
+
+            // (2) Head variable string
+            attributeNames.push_back("head_vars");
+            attributeTypeQualifiers.push_back("s:symbol");
+
+            // (3) For all atoms + negs + bcs: rel_<i>:symbol
+            for (size_t i = 0; i < clause->getBodyLiterals().size(); i++) {
+                const auto* literal = clause->getBodyLiterals().at(i);
+                if (isA<ast::Atom>(literal) || isA<ast::Negation>(literal) ||
+                        isA<ast::BinaryConstraint>(literal)) {
+                    attributeNames.push_back("rel_" + std::to_string(i));
+                    attributeTypeQualifiers.push_back("s:symbol");
+                }
+            }
+
+            // (4) Clause representation
+            attributeNames.push_back("clause_repr");
+            attributeTypeQualifiers.push_back("s:symbol");
+
+            ramRelations.push_back(mk<ram::Relation>(infoRelName, attributeNames.size(), 0, attributeNames,
+                    attributeTypeQualifiers, RelationRepresentation::INFO));
+        }
+    }
+
+    return ramRelations;
+}
+
 Own<ram::Statement> UnitTranslator::generateClearExpiredRelations(
         const std::set<const ast::Relation*>& /* expiredRelations */) const {
     // relations should be preserved if provenance is enabled
@@ -145,36 +195,6 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
             infoRelQualifiedName.append(toString(clauseID));
             std::string infoRelName = getConcreteRelationName(infoRelQualifiedName);
 
-            /* -- Relation -- */
-            std::vector<std::string> attributeNames;
-            std::vector<std::string> attributeTypeQualifiers;
-
-            // (1) Clause ID
-            attributeNames.push_back("clause_num");
-            attributeTypeQualifiers.push_back("i:number");
-
-            // (2) Head variable string
-            attributeNames.push_back("head_vars");
-            attributeTypeQualifiers.push_back("s:symbol");
-
-            // (3) For all atoms + negs + bcs: rel_<i>:symbol
-            for (size_t i = 0; i < clause->getBodyLiterals().size(); i++) {
-                const auto* literal = clause->getBodyLiterals().at(i);
-                if (isA<ast::Atom>(literal) || isA<ast::Negation>(literal) ||
-                        isA<ast::BinaryConstraint>(literal)) {
-                    attributeNames.push_back("rel_" + std::to_string(i));
-                    attributeTypeQualifiers.push_back("s:symbol");
-                }
-            }
-
-            // (4) Clause representation
-            attributeNames.push_back("clause_repr");
-            attributeTypeQualifiers.push_back("s:symbol");
-
-            auto infoRelation = mk<ram::Relation>(infoRelName, attributeNames.size(), 0, attributeNames,
-                    attributeTypeQualifiers, RelationRepresentation::INFO);
-
-            /* -- Clause Fact Arguments -- */
             // Generate clause head arguments
             VecOwn<ram::Expression> factArguments;
 

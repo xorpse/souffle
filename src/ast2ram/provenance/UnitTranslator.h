@@ -49,6 +49,7 @@ protected:
             const std::set<const ast::Relation*>& expiredRelations) const override;
     Own<ram::Relation> createRamRelation(
             const ast::Relation* baseRelation, std::string ramRelationName) const override;
+    VecOwn<ram::Relation> createRamRelations(const std::vector<size_t>& sccOrdering) const override;
 
 private:
     /** translate RAM code for subroutine to get subproofs */
