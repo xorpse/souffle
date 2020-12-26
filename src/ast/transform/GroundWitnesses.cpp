@@ -67,7 +67,7 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
         // not to use it after that point.
         // 1. make a copy of all aggregate body literals, because they will need to
         // be added to the rule body
-        std::vector<std::unique_ptr<Literal>> aggregateLiterals;
+        VecOwn<Literal> aggregateLiterals;
         for (const auto& literal : agg->getBodyLiterals()) {
             aggregateLiterals.push_back(souffle::clone(literal));
         }

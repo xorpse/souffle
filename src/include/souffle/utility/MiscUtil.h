@@ -16,10 +16,11 @@
 
 #pragma once
 
+#include "souffle/utility/Iteration.h"
+#include "souffle/utility/Types.h"
 #include "tinyformat.h"
 #include <cassert>
 #include <chrono>
-#include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -99,33 +100,25 @@ inline long duration_in_ns(const time_point& start, const time_point& end) {
 // -------------------------------------------------------------------------------
 
 template <typename A>
-std::unique_ptr<A> clone(const A* node) {
-    return node ? std::unique_ptr<A>(node->clone()) : nullptr;
+Own<A> clone(const A* node) {
+    return node ? Own<A>(node->clone()) : nullptr;
 }
 
 template <typename A>
-std::unique_ptr<A> clone(const std::unique_ptr<A>& node) {
-    return node ? std::unique_ptr<A>(node->clone()) : nullptr;
+Own<A> clone(const Own<A>& node) {
+    return clone(node.get());
 }
 
 template <typename A>
 auto clone(const std::vector<A*>& xs) {
-    std::vector<std::unique_ptr<A>> ys;
-    ys.reserve(xs.size());
-    for (auto&& x : xs) {
-        ys.emplace_back(x ? std::unique_ptr<A>(x->clone()) : nullptr);
-    }
-    return ys;
+    auto rn = makeTransformRange(xs.begin(), xs.end(), [](A* x) { return clone(x); });
+    return VecOwn<A>(rn.begin(), rn.end());
 }
 
 template <typename A>
-auto clone(const std::vector<std::unique_ptr<A>>& xs) {
-    std::vector<std::unique_ptr<A>> ys;
-    ys.reserve(xs.size());
-    for (auto&& x : xs) {
-        ys.emplace_back(x ? std::unique_ptr<A>(x->clone()) : nullptr);
-    }
-    return ys;
+auto clone(const VecOwn<A>& xs) {
+    auto rn = makeTransformRange(xs.begin(), xs.end(), [](Own<A> const& x) { return clone(x); });
+    return VecOwn<A>(rn.begin(), rn.end());
 }
 
 template <typename A, typename B>
@@ -156,7 +149,7 @@ bool equal_ptr(const T* a, const T* b) {
  * pointers are null is also considered equivalent.
  */
 template <typename T>
-bool equal_ptr(const std::unique_ptr<T>& a, const std::unique_ptr<T>& b) {
+bool equal_ptr(const Own<T>& a, const Own<T>& b) {
     return equal_ptr(a.get(), b.get());
 }
 
@@ -196,12 +189,12 @@ auto as(A& x) {
 }
 
 template <typename B, typename CastType = void, typename A>
-auto as(std::unique_ptr<A>& x) {
+auto as(Own<A>& x) {
     return as<B, CastType>(x.get());
 }
 
 template <typename B, typename CastType = void, typename A>
-auto as(const std::unique_ptr<A>& x) {
+auto as(const Own<A>& x) {
     return as<B, CastType>(x.get());
 }
 
@@ -230,12 +223,12 @@ auto isA(A& x) {
 }
 
 template <typename B, typename A>
-bool isA(const std::unique_ptr<A>& x) {
+bool isA(const Own<A>& x) {
     return isA<B>(x.get());
 }
 
 template <typename B, typename A>
-bool isA(std::unique_ptr<A>& x) {
+bool isA(Own<A>& x) {
     return isA<B>(x.get());
 }
 // -------------------------------------------------------------------------------
