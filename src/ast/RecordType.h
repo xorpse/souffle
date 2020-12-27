@@ -62,10 +62,6 @@ public:
         fields.at(idx)->setTypeName(std::move(type));
     }
 
-    RecordType* clone() const override {
-        return new RecordType(getQualifiedName(), souffle::clone(fields), getSrcLoc());
-    }
-
 protected:
     void print(std::ostream& os) const override {
         os << tfm::format(".type %s = [%s]", getQualifiedName(), join(fields, ", "));
@@ -74,6 +70,11 @@ protected:
     bool equal(const Node& node) const override {
         const auto& other = asAssert<RecordType>(node);
         return getQualifiedName() == other.getQualifiedName() && equal_targets(fields, other.fields);
+    }
+
+private:
+    RecordType* cloneImpl() const override {
+        return new RecordType(getQualifiedName(), souffle::clone(fields), getSrcLoc());
     }
 
 private:

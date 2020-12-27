@@ -62,14 +62,15 @@ public:
         os << tfm::format(".type %s = %s", getQualifiedName(), join(branches, " | "));
     }
 
-    AlgebraicDataType* clone() const override {
-        return new AlgebraicDataType(getQualifiedName(), souffle::clone(branches), getSrcLoc());
-    }
-
 protected:
     bool equal(const Node& node) const override {
         const auto& other = asAssert<AlgebraicDataType>(node);
         return getQualifiedName() == other.getQualifiedName() && branches == other.branches;
+    }
+
+private:
+    AlgebraicDataType* cloneImpl() const override {
+        return new AlgebraicDataType(getQualifiedName(), souffle::clone(branches), getSrcLoc());
     }
 
 private:

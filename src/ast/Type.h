@@ -42,8 +42,6 @@ public:
         this->name = std::move(name);
     }
 
-    Type* clone() const override = 0;
-
 private:
     /** type name */
     QualifiedName name;

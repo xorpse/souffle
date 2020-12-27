@@ -119,14 +119,6 @@ public:
         return toPtrVector(functionalDependencies);
     }
 
-    Relation* clone() const override {
-        auto res = new Relation(name, getSrcLoc());
-        res->attributes = souffle::clone(attributes);
-        res->qualifiers = qualifiers;
-        res->representation = representation;
-        return res;
-    }
-
     void apply(const NodeMapper& map) override {
         for (auto& cur : attributes) {
             cur = map(std::move(cur));
@@ -152,6 +144,16 @@ protected:
         return name == other.name && equal_targets(attributes, other.attributes);
     }
 
+private:
+    Relation* cloneImpl() const override {
+        auto res = new Relation(name, getSrcLoc());
+        res->attributes = souffle::clone(attributes);
+        res->qualifiers = qualifiers;
+        res->representation = representation;
+        return res;
+    }
+
+private:
     /** Name of relation */
     QualifiedName name;
 

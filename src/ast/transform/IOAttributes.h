@@ -56,11 +56,11 @@ public:
         return "IOAttributesTransformer";
     }
 
-    IOAttributesTransformer* clone() const override {
+private:
+    IOAttributesTransformer* cloneImpl() const override {
         return new IOAttributesTransformer();
     }
 
-private:
     bool transform(TranslationUnit& translationUnit) override {
         bool changed = false;
 

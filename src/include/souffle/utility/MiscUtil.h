@@ -99,9 +99,35 @@ inline long duration_in_ns(const time_point& start, const time_point& end) {
 //                             Cloning Utilities
 // -------------------------------------------------------------------------------
 
+namespace detail {
+// TODO: This function is still used by ram::Node::clone() because it hasn't been
+// converted to return Own<>.  Once converted, remove this.
+template <typename D, typename B>
+Own<D> downCast(B* ptr) {
+    // ensure the clone operation casts to appropriate pointer
+    static_assert(std::is_base_of_v<std::remove_const_t<B>, std::remove_const_t<D>>,
+            "Needs to be able to downcast");
+    return Own<D>(ptr);
+}
+
+template <typename D, typename B>
+Own<D> downCast(Own<B> ptr) {
+    // ensure the clone operation casts to appropriate pointer
+    static_assert(std::is_base_of_v<std::remove_const_t<B>, std::remove_const_t<D>>,
+            "Needs to be able to downcast");
+    return Own<D>(static_cast<D*>(ptr.release()));
+}
+
+}  // namespace detail
+
+template <typename A>
+std::enable_if_t<!std::is_pointer_v<A>, Own<A>> clone(const A& node) {
+    return detail::downCast<A>(node.clone());
+}
+
 template <typename A>
 Own<A> clone(const A* node) {
-    return node ? Own<A>(node->clone()) : nullptr;
+    return node ? clone(*node) : nullptr;
 }
 
 template <typename A>

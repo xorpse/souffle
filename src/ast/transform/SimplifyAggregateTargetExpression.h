@@ -28,11 +28,11 @@ public:
         return "SimplifyAggregateTargetExpressionTransformer";
     }
 
-    SimplifyAggregateTargetExpressionTransformer* clone() const override {
+private:
+    SimplifyAggregateTargetExpressionTransformer* cloneImpl() const override {
         return new SimplifyAggregateTargetExpressionTransformer();
     }
 
-private:
     bool transform(TranslationUnit& translationUnit) override;
 
     /**

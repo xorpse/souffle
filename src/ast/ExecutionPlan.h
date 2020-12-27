@@ -59,15 +59,6 @@ public:
         return result;
     }
 
-    ExecutionPlan* clone() const override {
-        auto res = new ExecutionPlan();
-        res->setSrcLoc(getSrcLoc());
-        for (auto& plan : plans) {
-            res->setOrderFor(plan.first, Own<ExecutionOrder>(plan.second->clone()));
-        }
-        return res;
-    }
-
     void apply(const NodeMapper& map) override {
         for (auto& plan : plans) {
             plan.second = map(std::move(plan.second));
@@ -95,6 +86,17 @@ protected:
         const auto& other = asAssert<ExecutionPlan>(node);
         return equal_targets(plans, other.plans);
     }
+
+private:
+    ExecutionPlan* cloneImpl() const override {
+        auto res = new ExecutionPlan();
+        res->setSrcLoc(getSrcLoc());
+        for (auto& plan : plans) {
+            res->setOrderFor(plan.first, souffle::clone(plan.second));
+        }
+        return res;
+    }
+
 
 private:
     /** Mapping versions of clauses to execution orders */

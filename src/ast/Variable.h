@@ -44,10 +44,6 @@ public:
         return name;
     }
 
-    Variable* clone() const override {
-        return new Variable(name, getSrcLoc());
-    }
-
 protected:
     void print(std::ostream& os) const override {
         os << name;
@@ -58,6 +54,12 @@ protected:
         return name == other.name;
     }
 
+private:
+    Variable* cloneImpl() const override {
+        return new Variable(name, getSrcLoc());
+    }
+
+private:
     /** Name */
     std::string name;
 };

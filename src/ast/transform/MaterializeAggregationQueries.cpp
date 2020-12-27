@@ -221,7 +221,7 @@ void MaterializeAggregationQueriesTransformer::groundInjectedParameters(
                 for (auto arg : atom->getArguments()) {
                     if (auto* var = as<ast::Variable>(arg)) {
                         if (var->getName() == ungroundedVariableName) {
-                            arguments.emplace_back(arg->clone());
+                            arguments.emplace_back(souffle::clone(arg));
                             continue;
                         }
                     }
@@ -335,7 +335,7 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
                         continue;
                     }
                 }
-                args.emplace_back(arg->clone());
+                args.emplace_back(souffle::clone(arg));
             }
             auto aggAtom =
                     mk<Atom>(aggClauseHead->getQualifiedName(), std::move(args), aggClauseHead->getSrcLoc());

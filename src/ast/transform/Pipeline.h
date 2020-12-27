@@ -84,14 +84,6 @@ public:
         return "PipelineTransformer";
     }
 
-    PipelineTransformer* clone() const override {
-        VecOwn<Transformer> transformers;
-        for (const auto& transformer : pipeline) {
-            transformers.push_back(souffle::clone(transformer));
-        }
-        return new PipelineTransformer(std::move(transformers));
-    }
-
 protected:
     VecOwn<Transformer> pipeline;
     bool transform(TranslationUnit& translationUnit) override {
@@ -100,6 +92,15 @@ protected:
             changed |= applySubtransformer(translationUnit, transformer.get());
         }
         return changed;
+    }
+
+private:
+    PipelineTransformer* cloneImpl() const override {
+        VecOwn<Transformer> transformers;
+        for (const auto& transformer : pipeline) {
+            transformers.push_back(souffle::clone(transformer));
+        }
+        return new PipelineTransformer(std::move(transformers));
     }
 };
 

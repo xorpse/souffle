@@ -384,7 +384,7 @@ Own<Clause> ResolveAliasesTransformer::removeTrivialEquality(const Clause& claus
 }
 
 Own<Clause> ResolveAliasesTransformer::removeComplexTermsInAtoms(const Clause& clause) {
-    Own<Clause> res(clause.clone());
+    Own<Clause> res(souffle::clone(clause));
 
     // get list of atoms
     std::vector<Atom*> atoms = getBodyLiterals<Atom>(*res);

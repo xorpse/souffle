@@ -45,10 +45,6 @@ public:
         return order;
     }
 
-    ExecutionOrder* clone() const override {
-        return new ExecutionOrder(order, getSrcLoc());
-    }
-
 protected:
     void print(std::ostream& out) const override {
         out << "(" << join(order) << ")";
@@ -57,6 +53,11 @@ protected:
     bool equal(const Node& node) const override {
         const auto& other = asAssert<ExecutionOrder>(node);
         return order == other.order;
+    }
+
+private:
+    ExecutionOrder* cloneImpl() const override {
+        return new ExecutionOrder(order, getSrcLoc());
     }
 
 private:

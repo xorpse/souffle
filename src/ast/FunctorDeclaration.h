@@ -74,10 +74,6 @@ public:
         return stateful;
     }
 
-    FunctorDeclaration* clone() const override {
-        return new FunctorDeclaration(name, argsTypes, returnType, stateful, getSrcLoc());
-    }
-
 protected:
     void print(std::ostream& out) const override {
         auto convert = [&](TypeAttribute type) {
@@ -105,6 +101,12 @@ protected:
         return name == other.name && argsTypes == other.argsTypes && returnType == other.returnType &&
                stateful == other.stateful;
     }
+
+private:
+    FunctorDeclaration* cloneImpl() const override {
+        return new FunctorDeclaration(name, argsTypes, returnType, stateful, getSrcLoc());
+    }
+
 
     /** Name of functor */
     const std::string name;

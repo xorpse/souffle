@@ -29,14 +29,16 @@ class UnnamedVariable : public Argument {
 public:
     using Argument::Argument;
 
-    UnnamedVariable* clone() const override {
-        return new UnnamedVariable(getSrcLoc());
-    }
-
 protected:
     void print(std::ostream& os) const override {
         os << "_";
     }
+
+private:
+    UnnamedVariable* cloneImpl() const override {
+        return new UnnamedVariable(getSrcLoc());
+    }
+
 };
 
 }  // namespace souffle::ast

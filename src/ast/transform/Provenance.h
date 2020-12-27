@@ -31,11 +31,11 @@ public:
         return "ProvenanceTransformer";
     }
 
-    ProvenanceTransformer* clone() const override {
+private:
+    ProvenanceTransformer* cloneImpl() const override {
         return new ProvenanceTransformer();
     }
 
-private:
     bool transform(TranslationUnit& translationUnit) override;
     bool transformMaxHeight(TranslationUnit& translationUnit);
 };

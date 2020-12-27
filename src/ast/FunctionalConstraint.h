@@ -77,16 +77,6 @@ public:
         return res;
     }
 
-    FunctionalConstraint* clone() const override {
-        VecOwn<Variable> newKeys;
-        for (const auto& key : keys) {
-            newKeys.push_back(Own<Variable>(key->clone()));
-        }
-        auto* res = new FunctionalConstraint(std::move(newKeys));
-        res->setSrcLoc(getSrcLoc());
-        return res;
-    }
-
 public:
     void print(std::ostream& os) const override {
         os << "keys ";
@@ -128,6 +118,18 @@ public:
         return true;
     }
 
+private:
+    FunctionalConstraint* cloneImpl() const override {
+        VecOwn<Variable> newKeys;
+        for (const auto& key : keys) {
+            newKeys.push_back(souffle::clone(key));
+        }
+        auto* res = new FunctionalConstraint(std::move(newKeys));
+        res->setSrcLoc(getSrcLoc());
+        return res;
+    }
+
+private:
     /* Functional constraint */
     VecOwn<Variable> keys;
 };

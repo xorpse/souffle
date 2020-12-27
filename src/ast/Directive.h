@@ -92,12 +92,6 @@ public:
         return parameters;
     }
 
-    Directive* clone() const override {
-        auto res = new Directive(type, name, getSrcLoc());
-        res->parameters = parameters;
-        return res;
-    }
-
 protected:
     void print(std::ostream& os) const override {
         os << "." << type << " " << name;
@@ -113,6 +107,14 @@ protected:
         return other.type == type && other.name == name && other.parameters == parameters;
     }
 
+private:
+    Directive* cloneImpl() const override {
+        auto res = new Directive(type, name, getSrcLoc());
+        res->parameters = parameters;
+        return res;
+    }
+
+private:
     /** Type of directive */
     DirectiveType type;
 

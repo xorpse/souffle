@@ -45,11 +45,11 @@ public:
         return "GroundWitnessesTransformer";
     }
 
-    GroundWitnessesTransformer* clone() const override {
+private:
+    GroundWitnessesTransformer* cloneImpl() const override {
         return new GroundWitnessesTransformer();
     }
 
-private:
     bool transform(TranslationUnit& translationUnit) override;
 };
 

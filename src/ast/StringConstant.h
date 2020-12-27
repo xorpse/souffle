@@ -34,15 +34,16 @@ public:
         setSrcLoc(std::move(loc));
     }
 
-    StringConstant* clone() const override {
-        auto* res = new StringConstant(getConstant());
-        res->setSrcLoc(getSrcLoc());
-        return res;
-    }
-
 protected:
     void print(std::ostream& os) const override {
         os << "\"" << getConstant() << "\"";
+    }
+
+private:
+    StringConstant* cloneImpl() const override {
+        auto* res = new StringConstant(getConstant());
+        res->setSrcLoc(getSrcLoc());
+        return res;
     }
 };
 

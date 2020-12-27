@@ -31,7 +31,8 @@ class NilConstant : public Constant {
 public:
     NilConstant(SrcLocation loc = {}) : Constant("nil", std::move(loc)) {}
 
-    NilConstant* clone() const override {
+private:
+    NilConstant* cloneImpl() const override {
         return new NilConstant(getSrcLoc());
     }
 };

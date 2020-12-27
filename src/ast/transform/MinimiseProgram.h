@@ -37,11 +37,11 @@ public:
     static bool areBijectivelyEquivalent(
             const analysis::NormalisedClause& left, const analysis::NormalisedClause& right);
 
-    MinimiseProgramTransformer* clone() const override {
+private:
+    MinimiseProgramTransformer* cloneImpl() const override {
         return new MinimiseProgramTransformer();
     }
 
-private:
     bool transform(TranslationUnit& translationUnit) override;
 
     /** -- Bijective Equivalence Helper Methods -- */

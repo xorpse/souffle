@@ -69,10 +69,6 @@ public:
         operation = op;
     }
 
-    BinaryConstraint* clone() const override {
-        return new BinaryConstraint(operation, souffle::clone(lhs), souffle::clone(rhs), getSrcLoc());
-    }
-
     void apply(const NodeMapper& map) override {
         lhs = map(std::move(lhs));
         rhs = map(std::move(rhs));
@@ -96,6 +92,12 @@ protected:
         return operation == other.operation && equal_ptr(lhs, other.lhs) && equal_ptr(rhs, other.rhs);
     }
 
+private:
+    BinaryConstraint* cloneImpl() const override {
+        return new BinaryConstraint(operation, souffle::clone(lhs), souffle::clone(rhs), getSrcLoc());
+    }
+
+private:
     /** Constraint (base) operator */
     BinaryConstraintOp operation;
 

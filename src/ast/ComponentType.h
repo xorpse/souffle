@@ -62,10 +62,6 @@ public:
         typeParams = params;
     }
 
-    ComponentType* clone() const override {
-        return new ComponentType(name, typeParams, getSrcLoc());
-    }
-
 protected:
     void print(std::ostream& os) const override {
         os << name;
@@ -77,6 +73,11 @@ protected:
     bool equal(const Node& node) const override {
         const auto& other = asAssert<ComponentType>(node);
         return name == other.name && typeParams == other.typeParams;
+    }
+
+private:
+    ComponentType* cloneImpl() const override {
+        return new ComponentType(name, typeParams, getSrcLoc());
     }
 
 private:

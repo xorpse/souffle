@@ -70,13 +70,10 @@ public:
         return "WhileTransformer";
     }
 
-    WhileTransformer* clone() const override {
+private:
+    WhileTransformer* cloneImpl() const override {
         return new WhileTransformer(condition, souffle::clone(transformer));
     }
-
-private:
-    std::function<bool()> condition;
-    Own<Transformer> transformer;
 
     bool transform(TranslationUnit& translationUnit) override {
         bool changed = false;
@@ -85,6 +82,10 @@ private:
         }
         return changed;
     }
+
+private:
+    std::function<bool()> condition;
+    Own<Transformer> transformer;
 };
 
 }  // namespace souffle::ast::transform

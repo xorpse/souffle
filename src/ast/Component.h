@@ -146,20 +146,6 @@ public:
         return overrideRules;
     }
 
-    Component* clone() const override {
-        auto* res = new Component();
-        res->componentType = souffle::clone(componentType);
-        res->baseComponents = souffle::clone(baseComponents);
-        res->components = souffle::clone(components);
-        res->instantiations = souffle::clone(instantiations);
-        res->types = souffle::clone(types);
-        res->relations = souffle::clone(relations);
-        res->clauses = souffle::clone(clauses);
-        res->directives = souffle::clone(directives);
-        res->overrideRules = overrideRules;
-        return res;
-    }
-
     void apply(const NodeMapper& mapper) override {
         componentType = mapper(std::move(componentType));
         for (auto& cur : baseComponents) {
@@ -265,6 +251,25 @@ protected:
         }
         return true;
     }
+
+private:
+    Component* cloneImpl() const override {
+        auto* res = new Component();
+        res->componentType = souffle::clone(componentType);
+        res->baseComponents = souffle::clone(baseComponents);
+        res->components = souffle::clone(components);
+        res->instantiations = souffle::clone(instantiations);
+        res->types = souffle::clone(types);
+        res->relations = souffle::clone(relations);
+        res->clauses = souffle::clone(clauses);
+        res->directives = souffle::clone(directives);
+        res->overrideRules = overrideRules;
+        return res;
+    }
+
+private:
+
+
 
     /** Name of component and its formal component arguments. */
     Own<ComponentType> componentType;

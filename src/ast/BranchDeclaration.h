@@ -52,13 +52,14 @@ public:
         return toPtrVector(fields);
     }
 
-    BranchDeclaration* clone() const override {
-        return new BranchDeclaration(constructor, souffle::clone(fields), getSrcLoc());
-    }
-
 protected:
     void print(std::ostream& os) const override {
         os << tfm::format("%s {%s}", constructor, join(fields, ", "));
+    }
+
+private:
+    BranchDeclaration* cloneImpl() const override {
+        return new BranchDeclaration(constructor, souffle::clone(fields), getSrcLoc());
     }
 
 private:

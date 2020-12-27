@@ -124,19 +124,6 @@ public:
     /** Remove components and components' instantiations */
     void clearComponents();
 
-    Program* clone() const override {
-        auto res = new Program();
-        res->pragmas = souffle::clone(pragmas);
-        res->components = souffle::clone(components);
-        res->instantiations = souffle::clone(instantiations);
-        res->types = souffle::clone(types);
-        res->functors = souffle::clone(functors);
-        res->relations = souffle::clone(relations);
-        res->clauses = souffle::clone(clauses);
-        res->directives = souffle::clone(directives);
-        return res;
-    }
-
     void apply(const NodeMapper& map) override {
         for (auto& cur : pragmas) {
             cur = map(std::move(cur));
@@ -256,6 +243,21 @@ protected:
         assert(instantiation && "NULL instantiation");
         instantiations.push_back(std::move(instantiation));
     }
+
+private:
+    Program* cloneImpl() const override {
+        auto res = new Program();
+        res->pragmas = souffle::clone(pragmas);
+        res->components = souffle::clone(components);
+        res->instantiations = souffle::clone(instantiations);
+        res->types = souffle::clone(types);
+        res->functors = souffle::clone(functors);
+        res->relations = souffle::clone(relations);
+        res->clauses = souffle::clone(clauses);
+        res->directives = souffle::clone(directives);
+        return res;
+    }
+
 
     /** Program types  */
     VecOwn<Type> types;
