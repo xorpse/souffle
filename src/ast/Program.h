@@ -258,7 +258,6 @@ private:
         return res;
     }
 
-
     /** Program types  */
     VecOwn<Type> types;
 

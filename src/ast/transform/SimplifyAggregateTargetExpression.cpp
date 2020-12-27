@@ -32,8 +32,8 @@ Aggregator* SimplifyAggregateTargetExpressionTransformer::simplifyTargetExpressi
     auto newTargetExpression = mk<Variable>(analysis::findUniqueVariableName(clause, "x"));
 
     // Create the new body, with the necessary equality between old and new target expressions
-    auto equalityLiteral = mk<BinaryConstraint>(BinaryConstraintOp::EQ,
-            souffle::clone(newTargetExpression), souffle::clone(origTargetExpression));
+    auto equalityLiteral = mk<BinaryConstraint>(BinaryConstraintOp::EQ, souffle::clone(newTargetExpression),
+            souffle::clone(origTargetExpression));
 
     std::vector<Own<Literal>> newBody;
     for (const auto* literal : aggregator.getBodyLiterals()) {

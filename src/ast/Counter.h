@@ -38,7 +38,6 @@ private:
     Counter* cloneImpl() const override {
         return new Counter(getSrcLoc());
     }
-
 };
 
 }  // namespace souffle::ast

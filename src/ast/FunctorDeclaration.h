@@ -107,7 +107,6 @@ private:
         return new FunctorDeclaration(name, argsTypes, returnType, stateful, getSrcLoc());
     }
 
-
     /** Name of functor */
     const std::string name;
 

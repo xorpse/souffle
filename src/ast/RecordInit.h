@@ -47,7 +47,6 @@ private:
     RecordInit* cloneImpl() const override {
         return new RecordInit(souffle::clone(args), getSrcLoc());
     }
-
 };
 
 }  // namespace souffle::ast

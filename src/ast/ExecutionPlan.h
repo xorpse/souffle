@@ -97,7 +97,6 @@ private:
         return res;
     }
 
-
 private:
     /** Mapping versions of clauses to execution orders */
     std::map<int, Own<ExecutionOrder>> plans;

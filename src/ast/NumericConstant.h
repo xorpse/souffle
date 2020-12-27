@@ -59,6 +59,7 @@ protected:
         const auto& other = asAssert<NumericConstant>(node);
         return Constant::equal(node) && fixedType == other.fixedType;
     }
+
 private:
     NumericConstant* cloneImpl() const override {
         auto* copy = new NumericConstant(getConstant(), getFixedType());

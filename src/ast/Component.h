@@ -268,9 +268,6 @@ private:
     }
 
 private:
-
-
-
     /** Name of component and its formal component arguments. */
     Own<ComponentType> componentType;
 

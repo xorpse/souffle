@@ -38,7 +38,6 @@ private:
     UnnamedVariable* cloneImpl() const override {
         return new UnnamedVariable(getSrcLoc());
     }
-
 };
 
 }  // namespace souffle::ast
