@@ -141,6 +141,11 @@ VecOwn<ram::Relation> UnitTranslator::createRamRelations(const std::vector<size_
     return ramRelations;
 }
 
+void UnitTranslator::addAuxiliaryArity(
+        const ast::Relation* /* relation */, std::map<std::string, std::string>& directives) const {
+    directives.insert(std::make_pair("auxArity", "2"));
+}
+
 Own<ram::Statement> UnitTranslator::generateClearExpiredRelations(
         const std::set<const ast::Relation*>& /* expiredRelations */) const {
     // relations should be preserved if provenance is enabled

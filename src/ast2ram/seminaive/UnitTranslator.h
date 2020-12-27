@@ -61,6 +61,9 @@ protected:
     VecOwn<ram::Statement> generateClauseVersions(
             const ast::Clause* clause, const std::set<const ast::Relation*>& scc) const;
 
+    virtual void addAuxiliaryArity(
+            const ast::Relation* relation, std::map<std::string, std::string>& directives) const;
+
     /** -- Generation methods -- */
 
     /** High-level relation translation */

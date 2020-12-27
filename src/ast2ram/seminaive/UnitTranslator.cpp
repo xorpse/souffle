@@ -385,6 +385,11 @@ Own<ram::Statement> UnitTranslator::generateRecursiveStratum(
     return mk<ram::Sequence>(std::move(result));
 }
 
+void UnitTranslator::addAuxiliaryArity(
+        const ast::Relation* /* relation */, std::map<std::string, std::string>& directives) const {
+    directives.insert(std::make_pair("auxArity", "0"));
+}
+
 Own<ram::Statement> UnitTranslator::generateLoadRelation(const ast::Relation* relation) const {
     VecOwn<ram::Statement> loadStmts;
     for (const auto* load : context->getLoadDirectives(relation->getQualifiedName())) {
@@ -393,6 +398,7 @@ Own<ram::Statement> UnitTranslator::generateLoadRelation(const ast::Relation* re
         for (const auto& [key, value] : load->getParameters()) {
             directives.insert(std::make_pair(key, unescape(value)));
         }
+        addAuxiliaryArity(relation, directives);
 
         // Create the resultant load statement, with profile information
         std::string ramRelationName = getConcreteRelationName(relation->getQualifiedName());
@@ -416,6 +422,7 @@ Own<ram::Statement> UnitTranslator::generateStoreRelation(const ast::Relation* r
         for (const auto& [key, value] : store->getParameters()) {
             directives.insert(std::make_pair(key, unescape(value)));
         }
+        addAuxiliaryArity(relation, directives);
 
         // Create the resultant store statement, with profile information
         std::string ramRelationName = getConcreteRelationName(relation->getQualifiedName());

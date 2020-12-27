@@ -50,6 +50,8 @@ protected:
     Own<ram::Relation> createRamRelation(
             const ast::Relation* baseRelation, std::string ramRelationName) const override;
     VecOwn<ram::Relation> createRamRelations(const std::vector<size_t>& sccOrdering) const override;
+    void addAuxiliaryArity(
+            const ast::Relation* relation, std::map<std::string, std::string>& directives) const override;
 
 private:
     /** translate RAM code for subroutine to get subproofs */
