@@ -169,7 +169,7 @@ void UnitTranslator::addProvenanceClauseSubroutines(const ast::Program* program)
 Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* program) {
     VecOwn<ram::Statement> infoClauseCalls;
 
-    size_t stratumCount = 0;
+    size_t stratumCount = context->getNumberOfSCCs();
     for (const auto* relation : program->getRelations()) {
         size_t clauseID = 1;
         for (const auto* clause : context->getClauses(relation->getQualifiedName())) {
@@ -273,7 +273,7 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
             ds << clause->getSrcLoc();
             infoClause = mk<ram::DebugInfo>(std::move(infoClause), ds.str());
 
-            std::string stratumID = "@info_stratum_" + toString(stratumCount++);
+            std::string stratumID = "stratum_" + toString(stratumCount++);
             addRamSubroutine(stratumID, std::move(infoClause));
 
             clauseID++;
