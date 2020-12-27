@@ -322,8 +322,7 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
             // so we should just quickly fetch the set of local variables for this aggregate.
             auto localVariables = analysis::getLocalVariables(translationUnit, clause, agg);
             if (agg.getTargetExpression() != nullptr) {
-                const auto* targetExpressionVariable =
-                        as<Variable>(agg.getTargetExpression());
+                const auto* targetExpressionVariable = as<Variable>(agg.getTargetExpression());
                 localVariables.erase(targetExpressionVariable->getName());
             }
             VecOwn<Argument> args;

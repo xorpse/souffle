@@ -229,8 +229,7 @@ bool equal_targets(const Container<Own<T>>& a, const Container<Own<T>>& b) {
  * targets.
  */
 template <typename Key, typename Value>
-bool equal_targets(
-        const std::map<Key, Own<Value>>& a, const std::map<Key, Own<Value>>& b) {
+bool equal_targets(const std::map<Key, Own<Value>>& a, const std::map<Key, Own<Value>>& b) {
     auto comp = comp_deref<Own<Value>>();
     return equal_targets(
             a, b, [&comp](auto& a, auto& b) { return a.first == b.first && comp(a.second, b.second); });

@@ -72,8 +72,7 @@ public:
 
         for (auto& key : directory.getKeys()) {
             auto* level = as<SizeEntry>(directory.readDirectoryEntry(key)->readEntry("level"));
-            auto* frequency =
-                    as<SizeEntry>(directory.readDirectoryEntry(key)->readEntry("num-tuples"));
+            auto* frequency = as<SizeEntry>(directory.readDirectoryEntry(key)->readEntry("num-tuples"));
             // Handle older logs
             size_t intFreq = frequency == nullptr ? 0 : frequency->getSize();
             size_t intLevel = level == nullptr ? 0 : level->getSize();

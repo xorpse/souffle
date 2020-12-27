@@ -40,8 +40,7 @@ bool RemoveRedundantSumsTransformer::transform(TranslationUnit& translationUnit)
             // sum k : { .. } where k is a constant
             if (auto* agg = as<Aggregator>(node)) {
                 if (agg->getBaseOperator() == AggregateOp::SUM) {
-                    if (const auto* constant =
-                                    as<NumericConstant>(agg->getTargetExpression())) {
+                    if (const auto* constant = as<NumericConstant>(agg->getTargetExpression())) {
                         changed = true;
                         // Then construct the new thing to replace it with
                         auto count = mk<Aggregator>(AggregateOp::COUNT);
