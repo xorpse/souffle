@@ -67,8 +67,6 @@ souffle_sources = \
         ast/analysis/Aggregate.cpp                         \
         ast/analysis/Aggregate.h                           \
         ast/analysis/Analysis.h                            \
-        ast/analysis/AuxArity.cpp                          \
-        ast/analysis/AuxArity.h                            \
         ast/analysis/ClauseNormalisation.h                 \
         ast/analysis/ClauseNormalisation.cpp               \
         ast/analysis/ComponentLookup.cpp                   \

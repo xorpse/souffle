@@ -52,14 +52,14 @@
 namespace souffle::ast2ram::provenance {
 
 Own<ram::Sequence> UnitTranslator::generateProgram(const ast::TranslationUnit& translationUnit) {
-    // create info clauses
-    auto infoClauses = generateInfoClauses(context->getProgram());
-
     // do the regular translation
     auto ramProgram = seminaive::UnitTranslator::generateProgram(translationUnit);
 
+    // create info clauses
+    auto infoClauses = generateInfoClauses(context->getProgram());
+
     // append into a single ram program
-    ramProgram = mk<ram::Sequence>(std::move(infoClauses), std::move(ramProgram));
+    ramProgram = mk<ram::Sequence>(std::move(ramProgram), std::move(infoClauses));
 
     // add subroutines for each clause
     addProvenanceClauseSubroutines(context->getProgram());

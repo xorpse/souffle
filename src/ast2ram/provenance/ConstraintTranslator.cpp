@@ -16,7 +16,6 @@
 #include "ast/Atom.h"
 #include "ast/BinaryConstraint.h"
 #include "ast/TranslationUnit.h"
-#include "ast/analysis/AuxArity.h"
 #include "ast2ram/ValueTranslator.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
