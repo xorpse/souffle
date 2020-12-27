@@ -432,7 +432,8 @@ Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
             mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
 }
 
-Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const {
+Own<ram::Operation> ClauseTranslator::addNegatedAtom(
+        Own<ram::Operation> op, const ast::Clause& clause, const ast::Atom* atom) const {
     size_t arity = atom->getArity();
     std::string name = getConcreteRelationName(atom->getQualifiedName());
 
@@ -463,7 +464,7 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
     if (isRecursive()) {
         if (clause.getHead()->getArity() > 0) {
             // also negate the head
-            op = addNegatedAtom(std::move(op), clause.getHead());
+            op = addNegatedAtom(std::move(op), clause, clause.getHead());
         }
 
         // also add in prev stuff

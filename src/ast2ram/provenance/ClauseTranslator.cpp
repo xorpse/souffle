@@ -60,7 +60,8 @@ Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
             mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
 }
 
-Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const {
+Own<ram::Operation> ClauseTranslator::addNegatedAtom(
+        Own<ram::Operation> op, const ast::Clause& clause, const ast::Atom* atom) const {
     VecOwn<ram::Expression> values;
 
     auto args = atom->getArguments();
@@ -71,8 +72,8 @@ Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, con
     // undefined value for rule number
     values.push_back(mk<ram::UndefValue>());
 
-    // TODO: should height be added here?
-    values.push_back(mk<ram::UndefValue>());
+    // height
+    values.push_back(getLevelNumber(clause));
 
     return mk<ram::Filter>(mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(
                                    getConcreteRelationName(atom->getQualifiedName()), std::move(values))),
@@ -103,16 +104,16 @@ Own<ram::Expression> ClauseTranslator::getLevelNumber(const ast::Clause& clause)
 
     const auto& bodyAtoms = getAtomOrdering(clause);
     if (bodyAtoms.empty()) return mk<ram::SignedConstant>(0);
-    if (bodyAtoms.size() == 1) {
-        auto levelVar = mk<ast::Variable>(getLevelVariable(0));
-        return context.translateValue(symbolTable, *valueIndex, levelVar.get());
-    }
+
     VecOwn<ram::Expression> values;
     for (size_t i = 0; i < bodyAtoms.size(); i++) {
         auto levelVar = mk<ast::Variable>(getLevelVariable(i));
         values.push_back(context.translateValue(symbolTable, *valueIndex, levelVar.get()));
     }
-    auto maxLevel = mk<ram::IntrinsicOperator>(FunctorOp::MAX, std::move(values));
+    assert(!values.empty() && "unexpected empty value set");
+
+    auto maxLevel = values.size() == 1 ? std::move(values.at(0))
+                                       : mk<ram::IntrinsicOperator>(FunctorOp::MAX, std::move(values));
 
     VecOwn<ram::Expression> addArgs;
     addArgs.push_back(std::move(maxLevel));

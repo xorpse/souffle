@@ -40,7 +40,8 @@ public:
 protected:
     Own<ram::Statement> createRamFactQuery(const ast::Clause& clause) const override;
     Own<ram::Statement> createRamRuleQuery(const ast::Clause& clause) override;
-    Own<ram::Operation> addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const override;
+    Own<ram::Operation> addNegatedAtom(
+            Own<ram::Operation> op, const ast::Clause& clause, const ast::Atom* atom) const override;
     Own<ram::Operation> generateReturnInstantiatedValues(const ast::Clause& clause) const;
     Own<ram::Operation> addBodyLiteralConstraints(
             const ast::Clause& clause, Own<ram::Operation> op) const override;

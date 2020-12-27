@@ -207,14 +207,14 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
             // Construct info relation name for the clause
             auto infoRelQualifiedName = clause->getHead()->getQualifiedName();
             infoRelQualifiedName.append("@info");
-            infoRelQualifiedName.append(toString(clauseID++));
+            infoRelQualifiedName.append(toString(clauseID));
             std::string infoRelName = getConcreteRelationName(infoRelQualifiedName);
 
             // Generate clause head arguments
             VecOwn<ram::Expression> factArguments;
 
             // (1) Clause ID
-            factArguments.push_back(mk<ram::SignedConstant>(clauseID));
+            factArguments.push_back(mk<ram::SignedConstant>(clauseID++));
 
             // (2) Head variables
             std::vector<std::string> headVariables;

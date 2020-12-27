@@ -44,7 +44,8 @@ SubproofGenerator::SubproofGenerator(const TranslatorContext& context, SymbolTab
 
 SubproofGenerator::~SubproofGenerator() = default;
 
-Own<ram::Operation> SubproofGenerator::addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const {
+Own<ram::Operation> SubproofGenerator::addNegatedAtom(
+        Own<ram::Operation> op, const ast::Clause& clause, const ast::Atom* atom) const {
     // Add direct values
     VecOwn<ram::Expression> values;
     for (const auto* arg : atom->getArguments()) {
@@ -158,7 +159,7 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
     if (isRecursive()) {
         if (clause.getHead()->getArity() > 0) {
             // also negate the head
-            op = addNegatedAtom(std::move(op), clause.getHead());
+            op = addNegatedAtom(std::move(op), clause, clause.getHead());
         }
 
         // also add in prev stuff

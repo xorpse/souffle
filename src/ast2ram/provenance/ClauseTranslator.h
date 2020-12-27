@@ -44,7 +44,8 @@ public:
 
 protected:
     Own<ram::Operation> addNegatedDeltaAtom(Own<ram::Operation> op, const ast::Atom* atom) const override;
-    Own<ram::Operation> addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const override;
+    Own<ram::Operation> addNegatedAtom(
+            Own<ram::Operation> op, const ast::Clause& clause, const ast::Atom* atom) const override;
     Own<ram::Operation> createProjection(const ast::Clause& clause) const override;
     void indexAtoms(const ast::Clause& clause) override;
 
