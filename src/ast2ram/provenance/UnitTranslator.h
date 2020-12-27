@@ -53,6 +53,9 @@ protected:
     void addAuxiliaryArity(
             const ast::Relation* relation, std::map<std::string, std::string>& directives) const override;
 
+    Own<ram::Statement> generateMergeRelations(const ast::Relation* rel, const std::string& destRelation,
+            const std::string& srcRelation) const override;
+
 private:
     /** translate RAM code for subroutine to get subproofs */
     Own<ram::Statement> makeSubproofSubroutine(const ast::Clause& clause);

@@ -87,7 +87,7 @@ protected:
     virtual Own<ram::Statement> generateClearExpiredRelations(
             const std::set<const ast::Relation*>& expiredRelations) const;
     Own<ram::Statement> generateClearRelation(const ast::Relation* relation) const;
-    Own<ram::Statement> generateMergeRelations(
+    virtual Own<ram::Statement> generateMergeRelations(
             const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const;
 
 private:

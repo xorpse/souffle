@@ -32,11 +32,13 @@
 #include "ram/DebugInfo.h"
 #include "ram/ExistenceCheck.h"
 #include "ram/Expression.h"
+#include "ram/Extend.h"
 #include "ram/Filter.h"
 #include "ram/LogRelationTimer.h"
 #include "ram/Negation.h"
 #include "ram/Project.h"
 #include "ram/Query.h"
+#include "ram/Scan.h"
 #include "ram/Sequence.h"
 #include "ram/SignedConstant.h"
 #include "ram/Statement.h"
@@ -169,6 +171,23 @@ void UnitTranslator::addProvenanceClauseSubroutines(const ast::Program* program)
                 relName + "_" + std::to_string(getClauseNum(program, &clause)) + "_negation_subproof";
         addRamSubroutine(negationSubroutineLabel, makeNegationSubproofSubroutine(clause));
     });
+}
+
+Own<ram::Statement> UnitTranslator::generateMergeRelations(
+        const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const {
+    VecOwn<ram::Expression> values;
+
+    // Predicate - project all values
+    for (size_t i = 0; i < rel->getArity() + 2; i++) {
+        values.push_back(mk<ram::TupleElement>(0, i));
+    }
+
+    auto projection = mk<ram::Project>(destRelation, std::move(values));
+    auto stmt = mk<ram::Query>(mk<ram::Scan>(srcRelation, 0, std::move(projection)));
+    if (rel->getRepresentation() == RelationRepresentation::EQREL) {
+        return mk<ram::Sequence>(mk<ram::Extend>(destRelation, srcRelation), std::move(stmt));
+    }
+    return stmt;
 }
 
 Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* program) {
