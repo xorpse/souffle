@@ -67,7 +67,7 @@ protected:
             return nullptr;
         }
         std::string line;
-        Own<RamDomain[]> tuple = std::make_unique<RamDomain[]>(typeAttributes.size());
+        Own<RamDomain[]> tuple = mk<RamDomain[]>(typeAttributes.size());
 
         if (!getline(file, line)) {
             return nullptr;

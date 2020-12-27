@@ -89,33 +89,33 @@ std::set<std::string> getWitnessVariables(
                 // Keep track of which variables are bound to aggregators
                 aggregatorVariables.insert(newVariableName.str());
 
-                return std::make_unique<Variable>(newVariableName.str());
+                return mk<Variable>(newVariableName.str());
             }
             node->apply(*this);
             return node;
         }
     };
 
-    auto aggregatorlessClause = std::make_unique<Clause>();
-    aggregatorlessClause->setHead(std::make_unique<Atom>("*"));
+    auto aggregatorlessClause = mk<Clause>();
+    aggregatorlessClause->setHead(mk<Atom>("*"));
     for (Literal* lit : clause.getBodyLiterals()) {
         aggregatorlessClause->addToBody(souffle::clone(lit));
     }
 
-    auto negatedHead = std::make_unique<Negation>(souffle::clone(clause.getHead()));
+    auto negatedHead = mk<Negation>(souffle::clone(clause.getHead()));
     aggregatorlessClause->addToBody(std::move(negatedHead));
 
     // Replace all aggregates with variables
     M update;
     aggregatorlessClause->apply(update);
-    auto groundingAtom = std::make_unique<Atom>("+grounding_atom");
+    auto groundingAtom = mk<Atom>("+grounding_atom");
     for (std::string variableName : update.getAggregatorVariables()) {
-        groundingAtom->addArgument(std::make_unique<Variable>(variableName));
+        groundingAtom->addArgument(mk<Variable>(variableName));
     }
     aggregatorlessClause->addToBody(std::move(groundingAtom));
     // 2. Create an aggregate clause so that we can check
     // that it IS this aggregate giving a grounding to the candidate variable.
-    auto aggregateSubclause = std::make_unique<Clause>();
+    auto aggregateSubclause = mk<Clause>();
     aggregateSubclause->setHead(mk<Atom>("*"));
     for (const auto& lit : aggregate.getBodyLiterals()) {
         aggregateSubclause->addToBody(souffle::clone(lit));
