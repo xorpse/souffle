@@ -105,7 +105,7 @@ VecOwn<ram::Relation> UnitTranslator::createRamRelations(const std::vector<size_
 
             auto infoRelQualifiedName = clause->getHead()->getQualifiedName();
             infoRelQualifiedName.append("@info");
-            infoRelQualifiedName.append(toString(clauseID));
+            infoRelQualifiedName.append(toString(clauseID++));
             std::string infoRelName = getConcreteRelationName(infoRelQualifiedName);
 
             std::vector<std::string> attributeNames;
@@ -207,7 +207,7 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
             // Construct info relation name for the clause
             auto infoRelQualifiedName = clause->getHead()->getQualifiedName();
             infoRelQualifiedName.append("@info");
-            infoRelQualifiedName.append(toString(clauseID));
+            infoRelQualifiedName.append(toString(clauseID++));
             std::string infoRelName = getConcreteRelationName(infoRelQualifiedName);
 
             // Generate clause head arguments
@@ -280,8 +280,6 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
 
             std::string stratumID = "stratum_" + toString(stratumCount++);
             addRamSubroutine(stratumID, std::move(infoClause));
-
-            clauseID++;
 
             infoClauseCalls.push_back(mk<ram::Call>(stratumID));
         }
