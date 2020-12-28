@@ -44,7 +44,7 @@ SubproofGenerator::SubproofGenerator(const TranslatorContext& context, SymbolTab
 SubproofGenerator::~SubproofGenerator() = default;
 
 Own<ram::Operation> SubproofGenerator::addNegatedAtom(
-        Own<ram::Operation> op, const ast::Clause& clause, const ast::Atom* atom) const {
+        Own<ram::Operation> op, const ast::Clause& /* clause */, const ast::Atom* atom) const {
     // Add direct values
     VecOwn<ram::Expression> values;
     for (const auto* arg : atom->getArguments()) {
@@ -179,7 +179,7 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
             for (const auto* arg : atom->getArguments()) {
                 values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
             }
-            // TODO: put helper methods for these variables
+            // TODO (azreika): put helper methods for these variables
             size_t levelNumber = 0;
             while (getAtomOrdering(clause).at(levelNumber) != atom) {
                 levelNumber++;

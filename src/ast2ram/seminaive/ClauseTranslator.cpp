@@ -424,7 +424,7 @@ Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
 }
 
 Own<ram::Operation> ClauseTranslator::addNegatedAtom(
-        Own<ram::Operation> op, const ast::Clause& clause, const ast::Atom* atom) const {
+        Own<ram::Operation> op, const ast::Clause& /* clause */, const ast::Atom* atom) const {
     size_t arity = atom->getArity();
     std::string name = getConcreteRelationName(atom->getQualifiedName());
 
