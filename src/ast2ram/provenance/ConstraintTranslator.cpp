@@ -14,17 +14,13 @@
 
 #include "ast2ram/provenance/ConstraintTranslator.h"
 #include "ast/Atom.h"
-#include "ast/BinaryConstraint.h"
 #include "ast/TranslationUnit.h"
 #include "ast2ram/ValueTranslator.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ast2ram/utility/ValueIndex.h"
-#include "ram/Constraint.h"
-#include "ram/EmptinessCheck.h"
 #include "ram/ExistenceCheck.h"
 #include "ram/Negation.h"
-#include "ram/ProvenanceExistenceCheck.h"
 #include "ram/UndefValue.h"
 
 namespace souffle::ast2ram::provenance {

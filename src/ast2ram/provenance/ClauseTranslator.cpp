@@ -17,8 +17,6 @@
 #include "ast/Argument.h"
 #include "ast/Atom.h"
 #include "ast/Clause.h"
-#include "ast/IntrinsicFunctor.h"
-#include "ast/NumericConstant.h"
 #include "ast/Variable.h"
 #include "ast/utility/Utils.h"
 #include "ast2ram/utility/TranslatorContext.h"

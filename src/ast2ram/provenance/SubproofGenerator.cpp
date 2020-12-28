@@ -13,24 +13,23 @@
  ***********************************************************************/
 
 #include "ast2ram/provenance/SubproofGenerator.h"
-#include "Global.h"
 #include "ast/Atom.h"
 #include "ast/BinaryConstraint.h"
+#include "ast/BranchInit.h"
 #include "ast/Clause.h"
+#include "ast/Functor.h"
+#include "ast/Negation.h"
+#include "ast/RecordInit.h"
+#include "ast/Variable.h"
 #include "ast/utility/Utils.h"
-#include "ast2ram/ConstraintTranslator.h"
-#include "ast2ram/ValueTranslator.h"
-#include "ast2ram/provenance/ClauseTranslator.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ast2ram/utility/ValueIndex.h"
-#include "ram/Condition.h"
 #include "ram/Constraint.h"
 #include "ram/Filter.h"
 #include "ram/Negation.h"
 #include "ram/ProvenanceExistenceCheck.h"
 #include "ram/Query.h"
-#include "ram/Relation.h"
 #include "ram/SignedConstant.h"
 #include "ram/Statement.h"
 #include "ram/SubroutineArgument.h"
@@ -56,7 +55,7 @@ Own<ram::Operation> SubproofGenerator::addNegatedAtom(
     values.push_back(mk<ram::UndefValue>());
 
     // Height annotation for provenanceNotExists
-    // TODO: get the correct height here this is not correct
+    // TODO (azreika): should height explicitly be here?
     values.push_back(mk<ram::UndefValue>());
 
     return mk<ram::Filter>(mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(
