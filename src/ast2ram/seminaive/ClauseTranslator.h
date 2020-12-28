@@ -43,7 +43,6 @@ namespace souffle::ram {
 class Condition;
 class Expression;
 class Operation;
-class Relation;
 class Statement;
 }  // namespace souffle::ram
 

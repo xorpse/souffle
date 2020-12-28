@@ -38,10 +38,6 @@ class Statement;
 class TranslationUnit;
 }  // namespace souffle::ram
 
-namespace souffle::ast2ram {
-class TranslatorContext;
-}
-
 namespace souffle::ast2ram::seminaive {
 
 class UnitTranslator : public ast2ram::UnitTranslator {

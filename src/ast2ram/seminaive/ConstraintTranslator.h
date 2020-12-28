@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include "ast/utility/Visitor.h"
 #include "ast2ram/ConstraintTranslator.h"
 #include "souffle/utility/ContainerUtil.h"
 
