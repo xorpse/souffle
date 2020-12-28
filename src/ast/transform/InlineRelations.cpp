@@ -960,7 +960,7 @@ std::vector<Clause*> getInlinedClause(Program& program, const Clause& clause) {
 
                     // Add in the current set of literals replacing the inlined literal
                     // In Case 2, each body contains exactly one literal
-                    replacementClause->setBodyLiterals(VecOwn<Literal>(body.begin(), body.end()));
+                    replacementClause->addToBody(VecOwn<Literal>(body.begin(), body.end()));
 
                     // FIXME: This is a horrible hack.  Should convert
                     // versions to hold Own<>
