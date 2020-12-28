@@ -74,8 +74,7 @@ Own<Relation> makeInfoRelation(
             makeRelationName(originalClause.getHead()->getQualifiedName(), "@info", originalClauseNum);
 
     // initialise info relation
-    auto infoRelation = new Relation();
-    infoRelation->setQualifiedName(name);
+    auto infoRelation = mk<Relation>(name);
     // set qualifier to INFO_RELATION
     infoRelation->setRepresentation(RelationRepresentation::INFO);
 
@@ -185,7 +184,7 @@ Own<Relation> makeInfoRelation(
     Program& program = translationUnit.getProgram();
     program.addClause(std::move(infoClause));
 
-    return Own<Relation>(infoRelation);
+    return infoRelation;
 }
 
 /** Transform eqrel relations to explicitly define equivalence relations */

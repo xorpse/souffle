@@ -121,7 +121,7 @@ Own<D> downCast(Own<B> ptr) {
 }  // namespace detail
 
 template <typename A>
-std::enable_if_t<!std::is_pointer_v<A>, Own<A>> clone(const A& node) {
+std::enable_if_t<!std::is_pointer_v<A> && !is_range_v<A>, Own<A>> clone(const A& node) {
     return detail::downCast<A>(node.clone());
 }
 
@@ -135,16 +135,23 @@ Own<A> clone(const Own<A>& node) {
     return clone(node.get());
 }
 
-template <typename A>
-auto clone(const std::vector<A*>& xs) {
-    auto rn = makeTransformRange(xs.begin(), xs.end(), [](A* x) { return clone(x); });
-    return VecOwn<A>(rn.begin(), rn.end());
+/**
+ * Clone a range
+ */
+template <typename R>
+auto cloneRange(R const& range) {
+    return makeTransformRange(std::begin(range), std::end(range), [](auto const& x) { return clone(x); });
 }
 
-template <typename A>
-auto clone(const VecOwn<A>& xs) {
-    auto rn = makeTransformRange(xs.begin(), xs.end(), [](Own<A> const& x) { return clone(x); });
-    return VecOwn<A>(rn.begin(), rn.end());
+/**
+ * Clone a range, optionally allowing up-casting the result to D
+ */
+template <typename D = void, typename R, std::enable_if_t<is_range_v<R>, void*> = nullptr>
+auto clone(R const& range) {
+    auto rn = cloneRange(range);
+    using ValueType = std::remove_const_t<std::remove_reference_t<decltype(**std::begin(range))>>;
+    using ResType = std::conditional_t<std::is_same_v<D, void>, ValueType, D>;
+    return VecOwn<ResType>(rn.begin(), rn.end());
 }
 
 template <typename A, typename B>
@@ -178,15 +185,6 @@ template <typename T>
 bool equal_ptr(const Own<T>& a, const Own<T>& b) {
     return equal_ptr(a.get(), b.get());
 }
-
-/**
- * Copy the const qualifier of type T onto type U
- */
-template <typename A, typename B>
-using copy_const = std::conditional<std::is_const_v<A>, const B, B>;
-
-template <typename A, typename B>
-using copy_const_t = typename copy_const<A, B>::type;
 
 /**
  * This class is used to tell as<> that cross-casting is allowed.

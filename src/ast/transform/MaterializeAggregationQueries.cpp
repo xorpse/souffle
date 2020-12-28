@@ -122,7 +122,7 @@ void MaterializeAggregationQueriesTransformer::groundInjectedParameters(
                  * then replace the atom with a negated version of the atom, so that
                  * injected parameters that occur in an inner aggregate don't "seem" grounded.
                  **/
-                std::vector<Own<Literal>> newBody;
+                VecOwn<Literal> newBody;
                 for (const auto& lit : aggregate->getBodyLiterals()) {
                     if (auto* atom = as<Atom>(lit)) {
                         newBody.push_back(mk<Negation>(souffle::clone(atom)));
@@ -280,11 +280,9 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
             }
             // begin materialisation process
             auto aggregateBodyRelationName = analysis::findUniqueRelationName(program, "__agg_subclause");
-            auto aggClause = mk<Clause>(aggregateBodyRelationName);
             // quickly copy in all the literals from the aggregate body
-            for (const auto& lit : agg.getBodyLiterals()) {
-                aggClause->addToBody(souffle::clone(lit));
-            }
+            auto aggClause = mk<Clause>(aggregateBodyRelationName);
+            aggClause->setBodyLiterals(souffle::clone(agg.getBodyLiterals()));
             if (agg.getBaseOperator() == AggregateOp::COUNT) {
                 instantiateUnnamedVariables(*aggClause);
             }

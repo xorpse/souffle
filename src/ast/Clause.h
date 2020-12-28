@@ -62,6 +62,9 @@ public:
         bodyLiterals.push_back(std::move(literal));
     }
 
+    /** Add a collection of literals to the body of the clause */
+    void addToBody(VecOwn<Literal>&& literals);
+
     /** Set the head of clause to @p h */
     void setHead(Own<Atom> h) {
         assert(h != nullptr);

@@ -47,15 +47,13 @@ bool AddNullariesToAtomlessAggregatesTransformer::transform(TranslationUnit& tra
         // We will add in the Tautology atom to the body of this aggregate now
         changed = true;
         // +Tautology()
-        std::string relName = "+Tautology";
-        auto nullaryAtom = mk<Atom>(relName);
+        std::string const relName = "+Tautology";
 
         if (getRelation(program, relName) == nullptr) {
             // +Tautology().
-            auto fact = mk<Clause>(souffle::clone(nullaryAtom));
+            auto fact = mk<Clause>(relName);
             // .decl +Tautology()
-            auto tautologyRel = mk<Relation>();
-            tautologyRel->setQualifiedName(relName);
+            auto tautologyRel = mk<Relation>(relName);
             program.addRelation(std::move(tautologyRel));
             program.addClause(std::move(fact));
         }
@@ -63,7 +61,7 @@ bool AddNullariesToAtomlessAggregatesTransformer::transform(TranslationUnit& tra
         for (const auto& lit : agg.getBodyLiterals()) {
             newBody.push_back(souffle::clone(lit));
         }
-        newBody.push_back(souffle::clone(nullaryAtom));
+        newBody.push_back(mk<Atom>(relName));
         agg.setBody(std::move(newBody));
     });
     return changed;

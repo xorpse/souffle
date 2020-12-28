@@ -55,10 +55,10 @@ static const unsigned int MAX_INSTANTIATION_DEPTH = 1000;
  * A container type for the (instantiated) content of a component.
  */
 struct ComponentContent {
-    std::vector<Own<ast::Type>> types;
-    std::vector<Own<Relation>> relations;
-    std::vector<Own<Directive>> directives;
-    std::vector<Own<Clause>> clauses;
+    VecOwn<ast::Type> types;
+    VecOwn<Relation> relations;
+    VecOwn<Directive> directives;
+    VecOwn<Clause> clauses;
 
     void add(Own<ast::Type>& type, ErrorReport& report) {
         // add to result content (check existence first)
@@ -123,7 +123,7 @@ struct ComponentContent {
  */
 ComponentContent getInstantiatedContent(Program& program, const ComponentInit& componentInit,
         const Component* enclosingComponent, const ComponentLookupAnalysis& componentLookup,
-        std::vector<Own<Clause>>& orphans, ErrorReport& report,
+        VecOwn<Clause>& orphans, ErrorReport& report,
         const TypeBinding& binding = analysis::TypeBinding(),
         unsigned int maxDepth = MAX_INSTANTIATION_DEPTH);
 
@@ -132,7 +132,7 @@ ComponentContent getInstantiatedContent(Program& program, const ComponentInit& c
  */
 void collectContent(Program& program, const Component& component, const TypeBinding& binding,
         const Component* enclosingComponent, const ComponentLookupAnalysis& componentLookup,
-        ComponentContent& res, std::vector<Own<Clause>>& orphans, const std::set<std::string>& overridden,
+        ComponentContent& res, VecOwn<Clause>& orphans, const std::set<std::string>& overridden,
         ErrorReport& report, unsigned int maxInstantiationDepth) {
     // start with relations and clauses of the base components
     for (const auto& base : component.getBaseComponents()) {
@@ -271,7 +271,7 @@ void collectContent(Program& program, const Component& component, const TypeBind
 
 ComponentContent getInstantiatedContent(Program& program, const ComponentInit& componentInit,
         const Component* enclosingComponent, const ComponentLookupAnalysis& componentLookup,
-        std::vector<Own<Clause>>& orphans, ErrorReport& report, const TypeBinding& binding,
+        VecOwn<Clause>& orphans, ErrorReport& report, const TypeBinding& binding,
         unsigned int maxDepth) {
     // start with an empty list
     ComponentContent res;
@@ -436,7 +436,7 @@ bool ComponentInstantiationTransformer::transform(TranslationUnit& translationUn
     auto* componentLookup = translationUnit.getAnalysis<ComponentLookupAnalysis>();
 
     for (const auto* cur : program.getComponentInstantiations()) {
-        std::vector<Own<Clause>> orphans;
+        VecOwn<Clause> orphans;
 
         auto content = getInstantiatedContent(program, *cur, nullptr, *componentLookup, orphans, report);
         if (report.getNumErrors() != 0) continue;

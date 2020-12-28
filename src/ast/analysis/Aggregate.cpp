@@ -97,10 +97,7 @@ std::set<std::string> getWitnessVariables(
     };
 
     auto aggregatorlessClause = mk<Clause>("*");
-    // FIXME: tomp - this can be improved
-    for (Literal* lit : clause.getBodyLiterals()) {
-        aggregatorlessClause->addToBody(souffle::clone(lit));
-    }
+    aggregatorlessClause->setBodyLiterals(souffle::clone(clause.getBodyLiterals()));
 
     auto negatedHead = mk<Negation>(souffle::clone(clause.getHead()));
     aggregatorlessClause->addToBody(std::move(negatedHead));
@@ -116,10 +113,7 @@ std::set<std::string> getWitnessVariables(
     // 2. Create an aggregate clause so that we can check
     // that it IS this aggregate giving a grounding to the candidate variable.
     auto aggregateSubclause = mk<Clause>("*");
-    // FIXME: tomp - this can be improved
-    for (const auto& lit : aggregate.getBodyLiterals()) {
-        aggregateSubclause->addToBody(souffle::clone(lit));
-    }
+    aggregateSubclause->setBodyLiterals(souffle::clone(aggregate.getBodyLiterals()));
 
     std::set<std::string> witnessVariables;
     auto isGroundedInAggregateSubclause = analysis::getGroundedTerms(tu, *aggregateSubclause);
@@ -329,11 +323,8 @@ std::set<std::string> getInjectedVariables(
     // 2. make a clone of the clause and then apply that mapper onto it
     auto clauseCopy = souffle::clone(clause);
     auto tweakedClause = mk<Clause>("*");
-    // FIXME: tomp - this can be improved
-    // copy in all the old body literals
-    for (Literal* lit : clause.getBodyLiterals()) {
-        tweakedClause->addToBody(souffle::clone(lit));
-    }
+    tweakedClause->setBodyLiterals(souffle::clone(clause.getBodyLiterals()));
+
     // copy in the head as a negated atom
     tweakedClause->addToBody(mk<Negation>(souffle::clone(clause.getHead())));
     // copy in body literals and also add the old head as a negated atom

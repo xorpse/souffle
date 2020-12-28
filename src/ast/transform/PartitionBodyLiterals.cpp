@@ -157,8 +157,7 @@ bool PartitionBodyLiteralsTransformer::transform(TranslationUnit& translationUni
 
             // Create the extracted relation and clause for the component
             // newrelX() <- disconnectedLiterals(x).
-            auto newRelation = mk<Relation>();
-            newRelation->setQualifiedName(newRelationName);
+            auto newRelation = mk<Relation>(newRelationName);
             program.addRelation(std::move(newRelation));
 
             auto disconnectedClause = mk<Clause>(newRelationName, clause.getSrcLoc());
@@ -187,12 +186,9 @@ bool PartitionBodyLiteralsTransformer::transform(TranslationUnit& translationUni
 
         // Create the replacement clause
         // a(x) <- b(x), c(y), d(z). --> a(x) <- newrel0(), newrel1(), b(x).
-        auto replacementClause = mk<Clause>(souffle::clone(clause.getHead()), clause.getSrcLoc());
-
-        // Add the new propositions to the clause first
-        for (Atom* newAtom : replacementAtoms) {
-            replacementClause->addToBody(Own<Literal>(newAtom));
-        }
+        auto replacementClause = mk<Clause>(souffle::clone(clause.getHead()),
+                VecOwn<Literal>(replacementAtoms.begin(), replacementAtoms.end()), nullptr,
+                clause.getSrcLoc());
 
         // Add the remaining body literals to the clause
         for (Literal* bodyLiteral : clause.getBodyLiterals()) {

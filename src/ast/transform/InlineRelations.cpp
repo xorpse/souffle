@@ -97,12 +97,8 @@ bool normaliseInlinedHeads(Program& program) {
         for (Clause* clause : getClauses(program, *rel)) {
             // Set up the new clause with an empty body and no arguments in the head
             auto newClause = mk<Clause>(clause->getHead()->getQualifiedName(), clause->getSrcLoc());
+            newClause->setBodyLiterals(souffle::clone(clause->getBodyLiterals()));
             auto clauseHead = newClause->getHead();
-
-            // Add in everything in the original body
-            for (Literal* lit : clause->getBodyLiterals()) {
-                newClause->addToBody(souffle::clone(lit));
-            }
 
             // Set up the head arguments in the new clause
             for (Argument* arg : clause->getHead()->getArguments()) {
@@ -920,11 +916,7 @@ std::vector<Clause*> getInlinedClause(Program& program, const Clause& clause) {
         // Produce the new clauses with the replacement head atoms
         for (Atom* newHead : headVersions.getVector()) {
             auto newClause = mk<Clause>(Own<Atom>(newHead), clause.getSrcLoc());
-
-            // The body will remain unchanged
-            for (Literal* lit : clause.getBodyLiterals()) {
-                newClause->addToBody(souffle::clone(lit));
-            }
+            newClause->setBodyLiterals(souffle::clone(clause.getBodyLiterals()));
 
             // FIXME: tomp - hack - this should be managed
             versions.push_back(newClause.release());
@@ -963,18 +955,16 @@ std::vector<Clause*> getInlinedClause(Program& program, const Clause& clause) {
                     }
                 }
 
-                for (std::vector<Literal*> body : bodyVersions) {
-                    // FIXME: This is a horrible hack.  Should convert
-                    // versions to hold Own<>
-                    Clause* replacementClause = souffle::clone(baseClause).release();
+                for (std::vector<Literal*> const& body : bodyVersions) {
+                    auto replacementClause = souffle::clone(baseClause);
 
                     // Add in the current set of literals replacing the inlined literal
                     // In Case 2, each body contains exactly one literal
-                    for (Literal* newLit : body) {
-                        replacementClause->addToBody(Own<Literal>(newLit));
-                    }
+                    replacementClause->setBodyLiterals(VecOwn<Literal>(body.begin(), body.end()));
 
-                    versions.push_back(replacementClause);
+                    // FIXME: This is a horrible hack.  Should convert
+                    // versions to hold Own<>
+                    versions.push_back(replacementClause.release());
                 }
             }
 

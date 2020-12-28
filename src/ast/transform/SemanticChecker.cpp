@@ -652,9 +652,8 @@ static const std::vector<SrcLocation> usesInvalidWitness(
     }
 
     auto aggregateSubclause = mk<Clause>("*");
-    for (const Literal* lit : aggregate.getBodyLiterals()) {
-        aggregateSubclause->addToBody(souffle::clone(lit));
-    }
+    aggregateSubclause->setBodyLiterals(souffle::clone(aggregate.getBodyLiterals()));
+
     struct InnerAggregateMasker : public NodeMapper {
         mutable int numReplaced = 0;
         Own<Node> operator()(Own<Node> node) const override {

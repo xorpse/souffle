@@ -108,9 +108,21 @@ namespace detail {
 inline auto allOfBool = [](bool b) { return b; };
 }
 
+/**
+ * Return true if all elements (optionally after applying up)
+ * are true
+ */
 template <typename R, typename UnaryP = decltype(detail::allOfBool) const&>
 bool all(R const& range, UnaryP&& up = detail::allOfBool) {
     return std::all_of(range.begin(), range.end(), std::forward<UnaryP>(up));
+}
+
+/**
+ * Append elements to a container
+ */
+template <class C, typename R>
+void append(C& container, R&& range) {
+    container.insert(container.end(), std::begin(range), std::end(range));
 }
 
 /**
