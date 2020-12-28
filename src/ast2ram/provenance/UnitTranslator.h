@@ -65,11 +65,10 @@ private:
     Own<ram::Sequence> generateInfoClauses(const ast::Program* program);
 
     Own<ram::ExistenceCheck> makeRamAtomExistenceCheck(const ast::Atom* atom,
-            const std::map<int, const ast::Variable*>& idToVar, ValueIndex& valueIndex) const;
+            const std::map<int, std::string>& idToVarName, ValueIndex& valueIndex) const;
     Own<ram::SubroutineReturn> makeRamReturnTrue() const;
     Own<ram::SubroutineReturn> makeRamReturnFalse() const;
-    void transformVariablesToSubroutineArgs(
-            ram::Node* node, const std::map<int, const ast::Variable*>& idToVar) const;
+    void transformVariablesToSubroutineArgs(ram::Node* node, const std::map<int, std::string>& idToVar) const;
     Own<ram::Sequence> makeIfStatement(
             Own<ram::Condition> condition, Own<ram::Operation> trueOp, Own<ram::Operation> falseOp) const;
 };

@@ -306,8 +306,8 @@ Own<ram::Statement> UnitTranslator::makeSubproofSubroutine(const ast::Clause& cl
     return SubproofGenerator(*context, *symbolTable).translateNonRecursiveClause(clause);
 }
 
-Own<ram::ExistenceCheck> UnitTranslator::makeRamAtomExistenceCheck(const ast::Atom* atom,
-        const std::map<int, const ast::Variable*>& idToVar, ValueIndex& valueIndex) const {
+Own<ram::ExistenceCheck> UnitTranslator::makeRamAtomExistenceCheck(
+        const ast::Atom* atom, const std::map<int, std::string>& idToVarName, ValueIndex& valueIndex) const {
     auto relName = getConcreteRelationName(atom->getQualifiedName());
 
     // construct a query
@@ -316,7 +316,7 @@ Own<ram::ExistenceCheck> UnitTranslator::makeRamAtomExistenceCheck(const ast::At
     // add each value (subroutine argument) to the search query
     for (const auto* arg : atom->getArguments()) {
         auto translatedValue = context->translateValue(*symbolTable, valueIndex, arg);
-        transformVariablesToSubroutineArgs(translatedValue.get(), idToVar);
+        transformVariablesToSubroutineArgs(translatedValue.get(), idToVarName);
         query.push_back(std::move(translatedValue));
     }
 
@@ -341,18 +341,18 @@ Own<ram::SubroutineReturn> UnitTranslator::makeRamReturnFalse() const {
 }
 
 void UnitTranslator::transformVariablesToSubroutineArgs(
-        ram::Node* node, const std::map<int, const ast::Variable*>& idToVar) const {
+        ram::Node* node, const std::map<int, std::string>& idToVarName) const {
     // a mapper to replace variables with subroutine arguments
     struct VariablesToArguments : public ram::NodeMapper {
-        const std::map<int, const ast::Variable*>& idToVar;
+        const std::map<int, std::string>& idToVarName;
 
-        VariablesToArguments(const std::map<int, const ast::Variable*>& idToVar) : idToVar(idToVar) {}
+        VariablesToArguments(const std::map<int, std::string>& idToVarName) : idToVarName(idToVarName) {}
 
         Own<ram::Node> operator()(Own<ram::Node> node) const override {
             if (const auto* tuple = dynamic_cast<const ram::TupleElement*>(node.get())) {
-                const auto* var = idToVar.at(tuple->getTupleId());
+                const auto& varName = idToVarName.at(tuple->getTupleId());
                 // TODO (azreika): shouldn't rely on name for singleton variables; do an index check
-                if (isPrefix("@level_num", var->getName()) || isPrefix("+underscore", var->getName())) {
+                if (isPrefix("@level_num", varName) || isPrefix("+underscore", varName)) {
                     return mk<ram::UndefValue>();
                 }
                 return mk<ram::SubroutineArgument>(tuple->getTupleId());
@@ -364,7 +364,7 @@ void UnitTranslator::transformVariablesToSubroutineArgs(
         }
     };
 
-    VariablesToArguments varsToArgs(idToVar);
+    VariablesToArguments varsToArgs(idToVarName);
     node->apply(varsToArgs);
 }
 
@@ -422,20 +422,20 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
     // clauseReplacedAggregates->apply(aggToVar);
 
     size_t count = 0;
-    std::map<int, const ast::Variable*> idToVar;
+    std::map<int, std::string> idToVarName;
     auto dummyValueIndex = mk<ValueIndex>();
     visitDepthFirst(clause, [&](const ast::Variable& var) {
         if (dummyValueIndex->isDefined(var) || isPrefix("@level_num", var.getName()) ||
                 isPrefix("+underscore", var.getName())) {
             return;
         }
-        idToVar[count] = &var;
+        idToVarName[count] = var.getName();
         dummyValueIndex->addVarReference(var, count++, 0);
     });
 
     visitDepthFirst(clause, [&](const ast::Variable& var) {
         if (isPrefix("+underscore", var.getName())) {
-            idToVar[count] = &var;
+            idToVarName[count] = var.getName();
             dummyValueIndex->addVarReference(var, count++, 0);
         }
     });
@@ -448,20 +448,20 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
     size_t litNumber = 0;
     for (const auto* lit : lits) {
         if (const auto* atom = dynamic_cast<const ast::Atom*>(lit)) {
-            auto existenceCheck = makeRamAtomExistenceCheck(atom, idToVar, *dummyValueIndex);
-            transformVariablesToSubroutineArgs(existenceCheck.get(), idToVar);
+            auto existenceCheck = makeRamAtomExistenceCheck(atom, idToVarName, *dummyValueIndex);
+            transformVariablesToSubroutineArgs(existenceCheck.get(), idToVarName);
             auto ifStatement =
                     makeIfStatement(std::move(existenceCheck), makeRamReturnTrue(), makeRamReturnFalse());
             appendStmt(searchSequence, std::move(ifStatement));
         } else if (const auto* neg = dynamic_cast<const ast::Negation*>(lit)) {
-            auto existenceCheck = makeRamAtomExistenceCheck(neg->getAtom(), idToVar, *dummyValueIndex);
-            transformVariablesToSubroutineArgs(existenceCheck.get(), idToVar);
+            auto existenceCheck = makeRamAtomExistenceCheck(neg->getAtom(), idToVarName, *dummyValueIndex);
+            transformVariablesToSubroutineArgs(existenceCheck.get(), idToVarName);
             auto ifStatement =
                     makeIfStatement(std::move(existenceCheck), makeRamReturnFalse(), makeRamReturnTrue());
             appendStmt(searchSequence, std::move(ifStatement));
         } else if (const auto* con = dynamic_cast<const ast::Constraint*>(lit)) {
             auto condition = context->translateConstraint(*symbolTable, *dummyValueIndex, con);
-            transformVariablesToSubroutineArgs(condition.get(), idToVar);
+            transformVariablesToSubroutineArgs(condition.get(), idToVarName);
             auto ifStatement =
                     makeIfStatement(std::move(condition), makeRamReturnTrue(), makeRamReturnFalse());
             appendStmt(searchSequence, std::move(ifStatement));
