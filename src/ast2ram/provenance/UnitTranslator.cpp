@@ -356,6 +356,7 @@ void UnitTranslator::transformVariablesToSubroutineArgs(
         Own<ram::Node> operator()(Own<ram::Node> node) const override {
             if (const auto* tuple = dynamic_cast<const ram::TupleElement*>(node.get())) {
                 const auto* var = idToVar.at(tuple->getTupleId());
+                // TODO (azreika): shouldn't rely on name for singleton variables; do an index check
                 if (isPrefix("@level_num", var->getName()) || isPrefix("+underscore", var->getName())) {
                     return mk<ram::UndefValue>();
                 }
@@ -386,7 +387,7 @@ Own<ram::Sequence> UnitTranslator::makeIfStatement(
 Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Clause& clause) {
     // TODO (taipan-snake): Currently we only deal with atoms (no constraints or negations or aggregates
     // or anything else...)
-    //
+
     // The resulting subroutine looks something like this:
     // IF (arg(0), arg(1), _, _) IN rel_1:
     //   return 1
