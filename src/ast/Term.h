@@ -45,8 +45,8 @@ protected:
 
     Term(VecOwn<Argument> operands, SrcLocation loc = {})
             : Argument(std::move(loc)), args(std::move(operands)) {
-                assert(allValidPtrs(args));
-            }
+        assert(allValidPtrs(args));
+    }
 
 public:
     /** Get arguments */

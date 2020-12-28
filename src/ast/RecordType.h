@@ -46,8 +46,8 @@ class RecordType : public Type {
 public:
     RecordType(QualifiedName name, VecOwn<Attribute> fields, SrcLocation loc = {})
             : Type(std::move(name), std::move(loc)), fields(std::move(fields)) {
-                assert(allValidPtrs(this->fields));
-            }
+        assert(allValidPtrs(this->fields));
+    }
 
     /** Add field to record type */
     void add(std::string name, QualifiedName type) {
