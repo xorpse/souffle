@@ -354,7 +354,7 @@ void UnitTranslator::transformVariablesToSubroutineArgs(
             if (const auto* tuple = dynamic_cast<const ram::TupleElement*>(node.get())) {
                 const auto& varName = idToVarName.at(tuple->getTupleId());
                 // TODO (azreika): shouldn't rely on name for singleton variables; do an index check
-                if (isPrefix("@level_num", varName) || isPrefix("+underscore", varName)) {
+                if (isPrefix("+underscore", varName)) {
                     return mk<ram::UndefValue>();
                 }
                 return mk<ram::SubroutineArgument>(tuple->getTupleId());
@@ -409,8 +409,7 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
 
     // Index all actual variables first
     visitDepthFirst(clause, [&](const ast::Variable& var) {
-        if (dummyValueIndex->isDefined(var) || isPrefix("@level_num", var.getName()) ||
-                isPrefix("+underscore", var.getName())) {
+        if (dummyValueIndex->isDefined(var) || isPrefix("+underscore", var.getName())) {
             return;
         }
         idToVarName[count] = var.getName();
