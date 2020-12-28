@@ -70,6 +70,7 @@ public:
 
     /** Set relation attributes */
     void setAttributes(VecOwn<Attribute> attrs) {
+        assert(allValidPtrs(attrs));
         attributes = std::move(attrs);
     }
 
@@ -110,6 +111,7 @@ public:
 
     /** Add functional dependency to this relation */
     void addDependency(Own<FunctionalConstraint> fd) {
+        assert(fd != nullptr);
         functionalDependencies.push_back(std::move(fd));
     }
 

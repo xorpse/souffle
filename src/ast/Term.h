@@ -44,7 +44,9 @@ protected:
             : Term(asVec(std::forward<Operands>(operands)...), std::move(loc)) {}
 
     Term(VecOwn<Argument> operands, SrcLocation loc = {})
-            : Argument(std::move(loc)), args(std::move(operands)) {}
+            : Argument(std::move(loc)), args(std::move(operands)) {
+                assert(allValidPtrs(args));
+            }
 
 public:
     /** Get arguments */
@@ -54,6 +56,7 @@ public:
 
     /** Add argument to argument list */
     void addArgument(Own<Argument> arg) {
+        assert(arg != nullptr);
         args.push_back(std::move(arg));
     }
 

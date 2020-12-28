@@ -43,7 +43,7 @@ public:
     explicit UserDefinedFunctor(std::string name) : Functor({}, {}), name(std::move(name)){};
 
     UserDefinedFunctor(std::string name, VecOwn<Argument> args, SrcLocation loc = {})
-            : Functor(std::move(args), std::move(loc)), name(std::move(name)){};
+            : Functor(std::move(args), std::move(loc)), name(std::move(name)) {}
 
     /** return the name */
     const std::string& getName() const {

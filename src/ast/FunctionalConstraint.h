@@ -52,9 +52,12 @@ namespace souffle::ast {
 class FunctionalConstraint : public Constraint {
 public:
     FunctionalConstraint(VecOwn<Variable> keys, SrcLocation loc = {})
-            : Constraint(std::move(loc)), keys(std::move(keys)) {}
+            : Constraint(std::move(loc)), keys(std::move(keys)) {
+                assert(allValidPtrs(this->keys));
+            }
 
     FunctionalConstraint(Own<Variable> key, SrcLocation loc = {}) : Constraint(std::move(loc)) {
+        assert(key != nullptr);
         keys.push_back(std::move(key));
     }
 

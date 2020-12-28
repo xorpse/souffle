@@ -49,6 +49,7 @@ public:
 
     /** Set execution order for a given rule version */
     void setOrderFor(int version, Own<ExecutionOrder> plan) {
+        assert(plan != nullptr);
         plans[version] = std::move(plan);
     }
 
