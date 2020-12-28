@@ -13,6 +13,7 @@
  ***********************************************************************/
 
 #include "ast2ram/provenance/ClauseTranslator.h"
+#include "Global.h"
 #include "ast/Argument.h"
 #include "ast/Atom.h"
 #include "ast/Clause.h"
@@ -32,8 +33,10 @@
 #include "ram/Negation.h"
 #include "ram/Operation.h"
 #include "ram/ProvenanceExistenceCheck.h"
+#include "ram/Scan.h"
 #include "ram/SignedConstant.h"
 #include "ram/UndefValue.h"
+#include "souffle/utility/StringUtil.h"
 
 namespace souffle::ast2ram::provenance {
 
@@ -119,6 +122,31 @@ Own<ram::Expression> ClauseTranslator::getLevelNumber(const ast::Clause& clause)
     addArgs.push_back(std::move(maxLevel));
     addArgs.push_back(mk<ram::SignedConstant>(1));
     return mk<ram::IntrinsicOperator>(FunctorOp::ADD, std::move(addArgs));
+}
+
+Own<ram::Operation> ClauseTranslator::addAtomScan(
+        Own<ram::Operation> op, const ast::Atom* atom, const ast::Clause& clause, int curLevel) const {
+    // add constraints
+    op = addConstantConstraints(curLevel, atom->getArguments(), std::move(op));
+
+    // add check for emptiness for an atom
+    op = mk<ram::Filter>(
+            mk<ram::Negation>(mk<ram::EmptinessCheck>(getClauseAtomName(clause, atom))), std::move(op));
+
+    // add a scan level
+    std::stringstream ss;
+    if (Global::config().has("profile")) {
+        ss << "@frequency-atom" << ';';
+        ss << clause.getHead()->getQualifiedName() << ';';
+        ss << version << ';';
+        ss << stringify(getClauseString(clause)) << ';';
+        ss << stringify(getClauseAtomName(clause, atom)) << ';';
+        ss << stringify(toString(clause)) << ';';
+        ss << curLevel << ';';
+    }
+    op = mk<ram::Scan>(getClauseAtomName(clause, atom), curLevel, std::move(op), ss.str());
+
+    return op;
 }
 
 Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause) const {
