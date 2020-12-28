@@ -63,7 +63,7 @@ public:
     }
 
     Choice* clone() const override {
-        return new Choice(relation, getTupleId(), souffle::clone(condition), souffle::clone(&getOperation()),
+        return new Choice(relation, getTupleId(), souffle::clone(condition), souffle::clone(getOperation()),
                 getProfileText());
     }
 

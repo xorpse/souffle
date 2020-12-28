@@ -45,9 +45,7 @@ namespace souffle::ast {
 class Relation : public Node {
 public:
     Relation() = default;
-    Relation(QualifiedName name, SrcLocation loc = {}) : name(std::move(name)) {
-        setSrcLoc(std::move(loc));
-    }
+    Relation(QualifiedName name, SrcLocation loc = {}) : Node(std::move(loc)), name(std::move(name)) {}
 
     /** Get qualified relation name */
     const QualifiedName& getQualifiedName() const {

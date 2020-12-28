@@ -124,9 +124,7 @@ private:
         for (const auto& key : keys) {
             newKeys.push_back(souffle::clone(key));
         }
-        auto* res = new FunctionalConstraint(std::move(newKeys));
-        res->setSrcLoc(getSrcLoc());
-        return res;
+        return new FunctionalConstraint(std::move(newKeys), getSrcLoc());
     }
 
 private:

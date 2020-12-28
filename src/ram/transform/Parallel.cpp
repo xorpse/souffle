@@ -44,14 +44,14 @@ bool ParallelTransformer::parallelizeOperations(Program& program) {
                     if (!isA<Project>(&scan->getOperation())) {
                         changed = true;
                         return mk<ParallelScan>(scan->getRelation(), scan->getTupleId(),
-                                souffle::clone(&scan->getOperation()), scan->getProfileText());
+                                souffle::clone(scan->getOperation()), scan->getProfileText());
                     }
                 }
             } else if (const Choice* choice = as<Choice>(node)) {
                 if (choice->getTupleId() == 0) {
                     changed = true;
                     return mk<ParallelChoice>(choice->getRelation(), choice->getTupleId(),
-                            souffle::clone(&choice->getCondition()), souffle::clone(&choice->getOperation()),
+                            souffle::clone(choice->getCondition()), souffle::clone(choice->getOperation()),
                             choice->getProfileText());
                 }
             } else if (const IndexScan* indexScan = as<IndexScan>(node)) {
@@ -59,7 +59,7 @@ bool ParallelTransformer::parallelizeOperations(Program& program) {
                     changed = true;
                     RamPattern queryPattern = souffle::clone(indexScan->getRangePattern());
                     return mk<ParallelIndexScan>(indexScan->getRelation(), indexScan->getTupleId(),
-                            std::move(queryPattern), souffle::clone(&indexScan->getOperation()),
+                            std::move(queryPattern), souffle::clone(indexScan->getOperation()),
                             indexScan->getProfileText());
                 }
             } else if (const IndexChoice* indexChoice = as<IndexChoice>(node)) {
@@ -67,8 +67,8 @@ bool ParallelTransformer::parallelizeOperations(Program& program) {
                     changed = true;
                     RamPattern queryPattern = souffle::clone(indexChoice->getRangePattern());
                     return mk<ParallelIndexChoice>(indexChoice->getRelation(), indexChoice->getTupleId(),
-                            souffle::clone(&indexChoice->getCondition()), std::move(queryPattern),
-                            souffle::clone(&indexChoice->getOperation()), indexChoice->getProfileText());
+                            souffle::clone(indexChoice->getCondition()), std::move(queryPattern),
+                            souffle::clone(indexChoice->getOperation()), indexChoice->getProfileText());
                 }
             } else if (const Aggregate* aggregate = as<Aggregate>(node)) {
                 const Relation& rel = relAnalysis->lookup(aggregate->getRelation());

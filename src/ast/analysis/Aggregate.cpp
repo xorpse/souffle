@@ -96,8 +96,8 @@ std::set<std::string> getWitnessVariables(
         }
     };
 
-    auto aggregatorlessClause = mk<Clause>();
-    aggregatorlessClause->setHead(mk<Atom>("*"));
+    auto aggregatorlessClause = mk<Clause>("*");
+    // FIXME: tomp - this can be improved
     for (Literal* lit : clause.getBodyLiterals()) {
         aggregatorlessClause->addToBody(souffle::clone(lit));
     }
@@ -115,8 +115,8 @@ std::set<std::string> getWitnessVariables(
     aggregatorlessClause->addToBody(std::move(groundingAtom));
     // 2. Create an aggregate clause so that we can check
     // that it IS this aggregate giving a grounding to the candidate variable.
-    auto aggregateSubclause = mk<Clause>();
-    aggregateSubclause->setHead(mk<Atom>("*"));
+    auto aggregateSubclause = mk<Clause>("*");
+    // FIXME: tomp - this can be improved
     for (const auto& lit : aggregate.getBodyLiterals()) {
         aggregateSubclause->addToBody(souffle::clone(lit));
     }
@@ -269,7 +269,7 @@ std::set<std::string> getInjectedVariables(
     visitDepthFirst(clause, [&](const Aggregator& ancestor) {
         visitDepthFirst(ancestor, [&](const Aggregator& agg) {
             if (agg == aggregate) {
-                ancestorAggregates.insert(souffle::clone(&ancestor));
+                ancestorAggregates.insert(souffle::clone(ancestor));
             }
         });
     });
@@ -327,10 +327,9 @@ std::set<std::string> getInjectedVariables(
         }
     };
     // 2. make a clone of the clause and then apply that mapper onto it
-    auto clauseCopy = souffle::clone(&clause);
-    auto tweakedClause = mk<Clause>();
-    // put a fake head here
-    tweakedClause->setHead(mk<Atom>("*"));
+    auto clauseCopy = souffle::clone(clause);
+    auto tweakedClause = mk<Clause>("*");
+    // FIXME: tomp - this can be improved
     // copy in all the old body literals
     for (Literal* lit : clause.getBodyLiterals()) {
         tweakedClause->addToBody(souffle::clone(lit));
@@ -338,7 +337,7 @@ std::set<std::string> getInjectedVariables(
     // copy in the head as a negated atom
     tweakedClause->addToBody(mk<Negation>(souffle::clone(clause.getHead())));
     // copy in body literals and also add the old head as a negated atom
-    ReplaceAggregatesWithVariables update(std::move(ancestorAggregates), souffle::clone(&aggregate));
+    ReplaceAggregatesWithVariables update(std::move(ancestorAggregates), souffle::clone(aggregate));
     tweakedClause->apply(update);
     // the update will now tell us which variables we need to ground!
     auto groundingAtom = mk<Atom>("+grounding_atom");

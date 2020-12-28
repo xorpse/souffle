@@ -44,23 +44,33 @@ namespace souffle::ast {
  */
 class Clause : public Node {
 public:
-    Clause(Own<Atom> head = {}, VecOwn<Literal> bodyLiterals = {}, Own<ExecutionPlan> plan = {},
-            SrcLocation loc = {})
+    Clause(Own<Atom> head, VecOwn<Literal> bodyLiterals, Own<ExecutionPlan> plan = {}, SrcLocation loc = {})
             : Node(std::move(loc)), head(std::move(head)), bodyLiterals(std::move(bodyLiterals)),
-              plan(std::move(plan)) {}
+              plan(std::move(plan)) {
+        assert(this->head != nullptr);
+        assert(allValidPtrs(this->bodyLiterals));
+        // Execution plan can be null
+    }
+
+    Clause(Own<Atom> head, SrcLocation loc = {}) : Clause(std::move(head), {}, {}, std::move(loc)) {}
+
+    Clause(QualifiedName name, SrcLocation loc = {}) : Clause(mk<Atom>(name), std::move(loc)) {}
 
     /** Add a literal to the body of the clause */
     void addToBody(Own<Literal> literal) {
+        assert(literal != nullptr);
         bodyLiterals.push_back(std::move(literal));
     }
 
     /** Set the head of clause to @p h */
     void setHead(Own<Atom> h) {
+        assert(h != nullptr);
         head = std::move(h);
     }
 
     /** Set the bodyLiterals of clause to @p body */
     void setBodyLiterals(VecOwn<Literal> body) {
+        assert(allValidPtrs(body));
         bodyLiterals = std::move(body);
     }
 

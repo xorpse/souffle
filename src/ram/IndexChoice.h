@@ -87,7 +87,7 @@ public:
             resQueryPattern.second.emplace_back(i->clone());
         }
         auto* res = new IndexChoice(relation, getTupleId(), souffle::clone(condition),
-                std::move(resQueryPattern), souffle::clone(&getOperation()), getProfileText());
+                std::move(resQueryPattern), souffle::clone(getOperation()), getProfileText());
         return res;
     }
 

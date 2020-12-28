@@ -180,10 +180,10 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
         if (transformable) {
             // append the weak version of inequality
             toAppend.emplace_back(mk<Constraint>(convertStrictToWeakIneqConstraint(binRelOp->getOperator()),
-                    clone(&binRelOp->getLHS()), clone(&binRelOp->getRHS())));
+                    souffle::clone(binRelOp->getLHS()), souffle::clone(binRelOp->getRHS())));
             // append the != constraint
             toAppend.emplace_back(mk<Constraint>(convertStrictToNotEqualConstraint(binRelOp->getOperator()),
-                    clone(&binRelOp->getLHS()), clone(&binRelOp->getRHS())));
+                    souffle::clone(binRelOp->getLHS()), souffle::clone(binRelOp->getRHS())));
 
             // remove the strict version of inequality
             it = conditionList.erase(it);
@@ -413,8 +413,8 @@ Own<Operation> MakeIndexTransformer::rewriteAggregate(const Aggregate* agg) {
         Own<Condition> condition = constructPattern(rel.getAttributeTypes(), queryPattern, indexable,
                 toConjunctionList(&agg->getCondition()), identifier, rel.getRepresentation());
         if (indexable) {
-            return mk<IndexAggregate>(souffle::clone(&agg->getOperation()), agg->getFunction(),
-                    agg->getRelation(), souffle::clone(&agg->getExpression()), std::move(condition),
+            return mk<IndexAggregate>(souffle::clone(agg->getOperation()), agg->getFunction(),
+                    agg->getRelation(), souffle::clone(agg->getExpression()), std::move(condition),
                     std::move(queryPattern), agg->getTupleId());
         }
     }
@@ -435,7 +435,7 @@ Own<Operation> MakeIndexTransformer::rewriteScan(const Scan* scan) {
         Own<Condition> condition = constructPattern(rel.getAttributeTypes(), queryPattern, indexable,
                 toConjunctionList(&filter->getCondition()), identifier, rel.getRepresentation());
         if (indexable) {
-            Own<Operation> op = souffle::clone(&filter->getOperation());
+            Own<Operation> op = souffle::clone(filter->getOperation());
             if (!isTrue(condition.get())) {
                 op = mk<Filter>(std::move(condition), std::move(op));
             }
@@ -463,7 +463,7 @@ Own<Operation> MakeIndexTransformer::rewriteIndexScan(const IndexScan* iscan) {
         if (indexable) {
             // Merge Index Pattern here
 
-            Own<Operation> op = souffle::clone(&filter->getOperation());
+            Own<Operation> op = souffle::clone(filter->getOperation());
             if (!isTrue(condition.get())) {
                 op = mk<Filter>(std::move(condition), std::move(op));
             }

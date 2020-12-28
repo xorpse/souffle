@@ -80,9 +80,8 @@ Own<Relation> makeInfoRelation(
     infoRelation->setRepresentation(RelationRepresentation::INFO);
 
     // create new clause containing a single fact
-    auto infoClause = new Clause();
-    auto infoClauseHead = new Atom();
-    infoClauseHead->setQualifiedName(name);
+    auto infoClause = mk<Clause>(name);
+    auto infoClauseHead = infoClause->getHead();
 
     // (darth_tytus): Can this be unsigned?
     infoRelation->addAttribute(mk<Attribute>("clause_num", QualifiedName("number")));
@@ -183,9 +182,8 @@ Own<Relation> makeInfoRelation(
     infoClauseHead->addArgument(mk<StringConstant>(toString(originalClause)));
 
     // set clause head and add clause to info relation
-    infoClause->setHead(Own<Atom>(infoClauseHead));
     Program& program = translationUnit.getProgram();
-    program.addClause(Own<Clause>(infoClause));
+    program.addClause(std::move(infoClause));
 
     return Own<Relation>(infoRelation);
 }
@@ -200,8 +198,8 @@ void transformEqrelRelation(Program& program, Relation& rel) {
 
     // transitivity
     // transitive clause: A(x, z) :- A(x, y), A(y, z).
-    auto transitiveClause = new Clause();
-    auto transitiveClauseHead = new Atom(rel.getQualifiedName());
+    auto transitiveClause = mk<Clause>(rel.getQualifiedName());
+    auto transitiveClauseHead = transitiveClause->getHead();
     transitiveClauseHead->addArgument(mk<ast::Variable>("x"));
     transitiveClauseHead->addArgument(mk<ast::Variable>("z"));
 
@@ -213,15 +211,14 @@ void transformEqrelRelation(Program& program, Relation& rel) {
     transitiveClauseBody2->addArgument(mk<ast::Variable>("y"));
     transitiveClauseBody2->addArgument(mk<ast::Variable>("z"));
 
-    transitiveClause->setHead(Own<Atom>(transitiveClauseHead));
     transitiveClause->addToBody(Own<Literal>(transitiveClauseBody));
     transitiveClause->addToBody(Own<Literal>(transitiveClauseBody2));
-    program.addClause(Own<Clause>(transitiveClause));
+    program.addClause(std::move(transitiveClause));
 
     // symmetric
     // symmetric clause: A(x, y) :- A(y, x).
-    auto symClause = new Clause();
-    auto symClauseHead = new Atom(rel.getQualifiedName());
+    auto symClause = mk<Clause>(rel.getQualifiedName());
+    auto symClauseHead = symClause->getHead();
     symClauseHead->addArgument(mk<ast::Variable>("x"));
     symClauseHead->addArgument(mk<ast::Variable>("y"));
 
@@ -229,14 +226,13 @@ void transformEqrelRelation(Program& program, Relation& rel) {
     symClauseBody->addArgument(mk<ast::Variable>("y"));
     symClauseBody->addArgument(mk<ast::Variable>("x"));
 
-    symClause->setHead(Own<Atom>(symClauseHead));
     symClause->addToBody(Own<Literal>(symClauseBody));
-    program.addClause(Own<Clause>(symClause));
+    program.addClause(std::move(symClause));
 
     // reflexivity
     // reflexive clause: A(x, x) :- A(x, _).
-    auto reflexiveClause = new Clause();
-    auto reflexiveClauseHead = new Atom(rel.getQualifiedName());
+    auto reflexiveClause = mk<Clause>(rel.getQualifiedName());
+    auto reflexiveClauseHead = reflexiveClause->getHead();
     reflexiveClauseHead->addArgument(mk<ast::Variable>("x"));
     reflexiveClauseHead->addArgument(mk<ast::Variable>("x"));
 
@@ -244,9 +240,8 @@ void transformEqrelRelation(Program& program, Relation& rel) {
     reflexiveClauseBody->addArgument(mk<ast::Variable>("x"));
     reflexiveClauseBody->addArgument(mk<UnnamedVariable>());
 
-    reflexiveClause->setHead(Own<Atom>(reflexiveClauseHead));
     reflexiveClause->addToBody(Own<Literal>(reflexiveClauseBody));
-    program.addClause(Own<Clause>(reflexiveClause));
+    program.addClause(std::move(reflexiveClause));
 }
 
 namespace {

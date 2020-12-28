@@ -49,7 +49,7 @@ bool CollapseFiltersTransformer::collapseFilters(Program& program) {
 
                 if (canCollapse) {
                     changed = true;
-                    node = mk<Filter>(toCondition(conditions), souffle::clone(&prevFilter->getOperation()),
+                    node = mk<Filter>(toCondition(conditions), souffle::clone(prevFilter->getOperation()),
                             prevFilter->getProfileText());
                 }
             }

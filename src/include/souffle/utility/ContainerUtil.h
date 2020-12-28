@@ -104,6 +104,15 @@ typename C::mapped_type const& getOr(
     }
 }
 
+namespace detail {
+inline auto allOfBool = [](bool b) { return b; };
+}
+
+template <typename R, typename UnaryP = decltype(detail::allOfBool) const&>
+bool all(R const& range, UnaryP&& up = detail::allOfBool) {
+    return std::all_of(range.begin(), range.end(), std::forward<UnaryP>(up));
+}
+
 /**
  * A utility function enabling the creation of a vector with a fixed set of
  * elements within a single expression. This is the base case covering empty
@@ -233,6 +242,14 @@ bool equal_targets(const std::map<Key, Own<Value>>& a, const std::map<Key, Own<V
     auto comp = comp_deref<Own<Value>>();
     return equal_targets(
             a, b, [&comp](auto& a, auto& b) { return a.first == b.first && comp(a.second, b.second); });
+}
+
+// -------------------------------------------------------------------------------
+//                             Checking Utilities
+// -------------------------------------------------------------------------------
+template <typename R>
+bool allValidPtrs(R const& range) {
+    return all(makeTransformRange(range, [](auto const& ptr) { return ptr != nullptr; }));
 }
 
 }  // namespace souffle
