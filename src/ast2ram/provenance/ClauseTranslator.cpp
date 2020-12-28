@@ -88,13 +88,13 @@ void ClauseTranslator::indexAtoms(const ast::Clause& clause) {
         int scanLevel = addOperatorLevel(atom);
         indexNodeArguments(scanLevel, atom->getArguments());
 
-        // add rule num variable
-        auto ruleNumVar = mk<ast::Variable>("@rule_num_" + std::to_string(atomIdx));
-        valueIndex->addVarReference(*ruleNumVar, scanLevel, atom->getArity());
+        // Add rule num variable
+        std::string ruleNumVarName = "@rule_num_" + std::to_string(atomIdx);
+        valueIndex->addVarReference(ruleNumVarName, scanLevel, atom->getArity());
 
-        // add level num variable
-        auto levelVar = mk<ast::Variable>("@level_num_" + std::to_string(atomIdx));
-        valueIndex->addVarReference(*levelVar, scanLevel, atom->getArity() + 1);
+        // Add level num variable
+        std::string levelNumVarName = "@level_num_" + std::to_string(atomIdx);
+        valueIndex->addVarReference(levelNumVarName, scanLevel, atom->getArity() + 1);
 
         atomIdx++;
     }

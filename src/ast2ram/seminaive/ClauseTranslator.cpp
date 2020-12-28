@@ -643,7 +643,7 @@ void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::
 
         // check for variable references
         if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
-            valueIndex->addVarReference(*var, nodeLevel, i);
+            valueIndex->addVarReference(var->getName(), nodeLevel, i);
         }
 
         // check for nested records
@@ -700,7 +700,7 @@ void ClauseTranslator::indexAggregatorBody(const ast::Aggregator& agg) {
     for (size_t i = 0; i < aggAtomArgs.size(); i++) {
         const auto* arg = aggAtomArgs.at(i);
         if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
-            valueIndex->addVarReference(*var, aggLoc.identifier, (int)i);
+            valueIndex->addVarReference(var->getName(), aggLoc.identifier, (int)i);
         }
     }
 }
@@ -718,7 +718,7 @@ void ClauseTranslator::indexAggregators(const ast::Clause& clause) {
         const auto* lhs = dynamic_cast<const ast::Variable*>(bc.getLHS());
         const auto* rhs = dynamic_cast<const ast::Aggregator*>(bc.getRHS());
         if (lhs == nullptr || rhs == nullptr) return;
-        valueIndex->addVarReference(*lhs, valueIndex->getGeneratorLoc(*rhs));
+        valueIndex->addVarReference(lhs->getName(), valueIndex->getGeneratorLoc(*rhs));
     });
 }
 
@@ -737,7 +737,7 @@ void ClauseTranslator::indexMultiResultFunctors(const ast::Clause& clause) {
         const auto* rhs = dynamic_cast<const ast::IntrinsicFunctor*>(bc.getRHS());
         if (lhs == nullptr || rhs == nullptr) return;
         if (!ast::analysis::FunctorAnalysis::isMultiResult(*rhs)) return;
-        valueIndex->addVarReference(*lhs, valueIndex->getGeneratorLoc(*rhs));
+        valueIndex->addVarReference(lhs->getName(), valueIndex->getGeneratorLoc(*rhs));
     });
 }
 
