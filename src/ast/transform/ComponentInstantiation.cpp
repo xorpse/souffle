@@ -123,8 +123,7 @@ struct ComponentContent {
  */
 ComponentContent getInstantiatedContent(Program& program, const ComponentInit& componentInit,
         const Component* enclosingComponent, const ComponentLookupAnalysis& componentLookup,
-        VecOwn<Clause>& orphans, ErrorReport& report,
-        const TypeBinding& binding = analysis::TypeBinding(),
+        VecOwn<Clause>& orphans, ErrorReport& report, const TypeBinding& binding = analysis::TypeBinding(),
         unsigned int maxDepth = MAX_INSTANTIATION_DEPTH);
 
 /**
@@ -271,8 +270,7 @@ void collectContent(Program& program, const Component& component, const TypeBind
 
 ComponentContent getInstantiatedContent(Program& program, const ComponentInit& componentInit,
         const Component* enclosingComponent, const ComponentLookupAnalysis& componentLookup,
-        VecOwn<Clause>& orphans, ErrorReport& report, const TypeBinding& binding,
-        unsigned int maxDepth) {
+        VecOwn<Clause>& orphans, ErrorReport& report, const TypeBinding& binding, unsigned int maxDepth) {
     // start with an empty list
     ComponentContent res;
 

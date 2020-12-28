@@ -1088,8 +1088,7 @@ void MagicSetCoreTransformer::addRelevantVariables(
 }
 
 Own<Clause> MagicSetCoreTransformer::createMagicClause(const Atom* atom,
-        const VecOwn<Atom>& constrainingAtoms,
-        const std::vector<const BinaryConstraint*> eqConstraints) {
+        const VecOwn<Atom>& constrainingAtoms, const std::vector<const BinaryConstraint*> eqConstraints) {
     auto magicClause = mk<Clause>(createMagicAtom(atom));
     // Add in all constraining atoms
     magicClause->setBodyLiterals(souffle::clone<Literal>(constrainingAtoms));
