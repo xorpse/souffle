@@ -17,11 +17,11 @@
 #include "ast2ram/provenance/ClauseTranslator.h"
 
 namespace souffle::ast {
+class Atom;
 class Clause;
-}
+}  // namespace souffle::ast
 
 namespace souffle::ram {
-class Condition;
 class Operation;
 class Statement;
 }  // namespace souffle::ram

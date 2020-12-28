@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include "ast/utility/Visitor.h"
 #include "ast2ram/seminaive/ConstraintTranslator.h"
 #include "souffle/utility/ContainerUtil.h"
 
@@ -23,8 +22,9 @@ class SymbolTable;
 }
 
 namespace souffle::ast {
+class Literal;
 class Negation;
-}
+}  // namespace souffle::ast
 
 namespace souffle::ram {
 class Condition;

@@ -18,7 +18,6 @@
 
 namespace souffle::ast {
 class Atom;
-class Node;
 class Program;
 class Variable;
 }  // namespace souffle::ast
@@ -26,7 +25,6 @@ class Variable;
 namespace souffle::ram {
 class Condition;
 class ExistenceCheck;
-class Expression;
 class Node;
 class Operation;
 class Statement;

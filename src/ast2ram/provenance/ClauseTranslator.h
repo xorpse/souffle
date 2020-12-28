@@ -22,7 +22,6 @@ class SymbolTable;
 }
 
 namespace souffle::ast {
-class Argument;
 class Atom;
 class Clause;
 }  // namespace souffle::ast
