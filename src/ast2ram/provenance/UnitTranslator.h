@@ -55,10 +55,10 @@ protected:
             const std::string& srcRelation) const override;
 
 private:
-    /** translate RAM code for subroutine to get subproofs */
+    /** Translate RAM code for subroutine to get subproofs */
     Own<ram::Statement> makeSubproofSubroutine(const ast::Clause& clause);
 
-    /** translate RAM code for subroutine to get subproofs for non-existence of a tuple */
+    /** Translate RAM code for subroutine to get subproofs for non-existence of a tuple */
     Own<ram::Statement> makeNegationSubproofSubroutine(const ast::Clause& clause);
 
     void addProvenanceClauseSubroutines(const ast::Program* program);

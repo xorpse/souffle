@@ -44,6 +44,8 @@ public:
         return varReferencePoints;
     }
     const std::set<Location>& getVariableReferences(std::string var) const;
+
+    // TODO (azreika): these should take var names not vars themselves
     void addVarReference(const ast::Variable& var, const Location& l);
     void addVarReference(const ast::Variable& var, int ident, int pos);
     bool isDefined(const ast::Variable& var) const;

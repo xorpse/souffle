@@ -378,7 +378,6 @@ Own<ram::Sequence> UnitTranslator::makeIfStatement(
     return mk<ram::Sequence>(std::move(trueBranch), std::move(falseBranch));
 }
 
-/** make a subroutine to search for subproofs for the non-existence of a tuple */
 Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Clause& clause) {
     // TODO (taipan-snake): Currently we only deal with atoms (no constraints or negations or aggregates
     // or anything else...)
@@ -403,24 +402,6 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
         lits.push_back(bodyLit);
     }
 
-    // struct AggregatesToVariables : public ast::NodeMapper {
-    //     mutable int aggNumber{0};
-
-    //     AggregatesToVariables() = default;
-
-    //     Own<ast::Node> operator()(Own<ast::Node> node) const override {
-    //         if (dynamic_cast<ast::Aggregator*>(node.get()) != nullptr) {
-    //             return mk<ast::Variable>("agg_" + std::to_string(aggNumber++));
-    //         }
-
-    //         node->apply(*this);
-    //         return node;
-    //     }
-    // };
-
-    // AggregatesToVariables aggToVar;
-    // clauseReplacedAggregates->apply(aggToVar);
-
     size_t count = 0;
     std::map<int, std::string> idToVarName;
     auto dummyValueIndex = mk<ValueIndex>();
@@ -432,6 +413,8 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
         idToVarName[count] = var.getName();
         dummyValueIndex->addVarReference(var, count++, 0);
     });
+
+    // TODO (azreika): index aggregators too, then override the value translator to treat them as variables
 
     visitDepthFirst(clause, [&](const ast::Variable& var) {
         if (isPrefix("+underscore", var.getName())) {
