@@ -13,7 +13,6 @@
  ***********************************************************************/
 
 #include "ast2ram/seminaive/ConstraintTranslator.h"
-#include "ast/Atom.h"
 #include "ast/BinaryConstraint.h"
 #include "ast/TranslationUnit.h"
 #include "ast2ram/ValueTranslator.h"
@@ -24,8 +23,6 @@
 #include "ram/EmptinessCheck.h"
 #include "ram/ExistenceCheck.h"
 #include "ram/Negation.h"
-#include "ram/ProvenanceExistenceCheck.h"
-#include "ram/UndefValue.h"
 
 namespace souffle::ast2ram::seminaive {
 
