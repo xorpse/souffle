@@ -49,6 +49,17 @@
 namespace souffle::ast2ram::provenance {
 
 Own<ram::Sequence> UnitTranslator::generateProgram(const ast::TranslationUnit& translationUnit) {
+    // Assign clause IDs to non-facts
+    for (const auto* relation : context->getProgram()->getRelations()) {
+        size_t clauseID = 1;
+        for (const auto* clause : context->getClauses(relation->getQualifiedName())) {
+            if (isFact(*clause)) {
+                continue;
+            }
+            clauseToId[clause] = clauseID++;
+        }
+    }
+
     // Do the regular translation
     auto ramProgram = seminaive::UnitTranslator::generateProgram(translationUnit);
 
@@ -93,46 +104,46 @@ VecOwn<ram::Relation> UnitTranslator::createRamRelations(const std::vector<size_
     auto ramRelations = seminaive::UnitTranslator::createRamRelations(sccOrdering);
 
     // Info relations
-    for (const auto* relation : context->getProgram()->getRelations()) {
-        size_t clauseID = 1;
-        for (const auto* clause : context->getClauses(relation->getQualifiedName())) {
-            if (isFact(*clause)) {
-                continue;
-            }
-
-            auto infoRelQualifiedName = clause->getHead()->getQualifiedName();
-            infoRelQualifiedName.append("@info");
-            infoRelQualifiedName.append(toString(clauseID++));
-            std::string infoRelName = getConcreteRelationName(infoRelQualifiedName);
-
-            std::vector<std::string> attributeNames;
-            std::vector<std::string> attributeTypeQualifiers;
-
-            // (1) Clause ID
-            attributeNames.push_back("clause_num");
-            attributeTypeQualifiers.push_back("i:number");
-
-            // (2) Head variable string
-            attributeNames.push_back("head_vars");
-            attributeTypeQualifiers.push_back("s:symbol");
-
-            // (3) For all atoms + negs + bcs: rel_<i>:symbol
-            for (size_t i = 0; i < clause->getBodyLiterals().size(); i++) {
-                const auto* literal = clause->getBodyLiterals().at(i);
-                if (isA<ast::Atom>(literal) || isA<ast::Negation>(literal) ||
-                        isA<ast::BinaryConstraint>(literal)) {
-                    attributeNames.push_back("rel_" + std::to_string(i));
-                    attributeTypeQualifiers.push_back("s:symbol");
-                }
-            }
-
-            // (4) Clause representation
-            attributeNames.push_back("clause_repr");
-            attributeTypeQualifiers.push_back("s:symbol");
-
-            ramRelations.push_back(mk<ram::Relation>(infoRelName, attributeNames.size(), 0, attributeNames,
-                    attributeTypeQualifiers, RelationRepresentation::INFO));
+    for (const auto* clause : context->getProgram()->getClauses()) {
+        if (isFact(*clause)) {
+            continue;
         }
+
+        assert(contains(clauseToId, clause) && "clause should have assigned ID");
+        size_t clauseID = clauseToId.at(clause);
+
+        auto infoRelQualifiedName = clause->getHead()->getQualifiedName();
+        infoRelQualifiedName.append("@info");
+        infoRelQualifiedName.append(toString(clauseID));
+        std::string infoRelName = getConcreteRelationName(infoRelQualifiedName);
+
+        std::vector<std::string> attributeNames;
+        std::vector<std::string> attributeTypeQualifiers;
+
+        // (1) Clause ID
+        attributeNames.push_back("clause_num");
+        attributeTypeQualifiers.push_back("i:number");
+
+        // (2) Head variable string
+        attributeNames.push_back("head_vars");
+        attributeTypeQualifiers.push_back("s:symbol");
+
+        // (3) For all atoms + negs + bcs: rel_<i>:symbol
+        for (size_t i = 0; i < clause->getBodyLiterals().size(); i++) {
+            const auto* literal = clause->getBodyLiterals().at(i);
+            if (isA<ast::Atom>(literal) || isA<ast::Negation>(literal) ||
+                    isA<ast::BinaryConstraint>(literal)) {
+                attributeNames.push_back("rel_" + std::to_string(i));
+                attributeTypeQualifiers.push_back("s:symbol");
+            }
+        }
+
+        // (4) Clause representation
+        attributeNames.push_back("clause_repr");
+        attributeTypeQualifiers.push_back("s:symbol");
+
+        ramRelations.push_back(mk<ram::Relation>(infoRelName, attributeNames.size(), 0, attributeNames,
+                attributeTypeQualifiers, RelationRepresentation::INFO));
     }
 
     return ramRelations;
@@ -191,114 +202,114 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
     VecOwn<ram::Statement> infoClauseCalls;
 
     size_t stratumCount = context->getNumberOfSCCs();
-    for (const auto* relation : program->getRelations()) {
-        size_t clauseID = 1;
-        for (const auto* clause : context->getClauses(relation->getQualifiedName())) {
-            if (isFact(*clause)) {
-                continue;
-            }
-
-            // Argument info generator
-            int functorNumber = 0;
-            int aggregateNumber = 0;
-            auto getArgInfo = [&](const ast::Argument* arg) -> std::string {
-                if (auto* var = dynamic_cast<const ast::Variable*>(arg)) {
-                    return toString(*var);
-                } else if (auto* constant = dynamic_cast<const ast::Constant*>(arg)) {
-                    return toString(*constant);
-                }
-                if (isA<ast::UnnamedVariable>(arg)) {
-                    return "_";
-                }
-                if (isA<ast::Functor>(arg)) {
-                    return tfm::format("functor_%d", functorNumber++);
-                }
-                if (isA<ast::Aggregator>(arg)) {
-                    return tfm::format("agg_%d", aggregateNumber++);
-                }
-
-                fatal("Unhandled argument type");
-            };
-
-            // Construct info relation name for the clause
-            auto infoRelQualifiedName = clause->getHead()->getQualifiedName();
-            infoRelQualifiedName.append("@info");
-            infoRelQualifiedName.append(toString(clauseID));
-            std::string infoRelName = getConcreteRelationName(infoRelQualifiedName);
-
-            // Generate clause head arguments
-            VecOwn<ram::Expression> factArguments;
-
-            // (1) Clause ID
-            factArguments.push_back(mk<ram::SignedConstant>(clauseID++));
-
-            // (2) Head variables
-            std::vector<std::string> headVariables;
-            for (const auto* arg : clause->getHead()->getArguments()) {
-                headVariables.push_back(getArgInfo(arg));
-            }
-            std::stringstream headVariableInfo;
-            headVariableInfo << join(headVariables, ",");
-            factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup(headVariableInfo.str())));
-
-            // (3) For all atoms || negs:
-            //      - atoms: relName,{atom arg info}
-            //      - negs: !relName
-            for (const auto* literal : clause->getBodyLiterals()) {
-                if (const auto* atom = dynamic_cast<const ast::Atom*>(literal)) {
-                    std::string atomDescription = toString(atom->getQualifiedName());
-                    for (const auto* arg : atom->getArguments()) {
-                        atomDescription.append("," + getArgInfo(arg));
-                    }
-                    factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup(atomDescription)));
-                } else if (const auto* neg = dynamic_cast<const ast::Negation*>(literal)) {
-                    const auto* atom = neg->getAtom();
-                    std::string relName = toString(atom->getQualifiedName());
-                    factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup("!" + relName)));
-                }
-            }
-
-            // (4) For all bcs:
-            //      - symbol,lhs arg info,rhs arg info
-            for (const auto* binaryConstraint : ast::getBodyLiterals<ast::BinaryConstraint>(*clause)) {
-                std::stringstream constraintDescription;
-                constraintDescription << toBinaryConstraintSymbol(binaryConstraint->getBaseOperator());
-                constraintDescription << "," << getArgInfo(binaryConstraint->getLHS());
-                constraintDescription << "," << getArgInfo(binaryConstraint->getRHS());
-                factArguments.push_back(
-                        mk<ram::SignedConstant>(symbolTable->lookup(constraintDescription.str())));
-            }
-
-            // (5) The actual clause
-            factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup(toString(*clause))));
-
-            /* -- Finalising -- */
-            // Push in the final clause
-            auto factProjection = mk<ram::Project>(infoRelName, std::move(factArguments));
-            auto infoClause = mk<ram::Statement, ram::Query>(std::move(factProjection));
-
-            // Add logging
-            if (Global::config().has("profile")) {
-                std::stringstream clauseText;
-                clauseText << "@info.clause[" << stringify(toString(*clause)) << "]";
-                const std::string logTimerStatement =
-                        LogStatement::tNonrecursiveRule(infoRelName, clause->getSrcLoc(), clauseText.str());
-                infoClause = mk<ram::LogRelationTimer>(std::move(infoClause), logTimerStatement, infoRelName);
-            }
-
-            // Add debug info
-            std::ostringstream ds;
-            ds << "@info.clause[";
-            ds << toString(*clause) << "]"
-               << "\nin file ";
-            ds << clause->getSrcLoc();
-            infoClause = mk<ram::DebugInfo>(std::move(infoClause), ds.str());
-
-            std::string stratumID = "stratum_" + toString(stratumCount++);
-            addRamSubroutine(stratumID, std::move(infoClause));
-
-            infoClauseCalls.push_back(mk<ram::Call>(stratumID));
+    for (const auto* clause : program->getClauses()) {
+        if (isFact(*clause)) {
+            continue;
         }
+
+        assert(contains(clauseToId, clause) && "clause should have assigned ID");
+        size_t clauseID = clauseToId.at(clause);
+
+        // Argument info generator
+        int functorNumber = 0;
+        int aggregateNumber = 0;
+        auto getArgInfo = [&](const ast::Argument* arg) -> std::string {
+            if (auto* var = dynamic_cast<const ast::Variable*>(arg)) {
+                return toString(*var);
+            } else if (auto* constant = dynamic_cast<const ast::Constant*>(arg)) {
+                return toString(*constant);
+            }
+            if (isA<ast::UnnamedVariable>(arg)) {
+                return "_";
+            }
+            if (isA<ast::Functor>(arg)) {
+                return tfm::format("functor_%d", functorNumber++);
+            }
+            if (isA<ast::Aggregator>(arg)) {
+                return tfm::format("agg_%d", aggregateNumber++);
+            }
+
+            fatal("Unhandled argument type");
+        };
+
+        // Construct info relation name for the clause
+        auto infoRelQualifiedName = clause->getHead()->getQualifiedName();
+        infoRelQualifiedName.append("@info");
+        infoRelQualifiedName.append(toString(clauseID));
+        std::string infoRelName = getConcreteRelationName(infoRelQualifiedName);
+
+        // Generate clause head arguments
+        VecOwn<ram::Expression> factArguments;
+
+        // (1) Clause ID
+        factArguments.push_back(mk<ram::SignedConstant>(clauseID++));
+
+        // (2) Head variables
+        std::vector<std::string> headVariables;
+        for (const auto* arg : clause->getHead()->getArguments()) {
+            headVariables.push_back(getArgInfo(arg));
+        }
+        std::stringstream headVariableInfo;
+        headVariableInfo << join(headVariables, ",");
+        factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup(headVariableInfo.str())));
+
+        // (3) For all atoms || negs:
+        //      - atoms: relName,{atom arg info}
+        //      - negs: !relName
+        for (const auto* literal : clause->getBodyLiterals()) {
+            if (const auto* atom = dynamic_cast<const ast::Atom*>(literal)) {
+                std::string atomDescription = toString(atom->getQualifiedName());
+                for (const auto* arg : atom->getArguments()) {
+                    atomDescription.append("," + getArgInfo(arg));
+                }
+                factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup(atomDescription)));
+            } else if (const auto* neg = dynamic_cast<const ast::Negation*>(literal)) {
+                const auto* atom = neg->getAtom();
+                std::string relName = toString(atom->getQualifiedName());
+                factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup("!" + relName)));
+            }
+        }
+
+        // (4) For all bcs:
+        //      - symbol,lhs arg info,rhs arg info
+        for (const auto* binaryConstraint : ast::getBodyLiterals<ast::BinaryConstraint>(*clause)) {
+            std::stringstream constraintDescription;
+            constraintDescription << toBinaryConstraintSymbol(binaryConstraint->getBaseOperator());
+            constraintDescription << "," << getArgInfo(binaryConstraint->getLHS());
+            constraintDescription << "," << getArgInfo(binaryConstraint->getRHS());
+            factArguments.push_back(
+                    mk<ram::SignedConstant>(symbolTable->lookup(constraintDescription.str())));
+        }
+
+        // (5) The actual clause
+        factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup(toString(*clause))));
+
+        /* -- Finalising -- */
+        // Push in the final clause
+        auto factProjection = mk<ram::Project>(infoRelName, std::move(factArguments));
+        auto infoClause = mk<ram::Statement, ram::Query>(std::move(factProjection));
+
+        // Add logging
+        if (Global::config().has("profile")) {
+            std::stringstream clauseText;
+            clauseText << "@info.clause[" << stringify(toString(*clause)) << "]";
+            const std::string logTimerStatement =
+                    LogStatement::tNonrecursiveRule(infoRelName, clause->getSrcLoc(), clauseText.str());
+            infoClause = mk<ram::LogRelationTimer>(std::move(infoClause), logTimerStatement, infoRelName);
+        }
+
+        // Add debug info
+        std::ostringstream ds;
+        ds << "@info.clause[";
+        ds << toString(*clause) << "]"
+           << "\nin file ";
+        ds << clause->getSrcLoc();
+        infoClause = mk<ram::DebugInfo>(std::move(infoClause), ds.str());
+
+        std::string stratumID = "stratum_" + toString(stratumCount++);
+        addRamSubroutine(stratumID, std::move(infoClause));
+
+        infoClauseCalls.push_back(mk<ram::Call>(stratumID));
     }
 
     return mk<ram::Sequence>(std::move(infoClauseCalls));
