@@ -47,7 +47,10 @@ namespace souffle::ast {
 class BinaryConstraint : public Constraint {
 public:
     BinaryConstraint(BinaryConstraintOp o, Own<Argument> ls, Own<Argument> rs, SrcLocation loc = {})
-            : Constraint(std::move(loc)), operation(o), lhs(std::move(ls)), rhs(std::move(rs)) {}
+            : Constraint(std::move(loc)), operation(o), lhs(std::move(ls)), rhs(std::move(rs)) {
+        assert(lhs != nullptr);
+        assert(rhs != nullptr);
+    }
 
     /** Return left-hand side argument */
     Argument* getLHS() const {

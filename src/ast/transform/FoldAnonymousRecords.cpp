@@ -137,7 +137,7 @@ void FoldAnonymousRecords::transformClause(const Clause& clause, VecOwn<Clause>&
 
     // If no inequality: create a single modified clause.
     if (neqConstraint == nullptr) {
-        auto newClause = souffle::clone(&clause);
+        auto newClause = souffle::clone(clause);
         newClause->setBodyLiterals(std::move(newBody));
         newClauses.emplace_back(std::move(newClause));
 
@@ -146,7 +146,7 @@ void FoldAnonymousRecords::transformClause(const Clause& clause, VecOwn<Clause>&
         auto transformedLiterals = expandRecordBinaryConstraint(*neqConstraint);
 
         for (auto it = begin(transformedLiterals); it != end(transformedLiterals); ++it) {
-            auto newClause = souffle::clone(&clause);
+            auto newClause = souffle::clone(clause);
             auto copyBody = souffle::clone(newBody);
             copyBody.push_back(std::move(*it));
 

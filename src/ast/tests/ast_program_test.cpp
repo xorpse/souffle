@@ -48,10 +48,9 @@ inline Own<TranslationUnit> makeATU(std::string program) {
 }
 
 inline Own<Clause> makeClause(std::string name, Own<Argument> headArgument) {
-    auto headAtom = mk<Atom>(name);
+    auto clause = mk<Clause>(name);
+    auto headAtom = clause->getHead();
     headAtom->addArgument(std::move(headArgument));
-    auto clause = mk<Clause>();
-    clause->setHead(std::move(headAtom));
     return clause;
 }
 

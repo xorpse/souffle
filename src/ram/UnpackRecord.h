@@ -70,7 +70,7 @@ public:
 
     UnpackRecord* clone() const override {
         return new UnpackRecord(
-                souffle::clone(&getOperation()), getTupleId(), souffle::clone(&getExpression()), arity);
+                souffle::clone(getOperation()), getTupleId(), souffle::clone(getExpression()), arity);
     }
 
     void apply(const NodeMapper& map) override {

@@ -53,7 +53,7 @@ public:
             : Aggregate(std::move(nested), fun, rel, std::move(expression), std::move(condition), ident) {}
 
     ParallelAggregate* clone() const override {
-        return new ParallelAggregate(souffle::clone(&getOperation()), function, relation,
+        return new ParallelAggregate(souffle::clone(getOperation()), function, relation,
                 souffle::clone(expression), souffle::clone(condition), identifier);
     }
 

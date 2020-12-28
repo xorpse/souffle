@@ -258,12 +258,10 @@ bool isDeltaRelation(const QualifiedName& name) {
     return isPrefix("@delta_", qualifiers[0]);
 }
 
-Clause* cloneHead(const Clause* clause) {
-    auto* clone = new Clause();
-    clone->setSrcLoc(clause->getSrcLoc());
-    clone->setHead(souffle::clone(clause->getHead()));
-    if (clause->getExecutionPlan() != nullptr) {
-        clone->setExecutionPlan(souffle::clone(clause->getExecutionPlan()));
+Own<Clause> cloneHead(const Clause& clause) {
+    auto clone = mk<Clause>(souffle::clone(clause.getHead()), clause.getSrcLoc());
+    if (clause.getExecutionPlan() != nullptr) {
+        clone->setExecutionPlan(souffle::clone(clause.getExecutionPlan()));
     }
     return clone;
 }
@@ -304,7 +302,7 @@ Clause* reorderAtoms(const Clause* clause, const std::vector<unsigned int>& newO
     assert(std::is_permutation(nopOrder.begin(), nopOrder.end(), newOrder.begin()));
 
     // Create a new clause with the given atom order, leaving the rest unchanged
-    Clause* newClause = cloneHead(clause);
+    auto newClause = cloneHead(*clause);
     unsigned int currentAtom = 0;
     for (unsigned int currentLiteral = 0; currentLiteral < bodyLiterals.size(); currentLiteral++) {
         Literal* literalToAdd = bodyLiterals[currentLiteral];
@@ -315,7 +313,8 @@ Clause* reorderAtoms(const Clause* clause, const std::vector<unsigned int>& newO
         newClause->addToBody(souffle::clone(literalToAdd));
     }
 
-    return newClause;
+    // FIXME: tomp - fix ownership
+    return newClause.release();
 }
 
 void negateConstraintInPlace(Constraint& constraint) {

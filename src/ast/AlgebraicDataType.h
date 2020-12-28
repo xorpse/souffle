@@ -52,6 +52,7 @@ public:
     AlgebraicDataType(QualifiedName name, VecOwn<BranchDeclaration> branches, SrcLocation loc = {})
             : Type(std::move(name), std::move(loc)), branches(std::move(branches)) {
         assert(!this->branches.empty());
+        assert(allValidPtrs(this->branches));
     };
 
     std::vector<BranchDeclaration*> getBranches() const {

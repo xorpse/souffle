@@ -135,7 +135,7 @@ void MaterializeAggregationQueriesTransformer::groundInjectedParameters(
         }
     };
 
-    auto aggClauseInnerAggregatesMasked = souffle::clone(&aggClause);
+    auto aggClauseInnerAggregatesMasked = souffle::clone(aggClause);
     aggClauseInnerAggregatesMasked->setHead(mk<Atom>("*"));
     NegateAggregateAtoms update;
     aggClauseInnerAggregatesMasked->apply(update);
@@ -190,7 +190,7 @@ void MaterializeAggregationQueriesTransformer::groundInjectedParameters(
                 continue;
             }
             // 2. Variable must be grounded by this literal.
-            auto singleLiteralClause = mk<Clause>();
+            auto singleLiteralClause = mk<Clause>("*");
             singleLiteralClause->addToBody(souffle::clone(lit));
             bool variableGroundedByLiteral = false;
             for (const auto& argPair : analysis::getGroundedTerms(translationUnit, *singleLiteralClause)) {
@@ -280,7 +280,7 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
             }
             // begin materialisation process
             auto aggregateBodyRelationName = analysis::findUniqueRelationName(program, "__agg_subclause");
-            auto aggClause = mk<Clause>();
+            auto aggClause = mk<Clause>(aggregateBodyRelationName);
             // quickly copy in all the literals from the aggregate body
             for (const auto& lit : agg.getBodyLiterals()) {
                 aggClause->addToBody(souffle::clone(lit));
@@ -293,13 +293,12 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
             // the head must contain all injected/local variables, but not variables
             // local to any inner aggregates. So we'll just take a set minus here.
             // auto aggClauseHead = mk<Atom>(aggregateBodyRelationName);
-            auto* aggClauseHead = new Atom(aggregateBodyRelationName);
+            auto* aggClauseHead = aggClause->getHead();
             std::set<std::string> headArguments = distinguishHeadArguments(translationUnit, clause, agg);
             // insert the head arguments into the head atom
             for (const auto& variableName : headArguments) {
                 aggClauseHead->addArgument(mk<Variable>(variableName));
             }
-            aggClause->setHead(Own<Atom>(aggClauseHead));
             // add them to the relation as well (need to do a bit of type analysis to make this work)
             auto aggRel = mk<Relation>(aggregateBodyRelationName);
             std::map<const Argument*, analysis::TypeSet> argTypes =

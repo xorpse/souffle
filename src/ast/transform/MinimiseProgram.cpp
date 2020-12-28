@@ -425,8 +425,7 @@ bool MinimiseProgramTransformer::reduceClauseBodies(TranslationUnit& translation
         }
 
         if (!redundantPositions.empty()) {
-            auto minimisedClause = mk<Clause>();
-            minimisedClause->setHead(souffle::clone(clause->getHead()));
+            auto minimisedClause = mk<Clause>(souffle::clone(clause->getHead()));
             for (size_t i = 0; i < bodyLiterals.size(); i++) {
                 if (!contains(redundantPositions, i)) {
                     minimisedClause->addToBody(souffle::clone(bodyLiterals[i]));

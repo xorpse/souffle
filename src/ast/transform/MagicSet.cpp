@@ -337,8 +337,8 @@ bool NormaliseDatabaseTransformer::partitionIO(TranslationUnit& translationUnit)
         }
 
         // Add the rule I <- I'
-        auto newClause = mk<Clause>();
-        auto newHeadAtom = mk<Atom>(relName);
+        auto newClause = mk<Clause>(relName);
+        auto newHeadAtom = newClause->getHead();
         auto newBodyAtom = mk<Atom>(newRelName);
         for (size_t i = 0; i < rel->getArity(); i++) {
             std::stringstream varName;
@@ -346,7 +346,6 @@ bool NormaliseDatabaseTransformer::partitionIO(TranslationUnit& translationUnit)
             newHeadAtom->addArgument(mk<ast::Variable>(varName.str()));
             newBodyAtom->addArgument(mk<ast::Variable>(varName.str()));
         }
-        newClause->setHead(std::move(newHeadAtom));
         newClause->addToBody(std::move(newBodyAtom));
 
         // New relation I' should be input, original should not
@@ -657,7 +656,7 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
     }
 
     // Create the adorned clause with an empty body
-    auto adornedClause = mk<Clause>();
+    auto adornedClause = mk<Clause>(getAdornmentID(relName, adornmentMarker));
 
     // Copy over plans if needed
     if (clause->getExecutionPlan() != nullptr) {
@@ -667,7 +666,7 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
     }
 
     // Create the head atom
-    auto adornedHeadAtom = mk<Atom>(getAdornmentID(relName, adornmentMarker));
+    auto adornedHeadAtom = adornedClause->getHead();
     assert((adornmentMarker == "" || headArgs.size() == adornmentMarker.length()) &&
             "adornment marker should correspond to head atom variables");
     for (const auto* arg : headArgs) {
@@ -675,7 +674,6 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
         assert(var != nullptr && "expected only variables in head");
         adornedHeadAtom->addArgument(souffle::clone(var));
     }
-    adornedClause->setHead(std::move(adornedHeadAtom));
 
     // Add in adorned body literals
     std::vector<Own<Literal>> adornedBodyLiterals;
@@ -1100,8 +1098,8 @@ void MagicSetCoreTransformer::addRelevantVariables(
 Own<Clause> MagicSetCoreTransformer::createMagicClause(const Atom* atom,
         const std::vector<Own<Atom>>& constrainingAtoms,
         const std::vector<const BinaryConstraint*> eqConstraints) {
-    auto magicHead = createMagicAtom(atom);
-    auto magicClause = mk<Clause>();
+    auto magicClause = mk<Clause>(createMagicAtom(atom));
+    auto magicHead = magicClause->getHead();
 
     // Add in all constraining atoms
     for (const auto& bindingAtom : constrainingAtoms) {
@@ -1127,7 +1125,6 @@ Own<Clause> MagicSetCoreTransformer::createMagicClause(const Atom* atom,
         if (addConstraint) magicClause->addToBody(souffle::clone(eqConstraint));
     }
 
-    magicClause->setHead(std::move(magicHead));
     return magicClause;
 }
 
@@ -1167,8 +1164,7 @@ bool MagicSetCoreTransformer::transform(TranslationUnit& translationUnit) {
         } else {
             // Refine the clause with a prepended magic atom
             auto magicAtom = createMagicAtom(head);
-            auto refinedClause = mk<Clause>();
-            refinedClause->setHead(souffle::clone(head));
+            auto refinedClause = mk<Clause>(souffle::clone(head));
             refinedClause->addToBody(souffle::clone(magicAtom));
             for (auto* literal : clause->getBodyLiterals()) {
                 refinedClause->addToBody(souffle::clone(literal));

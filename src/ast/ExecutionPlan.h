@@ -45,6 +45,8 @@ namespace souffle::ast {
  */
 class ExecutionPlan : public Node {
 public:
+    using Node::Node;
+
     /** Set execution order for a given rule version */
     void setOrderFor(int version, Own<ExecutionOrder> plan) {
         plans[version] = std::move(plan);
@@ -89,12 +91,11 @@ protected:
 
 private:
     ExecutionPlan* cloneImpl() const override {
-        auto res = new ExecutionPlan();
-        res->setSrcLoc(getSrcLoc());
+        auto res = mk<ExecutionPlan>(getSrcLoc());
         for (auto& plan : plans) {
             res->setOrderFor(plan.first, souffle::clone(plan.second));
         }
-        return res;
+        return res.release();
     }
 
 private:
