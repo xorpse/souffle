@@ -356,7 +356,7 @@ void UnitTranslator::transformVariablesToSubroutineArgs(
         Own<ram::Node> operator()(Own<ram::Node> node) const override {
             if (const auto* tuple = dynamic_cast<const ram::TupleElement*>(node.get())) {
                 const auto* var = idToVar.at(tuple->getTupleId());
-                if (isPrefix("@level_num", var->getName())) {
+                if (isPrefix("@level_num", var->getName()) || isPrefix("+underscore", var->getName())) {
                     return mk<ram::UndefValue>();
                 }
                 return mk<ram::SubroutineArgument>(tuple->getTupleId());
