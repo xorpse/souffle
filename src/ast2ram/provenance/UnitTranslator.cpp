@@ -99,6 +99,16 @@ Own<ram::Relation> UnitTranslator::createRamRelation(
             ramRelationName, arity + 2, 2, attributeNames, attributeTypeQualifiers, representation);
 }
 
+std::string UnitTranslator::getInfoRelationName(const ast::Clause* clause) const {
+    assert(!isFact(*clause) && "facts cannot have info relations");
+    assert(contains(clauseToId, clause) && "clause has unassigned ID");
+    size_t clauseID = clauseToId.at(clause);
+    auto infoRelQualifiedName = clause->getHead()->getQualifiedName();
+    infoRelQualifiedName.append("@info");
+    infoRelQualifiedName.append(toString(clauseID));
+    return getConcreteRelationName(infoRelQualifiedName);
+}
+
 VecOwn<ram::Relation> UnitTranslator::createRamRelations(const std::vector<size_t>& sccOrdering) const {
     // Regular relations
     auto ramRelations = seminaive::UnitTranslator::createRamRelations(sccOrdering);
@@ -108,14 +118,6 @@ VecOwn<ram::Relation> UnitTranslator::createRamRelations(const std::vector<size_
         if (isFact(*clause)) {
             continue;
         }
-
-        assert(contains(clauseToId, clause) && "clause should have assigned ID");
-        size_t clauseID = clauseToId.at(clause);
-
-        auto infoRelQualifiedName = clause->getHead()->getQualifiedName();
-        infoRelQualifiedName.append("@info");
-        infoRelQualifiedName.append(toString(clauseID));
-        std::string infoRelName = getConcreteRelationName(infoRelQualifiedName);
 
         std::vector<std::string> attributeNames;
         std::vector<std::string> attributeTypeQualifiers;
@@ -142,8 +144,9 @@ VecOwn<ram::Relation> UnitTranslator::createRamRelations(const std::vector<size_
         attributeNames.push_back("clause_repr");
         attributeTypeQualifiers.push_back("s:symbol");
 
-        ramRelations.push_back(mk<ram::Relation>(infoRelName, attributeNames.size(), 0, attributeNames,
-                attributeTypeQualifiers, RelationRepresentation::INFO));
+        // Create the info relation
+        ramRelations.push_back(mk<ram::Relation>(getInfoRelationName(clause), attributeNames.size(), 0,
+                attributeNames, attributeTypeQualifiers, RelationRepresentation::INFO));
     }
 
     return ramRelations;
@@ -216,7 +219,8 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
         auto getArgInfo = [&](const ast::Argument* arg) -> std::string {
             if (auto* var = dynamic_cast<const ast::Variable*>(arg)) {
                 return toString(*var);
-            } else if (auto* constant = dynamic_cast<const ast::Constant*>(arg)) {
+            }
+            if (auto* constant = dynamic_cast<const ast::Constant*>(arg)) {
                 return toString(*constant);
             }
             if (isA<ast::UnnamedVariable>(arg)) {
@@ -228,21 +232,14 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
             if (isA<ast::Aggregator>(arg)) {
                 return tfm::format("agg_%d", aggregateNumber++);
             }
-
             fatal("Unhandled argument type");
         };
-
-        // Construct info relation name for the clause
-        auto infoRelQualifiedName = clause->getHead()->getQualifiedName();
-        infoRelQualifiedName.append("@info");
-        infoRelQualifiedName.append(toString(clauseID));
-        std::string infoRelName = getConcreteRelationName(infoRelQualifiedName);
 
         // Generate clause head arguments
         VecOwn<ram::Expression> factArguments;
 
         // (1) Clause ID
-        factArguments.push_back(mk<ram::SignedConstant>(clauseID++));
+        factArguments.push_back(mk<ram::SignedConstant>(clauseID));
 
         // (2) Head variables
         std::vector<std::string> headVariables;
@@ -286,6 +283,7 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
 
         /* -- Finalising -- */
         // Push in the final clause
+        std::string infoRelName = getInfoRelationName(clause);
         auto factProjection = mk<ram::Project>(infoRelName, std::move(factArguments));
         auto infoClause = mk<ram::Statement, ram::Query>(std::move(factProjection));
 
@@ -306,9 +304,11 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
         ds << clause->getSrcLoc();
         infoClause = mk<ram::DebugInfo>(std::move(infoClause), ds.str());
 
+        // Add the subroutine to the program
         std::string stratumID = "stratum_" + toString(stratumCount++);
         addRamSubroutine(stratumID, std::move(infoClause));
 
+        // Push up the subroutine call
         infoClauseCalls.push_back(mk<ram::Call>(stratumID));
     }
 

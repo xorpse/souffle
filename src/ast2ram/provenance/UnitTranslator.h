@@ -66,6 +66,8 @@ private:
     void addProvenanceClauseSubroutines(const ast::Program* program);
     Own<ram::Sequence> generateInfoClauses(const ast::Program* program);
 
+    std::string getInfoRelationName(const ast::Clause* clause) const;
+
     Own<ram::ExistenceCheck> makeRamAtomExistenceCheck(const ast::Atom* atom,
             const std::map<int, std::string>& idToVarName, ValueIndex& valueIndex) const;
     Own<ram::SubroutineReturn> makeRamReturnTrue() const;
