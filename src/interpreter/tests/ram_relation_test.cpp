@@ -70,8 +70,7 @@ const std::string testInterpreterStore(
                                  {"types", Json::array(attribsTypes.begin(), attribsTypes.end())}}}};
 
     std::map<std::string, std::string> dirs = {{"operation", "output"}, {"IO", "stdout"},
-            {"attributeNames", "x\ty"}, {"name", "test"}, {"auxArity", static_cast<long long>(0)},
-            {"types", types.dump()}};
+            {"attributeNames", "x\ty"}, {"name", "test"}, {"auxArity", "0"}, {"types", types.dump()}};
 
     std::map<std::string, std::string> ioDirs = std::map<std::string, std::string>(dirs);
 
@@ -256,8 +255,8 @@ TEST(IO_store, SignedChangedDelimiter) {
                                  {"types", Json::array(attribsTypes.begin(), attribsTypes.end())}}}};
 
     std::map<std::string, std::string> dirs = {{"operation", "output"}, {"IO", "stdout"},
-            {"attributeNames", "x\ty"}, {"name", "test"}, {"auxArity", static_cast<long long>(0)},
-            {"delimiter", delimiter}, {"types", types.dump()}};
+            {"attributeNames", "x\ty"}, {"name", "test"}, {"auxArity", "0"}, {"delimiter", delimiter},
+            {"types", types.dump()}};
 
     std::map<std::string, std::string> ioDirs = std::map<std::string, std::string>(dirs);
 
@@ -325,9 +324,8 @@ TEST(IO_store, MixedTypes) {
             {"relation", Json::object{{"arity", static_cast<long long>(attribsTypes.size())},
                                  {"types", Json::array(attribsTypes.begin(), attribsTypes.end())}}}};
 
-    std::map<std::string, std::string> dirs = {{"operation", "output"}, {"IO", "stdout"},
-            {"auxArity", static_cast<long long>(0)}, {"attributeNames", "x\ty"}, {"name", "test"},
-            {"types", types.dump()}};
+    std::map<std::string, std::string> dirs = {{"operation", "output"}, {"IO", "stdout"}, {"auxArity", "0"},
+            {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> ioDirs = std::map<std::string, std::string>(dirs);
 
     SymbolTable symbolTable;
@@ -397,14 +395,12 @@ TEST(IO_load, Signed) {
             {"relation", Json::object{{"arity", static_cast<long long>(attribsTypes.size())},
                                  {"types", Json::array(attribsTypes.begin(), attribsTypes.end())}}}};
 
-    std::map<std::string, std::string> readDirs = {{"operation", "input"}, {"IO", "stdin"},
-            {"auxArity", static_cast<long long>(0)}, {"attributeNames", "x\ty"}, {"name", "test"},
-            {"types", types.dump()}};
+    std::map<std::string, std::string> readDirs = {{"operation", "input"}, {"IO", "stdin"}, {"auxArity", "0"},
+            {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> readIoDirs = std::map<std::string, std::string>(readDirs);
 
     std::map<std::string, std::string> writeDirs = {{"operation", "output"}, {"IO", "stdout"},
-            {"auxArity", static_cast<long long>(0)}, {"attributeNames", "x\ty"}, {"name", "test"},
-            {"types", types.dump()}};
+            {"auxArity", "0"}, {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> writeIoDirs = std::map<std::string, std::string>(writeDirs);
 
     Own<ram::Statement> main =
@@ -460,14 +456,12 @@ TEST(IO_load, Float) {
             {"relation", Json::object{{"arity", static_cast<long long>(attribsTypes.size())},
                                  {"types", Json::array(attribsTypes.begin(), attribsTypes.end())}}}};
 
-    std::map<std::string, std::string> readDirs = {{"operation", "input"}, {"IO", "stdin"},
-            {"auxArity", static_cast<long long>(0)}, {"attributeNames", "x\ty"}, {"name", "test"},
-            {"types", types.dump()}};
+    std::map<std::string, std::string> readDirs = {{"operation", "input"}, {"IO", "stdin"}, {"auxArity", "0"},
+            {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> readIoDirs = std::map<std::string, std::string>(readDirs);
 
     std::map<std::string, std::string> writeDirs = {{"operation", "output"}, {"IO", "stdout"},
-            {"auxArity", static_cast<long long>(0)}, {"attributeNames", "x\ty"}, {"name", "test"},
-            {"types", types.dump()}};
+            {"auxArity", "0"}, {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> writeIoDirs = std::map<std::string, std::string>(writeDirs);
 
     Own<ram::Statement> main =
@@ -523,14 +517,12 @@ TEST(IO_load, Unsigned) {
             {"relation", Json::object{{"arity", static_cast<long long>(attribsTypes.size())},
                                  {"types", Json::array(attribsTypes.begin(), attribsTypes.end())}}}};
 
-    std::map<std::string, std::string> readDirs = {{"operation", "input"}, {"IO", "stdin"},
-            {"auxArity", static_cast<long long>(0)}, {"attributeNames", "x\ty"}, {"name", "test"},
-            {"types", types.dump()}};
+    std::map<std::string, std::string> readDirs = {{"operation", "input"}, {"IO", "stdin"}, {"auxArity", "0"},
+            {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> readIoDirs = std::map<std::string, std::string>(readDirs);
 
     std::map<std::string, std::string> writeDirs = {{"operation", "output"}, {"IO", "stdout"},
-            {"auxArity", static_cast<long long>(0)}, {"attributeNames", "x\ty"}, {"name", "test"},
-            {"types", types.dump()}};
+            {"auxArity", "0"}, {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> writeIoDirs = std::map<std::string, std::string>(writeDirs);
 
     Own<ram::Statement> main =
@@ -586,14 +578,12 @@ TEST(IO_load, MixedTypesLoad) {
             {"relation", Json::object{{"arity", static_cast<long long>(attribsTypes.size())},
                                  {"types", Json::array(attribsTypes.begin(), attribsTypes.end())}}}};
 
-    std::map<std::string, std::string> readDirs = {{"operation", "input"}, {"IO", "stdin"},
-            {"auxArity", static_cast<long long>(0)}, {"attributeNames", "x\ty"}, {"name", "test"},
-            {"types", types.dump()}};
+    std::map<std::string, std::string> readDirs = {{"operation", "input"}, {"IO", "stdin"}, {"auxArity", "0"},
+            {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> readIoDirs = std::map<std::string, std::string>(readDirs);
 
     std::map<std::string, std::string> writeDirs = {{"operation", "output"}, {"IO", "stdout"},
-            {"auxArity", static_cast<long long>(0)}, {"attributeNames", "x\ty"}, {"name", "test"},
-            {"types", types.dump()}};
+            {"auxArity", "0"}, {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> writeIoDirs = std::map<std::string, std::string>(writeDirs);
 
     Own<ram::Statement> main =
