@@ -18,6 +18,7 @@
 
 #include "souffle/RamTypes.h"
 
+#include "souffle/utility/StringUtil.h"
 #include "souffle/utility/json11.h"
 #include <cassert>
 #include <cstddef>
