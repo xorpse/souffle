@@ -60,7 +60,7 @@ int LevelAnalysis::getLevel(const Node* node) const {
     class ValueLevelVisitor : public Visitor<int> {
     public:
         // number
-        int visit_(type_identity<Constant>,const Constant&) override {
+        int visit_(type_identity<Constant>, const Constant&) override {
             return -1;
         }
 
@@ -241,7 +241,8 @@ int LevelAnalysis::getLevel(const Node* node) const {
         }
 
         // provenance existence check
-        int visit_(type_identity<ProvenanceExistenceCheck>, const ProvenanceExistenceCheck& provExists) override {
+        int visit_(type_identity<ProvenanceExistenceCheck>,
+                const ProvenanceExistenceCheck& provExists) override {
             int level = -1;
             for (const auto& cur : provExists.getValues()) {
                 level = std::max(level, visit(*cur));

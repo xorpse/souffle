@@ -123,111 +123,115 @@ public:
      */
     NodePtr generateTree(const ram::Node& root);
 
-    NodePtr visit_(type_identity<ram::Constant>,const ram::Constant& num) override;
+    NodePtr visit_(type_identity<ram::Constant>, const ram::Constant& num) override;
 
-    NodePtr visit_(type_identity<ram::TupleElement>,const ram::TupleElement& access) override;
+    NodePtr visit_(type_identity<ram::TupleElement>, const ram::TupleElement& access) override;
 
-    NodePtr visit_(type_identity<ram::AutoIncrement>,const ram::AutoIncrement& inc) override;
+    NodePtr visit_(type_identity<ram::AutoIncrement>, const ram::AutoIncrement& inc) override;
 
-    NodePtr visit_(type_identity<ram::IntrinsicOperator>,const ram::IntrinsicOperator& op) override;
+    NodePtr visit_(type_identity<ram::IntrinsicOperator>, const ram::IntrinsicOperator& op) override;
 
-    NodePtr visit_(type_identity<ram::UserDefinedOperator>,const ram::UserDefinedOperator& op) override;
+    NodePtr visit_(type_identity<ram::UserDefinedOperator>, const ram::UserDefinedOperator& op) override;
 
-    NodePtr visit_(type_identity<ram::NestedIntrinsicOperator>,const ram::NestedIntrinsicOperator& op) override;
+    NodePtr visit_(
+            type_identity<ram::NestedIntrinsicOperator>, const ram::NestedIntrinsicOperator& op) override;
 
-    NodePtr visit_(type_identity<ram::PackRecord>,const ram::PackRecord& pr) override;
+    NodePtr visit_(type_identity<ram::PackRecord>, const ram::PackRecord& pr) override;
 
-    NodePtr visit_(type_identity<ram::SubroutineArgument>,const ram::SubroutineArgument& arg) override;
+    NodePtr visit_(type_identity<ram::SubroutineArgument>, const ram::SubroutineArgument& arg) override;
 
-    NodePtr visit_(type_identity<ram::True>,const ram::True& ltrue) override;
+    NodePtr visit_(type_identity<ram::True>, const ram::True& ltrue) override;
 
-    NodePtr visit_(type_identity<ram::False>,const ram::False& lfalse) override;
+    NodePtr visit_(type_identity<ram::False>, const ram::False& lfalse) override;
 
-    NodePtr visit_(type_identity<ram::Conjunction>,const ram::Conjunction& conj) override;
+    NodePtr visit_(type_identity<ram::Conjunction>, const ram::Conjunction& conj) override;
 
-    NodePtr visit_(type_identity<ram::Negation>,const ram::Negation& neg) override;
+    NodePtr visit_(type_identity<ram::Negation>, const ram::Negation& neg) override;
 
-    NodePtr visit_(type_identity<ram::EmptinessCheck>,const ram::EmptinessCheck& emptiness) override;
+    NodePtr visit_(type_identity<ram::EmptinessCheck>, const ram::EmptinessCheck& emptiness) override;
 
-    NodePtr visit_(type_identity<ram::RelationSize>,const ram::RelationSize& size) override;
+    NodePtr visit_(type_identity<ram::RelationSize>, const ram::RelationSize& size) override;
 
-    NodePtr visit_(type_identity<ram::ExistenceCheck>,const ram::ExistenceCheck& exists) override;
+    NodePtr visit_(type_identity<ram::ExistenceCheck>, const ram::ExistenceCheck& exists) override;
 
-    NodePtr visit_(type_identity<ram::ProvenanceExistenceCheck>,const ram::ProvenanceExistenceCheck& provExists) override;
+    NodePtr visit_(type_identity<ram::ProvenanceExistenceCheck>,
+            const ram::ProvenanceExistenceCheck& provExists) override;
 
-    NodePtr visit_(type_identity<ram::Constraint>,const ram::Constraint& relOp) override;
+    NodePtr visit_(type_identity<ram::Constraint>, const ram::Constraint& relOp) override;
 
-    NodePtr visit_(type_identity<ram::NestedOperation>,const ram::NestedOperation& nested) override;
+    NodePtr visit_(type_identity<ram::NestedOperation>, const ram::NestedOperation& nested) override;
 
-    NodePtr visit_(type_identity<ram::TupleOperation>,const ram::TupleOperation& search) override;
+    NodePtr visit_(type_identity<ram::TupleOperation>, const ram::TupleOperation& search) override;
 
-    NodePtr visit_(type_identity<ram::Scan>,const ram::Scan& scan) override;
+    NodePtr visit_(type_identity<ram::Scan>, const ram::Scan& scan) override;
 
-    NodePtr visit_(type_identity<ram::ParallelScan>,const ram::ParallelScan& pScan) override;
+    NodePtr visit_(type_identity<ram::ParallelScan>, const ram::ParallelScan& pScan) override;
 
-    NodePtr visit_(type_identity<ram::IndexScan>,const ram::IndexScan& iScan) override;
+    NodePtr visit_(type_identity<ram::IndexScan>, const ram::IndexScan& iScan) override;
 
-    NodePtr visit_(type_identity<ram::ParallelIndexScan>,const ram::ParallelIndexScan& piscan) override;
+    NodePtr visit_(type_identity<ram::ParallelIndexScan>, const ram::ParallelIndexScan& piscan) override;
 
-    NodePtr visit_(type_identity<ram::Choice>,const ram::Choice& choice) override;
+    NodePtr visit_(type_identity<ram::Choice>, const ram::Choice& choice) override;
 
-    NodePtr visit_(type_identity<ram::ParallelChoice>,const ram::ParallelChoice& pChoice) override;
+    NodePtr visit_(type_identity<ram::ParallelChoice>, const ram::ParallelChoice& pChoice) override;
 
-    NodePtr visit_(type_identity<ram::IndexChoice>,const ram::IndexChoice& iChoice) override;
+    NodePtr visit_(type_identity<ram::IndexChoice>, const ram::IndexChoice& iChoice) override;
 
-    NodePtr visit_(type_identity<ram::ParallelIndexChoice>,const ram::ParallelIndexChoice& piChoice) override;
+    NodePtr visit_(
+            type_identity<ram::ParallelIndexChoice>, const ram::ParallelIndexChoice& piChoice) override;
 
-    NodePtr visit_(type_identity<ram::UnpackRecord>,const ram::UnpackRecord& unpack) override;
+    NodePtr visit_(type_identity<ram::UnpackRecord>, const ram::UnpackRecord& unpack) override;
 
-    NodePtr visit_(type_identity<ram::Aggregate>,const ram::Aggregate& aggregate) override;
+    NodePtr visit_(type_identity<ram::Aggregate>, const ram::Aggregate& aggregate) override;
 
-    NodePtr visit_(type_identity<ram::ParallelAggregate>,const ram::ParallelAggregate& pAggregate) override;
+    NodePtr visit_(type_identity<ram::ParallelAggregate>, const ram::ParallelAggregate& pAggregate) override;
 
-    NodePtr visit_(type_identity<ram::IndexAggregate>,const ram::IndexAggregate& iAggregate) override;
+    NodePtr visit_(type_identity<ram::IndexAggregate>, const ram::IndexAggregate& iAggregate) override;
 
-    NodePtr visit_(type_identity<ram::ParallelIndexAggregate>,const ram::ParallelIndexAggregate& piAggregate) override;
+    NodePtr visit_(type_identity<ram::ParallelIndexAggregate>,
+            const ram::ParallelIndexAggregate& piAggregate) override;
 
-    NodePtr visit_(type_identity<ram::Break>,const ram::Break& breakOp) override;
+    NodePtr visit_(type_identity<ram::Break>, const ram::Break& breakOp) override;
 
-    NodePtr visit_(type_identity<ram::Filter>,const ram::Filter& filter) override;
+    NodePtr visit_(type_identity<ram::Filter>, const ram::Filter& filter) override;
 
-    NodePtr visit_(type_identity<ram::GuardedProject>,const ram::GuardedProject& guardedPorject) override;
+    NodePtr visit_(type_identity<ram::GuardedProject>, const ram::GuardedProject& guardedPorject) override;
 
-    NodePtr visit_(type_identity<ram::Project>,const ram::Project& project) override;
+    NodePtr visit_(type_identity<ram::Project>, const ram::Project& project) override;
 
-    NodePtr visit_(type_identity<ram::SubroutineReturn>,const ram::SubroutineReturn& ret) override;
+    NodePtr visit_(type_identity<ram::SubroutineReturn>, const ram::SubroutineReturn& ret) override;
 
-    NodePtr visit_(type_identity<ram::Sequence>,const ram::Sequence& seq) override;
+    NodePtr visit_(type_identity<ram::Sequence>, const ram::Sequence& seq) override;
 
-    NodePtr visit_(type_identity<ram::Parallel>,const ram::Parallel& parallel) override;
+    NodePtr visit_(type_identity<ram::Parallel>, const ram::Parallel& parallel) override;
 
-    NodePtr visit_(type_identity<ram::Loop>,const ram::Loop& loop) override;
+    NodePtr visit_(type_identity<ram::Loop>, const ram::Loop& loop) override;
 
-    NodePtr visit_(type_identity<ram::Exit>,const ram::Exit& exit) override;
+    NodePtr visit_(type_identity<ram::Exit>, const ram::Exit& exit) override;
 
-    NodePtr visit_(type_identity<ram::Call>,const ram::Call& call) override;
+    NodePtr visit_(type_identity<ram::Call>, const ram::Call& call) override;
 
-    NodePtr visit_(type_identity<ram::LogRelationTimer>,const ram::LogRelationTimer& timer) override;
+    NodePtr visit_(type_identity<ram::LogRelationTimer>, const ram::LogRelationTimer& timer) override;
 
-    NodePtr visit_(type_identity<ram::LogTimer>,const ram::LogTimer& timer) override;
+    NodePtr visit_(type_identity<ram::LogTimer>, const ram::LogTimer& timer) override;
 
-    NodePtr visit_(type_identity<ram::DebugInfo>,const ram::DebugInfo& dbg) override;
+    NodePtr visit_(type_identity<ram::DebugInfo>, const ram::DebugInfo& dbg) override;
 
-    NodePtr visit_(type_identity<ram::Clear>,const ram::Clear& clear) override;
+    NodePtr visit_(type_identity<ram::Clear>, const ram::Clear& clear) override;
 
-    NodePtr visit_(type_identity<ram::LogSize>,const ram::LogSize& size) override;
+    NodePtr visit_(type_identity<ram::LogSize>, const ram::LogSize& size) override;
 
-    NodePtr visit_(type_identity<ram::IO>,const ram::IO& io) override;
+    NodePtr visit_(type_identity<ram::IO>, const ram::IO& io) override;
 
-    NodePtr visit_(type_identity<ram::Query>,const ram::Query& query) override;
+    NodePtr visit_(type_identity<ram::Query>, const ram::Query& query) override;
 
-    NodePtr visit_(type_identity<ram::Extend>,const ram::Extend& extend) override;
+    NodePtr visit_(type_identity<ram::Extend>, const ram::Extend& extend) override;
 
-    NodePtr visit_(type_identity<ram::Swap>,const ram::Swap& swap) override;
+    NodePtr visit_(type_identity<ram::Swap>, const ram::Swap& swap) override;
 
-    NodePtr visit_(type_identity<ram::UndefValue>,const ram::UndefValue&) override;
+    NodePtr visit_(type_identity<ram::UndefValue>, const ram::UndefValue&) override;
 
-    NodePtr visit_(type_identity<ram::Node>,const ram::Node& node) override;
+    NodePtr visit_(type_identity<ram::Node>, const ram::Node& node) override;
 
 private:
     /**

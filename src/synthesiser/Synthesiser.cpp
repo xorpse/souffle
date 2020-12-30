@@ -1942,7 +1942,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         out << "symTable.lookup(" #op "({"; \
         for (auto& cur : args) {            \
             out << "symTable.resolve(";     \
-            visit(*cur, out);                \
+            visit(*cur, out);               \
             out << "), ";                   \
         }                                   \
         out << "}))";                       \

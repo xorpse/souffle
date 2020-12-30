@@ -56,13 +56,16 @@ public:
 
     /** -- Visitors -- */
     Own<ram::Expression> visit_(type_identity<ast::Variable>, const ast::Variable& var) override;
-    Own<ram::Expression> visit_(type_identity<ast::UnnamedVariable>, const ast::UnnamedVariable& var) override;
+    Own<ram::Expression> visit_(
+            type_identity<ast::UnnamedVariable>, const ast::UnnamedVariable& var) override;
     Own<ram::Expression> visit_(type_identity<ast::NumericConstant>, const ast::NumericConstant& c) override;
     Own<ram::Expression> visit_(type_identity<ast::StringConstant>, const ast::StringConstant& c) override;
     Own<ram::Expression> visit_(type_identity<ast::NilConstant>, const ast::NilConstant& c) override;
     Own<ram::Expression> visit_(type_identity<ast::TypeCast>, const ast::TypeCast& typeCast) override;
-    Own<ram::Expression> visit_(type_identity<ast::IntrinsicFunctor>, const ast::IntrinsicFunctor& inf) override;
-    Own<ram::Expression> visit_(type_identity<ast::UserDefinedFunctor>, const ast::UserDefinedFunctor& udf) override;
+    Own<ram::Expression> visit_(
+            type_identity<ast::IntrinsicFunctor>, const ast::IntrinsicFunctor& inf) override;
+    Own<ram::Expression> visit_(
+            type_identity<ast::UserDefinedFunctor>, const ast::UserDefinedFunctor& udf) override;
     Own<ram::Expression> visit_(type_identity<ast::Counter>, const ast::Counter& ctr) override;
     Own<ram::Expression> visit_(type_identity<ast::RecordInit>, const ast::RecordInit& init) override;
     Own<ram::Expression> visit_(type_identity<ast::BranchInit>, const ast::BranchInit& init) override;

@@ -48,7 +48,8 @@ public:
 
     /** -- Visitors -- */
     Own<ram::Condition> visit_(type_identity<ast::Atom>, const ast::Atom&) override;
-    Own<ram::Condition> visit_(type_identity<ast::BinaryConstraint>, const ast::BinaryConstraint& binRel) override;
+    Own<ram::Condition> visit_(
+            type_identity<ast::BinaryConstraint>, const ast::BinaryConstraint& binRel) override;
     Own<ram::Condition> visit_(type_identity<ast::Negation>, const ast::Negation& neg) override;
 };
 

@@ -48,11 +48,13 @@ Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::Variable>, const
     return makeRamTupleElement(index.getDefinitionPoint(var));
 }
 
-Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::UnnamedVariable>, const ast::UnnamedVariable&) {
+Own<ram::Expression> ValueTranslator::visit_(
+        type_identity<ast::UnnamedVariable>, const ast::UnnamedVariable&) {
     return mk<ram::UndefValue>();
 }
 
-Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::NumericConstant>, const ast::NumericConstant& c) {
+Own<ram::Expression> ValueTranslator::visit_(
+        type_identity<ast::NumericConstant>, const ast::NumericConstant& c) {
     switch (context.getInferredNumericConstantType(&c)) {
         case ast::NumericConstant::Type::Int:
             return mk<ram::SignedConstant>(RamSignedFromString(c.getConstant(), nullptr, 0));
@@ -65,7 +67,8 @@ Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::NumericConstant>
     fatal("unexpected numeric constant type");
 }
 
-Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::StringConstant>, const ast::StringConstant& c) {
+Own<ram::Expression> ValueTranslator::visit_(
+        type_identity<ast::StringConstant>, const ast::StringConstant& c) {
     return mk<ram::SignedConstant>(symbolTable.lookup(c.getConstant()));
 }
 
@@ -77,7 +80,8 @@ Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::TypeCast>, const
     return translateValue(typeCast.getValue());
 }
 
-Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::IntrinsicFunctor>, const ast::IntrinsicFunctor& inf) {
+Own<ram::Expression> ValueTranslator::visit_(
+        type_identity<ast::IntrinsicFunctor>, const ast::IntrinsicFunctor& inf) {
     VecOwn<ram::Expression> values;
     for (const auto& cur : inf.getArguments()) {
         values.push_back(translateValue(cur));
@@ -90,7 +94,8 @@ Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::IntrinsicFunctor
     }
 }
 
-Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::UserDefinedFunctor>, const ast::UserDefinedFunctor& udf) {
+Own<ram::Expression> ValueTranslator::visit_(
+        type_identity<ast::UserDefinedFunctor>, const ast::UserDefinedFunctor& udf) {
     VecOwn<ram::Expression> values;
     for (const auto& cur : udf.getArguments()) {
         values.push_back(translateValue(cur));

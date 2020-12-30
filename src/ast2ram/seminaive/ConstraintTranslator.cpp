@@ -39,7 +39,8 @@ Own<ram::Condition> ConstraintTranslator::visit_(type_identity<ast::Atom>, const
     return nullptr;  // covered already within the scan/lookup generation step
 }
 
-Own<ram::Condition> ConstraintTranslator::visit_(type_identity<ast::BinaryConstraint>, const ast::BinaryConstraint& binRel) {
+Own<ram::Condition> ConstraintTranslator::visit_(
+        type_identity<ast::BinaryConstraint>, const ast::BinaryConstraint& binRel) {
     auto valLHS = context.translateValue(symbolTable, index, binRel.getLHS());
     auto valRHS = context.translateValue(symbolTable, index, binRel.getRHS());
     return mk<ram::Constraint>(

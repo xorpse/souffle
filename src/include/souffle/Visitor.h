@@ -62,7 +62,8 @@ inline constexpr bool is_visitable_v = is_visitable<T>::value;
 
 namespace detail {
 template <typename T>
-using node_base_t = std::remove_const_t<std::remove_pointer_t<std::remove_reference_t<decltype(*std::begin(getChildNodes(std::declval<T&>())))>>>;
+using node_base_t = std::remove_const_t<std::remove_pointer_t<
+        std::remove_reference_t<decltype(*std::begin(getChildNodes(std::declval<T&>())))>>>;
 
 template <typename T>
 constexpr inline bool ptr_helper_v = is_pointer_like_v<std::remove_const_t<std::remove_reference_t<T>>>;
@@ -107,7 +108,7 @@ struct Visitor : public visitor_with_type<NodeType> {
 #define SOUFFLE_VISITOR_FORWARD(Kind) \
     if (auto* n = as<Kind>(node)) return visit_(type_identity<Kind>(), *n, args...);
 
-#define SOUFFLE_VISITOR_LINK(Kind, Parent)                                                         \
+#define SOUFFLE_VISITOR_LINK(Kind, Parent)                                                          \
     virtual R visit_(type_identity<Kind>, copy_const_t<NodeType, Kind>& n, Params const&... args) { \
         return visit_(type_identity<Parent>(), n, args...);                                         \
     }

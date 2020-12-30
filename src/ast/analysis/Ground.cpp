@@ -160,7 +160,7 @@ struct GroundednessAnalysis : public ConstraintAnalysis<BoolDisjunctVar> {
             : relCache(*tu.getAnalysis<RelationDetailCacheAnalysis>()) {}
 
     // atoms are producing grounded variables
-    void visit_(type_identity<Atom>,const Atom& cur) override {
+    void visit_(type_identity<Atom>, const Atom& cur) override {
         // some atoms need to be skipped (head or negation)
         if (ignore.find(&cur) != ignore.end()) {
             return;
@@ -173,13 +173,13 @@ struct GroundednessAnalysis : public ConstraintAnalysis<BoolDisjunctVar> {
     }
 
     // negations need to be skipped
-    void visit_(type_identity<Negation>,const Negation& cur) override {
+    void visit_(type_identity<Negation>, const Negation& cur) override {
         // add nested atom to black-list
         ignore.insert(cur.getAtom());
     }
 
     // also skip head if we don't have an inline qualifier
-    void visit_(type_identity<Clause>,const Clause& clause) override {
+    void visit_(type_identity<Clause>, const Clause& clause) override {
         if (auto clauseHead = clause.getHead()) {
             auto relation = relCache.getRelation(clauseHead->getQualifiedName());
             // Only skip the head if the relation ISN'T inline. Keeping the head will ground
@@ -191,7 +191,7 @@ struct GroundednessAnalysis : public ConstraintAnalysis<BoolDisjunctVar> {
     }
 
     // binary equality relations propagates groundness
-    void visit_(type_identity<BinaryConstraint>,const BinaryConstraint& cur) override {
+    void visit_(type_identity<BinaryConstraint>, const BinaryConstraint& cur) override {
         // only target equality
         if (!isEqConstraint(cur.getBaseOperator())) {
             return;
