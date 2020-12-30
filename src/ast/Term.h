@@ -60,7 +60,7 @@ public:
         args.push_back(std::move(arg));
     }
 
-    std::vector<const Node*> getChildNodesImpl() const override {
+    NodeVec getChildNodesImpl() const override {
         auto res = Argument::getChildNodesImpl();
         for (auto& cur : args) {
             res.push_back(cur.get());

@@ -77,7 +77,7 @@ public:
         rhs = map(std::move(rhs));
     }
 
-    std::vector<const Node*> getChildNodesImpl() const override {
+    NodeVec getChildNodesImpl() const override {
         return {lhs.get(), rhs.get()};
     }
 

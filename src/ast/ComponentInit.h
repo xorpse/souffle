@@ -71,7 +71,7 @@ public:
         componentType = mapper(std::move(componentType));
     }
 
-    std::vector<const Node*> getChildNodesImpl() const override {
+    NodeVec getChildNodesImpl() const override {
         return {componentType.get()};
     }
 

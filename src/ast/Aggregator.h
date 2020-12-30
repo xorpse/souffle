@@ -80,7 +80,7 @@ public:
         body = std::move(bodyLiterals);
     }
 
-    std::vector<const Node*> getChildNodesImpl() const override {
+    NodeVec getChildNodesImpl() const override {
         auto res = Argument::getChildNodesImpl();
         if (targetExpression) {
             res.push_back(targetExpression.get());

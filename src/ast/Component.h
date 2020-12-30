@@ -180,7 +180,7 @@ public:
         }
     }
 
-    std::vector<const Node*> getChildNodesImpl() const override {
+    NodeVec getChildNodesImpl() const override {
         std::vector<const Node*> res;
 
         res.push_back(componentType.get());

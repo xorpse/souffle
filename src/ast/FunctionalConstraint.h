@@ -71,7 +71,7 @@ public:
         return keys.size();
     }
 
-    std::vector<const Node*> getChildNodesImpl() const override {
+    NodeVec getChildNodesImpl() const override {
         std::vector<const Node*> res;
         for (auto& cur : keys) {
             res.push_back(cur.get());

@@ -311,4 +311,58 @@ auto makeDerefRange(Iter&& begin, Iter&& end) {
     return make_range(derefIter(std::forward<Iter>(begin)), derefIter(std::forward<Iter>(end)));
 }
 
+/**
+ * This wraps the Range container, and const_casts in place.
+ */
+template <typename Range, typename F>
+class OwningTransformRange {
+private:
+    // using const_reference = decltype(*std::cbegin(std::declval<Range&>()));
+    // using reference = decltype(*std::begin(std::declval<Range&>()));
+    // using value_type = std::remove_const_t<std::remove_reference_t<reference>>;
+
+public:
+    OwningTransformRange(Range&& range, F f) : range(std::move(range)), f(std::move(f)) {}
+
+    auto begin() {
+        return transformIter(std::begin(range), f);
+    }
+
+    auto begin() const {
+        return transformIter(std::begin(range), f);
+    }
+
+    auto cbegin() const {
+        return transformIter(std::cbegin(range), f);
+    }
+
+    auto end() {
+        return transformIter(std::end(range), f);
+    }
+
+    auto end() const {
+        return transformIter(std::begin(range), f);
+    }
+
+    auto cend() const {
+        return transformIter(std::cend(range), f);
+    }
+
+    auto size() const {
+        return range.size();
+    }
+
+    auto& operator[](std::size_t ii) {
+        return begin()[ii];
+    }
+
+    auto& operator[](std::size_t ii) const {
+        return cbegin()[ii];
+    }
+
+private:
+    Range range;
+    F f;
+};
+
 }  // namespace souffle

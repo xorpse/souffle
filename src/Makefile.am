@@ -47,6 +47,7 @@ souffle_sources = \
         ast/Negation.h                                     \
         ast/NilConstant.h                                  \
         ast/Node.h                                         \
+        ast/Node.cpp                                       \
         ast/NumericConstant.h                              \
         ast/Pragma.h                                       \
         ast/Program.cpp                                    \
