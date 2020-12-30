@@ -43,16 +43,16 @@ Own<ram::Expression> ValueTranslator::translateValue(const ast::Argument* arg) {
     return ValueTranslator(context, symbolTable, index)(*arg);
 }
 
-Own<ram::Expression> ValueTranslator::visitVariable(const ast::Variable& var) {
+Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::Variable>, const ast::Variable& var) {
     assert(index.isDefined(var) && "variable not grounded");
     return makeRamTupleElement(index.getDefinitionPoint(var));
 }
 
-Own<ram::Expression> ValueTranslator::visitUnnamedVariable(const ast::UnnamedVariable&) {
+Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::UnnamedVariable>, const ast::UnnamedVariable&) {
     return mk<ram::UndefValue>();
 }
 
-Own<ram::Expression> ValueTranslator::visitNumericConstant(const ast::NumericConstant& c) {
+Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::NumericConstant>, const ast::NumericConstant& c) {
     switch (context.getInferredNumericConstantType(&c)) {
         case ast::NumericConstant::Type::Int:
             return mk<ram::SignedConstant>(RamSignedFromString(c.getConstant(), nullptr, 0));
@@ -65,19 +65,19 @@ Own<ram::Expression> ValueTranslator::visitNumericConstant(const ast::NumericCon
     fatal("unexpected numeric constant type");
 }
 
-Own<ram::Expression> ValueTranslator::visitStringConstant(const ast::StringConstant& c) {
+Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::StringConstant>, const ast::StringConstant& c) {
     return mk<ram::SignedConstant>(symbolTable.lookup(c.getConstant()));
 }
 
-Own<ram::Expression> ValueTranslator::visitNilConstant(const ast::NilConstant&) {
+Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::NilConstant>, const ast::NilConstant&) {
     return mk<ram::SignedConstant>(0);
 }
 
-Own<ram::Expression> ValueTranslator::visitTypeCast(const ast::TypeCast& typeCast) {
+Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::TypeCast>, const ast::TypeCast& typeCast) {
     return translateValue(typeCast.getValue());
 }
 
-Own<ram::Expression> ValueTranslator::visitIntrinsicFunctor(const ast::IntrinsicFunctor& inf) {
+Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::IntrinsicFunctor>, const ast::IntrinsicFunctor& inf) {
     VecOwn<ram::Expression> values;
     for (const auto& cur : inf.getArguments()) {
         values.push_back(translateValue(cur));
@@ -90,7 +90,7 @@ Own<ram::Expression> ValueTranslator::visitIntrinsicFunctor(const ast::Intrinsic
     }
 }
 
-Own<ram::Expression> ValueTranslator::visitUserDefinedFunctor(const ast::UserDefinedFunctor& udf) {
+Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::UserDefinedFunctor>, const ast::UserDefinedFunctor& udf) {
     VecOwn<ram::Expression> values;
     for (const auto& cur : udf.getArguments()) {
         values.push_back(translateValue(cur));
@@ -101,11 +101,11 @@ Own<ram::Expression> ValueTranslator::visitUserDefinedFunctor(const ast::UserDef
             udf.getName(), argTypes, returnType, context.isStatefulFunctor(&udf), std::move(values));
 }
 
-Own<ram::Expression> ValueTranslator::visitCounter(const ast::Counter&) {
+Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::Counter>, const ast::Counter&) {
     return mk<ram::AutoIncrement>();
 }
 
-Own<ram::Expression> ValueTranslator::visitRecordInit(const ast::RecordInit& init) {
+Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::RecordInit>, const ast::RecordInit& init) {
     VecOwn<ram::Expression> values;
     for (const auto& cur : init.getArguments()) {
         values.push_back(translateValue(cur));
@@ -113,7 +113,7 @@ Own<ram::Expression> ValueTranslator::visitRecordInit(const ast::RecordInit& ini
     return mk<ram::PackRecord>(std::move(values));
 }
 
-Own<ram::Expression> ValueTranslator::visitBranchInit(const ast::BranchInit& adt) {
+Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::BranchInit>, const ast::BranchInit& adt) {
     auto branchId = context.getADTBranchId(&adt);
 
     // Enums are straight forward
@@ -145,7 +145,7 @@ Own<ram::Expression> ValueTranslator::visitBranchInit(const ast::BranchInit& adt
     return mk<ram::PackRecord>(std::move(finalRecordValues));
 }
 
-Own<ram::Expression> ValueTranslator::visitAggregator(const ast::Aggregator& agg) {
+Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::Aggregator>, const ast::Aggregator& agg) {
     // here we look up the location the aggregation result gets bound
     return makeRamTupleElement(index.getGeneratorLoc(agg));
 }

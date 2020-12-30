@@ -59,4 +59,20 @@ struct is_range : detail::is_range_impl<T> {};
 template <typename T>
 inline constexpr bool is_range_v = is_range<T>::value;
 
+/**
+ * Type identity, remove once on C++20
+ */
+template <typename T>
+struct type_identity {
+    using type = T;
+};
+
+template <typename T>
+struct is_pointer_like : std::is_pointer<T> {};
+
+template <typename T>
+struct is_pointer_like<Own<T>> : std::true_type {};
+
+template <typename T>
+inline constexpr bool is_pointer_like_v = is_pointer_like<T>::value;
 }  // namespace souffle
