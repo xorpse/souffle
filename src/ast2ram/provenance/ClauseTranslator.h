@@ -14,10 +14,6 @@
 
 #include "ast2ram/seminaive/ClauseTranslator.h"
 
-namespace souffle {
-class SymbolTable;
-}
-
 namespace souffle::ast {
 class Atom;
 }
@@ -34,8 +30,7 @@ namespace souffle::ast2ram::provenance {
 
 class ClauseTranslator : public ast2ram::seminaive::ClauseTranslator {
 public:
-    ClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable)
-            : ast2ram::seminaive::ClauseTranslator(context, symbolTable) {}
+    ClauseTranslator(const TranslatorContext& context) : ast2ram::seminaive::ClauseTranslator(context) {}
 
 protected:
     Own<ram::Operation> addNegatedDeltaAtom(Own<ram::Operation> op, const ast::Atom* atom) const override;

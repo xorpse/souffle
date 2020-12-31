@@ -29,7 +29,6 @@
 #include "ram/Clear.h"
 #include "ram/Condition.h"
 #include "ram/Conjunction.h"
-#include "ram/Constant.h"
 #include "ram/Constraint.h"
 #include "ram/DebugInfo.h"
 #include "ram/EmptinessCheck.h"
@@ -56,6 +55,7 @@
 #include "ram/NestedIntrinsicOperator.h"
 #include "ram/NestedOperation.h"
 #include "ram/Node.h"
+#include "ram/NumericConstant.h"
 #include "ram/Operation.h"
 #include "ram/PackRecord.h"
 #include "ram/Parallel.h"
@@ -77,6 +77,7 @@
 #include "ram/Sequence.h"
 #include "ram/SignedConstant.h"
 #include "ram/Statement.h"
+#include "ram/StringConstant.h"
 #include "ram/SubroutineArgument.h"
 #include "ram/SubroutineReturn.h"
 #include "ram/Swap.h"
@@ -149,7 +150,8 @@ struct Visitor : public ram_visitor_tag {
         FORWARD(SignedConstant);
         FORWARD(UnsignedConstant);
         FORWARD(FloatConstant);
-        FORWARD(Constant);
+        FORWARD(NumericConstant);
+        FORWARD(StringConstant);
         FORWARD(IntrinsicOperator);
         FORWARD(UserDefinedOperator);
         FORWARD(AutoIncrement);
@@ -291,10 +293,11 @@ protected:
     LINK(Condition, Node);
 
     // -- values --
-    LINK(SignedConstant, Constant);
-    LINK(UnsignedConstant, Constant);
-    LINK(FloatConstant, Constant);
-    LINK(Constant, Expression);
+    LINK(SignedConstant, NumericConstant);
+    LINK(UnsignedConstant, NumericConstant);
+    LINK(FloatConstant, NumericConstant);
+    LINK(NumericConstant, Expression);
+    LINK(StringConstant, Expression);
     LINK(UndefValue, Expression);
     LINK(TupleElement, Expression);
     LINK(IntrinsicOperator, AbstractOperator);

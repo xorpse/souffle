@@ -81,7 +81,7 @@ void UnitTranslator::addProvenanceClauseSubroutines(const ast::Program* program)
 
 /** make a subroutine to search for subproofs */
 Own<ram::Statement> UnitTranslator::makeSubproofSubroutine(const ast::Clause& clause) {
-    return SubproofGenerator(*context, *symbolTable).translateNonRecursiveClause(clause);
+    return SubproofGenerator(*context).translateNonRecursiveClause(clause);
 }
 
 Own<ram::ExistenceCheck> UnitTranslator::makeRamAtomExistenceCheck(const ast::Atom* atom,
@@ -96,7 +96,7 @@ Own<ram::ExistenceCheck> UnitTranslator::makeRamAtomExistenceCheck(const ast::At
     // add each value (subroutine argument) to the search query
     for (size_t i = 0; i < atom->getArity() - auxiliaryArity; i++) {
         auto arg = atomArgs.at(i);
-        auto translatedValue = context->translateValue(*symbolTable, valueIndex, arg);
+        auto translatedValue = context->translateValue(valueIndex, arg);
         transformVariablesToSubroutineArgs(translatedValue.get(), idToVar);
         query.push_back(std::move(translatedValue));
     }
@@ -244,7 +244,7 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
                     makeIfStatement(std::move(existenceCheck), makeRamReturnFalse(), makeRamReturnTrue());
             appendStmt(searchSequence, std::move(ifStatement));
         } else if (const auto* con = dynamic_cast<const ast::Constraint*>(lit)) {
-            auto condition = context->translateConstraint(*symbolTable, *dummyValueIndex, con);
+            auto condition = context->translateConstraint(*dummyValueIndex, con);
             transformVariablesToSubroutineArgs(condition.get(), idToVar);
             auto ifStatement =
                     makeIfStatement(std::move(condition), makeRamReturnTrue(), makeRamReturnFalse());

@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ram/Constant.h"
+#include "ram/NumericConstant.h"
 #include "souffle/RamTypes.h"
 #include <ostream>
 
@@ -31,9 +31,9 @@ namespace souffle::ram {
  * float(3.3)
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-class FloatConstant : public Constant {
+class FloatConstant : public NumericConstant {
 public:
-    explicit FloatConstant(RamFloat val) : Constant(ramBitCast(val)) {}
+    explicit FloatConstant(RamFloat val) : NumericConstant(ramBitCast(val)) {}
 
     /** @brief Get value of the constant. */
     RamFloat getValue() const {

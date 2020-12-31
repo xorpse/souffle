@@ -217,31 +217,27 @@ int TranslatorContext::getADTBranchId(const ast::BranchInit* adt) const {
     return std::distance(std::begin(branches), iterToBranch);
 }
 
-Own<ram::Statement> TranslatorContext::translateNonRecursiveClause(
-        SymbolTable& symbolTable, const ast::Clause& clause) const {
-    auto clauseTranslator =
-            Own<ClauseTranslator>(translationStrategy->createClauseTranslator(*this, symbolTable));
+Own<ram::Statement> TranslatorContext::translateNonRecursiveClause(const ast::Clause& clause) const {
+    auto clauseTranslator = Own<ClauseTranslator>(translationStrategy->createClauseTranslator(*this));
     return clauseTranslator->translateNonRecursiveClause(clause);
 }
 
-Own<ram::Statement> TranslatorContext::translateRecursiveClause(SymbolTable& symbolTable,
+Own<ram::Statement> TranslatorContext::translateRecursiveClause(
         const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version) const {
-    auto clauseTranslator =
-            Own<ClauseTranslator>(translationStrategy->createClauseTranslator(*this, symbolTable));
+    auto clauseTranslator = Own<ClauseTranslator>(translationStrategy->createClauseTranslator(*this));
     return clauseTranslator->translateRecursiveClause(clause, scc, version);
 }
 
 Own<ram::Expression> TranslatorContext::translateValue(
-        SymbolTable& symbolTable, const ValueIndex& index, const ast::Argument* arg) const {
-    auto valueTranslator =
-            Own<ValueTranslator>(translationStrategy->createValueTranslator(*this, symbolTable, index));
+        const ValueIndex& index, const ast::Argument* arg) const {
+    auto valueTranslator = Own<ValueTranslator>(translationStrategy->createValueTranslator(*this, index));
     return valueTranslator->translateValue(arg);
 }
 
 Own<ram::Condition> TranslatorContext::translateConstraint(
-        SymbolTable& symbolTable, const ValueIndex& index, const ast::Literal* lit) const {
-    auto constraintTranslator = Own<ConstraintTranslator>(
-            translationStrategy->createConstraintTranslator(*this, symbolTable, index));
+        const ValueIndex& index, const ast::Literal* lit) const {
+    auto constraintTranslator =
+            Own<ConstraintTranslator>(translationStrategy->createConstraintTranslator(*this, index));
     return constraintTranslator->translateConstraint(lit);
 }
 

@@ -59,6 +59,9 @@ private:
     /** Relation map */
     std::map<std::string, const ram::Relation*> relationMap;
 
+    /** Symbol map */
+    std::map<std::string, unsigned> symbolMap;
+
 protected:
     /** Get record table */
     const RecordTable& getRecordTable();
@@ -93,6 +96,18 @@ protected:
         auto it = relationMap.find(relName);
         assert(it != relationMap.end() && "relation not found");
         return it->second;
+    }
+
+    /** Lookup symbol index */
+    size_t lookupSymbolIdx(const std::string& symbol) {
+        auto it = symbolMap.find(symbol);
+        if (it != symbolMap.end()) {
+            return it->second;
+        } else {
+            size_t idx = symbolMap.size();
+            symbolMap[symbol] = idx;
+            return idx;
+        }
     }
 
 public:

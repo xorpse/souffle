@@ -53,7 +53,8 @@ struct RelationWrapper;
  * For specialized operation, pass to FOR_EACH(Expand, tok)
  */
 #define FOR_EACH_INTERPRETER_TOKEN(Forward, Expand)\
-    Forward(Constant)\
+    Forward(NumericConstant)\
+    Forward(StringConstant)\
     Forward(TupleElement)\
     Forward(AutoIncrement)\
     Forward(IntrinsicOperator)\
@@ -401,10 +402,25 @@ protected:
 };
 
 /**
- * @class Constant
+ * @class NumericConstant
  */
-class Constant : public Node {
+class NumericConstant : public Node {
     using Node::Node;
+};
+
+/**
+ * @class StringConstant
+ */
+class StringConstant : public Node {
+public:
+    StringConstant(enum NodeType ty, const ram::Node* sdw, size_t constant)
+            : Node(ty, sdw), constant(constant) {}
+    size_t getConstant() const {
+        return constant;
+    }
+
+private:
+    size_t constant;
 };
 
 /**

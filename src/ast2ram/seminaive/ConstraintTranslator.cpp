@@ -32,7 +32,7 @@ namespace souffle::ast2ram::seminaive {
 
 Own<ram::Condition> ConstraintTranslator::translateConstraint(const ast::Literal* lit) {
     assert(lit != nullptr && "literal should be defined");
-    return ConstraintTranslator(context, symbolTable, index)(*lit);
+    return ConstraintTranslator(context, index)(*lit);
 }
 
 Own<ram::Condition> ConstraintTranslator::visitAtom(const ast::Atom&) {
@@ -40,8 +40,8 @@ Own<ram::Condition> ConstraintTranslator::visitAtom(const ast::Atom&) {
 }
 
 Own<ram::Condition> ConstraintTranslator::visitBinaryConstraint(const ast::BinaryConstraint& binRel) {
-    auto valLHS = context.translateValue(symbolTable, index, binRel.getLHS());
-    auto valRHS = context.translateValue(symbolTable, index, binRel.getRHS());
+    auto valLHS = context.translateValue(index, binRel.getLHS());
+    auto valRHS = context.translateValue(index, binRel.getRHS());
     return mk<ram::Constraint>(
             context.getOverloadedBinaryConstraintOperator(&binRel), std::move(valLHS), std::move(valRHS));
 }
@@ -61,7 +61,7 @@ Own<ram::Condition> ConstraintTranslator::visitNegation(const ast::Negation& neg
     VecOwn<ram::Expression> values;
     auto args = atom->getArguments();
     for (size_t i = 0; i < arity; i++) {
-        values.push_back(context.translateValue(symbolTable, index, args[i]));
+        values.push_back(context.translateValue(index, args[i]));
     }
     for (size_t i = 0; i < auxiliaryArity; i++) {
         values.push_back(mk<ram::UndefValue>());

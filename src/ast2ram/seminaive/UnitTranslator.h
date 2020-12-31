@@ -21,10 +21,6 @@
 #include <string>
 #include <vector>
 
-namespace souffle {
-class SymbolTable;
-}
-
 namespace souffle::ast {
 class Clause;
 class Relation;

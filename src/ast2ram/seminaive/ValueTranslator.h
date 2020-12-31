@@ -17,10 +17,6 @@
 #include "ast/utility/Visitor.h"
 #include "ast2ram/ValueTranslator.h"
 
-namespace souffle {
-class SymbolTable;
-}
-
 namespace souffle::ast {
 class Argument;
 class Aggregator;
@@ -49,8 +45,8 @@ namespace souffle::ast2ram::seminaive {
 
 class ValueTranslator : public ast2ram::ValueTranslator {
 public:
-    ValueTranslator(const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index)
-            : ast2ram::ValueTranslator(context, symbolTable, index) {}
+    ValueTranslator(const TranslatorContext& context, const ValueIndex& index)
+            : ast2ram::ValueTranslator(context, index) {}
 
     Own<ram::Expression> translateValue(const ast::Argument* arg) override;
 

@@ -143,7 +143,7 @@ public:
         }
 
         inline difference_type operator-(const Iterator& rhs) const {
-            return {it - rhs.it};
+            return it - rhs.it;
         }
         inline Iterator operator+(difference_type rhs) const {
             return {it + rhs};
@@ -369,15 +369,13 @@ private:
  */
 class IndexSelectionStrategy {
 public:
+    virtual ~IndexSelectionStrategy() = default;
+
     /** @brief Run analysis for a RAM translation unit */
     virtual IndexCluster solve(const SearchSet& searches) const = 0;
 };
 
 class MinIndexSelectionStrategy : public IndexSelectionStrategy {
-public:
-    MinIndexSelectionStrategy() = default;
-    ~MinIndexSelectionStrategy() = default;
-
     /** @Brief map the keys in the key set to lexicographical order */
     IndexCluster solve(const SearchSet& searches) const override;
 

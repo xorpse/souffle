@@ -23,10 +23,6 @@
 #include <cstddef>
 #include <set>
 
-namespace souffle {
-class SymbolTable;
-}
-
 namespace souffle::ast {
 class Aggregator;
 class Atom;
@@ -125,16 +121,13 @@ public:
     size_t getEvaluationArity(const ast::Atom* atom) const;
 
     /** Translation strategy */
-    Own<ram::Statement> translateNonRecursiveClause(
-            SymbolTable& symbolTable, const ast::Clause& clause) const;
-    Own<ram::Statement> translateRecursiveClause(SymbolTable& symbolTable, const ast::Clause& clause,
-            const std::set<const ast::Relation*>& scc, size_t version) const;
+    Own<ram::Statement> translateNonRecursiveClause(const ast::Clause& clause) const;
+    Own<ram::Statement> translateRecursiveClause(
+            const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version) const;
 
-    Own<ram::Condition> translateConstraint(
-            SymbolTable& symbolTable, const ValueIndex& index, const ast::Literal* lit) const;
+    Own<ram::Condition> translateConstraint(const ValueIndex& index, const ast::Literal* lit) const;
 
-    Own<ram::Expression> translateValue(
-            SymbolTable& symbolTable, const ValueIndex& index, const ast::Argument* arg) const;
+    Own<ram::Expression> translateValue(const ValueIndex& index, const ast::Argument* arg) const;
 
 private:
     const ast::Program* program;

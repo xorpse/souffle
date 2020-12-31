@@ -61,19 +61,18 @@
 #include "ram/Scan.h"
 #include "ram/Sequence.h"
 #include "ram/SignedConstant.h"
+#include "ram/StringConstant.h"
 #include "ram/TupleElement.h"
 #include "ram/UnpackRecord.h"
 #include "ram/UnsignedConstant.h"
 #include "ram/utility/Utils.h"
-#include "souffle/SymbolTable.h"
 #include "souffle/utility/StringUtil.h"
 #include <map>
 #include <vector>
 
 namespace souffle::ast2ram::seminaive {
 
-ClauseTranslator::ClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable)
-        : ast2ram::ClauseTranslator(context, symbolTable) {}
+ClauseTranslator::ClauseTranslator(const TranslatorContext& context) : ast2ram::ClauseTranslator(context) {}
 
 ClauseTranslator::~ClauseTranslator() = default;
 
@@ -208,7 +207,7 @@ Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause
 
     VecOwn<ram::Expression> values;
     for (const auto* arg : head->getArguments()) {
-        values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
+        values.push_back(context.translateValue(*valueIndex, arg));
     }
 
     // Propositions
@@ -334,7 +333,7 @@ Own<ram::Operation> ClauseTranslator::instantiateAggregator(
     // translate constraints of sub-clause
     for (const auto* lit : agg->getBodyLiterals()) {
         // literal becomes a constraint
-        if (auto condition = context.translateConstraint(symbolTable, *valueIndex, lit)) {
+        if (auto condition = context.translateConstraint(*valueIndex, lit)) {
             aggCond = addConjunctiveTerm(std::move(aggCond), std::move(condition));
         }
     }
@@ -360,14 +359,14 @@ Own<ram::Operation> ClauseTranslator::instantiateAggregator(
             }
         } else {
             assert(arg != nullptr && "aggregator argument cannot be nullptr");
-            auto value = context.translateValue(symbolTable, *valueIndex, arg);
+            auto value = context.translateValue(*valueIndex, arg);
             aggCond = addAggEqCondition(std::move(aggCond), std::move(value), i);
         }
     }
 
     // translate aggregate expression
     const auto* aggExpr = agg->getTargetExpression();
-    auto expr = aggExpr ? context.translateValue(symbolTable, *valueIndex, aggExpr) : nullptr;
+    auto expr = aggExpr ? context.translateValue(*valueIndex, aggExpr) : nullptr;
 
     // add Ram-Aggregation layer
     return mk<ram::Aggregate>(std::move(op), context.getOverloadedAggregatorOperator(agg),
@@ -379,7 +378,7 @@ Own<ram::Operation> ClauseTranslator::instantiateMultiResultFunctor(
         Own<ram::Operation> op, const ast::IntrinsicFunctor* inf, int curLevel) const {
     VecOwn<ram::Expression> args;
     for (auto&& x : inf->getArguments()) {
-        args.push_back(context.translateValue(symbolTable, *valueIndex, x));
+        args.push_back(context.translateValue(*valueIndex, x));
     }
 
     auto func_op = [&]() -> ram::NestedIntrinsicOp {
@@ -427,7 +426,7 @@ Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
     VecOwn<ram::Expression> values;
     auto args = atom->getArguments();
     for (size_t i = 0; i < arity; i++) {
-        values.push_back(context.translateValue(symbolTable, *valueIndex, args[i]));
+        values.push_back(context.translateValue(*valueIndex, args[i]));
     }
     for (size_t i = 0; i < auxiliaryArity; i++) {
         values.push_back(mk<ram::UndefValue>());
@@ -452,7 +451,7 @@ Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, con
     VecOwn<ram::Expression> values;
     auto args = atom->getArguments();
     for (size_t i = 0; i < arity; i++) {
-        values.push_back(context.translateValue(symbolTable, *valueIndex, args[i]));
+        values.push_back(context.translateValue(*valueIndex, args[i]));
     }
     for (size_t i = 0; i < auxiliaryArity; i++) {
         values.push_back(mk<ram::UndefValue>());
@@ -465,7 +464,7 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
         const ast::Clause& clause, Own<ram::Operation> op) const {
     for (const auto* lit : clause.getBodyLiterals()) {
         // constraints become literals
-        if (auto condition = context.translateConstraint(symbolTable, *valueIndex, lit)) {
+        if (auto condition = context.translateConstraint(*valueIndex, lit)) {
             op = mk<ram::Filter>(std::move(condition), std::move(op));
         }
     }
@@ -496,37 +495,23 @@ Own<ram::Condition> ClauseTranslator::createCondition(const ast::Clause& clause)
     return nullptr;
 }
 
-RamDomain ClauseTranslator::getConstantRamRepresentation(
-        SymbolTable& symbolTable, const ast::Constant& constant) const {
+Own<ram::Expression> ClauseTranslator::translateConstant(const ast::Constant& constant) const {
     if (auto strConstant = dynamic_cast<const ast::StringConstant*>(&constant)) {
-        return symbolTable.lookup(strConstant->getConstant());
+        return mk<ram::StringConstant>(strConstant->getConstant());
     } else if (isA<ast::NilConstant>(&constant)) {
-        return 0;
-    } else if (auto* numConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
+        return mk<ram::SignedConstant>(0);
+    } else if (const auto* numConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
         switch (context.getInferredNumericConstantType(numConstant)) {
             case ast::NumericConstant::Type::Int:
-                return RamSignedFromString(numConstant->getConstant(), nullptr, 0);
+                return mk<ram::SignedConstant>(RamSignedFromString(numConstant->getConstant(), nullptr, 0));
             case ast::NumericConstant::Type::Uint:
-                return RamUnsignedFromString(numConstant->getConstant(), nullptr, 0);
-            case ast::NumericConstant::Type::Float: return RamFloatFromString(numConstant->getConstant());
+                return mk<ram::UnsignedConstant>(
+                        RamUnsignedFromString(numConstant->getConstant(), nullptr, 0));
+            case ast::NumericConstant::Type::Float:
+                return mk<ram::FloatConstant>(RamFloatFromString(numConstant->getConstant()));
         }
     }
-
     fatal("unaccounted-for constant");
-}
-
-Own<ram::Expression> ClauseTranslator::translateConstant(
-        SymbolTable& symbolTable, const ast::Constant& constant) const {
-    auto rawConstant = getConstantRamRepresentation(symbolTable, constant);
-    if (const auto* numericConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
-        switch (context.getInferredNumericConstantType(numericConstant)) {
-            case ast::NumericConstant::Type::Int: return mk<ram::SignedConstant>(rawConstant);
-            case ast::NumericConstant::Type::Uint: return mk<ram::UnsignedConstant>(rawConstant);
-            case ast::NumericConstant::Type::Float: return mk<ram::FloatConstant>(rawConstant);
-        }
-        fatal("unaccounted-for constant");
-    }
-    return mk<ram::SignedConstant>(rawConstant);
 }
 
 Own<ram::Operation> ClauseTranslator::addEqualityCheck(
@@ -544,11 +529,11 @@ Own<ram::Operation> ClauseTranslator::addConstantConstraints(
             bool isFloat = context.getInferredNumericConstantType(numericConstant) ==
                            ast::NumericConstant::Type::Float;
             auto lhs = mk<ram::TupleElement>(curLevel, i);
-            auto rhs = translateConstant(symbolTable, *numericConstant);
+            auto rhs = translateConstant(*numericConstant);
             op = addEqualityCheck(std::move(op), std::move(lhs), std::move(rhs), isFloat);
         } else if (const auto* constant = dynamic_cast<const ast::Constant*>(argument)) {
             auto lhs = mk<ram::TupleElement>(curLevel, i);
-            auto rhs = translateConstant(symbolTable, *constant);
+            auto rhs = translateConstant(*constant);
             op = addEqualityCheck(std::move(op), std::move(lhs), std::move(rhs), false);
         }
     }
@@ -597,8 +582,8 @@ Own<ram::Condition> ClauseTranslator::getFunctionalDependencies(const ast::Claus
             const auto attribute = attributes[i];
             if (contains(keys, attribute->getName())) {
                 // If this particular source argument matches the head argument, insert it.
-                vals.push_back(context.translateValue(symbolTable, *valueIndex, headArgs.at(i)));
-                valsCopy.push_back(context.translateValue(symbolTable, *valueIndex, headArgs.at(i)));
+                vals.push_back(context.translateValue(*valueIndex, headArgs.at(i)));
+                valsCopy.push_back(context.translateValue(*valueIndex, headArgs.at(i)));
             } else {
                 // Otherwise insert ⊥
                 vals.push_back(mk<ram::UndefValue>());
