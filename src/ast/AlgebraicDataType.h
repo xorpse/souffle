@@ -47,9 +47,9 @@ public:
 protected:
     void print(std::ostream& os) const override;
 
+private:
     bool equal(const Node& node) const override;
 
-private:
     AlgebraicDataType* cloneImpl() const override;
 
 private:

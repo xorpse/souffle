@@ -65,11 +65,13 @@ public:
 
 protected:
     void print(std::ostream& os) const override;
-    bool equal(const Node& node) const override;
+
+    NodeVec getChildNodesImpl() const override;
 
 private:
+    bool equal(const Node& node) const override;
+
     Aggregator* cloneImpl() const override;
-    NodeVec getChildNodesImpl() const override;
 
 private:
     /** Aggregate (base type) operator */

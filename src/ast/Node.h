@@ -73,8 +73,6 @@ public:
     /** Apply the mapper to all child nodes */
     virtual void apply(const NodeMapper& /* mapper */);
 
-private:
-public:
     using NodeVec = std::vector<Node const*>;  // std::reference_wrapper<Node const>>;
 
     using ConstChildNodes = OwningTransformRange<NodeVec, decltype(detail::refCaster)>;
@@ -95,12 +93,12 @@ protected:
     /** Output to a given output stream */
     virtual void print(std::ostream& os) const = 0;
 
-    /** Abstract equality check for two AST nodes */
-    virtual bool equal(const Node& /* other */) const;
-
     virtual NodeVec getChildNodesImpl() const;
 
 private:
+    /** Abstract equality check for two AST nodes */
+    virtual bool equal(const Node& /* other */) const;
+
     virtual Node* cloneImpl() const = 0;
 
 private:

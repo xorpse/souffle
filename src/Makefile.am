@@ -19,12 +19,14 @@ souffle_sources = \
         GraphUtils.h                                       \
         LogStatement.h                                     \
         RelationTag.h                                      \
-        ast/Aggregator.h                                   \
         ast/Aggregator.cpp                                 \
-        ast/AlgebraicDataType.h                            \
+        ast/Aggregator.h                                   \
         ast/AlgebraicDataType.cpp                          \
+        ast/AlgebraicDataType.h                            \
         ast/Argument.h                                     \
+        ast/Atom.cpp                                       \
         ast/Atom.h                                         \
+        ast/Attribute.cpp                                  \
         ast/Attribute.h                                    \
         ast/BinaryConstraint.h                             \
         ast/BooleanConstraint.h                            \
