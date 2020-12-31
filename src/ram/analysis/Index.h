@@ -376,6 +376,7 @@ public:
 };
 
 class MinIndexSelectionStrategy : public IndexSelectionStrategy {
+public:
     /** @Brief map the keys in the key set to lexicographical order */
     IndexCluster solve(const SearchSet& searches) const override;
 
