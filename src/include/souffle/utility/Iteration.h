@@ -365,4 +365,13 @@ private:
     F f;
 };
 
+/**
+ * Convert a range of any ptr-like to a range
+ * of pointers
+ */
+template <typename R>
+auto toPtrRange(R const& range) {
+    return makeTransformRange(range, [](auto const& ptrLike) { return &*ptrLike; });
+}
+
 }  // namespace souffle

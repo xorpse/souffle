@@ -20,7 +20,9 @@ souffle_sources = \
         LogStatement.h                                     \
         RelationTag.h                                      \
         ast/Aggregator.h                                   \
+        ast/Aggregator.cpp                                 \
         ast/AlgebraicDataType.h                            \
+        ast/AlgebraicDataType.cpp                          \
         ast/Argument.h                                     \
         ast/Atom.h                                         \
         ast/Attribute.h                                    \
