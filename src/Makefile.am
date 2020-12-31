@@ -28,9 +28,13 @@ souffle_sources = \
         ast/Atom.h                                         \
         ast/Attribute.cpp                                  \
         ast/Attribute.h                                    \
+        ast/BinaryConstraint.cpp                           \
         ast/BinaryConstraint.h                             \
+        ast/BooleanConstraint.cpp                          \
         ast/BooleanConstraint.h                            \
+        ast/BranchDeclaration.cpp                          \
         ast/BranchDeclaration.h                            \
+        ast/BranchInit.cpp                                 \
         ast/BranchInit.h                                   \
         ast/Clause.cpp                                     \
         ast/Clause.h                                       \

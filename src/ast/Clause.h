@@ -20,16 +20,8 @@
 #include "ast/ExecutionPlan.h"
 #include "ast/Literal.h"
 #include "ast/Node.h"
-#include "ast/utility/NodeMapper.h"
 #include "parser/SrcLocation.h"
-#include "souffle/utility/ContainerUtil.h"
-#include "souffle/utility/MiscUtil.h"
-#include "souffle/utility/StreamUtil.h"
-#include <algorithm>
-#include <memory>
-#include <ostream>
-#include <string>
-#include <utility>
+#include <iosfwd>
 #include <vector>
 
 namespace souffle::ast {
@@ -44,38 +36,23 @@ namespace souffle::ast {
  */
 class Clause : public Node {
 public:
-    Clause(Own<Atom> head, VecOwn<Literal> bodyLiterals, Own<ExecutionPlan> plan = {}, SrcLocation loc = {})
-            : Node(std::move(loc)), head(std::move(head)), bodyLiterals(std::move(bodyLiterals)),
-              plan(std::move(plan)) {
-        assert(this->head != nullptr);
-        assert(allValidPtrs(this->bodyLiterals));
-        // Execution plan can be null
-    }
+    Clause(Own<Atom> head, VecOwn<Literal> bodyLiterals, Own<ExecutionPlan> plan = {}, SrcLocation loc = {});
 
-    Clause(Own<Atom> head, SrcLocation loc = {}) : Clause(std::move(head), {}, {}, std::move(loc)) {}
+    Clause(Own<Atom> head, SrcLocation loc = {});
 
-    Clause(QualifiedName name, SrcLocation loc = {}) : Clause(mk<Atom>(name), std::move(loc)) {}
+    Clause(QualifiedName name, SrcLocation loc = {});
 
     /** Add a literal to the body of the clause */
-    void addToBody(Own<Literal> literal) {
-        assert(literal != nullptr);
-        bodyLiterals.push_back(std::move(literal));
-    }
+    void addToBody(Own<Literal> literal);
 
     /** Add a collection of literals to the body of the clause */
     void addToBody(VecOwn<Literal>&& literals);
 
     /** Set the head of clause to @p h */
-    void setHead(Own<Atom> h) {
-        assert(h != nullptr);
-        head = std::move(h);
-    }
+    void setHead(Own<Atom> h);
 
     /** Set the bodyLiterals of clause to @p body */
-    void setBodyLiterals(VecOwn<Literal> body) {
-        assert(allValidPtrs(body));
-        bodyLiterals = std::move(body);
-    }
+    void setBodyLiterals(VecOwn<Literal> body);
 
     /** Return the atom that represents the head of the clause */
     Atom* getHead() const {
@@ -83,9 +60,7 @@ public:
     }
 
     /** Obtains a copy of the internally maintained body literals */
-    std::vector<Literal*> getBodyLiterals() const {
-        return toPtrVector(bodyLiterals);
-    }
+    std::vector<Literal*> getBodyLiterals() const;
 
     /** Obtains the execution plan associated to this clause or null if there is none */
     const ExecutionPlan* getExecutionPlan() const {
@@ -93,55 +68,24 @@ public:
     }
 
     /** Updates the execution plan associated to this clause */
-    void setExecutionPlan(Own<ExecutionPlan> plan) {
-        this->plan = std::move(plan);
-    }
+    void setExecutionPlan(Own<ExecutionPlan> plan);
 
     /** Resets the execution plan */
     void clearExecutionPlan() {
         plan = nullptr;
     }
 
-    void apply(const NodeMapper& map) override {
-        head = map(std::move(head));
-        for (auto& lit : bodyLiterals) {
-            lit = map(std::move(lit));
-        }
-    }
-
-    NodeVec getChildNodesImpl() const override {
-        std::vector<const Node*> res = {head.get()};
-        for (auto& cur : bodyLiterals) {
-            res.push_back(cur.get());
-        }
-        return res;
-    }
+    void apply(const NodeMapper& map) override;
 
 protected:
-    void print(std::ostream& os) const override {
-        if (head != nullptr) {
-            os << *head;
-        }
-        if (!bodyLiterals.empty()) {
-            os << " :- \n   " << join(bodyLiterals, ",\n   ");
-        }
-        os << ".";
-        if (plan != nullptr) {
-            os << *plan;
-        }
-    }
+    void print(std::ostream& os) const override;
 
-    bool equal(const Node& node) const override {
-        const auto& other = asAssert<Clause>(node);
-        return equal_ptr(head, other.head) && equal_targets(bodyLiterals, other.bodyLiterals) &&
-               equal_ptr(plan, other.plan);
-    }
+    NodeVec getChildNodesImpl() const override;
 
 private:
-    Clause* cloneImpl() const override {
-        return new Clause(
-                souffle::clone(head), souffle::clone(bodyLiterals), souffle::clone(plan), getSrcLoc());
-    }
+    bool equal(const Node& node) const override;
+
+    Clause* cloneImpl() const override;
 
 private:
     /** Head of the clause */
