@@ -38,6 +38,7 @@ souffle_sources = \
         ast/BranchInit.h                                   \
         ast/Clause.cpp                                     \
         ast/Clause.h                                       \
+        ast/Component.cpp                                  \
         ast/Component.h                                    \
         ast/ComponentInit.h                                \
         ast/ComponentType.h                                \

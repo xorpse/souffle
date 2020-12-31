@@ -44,9 +44,7 @@ std::vector<Argument*> Atom::getArguments() const {
 }
 
 void Atom::apply(const NodeMapper& map) {
-    for (auto& arg : arguments) {
-        arg = map(std::move(arg));
-    }
+    mapAll(arguments, map);
 }
 
 Node::NodeVec Atom::getChildNodesImpl() const {

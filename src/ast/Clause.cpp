@@ -59,9 +59,7 @@ void Clause::setExecutionPlan(Own<ExecutionPlan> plan) {
 
 void Clause::apply(const NodeMapper& map) {
     head = map(std::move(head));
-    for (auto& lit : bodyLiterals) {
-        lit = map(std::move(lit));
-    }
+    mapAll(bodyLiterals, map);
 }
 
 Node::NodeVec Clause::getChildNodesImpl() const {

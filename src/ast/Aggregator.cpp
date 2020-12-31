@@ -38,9 +38,7 @@ void Aggregator::apply(const NodeMapper& map) {
         targetExpression = map(std::move(targetExpression));
     }
 
-    for (auto& cur : body) {
-        cur = map(std::move(cur));
-    }
+    mapAll(body, map);
 }
 
 void Aggregator::print(std::ostream& os) const {
