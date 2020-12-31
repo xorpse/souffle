@@ -2421,8 +2421,8 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     os << "SymbolTable symTable";
     if (symbolMap.size() > 0) {
         os << "{\n";
-        for (const auto& x : symbolMap) {
-            os << "\tR\"_(" << x.first << ")_\",\n";
+        for (const auto& x : symbolIndex) {
+            os << "\tR\"_(" << x << ")_\",\n";
         }
         os << "}";
     }

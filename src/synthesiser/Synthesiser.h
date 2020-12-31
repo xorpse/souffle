@@ -62,6 +62,9 @@ private:
     /** Symbol map */
     std::map<std::string, unsigned> symbolMap;
 
+    /** Symbol map */
+    std::vector<std::string> symbolIndex;
+
 protected:
     /** Get record table */
     const RecordTable& getRecordTable();
@@ -104,6 +107,7 @@ protected:
         if (it != symbolMap.end()) {
             return it->second;
         } else {
+            symbolIndex.push_back(symbol);
             size_t idx = symbolMap.size();
             symbolMap[symbol] = idx;
             return idx;

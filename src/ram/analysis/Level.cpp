@@ -39,6 +39,7 @@
 #include "ram/Project.h"
 #include "ram/ProvenanceExistenceCheck.h"
 #include "ram/Scan.h"
+#include "ram/StringConstant.h"
 #include "ram/SubroutineArgument.h"
 #include "ram/SubroutineReturn.h"
 #include "ram/True.h"
@@ -61,6 +62,11 @@ int LevelAnalysis::getLevel(const Node* node) const {
     public:
         // number
         int visitNumericConstant(const NumericConstant&) override {
+            return -1;
+        }
+
+        // string
+        int visitStringConstant(const StringConstant&) override {
             return -1;
         }
 
