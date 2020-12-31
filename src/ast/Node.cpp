@@ -26,11 +26,11 @@ Own<Node> Node::clone() const {
 void Node::apply(const NodeMapper& /* mapper */) {}
 
 Node::ConstChildNodes Node::getChildNodes() const {
-    return ConstChildNodes(getChildNodesImpl(), detail::refCaster);
+    return ConstChildNodes(getChildNodesImpl(), detail::RefCaster());
 }
 
 Node::ChildNodes Node::getChildNodes() {
-    return ChildNodes(getChildNodesImpl(), detail::constCaster);
+    return ChildNodes(getChildNodesImpl(), detail::ConstCaster());
 }
 
 std::ostream& operator<<(std::ostream& out, const Node& node) {

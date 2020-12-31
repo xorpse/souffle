@@ -30,8 +30,18 @@ class NodeMapper;
 class Node;
 
 namespace detail {
-inline auto refCaster = [](Node const* node) -> Node const& { return *node; };
-inline auto constCaster = [](Node const* node) -> Node& { return *const_cast<Node*>(node); };
+// Seems the gcc in Jenkins is not happy with the inline lambdas
+struct RefCaster {
+    auto operator()(Node const* node) const -> Node const& {
+        return *node;
+    }
+};
+
+struct ConstCaster {
+    auto operator()(Node const* node) const -> Node& {
+        return *const_cast<Node*>(node);
+    }
+};
 }  // namespace detail
 
 /**
@@ -75,7 +85,7 @@ public:
 
     using NodeVec = std::vector<Node const*>;  // std::reference_wrapper<Node const>>;
 
-    using ConstChildNodes = OwningTransformRange<NodeVec, decltype(detail::refCaster)>;
+    using ConstChildNodes = OwningTransformRange<NodeVec, detail::RefCaster>;
     /** Obtain a list of all embedded AST child nodes */
     ConstChildNodes getChildNodes() const;
 
@@ -83,7 +93,7 @@ public:
      * Using the ConstCastRange saves the user from having to write
      * getChildNodes() and getChildNodes() const
      */
-    using ChildNodes = OwningTransformRange<NodeVec, decltype(detail::constCaster)>;
+    using ChildNodes = OwningTransformRange<NodeVec, detail::ConstCaster>;
     ChildNodes getChildNodes();
 
     /** Print node onto an output stream */
