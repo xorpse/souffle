@@ -40,11 +40,16 @@ souffle_sources = \
         ast/Clause.h                                       \
         ast/Component.cpp                                  \
         ast/Component.h                                    \
+        ast/ComponentInit.cpp                              \
         ast/ComponentInit.h                                \
+        ast/ComponentType.cpp                              \
         ast/ComponentType.h                                \
+        ast/Constant.cpp                                   \
         ast/Constant.h                                     \
         ast/Constraint.h                                   \
+        ast/Counter.cpp                                    \
         ast/Counter.h                                      \
+        ast/ExecutionOrder.cpp                             \
         ast/ExecutionOrder.h                               \
         ast/ExecutionPlan.h                                \
         ast/Functor.h                                      \

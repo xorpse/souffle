@@ -18,15 +18,9 @@
 
 #include "ast/ComponentType.h"
 #include "ast/Node.h"
-#include "ast/utility/NodeMapper.h"
 #include "parser/SrcLocation.h"
-#include "souffle/utility/MiscUtil.h"
-#include <cassert>
-#include <memory>
-#include <ostream>
+#include <iosfwd>
 #include <string>
-#include <utility>
-#include <vector>
 
 namespace souffle::ast {
 
@@ -41,10 +35,7 @@ namespace souffle::ast {
  */
 class ComponentInit : public Node {
 public:
-    ComponentInit(std::string name, Own<ComponentType> type, SrcLocation loc = {})
-            : Node(std::move(loc)), instanceName(std::move(name)), componentType(std::move(type)) {
-        assert(componentType);
-    }
+    ComponentInit(std::string name, Own<ComponentType> type, SrcLocation loc = {});
 
     /** Return instance name */
     const std::string& getInstanceName() const {
@@ -52,9 +43,7 @@ public:
     }
 
     /** Set instance name */
-    void setInstanceName(std::string name) {
-        instanceName = std::move(name);
-    }
+    void setInstanceName(std::string name);
 
     /** Return component type */
     const ComponentType* getComponentType() const {
@@ -62,33 +51,19 @@ public:
     }
 
     /** Set component type */
-    void setComponentType(Own<ComponentType> type) {
-        assert(type != nullptr);
-        componentType = std::move(type);
-    }
+    void setComponentType(Own<ComponentType> type);
 
-    void apply(const NodeMapper& mapper) override {
-        componentType = mapper(std::move(componentType));
-    }
-
-    NodeVec getChildNodesImpl() const override {
-        return {componentType.get()};
-    }
+    void apply(const NodeMapper& mapper) override;
 
 protected:
-    void print(std::ostream& os) const override {
-        os << ".init " << instanceName << " = " << *componentType;
-    }
+    void print(std::ostream& os) const override;
 
-    bool equal(const Node& node) const override {
-        const auto& other = asAssert<ComponentInit>(node);
-        return instanceName == other.instanceName && *componentType == *other.componentType;
-    }
+    bool equal(const Node& node) const override;
 
 private:
-    ComponentInit* cloneImpl() const override {
-        return new ComponentInit(instanceName, souffle::clone(componentType), getSrcLoc());
-    }
+    NodeVec getChildNodesImpl() const override;
+
+    ComponentInit* cloneImpl() const override;
 
 private:
     /** Instance name */

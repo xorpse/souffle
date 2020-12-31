@@ -39,8 +39,7 @@ namespace souffle::ast {
  */
 class ComponentType : public Node {
 public:
-    ComponentType(std::string name = "", std::vector<QualifiedName> params = {}, SrcLocation loc = {})
-            : Node(std::move(loc)), name(std::move(name)), typeParams(std::move(params)) {}
+    ComponentType(std::string name = "", std::vector<QualifiedName> params = {}, SrcLocation loc = {});
 
     /** Return component name */
     const std::string& getName() const {
@@ -48,9 +47,7 @@ public:
     }
 
     /** Set component name */
-    void setName(std::string n) {
-        name = std::move(n);
-    }
+    void setName(std::string n);
 
     /** Return component type parameters */
     const std::vector<QualifiedName>& getTypeParameters() const {
@@ -63,22 +60,12 @@ public:
     }
 
 protected:
-    void print(std::ostream& os) const override {
-        os << name;
-        if (!typeParams.empty()) {
-            os << "<" << join(typeParams) << ">";
-        }
-    }
-
-    bool equal(const Node& node) const override {
-        const auto& other = asAssert<ComponentType>(node);
-        return name == other.name && typeParams == other.typeParams;
-    }
+    void print(std::ostream& os) const override;
 
 private:
-    ComponentType* cloneImpl() const override {
-        return new ComponentType(name, typeParams, getSrcLoc());
-    }
+    bool equal(const Node& node) const override;
+
+    ComponentType* cloneImpl() const override;
 
 private:
     /** Component name */
