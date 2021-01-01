@@ -17,20 +17,36 @@
  ***********************************************************************/
 
 #include "ast/Program.h"
-#include "ast/Clause.h"
-#include "ast/Directive.h"
-#include "ast/FunctorDeclaration.h"
-#include "ast/Pragma.h"
-#include "ast/QualifiedName.h"
-#include "ast/Relation.h"
-#include "ast/Type.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <cassert>
-#include <string>
 #include <utility>
-#include <vector>
 
 namespace souffle::ast {
+
+std::vector<Type*> Program::getTypes() const {
+    return toPtrVector(types);
+}
+
+std::vector<Relation*> Program::getRelations() const {
+    return toPtrVector(relations);
+}
+
+std::vector<Clause*> Program::getClauses() const {
+    return toPtrVector(clauses);
+}
+
+std::vector<FunctorDeclaration*> Program::getFunctorDeclarations() const {
+    return toPtrVector(functors);
+}
+
+std::vector<Directive*> Program::getDirectives() const {
+    return toPtrVector(directives);
+}
+
+void Program::addDirective(Own<Directive> directive) {
+    assert(directive && "NULL directive");
+    directives.push_back(std::move(directive));
+}
 
 void Program::addRelation(Own<Relation> relation) {
     assert(relation != nullptr);
@@ -42,6 +58,7 @@ void Program::addRelation(Own<Relation> relation) {
 }
 
 bool Program::removeRelationDecl(const QualifiedName& name) {
+    // FIXME: Refactor to std::remove/erase
     for (auto it = relations.begin(); it != relations.end(); it++) {
         const auto& rel = *it;
         if (rel->getQualifiedName() == name) {
@@ -52,6 +69,11 @@ bool Program::removeRelationDecl(const QualifiedName& name) {
     return false;
 }
 
+void Program::setClauses(VecOwn<Clause> newClauses) {
+    assert(allValidPtrs(newClauses));
+    clauses = std::move(newClauses);
+}
+
 void Program::addClause(Own<Clause> clause) {
     assert(clause != nullptr && "Undefined clause");
     assert(clause->getHead() != nullptr && "Undefined head of the clause");
@@ -59,6 +81,7 @@ void Program::addClause(Own<Clause> clause) {
 }
 
 bool Program::removeClause(const Clause* clause) {
+    // FIXME: Refactor to std::remove/erase
     for (auto it = clauses.begin(); it != clauses.end(); it++) {
         if (**it == *clause) {
             clauses.erase(it);
@@ -69,6 +92,7 @@ bool Program::removeClause(const Clause* clause) {
 }
 
 bool Program::removeDirective(const Directive* directive) {
+    // FIXME: Refactor to std::remove/erase
     for (auto it = directives.begin(); it != directives.end(); it++) {
         if (**it == *directive) {
             directives.erase(it);
@@ -76,6 +100,10 @@ bool Program::removeDirective(const Directive* directive) {
         }
     }
     return false;
+}
+
+std::vector<Component*> Program::getComponents() const {
+    return toPtrVector(components);
 }
 
 void Program::addType(Own<Type> type) {
@@ -99,9 +127,89 @@ void Program::addFunctorDeclaration(Own<FunctorDeclaration> f) {
     functors.push_back(std::move(f));
 }
 
+std::vector<ComponentInit*> Program::getComponentInstantiations() const {
+    return toPtrVector(instantiations);
+}
+
 void Program::clearComponents() {
     components.clear();
     instantiations.clear();
+}
+
+void Program::apply(const NodeMapper& map) {
+    mapAll(pragmas, map);
+    mapAll(components, map);
+    mapAll(instantiations, map);
+    mapAll(functors, map);
+    mapAll(types, map);
+    mapAll(relations, map);
+    mapAll(clauses, map);
+    mapAll(directives, map);
+}
+
+Node::NodeVec Program::getChildNodesImpl() const {
+    std::vector<const Node*> res;
+    append(res, makePtrRange(pragmas));
+    append(res, makePtrRange(components));
+    append(res, makePtrRange(instantiations));
+    append(res, makePtrRange(functors));
+    append(res, makePtrRange(types));
+    append(res, makePtrRange(relations));
+    append(res, makePtrRange(clauses));
+    append(res, makePtrRange(directives));
+    return res;
+}
+
+void Program::print(std::ostream& os) const {
+    auto show = [&](auto&& xs, char const* sep = "\n") {
+        if (!xs.empty()) os << join(xs, sep) << "\n";
+    };
+
+    show(pragmas, "\n\n");
+    show(components);
+    show(instantiations);
+    show(types);
+    show(functors);
+    show(relations);
+    show(clauses, "\n\n");
+    show(directives, "\n\n");
+}
+
+bool Program::equal(const Node& node) const {
+    const auto& other = asAssert<Program>(node);
+    // clang-format off
+    return equal_targets(pragmas, other.pragmas) &&
+           equal_targets(components, other.components) &&
+           equal_targets(instantiations, other.instantiations) &&
+           equal_targets(functors, other.functors) &&
+           equal_targets(types, other.types) &&
+           equal_targets(relations, other.relations) &&
+           equal_targets(clauses, other.clauses) &&
+           equal_targets(directives, other.directives);
+    // clang-format on
+}
+
+void Program::addComponent(Own<Component> component) {
+    assert(component && "NULL component");
+    components.push_back(std::move(component));
+}
+
+void Program::addInstantiation(Own<ComponentInit> instantiation) {
+    assert(instantiation && "NULL instantiation");
+    instantiations.push_back(std::move(instantiation));
+}
+
+Program* Program::cloneImpl() const {
+    auto res = new Program();
+    res->pragmas = souffle::clone(pragmas);
+    res->components = souffle::clone(components);
+    res->instantiations = souffle::clone(instantiations);
+    res->types = souffle::clone(types);
+    res->functors = souffle::clone(functors);
+    res->relations = souffle::clone(relations);
+    res->clauses = souffle::clone(clauses);
+    res->directives = souffle::clone(directives);
+    return res;
 }
 
 }  // namespace souffle::ast

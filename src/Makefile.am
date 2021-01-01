@@ -60,13 +60,18 @@ souffle_sources = \
         ast/FunctorDeclaration.h                           \
         ast/FunctionalConstraint.cpp                       \
         ast/FunctionalConstraint.h                         \
+        ast/IntrinsicFunctor.cpp                           \
         ast/IntrinsicFunctor.h                             \
         ast/Literal.h                                      \
+        ast/Negation.cpp                                   \
         ast/Negation.h                                     \
+        ast/NilConstant.cpp                                \
         ast/NilConstant.h                                  \
         ast/Node.h                                         \
         ast/Node.cpp                                       \
+        ast/NumericConstant.cpp                            \
         ast/NumericConstant.h                              \
+        ast/Pragma.cpp                                     \
         ast/Pragma.h                                       \
         ast/Program.cpp                                    \
         ast/Program.h                                      \

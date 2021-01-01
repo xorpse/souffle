@@ -18,8 +18,7 @@
 
 #include "ast/Node.h"
 #include "parser/SrcLocation.h"
-#include "souffle/utility/MiscUtil.h"
-#include <ostream>
+#include <iosfwd>
 #include <string>
 #include <utility>
 
@@ -31,29 +30,22 @@ namespace souffle::ast {
  */
 class Pragma : public Node {
 public:
-    Pragma(std::string key, std::string value, SrcLocation loc = {})
-            : Node(std::move(loc)), key(std::move(key)), value(std::move(value)) {}
+    Pragma(std::string key, std::string value, SrcLocation loc = {});
 
     /* Get kvp */
     std::pair<std::string, std::string> getkvp() const {
-        return std::pair<std::string, std::string>(key, value);
+        return std::make_pair(key, value);
     }
 
 protected:
-    void print(std::ostream& os) const override {
-        os << ".pragma " << key << " " << value << "\n";
-    }
-
-    bool equal(const Node& node) const override {
-        const auto& other = asAssert<Pragma>(node);
-        return other.key == key && other.value == value;
-    }
+    void print(std::ostream& os) const override;
 
 private:
-    Pragma* cloneImpl() const override {
-        return new Pragma(key, value, getSrcLoc());
-    }
+    bool equal(const Node& node) const override;
 
+    Pragma* cloneImpl() const override;
+
+private:
     /** Name of the key */
     std::string key;
 

@@ -134,34 +134,20 @@ void Component::print(std::ostream& os) const {
 bool Component::equal(const Node& node) const {
     const auto& other = asAssert<Component>(node);
 
-    if (equal_ptr(componentType, other.componentType)) {
-        return true;
-    }
-    if (!equal_targets(baseComponents, other.baseComponents)) {
-        return false;
-    }
-    if (!equal_targets(components, other.components)) {
-        return false;
-    }
-    if (!equal_targets(instantiations, other.instantiations)) {
-        return false;
-    }
-    if (!equal_targets(types, other.types)) {
-        return false;
-    }
-    if (!equal_targets(relations, other.relations)) {
-        return false;
-    }
-    if (!equal_targets(clauses, other.clauses)) {
-        return false;
-    }
-    if (!equal_targets(directives, other.directives)) {
-        return false;
-    }
-    if (overrideRules != other.overrideRules) {
-        return false;
-    }
-    return true;
+    // FIXME (?): This pointer comparison is either irrelevant or should
+    // be moved to operator== in Node. (Since e.g. Program doesn't check pointer
+    // equlity)
+    return (&componentType == &other.componentType) ||
+           // clang-format off
+           (equal_targets(baseComponents, other.baseComponents) &&
+            equal_targets(components, other.components) &&
+            equal_targets(instantiations, other.instantiations) &&
+            equal_targets(types, other.types) &&
+            equal_targets(relations, other.relations) &&
+            equal_targets(clauses, other.clauses) &&
+            equal_targets(directives, other.directives) &&
+            overrideRules != other.overrideRules);
+           // clang-format off
 }
 
 Component* Component::cloneImpl() const {
