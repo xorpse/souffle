@@ -51,6 +51,7 @@ souffle_sources = \
         ast/Counter.h                                      \
         ast/ExecutionOrder.cpp                             \
         ast/ExecutionOrder.h                               \
+        ast/ExecutionPlan.cpp                              \
         ast/ExecutionPlan.h                                \
         ast/Functor.h                                      \
         ast/FunctorDeclaration.h                           \
