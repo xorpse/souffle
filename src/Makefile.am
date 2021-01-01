@@ -75,12 +75,19 @@ souffle_sources = \
         ast/Pragma.h                                       \
         ast/Program.cpp                                    \
         ast/Program.h                                      \
+        ast/QualifiedName.cpp                              \
         ast/QualifiedName.h                                \
+        ast/RecordInit.cpp                                 \
         ast/RecordInit.h                                   \
+        ast/RecordType.cpp                                 \
         ast/RecordType.h                                   \
+        ast/Relation.cpp                                   \
         ast/Relation.h                                     \
+        ast/StringConstant.cpp                             \
         ast/StringConstant.h                               \
+        ast/SubsetType.cpp                                 \
         ast/SubsetType.h                                   \
+        ast/Term.cpp                                       \
         ast/Term.h                                         \
         ast/TranslationUnit.h                              \
         ast/Type.h                                         \

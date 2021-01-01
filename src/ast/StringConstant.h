@@ -18,9 +18,8 @@
 
 #include "ast/Constant.h"
 #include "parser/SrcLocation.h"
-#include <ostream>
+#include <iosfwd>
 #include <string>
-#include <utility>
 
 namespace souffle::ast {
 
@@ -30,18 +29,13 @@ namespace souffle::ast {
  */
 class StringConstant : public Constant {
 public:
-    explicit StringConstant(std::string value, SrcLocation loc = {})
-            : Constant(std::move(value), std::move(loc)) {}
+    explicit StringConstant(std::string value, SrcLocation loc = {});
 
 protected:
-    void print(std::ostream& os) const override {
-        os << "\"" << getConstant() << "\"";
-    }
+    void print(std::ostream& os) const override;
 
 private:
-    StringConstant* cloneImpl() const override {
-        return new StringConstant(getConstant(), getSrcLoc());
-    }
+    StringConstant* cloneImpl() const override;
 };
 
 }  // namespace souffle::ast

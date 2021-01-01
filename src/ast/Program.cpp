@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 #include "ast/Program.h"
+#include "ast/utility/NodeMapper.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <cassert>
 #include <utility>
