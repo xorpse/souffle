@@ -16,20 +16,11 @@
 
 #pragma once
 
-#include "ast/Argument.h"
 #include "ast/Constraint.h"
-#include "ast/Node.h"
 #include "ast/Variable.h"
-#include "ast/utility/NodeMapper.h"
 #include "parser/SrcLocation.h"
-#include "souffle/utility/ContainerUtil.h"
-#include "souffle/utility/MiscUtil.h"
-#include "souffle/utility/StreamUtil.h"
-#include <cassert>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <utility>
+#include <cstddef>
+#include <iosfwd>
 #include <vector>
 
 namespace souffle::ast {
@@ -51,84 +42,29 @@ namespace souffle::ast {
  */
 class FunctionalConstraint : public Constraint {
 public:
-    FunctionalConstraint(VecOwn<Variable> keys, SrcLocation loc = {})
-            : Constraint(std::move(loc)), keys(std::move(keys)) {
-        assert(allValidPtrs(this->keys));
-    }
+    FunctionalConstraint(VecOwn<Variable> keys, SrcLocation loc = {});
 
-    FunctionalConstraint(Own<Variable> key, SrcLocation loc = {}) : Constraint(std::move(loc)) {
-        assert(key != nullptr);
-        keys.push_back(std::move(key));
-    }
+    FunctionalConstraint(Own<Variable> key, SrcLocation loc = {});
 
     /** get keys */
-    std::vector<Variable*> getKeys() const {
-        return toPtrVector(keys);
-    }
+    std::vector<Variable*> getKeys() const;
 
     /** get arity of the keys (i.e. number of source nodes: (x,y)->z has an arity of 2) */
-    size_t getArity() const {
+    std::size_t getArity() const {
         return keys.size();
     }
 
-    NodeVec getChildNodesImpl() const override {
-        std::vector<const Node*> res;
-        for (auto& cur : keys) {
-            res.push_back(cur.get());
-        }
-        /* res.push_back(rhs.get()); */
-        return res;
-    }
+    bool equivalentConstraint(const FunctionalConstraint& other) const;
 
-public:
-    void print(std::ostream& os) const override {
-        os << "keys ";
-        if (keys.size() > 1) {
-            os << "(";
-        }
-        os << join(keys, ",", print_deref<Own<ast::Variable>>());
-        if (keys.size() > 1) {
-            os << ")";
-        }
-    }
+protected:
+    void print(std::ostream& os) const override;
 
-    bool equal(const Node& node) const override {
-        const auto& other = asAssert<FunctionalConstraint>(node);
-        if (keys.size() != other.keys.size()) {
-            return false;
-        }
-        for (size_t i = 0; i < keys.size(); i++) {
-            if (!equal_ptr(keys.at(i), other.keys.at(i))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    bool equivalentConstraint(const FunctionalConstraint& other) const {
-        if (this->getArity() != other.getArity()) {
-            return false;
-        }
-        std::set<std::string> keyNames;
-        for (const auto& key : keys) {
-            keyNames.insert(key->getName());
-        }
-        for (const auto& key : other.keys) {
-            if (keyNames.find(key->getName()) == keyNames.end()) {
-                return false;
-            }
-        }
-        return true;
-    }
+    NodeVec getChildNodesImpl() const override;
 
 private:
-    FunctionalConstraint* cloneImpl() const override {
-        VecOwn<Variable> newKeys;
-        for (const auto& key : keys) {
-            newKeys.push_back(souffle::clone(key));
-        }
-        return new FunctionalConstraint(std::move(newKeys), getSrcLoc());
-    }
+    bool equal(const Node& node) const override;
+
+    FunctionalConstraint* cloneImpl() const override;
 
 private:
     /* Functional constraint */

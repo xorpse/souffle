@@ -49,14 +49,17 @@ souffle_sources = \
         ast/Constraint.h                                   \
         ast/Counter.cpp                                    \
         ast/Counter.h                                      \
+        ast/Directive.cpp                                  \
+        ast/Directive.h                                    \
         ast/ExecutionOrder.cpp                             \
         ast/ExecutionOrder.h                               \
         ast/ExecutionPlan.cpp                              \
         ast/ExecutionPlan.h                                \
         ast/Functor.h                                      \
+        ast/FunctorDeclaration.cpp                         \
         ast/FunctorDeclaration.h                           \
+        ast/FunctionalConstraint.cpp                       \
         ast/FunctionalConstraint.h                         \
-        ast/Directive.h                                    \
         ast/IntrinsicFunctor.h                             \
         ast/Literal.h                                      \
         ast/Negation.h                                     \
