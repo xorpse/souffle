@@ -6,16 +6,6 @@
  * - <souffle root>/licenses/SOUFFLE-UPL.txt
  */
 
-/************************************************************************
- *
- * @file Program.cpp
- *
- * Defines the program class
- *
- * TODO(b-scholz): Remove ast/utility/Utils.h dependency!
- *
- ***********************************************************************/
-
 #include "ast/Program.h"
 #include "ast/utility/NodeMapper.h"
 #include "souffle/utility/ContainerUtil.h"

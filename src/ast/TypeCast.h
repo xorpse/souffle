@@ -19,14 +19,7 @@
 #include "ast/Argument.h"
 #include "ast/QualifiedName.h"
 #include "parser/SrcLocation.h"
-#include "souffle/utility/ContainerUtil.h"
-#include "souffle/utility/MiscUtil.h"
-#include "souffle/utility/tinyformat.h"
-#include <memory>
-#include <ostream>
-#include <string>
-#include <utility>
-#include <vector>
+#include <iosfwd>
 
 namespace souffle::ast {
 

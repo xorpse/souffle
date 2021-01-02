@@ -19,11 +19,8 @@
 #include "ast/Node.h"
 #include "ast/QualifiedName.h"
 #include "parser/SrcLocation.h"
-#include "souffle/utility/MiscUtil.h"
-#include "souffle/utility/StreamUtil.h"
-#include <ostream>
+#include <iosfwd>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace souffle::ast {
