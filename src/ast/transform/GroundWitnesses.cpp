@@ -16,8 +16,8 @@
 #include "ast/Aggregator.h"
 #include "ast/Clause.h"
 #include "ast/analysis/Aggregate.h"
-#include "ast/utility/NodeMapper.h"
 #include "ast/analysis/Ground.h"
+#include "ast/utility/NodeMapper.h"
 #include "ast/utility/Visitor.h"
 #include "souffle/utility/StringUtil.h"
 

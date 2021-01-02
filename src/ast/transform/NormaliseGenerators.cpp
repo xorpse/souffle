@@ -16,13 +16,13 @@
  ***********************************************************************/
 
 #include "ast/transform/NormaliseGenerators.h"
-#include "ast/analysis/Functor.h"
 #include "ast/BinaryConstraint.h"
 #include "ast/IntrinsicFunctor.h"
 #include "ast/Program.h"
 #include "ast/TranslationUnit.h"
-#include "ast/utility/NodeMapper.h"
 #include "ast/Variable.h"
+#include "ast/analysis/Functor.h"
+#include "ast/utility/NodeMapper.h"
 #include "souffle/utility/ContainerUtil.h"
 
 namespace souffle::ast::transform {
