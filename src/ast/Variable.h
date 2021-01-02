@@ -17,12 +17,9 @@
 #pragma once
 
 #include "ast/Argument.h"
-#include "ast/Node.h"
 #include "parser/SrcLocation.h"
-#include "souffle/utility/MiscUtil.h"
-#include <ostream>
+#include <iosfwd>
 #include <string>
-#include <utility>
 
 namespace souffle::ast {
 
@@ -32,12 +29,10 @@ namespace souffle::ast {
  */
 class Variable : public Argument {
 public:
-    Variable(std::string name, SrcLocation loc = {}) : Argument(std::move(loc)), name(std::move(name)) {}
+    Variable(std::string name, SrcLocation loc = {});
 
     /** Set variable name */
-    void setName(std::string name) {
-        this->name = std::move(name);
-    }
+    void setName(std::string name);
 
     /** Return variable name */
     const std::string& getName() const {
@@ -45,19 +40,12 @@ public:
     }
 
 protected:
-    void print(std::ostream& os) const override {
-        os << name;
-    }
-
-    bool equal(const Node& node) const override {
-        const auto& other = asAssert<Variable>(node);
-        return name == other.name;
-    }
+    void print(std::ostream& os) const override;
 
 private:
-    Variable* cloneImpl() const override {
-        return new Variable(name, getSrcLoc());
-    }
+    bool equal(const Node& node) const override;
+
+    Variable* cloneImpl() const override;
 
 private:
     /** Name */

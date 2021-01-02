@@ -22,6 +22,10 @@
 #include <string>
 #include <vector>
 
+namespace souffle::ast {
+class Relation;
+}
+
 namespace souffle::ast::transform {
 
 /**

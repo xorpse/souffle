@@ -13,6 +13,7 @@
  ***********************************************************************/
 
 #include "ast/analysis/TypeConstraints.h"
+#include "ast/analysis/Type.h"
 
 namespace souffle::ast::analysis {
 

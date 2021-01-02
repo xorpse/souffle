@@ -89,12 +89,19 @@ souffle_sources = \
         ast/SubsetType.h                                   \
         ast/Term.cpp                                       \
         ast/Term.h                                         \
+        ast/TranslationUnit.cpp                            \
         ast/TranslationUnit.h                              \
+        ast/Type.cpp                                       \
         ast/Type.h                                         \
+        ast/TypeCast.cpp                                   \
         ast/TypeCast.h                                     \
+        ast/UnionType.cpp                                  \
         ast/UnionType.h                                    \
+        ast/UnnamedVariable.cpp                            \
         ast/UnnamedVariable.h                              \
+        ast/UserDefinedFunctor.cpp                         \
         ast/UserDefinedFunctor.h                           \
+        ast/Variable.cpp                                   \
         ast/Variable.h                                     \
         ast/analysis/Aggregate.cpp                         \
         ast/analysis/Aggregate.h                           \

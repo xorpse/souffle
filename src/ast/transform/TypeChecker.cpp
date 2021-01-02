@@ -15,6 +15,7 @@
  ***********************************************************************/
 
 #include "ast/transform/TypeChecker.h"
+#include "Global.h"
 #include "ast/Aggregator.h"
 #include "ast/AlgebraicDataType.h"
 #include "ast/Argument.h"
@@ -36,6 +37,7 @@
 #include "ast/analysis/TypeSystem.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
+#include "reports/ErrorReport.h"
 #include "souffle/utility/StringUtil.h"
 #include <map>
 #include <sstream>
