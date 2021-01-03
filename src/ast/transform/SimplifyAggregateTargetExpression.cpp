@@ -23,20 +23,20 @@
 namespace souffle::ast::transform {
 
 Aggregator* SimplifyAggregateTargetExpressionTransformer::simplifyTargetExpression(
-        const TranslationUnit& tu, const Clause* clause, const Aggregator* aggregator) {
-    const auto* origTargetExpression = aggregator->getTargetExpression();
+        const TranslationUnit& tu, const Clause& clause, Aggregator& aggregator) {
+    auto* origTargetExpression = aggregator.getTargetExpression();
     assert(origTargetExpression != nullptr && !isA<Variable>(origTargetExpression) &&
             "aggregator should have complex target expression");
 
     // Create the new simplified target expression
-    auto newTargetExpression = mk<Variable>(analysis::findUniqueVariableName(*clause, "x"));
+    auto newTargetExpression = mk<Variable>(analysis::findUniqueVariableName(clause, "x"));
 
     // Create the new body, with the necessary equality between old and new target expressions
     auto equalityLiteral = std::make_unique<BinaryConstraint>(BinaryConstraintOp::EQ,
             souffle::clone(newTargetExpression), souffle::clone(origTargetExpression));
 
     std::vector<Own<Literal>> newBody;
-    for (const auto* literal : aggregator->getBodyLiterals()) {
+    for (const auto* literal : aggregator.getBodyLiterals()) {
         newBody.push_back(souffle::clone(literal));
     }
     newBody.push_back(std::move(equalityLiteral));
@@ -60,8 +60,8 @@ Aggregator* SimplifyAggregateTargetExpressionTransformer::simplifyTargetExpressi
     //         renamed
 
     // Therefore, variables to rename are non-witness outer scope variables
-    auto witnesses = analysis::getWitnessVariables(tu, *clause, *aggregator);
-    std::set<std::string> varsOutside = analysis::getVariablesOutsideAggregate(*clause, *aggregator);
+    auto witnesses = analysis::getWitnessVariables(tu, clause, aggregator);
+    std::set<std::string> varsOutside = analysis::getVariablesOutsideAggregate(clause, aggregator);
 
     std::set<std::string> varsGroundedOutside;
     for (auto& varName : varsOutside) {
@@ -71,20 +71,20 @@ Aggregator* SimplifyAggregateTargetExpressionTransformer::simplifyTargetExpressi
     }
 
     // Rename the necessary variables in the new aggregator
-    visitDepthFirst(*origTargetExpression, [&](const Variable& v) {
+    visitDepthFirst(*origTargetExpression, [&](Variable& v) {
         if (contains(varsGroundedOutside, v.getName())) {
             // Rename everywhere in the body to fix scoping
-            std::string newVarName = analysis::findUniqueVariableName(*clause, v.getName());
-            visitDepthFirst(newBody, [&](const Variable& literalVar) {
+            std::string newVarName = analysis::findUniqueVariableName(clause, v.getName());
+            visitDepthFirst(newBody, [&](Variable& literalVar) {
                 if (literalVar.getName() == v.getName()) {
-                    const_cast<Variable&>(literalVar).setName(newVarName);
+                    literalVar.setName(newVarName);
                 }
             });
         }
     });
 
     // Create the new simplified aggregator
-    return new Aggregator(aggregator->getBaseOperator(), std::move(newTargetExpression), std::move(newBody));
+    return new Aggregator(aggregator.getBaseOperator(), std::move(newTargetExpression), std::move(newBody));
 }
 
 bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& translationUnit) {
@@ -109,12 +109,12 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
 
     // Generate the necessary simplified forms for each complex aggregator
     std::map<const Aggregator*, Aggregator*> complexToSimple;
-    for (const auto* clause : program.getClauses()) {
-        visitDepthFirst(*clause, [&](const Aggregator& aggregator) {
+    for (auto* clause : program.getClauses()) {
+        visitDepthFirst(*clause, [&](Aggregator& aggregator) {
             const auto* targetExpression = aggregator.getTargetExpression();
             if (targetExpression != nullptr && !isA<Variable>(targetExpression)) {
                 complexToSimple.insert(
-                        {&aggregator, simplifyTargetExpression(translationUnit, clause, &aggregator)});
+                        {&aggregator, simplifyTargetExpression(translationUnit, *clause, aggregator)});
             }
         });
     }

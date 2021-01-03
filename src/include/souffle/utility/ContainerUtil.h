@@ -182,118 +182,140 @@ auto clone(const std::vector<std::unique_ptr<A>>& xs) {
     return ys;
 }
 
+namespace detail {
+
+// This is a helper in the cases when the lambda is stateless
+template <typename F>
+F const& makeFun() {
+    // Even thought the lambda is stateless, it has no default ctor
+    // Is this gross?  Yes, yes it is.
+    typename std::aligned_storage<sizeof(F)>::type fakeLam;
+    return reinterpret_cast<F const&>(fakeLam);
+}
+}  // namespace detail
+
 // -------------------------------------------------------------
 //                            Iterators
 // -------------------------------------------------------------
-
 /**
- * A wrapper for an iterator obtaining pointers of a certain type,
- * dereferencing values before forwarding them to the consumer.
+ * A wrapper for an iterator that transforms values returned by
+ * the underlying iter.
  *
  * @tparam Iter ... the type of wrapped iterator
- * @tparam T    ... the value to be accessed by the resulting iterator
+ * @tparam F    ... the function to apply
+ *
  */
-template <typename Iter, typename T = typename std::remove_pointer<typename Iter::value_type>::type>
-struct IterDerefWrapper : public std::iterator<std::forward_iterator_tag, T> {
-    /* The nested iterator. */
-    Iter iter;
+template <typename Iter, typename F>
+class TransformIterator {
+    using iter_t = std::iterator_traits<Iter>;
+    using difference_type = typename iter_t::difference_type;
+    using result_type = decltype(std::declval<F&>()(*std::declval<Iter>()));
+    static_assert(std::is_empty_v<F>, "Function object must be stateless");
 
 public:
     // some constructors
-    IterDerefWrapper() = default;
-    IterDerefWrapper(const Iter& iter) : iter(iter) {}
+    template <typename It>
+    TransformIterator(It iter, std::enable_if_t<std::is_empty_v<F>, void*> = nullptr)
+            : iter(std::move(iter)), fun(detail::makeFun<F>()) {}
+    TransformIterator(Iter iter, F f) : iter(std::move(iter)), fun(std::move(f)) {}
 
     // defaulted copy and move constructors
-    IterDerefWrapper(const IterDerefWrapper&) = default;
-    IterDerefWrapper(IterDerefWrapper&&) = default;
+    TransformIterator(const TransformIterator& other) : iter(other.iter), fun(other.fun) {}
+    TransformIterator(TransformIterator&& other) : iter(std::move(other.iter)), fun(std::move(other.fun)) {}
 
     // default assignment operators
-    IterDerefWrapper& operator=(const IterDerefWrapper&) = default;
-    IterDerefWrapper& operator=(IterDerefWrapper&&) = default;
+    TransformIterator& operator=(const TransformIterator& other) {
+        if (this != &other) {
+            iter = other.iter;
+        }
+        return *this;
+    }
+
+    TransformIterator& operator=(TransformIterator&& other) {
+        if (this != &other) {
+            iter = std::move(other.iter);
+        }
+        return *this;
+    }
 
     /* The equality operator as required by the iterator concept. */
-    bool operator==(const IterDerefWrapper& other) const {
+    bool operator==(const TransformIterator& other) const {
         return iter == other.iter;
     }
 
     /* The not-equality operator as required by the iterator concept. */
-    bool operator!=(const IterDerefWrapper& other) const {
+    bool operator!=(const TransformIterator& other) const {
         return iter != other.iter;
     }
 
     /* The deref operator as required by the iterator concept. */
-    const T& operator*() const {
-        return **iter;
+    auto operator*() const -> result_type {
+        return fun(*iter);
     }
 
     /* Support for the pointer operator. */
-    const T* operator->() const {
-        return &(**iter);
+    auto operator->() const {
+        return &**this;
     }
 
     /* The increment operator as required by the iterator concept. */
-    IterDerefWrapper& operator++() {
+    TransformIterator& operator++() {
         ++iter;
         return *this;
     }
+
+    TransformIterator operator++(int) {
+        auto res = *this;
+        ++iter;
+        return res;
+    }
+
+    TransformIterator& operator--() {
+        --iter;
+        return *this;
+    }
+
+    TransformIterator operator--(int) {
+        auto res = *this;
+        --iter;
+        return res;
+    }
+
+    auto operator[](difference_type ii) const -> result_type {
+        return f(iter[ii]);
+    }
+
+private:
+    /* The nested iterator. */
+    Iter iter;
+    F fun;
 };
+
+template <typename Iter, typename F>
+auto makeTransformIter(Iter&& iter, F&& f) {
+    return TransformIterator<std::remove_const_t<std::remove_reference_t<Iter>>, std::remove_reference_t<F>>(
+            std::forward<Iter>(iter), std::forward<F>(f));
+}
+
+/**
+ * A wrapper for an iterator obtaining pointers of a certain type,
+ * dereferencing values before forwarding them to the consumer.
+ */
+namespace detail {
+inline auto iterDeref = [](auto& p) -> decltype(*p) { return *p; };
+}
+
+template <typename Iter>
+using IterDerefWrapper = TransformIterator<Iter, decltype(detail::iterDeref)>;
 
 /**
  * A factory function enabling the construction of a dereferencing
  * iterator utilizing the automated deduction of template parameters.
  */
 template <typename Iter>
-IterDerefWrapper<Iter> derefIter(const Iter& iter) {
-    return IterDerefWrapper<Iter>(iter);
+auto derefIter(Iter&& iter) {
+    return makeTransformIter(std::forward<Iter>(iter), detail::iterDeref);
 }
-
-/**
- * An iterator to be utilized if there is only a single element to iterate over.
- */
-template <typename T>
-class SingleValueIterator : public std::iterator<std::forward_iterator_tag, T> {
-    T value;
-
-    bool end = true;
-
-public:
-    SingleValueIterator() = default;
-
-    SingleValueIterator(const T& value) : value(value), end(false) {}
-
-    // a copy constructor
-    SingleValueIterator(const SingleValueIterator& other) = default;
-
-    // an assignment operator
-    SingleValueIterator& operator=(const SingleValueIterator& other) = default;
-
-    // the equality operator as required by the iterator concept
-    bool operator==(const SingleValueIterator& other) const {
-        // only equivalent if pointing to the end
-        return end && other.end;
-    }
-
-    // the not-equality operator as required by the iterator concept
-    bool operator!=(const SingleValueIterator& other) const {
-        return !(*this == other);
-    }
-
-    // the deref operator as required by the iterator concept
-    const T& operator*() const {
-        return value;
-    }
-
-    // support for the pointer operator
-    const T* operator->() const {
-        return &value;
-    }
-
-    // the increment operator as required by the iterator concept
-    SingleValueIterator& operator++() {
-        end = true;
-        return *this;
-    }
-};
 
 // -------------------------------------------------------------
 //                             Ranges
@@ -384,6 +406,17 @@ range<Iter> make_range(const Iter& a, const Iter& b) {
     return range<Iter>(a, b);
 }
 
+template <typename Iter, typename F>
+auto makeTransformRange(Iter&& begin, Iter&& end, F const& f) {
+    return make_range(
+            makeTransformIter(std::forward<Iter>(begin), f), transformIter(std::forward<Iter>(end), f));
+}
+
+template <typename Iter>
+auto makeDerefRange(Iter&& begin, Iter&& end) {
+    return make_range(derefIter(std::forward<Iter>(begin)), derefIter(std::forward<Iter>(end)));
+}
+
 // -------------------------------------------------------------------------------
 //                             Equality Utilities
 // -------------------------------------------------------------------------------
@@ -470,3 +503,16 @@ bool equal_targets(
 }
 
 }  // namespace souffle
+
+namespace std {
+template <typename Iter, typename F>
+struct iterator_traits<souffle::TransformIterator<Iter, F>> {
+    using iter_t = std::iterator_traits<Iter>;
+    using iter_tag = typename iter_t::iterator_category;
+    using difference_type = typename iter_t::difference_type;
+    using result_type = decltype(std::declval<F&>()(*std::declval<Iter>()));
+    using value_type = std::remove_cv_t<std::remove_reference_t<result_type>>;
+    using iterator_category = std::conditional_t<std::is_base_of_v<std::random_access_iterator_tag, iter_tag>,
+            std::random_access_iterator_tag, iter_tag>;
+};
+}  // namespace std

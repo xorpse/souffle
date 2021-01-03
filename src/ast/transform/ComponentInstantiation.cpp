@@ -186,21 +186,21 @@ void collectContent(Program& program, const Component& component, const TypeBind
         Own<ast::Type> type(cur->clone());
 
         // instantiate elements of union types
-        visitDepthFirst(*type, [&](const ast::UnionType& type) {
-            for (const auto& name : type.getTypes()) {
+        visitDepthFirst(*type, [&](ast::UnionType& type) {
+            for (auto& name : type.getTypes()) {
                 QualifiedName newName = binding.find(name);
                 if (!newName.empty()) {
-                    const_cast<QualifiedName&>(name) = newName;
+                    name = std::move(newName);
                 }
             }
         });
 
         // instantiate elements of record types
         visitDepthFirst(*type, [&](const ast::RecordType& type) {
-            for (const auto& field : type.getFields()) {
+            for (auto& field : type.getFields()) {
                 auto&& newName = binding.find(field->getTypeName());
                 if (!newName.empty()) {
-                    const_cast<Attribute&>(*field).setTypeName(newName);
+                    field->setTypeName(newName);
                 }
             }
         });
@@ -343,59 +343,59 @@ ComponentContent getInstantiatedContent(Program& program, const ComponentInit& c
     }
 
     // create a helper function fixing type and relation references
-    auto fixNames = [&](const Node& node) {
+    auto fixNames = [&](Node& node) {
         // rename attribute types in headers
-        visitDepthFirst(node, [&](const Attribute& attr) {
+        visitDepthFirst(node, [&](Attribute& attr) {
             auto pos = typeNameMapping.find(attr.getTypeName());
             if (pos != typeNameMapping.end()) {
-                const_cast<Attribute&>(attr).setTypeName(pos->second);
+                attr.setTypeName(pos->second);
             }
         });
 
         // rename atoms in clauses
-        visitDepthFirst(node, [&](const Atom& atom) {
+        visitDepthFirst(node, [&](Atom& atom) {
             auto pos = relationNameMapping.find(atom.getQualifiedName());
             if (pos != relationNameMapping.end()) {
-                const_cast<Atom&>(atom).setQualifiedName(pos->second);
+                atom.setQualifiedName(pos->second);
             }
         });
 
         // rename directives
-        visitDepthFirst(node, [&](const Directive& directive) {
+        visitDepthFirst(node, [&](Directive& directive) {
             auto pos = relationNameMapping.find(directive.getQualifiedName());
             if (pos != relationNameMapping.end()) {
-                const_cast<Directive&>(directive).setQualifiedName(pos->second);
+                directive.setQualifiedName(pos->second);
             }
         });
 
         // rename field types in records
-        visitDepthFirst(node, [&](const ast::RecordType& recordType) {
+        visitDepthFirst(node, [&](ast::RecordType& recordType) {
             auto&& fields = recordType.getFields();
             for (size_t i = 0; i < fields.size(); i++) {
                 auto& field = fields[i];
                 auto pos = typeNameMapping.find(field->getTypeName());
                 if (pos != typeNameMapping.end()) {
-                    const_cast<ast::RecordType&>(recordType).setFieldType(i, pos->second);
+                    recordType.setFieldType(i, pos->second);
                 }
             }
         });
 
         // rename variant types in unions
-        visitDepthFirst(node, [&](const ast::UnionType& unionType) {
+        visitDepthFirst(node, [&](ast::UnionType& unionType) {
             auto& variants = unionType.getTypes();
             for (size_t i = 0; i < variants.size(); i++) {
                 auto pos = typeNameMapping.find(variants[i]);
                 if (pos != typeNameMapping.end()) {
-                    const_cast<ast::UnionType&>(unionType).setType(i, pos->second);
+                    unionType.setType(i, pos->second);
                 }
             }
         });
 
         // rename type information in typecast
-        visitDepthFirst(node, [&](const ast::TypeCast& cast) {
+        visitDepthFirst(node, [&](ast::TypeCast& cast) {
             auto pos = typeNameMapping.find(cast.getType());
             if (pos != typeNameMapping.end()) {
-                const_cast<ast::TypeCast&>(cast).setType(pos->second);
+                cast.setType(pos->second);
             }
         });
     };

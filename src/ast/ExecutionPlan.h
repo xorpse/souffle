@@ -73,7 +73,7 @@ public:
         }
     }
 
-    std::vector<const Node*> getChildNodes() const override {
+    std::vector<const Node*> getChildNodesImpl() const override {
         std::vector<const Node*> childNodes;
         for (auto& plan : plans) {
             childNodes.push_back(plan.second.get());

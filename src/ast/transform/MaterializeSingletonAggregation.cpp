@@ -58,8 +58,8 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
     });
 
     // collect references to clause / aggregate pairs
-    visitDepthFirst(program, [&](const Clause& clause) {
-        visitDepthFirst(clause, [&](const Aggregator& agg) {
+    visitDepthFirst(program, [&](Clause& clause) {
+        visitDepthFirst(clause, [&](Aggregator& agg) {
             // only unroll one level at a time
             if (innerAggregates.find(&agg) != innerAggregates.end()) {
                 return;
@@ -71,8 +71,8 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
             if (!isSingleValued(translationUnit, agg, clause) || clause.getBodyLiterals().size() == 1) {
                 return;
             }
-            auto* foundAggregate = const_cast<Aggregator*>(&agg);
-            auto* foundClause = const_cast<Clause*>(&clause);
+            auto* foundAggregate = &agg;
+            auto* foundClause = &clause;
             pairs.insert(std::make_pair(foundAggregate, foundClause));
         });
     });

@@ -101,7 +101,7 @@ public:
         }
     }
 
-    std::vector<const Node*> getChildNodes() const override {
+    std::vector<const Node*> getChildNodesImpl() const override {
         std::vector<const Node*> res = {head.get()};
         for (auto& cur : bodyLiterals) {
             res.push_back(cur.get());

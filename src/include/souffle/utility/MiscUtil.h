@@ -140,8 +140,14 @@ bool equal_ptr(const std::unique_ptr<T>& a, const std::unique_ptr<T>& b) {
     return equal_ptr(a.get(), b.get());
 }
 
+/**
+ * Copy the const qualifier of type T onto type U
+ */
 template <typename A, typename B>
-using copy_const_t = std::conditional_t<std::is_const_v<A>, const B, B>;
+using copy_const = std::conditional<std::is_const_v<A>, const B, B>;
+
+template <typename A, typename B>
+using copy_const_t = typename copy_const<A, B>::type;
 
 /**
  * Helpers for `dynamic_cast`ing without having to specify redundant type qualifiers.
