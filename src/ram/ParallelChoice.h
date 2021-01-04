@@ -52,7 +52,7 @@ public:
 
     ParallelChoice* clone() const override {
         return new ParallelChoice(relation, getTupleId(), souffle::clone(condition),
-                souffle::clone(&getOperation()), getProfileText());
+                souffle::clone(getOperation()), getProfileText());
     }
 
 protected:

@@ -343,7 +343,7 @@ bool SemanticCheckerImpl::isDependent(const Clause& agg1, const Clause& agg2) {
 void SemanticCheckerImpl::checkAggregator(const Aggregator& aggregator) {
     auto& report = tu.getErrorReport();
     const Program& program = tu.getProgram();
-    Clause dummyClauseAggregator;
+    Clause dummyClauseAggregator("dummy");
 
     visitDepthFirst(program, [&](const Literal& parentLiteral) {
         visitDepthFirst(parentLiteral, [&](const Aggregator& candidateAggregate) {
@@ -352,15 +352,15 @@ void SemanticCheckerImpl::checkAggregator(const Aggregator& aggregator) {
             }
             // Get the literal containing the aggregator and put it into a dummy clause
             // so we can get information about groundedness
-            dummyClauseAggregator.addToBody(souffle::clone(&parentLiteral));
+            dummyClauseAggregator.addToBody(souffle::clone(parentLiteral));
         });
     });
 
     visitDepthFirst(program, [&](const Literal& parentLiteral) {
         visitDepthFirst(parentLiteral, [&](const Aggregator& /* otherAggregate */) {
             // Create the other aggregate's dummy clause
-            Clause dummyClauseOther;
-            dummyClauseOther.addToBody(souffle::clone(&parentLiteral));
+            Clause dummyClauseOther("dummy");
+            dummyClauseOther.addToBody(souffle::clone(parentLiteral));
             // Check dependency between the aggregator and this one
             if (isDependent(dummyClauseAggregator, dummyClauseOther) &&
                     isDependent(dummyClauseOther, dummyClauseAggregator)) {
@@ -651,11 +651,9 @@ static const std::vector<SrcLocation> usesInvalidWitness(
         return invalidWitnessLocations;  // ie empty result
     }
 
-    auto aggregateSubclause = mk<Clause>();
-    aggregateSubclause->setHead(mk<Atom>("*"));
-    for (const Literal* lit : aggregate.getBodyLiterals()) {
-        aggregateSubclause->addToBody(souffle::clone(lit));
-    }
+    auto aggregateSubclause = mk<Clause>("*");
+    aggregateSubclause->setBodyLiterals(souffle::clone(aggregate.getBodyLiterals()));
+
     struct InnerAggregateMasker : public NodeMapper {
         mutable int numReplaced = 0;
         Own<Node> operator()(Own<Node> node) const override {

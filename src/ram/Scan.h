@@ -46,7 +46,7 @@ public:
             : RelationOperation(rel, ident, std::move(nested), std::move(profileText)) {}
 
     Scan* clone() const override {
-        return new Scan(relation, getTupleId(), souffle::clone(&getOperation()), getProfileText());
+        return new Scan(relation, getTupleId(), souffle::clone(getOperation()), getProfileText());
     }
 
 protected:

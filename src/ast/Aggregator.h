@@ -46,10 +46,14 @@ namespace souffle::ast {
  */
 class Aggregator : public Argument {
 public:
-    Aggregator(AggregateOp baseOperator, Own<Argument> expr = nullptr, VecOwn<Literal> body = {},
+    Aggregator(AggregateOp baseOperator, Own<Argument> expr = {}, VecOwn<Literal> body = {},
             SrcLocation loc = {})
             : Argument(std::move(loc)), baseOperator(baseOperator), targetExpression(std::move(expr)),
-              body(std::move(body)) {}
+              body(std::move(body)) {
+        // targetExpression can be nullptr - it's used e.g. when aggregator
+        // has no parameters, such as count: { body }
+        assert(allValidPtrs(this->body));
+    }
 
     /** Return the (base type) operator of the aggregator */
     AggregateOp getBaseOperator() const {
@@ -72,6 +76,7 @@ public:
 
     /** Set body */
     void setBody(VecOwn<Literal> bodyLiterals) {
+        assert(allValidPtrs(body));
         body = std::move(bodyLiterals);
     }
 

@@ -30,9 +30,8 @@ namespace souffle::ast {
  */
 class StringConstant : public Constant {
 public:
-    explicit StringConstant(std::string value, SrcLocation loc = {}) : Constant(std::move(value)) {
-        setSrcLoc(std::move(loc));
-    }
+    explicit StringConstant(std::string value, SrcLocation loc = {})
+            : Constant(std::move(value), std::move(loc)) {}
 
 protected:
     void print(std::ostream& os) const override {
@@ -41,9 +40,7 @@ protected:
 
 private:
     StringConstant* cloneImpl() const override {
-        auto* res = new StringConstant(getConstant());
-        res->setSrcLoc(getSrcLoc());
-        return res;
+        return new StringConstant(getConstant(), getSrcLoc());
     }
 };
 

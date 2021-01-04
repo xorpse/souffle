@@ -113,7 +113,7 @@ bool RemoveEmptyRelationsTransformer::removeEmptyRelationUses(
             if (rewrite) {
                 // clone clause without negation for empty relations
 
-                auto res = Own<Clause>(cloneHead(cl));
+                auto res = cloneHead(*cl);
 
                 for (Literal* lit : cl->getBodyLiterals()) {
                     if (auto* neg = as<Negation>(lit)) {

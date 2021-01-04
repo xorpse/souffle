@@ -30,6 +30,7 @@ template <typename F>
 F const& makeFun() {
     // Even thought the lambda is stateless, it has no default ctor
     // Is this gross?  Yes, yes it is.
+    // FIXME: Remove after C++20
     typename std::aligned_storage<sizeof(F)>::type fakeLam;
     return reinterpret_cast<F const&>(fakeLam);
 }
@@ -298,6 +299,11 @@ range<Iter> make_range(const Iter& a, const Iter& b) {
 template <typename Iter, typename F>
 auto makeTransformRange(Iter&& begin, Iter&& end, F const& f) {
     return make_range(transformIter(std::forward<Iter>(begin), f), transformIter(std::forward<Iter>(end), f));
+}
+
+template <typename R, typename F>
+auto makeTransformRange(R&& range, F const& f) {
+    return makeTransformRange(range.begin(), range.end(), f);
 }
 
 template <typename Iter>

@@ -40,7 +40,9 @@ namespace souffle::ast {
 class TypeCast : public Argument {
 public:
     TypeCast(Own<Argument> value, QualifiedName type, SrcLocation loc = {})
-            : Argument(std::move(loc)), value(std::move(value)), type(std::move(type)) {}
+            : Argument(std::move(loc)), value(std::move(value)), type(std::move(type)) {
+        assert(this->value != nullptr);
+    }
 
     /** Return value */
     Argument* getValue() const {

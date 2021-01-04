@@ -43,7 +43,9 @@ namespace souffle::ast {
  */
 class Negation : public Literal {
 public:
-    Negation(Own<Atom> atom, SrcLocation loc = {}) : Literal(std::move(loc)), atom(std::move(atom)) {}
+    Negation(Own<Atom> atom, SrcLocation loc = {}) : Literal(std::move(loc)), atom(std::move(atom)) {
+        assert(this->atom != nullptr);
+    }
 
     /** Get negated atom */
     Atom* getAtom() const {

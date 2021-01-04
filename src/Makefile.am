@@ -28,6 +28,7 @@ souffle_sources = \
         ast/BooleanConstraint.h                            \
         ast/BranchDeclaration.h                            \
         ast/BranchInit.h                                   \
+        ast/Clause.cpp                                     \
         ast/Clause.h                                       \
         ast/Component.h                                    \
         ast/ComponentInit.h                                \

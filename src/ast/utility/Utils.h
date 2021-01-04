@@ -17,6 +17,7 @@
 #pragma once
 
 #include "FunctorOps.h"
+#include "souffle/utility/Types.h"
 #include <cstddef>
 #include <map>
 #include <set>
@@ -249,7 +250,7 @@ bool isDeltaRelation(const QualifiedName& name);
  * @param clause the clause which head to be cloned
  * @return pointer to clause which has head cloned from given clause
  */
-Clause* cloneHead(const Clause* clause);
+Own<Clause> cloneHead(const Clause& clause);
 
 /**
  * Reorders the atoms of a clause to be in the given order.

@@ -337,8 +337,8 @@ bool NormaliseDatabaseTransformer::partitionIO(TranslationUnit& translationUnit)
         }
 
         // Add the rule I <- I'
-        auto newClause = mk<Clause>();
-        auto newHeadAtom = mk<Atom>(relName);
+        auto newClause = mk<Clause>(relName);
+        auto newHeadAtom = newClause->getHead();
         auto newBodyAtom = mk<Atom>(newRelName);
         for (size_t i = 0; i < rel->getArity(); i++) {
             std::stringstream varName;
@@ -346,7 +346,6 @@ bool NormaliseDatabaseTransformer::partitionIO(TranslationUnit& translationUnit)
             newHeadAtom->addArgument(mk<ast::Variable>(varName.str()));
             newBodyAtom->addArgument(mk<ast::Variable>(varName.str()));
         }
-        newClause->setHead(std::move(newHeadAtom));
         newClause->addToBody(std::move(newBodyAtom));
 
         // New relation I' should be input, original should not
@@ -536,13 +535,9 @@ bool NormaliseDatabaseTransformer::normaliseArguments(TranslationUnit& translati
                 aggr->apply(aggrUpdate);
 
                 // Add the constraints to this level
-                std::vector<Own<Literal>> newBodyLiterals;
-                for (const auto* lit : aggr->getBodyLiterals()) {
-                    newBodyLiterals.push_back(souffle::clone(lit));
-                }
-                for (auto& constr : subConstraints) {
-                    newBodyLiterals.push_back(souffle::clone(constr));
-                }
+                VecOwn<Literal> newBodyLiterals;
+                append(newBodyLiterals, souffle::cloneRange(aggr->getBodyLiterals()));
+                append(newBodyLiterals, souffle::cloneRange(subConstraints));
 
                 // Update the node to reflect normalised aggregator
                 node = aggr->getTargetExpression() != nullptr
@@ -605,11 +600,7 @@ bool NormaliseDatabaseTransformer::normaliseArguments(TranslationUnit& translati
             }
         });
 
-        // Add each necessary new constraint to the clause
-        for (auto& constraint : constraintsToAdd) {
-            clause->addToBody(souffle::clone(constraint));
-        }
-
+        clause->addToBody(souffle::clone<Literal>(constraintsToAdd));
         changed |= changeCount != 0;
     }
 
@@ -657,7 +648,7 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
     }
 
     // Create the adorned clause with an empty body
-    auto adornedClause = mk<Clause>();
+    auto adornedClause = mk<Clause>(getAdornmentID(relName, adornmentMarker));
 
     // Copy over plans if needed
     if (clause->getExecutionPlan() != nullptr) {
@@ -667,7 +658,7 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
     }
 
     // Create the head atom
-    auto adornedHeadAtom = mk<Atom>(getAdornmentID(relName, adornmentMarker));
+    auto adornedHeadAtom = adornedClause->getHead();
     assert((adornmentMarker == "" || headArgs.size() == adornmentMarker.length()) &&
             "adornment marker should correspond to head atom variables");
     for (const auto* arg : headArgs) {
@@ -675,10 +666,9 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
         assert(var != nullptr && "expected only variables in head");
         adornedHeadAtom->addArgument(souffle::clone(var));
     }
-    adornedClause->setHead(std::move(adornedHeadAtom));
 
     // Add in adorned body literals
-    std::vector<Own<Literal>> adornedBodyLiterals;
+    VecOwn<Literal> adornedBodyLiterals;
     for (const auto* lit : clause->getBodyLiterals()) {
         if (const auto* negation = as<Negation>(lit)) {
             // Negated atoms should not be adorned, but their clauses should be anyway
@@ -1098,15 +1088,11 @@ void MagicSetCoreTransformer::addRelevantVariables(
 }
 
 Own<Clause> MagicSetCoreTransformer::createMagicClause(const Atom* atom,
-        const std::vector<Own<Atom>>& constrainingAtoms,
-        const std::vector<const BinaryConstraint*> eqConstraints) {
-    auto magicHead = createMagicAtom(atom);
-    auto magicClause = mk<Clause>();
-
+        const VecOwn<Atom>& constrainingAtoms, const std::vector<const BinaryConstraint*> eqConstraints) {
+    auto magicClause = mk<Clause>(createMagicAtom(atom));
     // Add in all constraining atoms
-    for (const auto& bindingAtom : constrainingAtoms) {
-        magicClause->addToBody(souffle::clone(bindingAtom));
-    }
+    magicClause->setBodyLiterals(souffle::clone<Literal>(constrainingAtoms));
+    auto magicHead = magicClause->getHead();
 
     // Get the set of all variables that will be relevant to the magic clause
     std::set<std::string> relevantVariables;
@@ -1127,7 +1113,6 @@ Own<Clause> MagicSetCoreTransformer::createMagicClause(const Atom* atom,
         if (addConstraint) magicClause->addToBody(souffle::clone(eqConstraint));
     }
 
-    magicClause->setHead(std::move(magicHead));
     return magicClause;
 }
 
@@ -1167,18 +1152,15 @@ bool MagicSetCoreTransformer::transform(TranslationUnit& translationUnit) {
         } else {
             // Refine the clause with a prepended magic atom
             auto magicAtom = createMagicAtom(head);
-            auto refinedClause = mk<Clause>();
-            refinedClause->setHead(souffle::clone(head));
+            auto refinedClause = mk<Clause>(souffle::clone(head));
             refinedClause->addToBody(souffle::clone(magicAtom));
-            for (auto* literal : clause->getBodyLiterals()) {
-                refinedClause->addToBody(souffle::clone(literal));
-            }
+            refinedClause->addToBody(souffle::clone(clause->getBodyLiterals()));
             clausesToAdd.insert(std::move(refinedClause));
         }
 
         // (2) Add the associated magic rules
         std::vector<const BinaryConstraint*> eqConstraints = getBindingEqualityConstraints(clause);
-        std::vector<Own<Atom>> atomsToTheLeft;
+        VecOwn<Atom> atomsToTheLeft;
         if (isAdorned(relName)) {
             // Add the specialising head atom
             // Output relations are not specialised, and so the head will not contribute to specialisation

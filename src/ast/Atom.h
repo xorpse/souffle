@@ -26,6 +26,7 @@
 #include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <iostream>
 #include <memory>
@@ -46,7 +47,9 @@ namespace souffle::ast {
 class Atom : public Literal {
 public:
     Atom(QualifiedName name = {}, VecOwn<Argument> args = {}, SrcLocation loc = {})
-            : Literal(std::move(loc)), name(std::move(name)), arguments(std::move(args)) {}
+            : Literal(std::move(loc)), name(std::move(name)), arguments(std::move(args)) {
+        assert(allValidPtrs(arguments));
+    }
 
     /** Return qualified name */
     const QualifiedName& getQualifiedName() const {
@@ -65,6 +68,7 @@ public:
 
     /** Add argument to the atom */
     void addArgument(Own<Argument> arg) {
+        assert(arg != nullptr);
         arguments.push_back(std::move(arg));
     }
 

@@ -42,8 +42,8 @@ bool ExpandFilterTransformer::expandFilters(Program& program) {
                     VecOwn<Filter> filters;
                     for (auto& cond : conditionList) {
                         if (filters.empty()) {
-                            filters.emplace_back(mk<Filter>(
-                                    souffle::clone(cond), souffle::clone(&filter->getOperation())));
+                            filters.emplace_back(
+                                    mk<Filter>(souffle::clone(cond), souffle::clone(filter->getOperation())));
                         } else {
                             filters.emplace_back(mk<Filter>(souffle::clone(cond), std::move(filters.back())));
                         }

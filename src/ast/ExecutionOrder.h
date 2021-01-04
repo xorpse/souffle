@@ -36,9 +36,8 @@ class ExecutionOrder : public Node {
 public:
     using ExecOrder = std::vector<unsigned int>;
 
-    ExecutionOrder(ExecOrder order = {}, SrcLocation loc = {}) : order(std::move(order)) {
-        setSrcLoc(std::move(loc));
-    }
+    ExecutionOrder(ExecOrder order = {}, SrcLocation loc = {})
+            : Node(std::move(loc)), order(std::move(order)) {}
 
     /** Get order */
     const ExecOrder& getOrder() const {

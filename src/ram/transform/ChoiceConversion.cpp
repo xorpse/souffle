@@ -54,8 +54,8 @@ Own<Operation> ChoiceConversionTransformer::rewriteScan(const Scan* scan) {
         const auto* filter = as<Filter>(scan->getOperation());
         const int identifier = scan->getTupleId();
 
-        return mk<Choice>(scan->getRelation(), identifier, souffle::clone(&filter->getCondition()),
-                souffle::clone(&filter->getOperation()), scan->getProfileText());
+        return mk<Choice>(scan->getRelation(), identifier, souffle::clone(filter->getCondition()),
+                souffle::clone(filter->getOperation()), scan->getProfileText());
     }
     return nullptr;
 }
@@ -102,8 +102,8 @@ Own<Operation> ChoiceConversionTransformer::rewriteIndexScan(const IndexScan* in
             newValues.second.emplace_back(val);
         }
 
-        return mk<IndexChoice>(rel, identifier, souffle::clone(&filter->getCondition()), std::move(newValues),
-                souffle::clone(&filter->getOperation()), indexScan->getProfileText());
+        return mk<IndexChoice>(rel, identifier, souffle::clone(filter->getCondition()), std::move(newValues),
+                souffle::clone(filter->getOperation()), indexScan->getProfileText());
     }
     return nullptr;
 }

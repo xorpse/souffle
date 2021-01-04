@@ -35,10 +35,8 @@ Aggregator* SimplifyAggregateTargetExpressionTransformer::simplifyTargetExpressi
     auto equalityLiteral = mk<BinaryConstraint>(BinaryConstraintOp::EQ, souffle::clone(newTargetExpression),
             souffle::clone(origTargetExpression));
 
-    std::vector<Own<Literal>> newBody;
-    for (const auto* literal : aggregator.getBodyLiterals()) {
-        newBody.push_back(souffle::clone(literal));
-    }
+    VecOwn<Literal> newBody;
+    append(newBody, souffle::cloneRange(aggregator.getBodyLiterals()));
     newBody.push_back(std::move(equalityLiteral));
 
     // Variables in the target expression may have been shadowing variables from the outer scope,

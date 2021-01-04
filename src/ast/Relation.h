@@ -45,9 +45,7 @@ namespace souffle::ast {
 class Relation : public Node {
 public:
     Relation() = default;
-    Relation(QualifiedName name, SrcLocation loc = {}) : name(std::move(name)) {
-        setSrcLoc(std::move(loc));
-    }
+    Relation(QualifiedName name, SrcLocation loc = {}) : Node(std::move(loc)), name(std::move(name)) {}
 
     /** Get qualified relation name */
     const QualifiedName& getQualifiedName() const {
@@ -72,6 +70,7 @@ public:
 
     /** Set relation attributes */
     void setAttributes(VecOwn<Attribute> attrs) {
+        assert(allValidPtrs(attrs));
         attributes = std::move(attrs);
     }
 
@@ -112,6 +111,7 @@ public:
 
     /** Add functional dependency to this relation */
     void addDependency(Own<FunctionalConstraint> fd) {
+        assert(fd != nullptr);
         functionalDependencies.push_back(std::move(fd));
     }
 

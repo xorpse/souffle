@@ -96,14 +96,9 @@ bool normaliseInlinedHeads(Program& program) {
 
         for (Clause* clause : getClauses(program, *rel)) {
             // Set up the new clause with an empty body and no arguments in the head
-            auto newClause = mk<Clause>();
-            newClause->setSrcLoc(clause->getSrcLoc());
-            auto clauseHead = mk<Atom>(clause->getHead()->getQualifiedName());
-
-            // Add in everything in the original body
-            for (Literal* lit : clause->getBodyLiterals()) {
-                newClause->addToBody(souffle::clone(lit));
-            }
+            auto newClause = mk<Clause>(clause->getHead()->getQualifiedName(), clause->getSrcLoc());
+            newClause->setBodyLiterals(souffle::clone(clause->getBodyLiterals()));
+            auto clauseHead = newClause->getHead();
 
             // Set up the head arguments in the new clause
             for (Argument* arg : clause->getHead()->getArguments()) {
@@ -121,8 +116,6 @@ bool normaliseInlinedHeads(Program& program) {
                     clauseHead->addArgument(souffle::clone(arg));
                 }
             }
-
-            newClause->setHead(std::move(clauseHead));
 
             // Replace the old clause with this one
             program.addClause(std::move(newClause));
@@ -663,13 +656,12 @@ NullableVector<Argument*> getInlinedArgument(Program& program, const Argument* a
                         ++j;
                     }
                     if (const auto* intrFunc = as<IntrinsicFunctor>(arg)) {
-                        auto* newFunctor =
-                                new IntrinsicFunctor(intrFunc->getBaseFunctionOp(), std::move(argsCopy));
-                        newFunctor->setSrcLoc(functor->getSrcLoc());
+                        auto* newFunctor = new IntrinsicFunctor(
+                                intrFunc->getBaseFunctionOp(), std::move(argsCopy), functor->getSrcLoc());
                         versions.push_back(newFunctor);
                     } else if (const auto* userFunc = as<UserDefinedFunctor>(arg)) {
-                        auto* newFunctor = new UserDefinedFunctor(userFunc->getName(), std::move(argsCopy));
-                        newFunctor->setSrcLoc(userFunc->getSrcLoc());
+                        auto* newFunctor = new UserDefinedFunctor(
+                                userFunc->getName(), std::move(argsCopy), userFunc->getSrcLoc());
                         versions.push_back(newFunctor);
                     }
                 }
@@ -923,17 +915,11 @@ std::vector<Clause*> getInlinedClause(Program& program, const Clause& clause) {
 
         // Produce the new clauses with the replacement head atoms
         for (Atom* newHead : headVersions.getVector()) {
-            auto* newClause = new Clause();
-            newClause->setSrcLoc(clause.getSrcLoc());
+            auto newClause = mk<Clause>(Own<Atom>(newHead), clause.getSrcLoc());
+            newClause->setBodyLiterals(souffle::clone(clause.getBodyLiterals()));
 
-            newClause->setHead(Own<Atom>(newHead));
-
-            // The body will remain unchanged
-            for (Literal* lit : clause.getBodyLiterals()) {
-                newClause->addToBody(souffle::clone(lit));
-            }
-
-            versions.push_back(newClause);
+            // FIXME: tomp - hack - this should be managed
+            versions.push_back(newClause.release());
         }
     }
 
@@ -962,25 +948,23 @@ std::vector<Clause*> getInlinedClause(Program& program, const Clause& clause) {
                 std::vector<std::vector<Literal*>> bodyVersions = litVersions.getVector();
 
                 // Create the base clause with the current literal removed
-                auto baseClause = Own<Clause>(cloneHead(&clause));
+                auto baseClause = cloneHead(clause);
                 for (Literal* oldLit : bodyLiterals) {
                     if (currLit != oldLit) {
                         baseClause->addToBody(souffle::clone(oldLit));
                     }
                 }
 
-                for (std::vector<Literal*> body : bodyVersions) {
-                    // FIXME: This is a horrible hack.  Should convert
-                    // versions to hold Own<>
-                    Clause* replacementClause = souffle::clone(baseClause).release();
+                for (std::vector<Literal*> const& body : bodyVersions) {
+                    auto replacementClause = souffle::clone(baseClause);
 
                     // Add in the current set of literals replacing the inlined literal
                     // In Case 2, each body contains exactly one literal
-                    for (Literal* newLit : body) {
-                        replacementClause->addToBody(Own<Literal>(newLit));
-                    }
+                    replacementClause->addToBody(VecOwn<Literal>(body.begin(), body.end()));
 
-                    versions.push_back(replacementClause);
+                    // FIXME: This is a horrible hack.  Should convert
+                    // versions to hold Own<>
+                    versions.push_back(replacementClause.release());
                 }
             }
 

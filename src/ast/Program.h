@@ -96,6 +96,7 @@ public:
 
     /** Set clauses */
     void setClauses(VecOwn<Clause> newClauses) {
+        assert(allValidPtrs(newClauses));
         clauses = std::move(newClauses);
     }
 

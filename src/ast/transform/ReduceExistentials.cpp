@@ -129,9 +129,7 @@ bool ReduceExistentialsTransformer::transform(TranslationUnit& translationUnit) 
         std::stringstream newRelationName;
         newRelationName << "+?exists_" << relationName;
 
-        auto newRelation = mk<Relation>();
-        newRelation->setQualifiedName(newRelationName.str());
-        newRelation->setSrcLoc(originalRelation->getSrcLoc());
+        auto newRelation = mk<Relation>(newRelationName.str(), originalRelation->getSrcLoc());
 
         // EqRel relations require two arguments, so remove it from the qualifier
         if (newRelation->getRepresentation() == RelationRepresentation::EQREL) {
@@ -141,17 +139,10 @@ bool ReduceExistentialsTransformer::transform(TranslationUnit& translationUnit) 
         // Keep all non-recursive clauses
         for (Clause* clause : getClauses(program, *originalRelation)) {
             if (!isRecursiveClause(*clause)) {
-                auto newClause = mk<Clause>();
-
-                newClause->setSrcLoc(clause->getSrcLoc());
-                if (const ExecutionPlan* plan = clause->getExecutionPlan()) {
-                    newClause->setExecutionPlan(souffle::clone(plan));
-                }
-                newClause->setHead(mk<Atom>(newRelationName.str()));
-                for (Literal* lit : clause->getBodyLiterals()) {
-                    newClause->addToBody(souffle::clone(lit));
-                }
-
+                auto newClause =
+                        mk<Clause>(mk<Atom>(newRelationName.str()), souffle::clone(clause->getBodyLiterals()),
+                                // clone handles nullptr gracefully
+                                souffle::clone(clause->getExecutionPlan()), clause->getSrcLoc());
                 program.addClause(std::move(newClause));
             }
         }
