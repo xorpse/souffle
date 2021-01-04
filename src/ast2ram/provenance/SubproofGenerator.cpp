@@ -139,7 +139,7 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
 
     // add level constraints, i.e., that each body literal has height less than that of the head atom
     for (const auto* lit : clause.getBodyLiterals()) {
-        if (const auto* atom = as<ast::Atom*>(lit)) {
+        if (const auto* atom = as<ast::Atom>(lit)) {
             size_t levelNumber = 0;
             while (getAtomOrdering(clause).at(levelNumber) != atom) {
                 levelNumber++;
@@ -175,7 +175,7 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
 
     // get all values in the body
     for (const auto* lit : clause.getBodyLiterals()) {
-        if (const auto* atom = as<ast::Atom*>(lit)) {
+        if (const auto* atom = as<ast::Atom>(lit)) {
             for (const auto* arg : atom->getArguments()) {
                 values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
             }
@@ -192,7 +192,7 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
 
             values.push_back(std::move(ruleNum));
             values.push_back(std::move(level));
-        } else if (const auto* neg = as<ast::Negation*>(lit)) {
+        } else if (const auto* neg = as<ast::Negation>(lit)) {
             for (ast::Argument* arg : neg->getAtom()->getArguments()) {
                 values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
             }
@@ -238,7 +238,7 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
     }
 
     for (const auto* lit : clause.getBodyLiterals()) {
-        if (const auto* atom = as<ast::Atom*>(lit)) {
+        if (const auto* atom = as<ast::Atom>(lit)) {
             size_t levelNumber = 0;
             while (getAtomOrdering(clause).at(levelNumber) != atom) {
                 levelNumber++;

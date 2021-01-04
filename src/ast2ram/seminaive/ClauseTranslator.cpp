@@ -642,7 +642,7 @@ void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::
         const auto& arg = nodeArgs.at(i);
 
         // check for variable references
-        if (const auto* var = as<ast::Variable*>(arg)) {
+        if (const auto* var = as<ast::Variable>(arg)) {
             valueIndex->addVarReference(var->getName(), nodeLevel, i);
         }
 
@@ -699,7 +699,7 @@ void ClauseTranslator::indexAggregatorBody(const ast::Aggregator& agg) {
     const auto& aggAtomArgs = aggAtom->getArguments();
     for (size_t i = 0; i < aggAtomArgs.size(); i++) {
         const auto* arg = aggAtomArgs.at(i);
-        if (const auto* var = as<ast::Variable*>(arg)) {
+        if (const auto* var = as<ast::Variable>(arg)) {
             valueIndex->addVarReference(var->getName(), aggLoc.identifier, (int)i);
         }
     }
