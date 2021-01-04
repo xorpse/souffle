@@ -83,10 +83,10 @@ private:
         auto&& relTypes = relInfo["types"].array_items();
         assert(relTypes.size() == arity);
 
-        for (size_t i = 0; i < arity; ++i) {
-            auto&& type = relTypes[i].string_value();
-            assert(!type.empty() && "malformed types tag");
-            typeAttributes.push_back(type);
+        for (const auto& jsonType : relTypes) {
+            const auto& typeString = jsonType.string_value();
+            assert(!typeString.empty() && "malformed types tag");
+            typeAttributes.push_back(typeString);
         }
 
         for (size_t i = 0; i < auxiliaryArity; i++) {
