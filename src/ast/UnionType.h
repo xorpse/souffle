@@ -51,6 +51,10 @@ public:
         return types;
     }
 
+    std::vector<QualifiedName>& getTypes() {
+        return types;
+    }
+
     /** Add another unioned type */
     void add(QualifiedName type) {
         types.push_back(std::move(type));

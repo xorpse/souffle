@@ -185,7 +185,7 @@ public:
         }
     }
 
-    std::vector<const Node*> getChildNodes() const override {
+    std::vector<const Node*> getChildNodesImpl() const override {
         std::vector<const Node*> res;
 
         res.push_back(componentType.get());

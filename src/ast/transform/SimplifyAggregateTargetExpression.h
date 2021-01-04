@@ -43,6 +43,6 @@ private:
      * @return equivalent aggregator with a simple target expression
      */
     static Aggregator* simplifyTargetExpression(
-            const TranslationUnit& tu, const Clause* clause, const Aggregator* aggregator);
+            const TranslationUnit& tu, const Clause& clause, Aggregator& aggregator);
 };
 }  // namespace souffle::ast::transform
