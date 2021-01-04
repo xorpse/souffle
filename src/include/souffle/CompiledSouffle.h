@@ -111,7 +111,7 @@ private:
 
     protected:
         bool equal(const iterator_base& o) const override {
-            const auto& casted = static_cast<const iterator_wrapper&>(o);
+            const auto& casted = asAssert<iterator_wrapper>(o);
             return it == casted.it;
         }
     };

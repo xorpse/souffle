@@ -44,7 +44,7 @@ bool HoistConditionsTransformer::hoistConditions(Program& program) {
     visitDepthFirst(program, [&](const Query& query) {
         Own<Condition> newCondition;
         std::function<Own<Node>(Own<Node>)> filterRewriter = [&](Own<Node> node) -> Own<Node> {
-            if (auto* filter = dynamic_cast<Filter*>(node.get())) {
+            if (auto* filter = as<Filter>(node)) {
                 const Condition& condition = filter->getCondition();
                 // if filter condition is independent of any TupleOperation,
                 // delete the filter operation and collect condition
@@ -72,7 +72,7 @@ bool HoistConditionsTransformer::hoistConditions(Program& program) {
     visitDepthFirst(program, [&](const TupleOperation& search) {
         Own<Condition> newCondition;
         std::function<Own<Node>(Own<Node>)> filterRewriter = [&](Own<Node> node) -> Own<Node> {
-            if (auto* filter = dynamic_cast<Filter*>(node.get())) {
+            if (auto* filter = as<Filter>(node)) {
                 const Condition& condition = filter->getCondition();
                 // if filter condition matches level of TupleOperation,
                 // delete the filter operation and collect condition

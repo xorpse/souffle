@@ -18,6 +18,7 @@
 #include "RelationTag.h"
 #include "ram/Node.h"
 #include "souffle/utility/ContainerUtil.h"
+#include "souffle/utility/MiscUtil.h"
 #include <cassert>
 #include <cstddef>
 #include <memory>
@@ -116,8 +117,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        assert(isA<Relation>(&node));
-        const auto& other = static_cast<const Relation&>(node);
+        const auto& other = asAssert<Relation>(node);
         return representation == other.representation && name == other.name && arity == other.arity &&
                auxiliaryArity == other.auxiliaryArity && attributeNames == other.attributeNames &&
                attributeTypes == other.attributeTypes;

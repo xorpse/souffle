@@ -76,9 +76,9 @@ bool RemoveRelationCopiesTransformer::removeRelationCopies(TranslationUnit& tran
                         const auto cur = args.back();
                         args.pop_back();
 
-                        if (auto var = dynamic_cast<const ast::Variable*>(cur)) {
+                        if (auto var = as<ast::Variable>(cur)) {
                             onlyDistinctHeadVars &= headVars.insert(var->getName()).second;
-                        } else if (auto init = dynamic_cast<const RecordInit*>(cur)) {
+                        } else if (auto init = as<RecordInit>(cur)) {
                             // records are decomposed and their arguments are checked
                             for (auto rec_arg : init->getArguments()) {
                                 args.push_back(rec_arg);

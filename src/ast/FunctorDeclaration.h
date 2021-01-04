@@ -101,7 +101,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const FunctorDeclaration&>(node);
+        const auto& other = asAssert<FunctorDeclaration>(node);
         return name == other.name && argsTypes == other.argsTypes && returnType == other.returnType &&
                stateful == other.stateful;
     }

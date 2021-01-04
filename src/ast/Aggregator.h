@@ -110,7 +110,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Aggregator&>(node);
+        const auto& other = asAssert<Aggregator>(node);
         return baseOperator == other.baseOperator && equal_ptr(targetExpression, other.targetExpression) &&
                equal_targets(body, other.body);
     }

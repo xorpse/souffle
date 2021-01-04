@@ -488,10 +488,12 @@ souffleutility_HEADERS = \
         include/souffle/utility/FileUtil.h                 \
         include/souffle/utility/EvaluatorUtil.h            \
         include/souffle/utility/FunctionalUtil.h           \
+        include/souffle/utility/Iteration.h                \
         include/souffle/utility/MiscUtil.h                 \
         include/souffle/utility/ParallelUtil.h             \
         include/souffle/utility/StreamUtil.h               \
         include/souffle/utility/StringUtil.h               \
+        include/souffle/utility/Types.h                    \
         include/souffle/utility/json11.h                   \
         include/souffle/utility/span.h                     \
         include/souffle/utility/tinyformat.h

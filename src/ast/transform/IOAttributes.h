@@ -200,9 +200,7 @@ private:
         std::map<std::string, json11::Json> sumTypes;
 
         visitDepthFirst(program.getTypes(), [&](const AlgebraicDataType& astAlgebraicDataType) {
-            auto& sumType =
-                    dynamic_cast<const analysis::AlgebraicDataType&>(typeEnv.getType(astAlgebraicDataType));
-
+            auto& sumType = asAssert<analysis::AlgebraicDataType>(typeEnv.getType(astAlgebraicDataType));
             auto& branches = sumType.getBranches();
 
             std::vector<json11::Json> branchesInfo;

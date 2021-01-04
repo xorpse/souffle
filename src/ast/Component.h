@@ -234,7 +234,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Component&>(node);
+        const auto& other = asAssert<Component>(node);
 
         if (equal_ptr(componentType, other.componentType)) {
             return true;

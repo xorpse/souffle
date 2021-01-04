@@ -68,8 +68,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        assert(isA<Negation>(&node));
-        const auto& other = static_cast<const Negation&>(node);
+        const auto& other = asAssert<Negation>(node);
         return equal_ptr(atom, other.atom);
     }
 

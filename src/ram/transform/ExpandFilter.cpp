@@ -34,7 +34,7 @@ bool ExpandFilterTransformer::expandFilters(Program& program) {
     bool changed = false;
     visitDepthFirst(program, [&](const Query& query) {
         std::function<Own<Node>(Own<Node>)> filterRewriter = [&](Own<Node> node) -> Own<Node> {
-            if (const Filter* filter = dynamic_cast<Filter*>(node.get())) {
+            if (const Filter* filter = as<Filter>(node)) {
                 const Condition* condition = &filter->getCondition();
                 VecOwn<Condition> conditionList = toConjunctionList(condition);
                 if (conditionList.size() > 1) {

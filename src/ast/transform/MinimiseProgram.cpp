@@ -363,7 +363,7 @@ bool MinimiseProgramTransformer::reduceSingletonRelations(TranslationUnit& trans
             // Remove appearances from children nodes
             node->apply(*this);
 
-            if (auto* atom = dynamic_cast<Atom*>(node.get())) {
+            if (auto* atom = as<Atom>(node)) {
                 auto pos = canonicalName.find(atom->getQualifiedName());
                 if (pos != canonicalName.end()) {
                     auto newAtom = souffle::clone(atom);

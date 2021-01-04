@@ -31,8 +31,8 @@ bool ReorderFilterBreak::reorderFilterBreak(Program& program) {
     visitDepthFirst(program, [&](const Query& query) {
         std::function<Own<Node>(Own<Node>)> filterRewriter = [&](Own<Node> node) -> Own<Node> {
             // find filter-break nesting
-            if (const Filter* filter = dynamic_cast<Filter*>(node.get())) {
-                if (const Break* br = dynamic_cast<Break*>(&filter->getOperation())) {
+            if (const Filter* filter = as<Filter>(node)) {
+                if (const Break* br = as<Break>(filter->getOperation())) {
                     changed = true;
                     // convert to break-filter nesting
                     node = mk<Break>(souffle::clone(&br->getCondition()),

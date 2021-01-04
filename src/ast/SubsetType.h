@@ -20,6 +20,7 @@
 #include "ast/QualifiedName.h"
 #include "ast/Type.h"
 #include "parser/SrcLocation.h"
+#include "souffle/utility/MiscUtil.h"
 #include <iostream>
 #include <string>
 #include <utility>
@@ -53,7 +54,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const SubsetType&>(node);
+        const auto& other = asAssert<SubsetType>(node);
         return getQualifiedName() == other.getQualifiedName() && baseType == other.baseType;
     }
 

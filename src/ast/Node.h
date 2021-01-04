@@ -18,7 +18,7 @@
 
 #include "parser/SrcLocation.h"
 #include "souffle/utility/ContainerUtil.h"
-
+#include "souffle/utility/MiscUtil.h"
 #include <iosfwd>
 #include <string>
 #include <typeinfo>
@@ -92,19 +92,19 @@ public:
         ChildNodes(ConstChildNodes&& cn) : childNodes(std::move(cn)) {}
 
         auto begin() const {
-            return makeTransformIter(childNodes.begin(), caster());
+            return transformIter(childNodes.begin(), caster());
         }
 
         auto cbegin() const {
-            return makeTransformIter(childNodes.cbegin(), caster());
+            return transformIter(childNodes.cbegin(), caster());
         }
 
         auto end() const {
-            return makeTransformIter(childNodes.end(), caster());
+            return transformIter(childNodes.end(), caster());
         }
 
         auto cend() const {
-            return makeTransformIter(childNodes.cend(), caster());
+            return transformIter(childNodes.cend(), caster());
         }
 
         auto size() const {

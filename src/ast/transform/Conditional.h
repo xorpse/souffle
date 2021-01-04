@@ -47,7 +47,7 @@ public:
     }
 
     void setDebugReport() override {
-        if (auto* mt = dynamic_cast<MetaTransformer*>(transformer.get())) {
+        if (auto* mt = as<MetaTransformer>(transformer)) {
             mt->setDebugReport();
         } else {
             transformer = mk<DebugReporter>(std::move(transformer));
@@ -56,13 +56,13 @@ public:
 
     void setVerbosity(bool verbose) override {
         this->verbose = verbose;
-        if (auto* mt = dynamic_cast<MetaTransformer*>(transformer.get())) {
+        if (auto* mt = as<MetaTransformer>(transformer)) {
             mt->setVerbosity(verbose);
         }
     }
 
     void disableTransformers(const std::set<std::string>& transforms) override {
-        if (auto* mt = dynamic_cast<MetaTransformer*>(transformer.get())) {
+        if (auto* mt = as<MetaTransformer>(transformer)) {
             mt->disableTransformers(transforms);
         } else if (transforms.find(transformer->getName()) != transforms.end()) {
             transformer = mk<NullTransformer>();

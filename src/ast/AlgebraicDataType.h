@@ -22,6 +22,7 @@
 #include "ast/Type.h"
 #include "parser/SrcLocation.h"
 #include "souffle/utility/ContainerUtil.h"
+#include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include "souffle/utility/tinyformat.h"
 #include <cassert>
@@ -67,7 +68,7 @@ public:
 
 protected:
     bool equal(const Node& node) const override {
-        const auto& other = dynamic_cast<const AlgebraicDataType&>(node);
+        const auto& other = asAssert<AlgebraicDataType>(node);
         return getQualifiedName() == other.getQualifiedName() && branches == other.branches;
     }
 

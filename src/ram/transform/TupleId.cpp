@@ -43,7 +43,7 @@ bool TupleIdTransformer::reorderOperations(Program& program) {
         });
 
         std::function<Own<Node>(Own<Node>)> elementRewriter = [&](Own<Node> node) -> Own<Node> {
-            if (auto* element = dynamic_cast<TupleElement*>(node.get())) {
+            if (auto* element = as<TupleElement>(node)) {
                 if (reorder[element->getTupleId()] != element->getTupleId()) {
                     changed = true;
                     node = mk<TupleElement>(reorder[element->getTupleId()], element->getElement());

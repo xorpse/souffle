@@ -767,7 +767,7 @@ public:
 
     std::set<Usage> getUsageStats(size_t width = size_t(-1)) {
         std::set<Usage> usages;
-        DirectoryEntry* usageStats = dynamic_cast<DirectoryEntry*>(
+        DirectoryEntry* usageStats = as<DirectoryEntry>(
                 ProfileEventSingleton::instance().getDB().lookupEntry({"program", "usage", "timepoint"}));
         if (usageStats == nullptr || usageStats->getKeys().size() < 2) {
             return usages;
@@ -781,16 +781,13 @@ public:
             Usage currentUsage{};
             uint64_t cur = std::stoul(currentKey);
             currentUsage.time = std::chrono::duration<uint64_t, std::micro>(cur);
-            cur = dynamic_cast<SizeEntry*>(
-                    usageStats->readDirectoryEntry(currentKey)->readEntry("systemtime"))
+            cur = as<SizeEntry>(usageStats->readDirectoryEntry(currentKey)->readEntry("systemtime"))
                           ->getSize();
             currentUsage.systemtime = std::chrono::duration<uint64_t, std::micro>(cur);
-            cur = dynamic_cast<SizeEntry*>(usageStats->readDirectoryEntry(currentKey)->readEntry("usertime"))
-                          ->getSize();
+            cur = as<SizeEntry>(usageStats->readDirectoryEntry(currentKey)->readEntry("usertime"))->getSize();
             currentUsage.usertime = std::chrono::duration<uint64_t, std::micro>(cur);
             currentUsage.maxRSS =
-                    dynamic_cast<SizeEntry*>(usageStats->readDirectoryEntry(currentKey)->readEntry("maxRSS"))
-                            ->getSize();
+                    as<SizeEntry>(usageStats->readDirectoryEntry(currentKey)->readEntry("maxRSS"))->getSize();
 
             // Duplicate times are possible
             if (allUsages.find(currentUsage) != allUsages.end()) {
@@ -1022,12 +1019,10 @@ public:
 
     void top() {
         const std::shared_ptr<ProgramRun>& run = out.getProgramRun();
-        auto* totalRelationsEntry =
-                dynamic_cast<TextEntry*>(ProfileEventSingleton::instance().getDB().lookupEntry(
-                        {"program", "configuration", "relationCount"}));
-        auto* totalRulesEntry =
-                dynamic_cast<TextEntry*>(ProfileEventSingleton::instance().getDB().lookupEntry(
-                        {"program", "configuration", "ruleCount"}));
+        auto* totalRelationsEntry = as<TextEntry>(ProfileEventSingleton::instance().getDB().lookupEntry(
+                {"program", "configuration", "relationCount"}));
+        auto* totalRulesEntry = as<TextEntry>(ProfileEventSingleton::instance().getDB().lookupEntry(
+                {"program", "configuration", "ruleCount"}));
         size_t totalRelations = 0;
         if (totalRelationsEntry != nullptr) {
             totalRelations = std::stoul(totalRelationsEntry->getText());

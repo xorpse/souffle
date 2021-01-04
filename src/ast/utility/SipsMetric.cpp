@@ -45,7 +45,7 @@ std::vector<unsigned int> SipsMetric::getReordering(const Clause* clause) const 
 
         // set all arguments that are variables as bound
         for (const auto* arg : nextAtom->getArguments()) {
-            if (const auto* var = dynamic_cast<const Variable*>(arg)) {
+            if (const auto* var = as<Variable>(arg)) {
                 bindingStore.bindVariableStrongly(var->getName());
             }
         }

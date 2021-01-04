@@ -143,8 +143,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Program&>(node);
-
+        const auto& other = asAssert<Program>(node);
         return equal_targets(relations, other.relations) && equal_ptr(main, other.main) &&
                equal_targets(subroutines, other.subroutines);
     }

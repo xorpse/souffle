@@ -81,7 +81,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const ComponentInit&>(node);
+        const auto& other = asAssert<ComponentInit>(node);
         return instanceName == other.instanceName && *componentType == *other.componentType;
     }
 

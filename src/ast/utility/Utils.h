@@ -83,7 +83,7 @@ template <typename T, typename C>
 std::vector<T*> getBodyLiterals(const C& clause) {
     std::vector<T*> res;
     for (auto& lit : clause.getBodyLiterals()) {
-        if (T* t = dynamic_cast<T*>(lit)) {
+        if (T* t = as<T>(lit)) {
             res.push_back(t);
         }
     }

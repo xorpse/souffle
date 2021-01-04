@@ -91,7 +91,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const IndexAggregate&>(node);
+        const auto& other = asAssert<IndexAggregate>(node);
         return IndexOperation::equal(other) && AbstractAggregate::equal(other);
     }
 };

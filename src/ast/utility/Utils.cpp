@@ -319,9 +319,9 @@ Clause* reorderAtoms(const Clause* clause, const std::vector<unsigned int>& newO
 }
 
 void negateConstraintInPlace(Constraint& constraint) {
-    if (auto* bcstr = dynamic_cast<BooleanConstraint*>(&constraint)) {
+    if (auto* bcstr = as<BooleanConstraint>(constraint)) {
         bcstr->set(!bcstr->isTrue());
-    } else if (auto* cstr = dynamic_cast<BinaryConstraint*>(&constraint)) {
+    } else if (auto* cstr = as<BinaryConstraint>(constraint)) {
         cstr->setBaseOperator(souffle::negatedConstraintOp(cstr->getBaseOperator()));
     } else {
         fatal("Unknown ast-constraint type");
@@ -335,7 +335,7 @@ bool renameAtoms(Node& node, const std::map<QualifiedName, QualifiedName>& oldTo
         rename_atoms(const std::map<QualifiedName, QualifiedName>& oldToNew) : oldToNew(oldToNew) {}
         Own<Node> operator()(Own<Node> node) const override {
             node->apply(*this);
-            if (auto* atom = dynamic_cast<Atom*>(node.get())) {
+            if (auto* atom = as<Atom>(node)) {
                 if (contains(oldToNew, atom->getQualifiedName())) {
                     auto renamedAtom = souffle::clone(atom);
                     renamedAtom->setQualifiedName(oldToNew.at(atom->getQualifiedName()));
