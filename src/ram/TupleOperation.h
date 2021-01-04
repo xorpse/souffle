@@ -17,6 +17,7 @@
 #include "ram/NestedOperation.h"
 #include "ram/Node.h"
 #include "ram/Operation.h"
+#include "souffle/utility/MiscUtil.h"
 #include <memory>
 #include <string>
 #include <utility>
@@ -51,7 +52,7 @@ public:
 
 protected:
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const TupleOperation&>(node);
+        const auto& other = asAssert<TupleOperation>(node);
         return NestedOperation::equal(other) && identifier == other.identifier;
     }
 

@@ -18,6 +18,7 @@
 
 #include "ram/Expression.h"
 #include "ram/Node.h"
+#include "souffle/utility/MiscUtil.h"
 #include <cstdlib>
 #include <ostream>
 
@@ -56,7 +57,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const TupleElement&>(node);
+        const auto& other = asAssert<TupleElement>(node);
         return identifier == other.identifier && element == other.element;
     }
 

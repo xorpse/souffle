@@ -71,7 +71,7 @@ public:
         componentType = mapper(std::move(componentType));
     }
 
-    std::vector<const Node*> getChildNodes() const override {
+    std::vector<const Node*> getChildNodesImpl() const override {
         return {componentType.get()};
     }
 
@@ -81,7 +81,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const ComponentInit&>(node);
+        const auto& other = asAssert<ComponentInit>(node);
         return instanceName == other.instanceName && *componentType == *other.componentType;
     }
 

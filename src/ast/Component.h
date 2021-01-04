@@ -185,7 +185,7 @@ public:
         }
     }
 
-    std::vector<const Node*> getChildNodes() const override {
+    std::vector<const Node*> getChildNodesImpl() const override {
         std::vector<const Node*> res;
 
         res.push_back(componentType.get());
@@ -234,7 +234,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Component&>(node);
+        const auto& other = asAssert<Component>(node);
 
         if (equal_ptr(componentType, other.componentType)) {
             return true;

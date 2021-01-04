@@ -49,14 +49,14 @@ bool NormaliseGeneratorsTransformer::transform(TranslationUnit& translationUnit)
         Own<Node> operator()(Own<Node> node) const override {
             node->apply(*this);
 
-            if (auto* inf = dynamic_cast<IntrinsicFunctor*>(node.get())) {
+            if (auto* inf = as<IntrinsicFunctor>(node)) {
                 // Multi-result functors
                 if (analysis::FunctorAnalysis::isMultiResult(*inf)) {
                     std::string name = getUniqueName();
                     generatorNames.push_back({name, Own<IntrinsicFunctor>(inf->clone())});
                     return mk<Variable>(name);
                 }
-            } else if (auto* agg = dynamic_cast<Aggregator*>(node.get())) {
+            } else if (auto* agg = as<Aggregator>(node)) {
                 // Aggregators
                 std::string name = getUniqueName();
                 generatorNames.push_back({name, Own<Aggregator>(agg->clone())});

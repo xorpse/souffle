@@ -17,6 +17,7 @@
 #include "ram/ExistenceCheck.h"
 #include "ram/Project.h"
 #include "ram/utility/Utils.h"
+#include "souffle/utility/MiscUtil.h"
 #include <cassert>
 #include <iosfwd>
 #include <memory>
@@ -84,7 +85,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const GuardedProject&>(node);
+        const auto& other = asAssert<GuardedProject>(node);
         return relation == other.relation && equal_targets(expressions, other.expressions) &&
                equal_ptr(condition, other.condition);
     }

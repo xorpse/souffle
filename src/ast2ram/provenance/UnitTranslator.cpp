@@ -362,7 +362,7 @@ void UnitTranslator::transformVariablesToSubroutineArgs(
         VariablesToArguments(const std::map<int, std::string>& idToVarName) : idToVarName(idToVarName) {}
 
         Own<ram::Node> operator()(Own<ram::Node> node) const override {
-            if (const auto* tuple = dynamic_cast<const ram::TupleElement*>(node.get())) {
+            if (const auto* tuple = as<ram::TupleElement*>(node.get())) {
                 const auto& varName = idToVarName.at(tuple->getTupleId());
                 // TODO (azreika): shouldn't rely on name for singleton variables; do an index check
                 if (isPrefix("+underscore", varName)) {
@@ -442,19 +442,19 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
     VecOwn<ram::Statement> searchSequence;
     size_t litNumber = 0;
     for (const auto* lit : lits) {
-        if (const auto* atom = dynamic_cast<const ast::Atom*>(lit)) {
+        if (const auto* atom = as<ast::Atom*>(lit)) {
             auto existenceCheck = makeRamAtomExistenceCheck(atom, idToVarName, *dummyValueIndex);
             transformVariablesToSubroutineArgs(existenceCheck.get(), idToVarName);
             auto ifStatement =
                     makeIfStatement(std::move(existenceCheck), makeRamReturnTrue(), makeRamReturnFalse());
             appendStmt(searchSequence, std::move(ifStatement));
-        } else if (const auto* neg = dynamic_cast<const ast::Negation*>(lit)) {
+        } else if (const auto* neg = as<ast::Negation*>(lit)) {
             auto existenceCheck = makeRamAtomExistenceCheck(neg->getAtom(), idToVarName, *dummyValueIndex);
             transformVariablesToSubroutineArgs(existenceCheck.get(), idToVarName);
             auto ifStatement =
                     makeIfStatement(std::move(existenceCheck), makeRamReturnFalse(), makeRamReturnTrue());
             appendStmt(searchSequence, std::move(ifStatement));
-        } else if (const auto* con = dynamic_cast<const ast::Constraint*>(lit)) {
+        } else if (const auto* con = as<ast::Constraint>(lit)) {
             auto condition = context->translateConstraint(*symbolTable, *dummyValueIndex, con);
             transformVariablesToSubroutineArgs(condition.get(), idToVarName);
             auto ifStatement =

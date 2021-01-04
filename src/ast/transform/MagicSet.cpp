@@ -528,7 +528,7 @@ bool NormaliseDatabaseTransformer::normaliseArguments(TranslationUnit& translati
                 : constraints(constraints), changeCount(changeCount) {}
 
         Own<Node> operator()(Own<Node> node) const override {
-            if (auto* aggr = dynamic_cast<Aggregator*>(node.get())) {
+            if (auto* aggr = as<Aggregator>(node)) {
                 // Aggregator variable scopes should be maintained, so changes shouldn't propagate
                 // above this level.
                 std::set<Own<BinaryConstraint>> subConstraints;
@@ -556,7 +556,7 @@ bool NormaliseDatabaseTransformer::normaliseArguments(TranslationUnit& translati
             }
 
             // All non-variables should be normalised
-            if (auto* arg = dynamic_cast<Argument*>(node.get())) {
+            if (auto* arg = as<Argument>(node)) {
                 if (!isA<ast::Variable>(arg)) {
                     std::stringstream name;
                     name << "@abdul" << changeCount++;
@@ -590,7 +590,7 @@ bool NormaliseDatabaseTransformer::normaliseArguments(TranslationUnit& translati
 
         // Apply to each body literal that isn't already a `<var> = <arg>` constraint
         for (Literal* lit : clause->getBodyLiterals()) {
-            if (auto* bc = dynamic_cast<BinaryConstraint*>(lit)) {
+            if (auto* bc = as<BinaryConstraint>(lit)) {
                 if (isEqConstraint(bc->getBaseOperator()) && isA<ast::Variable>(bc->getLHS())) {
                     continue;
                 }
@@ -649,7 +649,7 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
      * Therefore, bound head atom vars should be marked as weakly bound.
      */
     for (size_t i = 0; i < adornmentMarker.length(); i++) {
-        const auto* var = dynamic_cast<ast::Variable*>(headArgs[i]);
+        const auto* var = as<ast::Variable>(headArgs[i]);
         assert(var != nullptr && "expected only variables in head");
         if (adornmentMarker[i] == 'b') {
             variableBindings.bindVariableWeakly(var->getName());
@@ -671,7 +671,7 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
     assert((adornmentMarker == "" || headArgs.size() == adornmentMarker.length()) &&
             "adornment marker should correspond to head atom variables");
     for (const auto* arg : headArgs) {
-        const auto* var = dynamic_cast<const ast::Variable*>(arg);
+        const auto* var = as<ast::Variable>(arg);
         assert(var != nullptr && "expected only variables in head");
         adornedHeadAtom->addArgument(souffle::clone(var));
     }
@@ -680,7 +680,7 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
     // Add in adorned body literals
     std::vector<Own<Literal>> adornedBodyLiterals;
     for (const auto* lit : clause->getBodyLiterals()) {
-        if (const auto* negation = dynamic_cast<const Negation*>(lit)) {
+        if (const auto* negation = as<Negation>(lit)) {
             // Negated atoms should not be adorned, but their clauses should be anyway
             const auto negatedAtomName = negation->getAtom()->getQualifiedName();
             assert(contains(weaklyIgnoredRelations, negatedAtomName) &&
@@ -694,14 +694,14 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
             continue;
         }
 
-        const auto* atom = dynamic_cast<const Atom*>(lit);
+        const auto* atom = as<Atom>(lit);
         assert(atom != nullptr && "expected atom");
 
         // Form the appropriate adornment marker
         std::stringstream atomAdornment;
         if (!contains(weaklyIgnoredRelations, atom->getQualifiedName())) {
             for (const auto* arg : atom->getArguments()) {
-                const auto* var = dynamic_cast<const ast::Variable*>(arg);
+                const auto* var = as<ast::Variable>(arg);
                 assert(var != nullptr && "expected only variables in atom");
                 atomAdornment << (variableBindings.isBound(var->getName()) ? "b" : "f");
             }
@@ -718,7 +718,7 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
 
         // All arguments are now bound
         for (const auto* arg : atom->getArguments()) {
-            const auto* var = dynamic_cast<const ast::Variable*>(arg);
+            const auto* var = as<ast::Variable>(arg);
             assert(var != nullptr && "expected only variables in atom");
             variableBindings.bindVariableStrongly(var->getName());
         }
@@ -817,11 +817,11 @@ bool NegativeLabellingTransformer::transform(TranslationUnit& translationUnit) {
         atom->setQualifiedName(getNegativeLabel(relName));
         relationsToLabel.insert(relName);
     });
-    visitDepthFirst(program, [&](const Aggregator& aggr) {
-        visitDepthFirst(aggr, [&](const Atom& atom) {
+    visitDepthFirst(program, [&](Aggregator& aggr) {
+        visitDepthFirst(aggr, [&](Atom& atom) {
             auto relName = atom.getQualifiedName();
             if (contains(relationsToNotLabel, relName)) return;
-            const_cast<Atom&>(atom).setQualifiedName(getNegativeLabel(relName));
+            atom.setQualifiedName(getNegativeLabel(relName));
             relationsToLabel.insert(relName);
         });
     });
@@ -1056,7 +1056,7 @@ void MagicSetCoreTransformer::addRelevantVariables(
 
     // Helper method to add all newly relevant variables given a lhs = rhs constraint
     auto addLocallyRelevantVariables = [&](const Argument* lhs, const Argument* rhs) {
-        const auto* lhsVar = dynamic_cast<const ast::Variable*>(lhs);
+        const auto* lhsVar = as<ast::Variable>(lhs);
         if (lhsVar == nullptr) return true;
 
         // if the rhs is fully bound, lhs is now bound
@@ -1071,9 +1071,9 @@ void MagicSetCoreTransformer::addRelevantVariables(
 
         // if the rhs is a record, and lhs is a bound var, then all rhs vars are bound
         bool fixpointReached = true;
-        if (const auto* rhsRec = dynamic_cast<const RecordInit*>(rhs)) {
+        if (const auto* rhsRec = as<RecordInit>(rhs)) {
             for (const auto* arg : rhsRec->getArguments()) {
-                const auto* subVar = dynamic_cast<const ast::Variable*>(arg);
+                const auto* subVar = as<ast::Variable>(arg);
                 assert(subVar != nullptr && "expected only variable arguments");
                 if (!contains(variables, subVar->getName())) {
                     fixpointReached = false;
@@ -1135,7 +1135,7 @@ std::vector<const BinaryConstraint*> MagicSetCoreTransformer::getBindingEquality
         const Clause* clause) {
     std::vector<const BinaryConstraint*> equalityConstraints;
     for (const auto* lit : clause->getBodyLiterals()) {
-        const auto* bc = dynamic_cast<const BinaryConstraint*>(lit);
+        const auto* bc = as<BinaryConstraint>(lit);
         if (bc == nullptr || !isEqConstraint(bc->getBaseOperator())) continue;
         if (isA<ast::Variable>(bc->getLHS()) || isA<Constant>(bc->getRHS())) {
             bool containsAggrs = false;
@@ -1185,7 +1185,7 @@ bool MagicSetCoreTransformer::transform(TranslationUnit& translationUnit) {
             atomsToTheLeft.push_back(createMagicAtom(clause->getHead()));
         }
         for (const auto* lit : clause->getBodyLiterals()) {
-            const auto* atom = dynamic_cast<const Atom*>(lit);
+            const auto* atom = as<Atom>(lit);
             if (atom == nullptr) continue;
             if (!isAdorned(atom->getQualifiedName())) {
                 atomsToTheLeft.push_back(souffle::clone(atom));

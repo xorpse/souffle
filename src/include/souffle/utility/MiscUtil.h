@@ -16,10 +16,11 @@
 
 #pragma once
 
+#include "souffle/utility/Iteration.h"
+#include "souffle/utility/Types.h"
 #include "tinyformat.h"
 #include <cassert>
 #include <chrono>
-#include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -99,13 +100,25 @@ inline long duration_in_ns(const time_point& start, const time_point& end) {
 // -------------------------------------------------------------------------------
 
 template <typename A>
-std::unique_ptr<A> clone(const A* node) {
-    return node ? std::unique_ptr<A>(node->clone()) : nullptr;
+Own<A> clone(const A* node) {
+    return node ? Own<A>(node->clone()) : nullptr;
 }
 
 template <typename A>
-std::unique_ptr<A> clone(const std::unique_ptr<A>& node) {
-    return node ? std::unique_ptr<A>(node->clone()) : nullptr;
+Own<A> clone(const Own<A>& node) {
+    return clone(node.get());
+}
+
+template <typename A>
+auto clone(const std::vector<A*>& xs) {
+    auto rn = makeTransformRange(xs.begin(), xs.end(), [](A* x) { return clone(x); });
+    return VecOwn<A>(rn.begin(), rn.end());
+}
+
+template <typename A>
+auto clone(const VecOwn<A>& xs) {
+    auto rn = makeTransformRange(xs.begin(), xs.end(), [](Own<A> const& x) { return clone(x); });
+    return VecOwn<A>(rn.begin(), rn.end());
 }
 
 template <typename A, typename B>
@@ -136,34 +149,63 @@ bool equal_ptr(const T* a, const T* b) {
  * pointers are null is also considered equivalent.
  */
 template <typename T>
-bool equal_ptr(const std::unique_ptr<T>& a, const std::unique_ptr<T>& b) {
+bool equal_ptr(const Own<T>& a, const Own<T>& b) {
     return equal_ptr(a.get(), b.get());
 }
 
+/**
+ * Copy the const qualifier of type T onto type U
+ */
 template <typename A, typename B>
-using copy_const_t = std::conditional_t<std::is_const_v<A>, const B, B>;
+using copy_const = std::conditional<std::is_const_v<A>, const B, B>;
+
+template <typename A, typename B>
+using copy_const_t = typename copy_const<A, B>::type;
+
+/**
+ * This class is used to tell as<> that cross-casting is allowed.
+ * I use a named type rather than just a bool to make the code stand out.
+ */
+class AllowCrossCast {};
 
 /**
  * Helpers for `dynamic_cast`ing without having to specify redundant type qualifiers.
- * e.g. `as<AstLiteral>(p)` instead of `dynamic_cast<const AstLiteral*>(p.get())`.
+ * e.g. `as<AstLiteral>(p)` instead of `as<AstLiteral>(p)`.
  */
-template <typename B, typename A>
+template <typename B, typename CastType = void, typename A>
 auto as(A* x) {
-    static_assert(std::is_base_of_v<A, B>,
-            "`as<B, A>` does not allow cross-type dyn casts. "
-            "(i.e. `as<B, A>` where `B <: A` is not true.) "
-            "Such a cast is likely a mistake or typo.");
+    if constexpr (!std::is_same_v<CastType, AllowCrossCast>) {
+        static_assert(std::is_base_of_v<std::remove_const_t<A>, std::remove_const_t<B>>,
+                "`as<B, A>` does not allow cross-type dyn casts. "
+                "(i.e. `as<B, A>` where `B <: A` is not true.) "
+                "Such a cast is likely a mistake or typo.");
+    }
     return dynamic_cast<copy_const_t<A, B>*>(x);
 }
 
-template <typename B, typename A>
-std::enable_if_t<std::is_base_of_v<A, B>, copy_const_t<A, B>*> as(A& x) {
-    return as<B>(&x);
+template <typename B, typename CastType = void, typename A>
+auto as(A& x) {
+    return as<B, CastType>(&x);
 }
 
-template <typename B, typename A>
-B* as(const std::unique_ptr<A>& x) {
-    return as<B>(x.get());
+template <typename B, typename CastType = void, typename A>
+auto as(Own<A>& x) {
+    return as<B, CastType>(x.get());
+}
+
+template <typename B, typename CastType = void, typename A>
+auto as(const Own<A>& x) {
+    return as<B, CastType>(x.get());
+}
+
+/**
+ * Down-casts and checks the cast has succeeded
+ */
+template <typename B, typename CastType = void, typename A>
+auto& asAssert(A&& a) {
+    auto* cast = as<B, CastType>(std::forward<A>(a));
+    assert(cast && "Invalid cast");
+    return *cast;
 }
 
 /**
@@ -171,19 +213,24 @@ B* as(const std::unique_ptr<A>& x) {
  */
 template <typename B, typename A>
 bool isA(A* x) {
+    // Dont't forward onto as<> - need to check cross-casting
     return dynamic_cast<copy_const_t<A, B>*>(x) != nullptr;
 }
 
 template <typename B, typename A>
-std::enable_if_t<std::is_base_of_v<A, B>, bool> isA(A& x) {
+auto isA(A& x) {
     return isA<B>(&x);
 }
 
 template <typename B, typename A>
-bool isA(const std::unique_ptr<A>& x) {
+bool isA(const Own<A>& x) {
     return isA<B>(x.get());
 }
 
+template <typename B, typename A>
+bool isA(Own<A>& x) {
+    return isA<B>(x.get());
+}
 // -------------------------------------------------------------------------------
 //                               Error Utilities
 // -------------------------------------------------------------------------------

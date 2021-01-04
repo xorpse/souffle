@@ -97,7 +97,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        auto&& other = static_cast<const NestedIntrinsicOperator&>(node);
+        auto&& other = asAssert<NestedIntrinsicOperator>(node);
         return TupleOperation::equal(node) && op == other.op && equal_targets(args, other.args);
     }
 

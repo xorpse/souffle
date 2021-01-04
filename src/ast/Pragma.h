@@ -18,6 +18,7 @@
 
 #include "ast/Node.h"
 #include "parser/SrcLocation.h"
+#include "souffle/utility/MiscUtil.h"
 #include <ostream>
 #include <string>
 #include <utility>
@@ -48,7 +49,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Pragma&>(node);
+        const auto& other = asAssert<Pragma>(node);
         return other.key == key && other.value == value;
     }
 

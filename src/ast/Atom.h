@@ -23,6 +23,7 @@
 #include "ast/utility/NodeMapper.h"
 #include "parser/SrcLocation.h"
 #include "souffle/utility/ContainerUtil.h"
+#include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include <algorithm>
 #include <cstddef>
@@ -82,7 +83,7 @@ public:
         }
     }
 
-    std::vector<const Node*> getChildNodes() const override {
+    std::vector<const Node*> getChildNodesImpl() const override {
         std::vector<const Node*> res;
         for (auto& cur : arguments) {
             res.push_back(cur.get());
@@ -96,7 +97,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Atom&>(node);
+        const auto& other = asAssert<Atom>(node);
         return name == other.name && equal_targets(arguments, other.arguments);
     }
 

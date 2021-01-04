@@ -61,8 +61,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        assert(isA<BooleanConstraint>(&node));
-        const auto& other = static_cast<const BooleanConstraint&>(node);
+        const auto& other = asAssert<BooleanConstraint>(node);
         return truthValue == other.truthValue;
     }
 

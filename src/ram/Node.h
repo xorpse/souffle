@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ram/utility/LambdaNodeMapper.h"
+#include "souffle/utility/MiscUtil.h"
 #include <cassert>
 #include <functional>
 #include <iostream>

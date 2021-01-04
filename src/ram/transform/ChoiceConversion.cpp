@@ -33,15 +33,14 @@ Own<Operation> ChoiceConversionTransformer::rewriteScan(const Scan* scan) {
     bool transformTuple = false;
 
     // Check that Filter follows the Scan in the loop nest
-    if (const auto* filter = dynamic_cast<const Filter*>(&scan->getOperation())) {
+    if (const auto* filter = as<Filter>(scan->getOperation())) {
         // Check that the Filter uses the identifier in the Scan
         if (rla->getLevel(&filter->getCondition()) == scan->getTupleId()) {
             transformTuple = true;
 
-            // Check that the filter is not referred to after
-            const auto* nextNode = dynamic_cast<const Node*>(&filter->getOperation());
+            const Node& nextNode = filter->getOperation();
 
-            visitDepthFirst(*nextNode, [&](const TupleElement& element) {
+            visitDepthFirst(nextNode, [&](const TupleElement& element) {
                 if (element.getTupleId() == scan->getTupleId()) {
                     transformTuple = false;
                 }
@@ -52,7 +51,7 @@ Own<Operation> ChoiceConversionTransformer::rewriteScan(const Scan* scan) {
     // Convert the Scan/If pair into a Choice
     if (transformTuple) {
         VecOwn<Expression> newValues;
-        const auto* filter = dynamic_cast<const Filter*>(&scan->getOperation());
+        const auto* filter = as<Filter>(scan->getOperation());
         const int identifier = scan->getTupleId();
 
         return mk<Choice>(scan->getRelation(), identifier, souffle::clone(&filter->getCondition()),
@@ -65,15 +64,15 @@ Own<Operation> ChoiceConversionTransformer::rewriteIndexScan(const IndexScan* in
     bool transformTuple = false;
 
     // Check that Filter follows the IndexScan in the loop nest
-    if (const auto* filter = dynamic_cast<const Filter*>(&indexScan->getOperation())) {
+    if (const auto* filter = as<Filter>(indexScan->getOperation())) {
         // Check that the Filter uses the identifier in the IndexScan
         if (rla->getLevel(&filter->getCondition()) == indexScan->getTupleId()) {
             transformTuple = true;
 
             // Check that the filter is not referred to after
-            const auto* nextNode = dynamic_cast<const Node*>(&filter->getOperation());
+            const Node& nextNode = filter->getOperation();
 
-            visitDepthFirst(*nextNode, [&](const TupleElement& element) {
+            visitDepthFirst(nextNode, [&](const TupleElement& element) {
                 if (element.getTupleId() == indexScan->getTupleId()) {
                     transformTuple = false;
                 }
@@ -84,7 +83,7 @@ Own<Operation> ChoiceConversionTransformer::rewriteIndexScan(const IndexScan* in
     // Convert the IndexScan/If pair into an IndexChoice
     if (transformTuple) {
         RamPattern newValues;
-        const auto* filter = dynamic_cast<const Filter*>(&indexScan->getOperation());
+        const auto* filter = as<Filter>(indexScan->getOperation());
         const int identifier = indexScan->getTupleId();
         const std::string& rel = indexScan->getRelation();
 
@@ -113,12 +112,12 @@ bool ChoiceConversionTransformer::convertScans(Program& program) {
     bool changed = false;
     visitDepthFirst(program, [&](const Query& query) {
         std::function<Own<Node>(Own<Node>)> scanRewriter = [&](Own<Node> node) -> Own<Node> {
-            if (const Scan* scan = dynamic_cast<Scan*>(node.get())) {
+            if (const Scan* scan = as<Scan>(node)) {
                 if (Own<Operation> op = rewriteScan(scan)) {
                     changed = true;
                     node = std::move(op);
                 }
-            } else if (const IndexScan* indexScan = dynamic_cast<IndexScan*>(node.get())) {
+            } else if (const IndexScan* indexScan = as<IndexScan>(node)) {
                 if (Own<Operation> op = rewriteIndexScan(indexScan)) {
                     changed = true;
                     node = std::move(op);

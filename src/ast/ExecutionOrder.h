@@ -18,6 +18,7 @@
 
 #include "ast/Node.h"
 #include "parser/SrcLocation.h"
+#include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include <ostream>
 #include <string>
@@ -54,7 +55,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const ExecutionOrder&>(node);
+        const auto& other = asAssert<ExecutionOrder>(node);
         return order == other.order;
     }
 

@@ -139,7 +139,7 @@ struct Visitor : public ram_visitor_tag {
         // dispatch node processing based on dynamic type
 
 #define FORWARD(Kind) \
-    if (const auto* n = dynamic_cast<const Kind*>(&node)) return visit##Kind(*n, args...);
+    if (const auto* n = as<Kind>(node)) return visit##Kind(*n, args...);
 
         // Relation
         FORWARD(Relation);
@@ -365,6 +365,7 @@ struct LambdaVisitor : public Visitor<void> {
     std::function<R(const N&)> lambda;
     LambdaVisitor(std::function<R(const N&)> lambda) : lambda(std::move(lambda)) {}
     void visit(const Node& node) override {
+        // Don't use as<> to allow cross-casting to mixins
         if (const auto* n = dynamic_cast<const N*>(&node)) {
             lambda(*n);
         }

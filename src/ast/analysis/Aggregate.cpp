@@ -81,7 +81,7 @@ std::set<std::string> getWitnessVariables(
 
         std::unique_ptr<Node> operator()(std::unique_ptr<Node> node) const override {
             static int numReplaced = 0;
-            if (dynamic_cast<Aggregator*>(node.get()) != nullptr) {
+            if (isA<Aggregator>(node)) {
                 // Replace the aggregator with a variable
                 std::stringstream newVariableName;
                 newVariableName << "+aggr_var_" << numReplaced++;
@@ -126,13 +126,13 @@ std::set<std::string> getWitnessVariables(
     // 3. Calculate all the witness variables
     // A witness will occur ungrounded in the aggregatorlessClause
     for (const auto& argPair : analysis::getGroundedTerms(tu, *aggregatorlessClause)) {
-        if (const auto* variable = dynamic_cast<const Variable*>(argPair.first)) {
+        if (const auto* variable = as<Variable>(argPair.first)) {
             bool variableIsGrounded = argPair.second;
             if (!variableIsGrounded) {
                 // then we expect it to be grounded in the aggregate subclause
                 // if it's a witness!!
                 for (const auto& aggArgPair : isGroundedInAggregateSubclause) {
-                    if (const auto* var = dynamic_cast<const Variable*>(aggArgPair.first)) {
+                    if (const auto* var = as<Variable>(aggArgPair.first)) {
                         bool aggVariableIsGrounded = aggArgPair.second;
                         if (var->getName() == variable->getName() && aggVariableIsGrounded) {
                             witnessVariables.insert(variable->getName());
@@ -294,7 +294,7 @@ std::set<std::string> getInjectedVariables(
 
         std::unique_ptr<Node> operator()(std::unique_ptr<Node> node) const override {
             static int numReplaced = 0;
-            if (auto* aggregate = dynamic_cast<Aggregator*>(node.get())) {
+            if (auto* aggregate = as<Aggregator>(node)) {
                 // If we come across an aggregate that is NOT an ancestor of
                 // the target aggregate, or that IS itself the target aggregate,
                 // we should replace it with a dummy variable.
@@ -351,7 +351,7 @@ std::set<std::string> getInjectedVariables(
     std::set<std::string> injectedVariables;
     // Search through the tweakedClause to find groundings!
     for (const auto& argPair : analysis::getGroundedTerms(tu, *tweakedClause)) {
-        if (const auto* variable = dynamic_cast<const Variable*>(argPair.first)) {
+        if (const auto* variable = as<Variable>(argPair.first)) {
             bool varIsGrounded = argPair.second;
             if (varIsGrounded && variablesInTargetAggregate.find(variable->getName()) !=
                                          variablesInTargetAggregate.end()) {

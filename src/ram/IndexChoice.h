@@ -102,7 +102,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const IndexChoice&>(node);
+        const auto& other = asAssert<IndexChoice>(node);
         return IndexOperation::equal(other) && AbstractChoice::equal(other);
     }
 };

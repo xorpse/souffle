@@ -78,7 +78,7 @@ public:
         rhs = map(std::move(rhs));
     }
 
-    std::vector<const Node*> getChildNodes() const override {
+    std::vector<const Node*> getChildNodesImpl() const override {
         return {lhs.get(), rhs.get()};
     }
 
@@ -92,8 +92,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        assert(isA<BinaryConstraint>(&node));
-        const auto& other = static_cast<const BinaryConstraint&>(node);
+        const auto& other = asAssert<BinaryConstraint>(node);
         return operation == other.operation && equal_ptr(lhs, other.lhs) && equal_ptr(rhs, other.rhs);
     }
 

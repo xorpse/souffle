@@ -20,6 +20,7 @@
 #include "ast/QualifiedName.h"
 #include "ast/Type.h"
 #include "parser/SrcLocation.h"
+#include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include <algorithm>
 #include <cstddef>
@@ -51,6 +52,10 @@ public:
         return types;
     }
 
+    std::vector<QualifiedName>& getTypes() {
+        return types;
+    }
+
     /** Add another unioned type */
     void add(QualifiedName type) {
         types.push_back(std::move(type));
@@ -71,7 +76,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const UnionType&>(node);
+        const auto& other = asAssert<UnionType>(node);
         return getQualifiedName() == other.getQualifiedName() && types == other.types;
     }
 

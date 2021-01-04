@@ -68,7 +68,7 @@ public:
         return keys.size();
     }
 
-    std::vector<const Node*> getChildNodes() const override {
+    std::vector<const Node*> getChildNodesImpl() const override {
         std::vector<const Node*> res;
         for (auto& cur : keys) {
             res.push_back(cur.get());
@@ -100,8 +100,7 @@ public:
     }
 
     bool equal(const Node& node) const override {
-        assert(nullptr != dynamic_cast<const FunctionalConstraint*>(&node));
-        const auto& other = static_cast<const FunctionalConstraint&>(node);
+        const auto& other = asAssert<FunctionalConstraint>(node);
         if (keys.size() != other.keys.size()) {
             return false;
         }

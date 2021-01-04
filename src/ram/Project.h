@@ -92,7 +92,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Project&>(node);
+        const auto& other = asAssert<Project>(node);
         return relation == other.relation && equal_targets(expressions, other.expressions);
     }
 

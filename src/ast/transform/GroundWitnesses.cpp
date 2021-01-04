@@ -38,11 +38,11 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
 
     std::vector<AggregateWithWitnesses> aggregatesToFix;
 
-    visitDepthFirst(program, [&](const Clause& clause) {
-        visitDepthFirst(clause, [&](const Aggregator& agg) {
+    visitDepthFirst(program, [&](Clause& clause) {
+        visitDepthFirst(clause, [&](Aggregator& agg) {
             auto witnessVariables = analysis::getWitnessVariables(translationUnit, clause, agg);
             // remove any witness variables that originate from an inner aggregate
-            visitDepthFirst(agg, [&](const Aggregator& innerAgg) {
+            visitDepthFirst(agg, [&](Aggregator& innerAgg) {
                 if (agg == innerAgg) {
                     return;
                 }
@@ -54,8 +54,7 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
             if (witnessVariables.empty()) {
                 return;
             }
-            AggregateWithWitnesses instance(
-                    const_cast<Aggregator*>(&agg), const_cast<Clause*>(&clause), witnessVariables);
+            AggregateWithWitnesses instance(&agg, &clause, witnessVariables);
             aggregatesToFix.push_back(instance);
         });
     });
@@ -68,7 +67,7 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
         // not to use it after that point.
         // 1. make a copy of all aggregate body literals, because they will need to
         // be added to the rule body
-        std::vector<std::unique_ptr<Literal>> aggregateLiterals;
+        VecOwn<Literal> aggregateLiterals;
         for (const auto& literal : agg->getBodyLiterals()) {
             aggregateLiterals.push_back(souffle::clone(literal));
         }
@@ -80,10 +79,10 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
         for (std::string witness : witnesses) {
             newWitnessVariableName[witness] = analysis::findUniqueVariableName(*clause, witness + "_w");
         }
-        visitDepthFirst(*agg, [&](const Variable& var) {
+        visitDepthFirst(*agg, [&](Variable& var) {
             if (witnesses.find(var.getName()) != witnesses.end()) {
                 // if this variable is a witness, we need to replace it with its new name
-                const_cast<Variable&>(var).setName(newWitnessVariableName[var.getName()]);
+                var.setName(newWitnessVariableName[var.getName()]);
             }
         });
 
@@ -94,7 +93,7 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
             TargetVariableReplacer(Aggregator* agg, std::string target)
                     : aggregate(agg), targetVariable(std::move(target)) {}
             std::unique_ptr<Node> operator()(std::unique_ptr<Node> node) const override {
-                if (auto* variable = dynamic_cast<Variable*>(node.get())) {
+                if (auto* variable = as<Variable>(node)) {
                     if (variable->getName() == targetVariable) {
                         auto replacement = souffle::clone(aggregate);
                         return replacement;
@@ -104,7 +103,7 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
                 return node;
             }
         };
-        const auto* targetVariable = dynamic_cast<const Variable*>(agg->getTargetExpression());
+        const auto* targetVariable = as<Variable>(agg->getTargetExpression());
         std::string targetVariableName = targetVariable->getName();
         TargetVariableReplacer replacer(agg, targetVariableName);
         for (std::unique_ptr<Literal>& literal : aggregateLiterals) {

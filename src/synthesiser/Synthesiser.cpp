@@ -206,15 +206,15 @@ void Synthesiser::generateRelationTypeStruct(std::ostream& out, Own<Relation> re
 std::set<const ram::Relation*> Synthesiser::getReferencedRelations(const Operation& op) {
     std::set<const ram::Relation*> res;
     visitDepthFirst(op, [&](const Node& node) {
-        if (auto scan = dynamic_cast<const RelationOperation*>(&node)) {
+        if (auto scan = as<RelationOperation>(node)) {
             res.insert(lookup(scan->getRelation()));
-        } else if (auto agg = dynamic_cast<const Aggregate*>(&node)) {
+        } else if (auto agg = as<Aggregate>(node)) {
             res.insert(lookup(agg->getRelation()));
-        } else if (auto exists = dynamic_cast<const ExistenceCheck*>(&node)) {
+        } else if (auto exists = as<ExistenceCheck>(node)) {
             res.insert(lookup(exists->getRelation()));
-        } else if (auto provExists = dynamic_cast<const ProvenanceExistenceCheck*>(&node)) {
+        } else if (auto provExists = as<ProvenanceExistenceCheck>(node)) {
             res.insert(lookup(provExists->getRelation()));
-        } else if (auto project = dynamic_cast<const Project*>(&node)) {
+        } else if (auto project = as<Project>(node)) {
             res.insert(lookup(project->getRelation()));
         }
     });
@@ -390,7 +390,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             const Operation* next = &query.getOperation();
             VecOwn<Condition> requireCtx;
             VecOwn<Condition> freeOfCtx;
-            if (const auto* filter = dynamic_cast<const Filter*>(&query.getOperation())) {
+            if (const auto* filter = as<Filter>(query.getOperation())) {
                 next = &filter->getOperation();
                 // Check terms of outer filter operation whether they can be pushed before
                 // the context-generation for speed imrovements
@@ -1141,7 +1141,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             auto keys = isa->getSearchSignature(&aggregate);
             RelationRepresentation repr = synthesiser.lookup(aggregate.getRelation())->getRepresentation();
 
-            const auto* tupleElem = dynamic_cast<const TupleElement*>(&aggregate.getExpression());
+            const auto* tupleElem = as<TupleElement>(aggregate.getExpression());
             return tupleElem && tupleElem->getTupleId() == identifier &&
                    keys[tupleElem->getElement()] != ram::analysis::AttributeConstraint::None &&
                    (repr == RelationRepresentation::BTREE || repr == RelationRepresentation::DEFAULT);

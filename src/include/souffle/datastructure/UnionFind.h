@@ -18,6 +18,7 @@
 
 #include "souffle/datastructure/LambdaBTree.h"
 #include "souffle/datastructure/PiggyList.h"
+#include "souffle/utility/MiscUtil.h"
 #include <atomic>
 #include <cstddef>
 #include <cstdint>

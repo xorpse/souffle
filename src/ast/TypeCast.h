@@ -57,8 +57,8 @@ public:
         this->type = type;
     }
 
-    std::vector<const Node*> getChildNodes() const override {
-        auto res = Argument::getChildNodes();
+    std::vector<const Node*> getChildNodesImpl() const override {
+        auto res = Argument::getChildNodesImpl();
         res.push_back(value.get());
         return res;
     }
@@ -77,7 +77,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const TypeCast&>(node);
+        const auto& other = asAssert<TypeCast>(node);
         return type == other.type && equal_ptr(value, other.value);
     }
 

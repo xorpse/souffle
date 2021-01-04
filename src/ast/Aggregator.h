@@ -61,6 +61,10 @@ public:
         return targetExpression.get();
     }
 
+    Argument* getTargetExpression() {
+        return targetExpression.get();
+    }
+
     /** Return body literals */
     std::vector<Literal*> getBodyLiterals() const {
         return toPtrVector(body);
@@ -71,8 +75,8 @@ public:
         body = std::move(bodyLiterals);
     }
 
-    std::vector<const Node*> getChildNodes() const override {
-        auto res = Argument::getChildNodes();
+    std::vector<const Node*> getChildNodesImpl() const override {
+        auto res = Argument::getChildNodesImpl();
         if (targetExpression) {
             res.push_back(targetExpression.get());
         }
@@ -106,7 +110,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Aggregator&>(node);
+        const auto& other = asAssert<Aggregator>(node);
         return baseOperator == other.baseOperator && equal_ptr(targetExpression, other.targetExpression) &&
                equal_targets(body, other.body);
     }

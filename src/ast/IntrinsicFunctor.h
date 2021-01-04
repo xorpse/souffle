@@ -23,6 +23,7 @@
 #include "parser/SrcLocation.h"
 #include "souffle/TypeAttribute.h"
 #include "souffle/utility/ContainerUtil.h"
+#include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include <cassert>
 #include <cstddef>
@@ -81,7 +82,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const IntrinsicFunctor&>(node);
+        const auto& other = asAssert<IntrinsicFunctor>(node);
         return function == other.function && Functor::equal(node);
     }
 

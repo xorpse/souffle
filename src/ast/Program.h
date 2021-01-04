@@ -28,6 +28,7 @@
 #include "ast/Type.h"
 #include "ast/utility/NodeMapper.h"
 #include "souffle/utility/ContainerUtil.h"
+#include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include <algorithm>
 #include <cassert>
@@ -163,7 +164,7 @@ public:
         }
     }
 
-    std::vector<const Node*> getChildNodes() const override {
+    std::vector<const Node*> getChildNodesImpl() const override {
         std::vector<const Node*> res;
         for (const auto& cur : pragmas) {
             res.push_back(cur.get());
@@ -209,7 +210,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Program&>(node);
+        const auto& other = asAssert<Program>(node);
         if (!equal_targets(pragmas, other.pragmas)) {
             return false;
         }

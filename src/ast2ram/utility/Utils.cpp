@@ -72,7 +72,7 @@ void nameUnnamedVariables(ast::Clause* clause) {
             node->apply(*this);
 
             // replace unknown variables
-            if (dynamic_cast<ast::UnnamedVariable*>(node.get()) != nullptr) {
+            if (isA<ast::UnnamedVariable>(node)) {
                 auto name = " _unnamed_var" + toString(++counter);
                 return mk<ast::Variable>(name);
             }

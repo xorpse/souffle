@@ -19,6 +19,7 @@
 #include "ast/Node.h"
 #include "ast/QualifiedName.h"
 #include "parser/SrcLocation.h"
+#include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include <ostream>
 #include <string>
@@ -74,7 +75,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const ComponentType&>(node);
+        const auto& other = asAssert<ComponentType>(node);
         return name == other.name && typeParams == other.typeParams;
     }
 
