@@ -222,7 +222,7 @@ std::set<const ram::Relation*> Synthesiser::getReferencedRelations(const Operati
 }
 
 void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
-    class CodeEmitter : public Visitor<void, std::ostream&> {
+    class CodeEmitter : public ram::Visitor<void, Node const, std::ostream&> {
     private:
         Synthesiser& synthesiser;
         IndexAnalysis* const isa = synthesiser.getTranslationUnit().getAnalysis<IndexAnalysis>();
@@ -304,7 +304,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                     low << supremum;
                 } else {
                     low << "ramBitCast(";
-                    visit(rangePatternLower[column], low);
+                    visit(*rangePatternLower[column], low);
                     low << ")";
                 }
 
@@ -312,7 +312,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                     high << infimum;
                 } else {
                     high << "ramBitCast(";
-                    visit(rangePatternUpper[column], high);
+                    visit(*rangePatternUpper[column], high);
                     high << ")";
                 }
             }
@@ -324,7 +324,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
         // -- relation statements --
 
-        void visitIO(const IO& io, std::ostream& out) override {
+        void visit_(type_identity<IO>, const IO& io, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
 
             // print directives as C++ initializers
@@ -381,7 +381,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitQuery(const Query& query, std::ostream& out) override {
+        void visit_(type_identity<Query>, const Query& query, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
 
             // split terms of conditions of outer filter operation
@@ -472,7 +472,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitClear(const Clear& clear, std::ostream& out) override {
+        void visit_(type_identity<Clear>, const Clear& clear, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
 
             if (!synthesiser.lookup(clear.getRelation())->isTemp()) {
@@ -484,7 +484,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitLogSize(const LogSize& size, std::ostream& out) override {
+        void visit_(type_identity<LogSize>, const LogSize& size, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "ProfileEventSingleton::instance().makeQuantityEvent( R\"(";
             out << size.getMessage() << ")\",";
@@ -494,15 +494,15 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
         // -- control flow statements --
 
-        void visitSequence(const Sequence& seq, std::ostream& out) override {
+        void visit_(type_identity<Sequence>, const Sequence& seq, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             for (const auto& cur : seq.getStatements()) {
-                visit(cur, out);
+                visit(*cur, out);
             }
             PRINT_END_COMMENT(out);
         }
 
-        void visitParallel(const Parallel& parallel, std::ostream& out) override {
+        void visit_(type_identity<Parallel>, const Parallel& parallel, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             auto stmts = parallel.getStatements();
 
@@ -514,7 +514,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             // a single statement => save the overhead
             if (stmts.size() == 1) {
-                visit(stmts[0], out);
+                visit(*stmts[0], out);
                 PRINT_END_COMMENT(out);
                 return;
             }
@@ -527,7 +527,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             // put each thread in another section
             for (const auto& cur : stmts) {
                 out << "SECTION_START;\n";
-                visit(cur, out);
+                visit(*cur, out);
                 out << "SECTION_END\n";
             }
 
@@ -536,7 +536,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitLoop(const Loop& loop, std::ostream& out) override {
+        void visit_(type_identity<Loop>, const Loop& loop, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "iter = 0;\n";
             out << "for(;;) {\n";
@@ -547,7 +547,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitSwap(const Swap& swap, std::ostream& out) override {
+        void visit_(type_identity<Swap>, const Swap& swap, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             const std::string& deltaKnowledge =
                     synthesiser.getRelationName(synthesiser.lookup(swap.getFirstRelation()));
@@ -558,7 +558,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitExtend(const Extend& extend, std::ostream& out) override {
+        void visit_(type_identity<Extend>, const Extend& extend, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << synthesiser.getRelationName(synthesiser.lookup(extend.getSourceRelation())) << "->"
                 << "extend("
@@ -567,7 +567,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitExit(const Exit& exit, std::ostream& out) override {
+        void visit_(type_identity<Exit>, const Exit& exit, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "if(";
             visit(exit.getCondition(), out);
@@ -575,7 +575,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitCall(const Call& call, std::ostream& out) override {
+        void visit_(type_identity<Call>, const Call& call, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             const Program& prog = synthesiser.getTranslationUnit().getProgram();
             const auto& subs = prog.getSubroutines();
@@ -586,7 +586,8 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitLogRelationTimer(const LogRelationTimer& timer, std::ostream& out) override {
+        void visit_(
+                type_identity<LogRelationTimer>, const LogRelationTimer& timer, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             // create local scope for name resolution
             out << "{\n";
@@ -606,7 +607,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitLogTimer(const LogTimer& timer, std::ostream& out) override {
+        void visit_(type_identity<LogTimer>, const LogTimer& timer, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             // create local scope for name resolution
             out << "{\n";
@@ -623,7 +624,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitDebugInfo(const DebugInfo& dbg, std::ostream& out) override {
+        void visit_(type_identity<DebugInfo>, const DebugInfo& dbg, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "signalHandler->setMsg(R\"_(";
             out << dbg.getMessage();
@@ -636,7 +637,8 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
         // -- operations --
 
-        void visitNestedOperation(const NestedOperation& nested, std::ostream& out) override {
+        void visit_(
+                type_identity<NestedOperation>, const NestedOperation& nested, std::ostream& out) override {
             visit(nested.getOperation(), out);
             if (Global::config().has("profile") && Global::config().has("profile-frequency") &&
                     !nested.getProfileText().empty()) {
@@ -644,13 +646,13 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             }
         }
 
-        void visitTupleOperation(const TupleOperation& search, std::ostream& out) override {
+        void visit_(type_identity<TupleOperation>, const TupleOperation& search, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
-            visitNestedOperation(search, out);
+            visit_(type_identity<NestedOperation>(), search, out);
             PRINT_END_COMMENT(out);
         }
 
-        void visitParallelScan(const ParallelScan& pscan, std::ostream& out) override {
+        void visit_(type_identity<ParallelScan>, const ParallelScan& pscan, std::ostream& out) override {
             const auto* rel = synthesiser.lookup(pscan.getRelation());
             const auto& relName = synthesiser.getRelationName(rel);
 
@@ -670,7 +672,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "try{\n";
             out << "for(const auto& env0 : *it) {\n";
 
-            visitTupleOperation(pscan, out);
+            visit_(type_identity<TupleOperation>(), pscan, out);
 
             out << "}\n";
             out << "} catch(std::exception &e) { signalHandler->error(e.what());}\n";
@@ -679,7 +681,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitScan(const Scan& scan, std::ostream& out) override {
+        void visit_(type_identity<Scan>, const Scan& scan, std::ostream& out) override {
             const auto* rel = synthesiser.lookup(scan.getRelation());
             auto relName = synthesiser.getRelationName(rel);
             auto id = scan.getTupleId();
@@ -691,14 +693,14 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "for(const auto& env" << id << " : "
                 << "*" << relName << ") {\n";
 
-            visitTupleOperation(scan, out);
+            visit_(type_identity<TupleOperation>(), scan, out);
 
             out << "}\n";
 
             PRINT_END_COMMENT(out);
         }
 
-        void visitChoice(const Choice& choice, std::ostream& out) override {
+        void visit_(type_identity<Choice>, const Choice& choice, std::ostream& out) override {
             const auto* rel = synthesiser.lookup(choice.getRelation());
             auto relName = synthesiser.getRelationName(rel);
             auto identifier = choice.getTupleId();
@@ -715,7 +717,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             out << ") {\n";
 
-            visitTupleOperation(choice, out);
+            visit_(type_identity<TupleOperation>(), choice, out);
 
             out << "break;\n";
             out << "}\n";
@@ -724,7 +726,8 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitParallelChoice(const ParallelChoice& pchoice, std::ostream& out) override {
+        void visit_(
+                type_identity<ParallelChoice>, const ParallelChoice& pchoice, std::ostream& out) override {
             const auto* rel = synthesiser.lookup(pchoice.getRelation());
             auto relName = synthesiser.getRelationName(rel);
 
@@ -749,7 +752,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             out << ") {\n";
 
-            visitTupleOperation(pchoice, out);
+            visit_(type_identity<TupleOperation>(), pchoice, out);
 
             out << "break;\n";
             out << "}\n";
@@ -760,7 +763,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitIndexScan(const IndexScan& iscan, std::ostream& out) override {
+        void visit_(type_identity<IndexScan>, const IndexScan& iscan, std::ostream& out) override {
             const auto* rel = synthesiser.lookup(iscan.getRelation());
             auto relName = synthesiser.getRelationName(rel);
             auto identifier = iscan.getTupleId();
@@ -781,13 +784,14 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 << rangeBounds.second.str() << "," << ctxName << ");\n";
             out << "for(const auto& env" << identifier << " : range) {\n";
 
-            visitTupleOperation(iscan, out);
+            visit_(type_identity<TupleOperation>(), iscan, out);
 
             out << "}\n";
             PRINT_END_COMMENT(out);
         }
 
-        void visitParallelIndexScan(const ParallelIndexScan& piscan, std::ostream& out) override {
+        void visit_(type_identity<ParallelIndexScan>, const ParallelIndexScan& piscan,
+                std::ostream& out) override {
             const auto* rel = synthesiser.lookup(piscan.getRelation());
             auto relName = synthesiser.getRelationName(rel);
             auto arity = rel->getArity();
@@ -817,7 +821,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "try{\n";
             out << "for(const auto& env0 : *it) {\n";
 
-            visitTupleOperation(piscan, out);
+            visit_(type_identity<TupleOperation>(), piscan, out);
 
             out << "}\n";
             out << "} catch(std::exception &e) { signalHandler->error(e.what());}\n";
@@ -826,7 +830,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitIndexChoice(const IndexChoice& ichoice, std::ostream& out) override {
+        void visit_(type_identity<IndexChoice>, const IndexChoice& ichoice, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             const auto* rel = synthesiser.lookup(ichoice.getRelation());
             auto relName = synthesiser.getRelationName(rel);
@@ -851,7 +855,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             out << ") {\n";
 
-            visitTupleOperation(ichoice, out);
+            visit_(type_identity<TupleOperation>(), ichoice, out);
 
             out << "break;\n";
             out << "}\n";
@@ -860,7 +864,8 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitParallelIndexChoice(const ParallelIndexChoice& pichoice, std::ostream& out) override {
+        void visit_(type_identity<ParallelIndexChoice>, const ParallelIndexChoice& pichoice,
+                std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             const auto* rel = synthesiser.lookup(pichoice.getRelation());
             auto relName = synthesiser.getRelationName(rel);
@@ -895,7 +900,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             out << ") {\n";
 
-            visitTupleOperation(pichoice, out);
+            visit_(type_identity<TupleOperation>(), pichoice, out);
 
             out << "break;\n";
             out << "}\n";
@@ -906,7 +911,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitUnpackRecord(const UnpackRecord& unpack, std::ostream& out) override {
+        void visit_(type_identity<UnpackRecord>, const UnpackRecord& unpack, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             auto arity = unpack.getArity();
 
@@ -927,14 +932,14 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "{\n";
 
             // continue with condition checks and nested body
-            visitTupleOperation(unpack, out);
+            visit_(type_identity<TupleOperation>(), unpack, out);
 
             out << "}\n";
             PRINT_END_COMMENT(out);
         }
 
-        void visitParallelIndexAggregate(
-                const ParallelIndexAggregate& aggregate, std::ostream& out) override {
+        void visit_(type_identity<ParallelIndexAggregate>, const ParallelIndexAggregate& aggregate,
+                std::ostream& out) override {
             assert(aggregate.getTupleId() == 0 && "not outer-most loop");
             assert(!preambleIssued && "only first loop can be made parallel");
             preambleIssued = true;
@@ -963,7 +968,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                     << "size();\n";
                 out << "{\n";  // to match PARALLEL_END closing bracket
                 out << preamble.str();
-                visitTupleOperation(aggregate, out);
+                visit_(type_identity<TupleOperation>(), aggregate, out);
                 PRINT_END_COMMENT(out);
                 return;
             }
@@ -1129,7 +1134,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             // check whether there exists a min/max first before next loop
             out << "if (shouldRunNested) {\n";
-            visitTupleOperation(aggregate, out);
+            visit_(type_identity<TupleOperation>(), aggregate, out);
             out << "}\n";
             // end single-threaded section
             out << "}\n";
@@ -1147,7 +1152,8 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                    (repr == RelationRepresentation::BTREE || repr == RelationRepresentation::DEFAULT);
         }
 
-        void visitIndexAggregate(const IndexAggregate& aggregate, std::ostream& out) override {
+        void visit_(
+                type_identity<IndexAggregate>, const IndexAggregate& aggregate, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             // get some properties
             const auto* rel = synthesiser.lookup(aggregate.getRelation());
@@ -1171,7 +1177,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 // shortcut: use relation size
                 out << "env" << identifier << "[0] = " << relName << "->"
                     << "size();\n";
-                visitTupleOperation(aggregate, out);
+                visit_(type_identity<TupleOperation>(), aggregate, out);
                 PRINT_END_COMMENT(out);
                 return;
             }
@@ -1295,13 +1301,14 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             // check whether there exists a min/max first before next loop
             out << "if (shouldRunNested) {\n";
-            visitTupleOperation(aggregate, out);
+            visit_(type_identity<TupleOperation>(), aggregate, out);
             out << "}\n";
 
             PRINT_END_COMMENT(out);
         }
 
-        void visitParallelAggregate(const ParallelAggregate& aggregate, std::ostream& out) override {
+        void visit_(type_identity<ParallelAggregate>, const ParallelAggregate& aggregate,
+                std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             // get some properties
             const auto* rel = synthesiser.lookup(aggregate.getRelation());
@@ -1323,7 +1330,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                     << "size();\n";
                 out << "PARALLEL_START\n";
                 out << preamble.str();
-                visitTupleOperation(aggregate, out);
+                visit_(type_identity<TupleOperation>(), aggregate, out);
                 PRINT_END_COMMENT(out);
                 return;
             }
@@ -1472,12 +1479,12 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             // check whether there exists a min/max first before next loop
             out << "if (shouldRunNested) {\n";
-            visitTupleOperation(aggregate, out);
+            visit_(type_identity<TupleOperation>(), aggregate, out);
             out << "}\n";
             out << "}\n";  // to close off pragma omp single section
             PRINT_END_COMMENT(out);
         }
-        void visitAggregate(const Aggregate& aggregate, std::ostream& out) override {
+        void visit_(type_identity<Aggregate>, const Aggregate& aggregate, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             // get some properties
             const auto* rel = synthesiser.lookup(aggregate.getRelation());
@@ -1493,7 +1500,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 // shortcut: use relation size
                 out << "env" << identifier << "[0] = " << relName << "->"
                     << "size();\n";
-                visitTupleOperation(aggregate, out);
+                visit_(type_identity<TupleOperation>(), aggregate, out);
                 PRINT_END_COMMENT(out);
                 return;
             }
@@ -1601,32 +1608,33 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             // check whether there exists a min/max first before next loop
             out << "if (shouldRunNested) {\n";
-            visitTupleOperation(aggregate, out);
+            visit_(type_identity<TupleOperation>(), aggregate, out);
             out << "}\n";
 
             PRINT_END_COMMENT(out);
         }
 
-        void visitFilter(const Filter& filter, std::ostream& out) override {
+        void visit_(type_identity<Filter>, const Filter& filter, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "if( ";
             visit(filter.getCondition(), out);
             out << ") {\n";
-            visitNestedOperation(filter, out);
+            visit_(type_identity<NestedOperation>(), filter, out);
             out << "}\n";
             PRINT_END_COMMENT(out);
         }
 
-        void visitBreak(const Break& breakOp, std::ostream& out) override {
+        void visit_(type_identity<Break>, const Break& breakOp, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "if( ";
             visit(breakOp.getCondition(), out);
             out << ") break;\n";
-            visitNestedOperation(breakOp, out);
+            visit_(type_identity<NestedOperation>(), breakOp, out);
             PRINT_END_COMMENT(out);
         }
 
-        void visitGuardedProject(const GuardedProject& guardedProject, std::ostream& out) override {
+        void visit_(type_identity<GuardedProject>, const GuardedProject& guardedProject,
+                std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             const auto* rel = synthesiser.lookup(guardedProject.getRelation());
             auto arity = rel->getArity();
@@ -1636,7 +1644,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             auto condition = guardedProject.getCondition();
             // guarded conditions
             out << "if( ";
-            visit(condition, out);
+            visit(*condition, out);
             out << ") {\n";
 
             // create projected tuple
@@ -1653,7 +1661,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitProject(const Project& project, std::ostream& out) override {
+        void visit_(type_identity<Project>, const Project& project, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             const auto* rel = synthesiser.lookup(project.getRelation());
             auto arity = rel->getArity();
@@ -1673,19 +1681,19 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
         // -- conditions --
 
-        void visitTrue(const True&, std::ostream& out) override {
+        void visit_(type_identity<True>, const True&, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "true";
             PRINT_END_COMMENT(out);
         }
 
-        void visitFalse(const False&, std::ostream& out) override {
+        void visit_(type_identity<False>, const False&, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "false";
             PRINT_END_COMMENT(out);
         }
 
-        void visitConjunction(const Conjunction& conj, std::ostream& out) override {
+        void visit_(type_identity<Conjunction>, const Conjunction& conj, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             visit(conj.getLHS(), out);
             out << " && ";
@@ -1693,7 +1701,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitNegation(const Negation& neg, std::ostream& out) override {
+        void visit_(type_identity<Negation>, const Negation& neg, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "!(";
             visit(neg.getOperand(), out);
@@ -1701,7 +1709,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitConstraint(const Constraint& rel, std::ostream& out) override {
+        void visit_(type_identity<Constraint>, const Constraint& rel, std::ostream& out) override {
             // clang-format off
 #define EVAL_CHILD(ty, idx)        \
     out << "ramBitCast<" #ty ">("; \
@@ -1786,14 +1794,15 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 #undef COMPARE_EQ_NE
         }
 
-        void visitEmptinessCheck(const EmptinessCheck& emptiness, std::ostream& out) override {
+        void visit_(
+                type_identity<EmptinessCheck>, const EmptinessCheck& emptiness, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << synthesiser.getRelationName(synthesiser.lookup(emptiness.getRelation())) << "->"
                 << "empty()";
             PRINT_END_COMMENT(out);
         }
 
-        void visitRelationSize(const RelationSize& size, std::ostream& out) override {
+        void visit_(type_identity<RelationSize>, const RelationSize& size, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "(RamDomain)" << synthesiser.getRelationName(synthesiser.lookup(size.getRelation()))
                 << "->"
@@ -1801,7 +1810,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitExistenceCheck(const ExistenceCheck& exists, std::ostream& out) override {
+        void visit_(type_identity<ExistenceCheck>, const ExistenceCheck& exists, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             // get some details
             const auto* rel = synthesiser.lookup(exists.getRelation());
@@ -1838,8 +1847,8 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visitProvenanceExistenceCheck(
-                const ProvenanceExistenceCheck& provExists, std::ostream& out) override {
+        void visit_(type_identity<ProvenanceExistenceCheck>, const ProvenanceExistenceCheck& provExists,
+                std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             // get some details
             const auto* rel = synthesiser.lookup(provExists.getRelation());
@@ -1894,43 +1903,46 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         }
 
         // -- values --
-        void visitUnsignedConstant(const UnsignedConstant& constant, std::ostream& out) override {
+        void visit_(type_identity<UnsignedConstant>, const UnsignedConstant& constant,
+                std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "RamUnsigned(" << constant.getValue() << ")";
             PRINT_END_COMMENT(out);
         }
 
-        void visitFloatConstant(const FloatConstant& constant, std::ostream& out) override {
+        void visit_(type_identity<FloatConstant>, const FloatConstant& constant, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "RamFloat(" << constant.getValue() << ")";
             PRINT_END_COMMENT(out);
         }
 
-        void visitSignedConstant(const SignedConstant& constant, std::ostream& out) override {
+        void visit_(
+                type_identity<SignedConstant>, const SignedConstant& constant, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "RamSigned(" << constant.getConstant() << ")";
             PRINT_END_COMMENT(out);
         }
 
-        void visitTupleElement(const TupleElement& access, std::ostream& out) override {
+        void visit_(type_identity<TupleElement>, const TupleElement& access, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "env" << access.getTupleId() << "[" << access.getElement() << "]";
             PRINT_END_COMMENT(out);
         }
 
-        void visitAutoIncrement(const AutoIncrement& /*inc*/, std::ostream& out) override {
+        void visit_(type_identity<AutoIncrement>, const AutoIncrement& /*inc*/, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "(ctr++)";
             PRINT_END_COMMENT(out);
         }
 
-        void visitIntrinsicOperator(const IntrinsicOperator& op, std::ostream& out) override {
+        void visit_(
+                type_identity<IntrinsicOperator>, const IntrinsicOperator& op, std::ostream& out) override {
 #define MINMAX_SYMBOL(op)                   \
     {                                       \
         out << "symTable.lookup(" #op "({"; \
         for (auto& cur : args) {            \
             out << "symTable.resolve(";     \
-            visit(cur, out);                \
+            visit(*cur, out);               \
             out << "), ";                   \
         }                                   \
         out << "}))";                       \
@@ -1943,7 +1955,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 #define UNARY_OP(opcode, ty, op)                \
     case FunctorOp::opcode: {                   \
         out << "(" #op "(ramBitCast<" #ty ">("; \
-        visit(args[0], out);                    \
+        visit(*args[0], out);                    \
         out << ")))";                           \
         break;                                  \
     }
@@ -1958,9 +1970,9 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 #define BINARY_OP_EXPR_EX(ty, op, rhs_post)      \
     {                                            \
         out << "(ramBitCast<" #ty ">(";          \
-        visit(args[0], out);                     \
+        visit(*args[0], out);                     \
         out << ") " #op " ramBitCast<" #ty ">("; \
-        visit(args[1], out);                     \
+        visit(*args[1], out);                     \
         out << rhs_post "))";                    \
         break;                                   \
     }
@@ -1987,9 +1999,9 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 #define BINARY_OP_EXP(opcode, ty, tyTemp)                                                     \
     case FunctorOp::opcode: {                                                                 \
         out << "static_cast<" #ty ">(static_cast<" #tyTemp ">(std::pow(ramBitCast<" #ty ">("; \
-        visit(args[0], out);                                                                  \
+        visit(*args[0], out);                                                                  \
         out << "), ramBitCast<" #ty ">(";                                                     \
-        visit(args[1], out);                                                                  \
+        visit(*args[1], out);                                                                  \
         out << "))))";                                                                        \
         break;                                                                                \
     }
@@ -1999,7 +2011,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         out << #op "({";                   \
         for (auto& cur : args) {           \
             out << "ramBitCast<" #ty ">("; \
-            visit(cur, out);               \
+            visit(*cur, out);               \
             out << "), ";                  \
         }                                  \
         out << "})";                       \
@@ -2014,13 +2026,13 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 #define CONV_TO_STRING(opcode, ty)                \
     case FunctorOp::opcode: {                     \
         out << "symTable.lookup(std::to_string("; \
-        visit(args[0], out);                      \
+        visit(*args[0], out);                      \
         out << "))";                              \
     } break;
 #define CONV_FROM_STRING(opcode, ty)                                            \
     case FunctorOp::opcode: {                                                   \
         out << "souffle::evaluator::symbol2numeric<" #ty ">(symTable.resolve("; \
-        visit(args[0], out);                                                    \
+        visit(*args[0], out);                                                    \
         out << "))";                                                            \
     } break;
             // clang-format on
@@ -2029,13 +2041,13 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             switch (op.getOperator()) {
                 /** Unary Functor Operators */
                 case FunctorOp::ORD: {
-                    visit(args[0], out);
+                    visit(*args[0], out);
                     break;
                 }
                 // TODO: change the signature of `STRLEN` to return an unsigned?
                 case FunctorOp::STRLEN: {
                     out << "static_cast<RamSigned>(symTable.resolve(";
-                    visit(args[0], out);
+                    visit(*args[0], out);
                     out << ").size())";
                     break;
                 }
@@ -2053,7 +2065,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case FunctorOp::I2I:
                 case FunctorOp::U2U:
                 case FunctorOp::S2S: {
-                    visit(args[0], out);
+                    visit(*args[0], out);
                     break;
                 }
 
@@ -2123,12 +2135,12 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                     size_t i = 0;
                     while (i < args.size() - 1) {
                         out << "symTable.resolve(";
-                        visit(args[i], out);
+                        visit(*args[i], out);
                         out << ") + ";
                         i++;
                     }
                     out << "symTable.resolve(";
-                    visit(args[i], out);
+                    visit(*args[i], out);
                     out << "))";
                     break;
                 }
@@ -2137,11 +2149,11 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case FunctorOp::SUBSTR: {
                     out << "symTable.lookup(";
                     out << "substr_wrapper(symTable.resolve(";
-                    visit(args[0], out);
+                    visit(*args[0], out);
                     out << "),(";
-                    visit(args[1], out);
+                    visit(*args[1], out);
                     out << "),(";
-                    visit(args[2], out);
+                    visit(*args[2], out);
                     out << ")))";
                     break;
                 }
@@ -2156,14 +2168,15 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 #undef MINMAX_SYMBOL
         }
 
-        void visitNestedIntrinsicOperator(const NestedIntrinsicOperator& op, std::ostream& out) override {
+        void visit_(type_identity<NestedIntrinsicOperator>, const NestedIntrinsicOperator& op,
+                std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
 
             auto emitHelper = [&](auto&& func) {
                 tfm::format(out, "%s(%s, [&](auto&& env%d) {\n", func,
-                        join(op.getArguments(), ",", [&](auto& os, auto* arg) { return visit(arg, os); }),
+                        join(op.getArguments(), ",", [&](auto& os, auto* arg) { return visit(*arg, os); }),
                         op.getTupleId());
-                visitTupleOperation(op, out);
+                visit_(type_identity<TupleOperation>(), op, out);
                 out << "});\n";
 
                 PRINT_END_COMMENT(out);
@@ -2182,7 +2195,8 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             UNREACHABLE_BAD_CASE_ANALYSIS
         }
 
-        void visitUserDefinedOperator(const UserDefinedOperator& op, std::ostream& out) override {
+        void visit_(type_identity<UserDefinedOperator>, const UserDefinedOperator& op,
+                std::ostream& out) override {
             const std::string& name = op.getName();
 
             auto args = op.getArguments();
@@ -2190,7 +2204,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 out << name << "(&symTable, &recordTable";
                 for (auto& arg : args) {
                     out << ",";
-                    visit(arg, out);
+                    visit(*arg, out);
                 }
                 out << ")";
             } else {
@@ -2208,22 +2222,22 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                     switch (argTypes[i]) {
                         case TypeAttribute::Signed:
                             out << "((RamSigned)";
-                            visit(args[i], out);
+                            visit(*args[i], out);
                             out << ")";
                             break;
                         case TypeAttribute::Unsigned:
                             out << "((RamUnsigned)";
-                            visit(args[i], out);
+                            visit(*args[i], out);
                             out << ")";
                             break;
                         case TypeAttribute::Float:
                             out << "((RamFloat)";
-                            visit(args[i], out);
+                            visit(*args[i], out);
                             out << ")";
                             break;
                         case TypeAttribute::Symbol:
                             out << "symTable.resolve(";
-                            visit(args[i], out);
+                            visit(*args[i], out);
                             out << ").c_str()";
                             break;
                         case TypeAttribute::ADT:
@@ -2239,7 +2253,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
         // -- records --
 
-        void visitPackRecord(const PackRecord& pack, std::ostream& out) override {
+        void visit_(type_identity<PackRecord>, const PackRecord& pack, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
 
             out << "pack(recordTable,"
@@ -2256,20 +2270,22 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
         // -- subroutine argument --
 
-        void visitSubroutineArgument(const SubroutineArgument& arg, std::ostream& out) override {
+        void visit_(type_identity<SubroutineArgument>, const SubroutineArgument& arg,
+                std::ostream& out) override {
             out << "(args)[" << arg.getArgument() << "]";
         }
 
         // -- subroutine return --
 
-        void visitSubroutineReturn(const SubroutineReturn& ret, std::ostream& out) override {
+        void visit_(
+                type_identity<SubroutineReturn>, const SubroutineReturn& ret, std::ostream& out) override {
             out << "std::lock_guard<std::mutex> guard(lock);\n";
             for (auto val : ret.getValues()) {
                 if (isUndefValue(val)) {
                     out << "ret.push_back(0);\n";
                 } else {
                     out << "ret.push_back(";
-                    visit(val, out);
+                    visit(*val, out);
                     out << ");\n";
                 }
             }
@@ -2277,11 +2293,11 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
         // -- safety net --
 
-        void visitUndefValue(const UndefValue&, std::ostream& /*out*/) override {
+        void visit_(type_identity<UndefValue>, const UndefValue&, std::ostream& /*out*/) override {
             fatal("Compilation error");
         }
 
-        void visitNode(const Node& node, std::ostream& /*out*/) override {
+        void visit_(type_identity<Node>, const Node& node, std::ostream& /*out*/) override {
             fatal("Unsupported node type: %s", typeid(node).name());
         }
     };

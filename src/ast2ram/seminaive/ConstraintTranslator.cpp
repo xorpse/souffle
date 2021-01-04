@@ -35,18 +35,19 @@ Own<ram::Condition> ConstraintTranslator::translateConstraint(const ast::Literal
     return ConstraintTranslator(context, symbolTable, index)(*lit);
 }
 
-Own<ram::Condition> ConstraintTranslator::visitAtom(const ast::Atom&) {
+Own<ram::Condition> ConstraintTranslator::visit_(type_identity<ast::Atom>, const ast::Atom&) {
     return nullptr;  // covered already within the scan/lookup generation step
 }
 
-Own<ram::Condition> ConstraintTranslator::visitBinaryConstraint(const ast::BinaryConstraint& binRel) {
+Own<ram::Condition> ConstraintTranslator::visit_(
+        type_identity<ast::BinaryConstraint>, const ast::BinaryConstraint& binRel) {
     auto valLHS = context.translateValue(symbolTable, index, binRel.getLHS());
     auto valRHS = context.translateValue(symbolTable, index, binRel.getRHS());
     return mk<ram::Constraint>(
             context.getOverloadedBinaryConstraintOperator(&binRel), std::move(valLHS), std::move(valRHS));
 }
 
-Own<ram::Condition> ConstraintTranslator::visitNegation(const ast::Negation& neg) {
+Own<ram::Condition> ConstraintTranslator::visit_(type_identity<ast::Negation>, const ast::Negation& neg) {
     const auto* atom = neg.getAtom();
     size_t auxiliaryArity = context.getEvaluationArity(atom);
     assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
