@@ -29,13 +29,14 @@ class Counter : public Argument {
 public:
     using Argument::Argument;
 
-    Counter* clone() const override {
-        return new Counter(getSrcLoc());
-    }
-
 protected:
     void print(std::ostream& os) const override {
         os << "$";
+    }
+
+private:
+    Counter* cloneImpl() const override {
+        return new Counter(getSrcLoc());
     }
 };
 

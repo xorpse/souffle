@@ -55,10 +55,6 @@ public:
         typeName = std::move(name);
     }
 
-    Attribute* clone() const override {
-        return new Attribute(name, typeName, getSrcLoc());
-    }
-
 protected:
     void print(std::ostream& os) const override {
         os << name << ":" << typeName;
@@ -67,6 +63,11 @@ protected:
     bool equal(const Node& node) const override {
         const auto& other = asAssert<Attribute>(node);
         return name == other.name && typeName == other.typeName;
+    }
+
+private:
+    Attribute* cloneImpl() const override {
+        return new Attribute(name, typeName, getSrcLoc());
     }
 
 private:

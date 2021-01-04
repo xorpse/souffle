@@ -63,10 +63,6 @@ public:
         componentType = std::move(type);
     }
 
-    ComponentInit* clone() const override {
-        return new ComponentInit(instanceName, souffle::clone(componentType), getSrcLoc());
-    }
-
     void apply(const NodeMapper& mapper) override {
         componentType = mapper(std::move(componentType));
     }
@@ -85,6 +81,12 @@ protected:
         return instanceName == other.instanceName && *componentType == *other.componentType;
     }
 
+private:
+    ComponentInit* cloneImpl() const override {
+        return new ComponentInit(instanceName, souffle::clone(componentType), getSrcLoc());
+    }
+
+private:
     /** Instance name */
     std::string instanceName;
 

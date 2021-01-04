@@ -39,10 +39,6 @@ public:
     SubsetType(QualifiedName name, QualifiedName baseTypeName, SrcLocation loc = {})
             : Type(std::move(name), std::move(loc)), baseType(std::move(baseTypeName)) {}
 
-    SubsetType* clone() const override {
-        return new SubsetType(getQualifiedName(), getBaseType(), getSrcLoc());
-    }
-
     /** Return base type */
     const QualifiedName& getBaseType() const {
         return baseType;
@@ -56,6 +52,11 @@ protected:
     bool equal(const Node& node) const override {
         const auto& other = asAssert<SubsetType>(node);
         return getQualifiedName() == other.getQualifiedName() && baseType == other.baseType;
+    }
+
+private:
+    SubsetType* cloneImpl() const override {
+        return new SubsetType(getQualifiedName(), getBaseType(), getSrcLoc());
     }
 
 private:

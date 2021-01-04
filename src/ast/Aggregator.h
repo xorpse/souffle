@@ -86,11 +86,6 @@ public:
         return res;
     }
 
-    Aggregator* clone() const override {
-        return new Aggregator(
-                baseOperator, souffle::clone(targetExpression), souffle::clone(body), getSrcLoc());
-    }
-
     void apply(const NodeMapper& map) override {
         if (targetExpression) {
             targetExpression = map(std::move(targetExpression));
@@ -113,6 +108,12 @@ protected:
         const auto& other = asAssert<Aggregator>(node);
         return baseOperator == other.baseOperator && equal_ptr(targetExpression, other.targetExpression) &&
                equal_targets(body, other.body);
+    }
+
+private:
+    Aggregator* cloneImpl() const override {
+        return new Aggregator(
+                baseOperator, souffle::clone(targetExpression), souffle::clone(body), getSrcLoc());
     }
 
 private:

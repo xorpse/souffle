@@ -168,7 +168,7 @@ bool FoldAnonymousRecords::transform(TranslationUnit& translationUnit) {
             changed = true;
             transformClause(*clause, newClauses);
         } else {
-            newClauses.emplace_back(clause->clone());
+            newClauses.emplace_back(souffle::clone(clause));
         }
     }
 

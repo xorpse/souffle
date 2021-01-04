@@ -63,10 +63,6 @@ public:
         return res;
     }
 
-    TypeCast* clone() const override {
-        return new TypeCast(souffle::clone(value), type, getSrcLoc());
-    }
-
     void apply(const NodeMapper& map) override {
         value = map(std::move(value));
     }
@@ -81,6 +77,12 @@ protected:
         return type == other.type && equal_ptr(value, other.value);
     }
 
+private:
+    TypeCast* cloneImpl() const override {
+        return new TypeCast(souffle::clone(value), type, getSrcLoc());
+    }
+
+private:
     /** Casted value */
     Own<Argument> value;
 

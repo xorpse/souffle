@@ -50,10 +50,6 @@ public:
         return atom.get();
     }
 
-    Negation* clone() const override {
-        return new Negation(souffle::clone(atom), getSrcLoc());
-    }
-
     void apply(const NodeMapper& map) override {
         atom = map(std::move(atom));
     }
@@ -72,6 +68,12 @@ protected:
         return equal_ptr(atom, other.atom);
     }
 
+private:
+    Negation* cloneImpl() const override {
+        return new Negation(souffle::clone(atom), getSrcLoc());
+    }
+
+private:
     /** Negated atom */
     Own<Atom> atom;
 };

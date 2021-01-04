@@ -68,12 +68,11 @@ public:
         return "FixpointTransformer";
     }
 
-    FixpointTransformer* clone() const override {
+private:
+    FixpointTransformer* cloneImpl() const override {
         return new FixpointTransformer(souffle::clone(transformer));
     }
 
-private:
-    Own<Transformer> transformer;
     bool transform(TranslationUnit& translationUnit) override {
         bool changed = false;
         while (applySubtransformer(translationUnit, transformer.get())) {
@@ -81,6 +80,9 @@ private:
         }
         return changed;
     }
+
+private:
+    Own<Transformer> transformer;
 };
 
 }  // namespace souffle::ast::transform

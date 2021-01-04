@@ -51,10 +51,6 @@ public:
         truthValue = value;
     }
 
-    BooleanConstraint* clone() const override {
-        return new BooleanConstraint(truthValue, getSrcLoc());
-    }
-
 protected:
     void print(std::ostream& os) const override {
         os << (truthValue ? "true" : "false");
@@ -65,6 +61,12 @@ protected:
         return truthValue == other.truthValue;
     }
 
+private:
+    BooleanConstraint* cloneImpl() const override {
+        return new BooleanConstraint(truthValue, getSrcLoc());
+    }
+
+private:
     /** Truth value of Boolean constraint */
     bool truthValue;
 };

@@ -62,10 +62,6 @@ public:
         function = std::move(functor);
     }
 
-    IntrinsicFunctor* clone() const override {
-        return new IntrinsicFunctor(function, souffle::clone(args), getSrcLoc());
-    }
-
 protected:
     void print(std::ostream& os) const override {
         if (isInfixFunctorOp(function)) {
@@ -86,6 +82,12 @@ protected:
         return function == other.function && Functor::equal(node);
     }
 
+private:
+    IntrinsicFunctor* cloneImpl() const override {
+        return new IntrinsicFunctor(function, souffle::clone(args), getSrcLoc());
+    }
+
+private:
     /** Function */
     std::string function;
 };

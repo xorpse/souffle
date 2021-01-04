@@ -50,10 +50,6 @@ public:
         return name;
     }
 
-    UserDefinedFunctor* clone() const override {
-        return new UserDefinedFunctor(name, souffle::clone(args), getSrcLoc());
-    }
-
 protected:
     void print(std::ostream& os) const override {
         os << '@' << name << "(" << join(args) << ")";
@@ -66,6 +62,11 @@ protected:
 
     /** Name */
     const std::string name;
+
+private:
+    UserDefinedFunctor* cloneImpl() const override {
+        return new UserDefinedFunctor(name, souffle::clone(args), getSrcLoc());
+    }
 };
 
 }  // namespace souffle::ast

@@ -73,10 +73,6 @@ public:
         return toPtrVector(arguments);
     }
 
-    Atom* clone() const override {
-        return new Atom(name, souffle::clone(arguments), getSrcLoc());
-    }
-
     void apply(const NodeMapper& map) override {
         for (auto& arg : arguments) {
             arg = map(std::move(arg));
@@ -101,6 +97,12 @@ protected:
         return name == other.name && equal_targets(arguments, other.arguments);
     }
 
+private:
+    Atom* cloneImpl() const override {
+        return new Atom(name, souffle::clone(arguments), getSrcLoc());
+    }
+
+private:
     /** Name of atom */
     QualifiedName name;
 

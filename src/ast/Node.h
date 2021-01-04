@@ -69,7 +69,9 @@ public:
     }
 
     /** Create a clone (i.e. deep copy) of this node */
-    virtual Node* clone() const = 0;
+    Own<Node> clone() const {
+        return Own<Node>(cloneImpl());
+    }
 
     /** Apply the mapper to all child nodes */
     virtual void apply(const NodeMapper& /* mapper */) {}
@@ -147,8 +149,11 @@ protected:
     }
 
 private:
+    virtual Node* cloneImpl() const = 0;
+
+private:
     /** Source location of a syntactic element */
     SrcLocation location;
-};
+};  // namespace souffle::ast
 
 }  // namespace souffle::ast

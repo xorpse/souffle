@@ -50,10 +50,6 @@ public:
         return constructor;
     }
 
-    BranchInit* clone() const override {
-        return new BranchInit(constructor, souffle::clone(args), getSrcLoc());
-    }
-
 protected:
     void print(std::ostream& os) const override {
         os << tfm::format("$%s(%s)", constructor, join(args, ", "));
@@ -63,6 +59,11 @@ protected:
     bool equal(const Node& node) const override {
         const auto& other = asAssert<BranchInit>(node);
         return (constructor == other.constructor) && equal_targets(args, other.args);
+    }
+
+private:
+    BranchInit* cloneImpl() const override {
+        return new BranchInit(constructor, souffle::clone(args), getSrcLoc());
     }
 
 private:

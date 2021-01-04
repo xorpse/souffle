@@ -50,12 +50,6 @@ public:
         setSrcLoc(std::move(loc));
     }
 
-    NumericConstant* clone() const override {
-        auto* copy = new NumericConstant(getConstant(), getFixedType());
-        copy->setSrcLoc(getSrcLoc());
-        return copy;
-    }
-
     const std::optional<Type>& getFixedType() const {
         return fixedType;
     }
@@ -64,6 +58,13 @@ protected:
     bool equal(const Node& node) const override {
         const auto& other = asAssert<NumericConstant>(node);
         return Constant::equal(node) && fixedType == other.fixedType;
+    }
+
+private:
+    NumericConstant* cloneImpl() const override {
+        auto* copy = new NumericConstant(getConstant(), getFixedType());
+        copy->setSrcLoc(getSrcLoc());
+        return copy;
     }
 
 private:

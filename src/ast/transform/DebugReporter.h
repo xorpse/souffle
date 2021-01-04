@@ -63,7 +63,7 @@ public:
         return "DebugReporter";
     }
 
-    DebugReporter* clone() const override {
+    DebugReporter* cloneImpl() const override {
         return new DebugReporter(souffle::clone(wrappedTransformer));
     }
 

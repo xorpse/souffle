@@ -28,9 +28,6 @@ namespace souffle::ast {
  */
 
 class Functor : public Term {
-public:
-    Functor* clone() const override = 0;
-
 protected:
     using Term::Term;
 };

@@ -89,11 +89,6 @@ public:
         plan = nullptr;
     }
 
-    Clause* clone() const override {
-        return new Clause(
-                souffle::clone(head), souffle::clone(bodyLiterals), souffle::clone(plan), getSrcLoc());
-    }
-
     void apply(const NodeMapper& map) override {
         head = map(std::move(head));
         for (auto& lit : bodyLiterals) {
@@ -129,6 +124,13 @@ protected:
                equal_ptr(plan, other.plan);
     }
 
+private:
+    Clause* cloneImpl() const override {
+        return new Clause(
+                souffle::clone(head), souffle::clone(bodyLiterals), souffle::clone(plan), getSrcLoc());
+    }
+
+private:
     /** Head of the clause */
     Own<Atom> head;
 

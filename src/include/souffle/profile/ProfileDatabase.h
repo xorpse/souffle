@@ -379,7 +379,7 @@ public:
         DirectoryEntry* dir = lookupPath(path);
 
         const std::string& key = qualifier.back();
-        Own<TextEntry> entry = std::make_unique<TextEntry>(key, text);
+        Own<TextEntry> entry = mk<TextEntry>(key, text);
         dir->writeEntry(std::move(entry));
     }
 
@@ -390,7 +390,7 @@ public:
         DirectoryEntry* dir = lookupPath(path);
 
         const std::string& key = qualifier.back();
-        Own<DurationEntry> entry = std::make_unique<DurationEntry>(key, start, end);
+        Own<DurationEntry> entry = mk<DurationEntry>(key, start, end);
         dir->writeEntry(std::move(entry));
     }
 
@@ -401,7 +401,7 @@ public:
         DirectoryEntry* dir = lookupPath(path);
 
         const std::string& key = qualifier.back();
-        Own<TimeEntry> entry = std::make_unique<TimeEntry>(key, time);
+        Own<TimeEntry> entry = mk<TimeEntry>(key, time);
         dir->writeEntry(std::move(entry));
     }
 
