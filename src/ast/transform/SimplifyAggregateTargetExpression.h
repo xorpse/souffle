@@ -18,6 +18,10 @@
 #include "ast/transform/Transformer.h"
 #include <string>
 
+namespace souffle::ast {
+class Clause;
+}
+
 namespace souffle::ast::transform {
 /**
  * Transformation pass to rename aggregation variables to make them unique.

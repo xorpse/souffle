@@ -17,17 +17,32 @@
 #pragma once
 
 #include "parser/SrcLocation.h"
-#include "souffle/utility/ContainerUtil.h"
-#include "souffle/utility/MiscUtil.h"
+#include "souffle/utility/Iteration.h"
+#include "souffle/utility/Types.h"
+#include <functional>
 #include <iosfwd>
 #include <string>
-#include <typeinfo>
-#include <utility>
 #include <vector>
 
 namespace souffle::ast {
 
 class NodeMapper;
+class Node;
+
+namespace detail {
+// Seems the gcc in Jenkins is not happy with the inline lambdas
+struct RefCaster {
+    auto operator()(Node const* node) const -> Node const& {
+        return *node;
+    }
+};
+
+struct ConstCaster {
+    auto operator()(Node const* node) const -> Node& {
+        return *const_cast<Node*>(node);
+    }
+};
+}  // namespace detail
 
 /**
  *  @class Node
@@ -35,8 +50,11 @@ class NodeMapper;
  */
 class Node {
 public:
-    Node(SrcLocation loc = {}) : location(std::move(loc)){};
+    Node(SrcLocation loc = {});
     virtual ~Node() = default;
+    // Make sure we don't accidentally copy/slice
+    Node(Node const&) = delete;
+    Node& operator=(Node const&) = delete;
 
     /** Return source location of the Node */
     const SrcLocation& getSrcLoc() const {
@@ -44,9 +62,7 @@ public:
     }
 
     /** Set source location for the Node */
-    void setSrcLoc(SrcLocation l) {
-        location = std::move(l);
-    }
+    void setSrcLoc(SrcLocation l);
 
     /** Return source location of the syntactic element */
     std::string extloc() const {
@@ -54,14 +70,7 @@ public:
     }
 
     /** Equivalence check for two AST nodes */
-    bool operator==(const Node& other) const {
-        if (this == &other) {
-            return true;
-        } else if (typeid(*this) == typeid(*&other)) {
-            return equal(other);
-        }
-        return false;
-    }
+    bool operator==(const Node& other) const;
 
     /** Inequality check for two AST nodes */
     bool operator!=(const Node& other) const {
@@ -69,91 +78,42 @@ public:
     }
 
     /** Create a clone (i.e. deep copy) of this node */
-    Own<Node> clone() const {
-        return Own<Node>(cloneImpl());
-    }
+    Own<Node> clone() const;
 
     /** Apply the mapper to all child nodes */
-    virtual void apply(const NodeMapper& /* mapper */) {}
+    virtual void apply(const NodeMapper& /* mapper */);
 
-    using ConstChildNodes = std::vector<Node const*>;
-    /**
-     * This wraps the ChildNodes container, and does the const-casting
-     * in place.  This allows us to move all the uses to be const-correct,
-     * while it's confined to a single location.
-     * It also saves the user from having to write getChildNodes()
-     * and getChildNodes() const
-     */
-    class ChildNodes {
-    private:
-        auto caster() const {
-            return [](Node const* node) { return const_cast<Node*>(node); };
-        }
+    using NodeVec = std::vector<Node const*>;  // std::reference_wrapper<Node const>>;
 
-    public:
-        ChildNodes(ConstChildNodes&& cn) : childNodes(std::move(cn)) {}
-
-        auto begin() const {
-            return transformIter(childNodes.begin(), caster());
-        }
-
-        auto cbegin() const {
-            return transformIter(childNodes.cbegin(), caster());
-        }
-
-        auto end() const {
-            return transformIter(childNodes.end(), caster());
-        }
-
-        auto cend() const {
-            return transformIter(childNodes.cend(), caster());
-        }
-
-        auto size() const {
-            return childNodes.size();
-        }
-        auto operator[](std::size_t ii) const {
-            return childNodes[ii];
-        }
-
-    private:
-        ConstChildNodes childNodes;
-    };
-
+    using ConstChildNodes = OwningTransformRange<NodeVec, detail::RefCaster>;
     /** Obtain a list of all embedded AST child nodes */
-    ConstChildNodes getChildNodes() const {
-        return getChildNodesImpl();
-    }
+    ConstChildNodes getChildNodes() const;
 
-    ChildNodes getChildNodes() {
-        return ChildNodes(getChildNodesImpl());
-    }
+    /*
+     * Using the ConstCastRange saves the user from having to write
+     * getChildNodes() and getChildNodes() const
+     */
+    using ChildNodes = OwningTransformRange<NodeVec, detail::ConstCaster>;
+    ChildNodes getChildNodes();
 
     /** Print node onto an output stream */
-    friend std::ostream& operator<<(std::ostream& out, const Node& node) {
-        node.print(out);
-        return out;
-    }
+    friend std::ostream& operator<<(std::ostream& out, const Node& node);
 
 protected:
     /** Output to a given output stream */
     virtual void print(std::ostream& os) const = 0;
 
-    /** Abstract equality check for two AST nodes */
-    virtual bool equal(const Node& /* other */) const {
-        return true;
-    }
-
-    virtual ConstChildNodes getChildNodesImpl() const {
-        return {};
-    }
+    virtual NodeVec getChildNodesImpl() const;
 
 private:
+    /** Abstract equality check for two AST nodes */
+    virtual bool equal(const Node& /* other */) const;
+
     virtual Node* cloneImpl() const = 0;
 
 private:
     /** Source location of a syntactic element */
     SrcLocation location;
-};  // namespace souffle::ast
+};
 
 }  // namespace souffle::ast

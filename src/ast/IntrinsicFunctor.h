@@ -19,19 +19,10 @@
 #include "FunctorOps.h"
 #include "ast/Argument.h"
 #include "ast/Functor.h"
-#include "ast/Node.h"
 #include "parser/SrcLocation.h"
-#include "souffle/TypeAttribute.h"
-#include "souffle/utility/ContainerUtil.h"
-#include "souffle/utility/MiscUtil.h"
-#include "souffle/utility/StreamUtil.h"
-#include <cassert>
-#include <cstddef>
-#include <optional>
-#include <ostream>
+#include <iosfwd>
 #include <string>
 #include <utility>
-#include <vector>
 
 namespace souffle::ast {
 
@@ -49,8 +40,7 @@ public:
     IntrinsicFunctor(SrcLocation loc, std::string op, Operands&&... operands)
             : Functor(std::move(loc), std::forward<Operands>(operands)...), function(std::move(op)) {}
 
-    IntrinsicFunctor(std::string op, VecOwn<Argument> args, SrcLocation loc = {})
-            : Functor(std::move(args), std::move(loc)), function(std::move(op)) {}
+    IntrinsicFunctor(std::string op, VecOwn<Argument> args, SrcLocation loc = {});
 
     /** Get (base type) function */
     const std::string& getBaseFunctionOp() const {
@@ -63,29 +53,12 @@ public:
     }
 
 protected:
-    void print(std::ostream& os) const override {
-        if (isInfixFunctorOp(function)) {
-            os << "(" << join(args, function) << ")";
-        } else {
-            // Negation is handled differently to all other functors so we need a special case.
-            if (function == FUNCTOR_INTRINSIC_PREFIX_NEGATE_NAME) {
-                os << "-";
-            } else {
-                os << function;
-            }
-            os << "(" << join(args) << ")";
-        }
-    }
-
-    bool equal(const Node& node) const override {
-        const auto& other = asAssert<IntrinsicFunctor>(node);
-        return function == other.function && Functor::equal(node);
-    }
+    void print(std::ostream& os) const override;
 
 private:
-    IntrinsicFunctor* cloneImpl() const override {
-        return new IntrinsicFunctor(function, souffle::clone(args), getSrcLoc());
-    }
+    bool equal(const Node& node) const override;
+
+    IntrinsicFunctor* cloneImpl() const override;
 
 private:
     /** Function */

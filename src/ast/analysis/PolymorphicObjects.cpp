@@ -18,6 +18,7 @@
 #include "ast/IntrinsicFunctor.h"
 #include "ast/NumericConstant.h"
 #include "ast/TranslationUnit.h"
+#include "ast/analysis/Type.h"
 #include "ast/utility/Visitor.h"
 #include "souffle/utility/ContainerUtil.h"
 

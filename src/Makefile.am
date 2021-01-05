@@ -19,51 +19,89 @@ souffle_sources = \
         GraphUtils.h                                       \
         LogStatement.h                                     \
         RelationTag.h                                      \
+        ast/Aggregator.cpp                                 \
         ast/Aggregator.h                                   \
+        ast/AlgebraicDataType.cpp                          \
         ast/AlgebraicDataType.h                            \
         ast/Argument.h                                     \
+        ast/Atom.cpp                                       \
         ast/Atom.h                                         \
+        ast/Attribute.cpp                                  \
         ast/Attribute.h                                    \
+        ast/BinaryConstraint.cpp                           \
         ast/BinaryConstraint.h                             \
+        ast/BooleanConstraint.cpp                          \
         ast/BooleanConstraint.h                            \
+        ast/BranchDeclaration.cpp                          \
         ast/BranchDeclaration.h                            \
+        ast/BranchInit.cpp                                 \
         ast/BranchInit.h                                   \
         ast/Clause.cpp                                     \
         ast/Clause.h                                       \
+        ast/Component.cpp                                  \
         ast/Component.h                                    \
+        ast/ComponentInit.cpp                              \
         ast/ComponentInit.h                                \
+        ast/ComponentType.cpp                              \
         ast/ComponentType.h                                \
+        ast/Constant.cpp                                   \
         ast/Constant.h                                     \
         ast/Constraint.h                                   \
+        ast/Counter.cpp                                    \
         ast/Counter.h                                      \
+        ast/Directive.cpp                                  \
+        ast/Directive.h                                    \
+        ast/ExecutionOrder.cpp                             \
         ast/ExecutionOrder.h                               \
+        ast/ExecutionPlan.cpp                              \
         ast/ExecutionPlan.h                                \
         ast/Functor.h                                      \
+        ast/FunctorDeclaration.cpp                         \
         ast/FunctorDeclaration.h                           \
+        ast/FunctionalConstraint.cpp                       \
         ast/FunctionalConstraint.h                         \
-        ast/Directive.h                                    \
+        ast/IntrinsicFunctor.cpp                           \
         ast/IntrinsicFunctor.h                             \
         ast/Literal.h                                      \
+        ast/Negation.cpp                                   \
         ast/Negation.h                                     \
+        ast/NilConstant.cpp                                \
         ast/NilConstant.h                                  \
         ast/Node.h                                         \
+        ast/Node.cpp                                       \
+        ast/NumericConstant.cpp                            \
         ast/NumericConstant.h                              \
+        ast/Pragma.cpp                                     \
         ast/Pragma.h                                       \
         ast/Program.cpp                                    \
         ast/Program.h                                      \
+        ast/QualifiedName.cpp                              \
         ast/QualifiedName.h                                \
+        ast/RecordInit.cpp                                 \
         ast/RecordInit.h                                   \
+        ast/RecordType.cpp                                 \
         ast/RecordType.h                                   \
+        ast/Relation.cpp                                   \
         ast/Relation.h                                     \
+        ast/StringConstant.cpp                             \
         ast/StringConstant.h                               \
+        ast/SubsetType.cpp                                 \
         ast/SubsetType.h                                   \
+        ast/Term.cpp                                       \
         ast/Term.h                                         \
+        ast/TranslationUnit.cpp                            \
         ast/TranslationUnit.h                              \
+        ast/Type.cpp                                       \
         ast/Type.h                                         \
+        ast/TypeCast.cpp                                   \
         ast/TypeCast.h                                     \
+        ast/UnionType.cpp                                  \
         ast/UnionType.h                                    \
+        ast/UnnamedVariable.cpp                            \
         ast/UnnamedVariable.h                              \
+        ast/UserDefinedFunctor.cpp                         \
         ast/UserDefinedFunctor.h                           \
+        ast/Variable.cpp                                   \
         ast/Variable.h                                     \
         ast/analysis/Aggregate.cpp                         \
         ast/analysis/Aggregate.h                           \

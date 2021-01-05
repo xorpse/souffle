@@ -17,13 +17,8 @@
 #pragma once
 
 #include "ast/Constraint.h"
-#include "ast/Node.h"
 #include "parser/SrcLocation.h"
-#include "souffle/utility/MiscUtil.h"
-#include <cassert>
-#include <iostream>
-#include <string>
-#include <utility>
+#include <iosfwd>
 
 namespace souffle::ast {
 
@@ -38,8 +33,7 @@ namespace souffle::ast {
  */
 class BooleanConstraint : public Constraint {
 public:
-    BooleanConstraint(bool truthValue, SrcLocation loc = {})
-            : Constraint(std::move(loc)), truthValue(truthValue) {}
+    BooleanConstraint(bool truthValue, SrcLocation loc = {});
 
     /** Check whether constraint holds */
     bool isTrue() const {
@@ -52,19 +46,12 @@ public:
     }
 
 protected:
-    void print(std::ostream& os) const override {
-        os << (truthValue ? "true" : "false");
-    }
-
-    bool equal(const Node& node) const override {
-        const auto& other = asAssert<BooleanConstraint>(node);
-        return truthValue == other.truthValue;
-    }
+    void print(std::ostream& os) const override;
 
 private:
-    BooleanConstraint* cloneImpl() const override {
-        return new BooleanConstraint(truthValue, getSrcLoc());
-    }
+    bool equal(const Node& node) const override;
+
+    BooleanConstraint* cloneImpl() const override;
 
 private:
     /** Truth value of Boolean constraint */

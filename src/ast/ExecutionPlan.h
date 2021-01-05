@@ -18,16 +18,8 @@
 
 #include "ast/ExecutionOrder.h"
 #include "ast/Node.h"
-#include "ast/utility/NodeMapper.h"
-#include "souffle/utility/ContainerUtil.h"
-#include "souffle/utility/MiscUtil.h"
-#include "souffle/utility/StreamUtil.h"
-#include <algorithm>
+#include <iosfwd>
 #include <map>
-#include <memory>
-#include <ostream>
-#include <utility>
-#include <vector>
 
 namespace souffle::ast {
 
@@ -48,56 +40,22 @@ public:
     using Node::Node;
 
     /** Set execution order for a given rule version */
-    void setOrderFor(int version, Own<ExecutionOrder> plan) {
-        assert(plan != nullptr);
-        plans[version] = std::move(plan);
-    }
+    void setOrderFor(int version, Own<ExecutionOrder> plan);
 
     /** Get orders */
-    std::map<int, const ExecutionOrder*> getOrders() const {
-        std::map<int, const ExecutionOrder*> result;
-        for (auto& plan : plans) {
-            result.insert(std::make_pair(plan.first, plan.second.get()));
-        }
-        return result;
-    }
+    std::map<int, const ExecutionOrder*> getOrders() const;
 
-    void apply(const NodeMapper& map) override {
-        for (auto& plan : plans) {
-            plan.second = map(std::move(plan.second));
-        }
-    }
+    void apply(const NodeMapper& map) override;
 
-    std::vector<const Node*> getChildNodesImpl() const override {
-        std::vector<const Node*> childNodes;
-        for (auto& plan : plans) {
-            childNodes.push_back(plan.second.get());
-        }
-        return childNodes;
-    }
+    NodeVec getChildNodesImpl() const override;
 
 protected:
-    void print(std::ostream& out) const override {
-        if (!plans.empty()) {
-            out << " .plan ";
-            out << join(plans, ", ",
-                    [](std::ostream& os, const auto& arg) { os << arg.first << ":" << *arg.second; });
-        }
-    }
-
-    bool equal(const Node& node) const override {
-        const auto& other = asAssert<ExecutionPlan>(node);
-        return equal_targets(plans, other.plans);
-    }
+    void print(std::ostream& out) const override;
 
 private:
-    ExecutionPlan* cloneImpl() const override {
-        auto res = mk<ExecutionPlan>(getSrcLoc());
-        for (auto& plan : plans) {
-            res->setOrderFor(plan.first, souffle::clone(plan.second));
-        }
-        return res.release();
-    }
+    bool equal(const Node& node) const override;
+
+    ExecutionPlan* cloneImpl() const override;
 
 private:
     /** Mapping versions of clauses to execution orders */
