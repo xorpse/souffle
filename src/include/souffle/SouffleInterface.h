@@ -62,6 +62,9 @@ protected:
          * Required for identifying type of iterator
          * (NB: LLVM has no typeinfo).
          *
+         * Note: The above statement is not true anymore - should this be made to work the same
+         * as Node::operator==?
+         *
          * TODO (Honghyw) : Provide a clear documentation of what id is used for.
          */
         uint32_t id;

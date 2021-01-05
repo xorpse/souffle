@@ -60,7 +60,7 @@ protected:
             return nullptr;
         }
 
-        Own<RamDomain[]> tuple = std::make_unique<RamDomain[]>(arity + auxiliaryArity);
+        Own<RamDomain[]> tuple = mk<RamDomain[]>(arity + auxiliaryArity);
 
         uint32_t column;
         for (column = 0; column < arity; column++) {

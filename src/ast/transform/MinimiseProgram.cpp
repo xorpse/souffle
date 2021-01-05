@@ -363,7 +363,7 @@ bool MinimiseProgramTransformer::reduceSingletonRelations(TranslationUnit& trans
             // Remove appearances from children nodes
             node->apply(*this);
 
-            if (auto* atom = dynamic_cast<Atom*>(node.get())) {
+            if (auto* atom = as<Atom>(node)) {
                 auto pos = canonicalName.find(atom->getQualifiedName());
                 if (pos != canonicalName.end()) {
                     auto newAtom = souffle::clone(atom);
@@ -425,8 +425,7 @@ bool MinimiseProgramTransformer::reduceClauseBodies(TranslationUnit& translation
         }
 
         if (!redundantPositions.empty()) {
-            auto minimisedClause = mk<Clause>();
-            minimisedClause->setHead(souffle::clone(clause->getHead()));
+            auto minimisedClause = mk<Clause>(souffle::clone(clause->getHead()));
             for (size_t i = 0; i < bodyLiterals.size(); i++) {
                 if (!contains(redundantPositions, i)) {
                     minimisedClause->addToBody(souffle::clone(bodyLiterals[i]));

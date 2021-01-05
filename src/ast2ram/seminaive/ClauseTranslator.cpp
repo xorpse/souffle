@@ -82,7 +82,7 @@ bool ClauseTranslator::isRecursive() const {
 }
 
 std::string ClauseTranslator::getClauseString(const ast::Clause& clause) const {
-    auto renamedClone = souffle::clone(&clause);
+    auto renamedClone = souffle::clone(clause);
 
     // Update the head atom
     renamedClone->getHead()->setQualifiedName(getClauseAtomName(clause, clause.getHead()));
@@ -302,13 +302,13 @@ Own<ram::Operation> ClauseTranslator::addVariableIntroductions(
         const ast::Clause& clause, Own<ram::Operation> op) {
     for (int i = operators.size() - 1; i >= 0; i--) {
         const auto* curOp = operators.at(i);
-        if (const auto* atom = dynamic_cast<const ast::Atom*>(curOp)) {
+        if (const auto* atom = as<ast::Atom>(curOp)) {
             // add atom arguments through a scan
             op = addAtomScan(std::move(op), atom, clause, i);
-        } else if (const auto* rec = dynamic_cast<const ast::RecordInit*>(curOp)) {
+        } else if (const auto* rec = as<ast::RecordInit>(curOp)) {
             // add record arguments through an unpack
             op = addRecordUnpack(std::move(op), rec, i);
-        } else if (const auto* adt = dynamic_cast<const ast::BranchInit*>(curOp)) {
+        } else if (const auto* adt = as<ast::BranchInit>(curOp)) {
             // add adt arguments through an unpack
             op = addAdtUnpack(std::move(op), adt, i);
         } else {
@@ -351,7 +351,7 @@ Own<ram::Operation> ClauseTranslator::instantiateAggregator(
 
         // variable bindings are issued differently since we don't want self
         // referential variable bindings
-        if (auto* var = dynamic_cast<const ast::Variable*>(arg)) {
+        if (auto* var = as<ast::Variable>(arg)) {
             for (auto&& loc : valueIndex->getVariableReferences(var->getName())) {
                 if (curLevel != loc.identifier || (int)i != loc.element) {
                     aggCond = addAggEqCondition(std::move(aggCond), makeRamTupleElement(loc), i);
@@ -399,9 +399,9 @@ Own<ram::Operation> ClauseTranslator::addGeneratorLevels(
         Own<ram::Operation> op, const ast::Clause& clause) const {
     size_t curLevel = operators.size() + generators.size() - 1;
     for (const auto* generator : reverse(generators)) {
-        if (auto agg = dynamic_cast<const ast::Aggregator*>(generator)) {
+        if (auto agg = as<ast::Aggregator>(generator)) {
             op = instantiateAggregator(std::move(op), clause, agg, curLevel);
-        } else if (const auto* inf = dynamic_cast<const ast::IntrinsicFunctor*>(generator)) {
+        } else if (const auto* inf = as<ast::IntrinsicFunctor>(generator)) {
             op = instantiateMultiResultFunctor(std::move(op), inf, curLevel);
         } else {
             assert(false && "unhandled generator");
@@ -498,11 +498,11 @@ Own<ram::Condition> ClauseTranslator::createCondition(const ast::Clause& clause)
 
 RamDomain ClauseTranslator::getConstantRamRepresentation(
         SymbolTable& symbolTable, const ast::Constant& constant) const {
-    if (auto strConstant = dynamic_cast<const ast::StringConstant*>(&constant)) {
+    if (auto strConstant = as<ast::StringConstant>(constant)) {
         return symbolTable.lookup(strConstant->getConstant());
     } else if (isA<ast::NilConstant>(&constant)) {
         return 0;
-    } else if (auto* numConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
+    } else if (auto* numConstant = as<ast::NumericConstant>(constant)) {
         switch (context.getInferredNumericConstantType(numConstant)) {
             case ast::NumericConstant::Type::Int:
                 return RamSignedFromString(numConstant->getConstant(), nullptr, 0);
@@ -518,7 +518,7 @@ RamDomain ClauseTranslator::getConstantRamRepresentation(
 Own<ram::Expression> ClauseTranslator::translateConstant(
         SymbolTable& symbolTable, const ast::Constant& constant) const {
     auto rawConstant = getConstantRamRepresentation(symbolTable, constant);
-    if (const auto* numericConstant = dynamic_cast<const ast::NumericConstant*>(&constant)) {
+    if (const auto* numericConstant = as<ast::NumericConstant>(constant)) {
         switch (context.getInferredNumericConstantType(numericConstant)) {
             case ast::NumericConstant::Type::Int: return mk<ram::SignedConstant>(rawConstant);
             case ast::NumericConstant::Type::Uint: return mk<ram::UnsignedConstant>(rawConstant);
@@ -540,13 +540,13 @@ Own<ram::Operation> ClauseTranslator::addConstantConstraints(
         size_t curLevel, const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op) const {
     for (size_t i = 0; i < arguments.size(); i++) {
         const auto* argument = arguments.at(i);
-        if (const auto* numericConstant = dynamic_cast<const ast::NumericConstant*>(argument)) {
+        if (const auto* numericConstant = as<ast::NumericConstant>(argument)) {
             bool isFloat = context.getInferredNumericConstantType(numericConstant) ==
                            ast::NumericConstant::Type::Float;
             auto lhs = mk<ram::TupleElement>(curLevel, i);
             auto rhs = translateConstant(symbolTable, *numericConstant);
             op = addEqualityCheck(std::move(op), std::move(lhs), std::move(rhs), isFloat);
-        } else if (const auto* constant = dynamic_cast<const ast::Constant*>(argument)) {
+        } else if (const auto* constant = as<ast::Constant>(argument)) {
             auto lhs = mk<ram::TupleElement>(curLevel, i);
             auto rhs = translateConstant(symbolTable, *constant);
             op = addEqualityCheck(std::move(op), std::move(lhs), std::move(rhs), false);
@@ -660,12 +660,12 @@ void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::
         const auto& arg = nodeArgs.at(i);
 
         // check for variable references
-        if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
+        if (const auto* var = as<ast::Variable>(arg)) {
             valueIndex->addVarReference(*var, nodeLevel, i);
         }
 
         // check for nested records
-        if (const auto* rec = dynamic_cast<const ast::RecordInit*>(arg)) {
+        if (const auto* rec = as<ast::RecordInit>(arg)) {
             valueIndex->setRecordDefinition(*rec, nodeLevel, i);
 
             // introduce new nesting level for unpack
@@ -674,7 +674,7 @@ void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::
         }
 
         // check for nested ADT branches
-        if (const auto* adt = dynamic_cast<const ast::BranchInit*>(arg)) {
+        if (const auto* adt = as<ast::BranchInit>(arg)) {
             valueIndex->setAdtDefinition(*adt, nodeLevel, i);
 
             // introduce new nesting level for unpack
@@ -717,7 +717,7 @@ void ClauseTranslator::indexAggregatorBody(const ast::Aggregator& agg) {
     const auto& aggAtomArgs = aggAtom->getArguments();
     for (size_t i = 0; i < aggAtomArgs.size(); i++) {
         const auto* arg = aggAtomArgs.at(i);
-        if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
+        if (const auto* var = as<ast::Variable>(arg)) {
             valueIndex->addVarReference(*var, aggLoc.identifier, (int)i);
         }
     }
@@ -733,8 +733,8 @@ void ClauseTranslator::indexAggregators(const ast::Clause& clause) {
     // Add aggregator value introductions
     visitDepthFirst(clause, [&](const ast::BinaryConstraint& bc) {
         if (!isEqConstraint(bc.getBaseOperator())) return;
-        const auto* lhs = dynamic_cast<const ast::Variable*>(bc.getLHS());
-        const auto* rhs = dynamic_cast<const ast::Aggregator*>(bc.getRHS());
+        const auto* lhs = as<ast::Variable>(bc.getLHS());
+        const auto* rhs = as<ast::Aggregator>(bc.getRHS());
         if (lhs == nullptr || rhs == nullptr) return;
         valueIndex->addVarReference(*lhs, valueIndex->getGeneratorLoc(*rhs));
     });
@@ -751,8 +751,8 @@ void ClauseTranslator::indexMultiResultFunctors(const ast::Clause& clause) {
     // Add multi-result functor value introductions
     visitDepthFirst(clause, [&](const ast::BinaryConstraint& bc) {
         if (!isEqConstraint(bc.getBaseOperator())) return;
-        const auto* lhs = dynamic_cast<const ast::Variable*>(bc.getLHS());
-        const auto* rhs = dynamic_cast<const ast::IntrinsicFunctor*>(bc.getRHS());
+        const auto* lhs = as<ast::Variable>(bc.getLHS());
+        const auto* rhs = as<ast::IntrinsicFunctor>(bc.getRHS());
         if (lhs == nullptr || rhs == nullptr) return;
         if (!ast::analysis::FunctorAnalysis::isMultiResult(*rhs)) return;
         valueIndex->addVarReference(*lhs, valueIndex->getGeneratorLoc(*rhs));

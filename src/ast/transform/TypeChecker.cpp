@@ -15,6 +15,7 @@
  ***********************************************************************/
 
 #include "ast/transform/TypeChecker.h"
+#include "Global.h"
 #include "ast/Aggregator.h"
 #include "ast/AlgebraicDataType.h"
 #include "ast/Argument.h"
@@ -36,6 +37,7 @@
 #include "ast/analysis/TypeSystem.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
+#include "reports/ErrorReport.h"
 #include "souffle/utility/StringUtil.h"
 #include <map>
 #include <sstream>
@@ -65,7 +67,7 @@ private:
     void checkADT(const ast::AlgebraicDataType& type);
 };
 
-class TypeCheckerImpl : Visitor<void> {
+class TypeCheckerImpl : public Visitor<void> {
 public:
     TypeCheckerImpl(TranslationUnit& tu) : tu(tu){};
 
@@ -91,22 +93,22 @@ private:
     std::unordered_set<const Atom*> negatedAtoms;
 
     /** Collect negated atoms */
-    void visitNegation(const Negation& neg) override;
+    void visit_(type_identity<Negation>, const Negation& neg) override;
 
     /* Type checks */
     /** Check if declared types of the relation match deduced types. */
-    void visitAtom(const Atom& atom) override;
-    void visitVariable(const Variable& var) override;
-    void visitStringConstant(const StringConstant& constant) override;
-    void visitNumericConstant(const NumericConstant& constant) override;
-    void visitNilConstant(const NilConstant& constant) override;
-    void visitRecordInit(const RecordInit& rec) override;
-    void visitBranchInit(const BranchInit& adt) override;
-    void visitTypeCast(const ast::TypeCast& cast) override;
-    void visitIntrinsicFunctor(const IntrinsicFunctor& fun) override;
-    void visitUserDefinedFunctor(const UserDefinedFunctor& fun) override;
-    void visitBinaryConstraint(const BinaryConstraint& constraint) override;
-    void visitAggregator(const Aggregator& aggregator) override;
+    void visit_(type_identity<Atom>, const Atom& atom) override;
+    void visit_(type_identity<Variable>, const Variable& var) override;
+    void visit_(type_identity<StringConstant>, const StringConstant& constant) override;
+    void visit_(type_identity<NumericConstant>, const NumericConstant& constant) override;
+    void visit_(type_identity<NilConstant>, const NilConstant& constant) override;
+    void visit_(type_identity<RecordInit>, const RecordInit& rec) override;
+    void visit_(type_identity<BranchInit>, const BranchInit& adt) override;
+    void visit_(type_identity<TypeCast>, const ast::TypeCast& cast) override;
+    void visit_(type_identity<IntrinsicFunctor>, const IntrinsicFunctor& fun) override;
+    void visit_(type_identity<UserDefinedFunctor>, const UserDefinedFunctor& fun) override;
+    void visit_(type_identity<BinaryConstraint>, const BinaryConstraint& constraint) override;
+    void visit_(type_identity<Aggregator>, const Aggregator& aggregator) override;
 };
 
 void TypeChecker::verify(TranslationUnit& tu) {
@@ -283,7 +285,7 @@ void TypeDeclarationChecker::run() {
     }
 }
 
-void TypeCheckerImpl::visitAtom(const Atom& atom) {
+void TypeCheckerImpl::visit_(type_identity<Atom>, const Atom& atom) {
     auto relation = getAtomRelation(&atom, &program);
     if (relation == nullptr) {
         return;  // error unrelated to types.
@@ -356,20 +358,20 @@ void TypeCheckerImpl::visitAtom(const Atom& atom) {
     }
 }
 
-void TypeCheckerImpl::visitVariable(const ast::Variable& var) {
+void TypeCheckerImpl::visit_(type_identity<Variable>, const ast::Variable& var) {
     if (typeAnalysis.getTypes(&var).empty()) {
         report.addError("Unable to deduce type for variable " + var.getName(), var.getSrcLoc());
     }
 }
 
-void TypeCheckerImpl::visitStringConstant(const StringConstant& constant) {
+void TypeCheckerImpl::visit_(type_identity<StringConstant>, const StringConstant& constant) {
     TypeSet types = typeAnalysis.getTypes(&constant);
     if (!isOfKind(types, TypeAttribute::Symbol)) {
         report.addError("Symbol constant (type mismatch)", constant.getSrcLoc());
     }
 }
 
-void TypeCheckerImpl::visitNumericConstant(const NumericConstant& constant) {
+void TypeCheckerImpl::visit_(type_identity<NumericConstant>, const NumericConstant& constant) {
     TypeSet types = typeAnalysis.getTypes(&constant);
 
     // No type could be assigned.
@@ -397,7 +399,7 @@ void TypeCheckerImpl::visitNumericConstant(const NumericConstant& constant) {
     }
 }
 
-void TypeCheckerImpl::visitNilConstant(const NilConstant& constant) {
+void TypeCheckerImpl::visit_(type_identity<NilConstant>, const NilConstant& constant) {
     TypeSet types = typeAnalysis.getTypes(&constant);
     if (!isOfKind(types, TypeAttribute::Record)) {
         report.addError("Nil constant used as a non-record", constant.getSrcLoc());
@@ -405,7 +407,7 @@ void TypeCheckerImpl::visitNilConstant(const NilConstant& constant) {
     }
 }
 
-void TypeCheckerImpl::visitRecordInit(const RecordInit& rec) {
+void TypeCheckerImpl::visit_(type_identity<RecordInit>, const RecordInit& rec) {
     TypeSet types = typeAnalysis.getTypes(&rec);
 
     if (!isOfKind(types, TypeAttribute::Record) || types.size() != 1) {
@@ -422,7 +424,7 @@ void TypeCheckerImpl::visitRecordInit(const RecordInit& rec) {
     }
 }
 
-void TypeCheckerImpl::visitBranchInit(const BranchInit& adt) {
+void TypeCheckerImpl::visit_(type_identity<BranchInit>, const BranchInit& adt) {
     TypeSet types = typeAnalysis.getTypes(&adt);
 
     if (sumTypesBranches.getType(adt.getConstructor()) == nullptr) {
@@ -460,7 +462,7 @@ void TypeCheckerImpl::visitBranchInit(const BranchInit& adt) {
     }
 }
 
-void TypeCheckerImpl::visitTypeCast(const ast::TypeCast& cast) {
+void TypeCheckerImpl::visit_(type_identity<TypeCast>, const ast::TypeCast& cast) {
     if (!typeEnv.isType(cast.getType())) {
         report.addError(
                 tfm::format("Type cast to the undeclared type \"%s\"", cast.getType()), cast.getSrcLoc());
@@ -481,7 +483,7 @@ void TypeCheckerImpl::visitTypeCast(const ast::TypeCast& cast) {
     }
 }
 
-void TypeCheckerImpl::visitIntrinsicFunctor(const IntrinsicFunctor& fun) {
+void TypeCheckerImpl::visit_(type_identity<IntrinsicFunctor>, const IntrinsicFunctor& fun) {
     if (!typeAnalysis.hasValidTypeInfo(&fun)) {
         auto args = fun.getArguments();
         if (!isValidFunctorOpArity(fun.getBaseFunctionOp(), args.size())) {
@@ -494,7 +496,7 @@ void TypeCheckerImpl::visitIntrinsicFunctor(const IntrinsicFunctor& fun) {
     }
 }
 
-void TypeCheckerImpl::visitUserDefinedFunctor(const UserDefinedFunctor& fun) {
+void TypeCheckerImpl::visit_(type_identity<UserDefinedFunctor>, const UserDefinedFunctor& fun) {
     // check type of result
     const TypeSet& resultType = typeAnalysis.getTypes(&fun);
 
@@ -549,7 +551,7 @@ void TypeCheckerImpl::visitUserDefinedFunctor(const UserDefinedFunctor& fun) {
     }
 }
 
-void TypeCheckerImpl::visitBinaryConstraint(const BinaryConstraint& constraint) {
+void TypeCheckerImpl::visit_(type_identity<BinaryConstraint>, const BinaryConstraint& constraint) {
     auto op = polyAnalysis.getOverloadedOperator(&constraint);
     auto left = constraint.getLHS();
     auto right = constraint.getRHS();
@@ -597,7 +599,7 @@ void TypeCheckerImpl::visitBinaryConstraint(const BinaryConstraint& constraint) 
     }
 }
 
-void TypeCheckerImpl::visitAggregator(const Aggregator& aggregator) {
+void TypeCheckerImpl::visit_(type_identity<Aggregator>, const Aggregator& aggregator) {
     auto op = polyAnalysis.getOverloadedOperator(&aggregator);
 
     auto aggregatorType = typeAnalysis.getTypes(&aggregator);
@@ -610,7 +612,7 @@ void TypeCheckerImpl::visitAggregator(const Aggregator& aggregator) {
     }
 }
 
-void TypeCheckerImpl::visitNegation(const Negation& neg) {
+void TypeCheckerImpl::visit_(type_identity<Negation>, const Negation& neg) {
     negatedAtoms.insert(neg.getAtom());
 }
 

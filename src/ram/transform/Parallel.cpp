@@ -21,7 +21,9 @@
 #include "ram/Relation.h"
 #include "ram/Statement.h"
 #include "ram/utility/Visitor.h"
+#include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/MiscUtil.h"
+
 #include <functional>
 #include <memory>
 #include <utility>
@@ -36,39 +38,39 @@ bool ParallelTransformer::parallelizeOperations(Program& program) {
     // most outer loops can be scan/choice/indexScan/indexChoice
     visitDepthFirst(program, [&](const Query& query) {
         std::function<Own<Node>(Own<Node>)> parallelRewriter = [&](Own<Node> node) -> Own<Node> {
-            if (const Scan* scan = dynamic_cast<Scan*>(node.get())) {
+            if (const Scan* scan = as<Scan>(node)) {
                 const Relation& rel = relAnalysis->lookup(scan->getRelation());
                 if (scan->getTupleId() == 0 && rel.getArity() > 0) {
                     if (!isA<Project>(&scan->getOperation())) {
                         changed = true;
                         return mk<ParallelScan>(scan->getRelation(), scan->getTupleId(),
-                                souffle::clone(&scan->getOperation()), scan->getProfileText());
+                                souffle::clone(scan->getOperation()), scan->getProfileText());
                     }
                 }
-            } else if (const Choice* choice = dynamic_cast<Choice*>(node.get())) {
+            } else if (const Choice* choice = as<Choice>(node)) {
                 if (choice->getTupleId() == 0) {
                     changed = true;
                     return mk<ParallelChoice>(choice->getRelation(), choice->getTupleId(),
-                            souffle::clone(&choice->getCondition()), souffle::clone(&choice->getOperation()),
+                            souffle::clone(choice->getCondition()), souffle::clone(choice->getOperation()),
                             choice->getProfileText());
                 }
-            } else if (const IndexScan* indexScan = dynamic_cast<IndexScan*>(node.get())) {
+            } else if (const IndexScan* indexScan = as<IndexScan>(node)) {
                 if (indexScan->getTupleId() == 0) {
                     changed = true;
-                    RamPattern queryPattern = clone(indexScan->getRangePattern());
+                    RamPattern queryPattern = souffle::clone(indexScan->getRangePattern());
                     return mk<ParallelIndexScan>(indexScan->getRelation(), indexScan->getTupleId(),
-                            std::move(queryPattern), souffle::clone(&indexScan->getOperation()),
+                            std::move(queryPattern), souffle::clone(indexScan->getOperation()),
                             indexScan->getProfileText());
                 }
-            } else if (const IndexChoice* indexChoice = dynamic_cast<IndexChoice*>(node.get())) {
+            } else if (const IndexChoice* indexChoice = as<IndexChoice>(node)) {
                 if (indexChoice->getTupleId() == 0) {
                     changed = true;
-                    RamPattern queryPattern = clone(indexChoice->getRangePattern());
+                    RamPattern queryPattern = souffle::clone(indexChoice->getRangePattern());
                     return mk<ParallelIndexChoice>(indexChoice->getRelation(), indexChoice->getTupleId(),
-                            souffle::clone(&indexChoice->getCondition()), std::move(queryPattern),
-                            souffle::clone(&indexChoice->getOperation()), indexChoice->getProfileText());
+                            souffle::clone(indexChoice->getCondition()), std::move(queryPattern),
+                            souffle::clone(indexChoice->getOperation()), indexChoice->getProfileText());
                 }
-            } else if (const Aggregate* aggregate = dynamic_cast<Aggregate*>(node.get())) {
+            } else if (const Aggregate* aggregate = as<Aggregate>(node)) {
                 const Relation& rel = relAnalysis->lookup(aggregate->getRelation());
                 if (aggregate->getTupleId() == 0 && !rel.isNullary()) {
                     changed = true;
@@ -77,11 +79,11 @@ bool ParallelTransformer::parallelizeOperations(Program& program) {
                             Own<Expression>(aggregate->getExpression().clone()),
                             Own<Condition>(aggregate->getCondition().clone()), aggregate->getTupleId());
                 }
-            } else if (const IndexAggregate* indexAggregate = dynamic_cast<IndexAggregate*>(node.get())) {
+            } else if (const IndexAggregate* indexAggregate = as<IndexAggregate>(node)) {
                 const Relation& rel = relAnalysis->lookup(indexAggregate->getRelation());
                 if (indexAggregate->getTupleId() == 0 && !rel.isNullary()) {
                     changed = true;
-                    RamPattern queryPattern = clone(indexAggregate->getRangePattern());
+                    RamPattern queryPattern = souffle::clone(indexAggregate->getRangePattern());
                     return mk<ParallelIndexAggregate>(Own<Operation>(indexAggregate->getOperation().clone()),
                             indexAggregate->getFunction(), indexAggregate->getRelation(),
                             Own<Expression>(indexAggregate->getExpression().clone()),

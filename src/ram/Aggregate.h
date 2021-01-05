@@ -61,7 +61,7 @@ public:
     }
 
     Aggregate* clone() const override {
-        return new Aggregate(souffle::clone(&getOperation()), function, relation, souffle::clone(expression),
+        return new Aggregate(souffle::clone(getOperation()), function, relation, souffle::clone(expression),
                 souffle::clone(condition), getTupleId());
     }
 
@@ -85,7 +85,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Aggregate&>(node);
+        const auto& other = asAssert<Aggregate>(node);
         return RelationOperation::equal(other) && AbstractAggregate::equal(node);
     }
 };

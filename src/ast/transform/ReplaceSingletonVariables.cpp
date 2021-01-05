@@ -43,7 +43,7 @@ bool ReplaceSingletonVariablesTransformer::transform(TranslationUnit& translatio
         replaceSingletons(std::set<std::string>& singletons) : singletons(singletons) {}
 
         Own<Node> operator()(Own<Node> node) const override {
-            if (auto* var = dynamic_cast<ast::Variable*>(node.get())) {
+            if (auto* var = as<ast::Variable>(node)) {
                 if (singletons.find(var->getName()) != singletons.end()) {
                     return mk<UnnamedVariable>();
                 }

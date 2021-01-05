@@ -81,7 +81,7 @@ std::set<std::string> getWitnessVariables(
 
         std::unique_ptr<Node> operator()(std::unique_ptr<Node> node) const override {
             static int numReplaced = 0;
-            if (dynamic_cast<Aggregator*>(node.get()) != nullptr) {
+            if (isA<Aggregator>(node)) {
                 // Replace the aggregator with a variable
                 std::stringstream newVariableName;
                 newVariableName << "+aggr_var_" << numReplaced++;
@@ -89,50 +89,44 @@ std::set<std::string> getWitnessVariables(
                 // Keep track of which variables are bound to aggregators
                 aggregatorVariables.insert(newVariableName.str());
 
-                return std::make_unique<Variable>(newVariableName.str());
+                return mk<Variable>(newVariableName.str());
             }
             node->apply(*this);
             return node;
         }
     };
 
-    auto aggregatorlessClause = std::make_unique<Clause>();
-    aggregatorlessClause->setHead(std::make_unique<Atom>("*"));
-    for (Literal* lit : clause.getBodyLiterals()) {
-        aggregatorlessClause->addToBody(souffle::clone(lit));
-    }
+    auto aggregatorlessClause = mk<Clause>("*");
+    aggregatorlessClause->setBodyLiterals(souffle::clone(clause.getBodyLiterals()));
 
-    auto negatedHead = std::make_unique<Negation>(souffle::clone(clause.getHead()));
+    auto negatedHead = mk<Negation>(souffle::clone(clause.getHead()));
     aggregatorlessClause->addToBody(std::move(negatedHead));
 
     // Replace all aggregates with variables
     M update;
     aggregatorlessClause->apply(update);
-    auto groundingAtom = std::make_unique<Atom>("+grounding_atom");
+    auto groundingAtom = mk<Atom>("+grounding_atom");
     for (std::string variableName : update.getAggregatorVariables()) {
-        groundingAtom->addArgument(std::make_unique<Variable>(variableName));
+        groundingAtom->addArgument(mk<Variable>(variableName));
     }
     aggregatorlessClause->addToBody(std::move(groundingAtom));
     // 2. Create an aggregate clause so that we can check
     // that it IS this aggregate giving a grounding to the candidate variable.
-    auto aggregateSubclause = std::make_unique<Clause>();
-    aggregateSubclause->setHead(mk<Atom>("*"));
-    for (const auto& lit : aggregate.getBodyLiterals()) {
-        aggregateSubclause->addToBody(souffle::clone(lit));
-    }
+    auto aggregateSubclause = mk<Clause>("*");
+    aggregateSubclause->setBodyLiterals(souffle::clone(aggregate.getBodyLiterals()));
 
     std::set<std::string> witnessVariables;
     auto isGroundedInAggregateSubclause = analysis::getGroundedTerms(tu, *aggregateSubclause);
     // 3. Calculate all the witness variables
     // A witness will occur ungrounded in the aggregatorlessClause
     for (const auto& argPair : analysis::getGroundedTerms(tu, *aggregatorlessClause)) {
-        if (const auto* variable = dynamic_cast<const Variable*>(argPair.first)) {
+        if (const auto* variable = as<Variable>(argPair.first)) {
             bool variableIsGrounded = argPair.second;
             if (!variableIsGrounded) {
                 // then we expect it to be grounded in the aggregate subclause
                 // if it's a witness!!
                 for (const auto& aggArgPair : isGroundedInAggregateSubclause) {
-                    if (const auto* var = dynamic_cast<const Variable*>(aggArgPair.first)) {
+                    if (const auto* var = as<Variable>(aggArgPair.first)) {
                         bool aggVariableIsGrounded = aggArgPair.second;
                         if (var->getName() == variable->getName() && aggVariableIsGrounded) {
                             witnessVariables.insert(variable->getName());
@@ -269,7 +263,7 @@ std::set<std::string> getInjectedVariables(
     visitDepthFirst(clause, [&](const Aggregator& ancestor) {
         visitDepthFirst(ancestor, [&](const Aggregator& agg) {
             if (agg == aggregate) {
-                ancestorAggregates.insert(souffle::clone(&ancestor));
+                ancestorAggregates.insert(souffle::clone(ancestor));
             }
         });
     });
@@ -294,7 +288,7 @@ std::set<std::string> getInjectedVariables(
 
         std::unique_ptr<Node> operator()(std::unique_ptr<Node> node) const override {
             static int numReplaced = 0;
-            if (auto* aggregate = dynamic_cast<Aggregator*>(node.get())) {
+            if (auto* aggregate = as<Aggregator>(node)) {
                 // If we come across an aggregate that is NOT an ancestor of
                 // the target aggregate, or that IS itself the target aggregate,
                 // we should replace it with a dummy variable.
@@ -327,18 +321,14 @@ std::set<std::string> getInjectedVariables(
         }
     };
     // 2. make a clone of the clause and then apply that mapper onto it
-    auto clauseCopy = souffle::clone(&clause);
-    auto tweakedClause = mk<Clause>();
-    // put a fake head here
-    tweakedClause->setHead(mk<Atom>("*"));
-    // copy in all the old body literals
-    for (Literal* lit : clause.getBodyLiterals()) {
-        tweakedClause->addToBody(souffle::clone(lit));
-    }
+    auto clauseCopy = souffle::clone(clause);
+    auto tweakedClause = mk<Clause>("*");
+    tweakedClause->setBodyLiterals(souffle::clone(clause.getBodyLiterals()));
+
     // copy in the head as a negated atom
     tweakedClause->addToBody(mk<Negation>(souffle::clone(clause.getHead())));
     // copy in body literals and also add the old head as a negated atom
-    ReplaceAggregatesWithVariables update(std::move(ancestorAggregates), souffle::clone(&aggregate));
+    ReplaceAggregatesWithVariables update(std::move(ancestorAggregates), souffle::clone(aggregate));
     tweakedClause->apply(update);
     // the update will now tell us which variables we need to ground!
     auto groundingAtom = mk<Atom>("+grounding_atom");
@@ -351,7 +341,7 @@ std::set<std::string> getInjectedVariables(
     std::set<std::string> injectedVariables;
     // Search through the tweakedClause to find groundings!
     for (const auto& argPair : analysis::getGroundedTerms(tu, *tweakedClause)) {
-        if (const auto* variable = dynamic_cast<const Variable*>(argPair.first)) {
+        if (const auto* variable = as<Variable>(argPair.first)) {
             bool varIsGrounded = argPair.second;
             if (varIsGrounded && variablesInTargetAggregate.find(variable->getName()) !=
                                          variablesInTargetAggregate.end()) {

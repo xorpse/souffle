@@ -66,7 +66,7 @@ public:
             resQueryPattern.second.emplace_back(i->clone());
         }
         return new ParallelIndexScan(relation, getTupleId(), std::move(resQueryPattern),
-                souffle::clone(&getOperation()), getProfileText());
+                souffle::clone(getOperation()), getProfileText());
     }
 
 protected:

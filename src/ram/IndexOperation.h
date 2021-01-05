@@ -97,7 +97,7 @@ public:
             resQueryPattern.second.emplace_back(i->clone());
         }
         return new IndexOperation(relation, getTupleId(), std::move(resQueryPattern),
-                souffle::clone(&getOperation()), getProfileText());
+                souffle::clone(getOperation()), getProfileText());
     }
 
     /** @brief Helper method for printing */
@@ -147,7 +147,7 @@ public:
 
 protected:
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const IndexOperation&>(node);
+        const auto& other = asAssert<IndexOperation>(node);
         return RelationOperation::equal(other) &&
                equal_targets(queryPattern.first, other.queryPattern.first) &&
                equal_targets(queryPattern.second, other.queryPattern.second);

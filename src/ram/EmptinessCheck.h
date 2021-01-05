@@ -62,7 +62,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const EmptinessCheck&>(node);
+        const auto& other = asAssert<EmptinessCheck>(node);
         return relation == other.relation;
     }
 

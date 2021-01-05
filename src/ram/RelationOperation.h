@@ -20,6 +20,7 @@
 #include "ram/TupleOperation.h"
 #include "ram/utility/NodeMapper.h"
 #include "souffle/utility/ContainerUtil.h"
+#include "souffle/utility/MiscUtil.h"
 #include <cassert>
 #include <memory>
 #include <string>
@@ -48,7 +49,7 @@ public:
 
 protected:
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const RelationOperation&>(node);
+        const auto& other = asAssert<RelationOperation>(node);
         return TupleOperation::equal(other) && relation == other.relation;
     }
 

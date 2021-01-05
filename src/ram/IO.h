@@ -65,7 +65,7 @@ protected:
     };
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const IO&>(node);
+        const auto& other = asAssert<IO>(node);
         return RelationStatement::equal(other) && directives == other.directives;
     }
 

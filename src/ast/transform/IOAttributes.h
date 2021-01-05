@@ -56,11 +56,11 @@ public:
         return "IOAttributesTransformer";
     }
 
-    IOAttributesTransformer* clone() const override {
+private:
+    IOAttributesTransformer* cloneImpl() const override {
         return new IOAttributesTransformer();
     }
 
-private:
     bool transform(TranslationUnit& translationUnit) override {
         bool changed = false;
 
@@ -200,9 +200,7 @@ private:
         std::map<std::string, json11::Json> sumTypes;
 
         visitDepthFirst(program.getTypes(), [&](const AlgebraicDataType& astAlgebraicDataType) {
-            auto& sumType =
-                    dynamic_cast<const analysis::AlgebraicDataType&>(typeEnv.getType(astAlgebraicDataType));
-
+            auto& sumType = asAssert<analysis::AlgebraicDataType>(typeEnv.getType(astAlgebraicDataType));
             auto& branches = sumType.getBranches();
 
             std::vector<json11::Json> branchesInfo;

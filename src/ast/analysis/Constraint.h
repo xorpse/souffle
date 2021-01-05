@@ -98,7 +98,7 @@ protected:
      * @return the analysis variable representing its associated value
      */
     AnalysisVar getVar(const Argument& arg) {
-        const auto* var = dynamic_cast<const ast::Variable*>(&arg);
+        const auto* var = as<ast::Variable>(arg);
         if (var == nullptr) {
             // no mapping required
             return AnalysisVar(arg);

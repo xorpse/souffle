@@ -20,6 +20,7 @@
 #include "ram/analysis/Index.h"
 #include "souffle/RamTypes.h"
 #include "souffle/SouffleInterface.h"
+#include "souffle/utility/MiscUtil.h"
 #include <cstddef>
 #include <cstdint>
 #include <deque>
@@ -260,7 +261,7 @@ public:
         }
 
         bool equal(const RelationWrapper::iterator_base& other) const override {
-            if (auto* o = dynamic_cast<const iterator_base*>(&other)) {
+            if (auto* o = as<iterator_base>(other)) {
                 return iter == o->iter;
             }
             return false;

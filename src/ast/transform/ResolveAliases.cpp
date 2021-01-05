@@ -95,7 +95,7 @@ public:
 
             Own<Node> operator()(Own<Node> node) const override {
                 // see whether it is a variable to be substituted
-                if (auto var = dynamic_cast<ast::Variable*>(node.get())) {
+                if (auto var = as<ast::Variable>(node)) {
                     auto pos = map.find(var->getName());
                     if (pos != map.end()) {
                         return souffle::clone(pos->second);
@@ -118,8 +118,8 @@ public:
     template <typename T>
     Own<T> operator()(Own<T> node) const {
         Own<Node> resPtr = (*this)(Own<Node>(node.release()));
-        assert(isA<T>(resPtr.get()) && "Invalid node type mapping.");
-        return Own<T>(dynamic_cast<T*>(resPtr.release()));
+        assert(isA<T>(resPtr) && "Invalid node type mapping.");
+        return Own<T>(as<T>(resPtr.release()));
     }
 
     /**
@@ -170,8 +170,7 @@ public:
     Own<Argument> lhs;
     Own<Argument> rhs;
 
-    Equation(const Argument& lhs, const Argument& rhs)
-            : lhs(souffle::clone(&lhs)), rhs(souffle::clone(&rhs)) {}
+    Equation(const Argument& lhs, const Argument& rhs) : lhs(souffle::clone(lhs)), rhs(souffle::clone(rhs)) {}
 
     Equation(const Argument* lhs, const Argument* rhs) : lhs(souffle::clone(lhs)), rhs(souffle::clone(rhs)) {}
 
@@ -219,7 +218,7 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
         if (isA<Aggregator>(&arg)) return true;
 
         // or multi-result functors
-        const auto* inf = dynamic_cast<const IntrinsicFunctor*>(&arg);
+        const auto* inf = as<IntrinsicFunctor>(arg);
         if (inf == nullptr) return false;
         return analysis::FunctorAnalysis::isMultiResult(*inf);
     };
@@ -236,13 +235,13 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
     std::set<std::string> baseGroundedVariables;
     for (const auto* atom : getBodyLiterals<Atom>(clause)) {
         for (const Argument* arg : atom->getArguments()) {
-            if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
+            if (const auto* var = as<ast::Variable>(arg)) {
                 baseGroundedVariables.insert(var->getName());
             }
         }
         visitDepthFirst(*atom, [&](const RecordInit& rec) {
             for (const Argument* arg : rec.getArguments()) {
-                if (const auto* var = dynamic_cast<const ast::Variable*>(arg)) {
+                if (const auto* var = as<ast::Variable>(arg)) {
                     baseGroundedVariables.insert(var->getName());
                 }
             }
@@ -359,15 +358,15 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
     }
 
     // III) compute resulting clause
-    return substitution(souffle::clone(&clause));
+    return substitution(souffle::clone(clause));
 }
 
 Own<Clause> ResolveAliasesTransformer::removeTrivialEquality(const Clause& clause) {
-    Own<Clause> res(cloneHead(&clause));
+    auto res = cloneHead(clause);
 
     // add all literals, except filtering out t = t constraints
     for (Literal* literal : clause.getBodyLiterals()) {
-        if (auto* constraint = dynamic_cast<BinaryConstraint*>(literal)) {
+        if (auto* constraint = as<BinaryConstraint>(literal)) {
             // TODO: don't filter out `FEQ` constraints, since `x = x` can fail when `x` is a NaN
             if (isEqConstraint(constraint->getBaseOperator())) {
                 if (*constraint->getLHS() == *constraint->getRHS()) {
@@ -384,7 +383,7 @@ Own<Clause> ResolveAliasesTransformer::removeTrivialEquality(const Clause& claus
 }
 
 Own<Clause> ResolveAliasesTransformer::removeComplexTermsInAtoms(const Clause& clause) {
-    Own<Clause> res(clause.clone());
+    Own<Clause> res(souffle::clone(clause));
 
     // get list of atoms
     std::vector<Atom*> atoms = getBodyLiterals<Atom>(*res);

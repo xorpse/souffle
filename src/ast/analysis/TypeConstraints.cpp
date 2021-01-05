@@ -13,6 +13,7 @@
  ***********************************************************************/
 
 #include "ast/analysis/TypeConstraints.h"
+#include "ast/analysis/Type.h"
 
 namespace souffle::ast::analysis {
 
@@ -112,7 +113,7 @@ static TypeConstraint hasSuperTypeInSet(const TypeVar& var, TypeSet values) {
 }
 
 static const Type& getBaseType(const Type* type) {
-    while (auto subset = dynamic_cast<const SubsetType*>(type)) {
+    while (auto subset = as<SubsetType>(type)) {
         type = &subset->getBaseType();
     };
     assert((isA<ConstantType>(type) || isA<RecordType>(type)) &&
@@ -397,7 +398,7 @@ void TypeConstraintsAnalysis::visitSink(const Atom& atom) {
     });
 }
 
-void TypeConstraintsAnalysis::visitAtom(const Atom& atom) {
+void TypeConstraintsAnalysis::visit_(type_identity<Atom>, const Atom& atom) {
     if (contains(sinks, &atom)) {
         visitSink(atom);
         return;
@@ -408,15 +409,15 @@ void TypeConstraintsAnalysis::visitAtom(const Atom& atom) {
     });
 }
 
-void TypeConstraintsAnalysis::visitNegation(const Negation& cur) {
+void TypeConstraintsAnalysis::visit_(type_identity<Negation>, const Negation& cur) {
     sinks.insert(cur.getAtom());
 }
 
-void TypeConstraintsAnalysis::visitStringConstant(const StringConstant& cnst) {
+void TypeConstraintsAnalysis::visit_(type_identity<StringConstant>, const StringConstant& cnst) {
     addConstraint(isSubtypeOf(getVar(cnst), typeEnv.getConstantType(TypeAttribute::Symbol)));
 }
 
-void TypeConstraintsAnalysis::visitNumericConstant(const NumericConstant& constant) {
+void TypeConstraintsAnalysis::visit_(type_identity<NumericConstant>, const NumericConstant& constant) {
     TypeSet possibleTypes;
 
     // Check if the type is given.
@@ -476,14 +477,14 @@ void TypeConstraintsAnalysis::visitNumericConstant(const NumericConstant& consta
     addConstraint(hasSuperTypeInSet(getVar(constant), possibleTypes));
 }
 
-void TypeConstraintsAnalysis::visitBinaryConstraint(const BinaryConstraint& rel) {
+void TypeConstraintsAnalysis::visit_(type_identity<BinaryConstraint>, const BinaryConstraint& rel) {
     auto lhs = getVar(rel.getLHS());
     auto rhs = getVar(rel.getRHS());
     addConstraint(isSubtypeOf(lhs, rhs));
     addConstraint(isSubtypeOf(rhs, lhs));
 }
 
-void TypeConstraintsAnalysis::visitFunctor(const Functor& fun) {
+void TypeConstraintsAnalysis::visit_(type_identity<Functor>, const Functor& fun) {
     auto functorVar = getVar(fun);
 
     auto intrFun = as<IntrinsicFunctor>(fun);
@@ -533,11 +534,11 @@ void TypeConstraintsAnalysis::visitFunctor(const Functor& fun) {
     }
 }
 
-void TypeConstraintsAnalysis::visitCounter(const Counter& counter) {
+void TypeConstraintsAnalysis::visit_(type_identity<Counter>, const Counter& counter) {
     addConstraint(isSubtypeOf(getVar(counter), typeEnv.getConstantType(TypeAttribute::Signed)));
 }
 
-void TypeConstraintsAnalysis::visitTypeCast(const ast::TypeCast& typeCast) {
+void TypeConstraintsAnalysis::visit_(type_identity<TypeCast>, const ast::TypeCast& typeCast) {
     auto& typeName = typeCast.getType();
     if (!typeEnv.isType(typeName)) {
         return;
@@ -554,14 +555,14 @@ void TypeConstraintsAnalysis::visitTypeCast(const ast::TypeCast& typeCast) {
     }
 }
 
-void TypeConstraintsAnalysis::visitRecordInit(const RecordInit& record) {
+void TypeConstraintsAnalysis::visit_(type_identity<RecordInit>, const RecordInit& record) {
     auto arguments = record.getArguments();
     for (size_t i = 0; i < arguments.size(); ++i) {
         addConstraint(isSubtypeOfComponent(getVar(arguments[i]), getVar(record), i));
     }
 }
 
-void TypeConstraintsAnalysis::visitBranchInit(const BranchInit& adt) {
+void TypeConstraintsAnalysis::visit_(type_identity<BranchInit>, const BranchInit& adt) {
     auto* correspondingType = sumTypesBranches.getType(adt.getConstructor());
 
     if (correspondingType == nullptr) {
@@ -597,7 +598,7 @@ void TypeConstraintsAnalysis::visitBranchInit(const BranchInit& adt) {
     }
 }
 
-void TypeConstraintsAnalysis::visitAggregator(const Aggregator& agg) {
+void TypeConstraintsAnalysis::visit_(type_identity<Aggregator>, const Aggregator& agg) {
     if (agg.getBaseOperator() == AggregateOp::COUNT) {
         addConstraint(isSubtypeOf(getVar(agg), typeEnv.getConstantType(TypeAttribute::Signed)));
     } else if (agg.getBaseOperator() == AggregateOp::MEAN) {

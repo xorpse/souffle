@@ -63,7 +63,7 @@ public:
     }
 
     Choice* clone() const override {
-        return new Choice(relation, getTupleId(), souffle::clone(condition), souffle::clone(&getOperation()),
+        return new Choice(relation, getTupleId(), souffle::clone(condition), souffle::clone(getOperation()),
                 getProfileText());
     }
 
@@ -82,7 +82,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Choice&>(node);
+        const auto& other = asAssert<Choice>(node);
         return RelationOperation::equal(other) && AbstractChoice::equal(other);
     }
 };

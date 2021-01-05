@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ast/TranslationUnit.h"
+#include "souffle/utility/Types.h"
 #include <string>
 
 namespace souffle::ast::transform {
@@ -32,7 +33,12 @@ public:
 
     virtual std::string getName() const = 0;
 
-    virtual Transformer* clone() const = 0;
+    Own<Transformer> clone() const {
+        return Own<Transformer>(cloneImpl());
+    }
+
+private:
+    virtual Transformer* cloneImpl() const = 0;
 };
 
 }  // namespace souffle::ast::transform

@@ -31,11 +31,11 @@ public:
         return "InlineRelationsTransformer";
     }
 
-    InlineRelationsTransformer* clone() const override {
+private:
+    InlineRelationsTransformer* cloneImpl() const override {
         return new InlineRelationsTransformer();
     }
 
-private:
     bool transform(TranslationUnit& translationUnit) override;
 };
 

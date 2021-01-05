@@ -48,7 +48,7 @@ public:
             : AbstractConditional(std::move(cond), std::move(nested), std::move(profileText)) {}
 
     Break* clone() const override {
-        return new Break(souffle::clone(condition), souffle::clone(&getOperation()), getProfileText());
+        return new Break(souffle::clone(condition), souffle::clone(getOperation()), getProfileText());
     }
 
 protected:

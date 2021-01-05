@@ -116,7 +116,7 @@ public:
 
     // read directory
     DirectoryEntry* readDirectoryEntry(const std::string& keyToRead) const {
-        return dynamic_cast<DirectoryEntry*>(readEntry(keyToRead));
+        return as<DirectoryEntry>(readEntry(keyToRead));
     }
 
     // accept visitor
@@ -306,7 +306,7 @@ protected:
             assert(!key.empty() && "Key is empty!");
             DirectoryEntry* newDir = dir->readDirectoryEntry(key);
             if (newDir == nullptr) {
-                newDir = dynamic_cast<DirectoryEntry*>(dir->writeEntry(mk<DirectoryEntry>(key)));
+                newDir = as<DirectoryEntry>(dir->writeEntry(mk<DirectoryEntry>(key)));
             }
             assert(newDir != nullptr && "Attempting to overwrite an existing entry");
             dir = newDir;
@@ -379,7 +379,7 @@ public:
         DirectoryEntry* dir = lookupPath(path);
 
         const std::string& key = qualifier.back();
-        Own<TextEntry> entry = std::make_unique<TextEntry>(key, text);
+        Own<TextEntry> entry = mk<TextEntry>(key, text);
         dir->writeEntry(std::move(entry));
     }
 
@@ -390,7 +390,7 @@ public:
         DirectoryEntry* dir = lookupPath(path);
 
         const std::string& key = qualifier.back();
-        Own<DurationEntry> entry = std::make_unique<DurationEntry>(key, start, end);
+        Own<DurationEntry> entry = mk<DurationEntry>(key, start, end);
         dir->writeEntry(std::move(entry));
     }
 
@@ -401,7 +401,7 @@ public:
         DirectoryEntry* dir = lookupPath(path);
 
         const std::string& key = qualifier.back();
-        Own<TimeEntry> entry = std::make_unique<TimeEntry>(key, time);
+        Own<TimeEntry> entry = mk<TimeEntry>(key, time);
         dir->writeEntry(std::move(entry));
     }
 
@@ -438,13 +438,13 @@ public:
      */
     std::map<std::string, std::string> getStringMap(const std::vector<std::string>& path) const {
         std::map<std::string, std::string> kvps;
-        auto* parent = dynamic_cast<DirectoryEntry*>(lookupEntry(path));
+        auto* parent = as<DirectoryEntry>(lookupEntry(path));
         if (parent == nullptr) {
             return kvps;
         }
 
         for (const auto& key : parent->getKeys()) {
-            auto* text = dynamic_cast<TextEntry*>(parent->readEntry(key));
+            auto* text = as<TextEntry>(parent->readEntry(key));
             if (text != nullptr) {
                 kvps[key] = text->getText();
             }

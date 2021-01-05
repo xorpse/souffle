@@ -393,13 +393,13 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
 
     // visit all nodes to collect searches of each relation
     visitDepthFirst(translationUnit.getProgram(), [&](const Node& node) {
-        if (const auto* indexSearch = dynamic_cast<const IndexOperation*>(&node)) {
+        if (const auto* indexSearch = as<IndexOperation>(node)) {
             relationToSearches[indexSearch->getRelation()].insert(getSearchSignature(indexSearch));
-        } else if (const auto* exists = dynamic_cast<const ExistenceCheck*>(&node)) {
+        } else if (const auto* exists = as<ExistenceCheck>(node)) {
             relationToSearches[exists->getRelation()].insert(getSearchSignature(exists));
-        } else if (const auto* provExists = dynamic_cast<const ProvenanceExistenceCheck*>(&node)) {
+        } else if (const auto* provExists = as<ProvenanceExistenceCheck>(node)) {
             relationToSearches[provExists->getRelation()].insert(getSearchSignature(provExists));
-        } else if (const auto* ramRel = dynamic_cast<const Relation*>(&node)) {
+        } else if (const auto* ramRel = as<Relation>(node)) {
             relationToSearches[ramRel->getName()].insert(getSearchSignature(ramRel));
         }
     });

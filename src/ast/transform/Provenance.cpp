@@ -74,15 +74,13 @@ Own<Relation> makeInfoRelation(
             makeRelationName(originalClause.getHead()->getQualifiedName(), "@info", originalClauseNum);
 
     // initialise info relation
-    auto infoRelation = new Relation();
-    infoRelation->setQualifiedName(name);
+    auto infoRelation = mk<Relation>(name);
     // set qualifier to INFO_RELATION
     infoRelation->setRepresentation(RelationRepresentation::INFO);
 
     // create new clause containing a single fact
-    auto infoClause = new Clause();
-    auto infoClauseHead = new Atom();
-    infoClauseHead->setQualifiedName(name);
+    auto infoClause = mk<Clause>(name);
+    auto infoClauseHead = infoClause->getHead();
 
     // (darth_tytus): Can this be unsigned?
     infoRelation->addAttribute(mk<Attribute>("clause_num", QualifiedName("number")));
@@ -97,9 +95,9 @@ Own<Relation> makeInfoRelation(
     int functorNumber = 0;
     int aggregateNumber = 0;
     auto getArgInfo = [&](Argument* arg) -> std::string {
-        if (auto* var = dynamic_cast<ast::Variable*>(arg)) {
+        if (auto* var = as<ast::Variable>(arg)) {
             return toString(*var);
-        } else if (auto* constant = dynamic_cast<Constant*>(arg)) {
+        } else if (auto* constant = as<Constant>(arg)) {
             return toString(*constant);
         }
         if (isA<UnnamedVariable>(arg)) {
@@ -168,7 +166,7 @@ Own<Relation> makeInfoRelation(
     for (size_t i = 0; i < originalClause.getBodyLiterals().size(); i++) {
         auto lit = originalClause.getBodyLiterals()[i];
 
-        if (auto con = dynamic_cast<BinaryConstraint*>(lit)) {
+        if (auto con = as<BinaryConstraint>(lit)) {
             // for a constraint, add the constraint symbol and LHS and RHS
             std::string constraintDescription = toBinaryConstraintSymbol(con->getBaseOperator());
 
@@ -183,11 +181,10 @@ Own<Relation> makeInfoRelation(
     infoClauseHead->addArgument(mk<StringConstant>(toString(originalClause)));
 
     // set clause head and add clause to info relation
-    infoClause->setHead(Own<Atom>(infoClauseHead));
     Program& program = translationUnit.getProgram();
-    program.addClause(Own<Clause>(infoClause));
+    program.addClause(std::move(infoClause));
 
-    return Own<Relation>(infoRelation);
+    return infoRelation;
 }
 
 /** Transform eqrel relations to explicitly define equivalence relations */
@@ -200,8 +197,8 @@ void transformEqrelRelation(Program& program, Relation& rel) {
 
     // transitivity
     // transitive clause: A(x, z) :- A(x, y), A(y, z).
-    auto transitiveClause = new Clause();
-    auto transitiveClauseHead = new Atom(rel.getQualifiedName());
+    auto transitiveClause = mk<Clause>(rel.getQualifiedName());
+    auto transitiveClauseHead = transitiveClause->getHead();
     transitiveClauseHead->addArgument(mk<ast::Variable>("x"));
     transitiveClauseHead->addArgument(mk<ast::Variable>("z"));
 
@@ -213,15 +210,14 @@ void transformEqrelRelation(Program& program, Relation& rel) {
     transitiveClauseBody2->addArgument(mk<ast::Variable>("y"));
     transitiveClauseBody2->addArgument(mk<ast::Variable>("z"));
 
-    transitiveClause->setHead(Own<Atom>(transitiveClauseHead));
     transitiveClause->addToBody(Own<Literal>(transitiveClauseBody));
     transitiveClause->addToBody(Own<Literal>(transitiveClauseBody2));
-    program.addClause(Own<Clause>(transitiveClause));
+    program.addClause(std::move(transitiveClause));
 
     // symmetric
     // symmetric clause: A(x, y) :- A(y, x).
-    auto symClause = new Clause();
-    auto symClauseHead = new Atom(rel.getQualifiedName());
+    auto symClause = mk<Clause>(rel.getQualifiedName());
+    auto symClauseHead = symClause->getHead();
     symClauseHead->addArgument(mk<ast::Variable>("x"));
     symClauseHead->addArgument(mk<ast::Variable>("y"));
 
@@ -229,14 +225,13 @@ void transformEqrelRelation(Program& program, Relation& rel) {
     symClauseBody->addArgument(mk<ast::Variable>("y"));
     symClauseBody->addArgument(mk<ast::Variable>("x"));
 
-    symClause->setHead(Own<Atom>(symClauseHead));
     symClause->addToBody(Own<Literal>(symClauseBody));
-    program.addClause(Own<Clause>(symClause));
+    program.addClause(std::move(symClause));
 
     // reflexivity
     // reflexive clause: A(x, x) :- A(x, _).
-    auto reflexiveClause = new Clause();
-    auto reflexiveClauseHead = new Atom(rel.getQualifiedName());
+    auto reflexiveClause = mk<Clause>(rel.getQualifiedName());
+    auto reflexiveClauseHead = reflexiveClause->getHead();
     reflexiveClauseHead->addArgument(mk<ast::Variable>("x"));
     reflexiveClauseHead->addArgument(mk<ast::Variable>("x"));
 
@@ -244,9 +239,8 @@ void transformEqrelRelation(Program& program, Relation& rel) {
     reflexiveClauseBody->addArgument(mk<ast::Variable>("x"));
     reflexiveClauseBody->addArgument(mk<UnnamedVariable>());
 
-    reflexiveClause->setHead(Own<Atom>(reflexiveClauseHead));
     reflexiveClause->addToBody(Own<Literal>(reflexiveClauseBody));
-    program.addClause(Own<Clause>(reflexiveClause));
+    program.addClause(std::move(reflexiveClause));
 }
 
 namespace {
@@ -295,10 +289,10 @@ bool ProvenanceTransformer::transformMaxHeight(TranslationUnit& translationUnit)
 
                 Own<Node> operator()(Own<Node> node) const override {
                     // add provenance columns
-                    if (auto atom = dynamic_cast<Atom*>(node.get())) {
+                    if (auto atom = as<Atom>(node)) {
                         atom->addArgument(mk<UnnamedVariable>());
                         atom->addArgument(mk<UnnamedVariable>());
-                    } else if (auto neg = dynamic_cast<Negation*>(node.get())) {
+                    } else if (auto neg = as<Negation>(node)) {
                         auto atom = neg->getAtom();
                         atom->addArgument(mk<UnnamedVariable>());
                         atom->addArgument(mk<UnnamedVariable>());
@@ -327,7 +321,7 @@ bool ProvenanceTransformer::transformMaxHeight(TranslationUnit& translationUnit)
                     lit->apply(M());
 
                     // add two provenance columns to lit; first is rule num, second is level num
-                    if (auto atom = dynamic_cast<Atom*>(lit)) {
+                    if (auto atom = as<Atom>(lit)) {
                         atom->addArgument(mk<UnnamedVariable>());
                         atom->addArgument(mk<ast::Variable>("@level_num_" + std::to_string(i)));
                         bodyLevels.push_back(new ast::Variable("@level_num_" + std::to_string(i)));

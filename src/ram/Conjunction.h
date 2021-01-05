@@ -80,7 +80,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Conjunction&>(node);
+        const auto& other = asAssert<Conjunction>(node);
         return equal_ptr(lhs, other.lhs) && equal_ptr(rhs, other.rhs);
     }
 
