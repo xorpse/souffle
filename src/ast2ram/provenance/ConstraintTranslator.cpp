@@ -30,7 +30,7 @@ Own<ram::Condition> ConstraintTranslator::translateConstraint(const ast::Literal
     return ConstraintTranslator(context, symbolTable, index)(*lit);
 }
 
-Own<ram::Condition> ConstraintTranslator::visitNegation(const ast::Negation& neg) {
+Own<ram::Condition> ConstraintTranslator::visit_(type_identity<ast::Negation>, const ast::Negation& neg) {
     // construct the atom and create a negation
     const auto* atom = neg.getAtom();
     VecOwn<ram::Expression> values;

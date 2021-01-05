@@ -45,7 +45,7 @@ public:
     Own<ram::Condition> translateConstraint(const ast::Literal* lit) override;
 
     /** -- Visitors -- */
-    Own<ram::Condition> visitNegation(const ast::Negation& neg) override;
+    Own<ram::Condition> visit_(type_identity<ast::Negation>, const ast::Negation& neg) override;
 };
 
 }  // namespace souffle::ast2ram::provenance
