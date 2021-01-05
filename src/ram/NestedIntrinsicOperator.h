@@ -78,7 +78,7 @@ public:
 
     NestedIntrinsicOperator* clone() const override {
         return new NestedIntrinsicOperator(
-                op, souffle::clone(args), souffle::clone(&getOperation()), getTupleId());
+                op, souffle::clone(args), souffle::clone(getOperation()), getTupleId());
     }
 
     void apply(const NodeMapper& map) override {

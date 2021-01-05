@@ -26,11 +26,11 @@ public:
         return "ComponentInstantiationTransformer";
     }
 
-    ComponentInstantiationTransformer* clone() const override {
+private:
+    ComponentInstantiationTransformer* cloneImpl() const override {
         return new ComponentInstantiationTransformer();
     }
 
-private:
     bool transform(TranslationUnit& translationUnit) override;
 };
 

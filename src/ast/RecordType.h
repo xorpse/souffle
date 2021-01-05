@@ -45,7 +45,9 @@ namespace souffle::ast {
 class RecordType : public Type {
 public:
     RecordType(QualifiedName name, VecOwn<Attribute> fields, SrcLocation loc = {})
-            : Type(std::move(name), std::move(loc)), fields(std::move(fields)) {}
+            : Type(std::move(name), std::move(loc)), fields(std::move(fields)) {
+        assert(allValidPtrs(this->fields));
+    }
 
     /** Add field to record type */
     void add(std::string name, QualifiedName type) {
@@ -62,10 +64,6 @@ public:
         fields.at(idx)->setTypeName(std::move(type));
     }
 
-    RecordType* clone() const override {
-        return new RecordType(getQualifiedName(), souffle::clone(fields), getSrcLoc());
-    }
-
 protected:
     void print(std::ostream& os) const override {
         os << tfm::format(".type %s = [%s]", getQualifiedName(), join(fields, ", "));
@@ -74,6 +72,11 @@ protected:
     bool equal(const Node& node) const override {
         const auto& other = asAssert<RecordType>(node);
         return getQualifiedName() == other.getQualifiedName() && equal_targets(fields, other.fields);
+    }
+
+private:
+    RecordType* cloneImpl() const override {
+        return new RecordType(getQualifiedName(), souffle::clone(fields), getSrcLoc());
     }
 
 private:

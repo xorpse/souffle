@@ -49,7 +49,7 @@ public:
             : Scan(rel, ident, std::move(nested), profileText) {}
 
     ParallelScan* clone() const override {
-        return new ParallelScan(relation, getTupleId(), souffle::clone(&getOperation()), getProfileText());
+        return new ParallelScan(relation, getTupleId(), souffle::clone(getOperation()), getProfileText());
     }
 
 protected:

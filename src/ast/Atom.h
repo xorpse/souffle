@@ -26,6 +26,7 @@
 #include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <iostream>
 #include <memory>
@@ -46,7 +47,9 @@ namespace souffle::ast {
 class Atom : public Literal {
 public:
     Atom(QualifiedName name = {}, VecOwn<Argument> args = {}, SrcLocation loc = {})
-            : Literal(std::move(loc)), name(std::move(name)), arguments(std::move(args)) {}
+            : Literal(std::move(loc)), name(std::move(name)), arguments(std::move(args)) {
+        assert(allValidPtrs(arguments));
+    }
 
     /** Return qualified name */
     const QualifiedName& getQualifiedName() const {
@@ -65,16 +68,13 @@ public:
 
     /** Add argument to the atom */
     void addArgument(Own<Argument> arg) {
+        assert(arg != nullptr);
         arguments.push_back(std::move(arg));
     }
 
     /** Return arguments */
     std::vector<Argument*> getArguments() const {
         return toPtrVector(arguments);
-    }
-
-    Atom* clone() const override {
-        return new Atom(name, souffle::clone(arguments), getSrcLoc());
     }
 
     void apply(const NodeMapper& map) override {
@@ -101,6 +101,12 @@ protected:
         return name == other.name && equal_targets(arguments, other.arguments);
     }
 
+private:
+    Atom* cloneImpl() const override {
+        return new Atom(name, souffle::clone(arguments), getSrcLoc());
+    }
+
+private:
     /** Name of atom */
     QualifiedName name;
 

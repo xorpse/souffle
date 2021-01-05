@@ -47,7 +47,10 @@ namespace souffle::ast {
 class BinaryConstraint : public Constraint {
 public:
     BinaryConstraint(BinaryConstraintOp o, Own<Argument> ls, Own<Argument> rs, SrcLocation loc = {})
-            : Constraint(std::move(loc)), operation(o), lhs(std::move(ls)), rhs(std::move(rs)) {}
+            : Constraint(std::move(loc)), operation(o), lhs(std::move(ls)), rhs(std::move(rs)) {
+        assert(lhs != nullptr);
+        assert(rhs != nullptr);
+    }
 
     /** Return left-hand side argument */
     Argument* getLHS() const {
@@ -67,10 +70,6 @@ public:
     /** Set binary operator */
     void setBaseOperator(BinaryConstraintOp op) {
         operation = op;
-    }
-
-    BinaryConstraint* clone() const override {
-        return new BinaryConstraint(operation, souffle::clone(lhs), souffle::clone(rhs), getSrcLoc());
     }
 
     void apply(const NodeMapper& map) override {
@@ -96,6 +95,12 @@ protected:
         return operation == other.operation && equal_ptr(lhs, other.lhs) && equal_ptr(rhs, other.rhs);
     }
 
+private:
+    BinaryConstraint* cloneImpl() const override {
+        return new BinaryConstraint(operation, souffle::clone(lhs), souffle::clone(rhs), getSrcLoc());
+    }
+
+private:
     /** Constraint (base) operator */
     BinaryConstraintOp operation;
 

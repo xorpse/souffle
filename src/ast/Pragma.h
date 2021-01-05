@@ -34,10 +34,6 @@ public:
     Pragma(std::string key, std::string value, SrcLocation loc = {})
             : Node(std::move(loc)), key(std::move(key)), value(std::move(value)) {}
 
-    Pragma* clone() const override {
-        return new Pragma(key, value, getSrcLoc());
-    }
-
     /* Get kvp */
     std::pair<std::string, std::string> getkvp() const {
         return std::pair<std::string, std::string>(key, value);
@@ -51,6 +47,11 @@ protected:
     bool equal(const Node& node) const override {
         const auto& other = asAssert<Pragma>(node);
         return other.key == key && other.value == value;
+    }
+
+private:
+    Pragma* cloneImpl() const override {
+        return new Pragma(key, value, getSrcLoc());
     }
 
     /** Name of the key */

@@ -52,6 +52,7 @@ public:
     AlgebraicDataType(QualifiedName name, VecOwn<BranchDeclaration> branches, SrcLocation loc = {})
             : Type(std::move(name), std::move(loc)), branches(std::move(branches)) {
         assert(!this->branches.empty());
+        assert(allValidPtrs(this->branches));
     };
 
     std::vector<BranchDeclaration*> getBranches() const {
@@ -62,14 +63,15 @@ public:
         os << tfm::format(".type %s = %s", getQualifiedName(), join(branches, " | "));
     }
 
-    AlgebraicDataType* clone() const override {
-        return new AlgebraicDataType(getQualifiedName(), souffle::clone(branches), getSrcLoc());
-    }
-
 protected:
     bool equal(const Node& node) const override {
         const auto& other = asAssert<AlgebraicDataType>(node);
         return getQualifiedName() == other.getQualifiedName() && branches == other.branches;
+    }
+
+private:
+    AlgebraicDataType* cloneImpl() const override {
+        return new AlgebraicDataType(getQualifiedName(), souffle::clone(branches), getSrcLoc());
     }
 
 private:

@@ -40,7 +40,9 @@ namespace souffle::ast {
 class TypeCast : public Argument {
 public:
     TypeCast(Own<Argument> value, QualifiedName type, SrcLocation loc = {})
-            : Argument(std::move(loc)), value(std::move(value)), type(std::move(type)) {}
+            : Argument(std::move(loc)), value(std::move(value)), type(std::move(type)) {
+        assert(this->value != nullptr);
+    }
 
     /** Return value */
     Argument* getValue() const {
@@ -63,10 +65,6 @@ public:
         return res;
     }
 
-    TypeCast* clone() const override {
-        return new TypeCast(souffle::clone(value), type, getSrcLoc());
-    }
-
     void apply(const NodeMapper& map) override {
         value = map(std::move(value));
     }
@@ -81,6 +79,12 @@ protected:
         return type == other.type && equal_ptr(value, other.value);
     }
 
+private:
+    TypeCast* cloneImpl() const override {
+        return new TypeCast(souffle::clone(value), type, getSrcLoc());
+    }
+
+private:
     /** Casted value */
     Own<Argument> value;
 

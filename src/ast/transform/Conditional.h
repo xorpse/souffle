@@ -73,17 +73,18 @@ public:
         return "ConditionalTransformer";
     }
 
-    ConditionalTransformer* clone() const override {
+private:
+    ConditionalTransformer* cloneImpl() const override {
         return new ConditionalTransformer(condition, souffle::clone(transformer));
+    }
+
+    bool transform(TranslationUnit& translationUnit) override {
+        return condition() ? applySubtransformer(translationUnit, transformer.get()) : false;
     }
 
 private:
     std::function<bool()> condition;
     Own<Transformer> transformer;
-
-    bool transform(TranslationUnit& translationUnit) override {
-        return condition() ? applySubtransformer(translationUnit, transformer.get()) : false;
-    }
 };
 
 }  // namespace souffle::ast::transform

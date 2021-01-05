@@ -91,7 +91,7 @@ VecOwn<ast::Clause> RuleBody::toClauseBodies() const {
     // collect clause results
     VecOwn<ast::Clause> bodies;
     for (const clause& cur : dnf) {
-        bodies.push_back(mk<ast::Clause>());
+        bodies.push_back(mk<ast::Clause>("*"));
         ast::Clause& clause = *bodies.back();
 
         for (const literal& lit : cur) {
@@ -102,8 +102,7 @@ VecOwn<ast::Clause> RuleBody::toClauseBodies() const {
                 // negate
                 if (auto* atom = as<ast::Atom>(*base)) {
                     base.release();
-                    base = mk<ast::Negation>(Own<ast::Atom>(atom));
-                    base->setSrcLoc(atom->getSrcLoc());
+                    base = mk<ast::Negation>(Own<ast::Atom>(atom), atom->getSrcLoc());
                 } else if (auto* cstr = as<ast::Constraint>(*base)) {
                     negateConstraintInPlace(*cstr);
                 }

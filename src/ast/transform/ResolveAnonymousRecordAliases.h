@@ -38,11 +38,11 @@ public:
         return "ResolveAnonymousRecordAliases";
     }
 
-    ResolveAnonymousRecordAliasesTransformer* clone() const override {
+private:
+    ResolveAnonymousRecordAliasesTransformer* cloneImpl() const override {
         return new ResolveAnonymousRecordAliasesTransformer();
     }
 
-private:
     bool transform(TranslationUnit& translationUnit) override;
 
     /**

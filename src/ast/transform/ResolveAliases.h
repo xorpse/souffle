@@ -59,11 +59,11 @@ public:
      */
     static Own<Clause> removeComplexTermsInAtoms(const Clause& clause);
 
-    ResolveAliasesTransformer* clone() const override {
+private:
+    ResolveAliasesTransformer* cloneImpl() const override {
         return new ResolveAliasesTransformer();
     }
 
-private:
     bool transform(TranslationUnit& translationUnit) override;
 };
 

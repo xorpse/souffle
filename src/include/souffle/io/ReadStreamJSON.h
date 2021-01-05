@@ -114,7 +114,7 @@ protected:
             return nullptr;
         }
 
-        Own<RamDomain[]> tuple = std::make_unique<RamDomain[]>(typeAttributes.size());
+        Own<RamDomain[]> tuple = mk<RamDomain[]>(typeAttributes.size());
         const Json& jsonObj = jsonSource[pos];
         assert(jsonObj.is_array() && "the input is not json array");
         pos++;
@@ -209,7 +209,7 @@ protected:
             return nullptr;
         }
 
-        Own<RamDomain[]> tuple = std::make_unique<RamDomain[]>(typeAttributes.size());
+        Own<RamDomain[]> tuple = mk<RamDomain[]>(typeAttributes.size());
         const Json& jsonObj = jsonSource[pos];
         assert(jsonObj.is_object() && "the input is not json object");
         pos++;

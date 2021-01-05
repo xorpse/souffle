@@ -53,13 +53,13 @@ bool NormaliseGeneratorsTransformer::transform(TranslationUnit& translationUnit)
                 // Multi-result functors
                 if (analysis::FunctorAnalysis::isMultiResult(*inf)) {
                     std::string name = getUniqueName();
-                    generatorNames.push_back({name, Own<IntrinsicFunctor>(inf->clone())});
+                    generatorNames.emplace_back(name, souffle::clone(inf));
                     return mk<Variable>(name);
                 }
             } else if (auto* agg = as<Aggregator>(node)) {
                 // Aggregators
                 std::string name = getUniqueName();
-                generatorNames.push_back({name, Own<Aggregator>(agg->clone())});
+                generatorNames.emplace_back(name, souffle::clone(agg));
                 return mk<Variable>(name);
             }
 

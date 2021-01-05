@@ -32,13 +32,11 @@ Aggregator* SimplifyAggregateTargetExpressionTransformer::simplifyTargetExpressi
     auto newTargetExpression = mk<Variable>(analysis::findUniqueVariableName(clause, "x"));
 
     // Create the new body, with the necessary equality between old and new target expressions
-    auto equalityLiteral = std::make_unique<BinaryConstraint>(BinaryConstraintOp::EQ,
-            souffle::clone(newTargetExpression), souffle::clone(origTargetExpression));
+    auto equalityLiteral = mk<BinaryConstraint>(BinaryConstraintOp::EQ, souffle::clone(newTargetExpression),
+            souffle::clone(origTargetExpression));
 
-    std::vector<Own<Literal>> newBody;
-    for (const auto* literal : aggregator.getBodyLiterals()) {
-        newBody.push_back(souffle::clone(literal));
-    }
+    VecOwn<Literal> newBody;
+    append(newBody, souffle::cloneRange(aggregator.getBodyLiterals()));
     newBody.push_back(std::move(equalityLiteral));
 
     // Variables in the target expression may have been shadowing variables from the outer scope,

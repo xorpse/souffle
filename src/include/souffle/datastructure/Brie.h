@@ -2738,7 +2738,7 @@ public:
         // conduct a lock-free lazy-creation of nested trees
         if (!nextPtr) {
             // create a sub-tree && register it atomically
-            auto newNested = std::make_unique<nested_trie_type>();
+            auto newNested = mk<nested_trie_type>();
             if (next.compare_exchange_weak(nextPtr, newNested.get())) {
                 nextPtr = newNested.release();  // worked, ownership is acquired by `store`
             }

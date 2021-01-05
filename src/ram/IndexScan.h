@@ -61,7 +61,7 @@ public:
             resQueryPattern.second.emplace_back(i->clone());
         }
         return new IndexScan(relation, getTupleId(), std::move(resQueryPattern),
-                souffle::clone(&getOperation()), getProfileText());
+                souffle::clone(getOperation()), getProfileText());
     }
 
 protected:

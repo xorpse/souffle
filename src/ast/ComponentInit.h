@@ -21,6 +21,7 @@
 #include "ast/utility/NodeMapper.h"
 #include "parser/SrcLocation.h"
 #include "souffle/utility/MiscUtil.h"
+#include <cassert>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -41,7 +42,9 @@ namespace souffle::ast {
 class ComponentInit : public Node {
 public:
     ComponentInit(std::string name, Own<ComponentType> type, SrcLocation loc = {})
-            : Node(std::move(loc)), instanceName(std::move(name)), componentType(std::move(type)) {}
+            : Node(std::move(loc)), instanceName(std::move(name)), componentType(std::move(type)) {
+        assert(componentType);
+    }
 
     /** Return instance name */
     const std::string& getInstanceName() const {
@@ -60,11 +63,8 @@ public:
 
     /** Set component type */
     void setComponentType(Own<ComponentType> type) {
+        assert(type != nullptr);
         componentType = std::move(type);
-    }
-
-    ComponentInit* clone() const override {
-        return new ComponentInit(instanceName, souffle::clone(componentType), getSrcLoc());
     }
 
     void apply(const NodeMapper& mapper) override {
@@ -85,6 +85,12 @@ protected:
         return instanceName == other.instanceName && *componentType == *other.componentType;
     }
 
+private:
+    ComponentInit* cloneImpl() const override {
+        return new ComponentInit(instanceName, souffle::clone(componentType), getSrcLoc());
+    }
+
+private:
     /** Instance name */
     std::string instanceName;
 

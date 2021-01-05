@@ -103,17 +103,17 @@ private:
     /** Visitors */
     void collectConstraints(const Clause& clause) override;
     void visitSink(const Atom& atom);
-    void visitAtom(const Atom& atom) override;
-    void visitNegation(const Negation& cur) override;
-    void visitStringConstant(const StringConstant& cnst) override;
-    void visitNumericConstant(const NumericConstant& constant) override;
-    void visitBinaryConstraint(const BinaryConstraint& rel) override;
-    void visitFunctor(const Functor& fun) override;
-    void visitCounter(const Counter& counter) override;
-    void visitTypeCast(const ast::TypeCast& typeCast) override;
-    void visitRecordInit(const RecordInit& record) override;
-    void visitBranchInit(const BranchInit& adt) override;
-    void visitAggregator(const Aggregator& agg) override;
+    void visit_(type_identity<Atom>, const Atom& atom) override;
+    void visit_(type_identity<Negation>, const Negation& cur) override;
+    void visit_(type_identity<StringConstant>, const StringConstant& cnst) override;
+    void visit_(type_identity<NumericConstant>, const NumericConstant& constant) override;
+    void visit_(type_identity<BinaryConstraint>, const BinaryConstraint& rel) override;
+    void visit_(type_identity<Functor>, const Functor& fun) override;
+    void visit_(type_identity<Counter>, const Counter& counter) override;
+    void visit_(type_identity<TypeCast>, const ast::TypeCast& typeCast) override;
+    void visit_(type_identity<RecordInit>, const RecordInit& record) override;
+    void visit_(type_identity<BranchInit>, const BranchInit& adt) override;
+    void visit_(type_identity<Aggregator>, const Aggregator& agg) override;
 };
 
 }  // namespace souffle::ast::analysis

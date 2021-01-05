@@ -473,7 +473,7 @@ relation_decl
             }
 
             for (auto&& fd : $dependency_list) {
-                rel->addDependency(Own<ast::FunctionalConstraint>(fd->clone()));
+                rel->addDependency(souffle::clone(fd));
             }
 
             rel->setAttributes(clone(attributes_list));

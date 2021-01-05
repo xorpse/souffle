@@ -42,7 +42,9 @@ namespace souffle::ast {
 class BranchDeclaration : public Node {
 public:
     BranchDeclaration(std::string constructor, VecOwn<Attribute> fields, SrcLocation loc = {})
-            : Node(std::move(loc)), constructor(std::move(constructor)), fields(std::move(fields)){};
+            : Node(std::move(loc)), constructor(std::move(constructor)), fields(std::move(fields)) {
+        assert(allValidPtrs(this->fields));
+    }
 
     const std::string& getConstructor() const {
         return constructor;
@@ -52,13 +54,14 @@ public:
         return toPtrVector(fields);
     }
 
-    BranchDeclaration* clone() const override {
-        return new BranchDeclaration(constructor, souffle::clone(fields), getSrcLoc());
-    }
-
 protected:
     void print(std::ostream& os) const override {
         os << tfm::format("%s {%s}", constructor, join(fields, ", "));
+    }
+
+private:
+    BranchDeclaration* cloneImpl() const override {
+        return new BranchDeclaration(constructor, souffle::clone(fields), getSrcLoc());
     }
 
 private:

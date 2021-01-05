@@ -66,10 +66,6 @@ public:
         types.at(idx) = std::move(type);
     }
 
-    UnionType* clone() const override {
-        return new UnionType(getQualifiedName(), types, getSrcLoc());
-    }
-
 protected:
     void print(std::ostream& os) const override {
         os << ".type " << getQualifiedName() << " = " << join(types, " | ");
@@ -78,6 +74,11 @@ protected:
     bool equal(const Node& node) const override {
         const auto& other = asAssert<UnionType>(node);
         return getQualifiedName() == other.getQualifiedName() && types == other.types;
+    }
+
+private:
+    UnionType* cloneImpl() const override {
+        return new UnionType(getQualifiedName(), types, getSrcLoc());
     }
 
 private:

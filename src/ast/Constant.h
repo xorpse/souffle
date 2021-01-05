@@ -32,8 +32,6 @@ namespace souffle::ast {
  */
 class Constant : public Argument {
 public:
-    Constant* clone() const override = 0;
-
     /** Get string representation of Constant */
     const std::string& getConstant() const {
         return constant;

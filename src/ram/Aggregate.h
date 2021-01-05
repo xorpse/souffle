@@ -61,7 +61,7 @@ public:
     }
 
     Aggregate* clone() const override {
-        return new Aggregate(souffle::clone(&getOperation()), function, relation, souffle::clone(expression),
+        return new Aggregate(souffle::clone(getOperation()), function, relation, souffle::clone(expression),
                 souffle::clone(condition), getTupleId());
     }
 

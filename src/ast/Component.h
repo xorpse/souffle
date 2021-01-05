@@ -28,6 +28,7 @@
 #include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include <algorithm>
+#include <cassert>
 #include <memory>
 #include <ostream>
 #include <set>
@@ -58,6 +59,7 @@ public:
 
     /** Set component type */
     void setComponentType(Own<ComponentType> other) {
+        assert(other != nullptr);
         componentType = std::move(other);
     }
 
@@ -68,11 +70,13 @@ public:
 
     /** Add base components */
     void addBaseComponent(Own<ComponentType> component) {
+        assert(component != nullptr);
         baseComponents.push_back(std::move(component));
     }
 
     /** Add type */
     void addType(Own<Type> t) {
+        assert(t != nullptr);
         types.push_back(std::move(t));
     }
 
@@ -88,6 +92,7 @@ public:
 
     /** Add relation */
     void addRelation(Own<Relation> r) {
+        assert(r != nullptr);
         relations.push_back(std::move(r));
     }
 
@@ -98,6 +103,7 @@ public:
 
     /** Add clause */
     void addClause(Own<Clause> c) {
+        assert(c != nullptr);
         clauses.push_back(std::move(c));
     }
 
@@ -108,6 +114,7 @@ public:
 
     /** Add directive */
     void addDirective(Own<Directive> directive) {
+        assert(directive != nullptr);
         directives.push_back(std::move(directive));
     }
 
@@ -118,6 +125,7 @@ public:
 
     /** Add components */
     void addComponent(Own<Component> c) {
+        assert(c != nullptr);
         components.push_back(std::move(c));
     }
 
@@ -128,6 +136,7 @@ public:
 
     /** Add instantiation */
     void addInstantiation(Own<ComponentInit> i) {
+        assert(i != nullptr);
         instantiations.push_back(std::move(i));
     }
 
@@ -144,20 +153,6 @@ public:
     /** Get override */
     const std::set<std::string>& getOverridden() const {
         return overrideRules;
-    }
-
-    Component* clone() const override {
-        auto* res = new Component();
-        res->componentType = souffle::clone(componentType);
-        res->baseComponents = souffle::clone(baseComponents);
-        res->components = souffle::clone(components);
-        res->instantiations = souffle::clone(instantiations);
-        res->types = souffle::clone(types);
-        res->relations = souffle::clone(relations);
-        res->clauses = souffle::clone(clauses);
-        res->directives = souffle::clone(directives);
-        res->overrideRules = overrideRules;
-        return res;
     }
 
     void apply(const NodeMapper& mapper) override {
@@ -266,6 +261,22 @@ protected:
         return true;
     }
 
+private:
+    Component* cloneImpl() const override {
+        auto* res = new Component();
+        res->componentType = souffle::clone(componentType);
+        res->baseComponents = souffle::clone(baseComponents);
+        res->components = souffle::clone(components);
+        res->instantiations = souffle::clone(instantiations);
+        res->types = souffle::clone(types);
+        res->relations = souffle::clone(relations);
+        res->clauses = souffle::clone(clauses);
+        res->directives = souffle::clone(directives);
+        res->overrideRules = overrideRules;
+        return res;
+    }
+
+private:
     /** Name of component and its formal component arguments. */
     Own<ComponentType> componentType;
 

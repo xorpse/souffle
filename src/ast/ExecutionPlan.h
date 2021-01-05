@@ -45,8 +45,11 @@ namespace souffle::ast {
  */
 class ExecutionPlan : public Node {
 public:
+    using Node::Node;
+
     /** Set execution order for a given rule version */
     void setOrderFor(int version, Own<ExecutionOrder> plan) {
+        assert(plan != nullptr);
         plans[version] = std::move(plan);
     }
 
@@ -57,15 +60,6 @@ public:
             result.insert(std::make_pair(plan.first, plan.second.get()));
         }
         return result;
-    }
-
-    ExecutionPlan* clone() const override {
-        auto res = new ExecutionPlan();
-        res->setSrcLoc(getSrcLoc());
-        for (auto& plan : plans) {
-            res->setOrderFor(plan.first, Own<ExecutionOrder>(plan.second->clone()));
-        }
-        return res;
     }
 
     void apply(const NodeMapper& map) override {
@@ -94,6 +88,15 @@ protected:
     bool equal(const Node& node) const override {
         const auto& other = asAssert<ExecutionPlan>(node);
         return equal_targets(plans, other.plans);
+    }
+
+private:
+    ExecutionPlan* cloneImpl() const override {
+        auto res = mk<ExecutionPlan>(getSrcLoc());
+        for (auto& plan : plans) {
+            res->setOrderFor(plan.first, souffle::clone(plan.second));
+        }
+        return res.release();
     }
 
 private:

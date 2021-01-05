@@ -28,11 +28,11 @@ public:
         return "ExpandEqrelsTransformer";
     }
 
-    ExpandEqrelsTransformer* clone() const override {
+private:
+    ExpandEqrelsTransformer* cloneImpl() const override {
         return new ExpandEqrelsTransformer();
     }
 
-private:
     bool transform(TranslationUnit& translationUnit) override;
 };
 

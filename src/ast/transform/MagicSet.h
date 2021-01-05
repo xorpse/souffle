@@ -64,11 +64,11 @@ public:
         return "MagicSetTransformer";
     }
 
-    MagicSetTransformer* clone() const override {
+private:
+    MagicSetTransformer* cloneImpl() const override {
         return new MagicSetTransformer();
     }
 
-private:
     bool transform(TranslationUnit& tu) override {
         return shouldRun(tu) ? PipelineTransformer::transform(tu) : false;
     }
@@ -115,11 +115,11 @@ public:
         return "NormaliseDatabaseTransformer";
     }
 
-    NormaliseDatabaseTransformer* clone() const override {
+private:
+    NormaliseDatabaseTransformer* cloneImpl() const override {
         return new NormaliseDatabaseTransformer();
     }
 
-private:
     bool transform(TranslationUnit& translationUnit) override;
 
     /**
@@ -168,11 +168,11 @@ public:
         return "LabelDatabaseTransformer";
     }
 
-    LabelDatabaseTransformer* clone() const override {
+private:
+    LabelDatabaseTransformer* cloneImpl() const override {
         return new LabelDatabaseTransformer();
     }
 
-private:
     /** Check if a relation is negatively labelled. */
     static bool isNegativelyLabelled(const QualifiedName& name);
 };
@@ -188,11 +188,11 @@ public:
         return "NegativeLabellingTransformer";
     }
 
-    NegativeLabellingTransformer* clone() const override {
+private:
+    NegativeLabellingTransformer* cloneImpl() const override {
         return new NegativeLabellingTransformer();
     }
 
-private:
     bool transform(TranslationUnit& translationUnit) override;
 
     /** Provide a unique name for negatively-labelled relations. */
@@ -211,11 +211,11 @@ public:
         return "PositiveLabellingTransformer";
     }
 
-    PositiveLabellingTransformer* clone() const override {
+private:
+    PositiveLabellingTransformer* cloneImpl() const override {
         return new PositiveLabellingTransformer();
     }
 
-private:
     bool transform(TranslationUnit& translationUnit) override;
 
     /** Provide a unique name for a positively labelled relation copy. */
@@ -233,11 +233,11 @@ public:
         return "AdornDatabaseTransformer";
     }
 
-    AdornDatabaseTransformer* clone() const override {
+private:
+    AdornDatabaseTransformer* cloneImpl() const override {
         return new AdornDatabaseTransformer();
     }
 
-private:
     using adorned_predicate = std::pair<QualifiedName, std::string>;
 
     std::set<adorned_predicate> headAdornmentsToDo;
@@ -289,11 +289,11 @@ public:
         return "MagicSetCoreTransformer";
     }
 
-    MagicSetCoreTransformer* clone() const override {
+private:
+    MagicSetCoreTransformer* cloneImpl() const override {
         return new MagicSetCoreTransformer();
     }
 
-private:
     bool transform(TranslationUnit& translationUnit) override;
 
     /** Gets a unique magic identifier for a given adorned relation name */

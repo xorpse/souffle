@@ -47,8 +47,8 @@ bool ReorderConditionsTransformer::reorderConditions(Program& program) {
                 if (!std::equal(sortedConds.begin(), sortedConds.end(), condList.begin(),
                             [](Own<Condition>& a, Own<Condition>& b) { return *a == *b; })) {
                     changed = true;
-                    node = mk<Filter>(Own<Condition>(toCondition(sortedConds)),
-                            souffle::clone(&filter->getOperation()));
+                    node = mk<Filter>(
+                            Own<Condition>(toCondition(sortedConds)), souffle::clone(filter->getOperation()));
                 }
             }
             node->apply(makeLambdaRamMapper(filterRewriter));

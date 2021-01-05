@@ -28,6 +28,7 @@ souffle_sources = \
         ast/BooleanConstraint.h                            \
         ast/BranchDeclaration.h                            \
         ast/BranchInit.h                                   \
+        ast/Clause.cpp                                     \
         ast/Clause.h                                       \
         ast/Component.h                                    \
         ast/ComponentInit.h                                \
@@ -406,7 +407,8 @@ soufflepublic_HEADERS = \
         include/souffle/SignalHandler.h                    \
         include/souffle/SouffleInterface.h                 \
         include/souffle/SymbolTable.h                      \
-        include/souffle/TypeAttribute.h
+        include/souffle/TypeAttribute.h                    \
+        include/souffle/Visitor.h
 
 souffledatastructuredir = $(soufflepublicdir)/datastructure
 

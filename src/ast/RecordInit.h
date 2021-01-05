@@ -38,13 +38,14 @@ public:
     RecordInit(VecOwn<Argument> operands = {}, SrcLocation loc = {})
             : Term(std::move(operands), std::move(loc)) {}
 
-    RecordInit* clone() const override {
-        return new RecordInit(souffle::clone(args), getSrcLoc());
-    }
-
 protected:
     void print(std::ostream& os) const override {
         os << "[" << join(args) << "]";
+    }
+
+private:
+    RecordInit* cloneImpl() const override {
+        return new RecordInit(souffle::clone(args), getSrcLoc());
     }
 };
 

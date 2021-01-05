@@ -41,20 +41,10 @@ public:
 
     NumericConstant(RamSigned value) : Constant(std::to_string(value)), fixedType(Type::Int) {}
 
-    NumericConstant(std::string constant, SrcLocation loc) : Constant(std::move(constant)) {
-        setSrcLoc(std::move(loc));
-    }
+    NumericConstant(std::string constant, SrcLocation loc) : Constant(std::move(constant), std::move(loc)) {}
 
     NumericConstant(std::string constant, std::optional<Type> fixedType = std::nullopt, SrcLocation loc = {})
-            : Constant(std::move(constant)), fixedType(fixedType) {
-        setSrcLoc(std::move(loc));
-    }
-
-    NumericConstant* clone() const override {
-        auto* copy = new NumericConstant(getConstant(), getFixedType());
-        copy->setSrcLoc(getSrcLoc());
-        return copy;
-    }
+            : Constant(std::move(constant), std::move(loc)), fixedType(fixedType) {}
 
     const std::optional<Type>& getFixedType() const {
         return fixedType;
@@ -64,6 +54,11 @@ protected:
     bool equal(const Node& node) const override {
         const auto& other = asAssert<NumericConstant>(node);
         return Constant::equal(node) && fixedType == other.fixedType;
+    }
+
+private:
+    NumericConstant* cloneImpl() const override {
+        return new NumericConstant(getConstant(), getFixedType(), getSrcLoc());
     }
 
 private:

@@ -73,7 +73,7 @@ bool ClauseTranslator::isRecursive() const {
 }
 
 std::string ClauseTranslator::getClauseString(const ast::Clause& clause) const {
-    auto renamedClone = souffle::clone(&clause);
+    auto renamedClone = souffle::clone(clause);
 
     // Update the head atom
     renamedClone->getHead()->setQualifiedName(getClauseAtomName(clause, clause.getHead()));

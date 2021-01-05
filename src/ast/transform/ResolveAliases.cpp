@@ -170,8 +170,7 @@ public:
     Own<Argument> lhs;
     Own<Argument> rhs;
 
-    Equation(const Argument& lhs, const Argument& rhs)
-            : lhs(souffle::clone(&lhs)), rhs(souffle::clone(&rhs)) {}
+    Equation(const Argument& lhs, const Argument& rhs) : lhs(souffle::clone(lhs)), rhs(souffle::clone(rhs)) {}
 
     Equation(const Argument* lhs, const Argument* rhs) : lhs(souffle::clone(lhs)), rhs(souffle::clone(rhs)) {}
 
@@ -359,11 +358,11 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
     }
 
     // III) compute resulting clause
-    return substitution(souffle::clone(&clause));
+    return substitution(souffle::clone(clause));
 }
 
 Own<Clause> ResolveAliasesTransformer::removeTrivialEquality(const Clause& clause) {
-    Own<Clause> res(cloneHead(&clause));
+    auto res = cloneHead(clause);
 
     // add all literals, except filtering out t = t constraints
     for (Literal* literal : clause.getBodyLiterals()) {
@@ -384,7 +383,7 @@ Own<Clause> ResolveAliasesTransformer::removeTrivialEquality(const Clause& claus
 }
 
 Own<Clause> ResolveAliasesTransformer::removeComplexTermsInAtoms(const Clause& clause) {
-    Own<Clause> res(clause.clone());
+    Own<Clause> res(souffle::clone(clause));
 
     // get list of atoms
     std::vector<Atom*> atoms = getBodyLiterals<Atom>(*res);

@@ -96,14 +96,9 @@ bool normaliseInlinedHeads(Program& program) {
 
         for (Clause* clause : getClauses(program, *rel)) {
             // Set up the new clause with an empty body and no arguments in the head
-            auto newClause = mk<Clause>();
-            newClause->setSrcLoc(clause->getSrcLoc());
-            auto clauseHead = mk<Atom>(clause->getHead()->getQualifiedName());
-
-            // Add in everything in the original body
-            for (Literal* lit : clause->getBodyLiterals()) {
-                newClause->addToBody(souffle::clone(lit));
-            }
+            auto newClause = mk<Clause>(clause->getHead()->getQualifiedName(), clause->getSrcLoc());
+            newClause->setBodyLiterals(souffle::clone(clause->getBodyLiterals()));
+            auto clauseHead = newClause->getHead();
 
             // Set up the head arguments in the new clause
             for (Argument* arg : clause->getHead()->getArguments()) {
@@ -121,8 +116,6 @@ bool normaliseInlinedHeads(Program& program) {
                     clauseHead->addArgument(souffle::clone(arg));
                 }
             }
-
-            newClause->setHead(std::move(clauseHead));
 
             // Replace the old clause with this one
             program.addClause(std::move(newClause));
@@ -330,7 +323,7 @@ std::pair<NullableVector<Literal*>, std::vector<BinaryConstraint*>> inlineBodyLi
 
     inlineCount++;
 
-    // Get the constraints needed to unify the two atoms
+    // Get the constraints needed to unify th366Ge two atoms
     NullableVector<std::pair<Argument*, Argument*>> res = unifyAtoms(atomClause->getHead(), atom);
     if (res.isValid()) {
         changed = true;
@@ -342,7 +335,9 @@ std::pair<NullableVector<Literal*>, std::vector<BinaryConstraint*>> inlineBodyLi
 
         // Add in the body of the current clause of the inlined atom
         for (Literal* lit : atomClause->getBodyLiterals()) {
-            addedLits.push_back(lit->clone());
+            // FIXME: This is a horrible hack.  Should convert
+            // addedLits to hold Own<>
+            addedLits.push_back(souffle::clone(lit).release());
         }
     }
 
@@ -357,14 +352,15 @@ std::pair<NullableVector<Literal*>, std::vector<BinaryConstraint*>> inlineBodyLi
  * Returns the negated version of a given literal
  */
 Literal* negateLiteral(Literal* lit) {
+    // FIXME: Ownership semantics
     if (auto* atom = as<Atom>(lit)) {
         auto* neg = new Negation(souffle::clone(atom));
         return neg;
     } else if (auto* neg = as<Negation>(lit)) {
-        Atom* atom = neg->getAtom()->clone();
+        Atom* atom = souffle::clone(neg->getAtom()).release();
         return atom;
     } else if (auto* cons = as<Constraint>(lit)) {
-        Constraint* newCons = cons->clone();
+        Constraint* newCons = souffle::clone(cons).release();
         negateConstraintInPlace(*newCons);
         return newCons;
     }
@@ -409,7 +405,9 @@ std::vector<std::vector<Literal*>> combineNegatedLiterals(std::vector<std::vecto
             newVec.push_back(negateLiteral(lhsLit));
 
             for (Literal* lit : rhsVec) {
-                newVec.push_back(lit->clone());
+                // FIXME: This is a horrible hack.  Should convert
+                // newVec to hold Own<>
+                newVec.push_back(souffle::clone(lit).release());
             }
 
             negation.push_back(newVec);
@@ -462,7 +460,9 @@ std::vector<std::vector<Literal*>> formNegatedLiterals(Program& program, Atom* a
     for (auto& negatedAddedBodyLiteral : negatedAddedBodyLiterals) {
         for (std::vector<BinaryConstraint*> constraintGroup : addedConstraints) {
             for (BinaryConstraint* constraint : constraintGroup) {
-                negatedAddedBodyLiteral.push_back(constraint->clone());
+                // FIXME: This is a horrible hack.  Should convert
+                // negatedBodyLiterals to hold Own<>
+                negatedAddedBodyLiteral.push_back(souffle::clone(constraint).release());
             }
         }
     }
@@ -651,18 +651,17 @@ NullableVector<Argument*> getInlinedArgument(Program& program, const Argument* a
                         if (j == i) {
                             argsCopy.emplace_back(newArgVersion);
                         } else {
-                            argsCopy.emplace_back(functorArg->clone());
+                            argsCopy.emplace_back(souffle::clone(functorArg));
                         }
                         ++j;
                     }
                     if (const auto* intrFunc = as<IntrinsicFunctor>(arg)) {
-                        auto* newFunctor =
-                                new IntrinsicFunctor(intrFunc->getBaseFunctionOp(), std::move(argsCopy));
-                        newFunctor->setSrcLoc(functor->getSrcLoc());
+                        auto* newFunctor = new IntrinsicFunctor(
+                                intrFunc->getBaseFunctionOp(), std::move(argsCopy), functor->getSrcLoc());
                         versions.push_back(newFunctor);
                     } else if (const auto* userFunc = as<UserDefinedFunctor>(arg)) {
-                        auto* newFunctor = new UserDefinedFunctor(userFunc->getName(), std::move(argsCopy));
-                        newFunctor->setSrcLoc(userFunc->getSrcLoc());
+                        auto* newFunctor = new UserDefinedFunctor(
+                                userFunc->getName(), std::move(argsCopy), userFunc->getSrcLoc());
                         versions.push_back(newFunctor);
                     }
                 }
@@ -743,7 +742,7 @@ NullableVector<Atom*> getInlinedAtom(Program& program, Atom& atom) {
                     if (j == i) {
                         newArgs.emplace_back(newArgument);
                     } else {
-                        newArgs.emplace_back(args[j]->clone());
+                        newArgs.emplace_back(souffle::clone(args[j]));
                     }
                 }
                 auto* newAtom = new Atom(atom.getQualifiedName(), std::move(newArgs), atom.getSrcLoc());
@@ -916,17 +915,11 @@ std::vector<Clause*> getInlinedClause(Program& program, const Clause& clause) {
 
         // Produce the new clauses with the replacement head atoms
         for (Atom* newHead : headVersions.getVector()) {
-            auto* newClause = new Clause();
-            newClause->setSrcLoc(clause.getSrcLoc());
+            auto newClause = mk<Clause>(Own<Atom>(newHead), clause.getSrcLoc());
+            newClause->setBodyLiterals(souffle::clone(clause.getBodyLiterals()));
 
-            newClause->setHead(Own<Atom>(newHead));
-
-            // The body will remain unchanged
-            for (Literal* lit : clause.getBodyLiterals()) {
-                newClause->addToBody(souffle::clone(lit));
-            }
-
-            versions.push_back(newClause);
+            // FIXME: tomp - hack - this should be managed
+            versions.push_back(newClause.release());
         }
     }
 
@@ -955,23 +948,23 @@ std::vector<Clause*> getInlinedClause(Program& program, const Clause& clause) {
                 std::vector<std::vector<Literal*>> bodyVersions = litVersions.getVector();
 
                 // Create the base clause with the current literal removed
-                auto baseClause = Own<Clause>(cloneHead(&clause));
+                auto baseClause = cloneHead(clause);
                 for (Literal* oldLit : bodyLiterals) {
                     if (currLit != oldLit) {
                         baseClause->addToBody(souffle::clone(oldLit));
                     }
                 }
 
-                for (std::vector<Literal*> body : bodyVersions) {
-                    Clause* replacementClause = baseClause->clone();
+                for (std::vector<Literal*> const& body : bodyVersions) {
+                    auto replacementClause = souffle::clone(baseClause);
 
                     // Add in the current set of literals replacing the inlined literal
                     // In Case 2, each body contains exactly one literal
-                    for (Literal* newLit : body) {
-                        replacementClause->addToBody(Own<Literal>(newLit));
-                    }
+                    replacementClause->addToBody(VecOwn<Literal>(body.begin(), body.end()));
 
-                    versions.push_back(replacementClause);
+                    // FIXME: This is a horrible hack.  Should convert
+                    // versions to hold Own<>
+                    versions.push_back(replacementClause.release());
                 }
             }
 
@@ -984,8 +977,10 @@ std::vector<Clause*> getInlinedClause(Program& program, const Clause& clause) {
 
     if (!changed) {
         // Case 3: No inlining changes, so a clone of the original should be returned
+        // FIXME: This is a horrible hack.  Should convert
+        // res to hold Own<>
         std::vector<Clause*> ret;
-        ret.push_back(clause.clone());
+        ret.push_back(souffle::clone(clause).release());
         return ret;
     } else {
         // Inlining changes, so return the replacement clauses.
