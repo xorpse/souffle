@@ -19,15 +19,8 @@
 #include "ast/Node.h"
 #include "parser/SrcLocation.h"
 #include "souffle/TypeAttribute.h"
-#include "souffle/utility/ContainerUtil.h"
-#include "souffle/utility/MiscUtil.h"
-#include "souffle/utility/StreamUtil.h"
-#include "souffle/utility/tinyformat.h"
-#include <cassert>
-#include <cstdlib>
-#include <ostream>
+#include <iosfwd>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace souffle::ast {
@@ -43,11 +36,7 @@ namespace souffle::ast {
 class FunctorDeclaration : public Node {
 public:
     FunctorDeclaration(std::string name, std::vector<TypeAttribute> argsTypes, TypeAttribute returnType,
-            bool stateful, SrcLocation loc = {})
-            : Node(std::move(loc)), name(std::move(name)), argsTypes(std::move(argsTypes)),
-              returnType(returnType), stateful(stateful) {
-        assert(this->name.length() > 0 && "functor name is empty");
-    }
+            bool stateful, SrcLocation loc = {});
 
     /** Return name */
     const std::string& getName() const {
@@ -75,38 +64,14 @@ public:
     }
 
 protected:
-    void print(std::ostream& out) const override {
-        auto convert = [&](TypeAttribute type) {
-            switch (type) {
-                case TypeAttribute::Signed: return "number";
-                case TypeAttribute::Symbol: return "symbol";
-                case TypeAttribute::Float: return "float";
-                case TypeAttribute::Unsigned: return "unsigned";
-                case TypeAttribute::Record: break;
-                case TypeAttribute::ADT: break;
-            }
-            fatal("unhandled `TypeAttribute`");
-        };
-
-        tfm::format(
-                out, ".declfun %s(%s): %s", name, join(map(argsTypes, convert), ","), convert(returnType));
-        if (stateful) {
-            out << " stateful";
-        }
-        out << std::endl;
-    }
-
-    bool equal(const Node& node) const override {
-        const auto& other = asAssert<FunctorDeclaration>(node);
-        return name == other.name && argsTypes == other.argsTypes && returnType == other.returnType &&
-               stateful == other.stateful;
-    }
+    void print(std::ostream& out) const override;
 
 private:
-    FunctorDeclaration* cloneImpl() const override {
-        return new FunctorDeclaration(name, argsTypes, returnType, stateful, getSrcLoc());
-    }
+    bool equal(const Node& node) const override;
 
+    FunctorDeclaration* cloneImpl() const override;
+
+private:
     /** Name of functor */
     const std::string name;
 

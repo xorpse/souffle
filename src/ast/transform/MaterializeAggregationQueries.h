@@ -20,7 +20,12 @@
 #include "ast/Aggregator.h"
 #include "ast/TranslationUnit.h"
 #include "ast/transform/Transformer.h"
+#include <set>
 #include <string>
+
+namespace souffle::ast {
+class Clause;
+}
 
 namespace souffle::ast::transform {
 /**

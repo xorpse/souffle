@@ -1,6 +1,6 @@
 /*
  * Souffle - A Datalog Compiler
- * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved
  * Licensed under the Universal Permissive License v 1.0 as shown at:
  * - https://opensource.org/licenses/UPL
  * - <souffle root>/licenses/SOUFFLE-UPL.txt
@@ -19,17 +19,9 @@
 #include "AggregateOp.h"
 #include "ast/Argument.h"
 #include "ast/Literal.h"
-#include "ast/Node.h"
-#include "ast/utility/NodeMapper.h"
 #include "parser/SrcLocation.h"
-#include "souffle/utility/ContainerUtil.h"
-#include "souffle/utility/MiscUtil.h"
-#include "souffle/utility/StreamUtil.h"
-#include <memory>
-#include <optional>
-#include <ostream>
-#include <string>
-#include <utility>
+#include "souffle/utility/Types.h"
+#include <iosfwd>
 #include <vector>
 
 namespace souffle::ast {
@@ -47,13 +39,7 @@ namespace souffle::ast {
 class Aggregator : public Argument {
 public:
     Aggregator(AggregateOp baseOperator, Own<Argument> expr = {}, VecOwn<Literal> body = {},
-            SrcLocation loc = {})
-            : Argument(std::move(loc)), baseOperator(baseOperator), targetExpression(std::move(expr)),
-              body(std::move(body)) {
-        // targetExpression can be nullptr - it's used e.g. when aggregator
-        // has no parameters, such as count: { body }
-        assert(allValidPtrs(this->body));
-    }
+            SrcLocation loc = {});
 
     /** Return the (base type) operator of the aggregator */
     AggregateOp getBaseOperator() const {
@@ -70,56 +56,22 @@ public:
     }
 
     /** Return body literals */
-    std::vector<Literal*> getBodyLiterals() const {
-        return toPtrVector(body);
-    }
+    std::vector<Literal*> getBodyLiterals() const;
 
     /** Set body */
-    void setBody(VecOwn<Literal> bodyLiterals) {
-        assert(allValidPtrs(body));
-        body = std::move(bodyLiterals);
-    }
+    void setBody(VecOwn<Literal> bodyLiterals);
 
-    std::vector<const Node*> getChildNodesImpl() const override {
-        auto res = Argument::getChildNodesImpl();
-        if (targetExpression) {
-            res.push_back(targetExpression.get());
-        }
-        for (auto& cur : body) {
-            res.push_back(cur.get());
-        }
-        return res;
-    }
-
-    void apply(const NodeMapper& map) override {
-        if (targetExpression) {
-            targetExpression = map(std::move(targetExpression));
-        }
-        for (auto& cur : body) {
-            cur = map(std::move(cur));
-        }
-    }
+    void apply(const NodeMapper& map) override;
 
 protected:
-    void print(std::ostream& os) const override {
-        os << baseOperator;
-        if (targetExpression) {
-            os << " " << *targetExpression;
-        }
-        os << " : { " << join(body) << " }";
-    }
+    void print(std::ostream& os) const override;
 
-    bool equal(const Node& node) const override {
-        const auto& other = asAssert<Aggregator>(node);
-        return baseOperator == other.baseOperator && equal_ptr(targetExpression, other.targetExpression) &&
-               equal_targets(body, other.body);
-    }
+    NodeVec getChildNodesImpl() const override;
 
 private:
-    Aggregator* cloneImpl() const override {
-        return new Aggregator(
-                baseOperator, souffle::clone(targetExpression), souffle::clone(body), getSrcLoc());
-    }
+    bool equal(const Node& node) const override;
+
+    Aggregator* cloneImpl() const override;
 
 private:
     /** Aggregate (base type) operator */

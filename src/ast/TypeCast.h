@@ -17,18 +17,9 @@
 #pragma once
 
 #include "ast/Argument.h"
-#include "ast/Node.h"
 #include "ast/QualifiedName.h"
-#include "ast/utility/NodeMapper.h"
 #include "parser/SrcLocation.h"
-#include "souffle/utility/ContainerUtil.h"
-#include "souffle/utility/MiscUtil.h"
-#include "souffle/utility/tinyformat.h"
-#include <memory>
-#include <ostream>
-#include <string>
-#include <utility>
-#include <vector>
+#include <iosfwd>
 
 namespace souffle::ast {
 
@@ -39,10 +30,7 @@ namespace souffle::ast {
 
 class TypeCast : public Argument {
 public:
-    TypeCast(Own<Argument> value, QualifiedName type, SrcLocation loc = {})
-            : Argument(std::move(loc)), value(std::move(value)), type(std::move(type)) {
-        assert(this->value != nullptr);
-    }
+    TypeCast(Own<Argument> value, QualifiedName type, SrcLocation loc = {});
 
     /** Return value */
     Argument* getValue() const {
@@ -55,34 +43,19 @@ public:
     }
 
     /** Set cast type */
-    void setType(const QualifiedName& type) {
-        this->type = type;
-    }
+    void setType(QualifiedName type);
 
-    std::vector<const Node*> getChildNodesImpl() const override {
-        auto res = Argument::getChildNodesImpl();
-        res.push_back(value.get());
-        return res;
-    }
-
-    void apply(const NodeMapper& map) override {
-        value = map(std::move(value));
-    }
+    void apply(const NodeMapper& map) override;
 
 protected:
-    void print(std::ostream& os) const override {
-        os << tfm::format("as(%s, %s)", *value, type);
-    }
+    void print(std::ostream& os) const override;
 
-    bool equal(const Node& node) const override {
-        const auto& other = asAssert<TypeCast>(node);
-        return type == other.type && equal_ptr(value, other.value);
-    }
+    NodeVec getChildNodesImpl() const override;
 
 private:
-    TypeCast* cloneImpl() const override {
-        return new TypeCast(souffle::clone(value), type, getSrcLoc());
-    }
+    bool equal(const Node& node) const override;
+
+    TypeCast* cloneImpl() const override;
 
 private:
     /** Casted value */

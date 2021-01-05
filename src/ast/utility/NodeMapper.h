@@ -19,7 +19,7 @@
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/MiscUtil.h"
 #include <cassert>
-#include <memory>
+#include <utility>
 
 namespace souffle::ast {
 class Node;
@@ -50,5 +50,12 @@ public:
         return Own<T>(as<T>(resPtr.release()));
     }
 };
+
+template <typename R>
+void mapAll(R& range, NodeMapper const& mapper) {
+    for (auto& cur : range) {
+        cur = mapper(std::move(cur));
+    }
+}
 
 }  // namespace souffle::ast

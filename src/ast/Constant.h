@@ -17,12 +17,9 @@
 #pragma once
 
 #include "ast/Argument.h"
-#include "ast/Node.h"
 #include "parser/SrcLocation.h"
-#include "souffle/utility/MiscUtil.h"
-#include <ostream>
+#include <iosfwd>
 #include <string>
-#include <utility>
 
 namespace souffle::ast {
 
@@ -38,17 +35,11 @@ public:
     }
 
 protected:
-    void print(std::ostream& os) const override {
-        os << getConstant();
-    }
+    Constant(std::string value, SrcLocation loc = {});
 
-    bool equal(const Node& node) const override {
-        const auto& other = asAssert<Constant>(node);
-        return constant == other.constant;
-    }
+    void print(std::ostream& os) const override;
 
-    Constant(std::string value, SrcLocation loc = {})
-            : Argument(std::move(loc)), constant(std::move(value)){};
+    bool equal(const Node& node) const override;
 
 private:
     /** String representation of constant */

@@ -16,14 +16,10 @@
 
 #pragma once
 
-#include "ast/Node.h"
 #include "ast/QualifiedName.h"
 #include "ast/Type.h"
 #include "parser/SrcLocation.h"
-#include "souffle/utility/MiscUtil.h"
-#include <iostream>
-#include <string>
-#include <utility>
+#include <iosfwd>
 
 namespace souffle::ast {
 
@@ -36,8 +32,7 @@ namespace souffle::ast {
  */
 class SubsetType : public Type {
 public:
-    SubsetType(QualifiedName name, QualifiedName baseTypeName, SrcLocation loc = {})
-            : Type(std::move(name), std::move(loc)), baseType(std::move(baseTypeName)) {}
+    SubsetType(QualifiedName name, QualifiedName baseTypeName, SrcLocation loc = {});
 
     /** Return base type */
     const QualifiedName& getBaseType() const {
@@ -45,19 +40,12 @@ public:
     }
 
 protected:
-    void print(std::ostream& os) const override {
-        os << ".type " << getQualifiedName() << " <: " << getBaseType();
-    }
-
-    bool equal(const Node& node) const override {
-        const auto& other = asAssert<SubsetType>(node);
-        return getQualifiedName() == other.getQualifiedName() && baseType == other.baseType;
-    }
+    void print(std::ostream& os) const override;
 
 private:
-    SubsetType* cloneImpl() const override {
-        return new SubsetType(getQualifiedName(), getBaseType(), getSrcLoc());
-    }
+    bool equal(const Node& node) const override;
+
+    SubsetType* cloneImpl() const override;
 
 private:
     /** Base type */

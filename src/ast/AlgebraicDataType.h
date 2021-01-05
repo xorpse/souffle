@@ -17,19 +17,10 @@
 #pragma once
 
 #include "ast/BranchDeclaration.h"
-#include "ast/Node.h"
 #include "ast/QualifiedName.h"
 #include "ast/Type.h"
 #include "parser/SrcLocation.h"
-#include "souffle/utility/ContainerUtil.h"
-#include "souffle/utility/MiscUtil.h"
-#include "souffle/utility/StreamUtil.h"
-#include "souffle/utility/tinyformat.h"
-#include <cassert>
 #include <iosfwd>
-#include <memory>
-#include <string>
-#include <utility>
 #include <vector>
 
 namespace souffle::ast {
@@ -49,30 +40,17 @@ namespace souffle::ast {
  */
 class AlgebraicDataType : public Type {
 public:
-    AlgebraicDataType(QualifiedName name, VecOwn<BranchDeclaration> branches, SrcLocation loc = {})
-            : Type(std::move(name), std::move(loc)), branches(std::move(branches)) {
-        assert(!this->branches.empty());
-        assert(allValidPtrs(this->branches));
-    };
+    AlgebraicDataType(QualifiedName name, VecOwn<BranchDeclaration> branches, SrcLocation loc = {});
 
-    std::vector<BranchDeclaration*> getBranches() const {
-        return toPtrVector(branches);
-    }
-
-    void print(std::ostream& os) const override {
-        os << tfm::format(".type %s = %s", getQualifiedName(), join(branches, " | "));
-    }
+    std::vector<BranchDeclaration*> getBranches() const;
 
 protected:
-    bool equal(const Node& node) const override {
-        const auto& other = asAssert<AlgebraicDataType>(node);
-        return getQualifiedName() == other.getQualifiedName() && branches == other.branches;
-    }
+    void print(std::ostream& os) const override;
 
 private:
-    AlgebraicDataType* cloneImpl() const override {
-        return new AlgebraicDataType(getQualifiedName(), souffle::clone(branches), getSrcLoc());
-    }
+    bool equal(const Node& node) const override;
+
+    AlgebraicDataType* cloneImpl() const override;
 
 private:
     /** The list of branches for this sum type. */
