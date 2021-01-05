@@ -74,12 +74,11 @@ bool ExpandEqrelsTransformer::transform(TranslationUnit& translationUnit) {
 
         // (1) Transitivity
         // A(x,z) :- A(x,y), A(y,z).
-        auto transitiveClause = mk<Clause>();
-
         auto transitiveClauseHead = mk<Atom>(relName);
         transitiveClauseHead->addArgument(mk<Variable>("x"));
         transitiveClauseHead->addArgument(mk<Variable>("z"));
-        transitiveClause->setHead(std::move(transitiveClauseHead));
+
+        auto transitiveClause = mk<Clause>(std::move(transitiveClauseHead));
 
         auto transitiveClauseLeftAtom = mk<Atom>(relName);
         transitiveClauseLeftAtom->addArgument(mk<Variable>("x"));
@@ -95,12 +94,11 @@ bool ExpandEqrelsTransformer::transform(TranslationUnit& translationUnit) {
 
         // (2) Symmetry
         // A(x,y) :- A(y,x).
-        auto symmetryClause = mk<Clause>();
-
         auto symmetryClauseHead = mk<Atom>(relName);
         symmetryClauseHead->addArgument(mk<Variable>("x"));
         symmetryClauseHead->addArgument(mk<Variable>("y"));
-        symmetryClause->setHead(std::move(symmetryClauseHead));
+
+        auto symmetryClause = mk<Clause>(std::move(symmetryClauseHead));
 
         auto symmetryClauseBodyAtom = mk<Atom>(relName);
         symmetryClauseBodyAtom->addArgument(mk<Variable>("y"));
@@ -111,12 +109,11 @@ bool ExpandEqrelsTransformer::transform(TranslationUnit& translationUnit) {
 
         // (3) Reflexivity
         // A(x,x) :- A(x,_).
-        auto reflexiveClause = mk<Clause>();
-
         auto reflexiveClauseHead = mk<Atom>(relName);
         reflexiveClauseHead->addArgument(mk<Variable>("x"));
         reflexiveClauseHead->addArgument(mk<Variable>("x"));
-        reflexiveClause->setHead(std::move(reflexiveClauseHead));
+
+        auto reflexiveClause = mk<Clause>(std::move(reflexiveClauseHead));
 
         auto reflexiveClauseBodyAtom = mk<Atom>(relName);
         reflexiveClauseBodyAtom->addArgument(mk<Variable>("x"));
