@@ -140,31 +140,6 @@ std::enable_if_t<is_visitable_v<Node> && is_visitor_v<Visitor>> visitDepthFirstP
 
 /**
  * A utility function visiting all nodes within the given root
- * recursively in a depth-first post-order fashion applying the given visitor to each
- * encountered node.
- *
- * @param root the root of the structure to be visited
- * @param visitor the visitor to be applied on each node
- * @param args a list of extra parameters to be forwarded to the visitor
- */
-template <class Node, class Visitor, typename... Args>
-std::enable_if_t<is_visitable_v<Node> && is_visitor_v<Visitor>> visitDepthFirstPostOrder(
-        Node&& root, Visitor& visitor, Args const&... args) {
-    for (auto&& cur : getChildNodes(root)) {
-        // FIXME: Remove this once nodes are converted to references
-        if constexpr (detail::ptr_helper_v<decltype(cur)>) {
-            if (cur != nullptr) {
-                visitDepthFirstPostOrder(*cur, visitor, args...);
-            }
-        } else {
-            visitDepthFirstPostOrder(cur, visitor, args...);
-        }
-    }
-    visitor(root, args...);
-}
-
-/**
- * A utility function visiting all nodes within the given root
  * recursively in a depth-first pre-order fashion, applying the given visitor to each
  * encountered node.
  *
@@ -249,44 +224,6 @@ std::enable_if_t<is_range_v<R>> visitDepthFirst(R const& range, F&& fun) {
             }
         } else {
             visitDepthFirst(cur, fun);
-        }
-    }
-}
-
-/**
- * A utility function visiting all nodes within the given root
- * recursively in a depth-first post-order fashion, applying the given visitor to each
- * encountered node.
- *
- * @param root the root of the structure to be visited
- * @param visitor the visitor to be applied on each node
- */
-template <class Node, typename F>
-std::enable_if_t<is_visitable_v<Node> && !is_visitor_v<F>> visitDepthFirstPostOrder(Node&& root, F&& fun) {
-    auto visitor = detail::makeLambdaVisitor<std::remove_reference_t<Node>>(std::forward<F>(fun));
-    visitDepthFirstPostOrder(root, visitor);
-}
-
-/**
- * A utility function visiting all nodes within a given container of root nodes
- * recursively in a depth-first post-order fashion applying the given function to each
- * encountered node.
- *
- * @param list the list of roots of the ASTs to be visited
- * @param fun the function to be applied
- */
-template <typename R, typename F>
-std::enable_if_t<is_range_v<R>> visitDepthFirstPostOrder(R const& range, F&& fun) {
-    for (auto&& cur : range) {
-        // NOTE: Can't forward since each visitDepthFirstPostOrder call could
-        // steal the temporary!
-        // FIXME: Remove this once nodes are converted to references
-        if constexpr (detail::ptr_helper_v<decltype(cur)>) {
-            if (cur != nullptr) {
-                visitDepthFirstPostOrder(*cur, fun);
-            }
-        } else {
-            visitDepthFirstPostOrder(cur, fun);
         }
     }
 }
