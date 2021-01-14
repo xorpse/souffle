@@ -67,20 +67,24 @@ public:
             for (auto& tuple : *rel) {
                 std::vector<std::string> bodyLiterals;
 
+                // first field is rule number
                 RamDomain ruleNum;
                 tuple >> ruleNum;
 
+                // middle fields are body literals
                 for (size_t i = 1; i + 1 < rel->getArity(); i++) {
                     std::string bodyLit;
                     tuple >> bodyLit;
                     bodyLiterals.push_back(bodyLit);
                 }
 
+                // last field is the rule itself
                 std::string rule;
                 tuple >> rule;
 
-                info.insert({std::make_pair(name.substr(0, name.find(".@info")), ruleNum), bodyLiterals});
-                rules.insert({std::make_pair(name.substr(0, name.find(".@info")), ruleNum), rule});
+                std::string relName = name.substr(0, name.find(".@info"));
+                info.insert({std::make_pair(relName, ruleNum), bodyLiterals});
+                rules.insert({std::make_pair(relName, ruleNum), rule});
             }
         }
     }
@@ -96,7 +100,7 @@ public:
             return mk<LeafNode>(relName + "(" + joinedArgsStr + ")");
         }
 
-        assert(info.find(std::make_pair(relName, ruleNum)) != info.end() && "invalid rule for tuple");
+        assert(contains(info, std::make_pair(relName, ruleNum)) && "invalid rule for tuple");
 
         // if depth limit exceeded
         if (depthLimit <= 1) {
@@ -129,7 +133,7 @@ public:
 
         // recursively get nodes for subproofs
         size_t tupleCurInd = 0;
-        auto bodyRelations = info[std::make_pair(relName, ruleNum)];
+        auto bodyRelations = info.at(std::make_pair(relName, ruleNum));
 
         // start from begin + 1 because the first element represents the head atom
         for (auto it = bodyRelations.begin() + 1; it < bodyRelations.end(); it++) {
@@ -321,7 +325,7 @@ public:
         std::map<std::string, char> variableTypes;
 
         // atom meta information stored for the current rule
-        auto atoms = info[std::make_pair(relName, ruleNum)];
+        auto atoms = info.at(std::make_pair(relName, ruleNum));
 
         // atoms[0] represents variables in the head atom
         auto headVariables = splitString(atoms[0], ',');
