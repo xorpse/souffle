@@ -240,13 +240,15 @@ public:
 
         auto rel = prog.getRelation(relName);
 
+        assert(rel->getAuxiliaryArity() == 2 && "unexpected auxiliary arity in provenance context");
+
         RamDomain ruleNum;
-        ruleNum = tup[rel->getArity() - rel->getAuxiliaryArity()];
+        ruleNum = tup[rel->getArity() - 2];
 
         RamDomain levelNum;
-        levelNum = tup[rel->getArity() - rel->getAuxiliaryArity() + 1];
+        levelNum = tup[rel->getArity() - 1];
 
-        tup.erase(tup.begin() + rel->getArity() - rel->getAuxiliaryArity(), tup.end());
+        tup.erase(tup.begin() + rel->getArity() - 2, tup.end());
 
         return explain(relName, tup, ruleNum, levelNum, depthLimit);
     }
