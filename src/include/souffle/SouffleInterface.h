@@ -28,6 +28,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -836,8 +837,12 @@ public:
      * @param name The name of the target relation (const std::string)
      * @return The size of the target relation (std::size_t)
      */
-    std::size_t getRelationSize(const std::string& name) const {
-        return getRelation(name)->size();
+    std::optional<std::size_t> getRelationSize(const std::string& name) const {
+        if (auto* rel = getRelation(name)) {
+            return rel->size();
+        }
+
+        return std::nullopt;
     }
 
     /**
@@ -846,8 +851,12 @@ public:
      * @param name The name of the target relation (const std::string)
      * @return The name of the target relation (std::string)
      */
-    std::string getRelationName(const std::string& name) const {
-        return getRelation(name)->getName();
+    std::optional<std::string> getRelationName(const std::string& name) const {
+        if (auto* rel = getRelation(name)) {
+            return rel->getName();
+        }
+
+        return std::nullopt;
     }
 
     /**
