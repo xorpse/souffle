@@ -55,8 +55,6 @@ protected:
             const std::string& srcRelation) const override;
 
 private:
-    std::map<const ast::Clause*, size_t> clauseToId;
-
     /** Translate RAM code for subroutine to get subproofs */
     Own<ram::Statement> makeSubproofSubroutine(const ast::Clause& clause);
 

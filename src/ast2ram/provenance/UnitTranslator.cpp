@@ -49,17 +49,6 @@
 namespace souffle::ast2ram::provenance {
 
 Own<ram::Sequence> UnitTranslator::generateProgram(const ast::TranslationUnit& translationUnit) {
-    // Assign clause IDs to non-facts
-    for (const auto* relation : context->getProgram()->getRelations()) {
-        size_t clauseID = 1;
-        for (const auto* clause : context->getClauses(relation->getQualifiedName())) {
-            if (isFact(*clause)) {
-                continue;
-            }
-            clauseToId[clause] = clauseID++;
-        }
-    }
-
     // Do the regular translation
     auto ramProgram = seminaive::UnitTranslator::generateProgram(translationUnit);
 
@@ -100,9 +89,7 @@ Own<ram::Relation> UnitTranslator::createRamRelation(
 }
 
 std::string UnitTranslator::getInfoRelationName(const ast::Clause* clause) const {
-    assert(!isFact(*clause) && "facts cannot have info relations");
-    assert(contains(clauseToId, clause) && "clause has unassigned ID");
-    size_t clauseID = clauseToId.at(clause);
+    size_t clauseID = context->getClauseNum(clause);
     auto infoRelQualifiedName = clause->getHead()->getQualifiedName();
     infoRelQualifiedName.append("@info");
     infoRelQualifiedName.append(toString(clauseID));
@@ -209,9 +196,7 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
         if (isFact(*clause)) {
             continue;
         }
-
-        assert(contains(clauseToId, clause) && "clause should have assigned ID");
-        size_t clauseID = clauseToId.at(clause);
+        size_t clauseID = context->getClauseNum(clause);
 
         // Argument info generator
         int functorNumber = 0;
