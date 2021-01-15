@@ -89,6 +89,7 @@ public:
     /** Clause methods */
     std::set<ast::Clause*> getClauses(const ast::QualifiedName& name) const;
     bool isRecursiveClause(const ast::Clause* clause) const;
+    size_t getClauseNum(const ast::Clause* clause) const;
 
     /** SCC methods */
     size_t getNumberOfSCCs() const;
@@ -140,6 +141,7 @@ private:
     const ast::analysis::TypeEnvironment* typeEnv;
     const ast::analysis::SumTypeBranchesAnalysis* sumTypeBranches;
     const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis;
+    std::map<const ast::Clause*, size_t> clauseNums;
     Own<ast::SipsMetric> sipsMetric;
     Own<TranslationStrategy> translationStrategy;
 };

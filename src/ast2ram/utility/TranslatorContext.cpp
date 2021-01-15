@@ -59,6 +59,17 @@ TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
     sumTypeBranches = tu.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>();
     polyAnalysis = tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
 
+    // Set up clause nums
+    for (const ast::Relation* rel : program->getRelations()) {
+        size_t count = 1;
+        for (const ast::Clause* clause : relationDetail->getClauses(rel->getQualifiedName())) {
+            if (isFact(*clause)) {
+                clauseNums[clause] = 0;
+            }
+            clauseNums[clause] = count++;
+        }
+    }
+
     // Set up SIPS metric
     std::string sipsChosen = "all-bound";
     if (Global::config().has("RamSIPS")) {
@@ -78,6 +89,11 @@ TranslatorContext::~TranslatorContext() = default;
 
 bool TranslatorContext::isRecursiveClause(const ast::Clause* clause) const {
     return recursiveClauses->recursive(clause);
+}
+
+size_t TranslatorContext::getClauseNum(const ast::Clause* clause) const {
+    assert(contains(clauseNums, clause) && "clause num should exist for all clauses");
+    return clauseNums.at(clause);
 }
 
 std::string TranslatorContext::getAttributeTypeQualifier(const ast::QualifiedName& name) const {

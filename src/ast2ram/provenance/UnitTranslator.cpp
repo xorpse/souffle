@@ -174,12 +174,12 @@ void UnitTranslator::addProvenanceClauseSubroutines(const ast::Program* program)
 
         // Positive subproof
         std::string subroutineLabel =
-                relName + "_" + std::to_string(getClauseNum(program, &clause)) + "_subproof";
+                relName + "_" + std::to_string(context->getClauseNum(&clause)) + "_subproof";
         addRamSubroutine(subroutineLabel, makeSubproofSubroutine(clause));
 
         // Negative subproof
         std::string negationSubroutineLabel =
-                relName + "_" + std::to_string(getClauseNum(program, &clause)) + "_negation_subproof";
+                relName + "_" + std::to_string(context->getClauseNum(&clause)) + "_negation_subproof";
         addRamSubroutine(negationSubroutineLabel, makeNegationSubproofSubroutine(clause));
     });
 }

@@ -161,7 +161,7 @@ Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause
         values.push_back(mk<ram::SignedConstant>(0));
         values.push_back(mk<ram::SignedConstant>(0));
     } else {
-        values.push_back(mk<ram::SignedConstant>(ast::getClauseNum(context.getProgram(), &clause)));
+        values.push_back(mk<ram::SignedConstant>(context.getClauseNum(&clause)));
         values.push_back(getLevelNumber(clause));
     }
 
