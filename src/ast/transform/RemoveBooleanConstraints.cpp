@@ -40,7 +40,7 @@ bool RemoveBooleanConstraintsTransformer::transform(TranslationUnit& translation
 
     // If any boolean constraints exist, they will be removed
     bool changed = false;
-    visitDepthFirst(program, [&](const BooleanConstraint&) { changed = true; });
+    visit(program, [&](const BooleanConstraint&) { changed = true; });
 
     // Remove true and false constant literals from all aggregators
     struct removeBools : public NodeMapper {

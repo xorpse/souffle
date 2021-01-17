@@ -50,8 +50,8 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
     // We will apply a fixpoint operator so that it ends up all getting
     // wound out but we can't rush this.
     std::set<const Aggregator*> innerAggregates;
-    visitDepthFirst(program, [&](const Aggregator& agg) {
-        visitDepthFirst(agg, [&](const Aggregator& innerAgg) {
+    visit(program, [&](const Aggregator& agg) {
+        visit(agg, [&](const Aggregator& innerAgg) {
             if (agg != innerAgg) {
                 innerAggregates.insert(&innerAgg);
             }
@@ -59,8 +59,8 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
     });
 
     // collect references to clause / aggregate pairs
-    visitDepthFirst(program, [&](Clause& clause) {
-        visitDepthFirst(clause, [&](Aggregator& agg) {
+    visit(program, [&](Clause& clause) {
+        visit(clause, [&](Aggregator& agg) {
             // only unroll one level at a time
             if (innerAggregates.find(&agg) != innerAggregates.end()) {
                 return;

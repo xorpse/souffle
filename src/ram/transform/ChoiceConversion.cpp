@@ -40,7 +40,7 @@ Own<Operation> ChoiceConversionTransformer::rewriteScan(const Scan* scan) {
 
             const Node& nextNode = filter->getOperation();
 
-            visitDepthFirst(nextNode, [&](const TupleElement& element) {
+            visit(nextNode, [&](const TupleElement& element) {
                 if (element.getTupleId() == scan->getTupleId()) {
                     transformTuple = false;
                 }
@@ -72,7 +72,7 @@ Own<Operation> ChoiceConversionTransformer::rewriteIndexScan(const IndexScan* in
             // Check that the filter is not referred to after
             const Node& nextNode = filter->getOperation();
 
-            visitDepthFirst(nextNode, [&](const TupleElement& element) {
+            visit(nextNode, [&](const TupleElement& element) {
                 if (element.getTupleId() == indexScan->getTupleId()) {
                     transformTuple = false;
                 }
@@ -110,7 +110,7 @@ Own<Operation> ChoiceConversionTransformer::rewriteIndexScan(const IndexScan* in
 
 bool ChoiceConversionTransformer::convertScans(Program& program) {
     bool changed = false;
-    visitDepthFirst(program, [&](const Query& query) {
+    visit(program, [&](const Query& query) {
         std::function<Own<Node>(Own<Node>)> scanRewriter = [&](Own<Node> node) -> Own<Node> {
             if (const Scan* scan = as<Scan>(node)) {
                 if (Own<Operation> op = rewriteScan(scan)) {

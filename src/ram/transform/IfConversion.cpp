@@ -33,7 +33,7 @@ namespace souffle::ram::transform {
 Own<Operation> IfConversionTransformer::rewriteIndexScan(const IndexScan* indexScan) {
     // check whether tuple is used in subsequent operations
     bool tupleNotUsed = true;
-    visitDepthFirst(*indexScan, [&](const TupleElement& element) {
+    visit(*indexScan, [&](const TupleElement& element) {
         if (element.getTupleId() == indexScan->getTupleId()) {
             tupleNotUsed = false;
         }
@@ -75,7 +75,7 @@ Own<Operation> IfConversionTransformer::rewriteIndexScan(const IndexScan* indexS
 
 bool IfConversionTransformer::convertIndexScans(Program& program) {
     bool changed = false;
-    visitDepthFirst(program, [&](const Query& query) {
+    visit(program, [&](const Query& query) {
         std::function<Own<Node>(Own<Node>)> scanRewriter = [&](Own<Node> node) -> Own<Node> {
             if (const IndexScan* scan = as<IndexScan>(node)) {
                 if (Own<Operation> op = rewriteIndexScan(scan)) {

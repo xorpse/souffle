@@ -65,14 +65,14 @@ bool PartitionBodyLiteralsTransformer::transform(TranslationUnit& translationUni
     std::vector<const Clause*> clausesToRemove;
 
     // The transformation is local to each rule, so can visit each independently
-    visitDepthFirst(program, [&](const Clause& clause) {
+    visit(program, [&](const Clause& clause) {
         // Create the variable dependency graph G
         Graph<std::string> variableGraph = Graph<std::string>();
         std::set<std::string> ruleVariables;
 
         // Add in the nodes
         // The nodes of G are the variables in the rule
-        visitDepthFirst(clause, [&](const ast::Variable& var) {
+        visit(clause, [&](const ast::Variable& var) {
             variableGraph.insert(var.getName());
             ruleVariables.insert(var.getName());
         });
@@ -88,8 +88,7 @@ bool PartitionBodyLiteralsTransformer::transform(TranslationUnit& translationUni
             std::set<std::string> literalVariables;
 
             // Store all variables in the literal
-            visitDepthFirst(*clauseLiteral,
-                    [&](const ast::Variable& var) { literalVariables.insert(var.getName()); });
+            visit(*clauseLiteral, [&](const ast::Variable& var) { literalVariables.insert(var.getName()); });
 
             // No new edges if only one variable is present
             if (literalVariables.size() > 1) {
@@ -109,11 +108,10 @@ bool PartitionBodyLiteralsTransformer::transform(TranslationUnit& translationUni
 
         // Find the connected component associated with the head
         std::set<std::string> headComponent;
-        visitDepthFirst(
-                *clause.getHead(), [&](const ast::Variable& var) { headComponent.insert(var.getName()); });
+        visit(*clause.getHead(), [&](const ast::Variable& var) { headComponent.insert(var.getName()); });
 
         if (!headComponent.empty()) {
-            variableGraph.visitDepthFirst(*headComponent.begin(), [&](const std::string& var) {
+            variableGraph.visit(*headComponent.begin(), [&](const std::string& var) {
                 headComponent.insert(var);
                 seenNodes.insert(var);
             });
@@ -130,7 +128,7 @@ bool PartitionBodyLiteralsTransformer::transform(TranslationUnit& translationUni
 
             // Construct the connected component
             std::set<std::string> component;
-            variableGraph.visitDepthFirst(var, [&](const std::string& child) {
+            variableGraph.visit(var, [&](const std::string& child) {
                 component.insert(child);
                 seenNodes.insert(child);
             });
@@ -166,7 +164,7 @@ bool PartitionBodyLiteralsTransformer::transform(TranslationUnit& translationUni
             std::vector<Literal*> associatedLiterals;
             for (Literal* bodyLiteral : clause.getBodyLiterals()) {
                 bool associated = false;
-                visitDepthFirst(*bodyLiteral, [&](const ast::Variable& var) {
+                visit(*bodyLiteral, [&](const ast::Variable& var) {
                     if (component.find(var.getName()) != component.end()) {
                         associated = true;
                     }
@@ -194,7 +192,7 @@ bool PartitionBodyLiteralsTransformer::transform(TranslationUnit& translationUni
         for (Literal* bodyLiteral : clause.getBodyLiterals()) {
             bool associated = false;
             bool hasVariables = false;
-            visitDepthFirst(*bodyLiteral, [&](const ast::Variable& var) {
+            visit(*bodyLiteral, [&](const ast::Variable& var) {
                 hasVariables = true;
                 if (headComponent.find(var.getName()) != headComponent.end()) {
                     associated = true;

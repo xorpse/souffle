@@ -36,7 +36,7 @@ bool ParallelTransformer::parallelizeOperations(Program& program) {
 
     // parallelize the most outer loop only
     // most outer loops can be scan/choice/indexScan/indexChoice
-    visitDepthFirst(program, [&](const Query& query) {
+    visit(program, [&](const Query& query) {
         std::function<Own<Node>(Own<Node>)> parallelRewriter = [&](Own<Node> node) -> Own<Node> {
             if (const Scan* scan = as<Scan>(node)) {
                 const Relation& rel = relAnalysis->lookup(scan->getRelation());
@@ -96,7 +96,7 @@ bool ParallelTransformer::parallelizeOperations(Program& program) {
         };
         // guardedProject cannot be parallelized
         bool isGuardedProject = false;
-        visitDepthFirst(query, [&](const GuardedProject&) { isGuardedProject = true; });
+        visit(query, [&](const GuardedProject&) { isGuardedProject = true; });
         if (isGuardedProject == false) {
             const_cast<Query*>(&query)->apply(makeLambdaRamMapper(parallelRewriter));
         }

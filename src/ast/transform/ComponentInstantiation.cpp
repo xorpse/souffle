@@ -185,7 +185,7 @@ void collectContent(Program& program, const Component& component, const TypeBind
         Own<ast::Type> type(souffle::clone(cur));
 
         // instantiate elements of union types
-        visitDepthFirst(*type, [&](ast::UnionType& type) {
+        visit(*type, [&](ast::UnionType& type) {
             for (auto& name : type.getTypes()) {
                 QualifiedName newName = binding.find(name);
                 if (!newName.empty()) {
@@ -195,7 +195,7 @@ void collectContent(Program& program, const Component& component, const TypeBind
         });
 
         // instantiate elements of record types
-        visitDepthFirst(*type, [&](const ast::RecordType& type) {
+        visit(*type, [&](const ast::RecordType& type) {
             for (auto& field : type.getFields()) {
                 auto&& newName = binding.find(field->getTypeName());
                 if (!newName.empty()) {
@@ -343,7 +343,7 @@ ComponentContent getInstantiatedContent(Program& program, const ComponentInit& c
     // create a helper function fixing type and relation references
     auto fixNames = [&](Node& node) {
         // rename attribute types in headers
-        visitDepthFirst(node, [&](Attribute& attr) {
+        visit(node, [&](Attribute& attr) {
             auto pos = typeNameMapping.find(attr.getTypeName());
             if (pos != typeNameMapping.end()) {
                 attr.setTypeName(pos->second);
@@ -351,7 +351,7 @@ ComponentContent getInstantiatedContent(Program& program, const ComponentInit& c
         });
 
         // rename atoms in clauses
-        visitDepthFirst(node, [&](Atom& atom) {
+        visit(node, [&](Atom& atom) {
             auto pos = relationNameMapping.find(atom.getQualifiedName());
             if (pos != relationNameMapping.end()) {
                 atom.setQualifiedName(pos->second);
@@ -359,7 +359,7 @@ ComponentContent getInstantiatedContent(Program& program, const ComponentInit& c
         });
 
         // rename directives
-        visitDepthFirst(node, [&](Directive& directive) {
+        visit(node, [&](Directive& directive) {
             auto pos = relationNameMapping.find(directive.getQualifiedName());
             if (pos != relationNameMapping.end()) {
                 directive.setQualifiedName(pos->second);
@@ -367,7 +367,7 @@ ComponentContent getInstantiatedContent(Program& program, const ComponentInit& c
         });
 
         // rename field types in records
-        visitDepthFirst(node, [&](ast::RecordType& recordType) {
+        visit(node, [&](ast::RecordType& recordType) {
             auto&& fields = recordType.getFields();
             for (size_t i = 0; i < fields.size(); i++) {
                 auto& field = fields[i];
@@ -379,7 +379,7 @@ ComponentContent getInstantiatedContent(Program& program, const ComponentInit& c
         });
 
         // rename variant types in unions
-        visitDepthFirst(node, [&](ast::UnionType& unionType) {
+        visit(node, [&](ast::UnionType& unionType) {
             auto& variants = unionType.getTypes();
             for (size_t i = 0; i < variants.size(); i++) {
                 auto pos = typeNameMapping.find(variants[i]);
@@ -390,7 +390,7 @@ ComponentContent getInstantiatedContent(Program& program, const ComponentInit& c
         });
 
         // rename type information in typecast
-        visitDepthFirst(node, [&](ast::TypeCast& cast) {
+        visit(node, [&](ast::TypeCast& cast) {
             auto pos = typeNameMapping.find(cast.getType());
             if (pos != typeNameMapping.end()) {
                 cast.setType(pos->second);

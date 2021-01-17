@@ -23,7 +23,7 @@ using NodePtrVec = std::vector<NodePtr>;
 using RelationHandle = Own<RelationWrapper>;
 
 NodeGenerator::NodeGenerator(Engine& engine) : engine(engine) {
-    visitDepthFirst(engine.tUnit.getProgram(), [&](const ram::Relation& relation) {
+    visit(engine.tUnit.getProgram(), [&](const ram::Relation& relation) {
         assert(relationMap.find(relation.getName()) == relationMap.end() && "double-naming of relations");
         relationMap[relation.getName()] = &relation;
     });
@@ -31,7 +31,7 @@ NodeGenerator::NodeGenerator(Engine& engine) : engine(engine) {
 
 NodePtr NodeGenerator::generateTree(const ram::Node& root) {
     // Encode all relation, indexPos and viewId.
-    visitDepthFirst(root, [&](const ram::Node& node) {
+    visit(root, [&](const ram::Node& node) {
         if (isA<ram::Query>(&node)) {
             newQueryBlock();
         }
@@ -441,7 +441,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Query>, const ram::Query& query
         auto conditions = findConjunctiveTerms(&filter->getCondition());
         for (auto const& cur : conditions) {
             bool needView = false;
-            visitDepthFirst(*cur, [&](const ram::Node& node) {
+            visit(*cur, [&](const ram::Node& node) {
                 if (requireView(&node)) {
                     needView = true;
                     const auto& rel = getViewRelation(&node);
@@ -458,14 +458,14 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Query>, const ram::Query& query
         }
     }
 
-    visitDepthFirst(*next, [&](const ram::Node& node) {
+    visit(*next, [&](const ram::Node& node) {
         if (requireView(&node)) {
             const auto& rel = getViewRelation(&node);
             viewContext->addViewInfoForNested(encodeRelation(rel), indexTable[&node], encodeView(&node));
         };
     });
 
-    visitDepthFirst(*next, [&](const ram::AbstractParallel&) { viewContext->isParallel = true; });
+    visit(*next, [&](const ram::AbstractParallel&) { viewContext->isParallel = true; });
 
     auto res = mk<Query>(I_Query, &query, dispatch(*next));
     res->setViewContext(parentQueryViewContext);

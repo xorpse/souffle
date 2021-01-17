@@ -725,13 +725,13 @@ void ClauseTranslator::indexAggregatorBody(const ast::Aggregator& agg) {
 
 void ClauseTranslator::indexAggregators(const ast::Clause& clause) {
     // Add each aggregator as an internal generator
-    visitDepthFirst(clause, [&](const ast::Aggregator& agg) { indexGenerator(agg); });
+    visit(clause, [&](const ast::Aggregator& agg) { indexGenerator(agg); });
 
     // Index aggregator bodies
-    visitDepthFirst(clause, [&](const ast::Aggregator& agg) { indexAggregatorBody(agg); });
+    visit(clause, [&](const ast::Aggregator& agg) { indexAggregatorBody(agg); });
 
     // Add aggregator value introductions
-    visitDepthFirst(clause, [&](const ast::BinaryConstraint& bc) {
+    visit(clause, [&](const ast::BinaryConstraint& bc) {
         if (!isEqConstraint(bc.getBaseOperator())) return;
         const auto* lhs = as<ast::Variable>(bc.getLHS());
         const auto* rhs = as<ast::Aggregator>(bc.getRHS());
@@ -742,14 +742,14 @@ void ClauseTranslator::indexAggregators(const ast::Clause& clause) {
 
 void ClauseTranslator::indexMultiResultFunctors(const ast::Clause& clause) {
     // Add each multi-result functor as an internal generator
-    visitDepthFirst(clause, [&](const ast::IntrinsicFunctor& func) {
+    visit(clause, [&](const ast::IntrinsicFunctor& func) {
         if (ast::analysis::FunctorAnalysis::isMultiResult(func)) {
             indexGenerator(func);
         }
     });
 
     // Add multi-result functor value introductions
-    visitDepthFirst(clause, [&](const ast::BinaryConstraint& bc) {
+    visit(clause, [&](const ast::BinaryConstraint& bc) {
         if (!isEqConstraint(bc.getBaseOperator())) return;
         const auto* lhs = as<ast::Variable>(bc.getLHS());
         const auto* rhs = as<ast::IntrinsicFunctor>(bc.getRHS());

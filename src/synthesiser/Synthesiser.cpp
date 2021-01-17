@@ -205,7 +205,7 @@ void Synthesiser::generateRelationTypeStruct(std::ostream& out, Own<Relation> re
 /** Get referenced relations */
 std::set<const ram::Relation*> Synthesiser::getReferencedRelations(const Operation& op) {
     std::set<const ram::Relation*> res;
-    visitDepthFirst(op, [&](const Node& node) {
+    visit(op, [&](const Node& node) {
         if (auto scan = as<RelationOperation>(node)) {
             res.insert(lookup(scan->getRelation()));
         } else if (auto agg = as<Aggregate>(node)) {
@@ -397,8 +397,8 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 auto conditions = toConjunctionList(&filter->getCondition());
                 for (auto const& cur : conditions) {
                     bool needContext = false;
-                    visitDepthFirst(*cur, [&](const ExistenceCheck&) { needContext = true; });
-                    visitDepthFirst(*cur, [&](const ProvenanceExistenceCheck&) { needContext = true; });
+                    visit(*cur, [&](const ExistenceCheck&) { needContext = true; });
+                    visit(*cur, [&](const ProvenanceExistenceCheck&) { needContext = true; });
                     if (needContext) {
                         requireCtx.push_back(souffle::clone(cur));
                     } else {
@@ -420,7 +420,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             // check whether loop nest can be parallelized
             bool isParallel = false;
-            visitDepthFirst(*next, [&](const AbstractParallel&) { isParallel = true; });
+            visit(*next, [&](const AbstractParallel&) { isParallel = true; });
 
             // reset preamble
             preamble.str("");
@@ -2340,7 +2340,7 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     os << "\n";
     // produce external definitions for user-defined functors
     std::map<std::string, std::tuple<TypeAttribute, std::vector<TypeAttribute>, bool>> functors;
-    visitDepthFirst(prog, [&](const UserDefinedOperator& op) {
+    visit(prog, [&](const UserDefinedOperator& op) {
         if (functors.find(op.getName()) == functors.end()) {
             functors[op.getName()] = std::make_tuple(op.getReturnType(), op.getArgsTypes(), op.isStateful());
         }
@@ -2447,7 +2447,7 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     if (Global::config().has("profile")) {
         os << "private:\n";
         size_t numFreq = 0;
-        visitDepthFirst(prog, [&](const Statement&) { numFreq++; });
+        visit(prog, [&](const Statement&) { numFreq++; });
         os << "  size_t freqs[" << numFreq << "]{};\n";
         size_t numRead = 0;
         for (auto rel : prog.getRelations()) {
@@ -2479,7 +2479,7 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     std::set<const IO*> storeIOs;
 
     // collect load/store operations/relations
-    visitDepthFirst(prog, [&](const IO& io) {
+    visit(prog, [&](const IO& io) {
         auto op = io.get("operation");
         if (op == "input") {
             loadRelations.insert(io.getRelation());
@@ -2773,7 +2773,7 @@ void runFunction(std::string  inputDirectoryArg   = "",
 
             // issue lock variable for return statements
             bool needLock = false;
-            visitDepthFirst(*sub.second, [&](const SubroutineReturn&) { needLock = true; });
+            visit(*sub.second, [&](const SubroutineReturn&) { needLock = true; });
             if (needLock) {
                 os << "std::mutex lock;\n";
             }

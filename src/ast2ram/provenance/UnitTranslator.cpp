@@ -61,7 +61,7 @@ Own<ram::Statement> UnitTranslator::generateClearExpiredRelations(
 }
 
 void UnitTranslator::addProvenanceClauseSubroutines(const ast::Program* program) {
-    visitDepthFirst(*program, [&](const ast::Clause& clause) {
+    visit(*program, [&](const ast::Clause& clause) {
         std::string relName = toString(clause.getHead()->getQualifiedName());
 
         // do not add subroutines for info relations or facts
@@ -208,7 +208,7 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
     size_t count = 0;
     std::map<int, const ast::Variable*> idToVar;
     auto dummyValueIndex = mk<ValueIndex>();
-    visitDepthFirst(clause, [&](const ast::Variable& var) {
+    visit(clause, [&](const ast::Variable& var) {
         if (dummyValueIndex->isDefined(var) || isPrefix("@level_num", var.getName()) ||
                 isPrefix("+underscore", var.getName())) {
             return;
@@ -217,7 +217,7 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
         dummyValueIndex->addVarReference(var, count++, 0);
     });
 
-    visitDepthFirst(clause, [&](const ast::Variable& var) {
+    visit(clause, [&](const ast::Variable& var) {
         if (isPrefix("+underscore", var.getName())) {
             idToVar[count] = &var;
             dummyValueIndex->addVarReference(var, count++, 0);

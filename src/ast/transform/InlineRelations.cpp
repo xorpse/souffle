@@ -189,7 +189,7 @@ bool nameInlinedUnderscores(Program& program) {
 bool containsInlinedAtom(const Program& program, const Clause& clause) {
     bool foundInlinedAtom = false;
 
-    visitDepthFirst(clause, [&](const Atom& atom) {
+    visit(clause, [&](const Atom& atom) {
         Relation* rel = getRelation(program, atom.getQualifiedName());
         if (rel->hasQualifier(RelationQualifier::INLINE)) {
             foundInlinedAtom = true;

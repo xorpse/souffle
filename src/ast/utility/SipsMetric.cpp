@@ -223,7 +223,7 @@ std::vector<double> LeastFreeVarsSips::evaluateCosts(
 
         // use a set to hold all free variables to avoid double-counting
         std::set<std::string> freeVars;
-        visitDepthFirst(*atom, [&](const Variable& var) {
+        visit(*atom, [&](const Variable& var) {
             if (bindingStore.isBound(var.getName())) {
                 freeVars.insert(var.getName());
             }

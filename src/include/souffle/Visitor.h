@@ -123,34 +123,19 @@ struct Visitor : public visitor_with_type<NodeType> {
  * @param args a list of extra parameters to be forwarded to the visitor
  */
 template <class Node, class Visitor, typename... Args>
-std::enable_if_t<is_visitable_v<Node> && is_visitor_v<Visitor>> visitDepthFirstPreOrder(
+std::enable_if_t<is_visitable_v<Node> && is_visitor_v<Visitor>> visit(
         Node&& root, Visitor& visitor, Args const&... args) {
     visitor(root, args...);
     for (auto&& cur : getChildNodes(root)) {
         // FIXME: Remove this once nodes are converted to references
         if constexpr (detail::ptr_helper_v<decltype(cur)>) {
             if (cur != nullptr) {
-                visitDepthFirstPreOrder(*cur, visitor, args...);
+                visit(*cur, visitor, args...);
             }
         } else {
-            visitDepthFirstPreOrder(cur, visitor, args...);
+            visit(cur, visitor, args...);
         }
     }
-}
-
-/**
- * A utility function visiting all nodes within the given root
- * recursively in a depth-first pre-order fashion, applying the given visitor to each
- * encountered node.
- *
- * @param root the root of the structure to be visited
- * @param visitor the visitor to be applied on each node
- * @param args a list of extra parameters to be forwarded to the visitor
- */
-template <class Node, class Visitor, typename... Args>
-std::enable_if_t<is_visitable_v<Node> && is_visitor_v<Visitor>> visitDepthFirst(
-        Node&& root, Visitor& visitor, Args const&... args) {
-    visitDepthFirstPreOrder(root, visitor, args...);
 }
 
 namespace detail {
@@ -199,9 +184,9 @@ auto makeLambdaVisitor(F&& f) {
  * @param visitor the visitor to be applied on each node
  */
 template <class Node, typename F>
-std::enable_if_t<is_visitable_v<Node> && !is_visitor_v<F>> visitDepthFirst(Node&& root, F&& fun) {
+std::enable_if_t<is_visitable_v<Node> && !is_visitor_v<F>> visit(Node&& root, F&& fun) {
     auto visitor = detail::makeLambdaVisitor<std::remove_reference_t<Node>>(std::forward<F>(fun));
-    visitDepthFirst(root, visitor);
+    visit(root, visitor);
 }
 
 /**
@@ -213,17 +198,17 @@ std::enable_if_t<is_visitable_v<Node> && !is_visitor_v<F>> visitDepthFirst(Node&
  * @param fun the function to be applied
  */
 template <typename R, typename F>
-std::enable_if_t<is_range_v<R>> visitDepthFirst(R const& range, F&& fun) {
+std::enable_if_t<is_range_v<R>> visit(R const& range, F&& fun) {
     for (auto&& cur : range) {
-        // NOTE: Can't forward since each visitDepthFirst call could
+        // NOTE: Can't forward since each visit call could
         // steal the temporary!
         // FIXME: Remove this once nodes are converted to references
         if constexpr (detail::ptr_helper_v<decltype(cur)>) {
             if (cur != nullptr) {
-                visitDepthFirst(*cur, fun);
+                visit(*cur, fun);
             }
         } else {
-            visitDepthFirst(cur, fun);
+            visit(cur, fun);
         }
     }
 }

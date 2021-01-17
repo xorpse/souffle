@@ -69,11 +69,11 @@ Aggregator* SimplifyAggregateTargetExpressionTransformer::simplifyTargetExpressi
     }
 
     // Rename the necessary variables in the new aggregator
-    visitDepthFirst(*origTargetExpression, [&](Variable& v) {
+    visit(*origTargetExpression, [&](Variable& v) {
         if (contains(varsGroundedOutside, v.getName())) {
             // Rename everywhere in the body to fix scoping
             std::string newVarName = analysis::findUniqueVariableName(clause, v.getName());
-            visitDepthFirst(newBody, [&](Variable& literalVar) {
+            visit(newBody, [&](Variable& literalVar) {
                 if (literalVar.getName() == v.getName()) {
                     literalVar.setName(newVarName);
                 }
@@ -108,7 +108,7 @@ bool SimplifyAggregateTargetExpressionTransformer::transform(TranslationUnit& tr
     // Generate the necessary simplified forms for each complex aggregator
     std::map<const Aggregator*, Aggregator*> complexToSimple;
     for (auto* clause : program.getClauses()) {
-        visitDepthFirst(*clause, [&](Aggregator& aggregator) {
+        visit(*clause, [&](Aggregator& aggregator) {
             const auto* targetExpression = aggregator.getTargetExpression();
             if (targetExpression != nullptr && !isA<Variable>(targetExpression)) {
                 complexToSimple.insert(

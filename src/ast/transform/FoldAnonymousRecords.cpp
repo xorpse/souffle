@@ -65,7 +65,7 @@ bool FoldAnonymousRecords::isValidRecordConstraint(const Literal* literal) {
 
 bool FoldAnonymousRecords::containsValidRecordConstraint(const Clause& clause) {
     bool contains = false;
-    visitDepthFirst(clause, [&](const BinaryConstraint& binary) {
+    visit(clause, [&](const BinaryConstraint& binary) {
         contains = (contains || isValidRecordConstraint(&binary));
     });
     return contains;
