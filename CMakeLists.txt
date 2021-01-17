@@ -122,6 +122,7 @@ configure_file("${PROJECT_SOURCE_DIR}/cmake/config.h.in"
 
 # TODO
 
+# Update README
 # Tests
 # bash completion
 # Check headers
