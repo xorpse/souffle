@@ -47,7 +47,7 @@ NodePtr NodeGenerator::generateTree(const ram::Node& root) {
         }
     });
     // Parse program
-    return visit(root);
+    return dispatch(root);
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::Constant>, const ram::Constant& num) {
@@ -68,7 +68,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::AutoIncrement>, const ram::Auto
 NodePtr NodeGenerator::visit_(type_identity<ram::IntrinsicOperator>, const ram::IntrinsicOperator& op) {
     NodePtrVec children;
     for (const auto& arg : op.getArguments()) {
-        children.push_back(visit(*arg));
+        children.push_back(dispatch(*arg));
     }
     return mk<IntrinsicOperator>(I_IntrinsicOperator, &op, std::move(children));
 }
@@ -76,7 +76,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::IntrinsicOperator>, const ram::
 NodePtr NodeGenerator::visit_(type_identity<ram::UserDefinedOperator>, const ram::UserDefinedOperator& op) {
     NodePtrVec children;
     for (const auto& arg : op.getArguments()) {
-        children.push_back(visit(*arg));
+        children.push_back(dispatch(*arg));
     }
     return mk<UserDefinedOperator>(I_UserDefinedOperator, &op, std::move(children));
 }
@@ -87,7 +87,7 @@ NodePtr NodeGenerator::visit_(
     orderingContext.addNewTuple(op.getTupleId(), arity);
     NodePtrVec children;
     for (auto&& arg : op.getArguments()) {
-        children.push_back(visit(*arg));
+        children.push_back(dispatch(*arg));
     }
     children.push_back(visit_(type_identity<ram::TupleOperation>(), op));
     return mk<NestedIntrinsicOperator>(I_NestedIntrinsicOperator, &op, std::move(children));
@@ -96,7 +96,7 @@ NodePtr NodeGenerator::visit_(
 NodePtr NodeGenerator::visit_(type_identity<ram::PackRecord>, const ram::PackRecord& pr) {
     NodePtrVec children;
     for (const auto& arg : pr.getArguments()) {
-        children.push_back(visit(*arg));
+        children.push_back(dispatch(*arg));
     }
     return mk<PackRecord>(I_PackRecord, &pr, std::move(children));
 }
@@ -115,11 +115,11 @@ NodePtr NodeGenerator::visit_(type_identity<ram::False>, const ram::False& lfals
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::Conjunction>, const ram::Conjunction& conj) {
-    return mk<Conjunction>(I_Conjunction, &conj, visit(conj.getLHS()), visit(conj.getRHS()));
+    return mk<Conjunction>(I_Conjunction, &conj, dispatch(conj.getLHS()), dispatch(conj.getRHS()));
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::Negation>, const ram::Negation& neg) {
-    return mk<Negation>(I_Negation, &neg, visit(neg.getOperand()));
+    return mk<Negation>(I_Negation, &neg, dispatch(neg.getOperand()));
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::EmptinessCheck>, const ram::EmptinessCheck& emptiness) {
@@ -155,23 +155,23 @@ NodePtr NodeGenerator::visit_(
         type_identity<ram::ProvenanceExistenceCheck>, const ram::ProvenanceExistenceCheck& provExists) {
     SuperInstruction superOp = getExistenceSuperInstInfo(provExists);
     NodeType type = constructNodeType("ProvenanceExistenceCheck", lookup(provExists.getRelation()));
-    return mk<ProvenanceExistenceCheck>(type, &provExists, visit(*provExists.getChildNodes().back()),
+    return mk<ProvenanceExistenceCheck>(type, &provExists, dispatch(*provExists.getChildNodes().back()),
             encodeView(&provExists), std::move(superOp));
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::Constraint>, const ram::Constraint& relOp) {
-    return mk<Constraint>(I_Constraint, &relOp, visit(relOp.getLHS()), visit(relOp.getRHS()));
+    return mk<Constraint>(I_Constraint, &relOp, dispatch(relOp.getLHS()), dispatch(relOp.getRHS()));
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::NestedOperation>, const ram::NestedOperation& nested) {
-    return visit(nested.getOperation());
+    return dispatch(nested.getOperation());
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::TupleOperation>, const ram::TupleOperation& search) {
     if (engine.profileEnabled && engine.frequencyCounterEnabled && !search.getProfileText().empty()) {
-        return mk<TupleOperation>(I_TupleOperation, &search, visit(search.getOperation()));
+        return mk<TupleOperation>(I_TupleOperation, &search, dispatch(search.getOperation()));
     }
-    return visit(search.getOperation());
+    return dispatch(search.getOperation());
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::Scan>, const ram::Scan& scan) {
@@ -217,7 +217,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Choice>, const ram::Choice& cho
     size_t relId = encodeRelation(choice.getRelation());
     auto rel = getRelationHandle(relId);
     NodeType type = constructNodeType("Choice", lookup(choice.getRelation()));
-    return mk<Choice>(type, &choice, rel, visit(choice.getCondition()),
+    return mk<Choice>(type, &choice, rel, dispatch(choice.getCondition()),
             visit_(type_identity<ram::TupleOperation>(), choice));
 }
 
@@ -226,7 +226,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::ParallelChoice>, const ram::Par
     size_t relId = encodeRelation(pChoice.getRelation());
     auto rel = getRelationHandle(relId);
     NodeType type = constructNodeType("ParallelChoice", lookup(pChoice.getRelation()));
-    auto res = mk<ParallelChoice>(type, &pChoice, rel, visit(pChoice.getCondition()),
+    auto res = mk<ParallelChoice>(type, &pChoice, rel, dispatch(pChoice.getCondition()),
             visit_(type_identity<ram::TupleOperation>(), pChoice));
     res->setViewContext(parentQueryViewContext);
     return res;
@@ -236,7 +236,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::IndexChoice>, const ram::IndexC
     orderingContext.addTupleWithIndexOrder(iChoice.getTupleId(), iChoice);
     SuperInstruction indexOperation = getIndexSuperInstInfo(iChoice);
     NodeType type = constructNodeType("IndexChoice", lookup(iChoice.getRelation()));
-    return mk<IndexChoice>(type, &iChoice, nullptr, visit(iChoice.getCondition()),
+    return mk<IndexChoice>(type, &iChoice, nullptr, dispatch(iChoice.getCondition()),
             visit_(type_identity<ram::TupleOperation>(), iChoice), encodeView(&iChoice),
             std::move(indexOperation));
 }
@@ -248,8 +248,8 @@ NodePtr NodeGenerator::visit_(
     size_t relId = encodeRelation(piChoice.getRelation());
     auto rel = getRelationHandle(relId);
     NodeType type = constructNodeType("ParallelIndexChoice", lookup(piChoice.getRelation()));
-    auto res = mk<ParallelIndexChoice>(type, &piChoice, rel, visit(piChoice.getCondition()),
-            visit(piChoice.getOperation()), encodeIndexPos(piChoice), std::move(indexOperation));
+    auto res = mk<ParallelIndexChoice>(type, &piChoice, rel, dispatch(piChoice.getCondition()),
+            dispatch(piChoice.getOperation()), encodeIndexPos(piChoice), std::move(indexOperation));
     res->setViewContext(parentQueryViewContext);
     return res;
 }
@@ -257,7 +257,7 @@ NodePtr NodeGenerator::visit_(
 NodePtr NodeGenerator::visit_(
         type_identity<ram::UnpackRecord>, const ram::UnpackRecord& unpack) {  // get reference
     orderingContext.addNewTuple(unpack.getTupleId(), unpack.getArity());
-    return mk<UnpackRecord>(I_UnpackRecord, &unpack, visit(unpack.getExpression()),
+    return mk<UnpackRecord>(I_UnpackRecord, &unpack, dispatch(unpack.getExpression()),
             visit_(type_identity<ram::TupleOperation>(), unpack));
 }
 
@@ -266,8 +266,8 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Aggregate>, const ram::Aggregat
     // orderCtxt consistent. The order of visiting should be the same as the order of execution during
     // runtime.
     orderingContext.addTupleWithDefaultOrder(aggregate.getTupleId(), aggregate);
-    NodePtr expr = visit(aggregate.getExpression());
-    NodePtr cond = visit(aggregate.getCondition());
+    NodePtr expr = dispatch(aggregate.getExpression());
+    NodePtr cond = dispatch(aggregate.getCondition());
     orderingContext.addNewTuple(aggregate.getTupleId(), 1);
     NodePtr nested = visit_(type_identity<ram::TupleOperation>(), aggregate);
     size_t relId = encodeRelation(aggregate.getRelation());
@@ -279,8 +279,8 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Aggregate>, const ram::Aggregat
 NodePtr NodeGenerator::visit_(
         type_identity<ram::ParallelAggregate>, const ram::ParallelAggregate& pAggregate) {
     orderingContext.addTupleWithDefaultOrder(pAggregate.getTupleId(), pAggregate);
-    NodePtr expr = visit(pAggregate.getExpression());
-    NodePtr cond = visit(pAggregate.getCondition());
+    NodePtr expr = dispatch(pAggregate.getExpression());
+    NodePtr cond = dispatch(pAggregate.getCondition());
     orderingContext.addNewTuple(pAggregate.getTupleId(), 1);
     NodePtr nested = visit_(type_identity<ram::TupleOperation>(), pAggregate);
     size_t relId = encodeRelation(pAggregate.getRelation());
@@ -296,8 +296,8 @@ NodePtr NodeGenerator::visit_(
 NodePtr NodeGenerator::visit_(type_identity<ram::IndexAggregate>, const ram::IndexAggregate& iAggregate) {
     orderingContext.addTupleWithIndexOrder(iAggregate.getTupleId(), iAggregate);
     SuperInstruction indexOperation = getIndexSuperInstInfo(iAggregate);
-    NodePtr expr = visit(iAggregate.getExpression());
-    NodePtr cond = visit(iAggregate.getCondition());
+    NodePtr expr = dispatch(iAggregate.getExpression());
+    NodePtr cond = dispatch(iAggregate.getCondition());
     orderingContext.addNewTuple(iAggregate.getTupleId(), 1);
     NodePtr nested = visit_(type_identity<ram::TupleOperation>(), iAggregate);
     size_t relId = encodeRelation(iAggregate.getRelation());
@@ -311,8 +311,8 @@ NodePtr NodeGenerator::visit_(
         type_identity<ram::ParallelIndexAggregate>, const ram::ParallelIndexAggregate& piAggregate) {
     orderingContext.addTupleWithIndexOrder(piAggregate.getTupleId(), piAggregate);
     SuperInstruction indexOperation = getIndexSuperInstInfo(piAggregate);
-    NodePtr expr = visit(piAggregate.getExpression());
-    NodePtr cond = visit(piAggregate.getCondition());
+    NodePtr expr = dispatch(piAggregate.getExpression());
+    NodePtr cond = dispatch(piAggregate.getCondition());
     orderingContext.addNewTuple(piAggregate.getTupleId(), 1);
     NodePtr nested = visit_(type_identity<ram::TupleOperation>(), piAggregate);
     size_t relId = encodeRelation(piAggregate.getRelation());
@@ -325,11 +325,11 @@ NodePtr NodeGenerator::visit_(
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::Break>, const ram::Break& breakOp) {
-    return mk<Break>(I_Break, &breakOp, visit(breakOp.getCondition()), visit(breakOp.getOperation()));
+    return mk<Break>(I_Break, &breakOp, dispatch(breakOp.getCondition()), dispatch(breakOp.getOperation()));
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::Filter>, const ram::Filter& filter) {
-    return mk<Filter>(I_Filter, &filter, visit(filter.getCondition()), visit(filter.getOperation()));
+    return mk<Filter>(I_Filter, &filter, dispatch(filter.getCondition()), dispatch(filter.getOperation()));
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::GuardedProject>, const ram::GuardedProject& guardedProject) {
@@ -338,7 +338,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::GuardedProject>, const ram::Gua
     auto rel = getRelationHandle(relId);
     NodeType type = constructNodeType("GuardedProject", lookup(guardedProject.getRelation()));
     auto condition = guardedProject.getCondition();
-    return mk<GuardedProject>(type, &guardedProject, rel, std::move(superOp), visit(*condition));
+    return mk<GuardedProject>(type, &guardedProject, rel, std::move(superOp), dispatch(*condition));
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::Project>, const ram::Project& project) {
@@ -352,7 +352,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Project>, const ram::Project& p
 NodePtr NodeGenerator::visit_(type_identity<ram::SubroutineReturn>, const ram::SubroutineReturn& ret) {
     NodePtrVec children;
     for (const auto& value : ret.getValues()) {
-        children.push_back(visit(*value));
+        children.push_back(dispatch(*value));
     }
     return mk<SubroutineReturn>(I_SubroutineReturn, &ret, std::move(children));
 }
@@ -360,7 +360,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::SubroutineReturn>, const ram::S
 NodePtr NodeGenerator::visit_(type_identity<ram::Sequence>, const ram::Sequence& seq) {
     NodePtrVec children;
     for (const auto& value : seq.getStatements()) {
-        children.push_back(visit(*value));
+        children.push_back(dispatch(*value));
     }
     return mk<Sequence>(I_Sequence, &seq, std::move(children));
 }
@@ -369,17 +369,17 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Parallel>, const ram::Parallel&
     // Parallel statements are executed in sequence for now.
     NodePtrVec children;
     for (const auto& value : parallel.getStatements()) {
-        children.push_back(visit(*value));
+        children.push_back(dispatch(*value));
     }
     return mk<Parallel>(I_Parallel, &parallel, std::move(children));
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::Loop>, const ram::Loop& loop) {
-    return mk<Loop>(I_Loop, &loop, visit(loop.getBody()));
+    return mk<Loop>(I_Loop, &loop, dispatch(loop.getBody()));
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::Exit>, const ram::Exit& exit) {
-    return mk<Exit>(I_Exit, &exit, visit(exit.getCondition()));
+    return mk<Exit>(I_Exit, &exit, dispatch(exit.getCondition()));
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::Call>, const ram::Call& call) {
@@ -396,15 +396,15 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Call>, const ram::Call& call) {
 NodePtr NodeGenerator::visit_(type_identity<ram::LogRelationTimer>, const ram::LogRelationTimer& timer) {
     size_t relId = encodeRelation(timer.getRelation());
     auto rel = getRelationHandle(relId);
-    return mk<LogRelationTimer>(I_LogRelationTimer, &timer, visit(timer.getStatement()), rel);
+    return mk<LogRelationTimer>(I_LogRelationTimer, &timer, dispatch(timer.getStatement()), rel);
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::LogTimer>, const ram::LogTimer& timer) {
-    return mk<LogTimer>(I_LogTimer, &timer, visit(timer.getStatement()));
+    return mk<LogTimer>(I_LogTimer, &timer, dispatch(timer.getStatement()));
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::DebugInfo>, const ram::DebugInfo& dbg) {
-    return mk<DebugInfo>(I_DebugInfo, &dbg, visit(dbg.getStatement()));
+    return mk<DebugInfo>(I_DebugInfo, &dbg, dispatch(dbg.getStatement()));
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::Clear>, const ram::Clear& clear) {
@@ -451,9 +451,9 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Query>, const ram::Query& query
             });
 
             if (needView) {
-                viewContext->addViewOperationForFilter(visit(*cur));
+                viewContext->addViewOperationForFilter(dispatch(*cur));
             } else {
-                viewContext->addViewFreeOperationForFilter(visit(*cur));
+                viewContext->addViewFreeOperationForFilter(dispatch(*cur));
             }
         }
     }
@@ -467,7 +467,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Query>, const ram::Query& query
 
     visitDepthFirst(*next, [&](const ram::AbstractParallel&) { viewContext->isParallel = true; });
 
-    auto res = mk<Query>(I_Query, &query, visit(*next));
+    auto res = mk<Query>(I_Query, &query, dispatch(*next));
     res->setViewContext(parentQueryViewContext);
     return res;
 }
@@ -608,7 +608,7 @@ SuperInstruction NodeGenerator::getIndexSuperInstInfo(const ram::IndexOperation&
         }
 
         // Generic expression
-        indexOperation.exprFirst.push_back(std::pair<size_t, Own<Node>>(i, visit(*low)));
+        indexOperation.exprFirst.push_back(std::pair<size_t, Own<Node>>(i, dispatch(*low)));
     }
     const auto& second = ramIndex.getRangePattern().second;
     for (size_t i = 0; i < arity; ++i) {
@@ -637,7 +637,7 @@ SuperInstruction NodeGenerator::getIndexSuperInstInfo(const ram::IndexOperation&
         }
 
         // Generic expression
-        indexOperation.exprSecond.push_back(std::pair<size_t, Own<Node>>(i, visit(*hig)));
+        indexOperation.exprSecond.push_back(std::pair<size_t, Own<Node>>(i, dispatch(*hig)));
     }
     return indexOperation;
 }
@@ -684,7 +684,7 @@ SuperInstruction NodeGenerator::getExistenceSuperInstInfo(const ram::AbstractExi
         }
 
         // Generic expression
-        superOp.exprFirst.push_back(std::pair<size_t, Own<Node>>(i, visit(*child)));
+        superOp.exprFirst.push_back(std::pair<size_t, Own<Node>>(i, dispatch(*child)));
     }
     return superOp;
 }
@@ -712,7 +712,7 @@ SuperInstruction NodeGenerator::getProjectSuperInstInfo(const ram::Project& exis
         }
 
         // Generic expression
-        superOp.exprFirst.push_back(std::pair<size_t, Own<Node>>(i, visit(*child)));
+        superOp.exprFirst.push_back(std::pair<size_t, Own<Node>>(i, dispatch(*child)));
     }
     return superOp;
 }

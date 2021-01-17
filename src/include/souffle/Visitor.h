@@ -85,7 +85,7 @@ struct Visitor : public visitor_with_type<NodeType> {
 
     /** The main entry for the user allowing visitors to be utilized as functions */
     R operator()(NodeType& node, Params const&... args) {
-        return visit(node, args...);
+        return dispatch(node, args...);
     }
 
     /**
@@ -96,7 +96,7 @@ struct Visitor : public visitor_with_type<NodeType> {
      * @param node the node to be visited
      * @param args a list of extra parameters to be forwarded
      */
-    virtual R visit(NodeType& node, Params const&... args) = 0;
+    virtual R dispatch(NodeType& node, Params const&... args) = 0;
 
     /** The base case for all visitors -- if no more specific overload was defined */
     virtual R visit_(type_identity<std::remove_const_t<NodeType>>, const NodeType& /*node*/,
@@ -163,7 +163,7 @@ template <class NodeToVisit, class Node, typename F>
 struct LambdaVisitor : public Visitor<void, copy_const_t<NodeToVisit, Node>> {
     F lambda;
     LambdaVisitor(F lam) : lambda(std::move(lam)) {}
-    void visit(copy_const_t<NodeToVisit, Node>& node) override {
+    void dispatch(copy_const_t<NodeToVisit, Node>& node) override {
         // Don't use as<> to allow cross-casting to mixins
         if (auto* n = dynamic_cast<NodeToVisit*>(&node)) {
             lambda(*n);
