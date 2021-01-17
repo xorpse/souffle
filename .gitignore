@@ -44,7 +44,6 @@ cmake-build-debug/
 .vscode
 
 stamp-h1
-/CMakeLists.txt
 
 utilities/bash-completion
 debian/changelog
