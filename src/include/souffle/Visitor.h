@@ -66,7 +66,8 @@ using node_base_t = std::remove_const_t<std::remove_pointer_t<
         std::remove_reference_t<decltype(*std::begin(getChildNodes(std::declval<T&>())))>>>;
 
 template <typename T>
-constexpr inline bool ptr_helper_v = is_pointer_like_v<std::remove_const_t<std::remove_reference_t<T>>>;
+constexpr inline bool ptr_helper_v = is_pointer_like_v<remove_cvref_t<T>>;
+
 }  // namespace detail
 
 /**
@@ -113,6 +114,10 @@ struct Visitor : public visitor_with_type<NodeType> {
         return visit_(type_identity<Parent>(), n, args...);                                         \
     }
 
+template <class R, class Visitor, typename... Args>
+std::enable_if_t<is_range_v<remove_cvref_t<R>> && is_visitor_v<Visitor>> visit(
+        R&& range, Visitor& visitor, Args const&... args);
+
 /**
  * A utility function visiting all nodes within the given root
  * recursively in a depth-first pre-order fashion, applying the given visitor to each
@@ -126,14 +131,29 @@ template <class Node, class Visitor, typename... Args>
 std::enable_if_t<is_visitable_v<Node> && is_visitor_v<Visitor>> visit(
         Node&& root, Visitor& visitor, Args const&... args) {
     visitor(root, args...);
-    for (auto&& cur : getChildNodes(root)) {
+    souffle::visit(getChildNodes(root), visitor, args...);
+}
+
+/**
+ * A utility function visiting all nodes within a given container of root nodes
+ * recursively in a depth-first pre-order fashion applying the given function to each
+ * encountered node.
+ *
+ * @param list the list of roots of the ASTs to be visited
+ * @param fun the function to be applied
+ * @param args a list of extra parameters to be forwarded to the visitor
+ */
+template <typename R, typename Visitor, typename... Args>
+std::enable_if_t<is_range_v<remove_cvref_t<R>> && is_visitor_v<Visitor>> visit(
+        R&& range, Visitor& visitor, Args const&... args) {
+    for (auto&& cur : range) {
         // FIXME: Remove this once nodes are converted to references
         if constexpr (detail::ptr_helper_v<decltype(cur)>) {
             if (cur != nullptr) {
-                visit(*cur, visitor, args...);
+                souffle::visit(*cur, visitor, args...);
             }
         } else {
-            visit(cur, visitor, args...);
+            souffle::visit(cur, visitor, args...);
         }
     }
 }
@@ -186,7 +206,7 @@ auto makeLambdaVisitor(F&& f) {
 template <class Node, typename F>
 std::enable_if_t<is_visitable_v<Node> && !is_visitor_v<F>> visit(Node&& root, F&& fun) {
     auto visitor = detail::makeLambdaVisitor<std::remove_reference_t<Node>>(std::forward<F>(fun));
-    visit(root, visitor);
+    souffle::visit(root, visitor);
 }
 
 /**
@@ -198,19 +218,12 @@ std::enable_if_t<is_visitable_v<Node> && !is_visitor_v<F>> visit(Node&& root, F&
  * @param fun the function to be applied
  */
 template <typename R, typename F>
-std::enable_if_t<is_range_v<R>> visit(R const& range, F&& fun) {
-    for (auto&& cur : range) {
-        // NOTE: Can't forward since each visit call could
-        // steal the temporary!
-        // FIXME: Remove this once nodes are converted to references
-        if constexpr (detail::ptr_helper_v<decltype(cur)>) {
-            if (cur != nullptr) {
-                visit(*cur, fun);
-            }
-        } else {
-            visit(cur, fun);
-        }
-    }
+std::enable_if_t<is_range_v<R> && !is_visitor_v<remove_cvref_t<F>>> visit(
+        R const& range, F&& fun) {
+    using Elem = remove_cvref_t<decltype(*std::begin(range))>;
+    using Node = std::conditional_t<is_pointer_like_v<Elem>, decltype(*std::declval<Elem&>()), Elem>;
+    auto visitor = detail::makeLambdaVisitor<std::remove_reference_t<Node>>(std::forward<F>(fun));
+    souffle::visit(range, visitor);
 }
 
 }  // namespace souffle
