@@ -218,8 +218,7 @@ std::enable_if_t<is_visitable_v<Node> && !is_visitor_v<F>> visit(Node&& root, F&
  * @param fun the function to be applied
  */
 template <typename R, typename F>
-std::enable_if_t<is_range_v<R> && !is_visitor_v<remove_cvref_t<F>>> visit(
-        R const& range, F&& fun) {
+std::enable_if_t<is_range_v<R> && !is_visitor_v<remove_cvref_t<F>>> visit(R const& range, F&& fun) {
     using Elem = remove_cvref_t<decltype(*std::begin(range))>;
     using Node = std::conditional_t<is_pointer_like_v<Elem>, decltype(*std::declval<Elem&>()), Elem>;
     auto visitor = detail::makeLambdaVisitor<std::remove_reference_t<Node>>(std::forward<F>(fun));
