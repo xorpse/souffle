@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
-
 # PACKAGE_VERSION is the full tag with git hash
 execute_process(COMMAND git describe --tags --always
-                OUTPUT_VARIABLE PACKAGE_VERSION)
+                OUTPUT_VARIABLE GIT_PACKAGE_VERSION)
+
+string(REGEX REPLACE "\n$" "" PACKAGE_VERSION ${GIT_PACKAGE_VERSION})
 message(STATUS "Building souffle version ${PACKAGE_VERSION}")
 
 # SOUFFLE_VERSION only includes the major/minor triplet
@@ -12,9 +13,11 @@ project(souffle VERSION ${SOUFFLE_VERSION}
                 DESCRIPTION "A datalog compiler"
                 LANGUAGES CXX)
 
-if (NOT DEFINED ${CMAKE_BUILD_TYPE})
-    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING
+        "Choose the type of build" FORCE)
 endif()
+message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
 # --------------------------------------------------
 # User options available from the command line/cache
@@ -26,6 +29,13 @@ option(SWIG_PYTHON "Enable/Disable Python SWIG" OFF)
 option(SWIG_JAVA "Enable/Disable Java SWIG" OFF)
 option(LIBZ "Enable/Disable use of libz file compression" ON)
 option(SQLITE "Enable/Disable use sqlite IO" ON)
+# This is how souffle is built by default in Debug
+option(FAST_DEBUG "Enable/Disable ON 'fast debug' mode" ON)
+# NDEBUG = ON means -DNDEBUG on the compiler command line = no cassert
+# Therefor NDEBUG = OFF means keep asserts
+option(NDEBUG "Enable/Disable runtime checks even in release mode" OFF)
+# Souffle, by default, uses -O3 for release builds
+option(FAST_RELEASE "Enable/Disable 'fast release' mode" ON)
 
 # Add aditional modules to CMake
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
@@ -42,6 +52,7 @@ endif()
 # --------------------------------------------------
 if (CURSES)
     find_package(Curses REQUIRED)
+    add_compile_definitions(USE_NCURSES)
 endif()
 
 # --------------------------------------------------
@@ -89,6 +100,7 @@ find_program(MCPP mcpp)
 # --------------------------------------------------
 if (LIBZ)
     find_package(ZLIB REQUIRED)
+    add_compile_definitions(USE_LIBZ)
 endif()
 
 # --------------------------------------------------
@@ -96,6 +108,7 @@ endif()
 # --------------------------------------------------
 if (SQLITE)
     find_package(SQLite3 REQUIRED)
+    add_compile_definitions(USE_SQLITE)
 endif()
 
 # --------------------------------------------------
@@ -112,7 +125,8 @@ find_package(Threads REQUIRED)
 # --------------------------------------------------
 # OpenMP
 # --------------------------------------------------
-find_package(OpenMP REQUIRED)
+find_package(OpenMP REQUIRED
+             COMPONENTS CXX)
 
 # --------------------------------------------------
 # Generate the config file
@@ -120,14 +134,41 @@ find_package(OpenMP REQUIRED)
 configure_file("${PROJECT_SOURCE_DIR}/cmake/config.h.in"
                "${PROJECT_BINARY_DIR}/config.h")
 
+# --------------------------------------------------
+# Change compile flags
+# --------------------------------------------------
+if (CMAKE_BUILD_TYPE MATCHES "Debug")
+    if (FAST_DEBUG)
+        string(REGEX REPLACE "-g" "-O0 -g3" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
+    endif()
+else()
+    foreach(flag_var
+            CMAKE_CXX_FLAGS_RELEASE
+            CMAKE_CXX_FLAGS_MINSIZEREL
+            CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+
+            # Remove/keep NDEBUG in Release builds
+            if (NOT NDEBUG)
+                string(REGEX REPLACE "-DNDEBUG" "" ${flag_var} "${${flag_var}}")
+            endif()
+
+            # Change -O2 to -O3
+            if (FAST_RELEASE)
+                string(REGEX REPLACE "-O2" "-O3" ${flag_var} "${${flag_var}}")
+            endif()
+
+    endforeach()
+endif()
+
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -fwrapv")
+
+
 # TODO
 
 # Update README
 # Tests
 # bash completion
 # Check headers
-# CXXFLAGS="-Wall -Wextra $CXXFLAGS $ENV_CXXFLAGS"
-# CXXFLAGS=" -fwrapv "?
 # Add 'fast debug" mode: CXXFLAGS="$CXXFLAGS -O0 -g3"
 # Souffle version
 # Doxygen
@@ -139,3 +180,6 @@ configure_file("${PROJECT_SOURCE_DIR}/cmake/config.h.in"
 #  [ src/souffle-compile src/souffle-config debian/changelog ],
 #  [ chmod +x src/souffle-compile src/souffle-config ]
 #)
+
+enable_testing()
+add_subdirectory(src)

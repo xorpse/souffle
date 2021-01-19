@@ -1,0 +1,8 @@
+include(SouffleTests)
+
+add_souffle_binary_test(ast_print_test)
+add_souffle_binary_test(ast_program_test)
+add_souffle_binary_test(ast_transformers_test)
+add_souffle_binary_test(ast_utils_test)
+add_souffle_binary_test(type_system_test)
+add_souffle_binary_test(constraints_test)

@@ -1,0 +1,9 @@
+include(SouffleTests)
+
+add_souffle_binary_test(ram_condition_equal_clone_test)
+add_souffle_binary_test(ram_statement_equal_clone_test)
+add_souffle_binary_test(ram_expression_equal_clone_test)
+add_souffle_binary_test(ram_relation_equal_clone_test)
+add_souffle_binary_test(ram_type_conversion_test)
+add_souffle_binary_test(matching_test)
+add_souffle_binary_test(max_matching_test)

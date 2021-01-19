@@ -1,0 +1,5 @@
+include(SouffleTests)
+
+add_souffle_binary_test(interpreter_relation_test)
+add_souffle_binary_test(ram_arithmetic_test)
+add_souffle_binary_test(ram_relation_test)
