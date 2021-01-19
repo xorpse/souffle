@@ -22,6 +22,7 @@
 #include "souffle/utility/ContainerUtil.h"
 #include <cstddef>
 #include <set>
+#include <vector>
 
 namespace souffle {
 class SymbolTable;
@@ -87,7 +88,7 @@ public:
     size_t getSizeLimit(const ast::Relation* relation) const;
 
     /** Clause methods */
-    std::set<ast::Clause*> getClauses(const ast::QualifiedName& name) const;
+    std::vector<ast::Clause*> getClauses(const ast::QualifiedName& name) const;
     bool isRecursiveClause(const ast::Clause* clause) const;
     size_t getClauseNum(const ast::Clause* clause) const;
 

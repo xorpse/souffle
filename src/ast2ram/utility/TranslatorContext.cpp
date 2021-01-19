@@ -61,6 +61,7 @@ TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
 
     // Set up clause nums
     for (const ast::Relation* rel : program->getRelations()) {
+        const auto& clauses = relationDetail->getClauses(rel->getQualifiedName());
         size_t count = 1;
         for (const ast::Clause* clause : relationDetail->getClauses(rel->getQualifiedName())) {
             if (isFact(*clause)) {
@@ -149,7 +150,7 @@ std::set<const ast::Relation*> TranslatorContext::getExpiredRelations(size_t scc
     return relationSchedule->schedule().at(scc).expired();
 }
 
-std::set<ast::Clause*> TranslatorContext::getClauses(const ast::QualifiedName& name) const {
+std::vector<ast::Clause*> TranslatorContext::getClauses(const ast::QualifiedName& name) const {
     return relationDetail->getClauses(name);
 }
 
