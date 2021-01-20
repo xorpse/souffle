@@ -142,19 +142,19 @@ if (CMAKE_BUILD_TYPE MATCHES "Debug")
         string(REGEX REPLACE "-g" "-O0 -g3" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
     endif()
 else()
-    foreach(flag_var
+    foreach(FLAG_VAR
             CMAKE_CXX_FLAGS_RELEASE
             CMAKE_CXX_FLAGS_MINSIZEREL
             CMAKE_CXX_FLAGS_RELWITHDEBINFO)
 
             # Remove/keep NDEBUG in Release builds
             if (NOT NDEBUG)
-                string(REGEX REPLACE "-DNDEBUG" "" ${flag_var} "${${flag_var}}")
+                string(REGEX REPLACE "-DNDEBUG" "" ${FLAG_VAR} "${${FLAG_VAR}}")
             endif()
 
             # Change -O2 to -O3
             if (FAST_RELEASE)
-                string(REGEX REPLACE "-O2" "-O3" ${flag_var} "${${flag_var}}")
+                string(REGEX REPLACE "-O2" "-O3" ${FLAG_VAR} "${${FLAG_VAR}}")
             endif()
 
     endforeach()
@@ -183,3 +183,4 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -fwrapv")
 
 enable_testing()
 add_subdirectory(src)
+add_subdirectory(tests)

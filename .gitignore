@@ -47,3 +47,5 @@ stamp-h1
 
 utilities/bash-completion
 debian/changelog
+
+__pycache__
