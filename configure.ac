@@ -38,6 +38,9 @@ dnl Do not set default CFLAGS and CXXFLAGS
 ENV_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS=" -fwrapv "
 
+dnl This is here for CMAKE build compatibility
+AC_SUBST(CMAKE_HEADER_DIRS)
+
 # Disable provenance
 AC_ARG_ENABLE(
   [ncurses],

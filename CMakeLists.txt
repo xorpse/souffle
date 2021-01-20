@@ -132,7 +132,7 @@ find_package(OpenMP REQUIRED
 # Generate the config file
 # --------------------------------------------------
 configure_file("${PROJECT_SOURCE_DIR}/cmake/config.h.in"
-               "${PROJECT_BINARY_DIR}/config.h")
+               "${PROJECT_BINARY_DIR}/src/config.h")
 
 # --------------------------------------------------
 # Change compile flags
