@@ -56,6 +56,7 @@ SWIGLANG=""
 
 # find header files of souffle
 HEADER_DIRS=" -I$(dirname $0)/../include -I$(dirname $0)/include "
+HEADER_DIRS="$HEADER_DIRS @CMAKE_HEADER_DIRS@"
 
 # Options processing via getopts builtin, it is very limiting but on OSX the
 # default getopt is an old BSD getopt, so need this for portability

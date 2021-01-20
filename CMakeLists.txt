@@ -23,12 +23,12 @@ message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 # User options available from the command line/cache
 # --------------------------------------------------
 option(DOMAIN_64BIT "Enable/Disable 64-bit number values in Datalog tuples" ON)
-option(CURSES "Enable/Disable ncurses-based provenance display" ON)
+option(USE_CURSES "Enable/Disable ncurses-based provenance display" ON)
 option(SWIG "Enable/Disable all SWIG builds" OFF)
 option(SWIG_PYTHON "Enable/Disable Python SWIG" OFF)
 option(SWIG_JAVA "Enable/Disable Java SWIG" OFF)
-option(LIBZ "Enable/Disable use of libz file compression" ON)
-option(SQLITE "Enable/Disable use sqlite IO" ON)
+option(USE_ZLIB "Enable/Disable use of libz file compression" ON)
+option(USE_SQLITE "Enable/Disable use sqlite IO" ON)
 # This is how souffle is built by default in Debug
 option(FAST_DEBUG "Enable/Disable ON 'fast debug' mode" ON)
 # NDEBUG = ON means -DNDEBUG on the compiler command line = no cassert
@@ -50,7 +50,7 @@ endif()
 # --------------------------------------------------
 # curses libraries for Provenance information
 # --------------------------------------------------
-if (CURSES)
+if (USE_CURSES)
     find_package(Curses REQUIRED)
     add_compile_definitions(USE_NCURSES)
 endif()
@@ -98,7 +98,7 @@ find_program(MCPP mcpp)
 # --------------------------------------------------
 # libz
 # --------------------------------------------------
-if (LIBZ)
+if (USE_ZLIB)
     find_package(ZLIB REQUIRED)
     add_compile_definitions(USE_LIBZ)
 endif()
@@ -106,7 +106,7 @@ endif()
 # --------------------------------------------------
 # sqlite
 # --------------------------------------------------
-if (SQLITE)
+if (USE_SQLITE)
     find_package(SQLite3 REQUIRED)
     add_compile_definitions(USE_SQLITE)
 endif()
@@ -162,24 +162,22 @@ endif()
 
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -fwrapv")
 
-
 # TODO
-
+# Tests:
+#  - semantic.at
+#  - swig.at
+#  - interface.at
+#  - provenance.at
 # Update README
 # Tests
+# install
+# add list of "outputs" to test targets
 # bash completion
-# Check headers
-# Add 'fast debug" mode: CXXFLAGS="$CXXFLAGS -O0 -g3"
-# Souffle version
 # Doxygen
 # Sanitizers
 # Packaging
 # clang-format, clang-tidy etc
-# dlopen?
-#AC_OUTPUT(
-#  [ src/souffle-compile src/souffle-config debian/changelog ],
-#  [ chmod +x src/souffle-compile src/souffle-config ]
-#)
+# substitute changelog
 
 enable_testing()
 add_subdirectory(src)

@@ -170,8 +170,8 @@ target_include_directories(libsouffle
 
 target_link_libraries(libsouffle
                       PUBLIC OpenMP::OpenMP_CXX
-                             $<$<BOOL:${LIBZ}>:ZLIB::ZLIB>
-                             $<$<BOOL:${SQLITE}>:SQLite::SQLite3>
+                             $<$<BOOL:${USE_ZLIB}>:ZLIB::ZLIB>
+                             $<$<BOOL:${USE_SQLITE}>:SQLite::SQLite3>
                              LibFFI::LibFFI
                              "${CURSES_LIBRARIES}"
                              "${CMAKE_DL_LIBS}"
@@ -190,6 +190,57 @@ set_target_properties(libsouffle PROPERTIES OUTPUT_NAME "souffle")
 add_executable(souffle
                main.cpp)
 target_link_libraries(souffle libsouffle)
+
+# --------------------------------------------------
+# Substitutions for souffle-compile and souffle-config
+# --------------------------------------------------
+# This is a bit fragile but there is actually no better way
+# to do this, AFAIK
+# Maybe we could make a cmake script instead of using shell?
+function(AUTOMAKE_COMPATIBLE_SUBST F_IN F_OUT)
+    # enclose in scope so we can create the
+    # values to substitute
+    set(CXX ${CMAKE_CXX_COMPILER})
+
+    set(CMAKE_HEADER_DIRS "-I${CMAKE_CURRENT_SOURCE_DIR}/include")
+
+    set(CPPFLAGS "")
+
+    # Compile definitions
+    get_property(COMP_DEFS DIRECTORY PROPERTY COMPILE_DEFINITIONS)
+    set(SUBST_DEFS "")
+    foreach(DEF ${COMP_DEFS})
+        string(APPEND SUBST_DEFS "-D${DEF} ")
+    endforeach()
+
+    # Compile flags
+    string(TOUPPER ${CMAKE_BUILD_TYPE} BT_UPPER)
+    # Remove -Wall/-Wextra since the code is not warning-free
+    string(REGEX REPLACE "-Wall|-Wextra" ""  SOUFFLE_CXXFLAGS ${CMAKE_CXX_FLAGS})
+    set(SOUFFLE_CXXFLAGS "${SOUFFLE_CXXFLAGS} ${CMAKE_CXX_FLAGS_${BT_UPPER}} ${SUBST_DEFS} -fopenmp")
+
+    # Libraries
+    set(LIBS "-l${CMAKE_DL_LIBS} -lpthread")
+    if (USE_SQLITE)
+        string(APPEND LIBS " ${SQLite3_LIBRARY}")
+    endif()
+
+    if (USE_ZLIB)
+        string(APPEND LIBS " ${ZLIB_LIBRARY_RELEASE}")
+    endif()
+
+    if (USE_CURSES)
+        string(APPEND LIBS " ${CURSES_NCURSES_LIBRARY}")
+    endif()
+
+    configure_file("${F_IN}" "${F_OUT}" @ONLY)
+endfunction()
+
+automake_compatible_subst("${CMAKE_SOURCE_DIR}/src/souffle-compile.in"
+                          "${CMAKE_CURRENT_BINARY_DIR}/souffle-compile")
+
+automake_compatible_subst("${CMAKE_SOURCE_DIR}/src/souffle-config.in"
+                          "${CMAKE_CURRENT_BINARY_DIR}/souffle-config")
 
 # FIXME: Ideally, eventually we will move these out to the "tests" subdirectory
 # now that we have a sane(er?) build system
