@@ -44,6 +44,9 @@ option(FAST_DEBUG "Enable/Disable ON 'fast debug' mode" ON)
 option(NDEBUG "Enable/Disable runtime checks even in release mode" OFF)
 # Souffle, by default, uses -O3 for release builds
 option(FAST_RELEASE "Enable/Disable 'fast release' mode" ON)
+# By default, the "test/example" directory is not part of testing
+# this flag enables the tests to run
+option(TEST_EXAMPLES, "Enable/Disable testing of additional code examples in tests/examples" OFF)
 
 # Add aditional modules to CMake
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})

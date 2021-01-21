@@ -57,6 +57,7 @@ function(RUN_SOUFFLE_TEST_HELPER)
     # Give the test a name which has good info about it when running
     # People can then search for the test by the name, or the labels we create
     set(QUALIFIED_TEST_NAME ${PARAM_CATEGORY}/${PARAM_TEST_NAME}${MT_EXTRA_SUFFIX}${SHORT_EXEC_STYLE})
+    set(FIXTURE_NAME ${QUALIFIED_TEST_NAME}_fixture)
 
     if(PARAM_NEGATIVE)
         set(POS_LABEL "negative")
@@ -69,11 +70,12 @@ function(RUN_SOUFFLE_TEST_HELPER)
     add_test(NAME ${QUALIFIED_TEST_NAME}_setup
              COMMAND "${CMAKE_SOURCE_DIR}/cmake/setup_test_dir.sh" "${DATA_CHECK_DIR}" "${OUTPUT_DIR}" "${PARAM_TEST_NAME}")
     set_tests_properties(${QUALIFIED_TEST_NAME}_setup PROPERTIES
-                         LABELS "${PARAM_CATEGORY};${EXEC_STYLE};${POS_LABEL};integration")
+                         LABELS "${PARAM_CATEGORY};${EXEC_STYLE};${POS_LABEL};integration"
+                         FIXTURES_SETUP ${FIXTURE_NAME}_directory)
 
     # Run souffle
     add_test(NAME ${QUALIFIED_TEST_NAME} COMMAND
-             sh -c "$<TARGET_FILE:souffle> ${EXTRA_FLAGS} \\
+             sh -c "$<TARGET_FILE:souffle> ${EXTRA_FLAGS} -j8 \\
                                             -D . \\
                                             -F '${FACTS_DIR}' \\
                                            '${INPUT_DIR}/${PARAM_TEST_NAME}.dl' \\
@@ -84,14 +86,15 @@ function(RUN_SOUFFLE_TEST_HELPER)
                          # souffle are dropped in there
                          WORKING_DIRECTORY "${OUTPUT_DIR}"
                          LABELS "${PARAM_CATEGORY};${EXEC_STYLE};${POS_LABEL};integration"
-                         DEPENDS ${QUALIFIED_TEST_NAME}_setup)
+                         FIXTURES_SETUP ${FIXTURE_NAME}
+                         FIXTURES_REQUIRED ${FIXTURE_NAME}_directory)
 
     # Compare stdout/stderr
     add_test(NAME ${QUALIFIED_TEST_NAME}_compare_std_outputs
              COMMAND "${CMAKE_SOURCE_DIR}/cmake/check_std_outputs.sh" "${OUTPUT_DIR}" "${PARAM_TEST_NAME}")
     set_tests_properties(${QUALIFIED_TEST_NAME}_compare_std_outputs PROPERTIES
                          LABELS "${PARAM_CATEGORY};${EXEC_STYLE};${POS_LABEL};integration"
-                         DEPENDS ${QUALIFIED_TEST_NAME})
+                         FIXTURES_REQUIRED ${FIXTURE_NAME})
 
     if (PARAM_NEGATIVE)
         # Mark the souffle run as "will fail" for negative tests
@@ -101,7 +104,7 @@ function(RUN_SOUFFLE_TEST_HELPER)
                  COMMAND "${CMAKE_SOURCE_DIR}/cmake/check_test_results.sh" "${OUTPUT_DIR}")
         set_tests_properties(${QUALIFIED_TEST_NAME}_compare_csv PROPERTIES
                             LABELS "${PARAM_CATEGORY};${EXEC_STYLE};${POS_LABEL};integration"
-                            DEPENDS ${QUALIFIED_TEST_NAME})
+                            FIXTURES_REQUIRED ${FIXTURE_NAME})
     endif()
 
 endfunction()
