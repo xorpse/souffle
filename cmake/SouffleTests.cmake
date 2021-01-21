@@ -28,7 +28,7 @@ function(RUN_SOUFFLE_TEST_HELPER)
     cmake_parse_arguments(
         PARAM
         "COMPILED;NEGATIVE;MULTI_TEST" # Options
-        "TEST_NAME;CATEGORY;FACTS_DIR_NAME" #Single valued options
+        "TEST_NAME;CATEGORY;FACTS_DIR_NAME;EXTRA_DATA" #Single valued options
         ""
         ${ARGV}
     )
@@ -40,6 +40,10 @@ function(RUN_SOUFFLE_TEST_HELPER)
     else()
         set(EXEC_STYLE "interpreted")
         set(SHORT_EXEC_STYLE "")
+    endif()
+
+    if (NOT PARAM_FACTS_DIR_NAME)
+        set(PARAM_FACTS_DIR_NAME "facts")
     endif()
 
     set(INPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${PARAM_TEST_NAME}")
@@ -100,8 +104,21 @@ function(RUN_SOUFFLE_TEST_HELPER)
         # Mark the souffle run as "will fail" for negative tests
         set_tests_properties(${QUALIFIED_TEST_NAME} PROPERTIES WILL_FAIL TRUE)
     else()
+        # If there are "extra outputs", handle them
+        if (PARAM_EXTRA_DATA)
+            if (PARAM_EXTRA_DATA STREQUAL "gzip")
+                set(EXTRA_BINARY "${GZIP_BINARY}")
+            elseif (PARAM_EXTRA_DATA STREQUAL "sqlite3")
+                set(EXTRA_BINARY "${SQLITE3_BINARY}")
+            else()
+                message(FATAL_ERROR "Unknown extra data type ${PARAM_EXTRA_DATA}")
+            endif()
+        endif()
+
         add_test(NAME ${QUALIFIED_TEST_NAME}_compare_csv
-                 COMMAND "${CMAKE_SOURCE_DIR}/cmake/check_test_results.sh" "${OUTPUT_DIR}")
+                 COMMAND "${CMAKE_SOURCE_DIR}/cmake/check_test_results.sh" "${OUTPUT_DIR}"
+                                                "${INPUT_DIR}" ${PARAM_EXTRA_DATA} "${EXTRA_BINARY}")
+
         set_tests_properties(${QUALIFIED_TEST_NAME}_compare_csv PROPERTIES
                             LABELS "${PARAM_CATEGORY};${EXEC_STYLE};${POS_LABEL};integration"
                             FIXTURES_REQUIRED ${FIXTURE_NAME})
@@ -116,15 +133,13 @@ endfunction()
 
 function(POSITIVE_SOUFFLE_TEST TEST_NAME CATEGORY)
     run_souffle_test(TEST_NAME ${TEST_NAME}
-                     CATEGORY ${CATEGORY}
-                     FACTS_DIR_NAME "facts")
+                     CATEGORY ${CATEGORY})
 endfunction()
 
 function(NEGATIVE_SOUFFLE_TEST TEST_NAME CATEGORY)
     run_souffle_test(NEGATIVE
                      TEST_NAME ${TEST_NAME}
-                     CATEGORY ${CATEGORY}
-                     FACTS_DIR_NAME "facts")
+                     CATEGORY ${CATEGORY})
 endfunction()
 
 function(POSITIVE_SOUFFLE_MULTI_TEST)

@@ -112,6 +112,8 @@ find_program(MCPP mcpp)
 if (USE_ZLIB)
     find_package(ZLIB REQUIRED)
     add_compile_definitions(USE_LIBZ)
+    # Needed for tests
+    find_program(GZIP_BINARY gzip REQUIRED)
 endif()
 
 # --------------------------------------------------
@@ -120,6 +122,8 @@ endif()
 if (USE_SQLITE)
     find_package(SQLite3 REQUIRED)
     add_compile_definitions(USE_SQLITE)
+    # Needed for tests
+    find_program(SQLITE3_BINARY sqlite3 REQUIRED)
 endif()
 
 # --------------------------------------------------
@@ -175,19 +179,17 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -fwrapv")
 
 # TODO
 # Tests:
-#  - semantic.at
+#  - finish semantic JSON tests
 #  - swig.at
 #  - interface.at
 #  - provenance.at
 # Update README
-# Tests
-# install
-# add list of "outputs" to test targets
+# install target
 # bash completion
 # Doxygen
 # Sanitizers
-# Packaging
 # clang-format, clang-tidy etc
+# Packaging
 # substitute changelog
 
 enable_testing()
