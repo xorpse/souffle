@@ -15,24 +15,13 @@
 #include "ast2ram/seminaive/UnitTranslator.h"
 #include "Global.h"
 #include "LogStatement.h"
-#include "ast/Aggregator.h"
-#include "ast/Argument.h"
-#include "ast/BinaryConstraint.h"
-#include "ast/BranchInit.h"
 #include "ast/Clause.h"
 #include "ast/Directive.h"
-#include "ast/Node.h"
-#include "ast/NumericConstant.h"
-#include "ast/RecordInit.h"
 #include "ast/Relation.h"
 #include "ast/TranslationUnit.h"
-#include "ast/analysis/PolymorphicObjects.h"
-#include "ast/analysis/SumTypeBranches.h"
 #include "ast/analysis/TopologicallySortedSCCGraph.h"
-#include "ast/utility/NodeMapper.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
-#include "ast2ram/seminaive/ClauseTranslator.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ram/Call.h"
@@ -65,7 +54,6 @@
 #include "ram/Swap.h"
 #include "ram/TranslationUnit.h"
 #include "ram/TupleElement.h"
-#include "ram/UnsignedConstant.h"
 #include "ram/utility/Utils.h"
 #include "reports/DebugReport.h"
 #include "reports/ErrorReport.h"
@@ -80,10 +68,8 @@
 #include <cassert>
 #include <chrono>
 #include <cstddef>
-#include <iterator>
 #include <map>
 #include <memory>
-#include <optional>
 #include <set>
 #include <sstream>
 #include <string>
@@ -110,7 +96,7 @@ Own<ram::Statement> UnitTranslator::generateNonRecursiveRelation(const ast::Rela
     std::string relName = getConcreteRelationName(rel.getQualifiedName());
 
     // Iterate over all non-recursive clauses that belong to the relation
-    for (ast::Clause* clause : context->getClauses(rel.getQualifiedName())) {
+    for (const auto* clause : context->getClauses(rel.getQualifiedName())) {
         // Skip recursive rules
         if (context->isRecursiveClause(clause)) {
             continue;
@@ -126,8 +112,6 @@ Own<ram::Statement> UnitTranslator::generateNonRecursiveRelation(const ast::Rela
             const std::string clauseText = stringify(toString(*clause));
             const std::string logTimerStatement =
                     LogStatement::tNonrecursiveRule(relationName, srcLocation, clauseText);
-            const std::string logSizeStatement =
-                    LogStatement::nNonrecursiveRule(relationName, srcLocation, clauseText);
             rule = mk<ram::LogRelationTimer>(std::move(rule), logTimerStatement, relName);
         }
 
@@ -229,13 +213,13 @@ Own<ram::Statement> UnitTranslator::translateRecursiveClauses(
     VecOwn<ram::Statement> result;
 
     // Translate each recursive clasue
-    for (const auto* cl : context->getClauses(rel->getQualifiedName())) {
+    for (const auto* clause : context->getClauses(rel->getQualifiedName())) {
         // Skip non-recursive clauses
-        if (!context->isRecursiveClause(cl)) {
+        if (!context->isRecursiveClause(clause)) {
             continue;
         }
 
-        auto clauseVersions = generateClauseVersions(cl, scc);
+        auto clauseVersions = generateClauseVersions(clause, scc);
         for (auto& clauseVersion : clauseVersions) {
             appendStmt(result, std::move(clauseVersion));
         }
@@ -326,7 +310,6 @@ Own<ram::Statement> UnitTranslator::generateStratumLoopBody(const std::set<const
             const std::string& relationName = toString(rel->getQualifiedName());
             const auto& srcLocation = rel->getSrcLoc();
             const std::string logTimerStatement = LogStatement::tRecursiveRelation(relationName, srcLocation);
-            const std::string logSizeStatement = LogStatement::nRecursiveRelation(relationName, srcLocation);
             relClauses = mk<ram::LogRelationTimer>(mk<ram::Sequence>(std::move(relClauses)),
                     logTimerStatement, getNewRelationName(rel->getQualifiedName()));
         }
@@ -388,6 +371,11 @@ Own<ram::Statement> UnitTranslator::generateRecursiveStratum(
     return mk<ram::Sequence>(std::move(result));
 }
 
+void UnitTranslator::addAuxiliaryArity(
+        const ast::Relation* /* relation */, std::map<std::string, std::string>& directives) const {
+    directives.insert(std::make_pair("auxArity", "0"));
+}
+
 Own<ram::Statement> UnitTranslator::generateLoadRelation(const ast::Relation* relation) const {
     VecOwn<ram::Statement> loadStmts;
     for (const auto* load : context->getLoadDirectives(relation->getQualifiedName())) {
@@ -396,6 +384,7 @@ Own<ram::Statement> UnitTranslator::generateLoadRelation(const ast::Relation* re
         for (const auto& [key, value] : load->getParameters()) {
             directives.insert(std::make_pair(key, unescape(value)));
         }
+        addAuxiliaryArity(relation, directives);
 
         // Create the resultant load statement, with profile information
         std::string ramRelationName = getConcreteRelationName(relation->getQualifiedName());
@@ -419,6 +408,7 @@ Own<ram::Statement> UnitTranslator::generateStoreRelation(const ast::Relation* r
         for (const auto& [key, value] : store->getParameters()) {
             directives.insert(std::make_pair(key, unescape(value)));
         }
+        addAuxiliaryArity(relation, directives);
 
         // Create the resultant store statement, with profile information
         std::string ramRelationName = getConcreteRelationName(relation->getQualifiedName());
@@ -437,7 +427,6 @@ Own<ram::Statement> UnitTranslator::generateStoreRelation(const ast::Relation* r
 Own<ram::Relation> UnitTranslator::createRamRelation(
         const ast::Relation* baseRelation, std::string ramRelationName) const {
     auto arity = baseRelation->getArity();
-    auto auxiliaryArity = context->getAuxiliaryArity(baseRelation);
     auto representation = baseRelation->getRepresentation();
 
     std::vector<std::string> attributeNames;
@@ -448,7 +437,7 @@ Own<ram::Relation> UnitTranslator::createRamRelation(
     }
 
     return mk<ram::Relation>(
-            ramRelationName, arity, auxiliaryArity, attributeNames, attributeTypeQualifiers, representation);
+            ramRelationName, arity, 0, attributeNames, attributeTypeQualifiers, representation);
 }
 
 VecOwn<ram::Relation> UnitTranslator::createRamRelations(const std::vector<size_t>& sccOrdering) const {

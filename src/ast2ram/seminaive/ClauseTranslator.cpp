@@ -29,20 +29,14 @@
 #include "ast/StringConstant.h"
 #include "ast/UnnamedVariable.h"
 #include "ast/analysis/Functor.h"
-#include "ast/analysis/PolymorphicObjects.h"
-#include "ast/transform/ReorderLiterals.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
-#include "ast2ram/ClauseTranslator.h"
-#include "ast2ram/seminaive/ConstraintTranslator.h"
-#include "ast2ram/seminaive/ValueTranslator.h"
 #include "ast2ram/utility/Location.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ast2ram/utility/ValueIndex.h"
 #include "ram/Aggregate.h"
 #include "ram/Break.h"
-#include "ram/Conjunction.h"
 #include "ram/Constraint.h"
 #include "ram/DebugInfo.h"
 #include "ram/EmptinessCheck.h"
@@ -51,13 +45,10 @@
 #include "ram/FloatConstant.h"
 #include "ram/GuardedProject.h"
 #include "ram/LogRelationTimer.h"
-#include "ram/LogSize.h"
-#include "ram/LogTimer.h"
 #include "ram/Negation.h"
 #include "ram/NestedIntrinsicOperator.h"
 #include "ram/Project.h"
 #include "ram/Query.h"
-#include "ram/Relation.h"
 #include "ram/Scan.h"
 #include "ram/Sequence.h"
 #include "ram/SignedConstant.h"
@@ -413,9 +404,7 @@ Own<ram::Operation> ClauseTranslator::addGeneratorLevels(
 
 Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
         Own<ram::Operation> op, const ast::Atom* atom) const {
-    size_t auxiliaryArity = context.getEvaluationArity(atom);
-    assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
-    size_t arity = atom->getArity() - auxiliaryArity;
+    size_t arity = atom->getArity();
     std::string name = getDeltaRelationName(atom->getQualifiedName());
 
     if (arity == 0) {
@@ -429,18 +418,14 @@ Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
     for (size_t i = 0; i < arity; i++) {
         values.push_back(context.translateValue(symbolTable, *valueIndex, args[i]));
     }
-    for (size_t i = 0; i < auxiliaryArity; i++) {
-        values.push_back(mk<ram::UndefValue>());
-    }
 
     return mk<ram::Filter>(
             mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
 }
 
-Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const {
-    size_t auxiliaryArity = context.getEvaluationArity(atom);
-    assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
-    size_t arity = atom->getArity() - auxiliaryArity;
+Own<ram::Operation> ClauseTranslator::addNegatedAtom(
+        Own<ram::Operation> op, const ast::Clause& /* clause */, const ast::Atom* atom) const {
+    size_t arity = atom->getArity();
     std::string name = getConcreteRelationName(atom->getQualifiedName());
 
     if (arity == 0) {
@@ -453,9 +438,6 @@ Own<ram::Operation> ClauseTranslator::addNegatedAtom(Own<ram::Operation> op, con
     auto args = atom->getArguments();
     for (size_t i = 0; i < arity; i++) {
         values.push_back(context.translateValue(symbolTable, *valueIndex, args[i]));
-    }
-    for (size_t i = 0; i < auxiliaryArity; i++) {
-        values.push_back(mk<ram::UndefValue>());
     }
     return mk<ram::Filter>(
             mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
@@ -473,7 +455,7 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
     if (isRecursive()) {
         if (clause.getHead()->getArity() > 0) {
             // also negate the head
-            op = addNegatedAtom(std::move(op), clause.getHead());
+            op = addNegatedAtom(std::move(op), clause, clause.getHead());
         }
 
         // also add in prev stuff
@@ -661,7 +643,7 @@ void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::
 
         // check for variable references
         if (const auto* var = as<ast::Variable>(arg)) {
-            valueIndex->addVarReference(*var, nodeLevel, i);
+            valueIndex->addVarReference(var->getName(), nodeLevel, i);
         }
 
         // check for nested records
@@ -718,7 +700,7 @@ void ClauseTranslator::indexAggregatorBody(const ast::Aggregator& agg) {
     for (size_t i = 0; i < aggAtomArgs.size(); i++) {
         const auto* arg = aggAtomArgs.at(i);
         if (const auto* var = as<ast::Variable>(arg)) {
-            valueIndex->addVarReference(*var, aggLoc.identifier, (int)i);
+            valueIndex->addVarReference(var->getName(), aggLoc.identifier, (int)i);
         }
     }
 }
@@ -736,7 +718,7 @@ void ClauseTranslator::indexAggregators(const ast::Clause& clause) {
         const auto* lhs = as<ast::Variable>(bc.getLHS());
         const auto* rhs = as<ast::Aggregator>(bc.getRHS());
         if (lhs == nullptr || rhs == nullptr) return;
-        valueIndex->addVarReference(*lhs, valueIndex->getGeneratorLoc(*rhs));
+        valueIndex->addVarReference(lhs->getName(), valueIndex->getGeneratorLoc(*rhs));
     });
 }
 
@@ -755,7 +737,7 @@ void ClauseTranslator::indexMultiResultFunctors(const ast::Clause& clause) {
         const auto* rhs = as<ast::IntrinsicFunctor>(bc.getRHS());
         if (lhs == nullptr || rhs == nullptr) return;
         if (!ast::analysis::FunctorAnalysis::isMultiResult(*rhs)) return;
-        valueIndex->addVarReference(*lhs, valueIndex->getGeneratorLoc(*rhs));
+        valueIndex->addVarReference(lhs->getName(), valueIndex->getGeneratorLoc(*rhs));
     });
 }
 

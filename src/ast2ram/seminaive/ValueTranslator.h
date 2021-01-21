@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include "ast/utility/Visitor.h"
 #include "ast2ram/ValueTranslator.h"
 
 namespace souffle {

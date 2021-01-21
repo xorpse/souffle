@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "ast2ram/ConstraintTranslator.h"
+#include "ast2ram/seminaive/ConstraintTranslator.h"
 #include "souffle/utility/ContainerUtil.h"
 
 namespace souffle {
@@ -22,8 +22,7 @@ class SymbolTable;
 }
 
 namespace souffle::ast {
-class Atom;
-class BinaryConstraint;
+class Literal;
 class Negation;
 }  // namespace souffle::ast
 
@@ -36,20 +35,17 @@ class TranslatorContext;
 class ValueIndex;
 }  // namespace souffle::ast2ram
 
-namespace souffle::ast2ram::seminaive {
+namespace souffle::ast2ram::provenance {
 
-class ConstraintTranslator : public ast2ram::ConstraintTranslator {
+class ConstraintTranslator : public ast2ram::seminaive::ConstraintTranslator {
 public:
     ConstraintTranslator(const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index)
-            : ast2ram::ConstraintTranslator(context, symbolTable, index) {}
+            : ast2ram::seminaive::ConstraintTranslator(context, symbolTable, index) {}
 
     Own<ram::Condition> translateConstraint(const ast::Literal* lit) override;
 
     /** -- Visitors -- */
-    Own<ram::Condition> visit_(type_identity<ast::Atom>, const ast::Atom&) override;
-    Own<ram::Condition> visit_(
-            type_identity<ast::BinaryConstraint>, const ast::BinaryConstraint& binRel) override;
     Own<ram::Condition> visit_(type_identity<ast::Negation>, const ast::Negation& neg) override;
 };
 
-}  // namespace souffle::ast2ram::seminaive
+}  // namespace souffle::ast2ram::provenance
