@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
+
 # PACKAGE_VERSION is the full tag with git hash
 execute_process(COMMAND git describe --tags --always
                 OUTPUT_VARIABLE GIT_PACKAGE_VERSION)
@@ -12,6 +13,13 @@ string(REGEX REPLACE "-.*$" "" SOUFFLE_VERSION ${PACKAGE_VERSION})
 project(souffle VERSION ${SOUFFLE_VERSION}
                 DESCRIPTION "A datalog compiler"
                 LANGUAGES CXX)
+
+# Require out-of-source builds
+file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
+if(EXISTS "${LOC_PATH}")
+    message(FATAL_ERROR "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please make a build subdirectory. Feel free to remove CMakeCache.txt and CMakeFiles.")
+endif()
+
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING

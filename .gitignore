@@ -4,7 +4,7 @@ Makefile.in
 aclocal.m4
 lt*.m4
 autom4te.cache
-config.*
+config.status
 configure
 env
 
