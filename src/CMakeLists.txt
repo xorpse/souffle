@@ -165,15 +165,14 @@ target_include_directories(libsouffle
                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
                                   "${CMAKE_CURRENT_SOURCE_DIR}"
                                   "${CMAKE_CURRENT_BINARY_DIR}"
-                           PRIVATE "${CURSES_INCLUDE_DIRS}"
                            )
 
 target_link_libraries(libsouffle
                       PUBLIC OpenMP::OpenMP_CXX
                              $<$<BOOL:${USE_ZLIB}>:ZLIB::ZLIB>
                              $<$<BOOL:${USE_SQLITE}>:SQLite::SQLite3>
+                             $<$<BOOL:${USE_CURSES}>:Curses::NCurses>
                              LibFFI::LibFFI
-                             "${CURSES_LIBRARIES}"
                              "${CMAKE_DL_LIBS}"
                       )
 

@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 
+find_package(Git REQUIRED)
+
 # PACKAGE_VERSION is the full tag with git hash
-execute_process(COMMAND git describe --tags --always
+execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --always
                 OUTPUT_VARIABLE GIT_PACKAGE_VERSION)
 
 string(REGEX REPLACE "\n$" "" PACKAGE_VERSION ${GIT_PACKAGE_VERSION})
@@ -64,6 +66,13 @@ endif()
 if (USE_CURSES)
     find_package(Curses REQUIRED)
     add_compile_definitions(USE_NCURSES)
+    if(NOT TARGET Curses::NCurses)
+        add_library(Curses::NCurses UNKNOWN IMPORTED)
+        set_target_properties(Curses::NCurses PROPERTIES
+            IMPORTED_LOCATION "${CURSES_NCURSES_LIBRARY}"
+            INTERFACE_INCLUDE_DIRECTORIES "${CURSES_INCLUDE_DIR}"
+        )
+    endif()
 endif()
 
 # --------------------------------------------------
