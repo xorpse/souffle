@@ -72,7 +72,8 @@ function(RUN_SOUFFLE_TEST_HELPER)
 
     # Set up the test directory
     add_test(NAME ${QUALIFIED_TEST_NAME}_setup
-             COMMAND "${CMAKE_SOURCE_DIR}/cmake/setup_test_dir.sh" "${DATA_CHECK_DIR}" "${OUTPUT_DIR}" "${PARAM_TEST_NAME}")
+             COMMAND "${CMAKE_SOURCE_DIR}/cmake/setup_test_dir.sh" "${DATA_CHECK_DIR}" "${OUTPUT_DIR}"
+                                                    "${PARAM_TEST_NAME}" "${PARAM_EXTRA_DATA}")
     set_tests_properties(${QUALIFIED_TEST_NAME}_setup PROPERTIES
                          LABELS "${PARAM_CATEGORY};${EXEC_STYLE};${POS_LABEL};integration"
                          FIXTURES_SETUP ${FIXTURE_NAME}_directory)
@@ -95,8 +96,9 @@ function(RUN_SOUFFLE_TEST_HELPER)
 
     # Compare stdout/stderr
     add_test(NAME ${QUALIFIED_TEST_NAME}_compare_std_outputs
-             COMMAND "${CMAKE_SOURCE_DIR}/cmake/check_std_outputs.sh" "${OUTPUT_DIR}" "${PARAM_TEST_NAME}")
+             COMMAND "${CMAKE_SOURCE_DIR}/cmake/check_std_outputs.sh" "${PARAM_TEST_NAME}" "${PARAM_EXTRA_DATA}")
     set_tests_properties(${QUALIFIED_TEST_NAME}_compare_std_outputs PROPERTIES
+                         WORKING_DIRECTORY "${OUTPUT_DIR}"
                          LABELS "${PARAM_CATEGORY};${EXEC_STYLE};${POS_LABEL};integration"
                          FIXTURES_REQUIRED ${FIXTURE_NAME})
 
@@ -110,16 +112,19 @@ function(RUN_SOUFFLE_TEST_HELPER)
                 set(EXTRA_BINARY "${GZIP_BINARY}")
             elseif (PARAM_EXTRA_DATA STREQUAL "sqlite3")
                 set(EXTRA_BINARY "${SQLITE3_BINARY}")
+            elseif (PARAM_EXTRA_DATA STREQUAL "json")
+                set(EXTRA_BINARY "")
             else()
                 message(FATAL_ERROR "Unknown extra data type ${PARAM_EXTRA_DATA}")
             endif()
         endif()
 
         add_test(NAME ${QUALIFIED_TEST_NAME}_compare_csv
-                 COMMAND "${CMAKE_SOURCE_DIR}/cmake/check_test_results.sh" "${OUTPUT_DIR}"
+                 COMMAND "${CMAKE_SOURCE_DIR}/cmake/check_test_results.sh"
                                                 "${INPUT_DIR}" ${PARAM_EXTRA_DATA} "${EXTRA_BINARY}")
 
         set_tests_properties(${QUALIFIED_TEST_NAME}_compare_csv PROPERTIES
+                            WORKING_DIRECTORY "${OUTPUT_DIR}"
                             LABELS "${PARAM_CATEGORY};${EXEC_STYLE};${POS_LABEL};integration"
                             FIXTURES_REQUIRED ${FIXTURE_NAME})
     endif()

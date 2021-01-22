@@ -1,38 +1,50 @@
 set -e
 
-OUTPUT_DIR="$1"
-INPUT_DIR="$2"
-EXTRA_DATA="$3"
-BINARY="$4" #BINARY will be set to gzip or sqlite3
+INPUT_DIR="$1"
+EXTRA_DATA="$2"
+BINARY="$3" #BINARY will be set to gzip or sqlite3
 
-find "${OUTPUT_DIR}" -maxdepth 1 -name "*.csv.expected.sorted" | wc -l > "${OUTPUT_DIR}/num.generated"
+find . -maxdepth 1 -name "*.csv.expected.sorted" | wc -l > num.generated
 
-diff "${OUTPUT_DIR}/num.generated" "${OUTPUT_DIR}/num.expected"
+diff num.generated num.expected
 
-for file in $(cd "${OUTPUT_DIR}" && find . -maxdepth 1 -name "*.csv"); do
-    sort "${OUTPUT_DIR}/${file}" > "${OUTPUT_DIR}/${file}.generated.sorted"
-    diff "${OUTPUT_DIR}/${file}.generated.sorted" "${OUTPUT_DIR}/${file}.expected.sorted"
+for file in $(find . -maxdepth 1 -name "*.csv"); do
+    sort "${file}" > "${file}.generated.sorted"
+    diff "${file}.generated.sorted" "${file}.expected.sorted"
 done
 
-if [ ! -z ${EXTRA_DATA} ]; then
-    for file in $(cd "${OUTPUT_DIR}" && find . -maxdepth 1 -name "*.output"); do
-        if [ ${EXTRA_DATA} = "gzip" ]; then
-            # Strip the .gz.output suffix.  There should be a corresponding .csv file
-            # in the input directory
-            EXTRA_FILE="${OUTPUT_DIR}/${file%%.gz.output}"
-            "${BINARY}" -d -c "${OUTPUT_DIR}/$file" > "${EXTRA_FILE}.generated.unsorted"
-        elif [ ${EXTRA_DATA} = "sqlite3" ]; then
-            # Strip the .sqlite.output suffix.  There should be a corresponding .csv file
-            # in the input directory
-            EXTRA_FILE="${OUTPUT_DIR}/${file%%.sqlite.output}.csv"
-            "${BINARY}" -batch "${OUTPUT_DIR}/$file" -init "${INPUT_DIR}/$file.script" "" > "${EXTRA_FILE}.generated.unsorted"
-        else
-            echo "Unknown processing type"
-            exit 1
-        fi
-
-        echo PROCESSING ${EXTRA_FILE}
-        sort "${EXTRA_FILE}.generated.unsorted" > "${EXTRA_FILE}.generated.sorted"
-        diff "${EXTRA_FILE}.generated.sorted" "${EXTRA_FILE}.expected.sorted"
-    done
+if [[ ${EXTRA_DATA} == "gzip" ]]; then
+    EXTRA_FILE_PAT="*.output"
+elif [[ ${EXTRA_DATA} == "sqlite3" ]]; then
+    EXTRA_FILE_PAT="*.output"
+elif [[ ${EXTRA_DATA} == "json" ]]; then
+    EXTRA_FILE_PAT="*.json"
+elif [[ ${EXTRA_DATA} == "" ]]; then
+    # We're done
+    exit 0
+else
+    echo "Unknown processing type '${EXTRA_DATA}'"
+    exit 1
 fi
+
+EXTRA_FILES=$(find . -maxdepth 1 -name "${EXTRA_FILE_PAT}")
+
+for file in ${EXTRA_FILES}; do
+    if [[ ${EXTRA_DATA} == "gzip" ]]; then
+        # Strip the .gz.output suffix.  There should be a corresponding .csv file
+        # in the input directory
+        EXTRA_FILE=${file%%.gz.output}
+        "${BINARY}" -d -c "$file" > "${EXTRA_FILE}.generated.unsorted"
+    elif [[ ${EXTRA_DATA} = "sqlite3" ]]; then
+        # Strip the .sqlite.output suffix.  There should be a corresponding .csv file
+        # in the input directory
+        EXTRA_FILE=${file%%.sqlite.output}.csv
+        "${BINARY}" -batch "$file" -init "${INPUT_DIR}/$file.script" "" > "${EXTRA_FILE}.generated.unsorted"
+    elif [[ ${EXTRA_DATA} = "json" ]]; then
+        EXTRA_FILE="${file}"
+        sed 's/\(@<:@@:>@,@:>@\)$/\\1/' "${file}" > "${file}.generated.unsorted"
+    fi
+
+    sort "${EXTRA_FILE}.generated.unsorted" > "${EXTRA_FILE}.generated.sorted"
+    diff "${EXTRA_FILE}.generated.sorted" "${EXTRA_FILE}.expected.sorted"
+done
