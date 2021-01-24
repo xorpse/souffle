@@ -57,6 +57,21 @@ Own<Operation> ChoiceConversionTransformer::rewriteScan(const Scan* scan) {
         return mk<Choice>(scan->getRelation(), identifier, souffle::clone(filter->getCondition()),
                 souffle::clone(filter->getOperation()), scan->getProfileText());
     }
+
+    // Check that Relation is not referenced further down in the loop nest
+    bool referencedBelow = false;
+    visitDepthFirst(*scan, [&](const TupleElement& element) {
+        if (element.getTupleId() == scan->getTupleId()) {
+            referencedBelow = true;
+        }
+    });
+
+    // Convert the Scan into a Choice where True
+    if (!referencedBelow) {
+        return mk<Choice>(scan->getRelation(), scan->getTupleId(), mk<True>(),
+                souffle::clone(scan->getOperation()), scan->getProfileText());
+    }
+
     return nullptr;
 }
 
@@ -105,6 +120,37 @@ Own<Operation> ChoiceConversionTransformer::rewriteIndexScan(const IndexScan* in
         return mk<IndexChoice>(rel, identifier, souffle::clone(filter->getCondition()), std::move(newValues),
                 souffle::clone(filter->getOperation()), indexScan->getProfileText());
     }
+
+    // Check that Relation is not referenced further down in the loop nest
+    bool referencedBelow = false;
+    visitDepthFirst(*indexScan, [&](const TupleElement& element) {
+        if (element.getTupleId() == indexScan->getTupleId()) {
+            referencedBelow = true;
+        }
+    });
+
+    // Convert the Scan into a Choice where True
+    if (!referencedBelow) {
+        RamPattern newValues;
+        for (auto& cur : indexScan->getRangePattern().first) {
+            Expression* val = nullptr;
+            if (cur != nullptr) {
+                val = cur->clone();
+            }
+            newValues.first.emplace_back(val);
+        }
+        for (auto& cur : indexScan->getRangePattern().second) {
+            Expression* val = nullptr;
+            if (cur != nullptr) {
+                val = cur->clone();
+            }
+            newValues.second.emplace_back(val);
+        }
+
+        return mk<IndexChoice>(indexScan->getRelation(), indexScan->getTupleId(), mk<True>(),
+                std::move(newValues), souffle::clone(indexScan->getOperation()), indexScan->getProfileText());
+    }
+
     return nullptr;
 }
 
