@@ -50,7 +50,6 @@ Own<Operation> ChoiceConversionTransformer::rewriteScan(const Scan* scan) {
 
     // Convert the Scan/If pair into a Choice
     if (transformTuple) {
-        VecOwn<Expression> newValues;
         const auto* filter = as<Filter>(scan->getOperation());
         const int identifier = scan->getTupleId();
 
@@ -97,26 +96,11 @@ Own<Operation> ChoiceConversionTransformer::rewriteIndexScan(const IndexScan* in
 
     // Convert the IndexScan/If pair into an IndexChoice
     if (transformTuple) {
-        RamPattern newValues;
+        RamPattern newValues = make_pair(souffle::clone(indexScan->getRangePattern().first),
+                souffle::clone(indexScan->getRangePattern().second));
         const auto* filter = as<Filter>(indexScan->getOperation());
         const int identifier = indexScan->getTupleId();
         const std::string& rel = indexScan->getRelation();
-
-        for (auto& cur : indexScan->getRangePattern().first) {
-            Expression* val = nullptr;
-            if (cur != nullptr) {
-                val = cur->clone();
-            }
-            newValues.first.emplace_back(val);
-        }
-        for (auto& cur : indexScan->getRangePattern().second) {
-            Expression* val = nullptr;
-            if (cur != nullptr) {
-                val = cur->clone();
-            }
-            newValues.second.emplace_back(val);
-        }
-
         return mk<IndexChoice>(rel, identifier, souffle::clone(filter->getCondition()), std::move(newValues),
                 souffle::clone(filter->getOperation()), indexScan->getProfileText());
     }
@@ -131,22 +115,8 @@ Own<Operation> ChoiceConversionTransformer::rewriteIndexScan(const IndexScan* in
 
     // Convert the Scan into a Choice where True
     if (!referencedBelow) {
-        RamPattern newValues;
-        for (auto& cur : indexScan->getRangePattern().first) {
-            Expression* val = nullptr;
-            if (cur != nullptr) {
-                val = cur->clone();
-            }
-            newValues.first.emplace_back(val);
-        }
-        for (auto& cur : indexScan->getRangePattern().second) {
-            Expression* val = nullptr;
-            if (cur != nullptr) {
-                val = cur->clone();
-            }
-            newValues.second.emplace_back(val);
-        }
-
+        RamPattern newValues = make_pair(souffle::clone(indexScan->getRangePattern().first),
+                souffle::clone(indexScan->getRangePattern().second));
         return mk<IndexChoice>(indexScan->getRelation(), indexScan->getTupleId(), mk<True>(),
                 std::move(newValues), souffle::clone(indexScan->getOperation()), indexScan->getProfileText());
     }
