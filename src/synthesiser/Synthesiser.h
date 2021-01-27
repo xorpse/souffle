@@ -60,10 +60,10 @@ private:
     std::map<std::string, const ram::Relation*> relationMap;
 
     /** Symbol map */
-    std::map<std::string, unsigned> symbolMap;
+    mutable std::map<std::string, unsigned> symbolMap;
 
     /** Symbol map */
-    std::vector<std::string> symbolIndex;
+    mutable std::vector<std::string> symbolIndex;
 
 protected:
     /** Get record table */
@@ -102,13 +102,13 @@ protected:
     }
 
     /** Lookup symbol index */
-    size_t lookupSymbolIdx(const std::string& symbol) {
+    std::size_t convertSymbol2Idx(const std::string& symbol) const {
         auto it = symbolMap.find(symbol);
         if (it != symbolMap.end()) {
             return it->second;
         } else {
             symbolIndex.push_back(symbol);
-            size_t idx = symbolMap.size();
+            std::size_t idx = symbolMap.size();
             symbolMap[symbol] = idx;
             return idx;
         }

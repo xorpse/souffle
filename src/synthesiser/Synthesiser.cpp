@@ -1925,7 +1925,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         void visit_(
                 type_identity<StringConstant>, const StringConstant& constant, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
-            out << "RamSigned(" << synthesiser.lookupSymbolIdx(constant.getConstant()) << ")";
+            out << "RamSigned(" << synthesiser.convertSymbol2Idx(constant.getConstant()) << ")";
             PRINT_END_COMMENT(out);
         }
 
@@ -2434,9 +2434,9 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     os << "// -- initialize symbol table --\n";
 
     // issue symbol table with string constants
-    visitDepthFirst(prog, [&](const StringConstant& sc) { lookupSymbolIdx(sc.getConstant()); });
+    visitDepthFirst(prog, [&](const StringConstant& sc) { convertSymbol2Idx(sc.getConstant()); });
     os << "SymbolTable symTable";
-    if (symbolMap.size() > 0) {
+    if (!symbolMap.empty()) {
         os << "{\n";
         for (const auto& x : symbolIndex) {
             os << "\tR\"_(" << x << ")_\",\n";

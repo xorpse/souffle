@@ -413,14 +413,13 @@ class NumericConstant : public Node {
  */
 class StringConstant : public Node {
 public:
-    StringConstant(enum NodeType ty, const ram::Node* sdw, size_t constant)
-            : Node(ty, sdw), constant(constant) {}
-    size_t getConstant() const {
+    StringConstant(NodeType ty, const ram::Node* sdw, size_t constant) : Node(ty, sdw), constant(constant) {}
+    std::size_t getConstant() const {
         return constant;
     }
 
 private:
-    size_t constant;
+    std::size_t constant;
 };
 
 /**

@@ -37,8 +37,8 @@
 #include "ram/Scan.h"
 #include "ram/Sequence.h"
 #include "ram/SignedConstant.h"
-#include "ram/StringConstant.h"
 #include "ram/Statement.h"
+#include "ram/StringConstant.h"
 #include "ram/SubroutineArgument.h"
 #include "ram/SubroutineReturn.h"
 #include "ram/TupleElement.h"
@@ -260,8 +260,7 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
             constraintDescription << toBinaryConstraintSymbol(binaryConstraint->getBaseOperator());
             constraintDescription << "," << getArgInfo(binaryConstraint->getLHS());
             constraintDescription << "," << getArgInfo(binaryConstraint->getRHS());
-            factArguments.push_back(
-                    mk<ram::StringConstant>(constraintDescription.str()));
+            factArguments.push_back(mk<ram::StringConstant>(constraintDescription.str()));
         }
 
         // (5) The actual clause
