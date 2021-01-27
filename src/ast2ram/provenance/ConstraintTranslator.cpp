@@ -12,52 +12,40 @@
  *
  ***********************************************************************/
 
-#include "ast2ram/seminaive/ConstraintTranslator.h"
-#include "ast/BinaryConstraint.h"
+#include "ast2ram/provenance/ConstraintTranslator.h"
+#include "ast/Atom.h"
 #include "ast/TranslationUnit.h"
 #include "ast2ram/ValueTranslator.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ast2ram/utility/ValueIndex.h"
-#include "ram/Constraint.h"
-#include "ram/EmptinessCheck.h"
 #include "ram/ExistenceCheck.h"
 #include "ram/Negation.h"
+#include "ram/UndefValue.h"
 
-namespace souffle::ast2ram::seminaive {
+namespace souffle::ast2ram::provenance {
 
 Own<ram::Condition> ConstraintTranslator::translateConstraint(const ast::Literal* lit) {
     assert(lit != nullptr && "literal should be defined");
     return ConstraintTranslator(context, symbolTable, index)(*lit);
 }
 
-Own<ram::Condition> ConstraintTranslator::visit_(type_identity<ast::Atom>, const ast::Atom&) {
-    return nullptr;  // covered already within the scan/lookup generation step
-}
-
-Own<ram::Condition> ConstraintTranslator::visit_(
-        type_identity<ast::BinaryConstraint>, const ast::BinaryConstraint& binRel) {
-    auto valLHS = context.translateValue(symbolTable, index, binRel.getLHS());
-    auto valRHS = context.translateValue(symbolTable, index, binRel.getRHS());
-    return mk<ram::Constraint>(
-            context.getOverloadedBinaryConstraintOperator(&binRel), std::move(valLHS), std::move(valRHS));
-}
-
 Own<ram::Condition> ConstraintTranslator::visit_(type_identity<ast::Negation>, const ast::Negation& neg) {
+    // construct the atom and create a negation
     const auto* atom = neg.getAtom();
-    size_t arity = atom->getArity();
-
-    if (arity == 0) {
-        // for a nullary, negation is a simple emptiness check
-        return mk<ram::EmptinessCheck>(getConcreteRelationName(atom->getQualifiedName()));
-    }
-
-    // else, we construct the atom and create a negation
     VecOwn<ram::Expression> values;
+
+    // actual arguments
     for (const auto* arg : atom->getArguments()) {
         values.push_back(context.translateValue(symbolTable, index, arg));
     }
+
+    // add rule + level number
+    values.push_back(mk<ram::UndefValue>());
+    values.push_back(mk<ram::UndefValue>());
+
     return mk<ram::Negation>(
             mk<ram::ExistenceCheck>(getConcreteRelationName(atom->getQualifiedName()), std::move(values)));
 }
-}  // namespace souffle::ast2ram::seminaive
+
+}  // namespace souffle::ast2ram::provenance

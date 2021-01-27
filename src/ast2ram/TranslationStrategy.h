@@ -33,6 +33,9 @@ class ValueTranslator;
 
 class TranslationStrategy {
 public:
+    /** Translation strategy name */
+    virtual std::string getName() const = 0;
+
     /** AST translation unit -> RAM translation unit translator */
     virtual UnitTranslator* createUnitTranslator() const = 0;
 

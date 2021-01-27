@@ -106,8 +106,6 @@ souffle_sources = \
         ast/analysis/Aggregate.cpp                         \
         ast/analysis/Aggregate.h                           \
         ast/analysis/Analysis.h                            \
-        ast/analysis/AuxArity.cpp                          \
-        ast/analysis/AuxArity.h                            \
         ast/analysis/ClauseNormalisation.h                 \
         ast/analysis/ClauseNormalisation.cpp               \
         ast/analysis/ComponentLookup.cpp                   \
@@ -159,6 +157,8 @@ souffle_sources = \
         ast/transform/DebugReporter.h                      \
         ast/transform/ExecutionPlanChecker.cpp             \
         ast/transform/ExecutionPlanChecker.h               \
+        ast/transform/ExpandEqrels.cpp                     \
+        ast/transform/ExpandEqrels.h                       \
         ast/transform/Fixpoint.h                           \
         ast/transform/FoldAnonymousRecords.cpp             \
         ast/transform/FoldAnonymousRecords.h               \
@@ -190,8 +190,6 @@ souffle_sources = \
         ast/transform/Pipeline.h                           \
         ast/transform/PragmaChecker.cpp                    \
         ast/transform/PragmaChecker.h                      \
-        ast/transform/Provenance.cpp                       \
-        ast/transform/Provenance.h                         \
         ast/transform/ReduceExistentials.cpp               \
         ast/transform/ReduceExistentials.h                 \
         ast/transform/RemoveBooleanConstraints.cpp         \
@@ -239,6 +237,8 @@ souffle_sources = \
         ast2ram/ValueTranslator.h                          \
         ast2ram/provenance/ClauseTranslator.cpp            \
         ast2ram/provenance/ClauseTranslator.h              \
+        ast2ram/provenance/ConstraintTranslator.cpp        \
+        ast2ram/provenance/ConstraintTranslator.h          \
         ast2ram/provenance/SubproofGenerator.cpp           \
         ast2ram/provenance/SubproofGenerator.h             \
         ast2ram/provenance/TranslationStrategy.cpp         \

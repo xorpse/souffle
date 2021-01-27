@@ -18,6 +18,7 @@
 
 #include "souffle/RamTypes.h"
 
+#include "souffle/utility/StringUtil.h"
 #include "souffle/utility/json11.h"
 #include <cassert>
 #include <cstddef>
@@ -59,6 +60,9 @@ protected:
         std::string parseErrors;
         types = Json::parse(rwOperation.at("types"), parseErrors);
         assert(parseErrors.size() == 0 && "Internal JSON parsing failed.");
+
+        auxiliaryArity = RamSignedFromString(rwOperation.at("auxArity"));
+
         setupFromJson();
     }
 
@@ -74,16 +78,19 @@ private:
     void setupFromJson() {
         auto&& relInfo = types["relation"];
         arity = static_cast<size_t>(relInfo["arity"].long_value());
-        auxiliaryArity = static_cast<size_t>(relInfo["auxArity"].long_value());
 
         assert(relInfo["types"].is_array());
         auto&& relTypes = relInfo["types"].array_items();
-        assert(relTypes.size() == (arity + auxiliaryArity));
+        assert(relTypes.size() == arity);
 
-        for (size_t i = 0; i < arity + auxiliaryArity; ++i) {
-            auto&& type = relTypes[i].string_value();
-            assert(!type.empty() && "malformed types tag");
-            typeAttributes.push_back(type);
+        for (const auto& jsonType : relTypes) {
+            const auto& typeString = jsonType.string_value();
+            assert(!typeString.empty() && "malformed types tag");
+            typeAttributes.push_back(typeString);
+        }
+
+        for (size_t i = 0; i < auxiliaryArity; i++) {
+            typeAttributes.push_back("i:number");
         }
     }
 };

@@ -43,7 +43,6 @@ namespace souffle::ram {
 class Condition;
 class Expression;
 class Operation;
-class Relation;
 class Statement;
 }  // namespace souffle::ram
 
@@ -74,7 +73,8 @@ protected:
 
     std::string getClauseAtomName(const ast::Clause& clause, const ast::Atom* atom) const;
 
-    virtual Own<ram::Operation> addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const;
+    virtual Own<ram::Operation> addNegatedAtom(
+            Own<ram::Operation> op, const ast::Clause& clause, const ast::Atom* atom) const;
     virtual Own<ram::Operation> addNegatedDeltaAtom(Own<ram::Operation> op, const ast::Atom* atom) const;
 
     Own<ValueIndex> valueIndex;
@@ -90,7 +90,7 @@ protected:
 
     /** Indexing */
     void indexClause(const ast::Clause& clause);
-    void indexAtoms(const ast::Clause& clause);
+    virtual void indexAtoms(const ast::Clause& clause);
     void indexAggregators(const ast::Clause& clause);
     void indexMultiResultFunctors(const ast::Clause& clause);
     void indexNodeArguments(int nodeLevel, const std::vector<ast::Argument*>& nodeArgs);
@@ -106,7 +106,7 @@ protected:
     Own<ram::Operation> addEntryPoint(const ast::Clause& clause, Own<ram::Operation> op) const;
 
     /** Levelling methods */
-    Own<ram::Operation> addAtomScan(
+    virtual Own<ram::Operation> addAtomScan(
             Own<ram::Operation> op, const ast::Atom* atom, const ast::Clause& clause, int curLevel) const;
     Own<ram::Operation> addRecordUnpack(
             Own<ram::Operation> op, const ast::RecordInit* rec, int curLevel) const;
@@ -129,13 +129,13 @@ protected:
     Own<ram::Operation> instantiateMultiResultFunctor(
             Own<ram::Operation> op, const ast::IntrinsicFunctor* inf, int curLevel) const;
 
-private:
-    std::vector<const ast::Argument*> generators;
-    std::vector<const ast::Node*> operators;
-
     /** Operation levelling */
     int addGeneratorLevel(const ast::Argument* arg);
     int addOperatorLevel(const ast::Node* node);
+
+private:
+    std::vector<const ast::Argument*> generators;
+    std::vector<const ast::Node*> operators;
 };
 
 }  // namespace souffle::ast2ram::seminaive

@@ -13,24 +13,23 @@
  ***********************************************************************/
 
 #include "ast2ram/provenance/SubproofGenerator.h"
-#include "Global.h"
 #include "ast/Atom.h"
 #include "ast/BinaryConstraint.h"
+#include "ast/BranchInit.h"
 #include "ast/Clause.h"
+#include "ast/Functor.h"
+#include "ast/Negation.h"
+#include "ast/RecordInit.h"
+#include "ast/Variable.h"
 #include "ast/utility/Utils.h"
-#include "ast2ram/ConstraintTranslator.h"
-#include "ast2ram/ValueTranslator.h"
-#include "ast2ram/seminaive/ClauseTranslator.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ast2ram/utility/ValueIndex.h"
-#include "ram/Condition.h"
 #include "ram/Constraint.h"
 #include "ram/Filter.h"
 #include "ram/Negation.h"
 #include "ram/ProvenanceExistenceCheck.h"
 #include "ram/Query.h"
-#include "ram/Relation.h"
 #include "ram/SignedConstant.h"
 #include "ram/Statement.h"
 #include "ram/SubroutineArgument.h"
@@ -40,28 +39,24 @@
 namespace souffle::ast2ram::provenance {
 
 SubproofGenerator::SubproofGenerator(const TranslatorContext& context, SymbolTable& symbolTable)
-        : ast2ram::seminaive::ClauseTranslator(context, symbolTable) {}
+        : ast2ram::provenance::ClauseTranslator(context, symbolTable) {}
 
 SubproofGenerator::~SubproofGenerator() = default;
 
-Own<ram::Operation> SubproofGenerator::addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const {
-    size_t auxiliaryArity = context.getEvaluationArity(atom);
-    assert(auxiliaryArity <= atom->getArity() && "auxiliary arity out of bounds");
-    size_t arity = atom->getArity() - auxiliaryArity;
-
+Own<ram::Operation> SubproofGenerator::addNegatedAtom(
+        Own<ram::Operation> op, const ast::Clause& /* clause */, const ast::Atom* atom) const {
+    // Add direct values
     VecOwn<ram::Expression> values;
-
-    auto args = atom->getArguments();
-    for (size_t i = 0; i < arity; i++) {
-        values.push_back(context.translateValue(symbolTable, *valueIndex, args[i]));
+    for (const auto* arg : atom->getArguments()) {
+        values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
     }
 
-    // undefined value for rule number
+    // Undefined value for rule number
     values.push_back(mk<ram::UndefValue>());
-    // add the height annotation for provenanceNotExists
-    for (size_t height = 1; height < auxiliaryArity; height++) {
-        values.push_back(context.translateValue(symbolTable, *valueIndex, args[arity + height]));
-    }
+
+    // Height annotation for provenanceNotExists
+    // TODO (azreika): should height explicitly be here?
+    values.push_back(mk<ram::UndefValue>());
 
     return mk<ram::Filter>(mk<ram::Negation>(mk<ram::ProvenanceExistenceCheck>(
                                    getConcreteRelationName(atom->getQualifiedName()), std::move(values))),
@@ -114,9 +109,8 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
     // index of level argument in argument list
     const auto* head = clause.getHead();
     const auto& headArgs = head->getArguments();
-    size_t auxiliaryArity = context.getAuxiliaryArity(clause.getHead());
-    size_t levelIndex = clause.getHead()->getArguments().size() - auxiliaryArity;
-    for (size_t i = 0; i < head->getArity() - auxiliaryArity; i++) {
+    size_t levelIndex = clause.getHead()->getArguments().size();
+    for (size_t i = 0; i < head->getArity(); i++) {
         auto arg = headArgs.at(i);
         if (const auto* var = as<ast::Variable>(arg)) {
             // FIXME: float equiv (`FEQ`)
@@ -146,10 +140,13 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
     // add level constraints, i.e., that each body literal has height less than that of the head atom
     for (const auto* lit : clause.getBodyLiterals()) {
         if (const auto* atom = as<ast::Atom>(lit)) {
-            // arity - 1 is the level number in body atoms
-            auto arity = atom->getArity();
-            auto atomArgs = atom->getArguments();
-            auto valLHS = context.translateValue(symbolTable, *valueIndex, atomArgs.at(arity - 1));
+            size_t levelNumber = 0;
+            while (getAtomOrdering(clause).at(levelNumber) != atom) {
+                levelNumber++;
+                assert(levelNumber < getAtomOrdering(clause).size());
+            }
+            auto varRepr = mk<ast::Variable>("@level_num_" + std::to_string(levelNumber));
+            auto valLHS = context.translateValue(symbolTable, *valueIndex, varRepr.get());
 
             // add the constraint
             auto constraint = mk<ram::Constraint>(
@@ -161,7 +158,7 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
     if (isRecursive()) {
         if (clause.getHead()->getArity() > 0) {
             // also negate the head
-            op = addNegatedAtom(std::move(op), clause.getHead());
+            op = addNegatedAtom(std::move(op), clause, clause.getHead());
         }
 
         // also add in prev stuff
@@ -177,15 +174,30 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
     VecOwn<ram::Expression> values;
 
     // get all values in the body
-    for (ast::Literal* lit : clause.getBodyLiterals()) {
-        if (auto atom = as<ast::Atom>(lit)) {
-            for (ast::Argument* arg : atom->getArguments()) {
+    for (const auto* lit : clause.getBodyLiterals()) {
+        if (const auto* atom = as<ast::Atom>(lit)) {
+            for (const auto* arg : atom->getArguments()) {
                 values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
             }
-        } else if (auto neg = as<ast::Negation>(lit)) {
+            // TODO (azreika): put helper methods for these variables
+            size_t levelNumber = 0;
+            while (getAtomOrdering(clause).at(levelNumber) != atom) {
+                levelNumber++;
+                assert(levelNumber < getAtomOrdering(clause).size());
+            }
+            auto levelVarRepr = mk<ast::Variable>("@level_num_" + std::to_string(levelNumber));
+            auto ruleNumRepr = mk<ast::Variable>("@rule_num_" + std::to_string(levelNumber));
+            auto level = context.translateValue(symbolTable, *valueIndex, levelVarRepr.get());
+            auto ruleNum = context.translateValue(symbolTable, *valueIndex, ruleNumRepr.get());
+
+            values.push_back(std::move(ruleNum));
+            values.push_back(std::move(level));
+        } else if (const auto* neg = as<ast::Negation>(lit)) {
             for (ast::Argument* arg : neg->getAtom()->getArguments()) {
                 values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
             }
+            values.push_back(mk<ram::UndefValue>());
+            values.push_back(mk<ram::UndefValue>());
         }
     }
 
@@ -197,21 +209,18 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
     // final provenance negation
     if (isRecursive()) {
         const auto* head = clause.getHead();
-        size_t auxiliaryArity = context.getEvaluationArity(head);
-        for (size_t i = 0; i < head->getArguments().size() - auxiliaryArity; i++) {
+        for (size_t i = 0; i < head->getArguments().size(); i++) {
             auto arg = head->getArguments().at(i);
             values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
         }
-        for (size_t i = 0; i < auxiliaryArity; ++i) {
-            values.push_back(mk<ram::SignedConstant>(-1));
-        }
+        values.push_back(mk<ram::SignedConstant>(-1));
+        values.push_back(mk<ram::SignedConstant>(-1));
     }
 
     const auto* head = clause.getHead();
     const auto& headArgs = head->getArguments();
-    size_t auxiliaryArity = context.getAuxiliaryArity(clause.getHead());
-    size_t levelIndex = clause.getHead()->getArguments().size() - auxiliaryArity;
-    for (size_t i = 0; i < head->getArity() - auxiliaryArity; i++) {
+    size_t levelIndex = clause.getHead()->getArguments().size();
+    for (size_t i = 0; i < head->getArity(); i++) {
         auto arg = headArgs.at(i);
         if (const auto* var = as<ast::Variable>(arg)) {
             values.push_back(context.translateValue(symbolTable, *valueIndex, var));
@@ -230,9 +239,17 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
 
     for (const auto* lit : clause.getBodyLiterals()) {
         if (const auto* atom = as<ast::Atom>(lit)) {
-            auto arity = atom->getArity();
-            auto atomArgs = atom->getArguments();
-            values.push_back(context.translateValue(symbolTable, *valueIndex, atomArgs.at(arity - 1)));
+            size_t levelNumber = 0;
+            while (getAtomOrdering(clause).at(levelNumber) != atom) {
+                levelNumber++;
+                assert(levelNumber < getAtomOrdering(clause).size());
+            }
+            auto levelVarRepr = mk<ast::Variable>("@level_num_" + std::to_string(levelNumber));
+            auto ruleNumRepr = mk<ast::Variable>("@rule_num_" + std::to_string(levelNumber));
+            auto level = context.translateValue(symbolTable, *valueIndex, levelVarRepr.get());
+            auto ruleNum = context.translateValue(symbolTable, *valueIndex, ruleNumRepr.get());
+
+            values.push_back(std::move(level));
             values.push_back(mk<ram::SubroutineArgument>(levelIndex));
         }
     }
