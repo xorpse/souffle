@@ -19,6 +19,7 @@
 #include "ram/Expression.h"
 #include "ram/Node.h"
 #include "souffle/RamTypes.h"
+#include "souffle/utility/MiscUtil.h"
 
 namespace souffle::ram {
 
@@ -38,7 +39,7 @@ protected:
     explicit NumericConstant(RamDomain constant) : constant(constant) {}
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const NumericConstant&>(node);
+        const auto& other = asAssert<NumericConstant>(node);
         return constant == other.constant;
     }
 

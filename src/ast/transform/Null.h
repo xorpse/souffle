@@ -49,7 +49,7 @@ public:
         return "NullTransformer";
     }
 
-    NullTransformer* clone() const override {
+    NullTransformer* cloneImpl() const override {
         return new NullTransformer();
     }
 };

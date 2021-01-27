@@ -343,7 +343,7 @@ bool SemanticCheckerImpl::isDependent(const Clause& agg1, const Clause& agg2) {
 void SemanticCheckerImpl::checkAggregator(const Aggregator& aggregator) {
     auto& report = tu.getErrorReport();
     const Program& program = tu.getProgram();
-    Clause dummyClauseAggregator;
+    Clause dummyClauseAggregator("dummy");
 
     visitDepthFirst(program, [&](const Literal& parentLiteral) {
         visitDepthFirst(parentLiteral, [&](const Aggregator& candidateAggregate) {
@@ -352,15 +352,15 @@ void SemanticCheckerImpl::checkAggregator(const Aggregator& aggregator) {
             }
             // Get the literal containing the aggregator and put it into a dummy clause
             // so we can get information about groundedness
-            dummyClauseAggregator.addToBody(souffle::clone(&parentLiteral));
+            dummyClauseAggregator.addToBody(souffle::clone(parentLiteral));
         });
     });
 
     visitDepthFirst(program, [&](const Literal& parentLiteral) {
         visitDepthFirst(parentLiteral, [&](const Aggregator& /* otherAggregate */) {
             // Create the other aggregate's dummy clause
-            Clause dummyClauseOther;
-            dummyClauseOther.addToBody(souffle::clone(&parentLiteral));
+            Clause dummyClauseOther("dummy");
+            dummyClauseOther.addToBody(souffle::clone(parentLiteral));
             // Check dependency between the aggregator and this one
             if (isDependent(dummyClauseAggregator, dummyClauseOther) &&
                     isDependent(dummyClauseOther, dummyClauseAggregator)) {
@@ -375,14 +375,14 @@ void SemanticCheckerImpl::checkAggregator(const Aggregator& aggregator) {
 }
 
 void SemanticCheckerImpl::checkArgument(const Argument& arg) {
-    if (const auto* agg = dynamic_cast<const Aggregator*>(&arg)) {
+    if (const auto* agg = as<Aggregator>(arg)) {
         checkAggregator(*agg);
-    } else if (const auto* func = dynamic_cast<const Functor*>(&arg)) {
+    } else if (const auto* func = as<Functor>(arg)) {
         for (auto arg : func->getArguments()) {
             checkArgument(*arg);
         }
 
-        if (auto const* udFunc = dynamic_cast<UserDefinedFunctor const*>(func)) {
+        if (auto const* udFunc = as<UserDefinedFunctor const>(func)) {
             auto const& name = udFunc->getName();
             auto const* udfd = getFunctorDeclaration(program, name);
 
@@ -651,15 +651,13 @@ static const std::vector<SrcLocation> usesInvalidWitness(
         return invalidWitnessLocations;  // ie empty result
     }
 
-    auto aggregateSubclause = mk<Clause>();
-    aggregateSubclause->setHead(mk<Atom>("*"));
-    for (const Literal* lit : aggregate.getBodyLiterals()) {
-        aggregateSubclause->addToBody(souffle::clone(lit));
-    }
+    auto aggregateSubclause = mk<Clause>("*");
+    aggregateSubclause->setBodyLiterals(souffle::clone(aggregate.getBodyLiterals()));
+
     struct InnerAggregateMasker : public NodeMapper {
         mutable int numReplaced = 0;
         Own<Node> operator()(Own<Node> node) const override {
-            if (isA<Aggregator>(node.get())) {
+            if (isA<Aggregator>(node)) {
                 std::string newVariableName = "+aggr_var_" + toString(numReplaced++);
                 return mk<Variable>(newVariableName);
             }
@@ -953,17 +951,17 @@ void SemanticCheckerImpl::checkInlining() {
     // Returns the pair (isValid, lastSrcLoc) where:
     //  - isValid is true if and only if the node contains an invalid underscore, and
     //  - lastSrcLoc is the source location of the last visited node
-    std::function<std::pair<bool, SrcLocation>(const Node*)> checkInvalidUnderscore = [&](const Node* node) {
+    std::function<std::pair<bool, SrcLocation>(const Node&)> checkInvalidUnderscore = [&](const Node& node) {
         if (isA<UnnamedVariable>(node)) {
             // Found an invalid underscore
-            return std::make_pair(true, node->getSrcLoc());
+            return std::make_pair(true, node.getSrcLoc());
         } else if (isA<Aggregator>(node)) {
             // Don't care about underscores within aggregators
-            return std::make_pair(false, node->getSrcLoc());
+            return std::make_pair(false, node.getSrcLoc());
         }
 
         // Check if any children nodes use invalid underscores
-        for (const Node* child : node->getChildNodes()) {
+        for (const Node& child : node.getChildNodes()) {
             std::pair<bool, SrcLocation> childStatus = checkInvalidUnderscore(child);
             if (childStatus.first) {
                 // Found an invalid underscore
@@ -971,7 +969,7 @@ void SemanticCheckerImpl::checkInlining() {
             }
         }
 
-        return std::make_pair(false, node->getSrcLoc());
+        return std::make_pair(false, node.getSrcLoc());
     };
 
     // Perform the check
@@ -979,7 +977,7 @@ void SemanticCheckerImpl::checkInlining() {
         const Atom* associatedAtom = negation.getAtom();
         const Relation* associatedRelation = getRelation(program, associatedAtom->getQualifiedName());
         if (associatedRelation != nullptr && isInline(associatedRelation)) {
-            std::pair<bool, SrcLocation> atomStatus = checkInvalidUnderscore(associatedAtom);
+            std::pair<bool, SrcLocation> atomStatus = checkInvalidUnderscore(*associatedAtom);
             if (atomStatus.first) {
                 report.addError(
                         "Cannot inline negated atom containing an unnamed variable unless the variable is "

@@ -48,7 +48,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const StringConstant&>(node);
+        const auto& other = asAssert<StringConstant>(node);
         return constant == other.constant;
     }
 

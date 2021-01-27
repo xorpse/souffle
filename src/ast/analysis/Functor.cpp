@@ -19,6 +19,7 @@
 #include "ast/FunctorDeclaration.h"
 #include "ast/IntrinsicFunctor.h"
 #include "ast/TranslationUnit.h"
+#include "ast/analysis/Type.h"
 #include "ast/utility/Utils.h"
 
 namespace souffle::ast::analysis {

@@ -154,27 +154,6 @@ std::set<const Relation*> getBodyRelations(const Clause* clause, const Program* 
     return bodyRelations;
 }
 
-size_t getClauseNum(const Program* program, const Clause* clause) {
-    // TODO (azreika): This number might change between the provenance transformer and the AST->RAM
-    // translation. Might need a better way to assign IDs to clauses... (see PR #1288).
-    const Relation* rel = getRelation(*program, clause->getHead()->getQualifiedName());
-    assert(rel != nullptr && "clause relation does not exist");
-
-    size_t clauseNum = 1;
-    for (const auto* cur : getClauses(*program, *rel)) {
-        bool isFact = cur->getBodyLiterals().empty();
-        if (cur == clause) {
-            return isFact ? 0 : clauseNum;
-        }
-
-        if (!isFact) {
-            clauseNum++;
-        }
-    }
-
-    fatal("clause does not exist");
-}
-
 bool hasClauseWithNegatedRelation(const Relation* relation, const Relation* negRelation,
         const Program* program, const Literal*& foundLiteral) {
     for (const Clause* cl : getClauses(*program, *relation)) {
@@ -258,12 +237,10 @@ bool isDeltaRelation(const QualifiedName& name) {
     return isPrefix("@delta_", qualifiers[0]);
 }
 
-Clause* cloneHead(const Clause* clause) {
-    auto* clone = new Clause();
-    clone->setSrcLoc(clause->getSrcLoc());
-    clone->setHead(souffle::clone(clause->getHead()));
-    if (clause->getExecutionPlan() != nullptr) {
-        clone->setExecutionPlan(souffle::clone(clause->getExecutionPlan()));
+Own<Clause> cloneHead(const Clause& clause) {
+    auto clone = mk<Clause>(souffle::clone(clause.getHead()), clause.getSrcLoc());
+    if (clause.getExecutionPlan() != nullptr) {
+        clone->setExecutionPlan(souffle::clone(clause.getExecutionPlan()));
     }
     return clone;
 }
@@ -304,7 +281,7 @@ Clause* reorderAtoms(const Clause* clause, const std::vector<unsigned int>& newO
     assert(std::is_permutation(nopOrder.begin(), nopOrder.end(), newOrder.begin()));
 
     // Create a new clause with the given atom order, leaving the rest unchanged
-    Clause* newClause = cloneHead(clause);
+    auto newClause = cloneHead(*clause);
     unsigned int currentAtom = 0;
     for (unsigned int currentLiteral = 0; currentLiteral < bodyLiterals.size(); currentLiteral++) {
         Literal* literalToAdd = bodyLiterals[currentLiteral];
@@ -315,13 +292,14 @@ Clause* reorderAtoms(const Clause* clause, const std::vector<unsigned int>& newO
         newClause->addToBody(souffle::clone(literalToAdd));
     }
 
-    return newClause;
+    // FIXME: tomp - fix ownership
+    return newClause.release();
 }
 
 void negateConstraintInPlace(Constraint& constraint) {
-    if (auto* bcstr = dynamic_cast<BooleanConstraint*>(&constraint)) {
+    if (auto* bcstr = as<BooleanConstraint>(constraint)) {
         bcstr->set(!bcstr->isTrue());
-    } else if (auto* cstr = dynamic_cast<BinaryConstraint*>(&constraint)) {
+    } else if (auto* cstr = as<BinaryConstraint>(constraint)) {
         cstr->setBaseOperator(souffle::negatedConstraintOp(cstr->getBaseOperator()));
     } else {
         fatal("Unknown ast-constraint type");
@@ -335,7 +313,7 @@ bool renameAtoms(Node& node, const std::map<QualifiedName, QualifiedName>& oldTo
         rename_atoms(const std::map<QualifiedName, QualifiedName>& oldToNew) : oldToNew(oldToNew) {}
         Own<Node> operator()(Own<Node> node) const override {
             node->apply(*this);
-            if (auto* atom = dynamic_cast<Atom*>(node.get())) {
+            if (auto* atom = as<Atom>(node)) {
                 if (contains(oldToNew, atom->getQualifiedName())) {
                     auto renamedAtom = souffle::clone(atom);
                     renamedAtom->setQualifiedName(oldToNew.at(atom->getQualifiedName()));

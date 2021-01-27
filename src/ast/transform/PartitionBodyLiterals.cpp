@@ -157,13 +157,10 @@ bool PartitionBodyLiteralsTransformer::transform(TranslationUnit& translationUni
 
             // Create the extracted relation and clause for the component
             // newrelX() <- disconnectedLiterals(x).
-            auto newRelation = mk<Relation>();
-            newRelation->setQualifiedName(newRelationName);
+            auto newRelation = mk<Relation>(newRelationName);
             program.addRelation(std::move(newRelation));
 
-            auto* disconnectedClause = new Clause();
-            disconnectedClause->setSrcLoc(clause.getSrcLoc());
-            disconnectedClause->setHead(mk<Atom>(newRelationName));
+            auto disconnectedClause = mk<Clause>(newRelationName, clause.getSrcLoc());
 
             // Find the body literals for this connected component
             std::vector<Literal*> associatedLiterals;
@@ -183,19 +180,15 @@ bool PartitionBodyLiteralsTransformer::transform(TranslationUnit& translationUni
             replacementAtoms.push_back(new Atom(newRelationName));
 
             // Add the clause to the program
-            clausesToAdd.push_back(disconnectedClause);
+            // FIXME: tomp - this should be managed
+            clausesToAdd.push_back(disconnectedClause.release());
         }
 
         // Create the replacement clause
         // a(x) <- b(x), c(y), d(z). --> a(x) <- newrel0(), newrel1(), b(x).
-        auto* replacementClause = new Clause();
-        replacementClause->setSrcLoc(clause.getSrcLoc());
-        replacementClause->setHead(souffle::clone(clause.getHead()));
-
-        // Add the new propositions to the clause first
-        for (Atom* newAtom : replacementAtoms) {
-            replacementClause->addToBody(Own<Literal>(newAtom));
-        }
+        auto replacementClause = mk<Clause>(souffle::clone(clause.getHead()),
+                VecOwn<Literal>(replacementAtoms.begin(), replacementAtoms.end()), nullptr,
+                clause.getSrcLoc());
 
         // Add the remaining body literals to the clause
         for (Literal* bodyLiteral : clause.getBodyLiterals()) {
@@ -214,7 +207,8 @@ bool PartitionBodyLiteralsTransformer::transform(TranslationUnit& translationUni
 
         // Replace the old clause with the new one
         clausesToRemove.push_back(&clause);
-        clausesToAdd.push_back(replacementClause);
+        // FIXME: tomp - this should be managed
+        clausesToAdd.push_back(replacementClause.release());
     });
 
     // Adjust the program

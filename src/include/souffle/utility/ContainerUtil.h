@@ -16,11 +16,13 @@
 
 #pragma once
 
+#include "souffle/utility/Iteration.h"
+#include "souffle/utility/MiscUtil.h"
+
 #include <algorithm>
 #include <functional>
 #include <iterator>
 #include <map>
-#include <memory>
 #include <set>
 #include <type_traits>
 #include <utility>
@@ -31,17 +33,6 @@ namespace souffle {
 // -------------------------------------------------------------------------------
 //                           General Container Utilities
 // -------------------------------------------------------------------------------
-
-template <typename A>
-using Own = std::unique_ptr<A>;
-
-template <typename A>
-using VecOwn = std::vector<Own<A>>;
-
-template <typename A, typename B = A, typename... Args>
-Own<A> mk(Args&&... xs) {
-    return Own<A>(new B(std::forward<Args>(xs)...));
-}
 
 /**
  * Use to range-for iterate in reverse.
@@ -113,6 +104,27 @@ typename C::mapped_type const& getOr(
     }
 }
 
+namespace detail {
+inline auto allOfBool = [](bool b) { return b; };
+}
+
+/**
+ * Return true if all elements (optionally after applying up)
+ * are true
+ */
+template <typename R, typename UnaryP = decltype(detail::allOfBool) const&>
+bool all(R const& range, UnaryP&& up = detail::allOfBool) {
+    return std::all_of(range.begin(), range.end(), std::forward<UnaryP>(up));
+}
+
+/**
+ * Append elements to a container
+ */
+template <class C, typename R>
+void append(C& container, R&& range) {
+    container.insert(container.end(), std::begin(range), std::end(range));
+}
+
 /**
  * A utility function enabling the creation of a vector with a fixed set of
  * elements within a single expression. This is the base case covering empty
@@ -137,7 +149,7 @@ std::vector<T> toVector(const T& first, const R&... rest) {
  * A utility function enabling the creation of a vector of pointers.
  */
 template <typename T>
-std::vector<T*> toPtrVector(const std::vector<std::unique_ptr<T>>& v) {
+std::vector<T*> toPtrVector(const VecOwn<T>& v) {
     std::vector<T*> res;
     for (auto& e : v) {
         res.push_back(e.get());
@@ -150,271 +162,14 @@ std::vector<T*> toPtrVector(const std::vector<std::unique_ptr<T>>& v) {
  */
 template <typename A, typename F /* : A -> B */>
 auto map(const std::vector<A>& xs, F&& f) {
+    // FIXME: We can rewrite this using makeTransformRange now,
+    // or remove the usage of this completely
     std::vector<decltype(f(xs[0]))> ys;
     ys.reserve(xs.size());
     for (auto&& x : xs) {
         ys.emplace_back(f(x));
     }
     return ys;
-}
-
-// -------------------------------------------------------------------------------
-//                             Cloning Utilities
-// -------------------------------------------------------------------------------
-
-template <typename A>
-auto clone(const std::vector<A*>& xs) {
-    std::vector<std::unique_ptr<A>> ys;
-    ys.reserve(xs.size());
-    for (auto&& x : xs) {
-        ys.emplace_back(x ? std::unique_ptr<A>(x->clone()) : nullptr);
-    }
-    return ys;
-}
-
-template <typename A>
-auto clone(const std::vector<std::unique_ptr<A>>& xs) {
-    std::vector<std::unique_ptr<A>> ys;
-    ys.reserve(xs.size());
-    for (auto&& x : xs) {
-        ys.emplace_back(x ? std::unique_ptr<A>(x->clone()) : nullptr);
-    }
-    return ys;
-}
-
-namespace detail {
-
-// This is a helper in the cases when the lambda is stateless
-template <typename F>
-F const& makeFun() {
-    // Even thought the lambda is stateless, it has no default ctor
-    // Is this gross?  Yes, yes it is.
-    typename std::aligned_storage<sizeof(F)>::type fakeLam;
-    return reinterpret_cast<F const&>(fakeLam);
-}
-}  // namespace detail
-
-// -------------------------------------------------------------
-//                            Iterators
-// -------------------------------------------------------------
-/**
- * A wrapper for an iterator that transforms values returned by
- * the underlying iter.
- *
- * @tparam Iter ... the type of wrapped iterator
- * @tparam F    ... the function to apply
- *
- */
-template <typename Iter, typename F>
-class TransformIterator {
-    using iter_t = std::iterator_traits<Iter>;
-    using difference_type = typename iter_t::difference_type;
-    using result_type = decltype(std::declval<F&>()(*std::declval<Iter>()));
-    static_assert(std::is_empty_v<F>, "Function object must be stateless");
-
-public:
-    // some constructors
-    template <typename It>
-    TransformIterator(It iter, std::enable_if_t<std::is_empty_v<F>, void*> = nullptr)
-            : iter(std::move(iter)), fun(detail::makeFun<F>()) {}
-    TransformIterator(Iter iter, F f) : iter(std::move(iter)), fun(std::move(f)) {}
-
-    // defaulted copy and move constructors
-    TransformIterator(const TransformIterator& other) : iter(other.iter), fun(other.fun) {}
-    TransformIterator(TransformIterator&& other) : iter(std::move(other.iter)), fun(std::move(other.fun)) {}
-
-    // default assignment operators
-    TransformIterator& operator=(const TransformIterator& other) {
-        if (this != &other) {
-            iter = other.iter;
-        }
-        return *this;
-    }
-
-    TransformIterator& operator=(TransformIterator&& other) {
-        if (this != &other) {
-            iter = std::move(other.iter);
-        }
-        return *this;
-    }
-
-    /* The equality operator as required by the iterator concept. */
-    bool operator==(const TransformIterator& other) const {
-        return iter == other.iter;
-    }
-
-    /* The not-equality operator as required by the iterator concept. */
-    bool operator!=(const TransformIterator& other) const {
-        return iter != other.iter;
-    }
-
-    /* The deref operator as required by the iterator concept. */
-    auto operator*() const -> result_type {
-        return fun(*iter);
-    }
-
-    /* Support for the pointer operator. */
-    auto operator->() const {
-        return &**this;
-    }
-
-    /* The increment operator as required by the iterator concept. */
-    TransformIterator& operator++() {
-        ++iter;
-        return *this;
-    }
-
-    TransformIterator operator++(int) {
-        auto res = *this;
-        ++iter;
-        return res;
-    }
-
-    TransformIterator& operator--() {
-        --iter;
-        return *this;
-    }
-
-    TransformIterator operator--(int) {
-        auto res = *this;
-        --iter;
-        return res;
-    }
-
-    auto operator[](difference_type ii) const -> result_type {
-        return f(iter[ii]);
-    }
-
-private:
-    /* The nested iterator. */
-    Iter iter;
-    F fun;
-};
-
-template <typename Iter, typename F>
-auto makeTransformIter(Iter&& iter, F&& f) {
-    return TransformIterator<std::remove_const_t<std::remove_reference_t<Iter>>, std::remove_reference_t<F>>(
-            std::forward<Iter>(iter), std::forward<F>(f));
-}
-
-/**
- * A wrapper for an iterator obtaining pointers of a certain type,
- * dereferencing values before forwarding them to the consumer.
- */
-namespace detail {
-inline auto iterDeref = [](auto& p) -> decltype(*p) { return *p; };
-}
-
-template <typename Iter>
-using IterDerefWrapper = TransformIterator<Iter, decltype(detail::iterDeref)>;
-
-/**
- * A factory function enabling the construction of a dereferencing
- * iterator utilizing the automated deduction of template parameters.
- */
-template <typename Iter>
-auto derefIter(Iter&& iter) {
-    return makeTransformIter(std::forward<Iter>(iter), detail::iterDeref);
-}
-
-// -------------------------------------------------------------
-//                             Ranges
-// -------------------------------------------------------------
-
-/**
- * A utility class enabling representation of ranges by pairing
- * two iterator instances marking lower and upper boundaries.
- */
-template <typename Iter>
-struct range {
-    // the lower and upper boundary
-    Iter a, b;
-
-    // a constructor accepting a lower and upper boundary
-    range(Iter a, Iter b) : a(std::move(a)), b(std::move(b)) {}
-
-    // default copy / move and assignment support
-    range(const range&) = default;
-    range(range&&) = default;
-    range& operator=(const range&) = default;
-
-    // get the lower boundary (for for-all loop)
-    Iter& begin() {
-        return a;
-    }
-    const Iter& begin() const {
-        return a;
-    }
-
-    // get the upper boundary (for for-all loop)
-    Iter& end() {
-        return b;
-    }
-    const Iter& end() const {
-        return b;
-    }
-
-    // emptiness check
-    bool empty() const {
-        return a == b;
-    }
-
-    // splits up this range into the given number of partitions
-    std::vector<range> partition(int np = 100) {
-        // obtain the size
-        int n = 0;
-        for (auto i = a; i != b; ++i) {
-            n++;
-        }
-
-        // split it up
-        auto s = n / np;
-        auto r = n % np;
-        std::vector<range> res;
-        res.reserve(np);
-        auto cur = a;
-        auto last = cur;
-        int i = 0;
-        int p = 0;
-        while (cur != b) {
-            ++cur;
-            i++;
-            if (i >= (s + (p < r ? 1 : 0))) {
-                res.push_back({last, cur});
-                last = cur;
-                p++;
-                i = 0;
-            }
-        }
-        if (cur != last) {
-            res.push_back({last, cur});
-        }
-        return res;
-    }
-};
-
-/**
- * A utility function enabling the construction of ranges
- * without explicitly specifying the iterator type.
- *
- * @tparam Iter .. the iterator type
- * @param a .. the lower boundary
- * @param b .. the upper boundary
- */
-template <typename Iter>
-range<Iter> make_range(const Iter& a, const Iter& b) {
-    return range<Iter>(a, b);
-}
-
-template <typename Iter, typename F>
-auto makeTransformRange(Iter&& begin, Iter&& end, F const& f) {
-    return make_range(
-            makeTransformIter(std::forward<Iter>(begin), f), transformIter(std::forward<Iter>(end), f));
-}
-
-template <typename Iter>
-auto makeDerefRange(Iter&& begin, Iter&& end) {
-    return make_range(derefIter(std::forward<Iter>(begin)), derefIter(std::forward<Iter>(end)));
 }
 
 // -------------------------------------------------------------------------------
@@ -429,8 +184,8 @@ auto makeDerefRange(Iter&& begin, Iter&& end) {
  */
 template <typename toType, typename baseType>
 bool castEq(const baseType* left, const baseType* right) {
-    if (auto castedLeft = dynamic_cast<const toType*>(left)) {
-        if (auto castedRight = dynamic_cast<const toType*>(right)) {
+    if (auto castedLeft = as<toType>(left)) {
+        if (auto castedRight = as<toType>(right)) {
             return castedLeft == castedRight;
         }
     }
@@ -486,8 +241,8 @@ bool equal_targets(const Container<T*>& a, const Container<T*>& b) {
  * targets.
  */
 template <typename T, template <typename...> class Container>
-bool equal_targets(const Container<std::unique_ptr<T>>& a, const Container<std::unique_ptr<T>>& b) {
-    return equal_targets(a, b, comp_deref<std::unique_ptr<T>>());
+bool equal_targets(const Container<Own<T>>& a, const Container<Own<T>>& b) {
+    return equal_targets(a, b, comp_deref<Own<T>>());
 }
 
 /**
@@ -495,11 +250,18 @@ bool equal_targets(const Container<std::unique_ptr<T>>& a, const Container<std::
  * targets.
  */
 template <typename Key, typename Value>
-bool equal_targets(
-        const std::map<Key, std::unique_ptr<Value>>& a, const std::map<Key, std::unique_ptr<Value>>& b) {
-    auto comp = comp_deref<std::unique_ptr<Value>>();
+bool equal_targets(const std::map<Key, Own<Value>>& a, const std::map<Key, Own<Value>>& b) {
+    auto comp = comp_deref<Own<Value>>();
     return equal_targets(
             a, b, [&comp](auto& a, auto& b) { return a.first == b.first && comp(a.second, b.second); });
+}
+
+// -------------------------------------------------------------------------------
+//                             Checking Utilities
+// -------------------------------------------------------------------------------
+template <typename R>
+bool allValidPtrs(R const& range) {
+    return all(makeTransformRange(range, [](auto const& ptr) { return ptr != nullptr; }));
 }
 
 }  // namespace souffle
@@ -510,8 +272,8 @@ struct iterator_traits<souffle::TransformIterator<Iter, F>> {
     using iter_t = std::iterator_traits<Iter>;
     using iter_tag = typename iter_t::iterator_category;
     using difference_type = typename iter_t::difference_type;
-    using result_type = decltype(std::declval<F&>()(*std::declval<Iter>()));
-    using value_type = std::remove_cv_t<std::remove_reference_t<result_type>>;
+    using reference = decltype(std::declval<F&>()(*std::declval<Iter>()));
+    using value_type = std::remove_cv_t<std::remove_reference_t<reference>>;
     using iterator_category = std::conditional_t<std::is_base_of_v<std::random_access_iterator_tag, iter_tag>,
             std::random_access_iterator_tag, iter_tag>;
 };

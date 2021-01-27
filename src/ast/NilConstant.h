@@ -29,11 +29,10 @@ namespace souffle::ast {
  */
 class NilConstant : public Constant {
 public:
-    NilConstant(SrcLocation loc = {}) : Constant("nil", std::move(loc)) {}
+    NilConstant(SrcLocation loc = {});
 
-    NilConstant* clone() const override {
-        return new NilConstant(getSrcLoc());
-    }
+private:
+    NilConstant* cloneImpl() const override;
 };
 
 }  // namespace souffle::ast

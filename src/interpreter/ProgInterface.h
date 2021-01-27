@@ -28,6 +28,7 @@
 #include "souffle/RamTypes.h"
 #include "souffle/SouffleInterface.h"
 #include "souffle/SymbolTable.h"
+#include "souffle/utility/MiscUtil.h"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -168,12 +169,8 @@ protected:
     protected:
         /** Check equivalence */
         bool equal(const souffle::Relation::iterator_base& o) const override {
-            try {
-                auto& iter = dynamic_cast<const RelInterface::iterator_base&>(o);
-                return ramRelationInterface == iter.ramRelationInterface && it == iter.it;
-            } catch (const std::bad_cast& e) {
-                return false;
-            }
+            auto& iter = asAssert<RelInterface::iterator_base>(o);
+            return ramRelationInterface == iter.ramRelationInterface && it == iter.it;
         }
 
     private:

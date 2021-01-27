@@ -18,6 +18,7 @@
 #include "ram/Node.h"
 #include "ram/utility/NodeMapper.h"
 #include "souffle/utility/ContainerUtil.h"
+#include "souffle/utility/MiscUtil.h"
 #include <cassert>
 #include <memory>
 #include <utility>
@@ -53,7 +54,7 @@ public:
 
 protected:
     bool equal(const Node& node) const {
-        const auto& other = dynamic_cast<const AbstractChoice&>(node);
+        const auto& other = asAssert<AbstractChoice, AllowCrossCast>(node);
         return equal_ptr(condition, other.condition);
     }
 

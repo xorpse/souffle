@@ -22,6 +22,7 @@
 #include "souffle/utility/ContainerUtil.h"
 #include <cstddef>
 #include <set>
+#include <vector>
 
 namespace souffle::ast {
 class Aggregator;
@@ -48,7 +49,6 @@ class Statement;
 }  // namespace souffle::ram
 
 namespace souffle::ast::analysis {
-class AuxiliaryArityAnalysis;
 class FunctorAnalysis;
 class IOTypeAnalysis;
 class PolymorphicObjectsAnalysis;
@@ -84,8 +84,9 @@ public:
     size_t getSizeLimit(const ast::Relation* relation) const;
 
     /** Clause methods */
-    std::set<ast::Clause*> getClauses(const ast::QualifiedName& name) const;
+    std::vector<ast::Clause*> getClauses(const ast::QualifiedName& name) const;
     bool isRecursiveClause(const ast::Clause* clause) const;
+    size_t getClauseNum(const ast::Clause* clause) const;
 
     /** SCC methods */
     size_t getNumberOfSCCs() const;
@@ -116,10 +117,6 @@ public:
         return sipsMetric.get();
     }
 
-    size_t getAuxiliaryArity(const ast::Atom* atom) const;
-    size_t getAuxiliaryArity(const ast::Relation* relation) const;
-    size_t getEvaluationArity(const ast::Atom* atom) const;
-
     /** Translation strategy */
     Own<ram::Statement> translateNonRecursiveClause(const ast::Clause& clause) const;
     Own<ram::Statement> translateRecursiveClause(
@@ -131,7 +128,6 @@ public:
 
 private:
     const ast::Program* program;
-    const ast::analysis::AuxiliaryArityAnalysis* auxArityAnalysis;
     const ast::analysis::RecursiveClausesAnalysis* recursiveClauses;
     const ast::analysis::RelationScheduleAnalysis* relationSchedule;
     const ast::analysis::SCCGraphAnalysis* sccGraph;
@@ -141,6 +137,7 @@ private:
     const ast::analysis::TypeEnvironment* typeEnv;
     const ast::analysis::SumTypeBranchesAnalysis* sumTypeBranches;
     const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis;
+    std::map<const ast::Clause*, size_t> clauseNums;
     Own<ast::SipsMetric> sipsMetric;
     Own<TranslationStrategy> translationStrategy;
 };

@@ -56,7 +56,7 @@ inline VecOwn<Condition> toConjunctionList(const Condition* condition) {
         while (!conditionsToProcess.empty()) {
             condition = conditionsToProcess.front();
             conditionsToProcess.pop();
-            if (const auto* ramConj = dynamic_cast<const Conjunction*>(condition)) {
+            if (const auto* ramConj = as<Conjunction>(condition)) {
                 conditionsToProcess.push(&ramConj->getLHS());
                 conditionsToProcess.push(&ramConj->getRHS());
             } else {
@@ -101,7 +101,7 @@ inline std::vector<const ram::Condition*> findConjunctiveTerms(const ram::Condit
         while (!conditionsToProcess.empty()) {
             condition = conditionsToProcess.front();
             conditionsToProcess.pop();
-            if (const auto* ramConj = dynamic_cast<const ram::Conjunction*>(condition)) {
+            if (const auto* ramConj = as<ram::Conjunction>(condition)) {
                 conditionsToProcess.push(&ramConj->getLHS());
                 conditionsToProcess.push(&ramConj->getRHS());
             } else {

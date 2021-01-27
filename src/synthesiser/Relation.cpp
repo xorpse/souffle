@@ -10,6 +10,7 @@
 #include "RelationTag.h"
 #include "ram/analysis/Index.h"
 #include "souffle/SouffleInterface.h"
+#include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include <algorithm>
 #include <cassert>

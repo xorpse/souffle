@@ -73,7 +73,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Query&>(node);
+        const auto& other = asAssert<Query>(node);
         return equal_ptr(operation, other.operation);
     }
 

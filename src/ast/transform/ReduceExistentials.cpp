@@ -129,9 +129,7 @@ bool ReduceExistentialsTransformer::transform(TranslationUnit& translationUnit) 
         std::stringstream newRelationName;
         newRelationName << "+?exists_" << relationName;
 
-        auto newRelation = mk<Relation>();
-        newRelation->setQualifiedName(newRelationName.str());
-        newRelation->setSrcLoc(originalRelation->getSrcLoc());
+        auto newRelation = mk<Relation>(newRelationName.str(), originalRelation->getSrcLoc());
 
         // EqRel relations require two arguments, so remove it from the qualifier
         if (newRelation->getRepresentation() == RelationRepresentation::EQREL) {
@@ -141,17 +139,10 @@ bool ReduceExistentialsTransformer::transform(TranslationUnit& translationUnit) 
         // Keep all non-recursive clauses
         for (Clause* clause : getClauses(program, *originalRelation)) {
             if (!isRecursiveClause(*clause)) {
-                auto newClause = mk<Clause>();
-
-                newClause->setSrcLoc(clause->getSrcLoc());
-                if (const ExecutionPlan* plan = clause->getExecutionPlan()) {
-                    newClause->setExecutionPlan(souffle::clone(plan));
-                }
-                newClause->setHead(mk<Atom>(newRelationName.str()));
-                for (Literal* lit : clause->getBodyLiterals()) {
-                    newClause->addToBody(souffle::clone(lit));
-                }
-
+                auto newClause =
+                        mk<Clause>(mk<Atom>(newRelationName.str()), souffle::clone(clause->getBodyLiterals()),
+                                // clone handles nullptr gracefully
+                                souffle::clone(clause->getExecutionPlan()), clause->getSrcLoc());
                 program.addClause(std::move(newClause));
             }
         }
@@ -167,12 +158,12 @@ bool ReduceExistentialsTransformer::transform(TranslationUnit& translationUnit) 
         renameExistentials(std::set<QualifiedName>& relations) : relations(relations) {}
 
         Own<Node> operator()(Own<Node> node) const override {
-            if (auto* clause = dynamic_cast<Clause*>(node.get())) {
+            if (auto* clause = as<Clause>(node)) {
                 if (relations.find(clause->getHead()->getQualifiedName()) != relations.end()) {
                     // Clause is going to be removed, so don't rename it
                     return node;
                 }
-            } else if (auto* atom = dynamic_cast<Atom*>(node.get())) {
+            } else if (auto* atom = as<Atom>(node)) {
                 if (relations.find(atom->getQualifiedName()) != relations.end()) {
                     // Relation is now existential, so rename it
                     std::stringstream newName;

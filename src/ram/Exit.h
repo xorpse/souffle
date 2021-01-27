@@ -70,7 +70,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const Exit&>(node);
+        const auto& other = asAssert<Exit>(node);
         return equal_ptr(condition, other.condition);
     }
 

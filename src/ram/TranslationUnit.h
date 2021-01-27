@@ -73,7 +73,7 @@ public:
                 analyses[name] = std::move(analysis);
             }
         }
-        return dynamic_cast<Analysis*>(analyses[name].get());
+        return as<Analysis>(analyses[name]);
     }
 
     /** @brief Get all alive analyses */

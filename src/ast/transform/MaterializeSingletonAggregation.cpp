@@ -27,6 +27,7 @@
 #include "ast/TranslationUnit.h"
 #include "ast/Variable.h"
 #include "ast/analysis/Aggregate.h"
+#include "ast/analysis/Type.h"
 #include "ast/utility/NodeMapper.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
@@ -82,13 +83,10 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
         Clause* clause = pair.second;
         // synthesise an aggregate relation
         // __agg_rel_0()
-        auto aggRel = mk<Relation>();
-        auto aggHead = mk<Atom>();
-        auto aggClause = mk<Clause>();
-
         std::string aggRelName = analysis::findUniqueRelationName(program, "__agg_single");
-        aggRel->setQualifiedName(aggRelName);
-        aggHead->setQualifiedName(aggRelName);
+        auto aggRel = mk<Relation>(aggRelName);
+        auto aggClause = mk<Clause>(aggRelName);
+        auto* aggHead = aggClause->getHead();
 
         // create a synthesised variable to replace the aggregate term!
         std::string variableName = analysis::findUniqueVariableName(*clause, "z");
@@ -102,7 +100,6 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
         // __agg_single(z) :- ...
         aggHead->addArgument(souffle::clone(variable));
         aggRel->addAttribute(mk<Attribute>(variableName, curArgType.begin()->getName()));
-        aggClause->setHead(souffle::clone(aggHead));
 
         //    A(x) :- x = sum .., B(x).
         // -> A(x) :- x = z, B(x), __agg_single(z).
@@ -122,7 +119,7 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
             replaceAggregate(const Aggregator& aggregate, Own<ast::Variable> variable)
                     : aggregate(aggregate), variable(std::move(variable)) {}
             Own<Node> operator()(Own<Node> node) const override {
-                if (auto* current = dynamic_cast<Aggregator*>(node.get())) {
+                if (auto* current = as<Aggregator>(node)) {
                     if (*current == aggregate) {
                         auto replacement = souffle::clone(variable);
                         assert(replacement != nullptr);
@@ -135,7 +132,7 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
         };
         replaceAggregate update(*aggregate, std::move(variable));
         clause->apply(update);
-        clause->addToBody(std::move(aggHead));
+        clause->addToBody(souffle::clone(*aggHead));
     }
     return pairs.size() > 0;
 }

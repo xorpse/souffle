@@ -87,7 +87,7 @@ public:
             resQueryPattern.second.emplace_back(i->clone());
         }
         auto* res = new IndexChoice(relation, getTupleId(), souffle::clone(condition),
-                std::move(resQueryPattern), souffle::clone(&getOperation()), getProfileText());
+                std::move(resQueryPattern), souffle::clone(getOperation()), getProfileText());
         return res;
     }
 
@@ -102,7 +102,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const IndexChoice&>(node);
+        const auto& other = asAssert<IndexChoice>(node);
         return IndexOperation::equal(other) && AbstractChoice::equal(other);
     }
 };

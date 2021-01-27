@@ -32,6 +32,10 @@ namespace souffle::ast2ram::provenance {
 
 class TranslationStrategy : public ast2ram::TranslationStrategy {
 public:
+    std::string getName() const override {
+        return "ProvenanceEvaluation";
+    }
+
     ast2ram::UnitTranslator* createUnitTranslator() const override;
     ast2ram::ClauseTranslator* createClauseTranslator(const TranslatorContext& context) const override;
     ast2ram::ConstraintTranslator* createConstraintTranslator(

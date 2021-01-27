@@ -48,13 +48,13 @@ bool RemoveBooleanConstraintsTransformer::transform(TranslationUnit& translation
             // Remove them from child nodes
             node->apply(*this);
 
-            if (auto* aggr = dynamic_cast<Aggregator*>(node.get())) {
+            if (auto* aggr = as<Aggregator>(node)) {
                 bool containsTrue = false;
                 bool containsFalse = false;
 
                 // Check if aggregator body contains booleans.
                 for (Literal* lit : aggr->getBodyLiterals()) {
-                    if (auto* bc = dynamic_cast<BooleanConstraint*>(lit)) {
+                    if (auto* bc = as<BooleanConstraint>(lit)) {
                         if (bc->isTrue()) {
                             containsTrue = true;
                         } else {
@@ -117,7 +117,7 @@ bool RemoveBooleanConstraintsTransformer::transform(TranslationUnit& translation
             bool containsFalse = false;
 
             for (Literal* lit : clause->getBodyLiterals()) {
-                if (auto* bc = dynamic_cast<BooleanConstraint*>(lit)) {
+                if (auto* bc = as<BooleanConstraint>(lit)) {
                     bc->isTrue() ? containsTrue = true : containsFalse = true;
                 }
             }
@@ -126,7 +126,7 @@ bool RemoveBooleanConstraintsTransformer::transform(TranslationUnit& translation
                 // Clause will always fail
                 program.removeClause(clause);
             } else if (containsTrue) {
-                auto replacementClause = Own<Clause>(cloneHead(clause));
+                auto replacementClause = cloneHead(*clause);
 
                 // Only keep non-'true' literals
                 for (Literal* lit : clause->getBodyLiterals()) {

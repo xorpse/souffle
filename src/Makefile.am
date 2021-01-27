@@ -19,56 +19,93 @@ souffle_sources = \
         GraphUtils.h                                       \
         LogStatement.h                                     \
         RelationTag.h                                      \
+        ast/Aggregator.cpp                                 \
         ast/Aggregator.h                                   \
+        ast/AlgebraicDataType.cpp                          \
         ast/AlgebraicDataType.h                            \
         ast/Argument.h                                     \
+        ast/Atom.cpp                                       \
         ast/Atom.h                                         \
+        ast/Attribute.cpp                                  \
         ast/Attribute.h                                    \
+        ast/BinaryConstraint.cpp                           \
         ast/BinaryConstraint.h                             \
+        ast/BooleanConstraint.cpp                          \
         ast/BooleanConstraint.h                            \
+        ast/BranchDeclaration.cpp                          \
         ast/BranchDeclaration.h                            \
+        ast/BranchInit.cpp                                 \
         ast/BranchInit.h                                   \
+        ast/Clause.cpp                                     \
         ast/Clause.h                                       \
+        ast/Component.cpp                                  \
         ast/Component.h                                    \
+        ast/ComponentInit.cpp                              \
         ast/ComponentInit.h                                \
+        ast/ComponentType.cpp                              \
         ast/ComponentType.h                                \
+        ast/Constant.cpp                                   \
         ast/Constant.h                                     \
         ast/Constraint.h                                   \
+        ast/Counter.cpp                                    \
         ast/Counter.h                                      \
+        ast/Directive.cpp                                  \
+        ast/Directive.h                                    \
+        ast/ExecutionOrder.cpp                             \
         ast/ExecutionOrder.h                               \
+        ast/ExecutionPlan.cpp                              \
         ast/ExecutionPlan.h                                \
         ast/Functor.h                                      \
+        ast/FunctorDeclaration.cpp                         \
         ast/FunctorDeclaration.h                           \
+        ast/FunctionalConstraint.cpp                       \
         ast/FunctionalConstraint.h                         \
-        ast/Directive.h                                    \
+        ast/IntrinsicFunctor.cpp                           \
         ast/IntrinsicFunctor.h                             \
         ast/Literal.h                                      \
+        ast/Negation.cpp                                   \
         ast/Negation.h                                     \
+        ast/NilConstant.cpp                                \
         ast/NilConstant.h                                  \
         ast/Node.h                                         \
+        ast/Node.cpp                                       \
+        ast/NumericConstant.cpp                            \
         ast/NumericConstant.h                              \
+        ast/Pragma.cpp                                     \
         ast/Pragma.h                                       \
         ast/Program.cpp                                    \
         ast/Program.h                                      \
+        ast/QualifiedName.cpp                              \
         ast/QualifiedName.h                                \
+        ast/RecordInit.cpp                                 \
         ast/RecordInit.h                                   \
+        ast/RecordType.cpp                                 \
         ast/RecordType.h                                   \
+        ast/Relation.cpp                                   \
         ast/Relation.h                                     \
+        ast/StringConstant.cpp                             \
         ast/StringConstant.h                               \
+        ast/SubsetType.cpp                                 \
         ast/SubsetType.h                                   \
+        ast/Term.cpp                                       \
         ast/Term.h                                         \
+        ast/TranslationUnit.cpp                            \
         ast/TranslationUnit.h                              \
+        ast/Type.cpp                                       \
         ast/Type.h                                         \
+        ast/TypeCast.cpp                                   \
         ast/TypeCast.h                                     \
+        ast/UnionType.cpp                                  \
         ast/UnionType.h                                    \
+        ast/UnnamedVariable.cpp                            \
         ast/UnnamedVariable.h                              \
+        ast/UserDefinedFunctor.cpp                         \
         ast/UserDefinedFunctor.h                           \
+        ast/Variable.cpp                                   \
         ast/Variable.h                                     \
         ast/analysis/Aggregate.cpp                         \
         ast/analysis/Aggregate.h                           \
         ast/analysis/Analysis.h                            \
-        ast/analysis/AuxArity.cpp                          \
-        ast/analysis/AuxArity.h                            \
         ast/analysis/ClauseNormalisation.h                 \
         ast/analysis/ClauseNormalisation.cpp               \
         ast/analysis/ComponentLookup.cpp                   \
@@ -120,6 +157,8 @@ souffle_sources = \
         ast/transform/DebugReporter.h                      \
         ast/transform/ExecutionPlanChecker.cpp             \
         ast/transform/ExecutionPlanChecker.h               \
+        ast/transform/ExpandEqrels.cpp                     \
+        ast/transform/ExpandEqrels.h                       \
         ast/transform/Fixpoint.h                           \
         ast/transform/FoldAnonymousRecords.cpp             \
         ast/transform/FoldAnonymousRecords.h               \
@@ -151,8 +190,6 @@ souffle_sources = \
         ast/transform/Pipeline.h                           \
         ast/transform/PragmaChecker.cpp                    \
         ast/transform/PragmaChecker.h                      \
-        ast/transform/Provenance.cpp                       \
-        ast/transform/Provenance.h                         \
         ast/transform/ReduceExistentials.cpp               \
         ast/transform/ReduceExistentials.h                 \
         ast/transform/RemoveBooleanConstraints.cpp         \
@@ -200,6 +237,8 @@ souffle_sources = \
         ast2ram/ValueTranslator.h                          \
         ast2ram/provenance/ClauseTranslator.cpp            \
         ast2ram/provenance/ClauseTranslator.h              \
+        ast2ram/provenance/ConstraintTranslator.cpp        \
+        ast2ram/provenance/ConstraintTranslator.h          \
         ast2ram/provenance/SubproofGenerator.cpp           \
         ast2ram/provenance/SubproofGenerator.h             \
         ast2ram/provenance/TranslationStrategy.cpp         \
@@ -407,7 +446,8 @@ soufflepublic_HEADERS = \
         include/souffle/SignalHandler.h                    \
         include/souffle/SouffleInterface.h                 \
         include/souffle/SymbolTable.h                      \
-        include/souffle/TypeAttribute.h
+        include/souffle/TypeAttribute.h                    \
+        include/souffle/Visitor.h
 
 souffledatastructuredir = $(soufflepublicdir)/datastructure
 
@@ -489,10 +529,12 @@ souffleutility_HEADERS = \
         include/souffle/utility/FileUtil.h                 \
         include/souffle/utility/EvaluatorUtil.h            \
         include/souffle/utility/FunctionalUtil.h           \
+        include/souffle/utility/Iteration.h                \
         include/souffle/utility/MiscUtil.h                 \
         include/souffle/utility/ParallelUtil.h             \
         include/souffle/utility/StreamUtil.h               \
         include/souffle/utility/StringUtil.h               \
+        include/souffle/utility/Types.h                    \
         include/souffle/utility/json11.h                   \
         include/souffle/utility/span.h                     \
         include/souffle/utility/tinyformat.h

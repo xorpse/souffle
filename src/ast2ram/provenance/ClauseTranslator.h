@@ -12,11 +12,15 @@
  *
  ***********************************************************************/
 
+#pragma once
+
 #include "ast2ram/seminaive/ClauseTranslator.h"
+#include <vector>
 
 namespace souffle::ast {
 class Atom;
-}
+class Clause;
+}  // namespace souffle::ast
 
 namespace souffle::ram {
 class Operation;
@@ -34,7 +38,15 @@ public:
 
 protected:
     Own<ram::Operation> addNegatedDeltaAtom(Own<ram::Operation> op, const ast::Atom* atom) const override;
-    Own<ram::Operation> addNegatedAtom(Own<ram::Operation> op, const ast::Atom* atom) const override;
+    Own<ram::Operation> addNegatedAtom(
+            Own<ram::Operation> op, const ast::Clause& clause, const ast::Atom* atom) const override;
+    Own<ram::Operation> createProjection(const ast::Clause& clause) const override;
+    void indexAtoms(const ast::Clause& clause) override;
+    Own<ram::Operation> addAtomScan(Own<ram::Operation> op, const ast::Atom* atom, const ast::Clause& clause,
+            int curLevel) const override;
+
+private:
+    Own<ram::Expression> getLevelNumber(const ast::Clause& clause) const;
 };
 
 }  // namespace souffle::ast2ram::provenance

@@ -20,6 +20,7 @@
 #include "ram/Expression.h"
 #include "ram/Node.h"
 #include "souffle/TypeAttribute.h"
+#include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include <cassert>
 #include <memory>
@@ -84,7 +85,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const UserDefinedOperator&>(node);
+        const auto& other = asAssert<UserDefinedOperator>(node);
         return AbstractOperator::equal(node) && name == other.name && argsTypes == other.argsTypes &&
                returnType == other.returnType && stateful == other.stateful;
     }

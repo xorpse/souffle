@@ -70,7 +70,7 @@ public:
 
     UnpackRecord* clone() const override {
         return new UnpackRecord(
-                souffle::clone(&getOperation()), getTupleId(), souffle::clone(&getExpression()), arity);
+                souffle::clone(getOperation()), getTupleId(), souffle::clone(getExpression()), arity);
     }
 
     void apply(const NodeMapper& map) override {
@@ -86,7 +86,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = static_cast<const UnpackRecord&>(node);
+        const auto& other = asAssert<UnpackRecord>(node);
         return TupleOperation::equal(other) && equal_ptr(expression, other.expression) &&
                arity == other.arity;
     }

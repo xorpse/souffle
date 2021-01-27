@@ -40,10 +40,10 @@ bool NameUnnamedVariablesTransformer::transform(TranslationUnit& translationUnit
         nameVariables() = default;
 
         Own<Node> operator()(Own<Node> node) const override {
-            if (isA<Negation>(node.get())) {
+            if (isA<Negation>(node)) {
                 return node;
             }
-            if (isA<UnnamedVariable>(node.get())) {
+            if (isA<UnnamedVariable>(node)) {
                 changed = true;
                 std::stringstream name;
                 name << boundPrefix << "_" << underscoreCount++;
