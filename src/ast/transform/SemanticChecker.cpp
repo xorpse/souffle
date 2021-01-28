@@ -124,6 +124,8 @@ private:
     void checkRelationDeclaration(const Relation& relation);
     void checkRelationFunctionalDependencies(const Relation& relation);
     void checkRelation(const Relation& relation);
+    void checkType(ast::Attribute const& attr, std::string const& name={});
+    void checkFunctorDeclaration(const FunctorDeclaration& decl);
 
     void checkNamespaces();
     void checkIO();
@@ -174,6 +176,10 @@ SemanticCheckerImpl::SemanticCheckerImpl(TranslationUnit& tu) : tu(tu) {
     }
     for (auto* clause : program.getClauses()) {
         checkClause(*clause);
+    }
+
+    for (auto* decl : program.getFunctorDeclarations()) {
+        checkFunctorDeclaration(*decl);
     }
 
     // Group clauses that stem from a single complex rule
@@ -545,20 +551,44 @@ void SemanticCheckerImpl::checkComplexRule(std::set<const Clause*> multiRule) {
     }
 }
 
+void SemanticCheckerImpl::checkType(ast::Attribute const& attr, std::string const& name) {
+    auto&& typeName = attr.getTypeName();
+    auto* existingType = getIf(
+            program.getTypes(), [&](const ast::Type* type) { return type->getQualifiedName() == typeName; });
+
+    /* check whether type exists */
+    if (!typeEnv.isPrimitiveType(typeName) && nullptr == existingType) {
+        std::ostringstream out;
+
+        if (name.empty()) {
+            if (attr.getName().empty()) {
+                report.addError(
+                        tfm::format("Undefined type %s in attribute", attr.getTypeName()), attr.getSrcLoc());
+            } else {
+                report.addError(tfm::format("Undefined type in attribute %s", attr), attr.getSrcLoc());
+            }
+        } else {
+            report.addError(
+                    tfm::format("Undefined type %s in %s", attr.getTypeName(), name), attr.getSrcLoc());
+        }
+    }
+}
+
+void SemanticCheckerImpl::checkFunctorDeclaration(const FunctorDeclaration& decl) {
+    checkType(decl.getReturnType(), "return type");
+
+    for (auto const& param : decl.getParams()) {
+        checkType(*param);
+    }
+}
+
 void SemanticCheckerImpl::checkRelationDeclaration(const Relation& relation) {
     const auto& attributes = relation.getAttributes();
     assert(attributes.size() == relation.getArity() && "mismatching attribute size and arity");
 
     for (size_t i = 0; i < relation.getArity(); i++) {
         Attribute* attr = attributes[i];
-        auto&& typeName = attr->getTypeName();
-        auto* existingType = getIf(program.getTypes(),
-                [&](const ast::Type* type) { return type->getQualifiedName() == typeName; });
-
-        /* check whether type exists */
-        if (!typeEnv.isPrimitiveType(typeName) && nullptr == existingType) {
-            report.addError(tfm::format("Undefined type in attribute %s", *attr), attr->getSrcLoc());
-        }
+        checkType(*attr);
 
         /* check whether name occurs more than once */
         for (size_t j = 0; j < i; j++) {

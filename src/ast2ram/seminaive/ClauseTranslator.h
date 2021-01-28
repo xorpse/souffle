@@ -127,7 +127,7 @@ protected:
     Own<ram::Operation> instantiateAggregator(Own<ram::Operation> op, const ast::Clause& clause,
             const ast::Aggregator* agg, int curLevel) const;
     Own<ram::Operation> instantiateMultiResultFunctor(
-            Own<ram::Operation> op, const ast::IntrinsicFunctor* inf, int curLevel) const;
+            Own<ram::Operation> op, const ast::IntrinsicFunctor& inf, int curLevel) const;
 
     /** Operation levelling */
     int addGeneratorLevel(const ast::Argument* arg);

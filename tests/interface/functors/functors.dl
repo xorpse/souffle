@@ -70,11 +70,10 @@ S(@mycat("A","B")) :- true.
 // To ease readability of the code, we suggest defining a macro for casting as shown
 // below.
 
-.functor _myappend(number):number stateful
-#define myappend(a) as(@_myappend(as(a,number)),List)
+.functor myappend(List):List stateful
 
 .type List = [x:number, y:List]
 .decl L(x:List)
 L([1,nil]).
-L(myappend(l)) :- L(l), l = [x, _l1], x < 10.
+L(@myappend(l)) :- L(l), l = [x, _l1], x < 10.
 .output L

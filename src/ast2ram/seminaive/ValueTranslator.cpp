@@ -55,7 +55,7 @@ Own<ram::Expression> ValueTranslator::visit_(
 
 Own<ram::Expression> ValueTranslator::visit_(
         type_identity<ast::NumericConstant>, const ast::NumericConstant& c) {
-    switch (context.getInferredNumericConstantType(&c)) {
+    switch (context.getInferredNumericConstantType(c)) {
         case ast::NumericConstant::Type::Int:
             return mk<ram::SignedConstant>(RamSignedFromString(c.getConstant(), nullptr, 0));
         case ast::NumericConstant::Type::Uint:
@@ -90,7 +90,7 @@ Own<ram::Expression> ValueTranslator::visit_(
     if (ast::analysis::FunctorAnalysis::isMultiResult(inf)) {
         return makeRamTupleElement(index.getGeneratorLoc(inf));
     } else {
-        return mk<ram::IntrinsicOperator>(context.getOverloadedFunctorOp(&inf), std::move(values));
+        return mk<ram::IntrinsicOperator>(context.getOverloadedFunctorOp(inf), std::move(values));
     }
 }
 
@@ -100,10 +100,10 @@ Own<ram::Expression> ValueTranslator::visit_(
     for (const auto& cur : udf.getArguments()) {
         values.push_back(translateValue(cur));
     }
-    auto returnType = context.getFunctorReturnType(&udf);
-    auto argTypes = context.getFunctorArgTypes(udf);
+    auto returnType = context.getFunctorReturnTypeAttribute(udf);
+    auto paramTypes = context.getFunctorParamTypeAtributes(udf);
     return mk<ram::UserDefinedOperator>(
-            udf.getName(), argTypes, returnType, context.isStatefulFunctor(&udf), std::move(values));
+            udf.getName(), paramTypes, returnType, context.isStatefulFunctor(udf), std::move(values));
 }
 
 Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::Counter>, const ast::Counter&) {

@@ -101,20 +101,20 @@ public:
     std::set<const ast::Relation*> getOutputRelationsInSCC(size_t scc) const;
 
     /** Functor methods */
-    TypeAttribute getFunctorReturnType(const ast::Functor* functor) const;
-    TypeAttribute getFunctorArgType(const ast::Functor* functor, size_t idx) const;
-    const std::vector<TypeAttribute>& getFunctorArgTypes(const ast::UserDefinedFunctor& udf) const;
-    bool isStatefulFunctor(const ast::UserDefinedFunctor* functor) const;
+    TypeAttribute getFunctorReturnTypeAttribute(const ast::Functor& functor) const;
+    TypeAttribute getFunctorParamTypeAtribute(const ast::Functor& functor, std::size_t idx) const;
+    std::vector<TypeAttribute> getFunctorParamTypeAtributes(const ast::UserDefinedFunctor& udf) const;
+    bool isStatefulFunctor(const ast::UserDefinedFunctor& functor) const;
 
     /** ADT methods */
     bool isADTEnum(const ast::BranchInit* adt) const;
     int getADTBranchId(const ast::BranchInit* adt) const;
 
     /** Polymorphic objects methods */
-    ast::NumericConstant::Type getInferredNumericConstantType(const ast::NumericConstant* nc) const;
-    AggregateOp getOverloadedAggregatorOperator(const ast::Aggregator* aggr) const;
-    BinaryConstraintOp getOverloadedBinaryConstraintOperator(const ast::BinaryConstraint* bc) const;
-    FunctorOp getOverloadedFunctorOp(const ast::IntrinsicFunctor* inf) const;
+    ast::NumericConstant::Type getInferredNumericConstantType(const ast::NumericConstant& nc) const;
+    AggregateOp getOverloadedAggregatorOperator(const ast::Aggregator& aggr) const;
+    BinaryConstraintOp getOverloadedBinaryConstraintOperator(const ast::BinaryConstraint& bc) const;
+    FunctorOp getOverloadedFunctorOp(const ast::IntrinsicFunctor& inf) const;
 
     /** Analyses */
     const ast::SipsMetric* getSipsMetric() const {

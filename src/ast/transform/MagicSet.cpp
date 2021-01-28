@@ -138,7 +138,7 @@ std::set<QualifiedName> MagicSetTransformer::getWeaklyIgnoredRelations(const Tra
                     BinaryConstraintOp::FGE, BinaryConstraintOp::FLT, BinaryConstraintOp::FGT});
     for (const auto* clause : program.getClauses()) {
         visitDepthFirst(*clause, [&](const BinaryConstraint& bc) {
-            if (contains(floatOps, polyAnalysis.getOverloadedOperator(&bc))) {
+            if (contains(floatOps, polyAnalysis.getOverloadedOperator(bc))) {
                 weaklyIgnoredRelations.insert(clause->getHead()->getQualifiedName());
             }
         });
@@ -149,7 +149,7 @@ std::set<QualifiedName> MagicSetTransformer::getWeaklyIgnoredRelations(const Tra
             {FunctorOp::MOD, FunctorOp::FDIV, FunctorOp::DIV, FunctorOp::UMOD});
     for (const auto* clause : program.getClauses()) {
         visitDepthFirst(*clause, [&](const IntrinsicFunctor& functor) {
-            if (contains(orderDepFuncOps, polyAnalysis.getOverloadedFunctionOp(&functor))) {
+            if (contains(orderDepFuncOps, polyAnalysis.getOverloadedFunctionOp(functor))) {
                 weaklyIgnoredRelations.insert(clause->getHead()->getQualifiedName());
             }
         });

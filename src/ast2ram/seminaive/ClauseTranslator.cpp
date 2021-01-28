@@ -361,15 +361,15 @@ Own<ram::Operation> ClauseTranslator::instantiateAggregator(
     auto expr = aggExpr ? context.translateValue(symbolTable, *valueIndex, aggExpr) : nullptr;
 
     // add Ram-Aggregation layer
-    return mk<ram::Aggregate>(std::move(op), context.getOverloadedAggregatorOperator(agg),
+    return mk<ram::Aggregate>(std::move(op), context.getOverloadedAggregatorOperator(*agg),
             getClauseAtomName(clause, aggAtom), expr ? std::move(expr) : mk<ram::UndefValue>(),
             aggCond ? std::move(aggCond) : mk<ram::True>(), curLevel);
 }
 
 Own<ram::Operation> ClauseTranslator::instantiateMultiResultFunctor(
-        Own<ram::Operation> op, const ast::IntrinsicFunctor* inf, int curLevel) const {
+        Own<ram::Operation> op, const ast::IntrinsicFunctor& inf, int curLevel) const {
     VecOwn<ram::Expression> args;
-    for (auto&& x : inf->getArguments()) {
+    for (auto&& x : inf.getArguments()) {
         args.push_back(context.translateValue(symbolTable, *valueIndex, x));
     }
 
@@ -393,7 +393,7 @@ Own<ram::Operation> ClauseTranslator::addGeneratorLevels(
         if (auto agg = as<ast::Aggregator>(generator)) {
             op = instantiateAggregator(std::move(op), clause, agg, curLevel);
         } else if (const auto* inf = as<ast::IntrinsicFunctor>(generator)) {
-            op = instantiateMultiResultFunctor(std::move(op), inf, curLevel);
+            op = instantiateMultiResultFunctor(std::move(op), *inf, curLevel);
         } else {
             assert(false && "unhandled generator");
         }
@@ -485,7 +485,7 @@ RamDomain ClauseTranslator::getConstantRamRepresentation(
     } else if (isA<ast::NilConstant>(&constant)) {
         return 0;
     } else if (auto* numConstant = as<ast::NumericConstant>(constant)) {
-        switch (context.getInferredNumericConstantType(numConstant)) {
+        switch (context.getInferredNumericConstantType(*numConstant)) {
             case ast::NumericConstant::Type::Int:
                 return RamSignedFromString(numConstant->getConstant(), nullptr, 0);
             case ast::NumericConstant::Type::Uint:
@@ -501,7 +501,7 @@ Own<ram::Expression> ClauseTranslator::translateConstant(
         SymbolTable& symbolTable, const ast::Constant& constant) const {
     auto rawConstant = getConstantRamRepresentation(symbolTable, constant);
     if (const auto* numericConstant = as<ast::NumericConstant>(constant)) {
-        switch (context.getInferredNumericConstantType(numericConstant)) {
+        switch (context.getInferredNumericConstantType(*numericConstant)) {
             case ast::NumericConstant::Type::Int: return mk<ram::SignedConstant>(rawConstant);
             case ast::NumericConstant::Type::Uint: return mk<ram::UnsignedConstant>(rawConstant);
             case ast::NumericConstant::Type::Float: return mk<ram::FloatConstant>(rawConstant);
@@ -523,7 +523,7 @@ Own<ram::Operation> ClauseTranslator::addConstantConstraints(
     for (size_t i = 0; i < arguments.size(); i++) {
         const auto* argument = arguments.at(i);
         if (const auto* numericConstant = as<ast::NumericConstant>(argument)) {
-            bool isFloat = context.getInferredNumericConstantType(numericConstant) ==
+            bool isFloat = context.getInferredNumericConstantType(*numericConstant) ==
                            ast::NumericConstant::Type::Float;
             auto lhs = mk<ram::TupleElement>(curLevel, i);
             auto rhs = translateConstant(symbolTable, *numericConstant);

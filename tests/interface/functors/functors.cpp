@@ -83,7 +83,7 @@ souffle::RamDomain mycat(souffle::SymbolTable* symbolTable, souffle::RecordTable
     return symbolTable->lookup(result);
 }
 
-souffle::RamDomain _myappend(
+souffle::RamDomain myappend(
         souffle::SymbolTable* symbolTable, souffle::RecordTable* recordTable, souffle::RamDomain arg) {
     assert(symbolTable && "NULL symbol table");
     assert(recordTable && "NULL record table");
