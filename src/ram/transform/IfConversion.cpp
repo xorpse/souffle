@@ -41,23 +41,15 @@ Own<Operation> IfConversionTransformer::rewriteIndexScan(const IndexScan* indexS
 
     // if not used, transform the IndexScan operation to an existence check
     if (tupleNotUsed) {
-        // replace IndexScan with an Filter/Existence check
-        VecOwn<Expression> newValues;
-
+        // existence check is only supported for equality predicates on each attribute
         size_t arity = indexScan->getRangePattern().first.size();
         for (size_t i = 0; i < arity; ++i) {
             if (*(indexScan->getRangePattern().first[i]) != *(indexScan->getRangePattern().second[i])) {
                 return nullptr;
             }
         }
-
-        for (auto& cur : indexScan->getRangePattern().second) {
-            Expression* val = nullptr;
-            if (cur != nullptr) {
-                val = cur->clone();
-            }
-            newValues.emplace_back(val);
-        }
+        // replace IndexScan with an Filter/Existence check
+        RamBound newValues = souffle::clone(indexScan->getRangePattern().first);
 
         // check if there is a break statement nested in the Scan - if so, remove it
         Operation* newOp;
