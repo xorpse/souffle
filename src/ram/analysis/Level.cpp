@@ -21,7 +21,6 @@
 #include "ram/Choice.h"
 #include "ram/Condition.h"
 #include "ram/Conjunction.h"
-#include "ram/Constant.h"
 #include "ram/Constraint.h"
 #include "ram/EmptinessCheck.h"
 #include "ram/ExistenceCheck.h"
@@ -34,11 +33,13 @@
 #include "ram/IntrinsicOperator.h"
 #include "ram/Negation.h"
 #include "ram/Node.h"
+#include "ram/NumericConstant.h"
 #include "ram/Operation.h"
 #include "ram/PackRecord.h"
 #include "ram/Project.h"
 #include "ram/ProvenanceExistenceCheck.h"
 #include "ram/Scan.h"
+#include "ram/StringConstant.h"
 #include "ram/SubroutineArgument.h"
 #include "ram/SubroutineReturn.h"
 #include "ram/True.h"
@@ -59,8 +60,13 @@ int LevelAnalysis::getLevel(const Node* node) const {
     // visitor
     class ValueLevelVisitor : public Visitor<int> {
     public:
-        // number
-        int visit_(type_identity<Constant>, const Constant&) override {
+        // string constant
+        int visit_(type_identity<StringConstant>, const StringConstant&) override {
+            return -1;
+        }
+
+        // number constant
+        int visit_(type_identity<NumericConstant>, const NumericConstant&) override {
             return -1;
         }
 

@@ -38,6 +38,7 @@
 #include "ram/Sequence.h"
 #include "ram/SignedConstant.h"
 #include "ram/Statement.h"
+#include "ram/StringConstant.h"
 #include "ram/SubroutineArgument.h"
 #include "ram/SubroutineReturn.h"
 #include "ram/TupleElement.h"
@@ -233,7 +234,7 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
         }
         std::stringstream headVariableInfo;
         headVariableInfo << join(headVariables, ",");
-        factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup(headVariableInfo.str())));
+        factArguments.push_back(mk<ram::StringConstant>(headVariableInfo.str()));
 
         // (3) For all atoms || negs:
         //      - atoms: relName,{atom arg info}
@@ -244,11 +245,11 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
                 for (const auto* arg : atom->getArguments()) {
                     atomDescription.append("," + getArgInfo(arg));
                 }
-                factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup(atomDescription)));
+                factArguments.push_back(mk<ram::StringConstant>(atomDescription));
             } else if (const auto* neg = dynamic_cast<const ast::Negation*>(literal)) {
                 const auto* atom = neg->getAtom();
                 std::string relName = toString(atom->getQualifiedName());
-                factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup("!" + relName)));
+                factArguments.push_back(mk<ram::StringConstant>("!" + relName));
             }
         }
 
@@ -259,12 +260,11 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
             constraintDescription << toBinaryConstraintSymbol(binaryConstraint->getBaseOperator());
             constraintDescription << "," << getArgInfo(binaryConstraint->getLHS());
             constraintDescription << "," << getArgInfo(binaryConstraint->getRHS());
-            factArguments.push_back(
-                    mk<ram::SignedConstant>(symbolTable->lookup(constraintDescription.str())));
+            factArguments.push_back(mk<ram::StringConstant>(constraintDescription.str()));
         }
 
         // (5) The actual clause
-        factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup(toString(*clause))));
+        factArguments.push_back(mk<ram::StringConstant>(toString(*clause)));
 
         /* -- Finalising -- */
         // Push in the final clause
@@ -301,7 +301,7 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
 }
 
 Own<ram::Statement> UnitTranslator::makeSubproofSubroutine(const ast::Clause& clause) {
-    return SubproofGenerator(*context, *symbolTable).translateNonRecursiveClause(clause);
+    return SubproofGenerator(*context).translateNonRecursiveClause(clause);
 }
 
 Own<ram::ExistenceCheck> UnitTranslator::makeRamAtomExistenceCheck(
@@ -313,7 +313,7 @@ Own<ram::ExistenceCheck> UnitTranslator::makeRamAtomExistenceCheck(
 
     // Add each value (subroutine argument) to the search query
     for (const auto* arg : atom->getArguments()) {
-        auto translatedValue = context->translateValue(*symbolTable, valueIndex, arg);
+        auto translatedValue = context->translateValue(valueIndex, arg);
         transformVariablesToSubroutineArgs(translatedValue.get(), idToVarName);
         query.push_back(std::move(translatedValue));
     }
@@ -440,7 +440,7 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
                     makeIfStatement(std::move(existenceCheck), makeRamReturnFalse(), makeRamReturnTrue());
             appendStmt(searchSequence, std::move(ifStatement));
         } else if (const auto* con = as<ast::Constraint>(lit)) {
-            auto condition = context->translateConstraint(*symbolTable, *dummyValueIndex, con);
+            auto condition = context->translateConstraint(*dummyValueIndex, con);
             transformVariablesToSubroutineArgs(condition.get(), idToVarName);
             auto ifStatement =
                     makeIfStatement(std::move(condition), makeRamReturnTrue(), makeRamReturnFalse());

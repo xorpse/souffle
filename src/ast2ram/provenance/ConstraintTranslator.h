@@ -17,10 +17,6 @@
 #include "ast2ram/seminaive/ConstraintTranslator.h"
 #include "souffle/utility/ContainerUtil.h"
 
-namespace souffle {
-class SymbolTable;
-}
-
 namespace souffle::ast {
 class Literal;
 class Negation;
@@ -39,8 +35,8 @@ namespace souffle::ast2ram::provenance {
 
 class ConstraintTranslator : public ast2ram::seminaive::ConstraintTranslator {
 public:
-    ConstraintTranslator(const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index)
-            : ast2ram::seminaive::ConstraintTranslator(context, symbolTable, index) {}
+    ConstraintTranslator(const TranslatorContext& context, const ValueIndex& index)
+            : ast2ram::seminaive::ConstraintTranslator(context, index) {}
 
     Own<ram::Condition> translateConstraint(const ast::Literal* lit) override;
 

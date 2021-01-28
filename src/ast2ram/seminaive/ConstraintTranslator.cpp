@@ -28,7 +28,7 @@ namespace souffle::ast2ram::seminaive {
 
 Own<ram::Condition> ConstraintTranslator::translateConstraint(const ast::Literal* lit) {
     assert(lit != nullptr && "literal should be defined");
-    return ConstraintTranslator(context, symbolTable, index)(*lit);
+    return ConstraintTranslator(context, index)(*lit);
 }
 
 Own<ram::Condition> ConstraintTranslator::visit_(type_identity<ast::Atom>, const ast::Atom&) {
@@ -37,8 +37,8 @@ Own<ram::Condition> ConstraintTranslator::visit_(type_identity<ast::Atom>, const
 
 Own<ram::Condition> ConstraintTranslator::visit_(
         type_identity<ast::BinaryConstraint>, const ast::BinaryConstraint& binRel) {
-    auto valLHS = context.translateValue(symbolTable, index, binRel.getLHS());
-    auto valRHS = context.translateValue(symbolTable, index, binRel.getRHS());
+    auto valLHS = context.translateValue(index, binRel.getLHS());
+    auto valRHS = context.translateValue(index, binRel.getRHS());
     return mk<ram::Constraint>(
             context.getOverloadedBinaryConstraintOperator(&binRel), std::move(valLHS), std::move(valRHS));
 }
@@ -55,7 +55,7 @@ Own<ram::Condition> ConstraintTranslator::visit_(type_identity<ast::Negation>, c
     // else, we construct the atom and create a negation
     VecOwn<ram::Expression> values;
     for (const auto* arg : atom->getArguments()) {
-        values.push_back(context.translateValue(symbolTable, index, arg));
+        values.push_back(context.translateValue(index, arg));
     }
     return mk<ram::Negation>(
             mk<ram::ExistenceCheck>(getConcreteRelationName(atom->getQualifiedName()), std::move(values)));
