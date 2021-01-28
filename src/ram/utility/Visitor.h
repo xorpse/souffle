@@ -29,7 +29,6 @@
 #include "ram/Clear.h"
 #include "ram/Condition.h"
 #include "ram/Conjunction.h"
-#include "ram/Constant.h"
 #include "ram/Constraint.h"
 #include "ram/DebugInfo.h"
 #include "ram/EmptinessCheck.h"
@@ -56,6 +55,7 @@
 #include "ram/NestedIntrinsicOperator.h"
 #include "ram/NestedOperation.h"
 #include "ram/Node.h"
+#include "ram/NumericConstant.h"
 #include "ram/Operation.h"
 #include "ram/PackRecord.h"
 #include "ram/Parallel.h"
@@ -77,6 +77,7 @@
 #include "ram/Sequence.h"
 #include "ram/SignedConstant.h"
 #include "ram/Statement.h"
+#include "ram/StringConstant.h"
 #include "ram/SubroutineArgument.h"
 #include "ram/SubroutineReturn.h"
 #include "ram/Swap.h"
@@ -116,7 +117,8 @@ struct Visitor : public souffle::Visitor<R, NodeType, Params...> {
         SOUFFLE_VISITOR_FORWARD(SignedConstant);
         SOUFFLE_VISITOR_FORWARD(UnsignedConstant);
         SOUFFLE_VISITOR_FORWARD(FloatConstant);
-        SOUFFLE_VISITOR_FORWARD(Constant);
+        SOUFFLE_VISITOR_FORWARD(NumericConstant);
+        SOUFFLE_VISITOR_FORWARD(StringConstant);
         SOUFFLE_VISITOR_FORWARD(IntrinsicOperator);
         SOUFFLE_VISITOR_FORWARD(UserDefinedOperator);
         SOUFFLE_VISITOR_FORWARD(AutoIncrement);
@@ -247,10 +249,11 @@ protected:
     SOUFFLE_VISITOR_LINK(Condition, Node);
 
     // -- values --
-    SOUFFLE_VISITOR_LINK(SignedConstant, Constant);
-    SOUFFLE_VISITOR_LINK(UnsignedConstant, Constant);
-    SOUFFLE_VISITOR_LINK(FloatConstant, Constant);
-    SOUFFLE_VISITOR_LINK(Constant, Expression);
+    SOUFFLE_VISITOR_LINK(SignedConstant, NumericConstant);
+    SOUFFLE_VISITOR_LINK(UnsignedConstant, NumericConstant);
+    SOUFFLE_VISITOR_LINK(FloatConstant, NumericConstant);
+    SOUFFLE_VISITOR_LINK(NumericConstant, Expression);
+    SOUFFLE_VISITOR_LINK(StringConstant, Expression);
     SOUFFLE_VISITOR_LINK(UndefValue, Expression);
     SOUFFLE_VISITOR_LINK(TupleElement, Expression);
     SOUFFLE_VISITOR_LINK(IntrinsicOperator, AbstractOperator);

@@ -87,7 +87,6 @@
 #include "ram/utility/Visitor.h"
 #include "souffle/BinaryConstraintOps.h"
 #include "souffle/RamTypes.h"
-#include "souffle/SymbolTable.h"
 #include "souffle/TypeAttribute.h"
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/FileUtil.h"
@@ -1923,6 +1922,13 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
+        void visit_(
+                type_identity<StringConstant>, const StringConstant& constant, std::ostream& out) override {
+            PRINT_BEGIN_COMMENT(out);
+            out << "RamSigned(" << synthesiser.convertSymbol2Idx(constant.getConstant()) << ")";
+            PRINT_END_COMMENT(out);
+        }
+
         void visit_(type_identity<TupleElement>, const TupleElement& access, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "env" << access.getTupleId() << "[" << access.getElement() << "]";
@@ -2311,7 +2317,6 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     // ---------------------------------------------------------------
     //                      Auto-Index Generation
     // ---------------------------------------------------------------
-    const SymbolTable& symTable = translationUnit.getSymbolTable();
     const Program& prog = translationUnit.getProgram();
     auto* idxAnalysis = translationUnit.getAnalysis<IndexAnalysis>();
     // ---------------------------------------------------------------
@@ -2428,11 +2433,13 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     // declare symbol table
     os << "// -- initialize symbol table --\n";
 
+    // issue symbol table with string constants
+    visitDepthFirst(prog, [&](const StringConstant& sc) { convertSymbol2Idx(sc.getConstant()); });
     os << "SymbolTable symTable";
-    if (symTable.size() > 0) {
+    if (!symbolMap.empty()) {
         os << "{\n";
-        for (size_t i = 0; i < symTable.size(); i++) {
-            os << "\tR\"_(" << symTable.resolve(i) << ")_\",\n";
+        for (const auto& x : symbolIndex) {
+            os << "\tR\"_(" << x << ")_\",\n";
         }
         os << "}";
     }

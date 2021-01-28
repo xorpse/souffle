@@ -26,6 +26,7 @@
 #include "ast/transform/ComponentInstantiation.h"
 #include "ast/transform/Conditional.h"
 #include "ast/transform/ExecutionPlanChecker.h"
+#include "ast/transform/ExpandEqrels.h"
 #include "ast/transform/Fixpoint.h"
 #include "ast/transform/FoldAnonymousRecords.h"
 #include "ast/transform/GroundWitnesses.h"
@@ -42,7 +43,6 @@
 #include "ast/transform/PartitionBodyLiterals.h"
 #include "ast/transform/Pipeline.h"
 #include "ast/transform/PragmaChecker.h"
-#include "ast/transform/Provenance.h"
 #include "ast/transform/ReduceExistentials.h"
 #include "ast/transform/RemoveBooleanConstraints.h"
 #include "ast/transform/RemoveEmptyRelations.h"
@@ -477,7 +477,7 @@ int main(int argc, char** argv) {
 
     // Provenance pipeline
     auto provenancePipeline = mk<ast::transform::ConditionalTransformer>(Global::config().has("provenance"),
-            mk<ast::transform::PipelineTransformer>(mk<ast::transform::ProvenanceTransformer>(),
+            mk<ast::transform::PipelineTransformer>(mk<ast::transform::ExpandEqrelsTransformer>(),
                     mk<ast::transform::NameUnnamedVariablesTransformer>()));
 
     // Main pipeline

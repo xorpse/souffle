@@ -71,7 +71,9 @@ private:
     /** @brief Return a reference to the relation on the given index */
     RelationHandle& getRelationHandle(const size_t idx);
     /** @brief Return the string symbol table */
-    SymbolTable& getSymbolTable();
+    SymbolTable& getSymbolTable() {
+        return symbolTable;
+    }
     /** @brief Return the record table */
     RecordTable& getRecordTable();
     /** @brief Return the ram::TranslationUnit */
@@ -180,6 +182,8 @@ private:
     RecordTable recordTable;
     /** Symbol table for relations */
     VecOwn<RelationHandle> relations;
+    /** Symbol table */
+    SymbolTable symbolTable;
 };
 
 }  // namespace souffle::interpreter

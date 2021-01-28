@@ -185,15 +185,6 @@ const Relation* getHeadRelation(const Clause* clause, const Program* program);
 std::set<const Relation*> getBodyRelations(const Clause* clause, const Program* program);
 
 /**
- * Returns the index of a clause within its relation, ignoring facts.
- * Used in provenance as a unique ID for clauses within their relations.
- * @param program the program
- * @param clause the clause to get the index of
- * @return the index of the clause ignoring facts; 0 for facts
- */
-size_t getClauseNum(const Program* program, const Clause* clause);
-
-/**
  * Returns whether the given relation has any clauses which contain a negation of a specific relation.
  * @param relation the relation to search the clauses of
  * @param negRelation the relation to search for negations of in clause bodies

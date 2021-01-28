@@ -152,27 +152,6 @@ std::set<const Relation*> getBodyRelations(const Clause* clause, const Program* 
     return bodyRelations;
 }
 
-size_t getClauseNum(const Program* program, const Clause* clause) {
-    // TODO (azreika): This number might change between the provenance transformer and the AST->RAM
-    // translation. Might need a better way to assign IDs to clauses... (see PR #1288).
-    const Relation* rel = getRelation(*program, clause->getHead()->getQualifiedName());
-    assert(rel != nullptr && "clause relation does not exist");
-
-    size_t clauseNum = 1;
-    for (const auto* cur : getClauses(*program, *rel)) {
-        bool isFact = cur->getBodyLiterals().empty();
-        if (cur == clause) {
-            return isFact ? 0 : clauseNum;
-        }
-
-        if (!isFact) {
-            clauseNum++;
-        }
-    }
-
-    fatal("clause does not exist");
-}
-
 bool hasClauseWithNegatedRelation(const Relation* relation, const Relation* negRelation,
         const Program* program, const Literal*& foundLiteral) {
     for (const Clause* cl : getClauses(*program, *relation)) {

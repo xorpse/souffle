@@ -50,8 +50,13 @@ NodePtr NodeGenerator::generateTree(const ram::Node& root) {
     return dispatch(root);
 }
 
-NodePtr NodeGenerator::visit_(type_identity<ram::Constant>, const ram::Constant& num) {
-    return mk<Constant>(I_Constant, &num);
+NodePtr NodeGenerator::visit_(type_identity<ram::StringConstant>, const ram::StringConstant& sc) {
+    size_t num = engine.getSymbolTable().lookup(sc.getConstant());
+    return mk<StringConstant>(I_StringConstant, &sc, num);
+}
+
+NodePtr NodeGenerator::visit_(type_identity<ram::NumericConstant>, const ram::NumericConstant& num) {
+    return mk<NumericConstant>(I_NumericConstant, &num);
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::TupleElement>, const ram::TupleElement& access) {
@@ -592,8 +597,8 @@ SuperInstruction NodeGenerator::getIndexSuperInstInfo(const ram::IndexOperation&
         }
 
         // Constant
-        if (isA<ram::Constant>(low)) {
-            indexOperation.first[i] = as<ram::Constant>(low)->getConstant();
+        if (isA<ram::NumericConstant>(low)) {
+            indexOperation.first[i] = as<ram::NumericConstant>(low)->getConstant();
             continue;
         }
 
@@ -621,8 +626,8 @@ SuperInstruction NodeGenerator::getIndexSuperInstInfo(const ram::IndexOperation&
         }
 
         // Constant
-        if (isA<ram::Constant>(hig)) {
-            indexOperation.second[i] = as<ram::Constant>(hig)->getConstant();
+        if (isA<ram::NumericConstant>(hig)) {
+            indexOperation.second[i] = as<ram::NumericConstant>(hig)->getConstant();
             continue;
         }
 
@@ -667,8 +672,8 @@ SuperInstruction NodeGenerator::getExistenceSuperInstInfo(const ram::AbstractExi
         }
 
         // Constant
-        if (isA<ram::Constant>(child)) {
-            superOp.first[i] = as<ram::Constant>(child)->getConstant();
+        if (isA<ram::NumericConstant>(child)) {
+            superOp.first[i] = as<ram::NumericConstant>(child)->getConstant();
             superOp.second[i] = superOp.first[i];
             continue;
         }
@@ -696,8 +701,8 @@ SuperInstruction NodeGenerator::getProjectSuperInstInfo(const ram::Project& exis
     for (size_t i = 0; i < arity; ++i) {
         auto& child = children[i];
         // Constant
-        if (isA<ram::Constant>(child)) {
-            superOp.first[i] = as<ram::Constant>(child)->getConstant();
+        if (isA<ram::NumericConstant>(child)) {
+            superOp.first[i] = as<ram::NumericConstant>(child)->getConstant();
             continue;
         }
 

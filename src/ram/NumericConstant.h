@@ -8,7 +8,7 @@
 
 /************************************************************************
  *
- * @file Constant.h
+ * @file NumericConstant.h
  *
  * Defines a class for evaluating values in the Relational Algebra Machine
  *
@@ -24,11 +24,11 @@
 namespace souffle::ram {
 
 /**
- * @class Constant
+ * @class NumericConstant
  * @brief Represents a Ram Constant
  *
  */
-class Constant : public Expression {
+class NumericConstant : public Expression {
 public:
     /** @brief Get constant */
     RamDomain getConstant() const {
@@ -36,10 +36,10 @@ public:
     }
 
 protected:
-    explicit Constant(RamDomain constant) : constant(constant) {}
+    explicit NumericConstant(RamDomain constant) : constant(constant) {}
 
     bool equal(const Node& node) const override {
-        const auto& other = asAssert<Constant>(node);
+        const auto& other = asAssert<NumericConstant>(node);
         return constant == other.constant;
     }
 
