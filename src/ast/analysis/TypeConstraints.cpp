@@ -493,8 +493,8 @@ void TypeConstraintsAnalysis::visit_(type_identity<IntrinsicFunctor>, const Intr
     // The type of the user-defined function might not be set at this stage.
     // If so then add overloads as alternatives
     if (!typeAnalysis.hasValidTypeInfo(fun))
-        addConstraint(satisfiesOverload(typeEnv, functorBuiltIn(fun.getBaseFunctionOp()), functorVar,
-                argVars, isInfixFunctorOp(fun.getBaseFunctionOp())));
+        addConstraint(satisfiesOverload(typeEnv, functorBuiltIn(fun.getBaseFunctionOp()), functorVar, argVars,
+                isInfixFunctorOp(fun.getBaseFunctionOp())));
 
     // In polymorphic case
     // We only require arguments to share a base type with a return type.

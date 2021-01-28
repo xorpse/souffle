@@ -16,9 +16,9 @@
 
 #pragma once
 
+#include "ast/Attribute.h"
 #include "ast/Node.h"
 #include "parser/SrcLocation.h"
-#include "ast/Attribute.h"
 #include "souffle/utility/Types.h"
 #include <cstddef>
 #include <iosfwd>
@@ -36,8 +36,8 @@ namespace souffle::ast {
 
 class FunctorDeclaration : public Node {
 public:
-    FunctorDeclaration(std::string name, VecOwn<Attribute> params, Own<Attribute> returnType,
-            bool stateful, SrcLocation loc = {});
+    FunctorDeclaration(std::string name, VecOwn<Attribute> params, Own<Attribute> returnType, bool stateful,
+            SrcLocation loc = {});
 
     /** Return name */
     const std::string& getName() const {

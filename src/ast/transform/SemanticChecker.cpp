@@ -124,7 +124,7 @@ private:
     void checkRelationDeclaration(const Relation& relation);
     void checkRelationFunctionalDependencies(const Relation& relation);
     void checkRelation(const Relation& relation);
-    void checkType(ast::Attribute const& attr, std::string const& name={});
+    void checkType(ast::Attribute const& attr, std::string const& name = {});
     void checkFunctorDeclaration(const FunctorDeclaration& decl);
 
     void checkNamespaces();

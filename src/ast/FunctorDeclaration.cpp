@@ -17,10 +17,10 @@
 
 namespace souffle::ast {
 
-FunctorDeclaration::FunctorDeclaration(std::string name, VecOwn<Attribute> params, Own<Attribute> returnType,
-        bool stateful, SrcLocation loc)
-        : Node(std::move(loc)), name(std::move(name)), params(std::move(params)), returnType(std::move(returnType)),
-          stateful(stateful) {
+FunctorDeclaration::FunctorDeclaration(
+        std::string name, VecOwn<Attribute> params, Own<Attribute> returnType, bool stateful, SrcLocation loc)
+        : Node(std::move(loc)), name(std::move(name)), params(std::move(params)),
+          returnType(std::move(returnType)), stateful(stateful) {
     assert(this->name.length() > 0 && "functor name is empty");
     assert(allValidPtrs(this->params));
     assert(this->returnType != nullptr);
@@ -29,8 +29,7 @@ FunctorDeclaration::FunctorDeclaration(std::string name, VecOwn<Attribute> param
 void FunctorDeclaration::print(std::ostream& out) const {
     auto convert = [&](Own<Attribute> const& attr) { return attr->getName() + ": " + attr->getTypeName(); };
 
-    tfm::format(
-            out, ".declfun %s(%s): %s", name, join(map(params, convert), ","), returnType->getTypeName());
+    tfm::format(out, ".declfun %s(%s): %s", name, join(map(params, convert), ","), returnType->getTypeName());
     if (stateful) {
         out << " stateful";
     }

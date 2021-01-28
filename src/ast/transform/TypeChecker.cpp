@@ -556,7 +556,7 @@ void TypeCheckerImpl::visit_(type_identity<UserDefinedFunctor>, const UserDefine
         std::ostringstream out;
         out << "positional parameter " << idx;
         if (!name.empty()) {
-            out << " ('" << name << "')" ;
+            out << " ('" << name << "')";
         }
 
         return out.str();

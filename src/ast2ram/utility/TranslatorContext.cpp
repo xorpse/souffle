@@ -162,8 +162,7 @@ TypeAttribute TranslatorContext::getFunctorReturnTypeAttribute(const ast::Functo
     return functorAnalysis->getReturnTypeAttribute(functor);
 }
 
-TypeAttribute TranslatorContext::getFunctorParamTypeAtribute(
-        const ast::Functor& functor, size_t idx) const {
+TypeAttribute TranslatorContext::getFunctorParamTypeAtribute(const ast::Functor& functor, size_t idx) const {
     return functorAnalysis->getParamTypeAttribute(functor, idx);
 }
 

@@ -22,11 +22,11 @@
 #include <vector>
 
 namespace souffle::ast {
-    class Functor;
-    class IntrinsicFunctor;
-    class Type;
-    class UserDefinedFunctor;
-}
+class Functor;
+class IntrinsicFunctor;
+class Type;
+class UserDefinedFunctor;
+}  // namespace souffle::ast
 
 namespace souffle::ast::analysis {
 
