@@ -1712,7 +1712,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             // clang-format off
 #define EVAL_CHILD(ty, idx)        \
     out << "ramBitCast<" #ty ">("; \
-    dispatch(rel.idx(), out);         \
+    dispatch(rel.idx(), out);      \
     out << ")"
 #define COMPARE_NUMERIC(ty, op) \
     out << "(";                 \
@@ -1961,7 +1961,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 #define UNARY_OP(opcode, ty, op)                \
     case FunctorOp::opcode: {                   \
         out << "(" #op "(ramBitCast<" #ty ">("; \
-        dispatch(*args[0], out);                    \
+        dispatch(*args[0], out);                \
         out << ")))";                           \
         break;                                  \
     }
@@ -1976,9 +1976,9 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 #define BINARY_OP_EXPR_EX(ty, op, rhs_post)      \
     {                                            \
         out << "(ramBitCast<" #ty ">(";          \
-        dispatch(*args[0], out);                     \
+        dispatch(*args[0], out);                 \
         out << ") " #op " ramBitCast<" #ty ">("; \
-        dispatch(*args[1], out);                     \
+        dispatch(*args[1], out);                 \
         out << rhs_post "))";                    \
         break;                                   \
     }
@@ -2005,9 +2005,9 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 #define BINARY_OP_EXP(opcode, ty, tyTemp)                                                     \
     case FunctorOp::opcode: {                                                                 \
         out << "static_cast<" #ty ">(static_cast<" #tyTemp ">(std::pow(ramBitCast<" #ty ">("; \
-        dispatch(*args[0], out);                                                                  \
+        dispatch(*args[0], out);                                                              \
         out << "), ramBitCast<" #ty ">(";                                                     \
-        dispatch(*args[1], out);                                                                  \
+        dispatch(*args[1], out);                                                              \
         out << "))))";                                                                        \
         break;                                                                                \
     }
@@ -2017,7 +2017,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         out << #op "({";                   \
         for (auto& cur : args) {           \
             out << "ramBitCast<" #ty ">("; \
-            dispatch(*cur, out);               \
+            dispatch(*cur, out);           \
             out << "), ";                  \
         }                                  \
         out << "})";                       \
@@ -2038,7 +2038,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 #define CONV_FROM_STRING(opcode, ty)                                            \
     case FunctorOp::opcode: {                                                   \
         out << "souffle::evaluator::symbol2numeric<" #ty ">(symTable.resolve("; \
-        dispatch(*args[0], out);                                                    \
+        dispatch(*args[0], out);                                                \
         out << "))";                                                            \
     } break;
             // clang-format on
