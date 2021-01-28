@@ -27,20 +27,20 @@
 #include "ram/IntrinsicOperator.h"
 #include "ram/PackRecord.h"
 #include "ram/SignedConstant.h"
+#include "ram/StringConstant.h"
 #include "ram/SubroutineArgument.h"
 #include "ram/TupleElement.h"
 #include "ram/UndefValue.h"
 #include "ram/UnsignedConstant.h"
 #include "ram/UserDefinedOperator.h"
 #include "ram/utility/Utils.h"
-#include "souffle/SymbolTable.h"
 #include "souffle/utility/StringUtil.h"
 
 namespace souffle::ast2ram::seminaive {
 
 Own<ram::Expression> ValueTranslator::translateValue(const ast::Argument* arg) {
     assert(arg != nullptr && "arg should be defined");
-    return ValueTranslator(context, symbolTable, index)(*arg);
+    return ValueTranslator(context, index)(*arg);
 }
 
 Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::Variable>, const ast::Variable& var) {
@@ -69,7 +69,7 @@ Own<ram::Expression> ValueTranslator::visit_(
 
 Own<ram::Expression> ValueTranslator::visit_(
         type_identity<ast::StringConstant>, const ast::StringConstant& c) {
-    return mk<ram::SignedConstant>(symbolTable.lookup(c.getConstant()));
+    return mk<ram::StringConstant>(c.getConstant());
 }
 
 Own<ram::Expression> ValueTranslator::visit_(type_identity<ast::NilConstant>, const ast::NilConstant&) {

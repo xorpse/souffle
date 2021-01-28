@@ -34,7 +34,7 @@ namespace souffle::ast2ram::provenance {
 
 class SubproofGenerator : public ast2ram::provenance::ClauseTranslator {
 public:
-    SubproofGenerator(const TranslatorContext& context, SymbolTable& symbolTable);
+    SubproofGenerator(const TranslatorContext& context);
     ~SubproofGenerator();
 
 protected:

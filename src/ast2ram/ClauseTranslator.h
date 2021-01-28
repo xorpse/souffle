@@ -19,10 +19,6 @@
 
 #include "souffle/utility/ContainerUtil.h"
 
-namespace souffle {
-class SymbolTable;
-}
-
 namespace souffle::ast {
 class Clause;
 class Relation;
@@ -38,8 +34,7 @@ class TranslatorContext;
 
 class ClauseTranslator {
 public:
-    ClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable)
-            : context(context), symbolTable(symbolTable) {}
+    ClauseTranslator(const TranslatorContext& context) : context(context) {}
     virtual ~ClauseTranslator() = default;
 
     virtual Own<ram::Statement> translateNonRecursiveClause(const ast::Clause& clause) = 0;
@@ -48,7 +43,6 @@ public:
 
 protected:
     const TranslatorContext& context;
-    SymbolTable& symbolTable;
 };
 
 }  // namespace souffle::ast2ram

@@ -18,10 +18,6 @@
 
 #include "souffle/utility/ContainerUtil.h"
 
-namespace souffle {
-class SymbolTable;
-}
-
 namespace souffle::ast2ram {
 
 class ClauseTranslator;
@@ -33,6 +29,8 @@ class ValueTranslator;
 
 class TranslationStrategy {
 public:
+    virtual ~TranslationStrategy() = default;
+
     /** Translation strategy name */
     virtual std::string getName() const = 0;
 
@@ -40,16 +38,15 @@ public:
     virtual UnitTranslator* createUnitTranslator() const = 0;
 
     /** AST clause -> RAM statement translator */
-    virtual ClauseTranslator* createClauseTranslator(
-            const TranslatorContext& context, SymbolTable& symbolTable) const = 0;
+    virtual ClauseTranslator* createClauseTranslator(const TranslatorContext& context) const = 0;
 
     /** AST literal -> RAM condition translator */
     virtual ConstraintTranslator* createConstraintTranslator(
-            const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index) const = 0;
+            const TranslatorContext& context, const ValueIndex& index) const = 0;
 
     /** AST argument -> RAM expression translator */
     virtual ValueTranslator* createValueTranslator(
-            const TranslatorContext& context, SymbolTable& symbolTable, const ValueIndex& index) const = 0;
+            const TranslatorContext& context, const ValueIndex& index) const = 0;
 };
 
 }  // namespace souffle::ast2ram

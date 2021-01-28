@@ -303,7 +303,6 @@ souffle_sources = \
         ram/Clear.h                                        \
         ram/Condition.h                                    \
         ram/Conjunction.h                                  \
-        ram/Constant.h                                     \
         ram/Constraint.h                                   \
         ram/DebugInfo.h                                    \
         ram/EmptinessCheck.h                               \
@@ -330,6 +329,7 @@ souffle_sources = \
         ram/NestedIntrinsicOperator.h                      \
         ram/NestedOperation.h                              \
         ram/Node.h                                         \
+        ram/NumericConstant.h                              \
         ram/Operation.h                                    \
         ram/PackRecord.h                                   \
         ram/Parallel.h                                     \
@@ -352,6 +352,7 @@ souffle_sources = \
         ram/SignedConstant.h                               \
         ram/Statement.h                                    \
         ram/Statement.h                                    \
+        ram/StringConstant.h                               \
         ram/SubroutineArgument.h                           \
         ram/SubroutineReturn.h                             \
         ram/Swap.h                                         \

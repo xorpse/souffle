@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ram/Constant.h"
+#include "ram/NumericConstant.h"
 #include "souffle/RamTypes.h"
 #include <ostream>
 
@@ -31,9 +31,9 @@ namespace souffle::ram {
  * number(5)
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-class SignedConstant : public Constant {
+class SignedConstant : public NumericConstant {
 public:
-    explicit SignedConstant(RamDomain val) : Constant(val) {}
+    explicit SignedConstant(RamDomain val) : NumericConstant(val) {}
 
     /** @brief Get value of the constant. */
     RamDomain getValue() const {
