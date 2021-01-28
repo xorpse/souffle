@@ -59,7 +59,7 @@ Own<Operation> ChoiceConversionTransformer::rewriteScan(const Scan* scan) {
 
     // Check that Relation is not referenced further down in the loop nest
     bool referencedBelow = false;
-    visitDepthFirst(*scan, [&](const TupleElement& element) {
+    visit(*scan, [&](const TupleElement& element) {
         if (element.getTupleId() == scan->getTupleId()) {
             referencedBelow = true;
         }
@@ -107,7 +107,7 @@ Own<Operation> ChoiceConversionTransformer::rewriteIndexScan(const IndexScan* in
 
     // Check that Relation is not referenced further down in the loop nest
     bool referencedBelow = false;
-    visitDepthFirst(*indexScan, [&](const TupleElement& element) {
+    visit(*indexScan, [&](const TupleElement& element) {
         if (element.getTupleId() == indexScan->getTupleId()) {
             referencedBelow = true;
         }

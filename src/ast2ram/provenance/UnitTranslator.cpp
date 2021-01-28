@@ -411,10 +411,11 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
     });
 
     visit(clause, [&](const ast::Variable& var) {
-    // TODO (azreika): index aggregators too, then override the value translator to treat them as variables
+        // TODO (azreika): index aggregators too, then override the value translator to treat them as
+        // variables
 
-    // Index all unnamed variables
-    // TODO (azreika): maybe don't unname variables in provenance
+        // Index all unnamed variables
+        // TODO (azreika): maybe don't unname variables in provenance
         if (isPrefix("+underscore", var.getName())) {
             idToVarName[count] = var.getName();
             dummyValueIndex->addVarReference(var.getName(), count++, 0);

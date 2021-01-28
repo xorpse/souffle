@@ -2434,7 +2434,7 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     os << "// -- initialize symbol table --\n";
 
     // issue symbol table with string constants
-    visitDepthFirst(prog, [&](const StringConstant& sc) { convertSymbol2Idx(sc.getConstant()); });
+    visit(prog, [&](const StringConstant& sc) { convertSymbol2Idx(sc.getConstant()); });
     os << "SymbolTable symTable";
     if (!symbolMap.empty()) {
         os << "{\n";
