@@ -37,7 +37,7 @@ bool HoistAggregateTransformer::hoistAggregate(Program& program) {
     // We assume all Operations are renumbered for this transformation.
 
     // Hoist a single aggregate to an outer scope that is data-independent.
-    visitDepthFirst(program, [&](const Query& query) {
+    visit(program, [&](const Query& query) {
         Own<NestedOperation> newAgg;
         bool priorTupleOp = false;
         std::function<Own<Node>(Own<Node>)> aggRewriter = [&](Own<Node> node) -> Own<Node> {
@@ -65,7 +65,7 @@ bool HoistAggregateTransformer::hoistAggregate(Program& program) {
     });
 
     // hoist a single aggregate to an outer scope that is data-dependent on a prior operation.
-    visitDepthFirst(program, [&](const Query& query) {
+    visit(program, [&](const Query& query) {
         int newLevel = -1;
         Own<NestedOperation> newAgg;
         int priorOpLevel = -1;

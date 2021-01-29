@@ -66,7 +66,7 @@ template <typename R = void, typename NodeType = Node const, typename... Params>
 struct Visitor : public souffle::Visitor<R, NodeType, Params...> {
     using souffle::Visitor<R, NodeType, Params...>::visit_;
 
-    virtual R visit(NodeType& node, Params const&... args) override {
+    virtual R dispatch(NodeType& node, Params const&... args) override {
         // dispatch node processing based on dynamic type
 
         // types

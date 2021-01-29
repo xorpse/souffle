@@ -35,10 +35,10 @@ bool UniqueAggregationVariablesTransformer::transform(TranslationUnit& translati
     bool changed = false;
 
     // make variables in aggregates unique
-    visitDepthFirst(translationUnit.getProgram(), [&](Clause& clause) {
+    visit(translationUnit.getProgram(), [&](Clause& clause) {
         // find out if the target expression variable occurs elsewhere in the rule. If so, rename it
         // to avoid naming conflicts
-        visitDepthFirst(clause, [&](Aggregator& agg) {
+        visit(clause, [&](Aggregator& agg) {
             // get the set of local variables in this aggregate and rename
             // those that occur outside the aggregate
             std::set<std::string> localVariables = analysis::getLocalVariables(translationUnit, clause, agg);
@@ -48,7 +48,7 @@ bool UniqueAggregationVariablesTransformer::transform(TranslationUnit& translati
                 if (variablesOutsideAggregate.find(name) != variablesOutsideAggregate.end()) {
                     // then this MUST be renamed to avoid scoping issues
                     std::string uniqueName = analysis::findUniqueVariableName(clause, name);
-                    visitDepthFirst(agg, [&](Variable& var) {
+                    visit(agg, [&](Variable& var) {
                         if (var.getName() == name) {
                             var.setName(uniqueName);
                             changed = true;

@@ -29,7 +29,6 @@
 #include "ram/Choice.h"
 #include "ram/Clear.h"
 #include "ram/Conjunction.h"
-#include "ram/Constant.h"
 #include "ram/Constraint.h"
 #include "ram/DebugInfo.h"
 #include "ram/EmptinessCheck.h"
@@ -49,6 +48,7 @@
 #include "ram/Loop.h"
 #include "ram/Negation.h"
 #include "ram/NestedIntrinsicOperator.h"
+#include "ram/NumericConstant.h"
 #include "ram/PackRecord.h"
 #include "ram/Parallel.h"
 #include "ram/ParallelAggregate.h"
@@ -66,6 +66,7 @@
 #include "ram/Scan.h"
 #include "ram/Sequence.h"
 #include "ram/Statement.h"
+#include "ram/StringConstant.h"
 #include "ram/SubroutineArgument.h"
 #include "ram/SubroutineReturn.h"
 #include "ram/Swap.h"
@@ -163,10 +164,6 @@ void Engine::swapRelation(const size_t ramRel1, const size_t ramRel2) {
 
 int Engine::incCounter() {
     return counter++;
-}
-
-SymbolTable& Engine::getSymbolTable() {
-    return tUnit.getSymbolTable();
 }
 
 RecordTable& Engine::getRecordTable() {
@@ -284,7 +281,7 @@ void Engine::executeMain() {
         ProfileEventSingleton::instance().setOutputFile(Global::config().get("profile"));
         // Prepare the frequency table for threaded use
         const ram::Program& program = tUnit.getProgram();
-        visitDepthFirst(program, [&](const ram::TupleOperation& node) {
+        visit(program, [&](const ram::TupleOperation& node) {
             if (!node.getProfileText().empty()) {
                 frequencies.emplace(node.getProfileText(), std::deque<std::atomic<size_t>>());
                 frequencies[node.getProfileText()].emplace_back(0);
@@ -309,7 +306,7 @@ void Engine::executeMain() {
 
         // Store count of rules
         size_t ruleCount = 0;
-        visitDepthFirst(program, [&](const ram::Query&) { ++ruleCount; });
+        visit(program, [&](const ram::Query&) { ++ruleCount; });
         ProfileEventSingleton::instance().makeConfigRecord("ruleCount", std::to_string(ruleCount));
 
         Context ctxt;
@@ -406,9 +403,13 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
     }
 
     switch (node->getType()) {
-        CASE(Constant)
+        CASE(NumericConstant)
             return cur.getConstant();
-        ESAC(Constant)
+        ESAC(NumericConstant)
+
+        CASE(StringConstant)
+            return shadow.getConstant();
+        ESAC(StringConstant)
 
         CASE(TupleElement)
             return ctxt[shadow.getTupleId()][shadow.getElement()];

@@ -62,7 +62,7 @@ public:
     using solution_type = std::map<const Argument*, value_type>;
 
     virtual void collectConstraints(const Clause& clause) {
-        visitDepthFirstPreOrder(clause, *this);
+        visit(clause, *this);
     }
 
     /**
@@ -86,7 +86,7 @@ public:
 
         // convert assignment to result
         solution_type solution;
-        visitDepthFirst(clause, [&](const Argument& arg) { solution[&arg] = assignment[getVar(arg)]; });
+        visit(clause, [&](const Argument& arg) { solution[&arg] = assignment[getVar(arg)]; });
         return solution;
     }
 

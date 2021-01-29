@@ -1,6 +1,6 @@
 /*
  * Souffle - A Datalog Compiler
- * Copyright (c) 2017, The Souffle Developers. All rights reserved
+ * Copyright (c) 2020, The Souffle Developers. All rights reserved
  * Licensed under the Universal Permissive License v 1.0 as shown at:
  * - https://opensource.org/licenses/UPL
  * - <souffle root>/licenses/SOUFFLE-UPL.txt
@@ -8,9 +8,9 @@
 
 /************************************************************************
  *
- * @file Provenance.h
+ * @file ExpandEqrels.h
  *
- * Transformation pass to add provenance information
+ * Transformation pass to explicitly define eqrel relations.
  *
  ***********************************************************************/
 
@@ -22,22 +22,18 @@
 
 namespace souffle::ast::transform {
 
-/**
- * Transformation pass to add provenance information
- */
-class ProvenanceTransformer : public Transformer {
+class ExpandEqrelsTransformer : public Transformer {
 public:
     std::string getName() const override {
-        return "ProvenanceTransformer";
+        return "ExpandEqrelsTransformer";
     }
 
 private:
-    ProvenanceTransformer* cloneImpl() const override {
-        return new ProvenanceTransformer();
+    ExpandEqrelsTransformer* cloneImpl() const override {
+        return new ExpandEqrelsTransformer();
     }
 
     bool transform(TranslationUnit& translationUnit) override;
-    bool transformMaxHeight(TranslationUnit& translationUnit);
 };
 
 }  // namespace souffle::ast::transform

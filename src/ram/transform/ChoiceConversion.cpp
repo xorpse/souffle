@@ -40,7 +40,7 @@ Own<Operation> ChoiceConversionTransformer::rewriteScan(const Scan* scan) {
 
             const Node& nextNode = filter->getOperation();
 
-            visitDepthFirst(nextNode, [&](const TupleElement& element) {
+            visit(nextNode, [&](const TupleElement& element) {
                 if (element.getTupleId() == scan->getTupleId()) {
                     transformTuple = false;
                 }
@@ -50,13 +50,27 @@ Own<Operation> ChoiceConversionTransformer::rewriteScan(const Scan* scan) {
 
     // Convert the Scan/If pair into a Choice
     if (transformTuple) {
-        VecOwn<Expression> newValues;
         const auto* filter = as<Filter>(scan->getOperation());
         const int identifier = scan->getTupleId();
 
         return mk<Choice>(scan->getRelation(), identifier, souffle::clone(filter->getCondition()),
                 souffle::clone(filter->getOperation()), scan->getProfileText());
     }
+
+    // Check that Relation is not referenced further down in the loop nest
+    bool referencedBelow = false;
+    visit(*scan, [&](const TupleElement& element) {
+        if (element.getTupleId() == scan->getTupleId()) {
+            referencedBelow = true;
+        }
+    });
+
+    // Convert the Scan into a Choice where True
+    if (!referencedBelow) {
+        return mk<Choice>(scan->getRelation(), scan->getTupleId(), mk<True>(),
+                souffle::clone(scan->getOperation()), scan->getProfileText());
+    }
+
     return nullptr;
 }
 
@@ -72,7 +86,7 @@ Own<Operation> ChoiceConversionTransformer::rewriteIndexScan(const IndexScan* in
             // Check that the filter is not referred to after
             const Node& nextNode = filter->getOperation();
 
-            visitDepthFirst(nextNode, [&](const TupleElement& element) {
+            visit(nextNode, [&](const TupleElement& element) {
                 if (element.getTupleId() == indexScan->getTupleId()) {
                     transformTuple = false;
                 }
@@ -82,35 +96,37 @@ Own<Operation> ChoiceConversionTransformer::rewriteIndexScan(const IndexScan* in
 
     // Convert the IndexScan/If pair into an IndexChoice
     if (transformTuple) {
-        RamPattern newValues;
+        RamPattern newValues = make_pair(souffle::clone(indexScan->getRangePattern().first),
+                souffle::clone(indexScan->getRangePattern().second));
         const auto* filter = as<Filter>(indexScan->getOperation());
         const int identifier = indexScan->getTupleId();
         const std::string& rel = indexScan->getRelation();
-
-        for (auto& cur : indexScan->getRangePattern().first) {
-            Expression* val = nullptr;
-            if (cur != nullptr) {
-                val = cur->clone();
-            }
-            newValues.first.emplace_back(val);
-        }
-        for (auto& cur : indexScan->getRangePattern().second) {
-            Expression* val = nullptr;
-            if (cur != nullptr) {
-                val = cur->clone();
-            }
-            newValues.second.emplace_back(val);
-        }
-
         return mk<IndexChoice>(rel, identifier, souffle::clone(filter->getCondition()), std::move(newValues),
                 souffle::clone(filter->getOperation()), indexScan->getProfileText());
     }
+
+    // Check that Relation is not referenced further down in the loop nest
+    bool referencedBelow = false;
+    visit(*indexScan, [&](const TupleElement& element) {
+        if (element.getTupleId() == indexScan->getTupleId()) {
+            referencedBelow = true;
+        }
+    });
+
+    // Convert the Scan into a Choice where True
+    if (!referencedBelow) {
+        RamPattern newValues = make_pair(souffle::clone(indexScan->getRangePattern().first),
+                souffle::clone(indexScan->getRangePattern().second));
+        return mk<IndexChoice>(indexScan->getRelation(), indexScan->getTupleId(), mk<True>(),
+                std::move(newValues), souffle::clone(indexScan->getOperation()), indexScan->getProfileText());
+    }
+
     return nullptr;
 }
 
 bool ChoiceConversionTransformer::convertScans(Program& program) {
     bool changed = false;
-    visitDepthFirst(program, [&](const Query& query) {
+    visit(program, [&](const Query& query) {
         std::function<Own<Node>(Own<Node>)> scanRewriter = [&](Own<Node> node) -> Own<Node> {
             if (const Scan* scan = as<Scan>(node)) {
                 if (Own<Operation> op = rewriteScan(scan)) {

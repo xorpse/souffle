@@ -128,7 +128,7 @@ bool RemoveRelationCopiesTransformer::removeRelationCopies(TranslationUnit& tran
     }
 
     // replace usage of relations according to alias map
-    visitDepthFirst(program, [&](Atom& atom) {
+    visit(program, [&](Atom& atom) {
         auto pos = isAliasOf.find(atom.getQualifiedName());
         if (pos != isAliasOf.end()) {
             atom.setQualifiedName(pos->second);
