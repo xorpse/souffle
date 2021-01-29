@@ -264,12 +264,12 @@ namespace {
  */
 std::set<const UnnamedVariable*> getUnnamedVariables(const Node& node) {
     std::set<const UnnamedVariable*> unnamedInAggregates;
-    visitDepthFirst(node, [&](const Aggregator& agg) {
-        visitDepthFirst(agg, [&](const UnnamedVariable& var) { unnamedInAggregates.insert(&var); });
+    visit(node, [&](const Aggregator& agg) {
+        visit(agg, [&](const UnnamedVariable& var) { unnamedInAggregates.insert(&var); });
     });
 
     std::set<const UnnamedVariable*> unnamed;
-    visitDepthFirst(node, [&](const UnnamedVariable& var) {
+    visit(node, [&](const UnnamedVariable& var) {
         if (!contains(unnamedInAggregates, &var)) {
             unnamed.insert(&var);
         }
@@ -295,7 +295,7 @@ void SemanticCheckerImpl::checkLiteral(const Literal& literal) {
         checkArgument(*constraint->getRHS());
 
         std::set<const UnnamedVariable*> unnamedInRecord;
-        visitDepthFirst(*constraint, [&](const RecordInit& record) {
+        visit(*constraint, [&](const RecordInit& record) {
             for (auto* arg : record.getArguments()) {
                 if (auto* unnamed = as<UnnamedVariable>(arg)) {
                     unnamedInRecord.insert(unnamed);
@@ -326,11 +326,11 @@ bool SemanticCheckerImpl::isDependent(const Clause& agg1, const Clause& agg2) {
     auto groundedInAgg2 = getGroundedTerms(tu, agg2);
     bool dependent = false;
     // For each variable X in the first aggregate
-    visitDepthFirst(agg1, [&](const ast::Variable& searchVar) {
+    visit(agg1, [&](const ast::Variable& searchVar) {
         // Try to find the corresponding variable X in the second aggregate
         // by string comparison
         const ast::Variable* matchingVarPtr = nullptr;
-        visitDepthFirst(agg2, [&](const ast::Variable& var) {
+        visit(agg2, [&](const ast::Variable& var) {
             if (var == searchVar) {
                 matchingVarPtr = &var;
                 return;
@@ -351,8 +351,8 @@ void SemanticCheckerImpl::checkAggregator(const Aggregator& aggregator) {
     const Program& program = tu.getProgram();
     Clause dummyClauseAggregator("dummy");
 
-    visitDepthFirst(program, [&](const Literal& parentLiteral) {
-        visitDepthFirst(parentLiteral, [&](const Aggregator& candidateAggregate) {
+    visit(program, [&](const Literal& parentLiteral) {
+        visit(parentLiteral, [&](const Aggregator& candidateAggregate) {
             if (candidateAggregate != aggregator) {
                 return;
             }
@@ -362,8 +362,8 @@ void SemanticCheckerImpl::checkAggregator(const Aggregator& aggregator) {
         });
     });
 
-    visitDepthFirst(program, [&](const Literal& parentLiteral) {
-        visitDepthFirst(parentLiteral, [&](const Aggregator& /* otherAggregate */) {
+    visit(program, [&](const Literal& parentLiteral) {
+        visit(parentLiteral, [&](const Aggregator& /* otherAggregate */) {
             // Create the other aggregate's dummy clause
             Clause dummyClauseOther("dummy");
             dummyClauseOther.addToBody(souffle::clone(parentLiteral));
@@ -474,7 +474,7 @@ void SemanticCheckerImpl::checkClause(const Clause& clause) {
     // issued.
     std::map<std::string, int> var_count;
     std::map<std::string, const ast::Variable*> var_pos;
-    visitDepthFirst(clause, [&](const ast::Variable& var) {
+    visit(clause, [&](const ast::Variable& var) {
         var_count[var.getName()]++;
         var_pos[var.getName()] = &var;
     });
@@ -511,7 +511,7 @@ void SemanticCheckerImpl::checkClause(const Clause& clause) {
 
     // check auto-increment
     if (recursiveClauses.recursive(&clause)) {
-        visitDepthFirst(clause, [&](const Counter& ctr) {
+        visit(clause, [&](const Counter& ctr) {
             report.addError("Auto-increment functor in a recursive rule", ctr.getSrcLoc());
         });
     }
@@ -526,7 +526,7 @@ void SemanticCheckerImpl::checkComplexRule(std::set<const Clause*> multiRule) {
     // TODO (b-scholz): for negation / disjunction this is not quite
     // right; we would need more semantic information here.
     for (auto literal : (*multiRule.begin())->getBodyLiterals()) {
-        visitDepthFirst(*literal, [&](const ast::Variable& var) {
+        visit(*literal, [&](const ast::Variable& var) {
             var_count[var.getName()]++;
             var_pos[var.getName()] = &var;
         });
@@ -534,7 +534,7 @@ void SemanticCheckerImpl::checkComplexRule(std::set<const Clause*> multiRule) {
 
     // Count variable occurrence for each head separately
     for (auto clause : multiRule) {
-        visitDepthFirst(*(clause->getHead()), [&](const ast::Variable& var) {
+        visit(*(clause->getHead()), [&](const ast::Variable& var) {
             var_count[var.getName()]++;
             var_pos[var.getName()] = &var;
         });
@@ -707,7 +707,7 @@ static const std::vector<SrcLocation> usesInvalidWitness(
     // of the variable to the invalidWitnessLocations vector.
     auto witnesses = analysis::getWitnessVariables(tu, clause, aggregate);
     for (const auto& witness : witnesses) {
-        visitDepthFirst(*aggregateSubclause, [&](const Variable& var) {
+        visit(*aggregateSubclause, [&](const Variable& var) {
             if (var.getName() == witness) {
                 invalidWitnessLocations.push_back(var.getSrcLoc());
             }
@@ -720,8 +720,8 @@ void SemanticCheckerImpl::checkWitnessProblem() {
     // Check whether there is the use of a witness in
     // an aggregate where it doesn't make sense to use it, i.e.
     // count, sum, mean
-    visitDepthFirst(program, [&](const Clause& clause) {
-        visitDepthFirst(clause, [&](const Aggregator& agg) {
+    visit(program, [&](const Clause& clause) {
+        visit(clause, [&](const Aggregator& agg) {
             for (auto&& invalidArgument : usesInvalidWitness(tu, clause, agg)) {
                 report.addError(
                         "Witness problem: argument grounded by an aggregator's inner scope is used "
@@ -874,10 +874,10 @@ void SemanticCheckerImpl::checkInlining() {
     // Cannot use the counter argument ('$') in inlined relations
 
     // Check if an inlined literal ever takes in a $
-    visitDepthFirst(program, [&](const Atom& atom) {
+    visit(program, [&](const Atom& atom) {
         Relation* associatedRelation = getRelation(program, atom.getQualifiedName());
         if (associatedRelation != nullptr && isInline(associatedRelation)) {
-            visitDepthFirst(atom, [&](const Argument& arg) {
+            visit(atom, [&](const Argument& arg) {
                 if (isA<Counter>(&arg)) {
                     report.addError(
                             "Cannot inline literal containing a counter argument '$'", arg.getSrcLoc());
@@ -889,7 +889,7 @@ void SemanticCheckerImpl::checkInlining() {
     // Check if an inlined clause ever contains a $
     for (const Relation* rel : inlinedRelations) {
         for (Clause* clause : getClauses(program, *rel)) {
-            visitDepthFirst(*clause, [&](const Argument& arg) {
+            visit(*clause, [&](const Argument& arg) {
                 if (isA<Counter>(&arg)) {
                     report.addError(
                             "Cannot inline clause containing a counter argument '$'", arg.getSrcLoc());
@@ -910,12 +910,11 @@ void SemanticCheckerImpl::checkInlining() {
         for (const Clause* clause : getClauses(program, *rel)) {
             // Get the variables in the head
             std::set<std::string> headVariables;
-            visitDepthFirst(*clause->getHead(),
-                    [&](const ast::Variable& var) { headVariables.insert(var.getName()); });
+            visit(*clause->getHead(), [&](const ast::Variable& var) { headVariables.insert(var.getName()); });
 
             // Get the variables in the body
             std::set<std::string> bodyVariables;
-            visitDepthFirst(clause->getBodyLiterals(),
+            visit(clause->getBodyLiterals(),
                     [&](const ast::Variable& var) { bodyVariables.insert(var.getName()); });
 
             // Check if all body variables are in the head
@@ -935,7 +934,7 @@ void SemanticCheckerImpl::checkInlining() {
     }
 
     // Check that these relations never appear negated
-    visitDepthFirst(program, [&](const Negation& neg) {
+    visit(program, [&](const Negation& neg) {
         Relation* associatedRelation = getRelation(program, neg.getAtom()->getQualifiedName());
         if (associatedRelation != nullptr &&
                 nonNegatableRelations.find(associatedRelation) != nonNegatableRelations.end()) {
@@ -956,8 +955,8 @@ void SemanticCheckerImpl::checkInlining() {
 
     // This corner case prevents generalising aggregator inlining with the current set up.
 
-    visitDepthFirst(program, [&](const Aggregator& aggr) {
-        visitDepthFirst(aggr, [&](const Atom& subatom) {
+    visit(program, [&](const Aggregator& aggr) {
+        visit(aggr, [&](const Atom& subatom) {
             const Relation* rel = getRelation(program, subatom.getQualifiedName());
             if (rel != nullptr && isInline(rel)) {
                 report.addError("Cannot inline relations that appear in aggregator", subatom.getSrcLoc());
@@ -1003,7 +1002,7 @@ void SemanticCheckerImpl::checkInlining() {
     };
 
     // Perform the check
-    visitDepthFirst(program, [&](const Negation& negation) {
+    visit(program, [&](const Negation& negation) {
         const Atom* associatedAtom = negation.getAtom();
         const Relation* associatedRelation = getRelation(program, associatedAtom->getQualifiedName());
         if (associatedRelation != nullptr && isInline(associatedRelation)) {

@@ -149,7 +149,7 @@ auto cloneRange(R const& range) {
 template <typename D = void, typename R, std::enable_if_t<is_range_v<R>, void*> = nullptr>
 auto clone(R const& range) {
     auto rn = cloneRange(range);
-    using ValueType = std::remove_const_t<std::remove_reference_t<decltype(**std::begin(range))>>;
+    using ValueType = remove_cvref_t<decltype(**std::begin(range))>;
     using ResType = std::conditional_t<std::is_same_v<D, void>, ValueType, D>;
     return VecOwn<ResType>(rn.begin(), rn.end());
 }

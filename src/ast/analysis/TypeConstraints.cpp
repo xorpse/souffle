@@ -660,7 +660,7 @@ void TypeConstraintsAnalysis::iterateOverAtom(
 
 void TypeConstraintsAnalysis::collectConstraints(const Clause& clause) {
     sinks.insert(clause.getHead());
-    visitDepthFirstPreOrder(clause, *this);
+    visit(clause, *this);
 }
 
 }  // namespace souffle::ast::analysis

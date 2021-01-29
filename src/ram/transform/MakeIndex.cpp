@@ -476,7 +476,7 @@ Own<Operation> MakeIndexTransformer::rewriteIndexScan(const IndexScan* iscan) {
 
 bool MakeIndexTransformer::makeIndex(Program& program) {
     bool changed = false;
-    visitDepthFirst(program, [&](const Query& query) {
+    visit(program, [&](const Query& query) {
         std::function<Own<Node>(Own<Node>)> scanRewriter = [&](Own<Node> node) -> Own<Node> {
             if (const Scan* scan = as<Scan>(node)) {
                 const Relation& rel = relAnalysis->lookup(scan->getRelation());

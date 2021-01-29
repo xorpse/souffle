@@ -92,7 +92,7 @@ std::set<std::string> MaterializeAggregationQueriesTransformer::distinguishHeadA
         headArguments.insert(localVarName);
     }
     // find local variables of inner aggregate and remove them
-    visitDepthFirst(aggregate, [&](const Aggregator& innerAggregate) {
+    visit(aggregate, [&](const Aggregator& innerAggregate) {
         if (aggregate == innerAggregate) {
             return;
         }
@@ -166,7 +166,7 @@ void MaterializeAggregationQueriesTransformer::groundInjectedParameters(
         for (const auto& lit : originalClause.getBodyLiterals()) {
             // -1. This may not be the same literal
             bool originalAggregateFound = false;
-            visitDepthFirst(*lit, [&](const Aggregator& a) {
+            visit(*lit, [&](const Aggregator& a) {
                 if (a == aggregate) {
                     originalAggregateFound = true;
                     return;
@@ -181,7 +181,7 @@ void MaterializeAggregationQueriesTransformer::groundInjectedParameters(
             }
             // 1. Variable must occur in this literal
             bool variableOccursInLit = false;
-            visitDepthFirst(*lit, [&](const Variable& var) {
+            visit(*lit, [&](const Variable& var) {
                 if (var.getName() == ungroundedVariableName) {
                     variableOccursInLit = true;
                 }
@@ -261,16 +261,16 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
      *
      **/
     std::set<const Aggregator*> innerAggregates;
-    visitDepthFirst(program, [&](const Aggregator& agg) {
-        visitDepthFirst(agg, [&](const Aggregator& innerAgg) {
+    visit(program, [&](const Aggregator& agg) {
+        visit(agg, [&](const Aggregator& innerAgg) {
             if (agg != innerAgg) {
                 innerAggregates.insert(&innerAgg);
             }
         });
     });
 
-    visitDepthFirst(program, [&](Clause& clause) {
-        visitDepthFirst(clause, [&](Aggregator& agg) {
+    visit(program, [&](Clause& clause) {
+        visit(clause, [&](Aggregator& agg) {
             if (!needsMaterializedRelation(agg)) {
                 return;
             }
@@ -367,7 +367,7 @@ bool MaterializeAggregationQueriesTransformer::needsMaterializedRelation(const A
 
     bool seenInnerAggregate = false;
     // If we have an aggregate within this aggregate => materialize
-    visitDepthFirst(agg, [&](const Aggregator& innerAgg) {
+    visit(agg, [&](const Aggregator& innerAgg) {
         if (agg != innerAgg) {
             seenInnerAggregate = true;
         }
@@ -381,7 +381,7 @@ bool MaterializeAggregationQueriesTransformer::needsMaterializedRelation(const A
     bool duplicates = false;
     std::set<std::string> vars;
     if (atom != nullptr) {
-        visitDepthFirst(*atom, [&](const ast::Variable& var) {
+        visit(*atom, [&](const ast::Variable& var) {
             duplicates = duplicates || !vars.insert(var.getName()).second;
         });
     }

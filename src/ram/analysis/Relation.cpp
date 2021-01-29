@@ -31,7 +31,7 @@ const ram::Relation& RelationAnalysis::lookup(const std::string& name) const {
 }
 
 void RelationAnalysis::run(const TranslationUnit& translationUnit) {
-    visitDepthFirst(translationUnit.getProgram(),
+    visit(translationUnit.getProgram(),
             [&](const Relation& relation) { relationMap[relation.getName()] = &relation; });
 }
 

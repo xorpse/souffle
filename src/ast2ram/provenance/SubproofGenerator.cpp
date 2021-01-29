@@ -38,8 +38,8 @@
 
 namespace souffle::ast2ram::provenance {
 
-SubproofGenerator::SubproofGenerator(const TranslatorContext& context, SymbolTable& symbolTable)
-        : ast2ram::provenance::ClauseTranslator(context, symbolTable) {}
+SubproofGenerator::SubproofGenerator(const TranslatorContext& context)
+        : ast2ram::provenance::ClauseTranslator(context) {}
 
 SubproofGenerator::~SubproofGenerator() = default;
 
@@ -48,7 +48,7 @@ Own<ram::Operation> SubproofGenerator::addNegatedAtom(
     // Add direct values
     VecOwn<ram::Expression> values;
     for (const auto* arg : atom->getArguments()) {
-        values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
+        values.push_back(context.translateValue(*valueIndex, arg));
     }
 
     // Undefined value for rule number
@@ -95,13 +95,13 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
             continue;
         }
 
-        if (auto condition = context.translateConstraint(symbolTable, *valueIndex, lit)) {
+        if (auto condition = context.translateConstraint(*valueIndex, lit)) {
             op = mk<ram::Filter>(std::move(condition), std::move(op));
         }
     }
 
     for (const auto* constraint : constraints) {
-        if (auto condition = context.translateConstraint(symbolTable, *valueIndex, constraint)) {
+        if (auto condition = context.translateConstraint(*valueIndex, constraint)) {
             op = mk<ram::Filter>(std::move(condition), std::move(op));
         }
     }
@@ -114,18 +114,18 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
         auto arg = headArgs.at(i);
         if (const auto* var = as<ast::Variable>(arg)) {
             // FIXME: float equiv (`FEQ`)
-            auto lhs = context.translateValue(symbolTable, *valueIndex, var);
+            auto lhs = context.translateValue(*valueIndex, var);
             auto constraint = mk<ram::Constraint>(
                     BinaryConstraintOp::EQ, std::move(lhs), mk<ram::SubroutineArgument>(i));
             op = mk<ram::Filter>(std::move(constraint), std::move(op));
         } else if (const auto* func = as<ast::Functor>(arg)) {
             TypeAttribute returnType = context.getFunctorReturnTypeAttribute(*func);
             auto opEq = returnType == TypeAttribute::Float ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ;
-            auto lhs = context.translateValue(symbolTable, *valueIndex, func);
+            auto lhs = context.translateValue(*valueIndex, func);
             auto constraint = mk<ram::Constraint>(opEq, std::move(lhs), mk<ram::SubroutineArgument>(i));
             op = mk<ram::Filter>(std::move(constraint), std::move(op));
         } else if (const auto* rec = as<ast::RecordInit>(arg)) {
-            auto lhs = context.translateValue(symbolTable, *valueIndex, rec);
+            auto lhs = context.translateValue(*valueIndex, rec);
             auto constraint = mk<ram::Constraint>(
                     BinaryConstraintOp::EQ, std::move(lhs), mk<ram::SubroutineArgument>(i));
             op = mk<ram::Filter>(std::move(constraint), std::move(op));
@@ -146,7 +146,7 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
                 assert(levelNumber < getAtomOrdering(clause).size());
             }
             auto varRepr = mk<ast::Variable>("@level_num_" + std::to_string(levelNumber));
-            auto valLHS = context.translateValue(symbolTable, *valueIndex, varRepr.get());
+            auto valLHS = context.translateValue(*valueIndex, varRepr.get());
 
             // add the constraint
             auto constraint = mk<ram::Constraint>(
@@ -177,7 +177,7 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
     for (const auto* lit : clause.getBodyLiterals()) {
         if (const auto* atom = as<ast::Atom>(lit)) {
             for (const auto* arg : atom->getArguments()) {
-                values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
+                values.push_back(context.translateValue(*valueIndex, arg));
             }
             // TODO (azreika): put helper methods for these variables
             size_t levelNumber = 0;
@@ -187,14 +187,14 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
             }
             auto levelVarRepr = mk<ast::Variable>("@level_num_" + std::to_string(levelNumber));
             auto ruleNumRepr = mk<ast::Variable>("@rule_num_" + std::to_string(levelNumber));
-            auto level = context.translateValue(symbolTable, *valueIndex, levelVarRepr.get());
-            auto ruleNum = context.translateValue(symbolTable, *valueIndex, ruleNumRepr.get());
+            auto level = context.translateValue(*valueIndex, levelVarRepr.get());
+            auto ruleNum = context.translateValue(*valueIndex, ruleNumRepr.get());
 
             values.push_back(std::move(ruleNum));
             values.push_back(std::move(level));
         } else if (const auto* neg = as<ast::Negation>(lit)) {
             for (ast::Argument* arg : neg->getAtom()->getArguments()) {
-                values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
+                values.push_back(context.translateValue(*valueIndex, arg));
             }
             values.push_back(mk<ram::UndefValue>());
             values.push_back(mk<ram::UndefValue>());
@@ -202,8 +202,8 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
     }
 
     for (const auto* constraint : ast::getBodyLiterals<const ast::BinaryConstraint>(clause)) {
-        values.push_back(context.translateValue(symbolTable, *valueIndex, constraint->getLHS()));
-        values.push_back(context.translateValue(symbolTable, *valueIndex, constraint->getRHS()));
+        values.push_back(context.translateValue(*valueIndex, constraint->getLHS()));
+        values.push_back(context.translateValue(*valueIndex, constraint->getRHS()));
     }
 
     // final provenance negation
@@ -211,7 +211,7 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
         const auto* head = clause.getHead();
         for (size_t i = 0; i < head->getArguments().size(); i++) {
             auto arg = head->getArguments().at(i);
-            values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
+            values.push_back(context.translateValue(*valueIndex, arg));
         }
         values.push_back(mk<ram::SignedConstant>(-1));
         values.push_back(mk<ram::SignedConstant>(-1));
@@ -223,13 +223,13 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
     for (size_t i = 0; i < head->getArity(); i++) {
         auto arg = headArgs.at(i);
         if (const auto* var = as<ast::Variable>(arg)) {
-            values.push_back(context.translateValue(symbolTable, *valueIndex, var));
+            values.push_back(context.translateValue(*valueIndex, var));
             values.push_back(mk<ram::SubroutineArgument>(i));
         } else if (const auto* func = as<ast::Functor>(arg)) {
-            values.push_back(context.translateValue(symbolTable, *valueIndex, func));
+            values.push_back(context.translateValue(*valueIndex, func));
             values.push_back(mk<ram::SubroutineArgument>(i));
         } else if (const auto* rec = as<ast::RecordInit>(arg)) {
-            values.push_back(context.translateValue(symbolTable, *valueIndex, rec));
+            values.push_back(context.translateValue(*valueIndex, rec));
             values.push_back(mk<ram::SubroutineArgument>(i));
         } else if (const auto* adt = as<ast::BranchInit>(arg)) {
             // TODO (azreika): fill this out like record arguments
@@ -246,8 +246,8 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
             }
             auto levelVarRepr = mk<ast::Variable>("@level_num_" + std::to_string(levelNumber));
             auto ruleNumRepr = mk<ast::Variable>("@rule_num_" + std::to_string(levelNumber));
-            auto level = context.translateValue(symbolTable, *valueIndex, levelVarRepr.get());
-            auto ruleNum = context.translateValue(symbolTable, *valueIndex, ruleNumRepr.get());
+            auto level = context.translateValue(*valueIndex, levelVarRepr.get());
+            auto ruleNum = context.translateValue(*valueIndex, ruleNumRepr.get());
 
             values.push_back(std::move(level));
             values.push_back(mk<ram::SubroutineArgument>(levelIndex));

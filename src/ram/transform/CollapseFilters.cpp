@@ -30,7 +30,7 @@ namespace souffle::ram::transform {
 
 bool CollapseFiltersTransformer::collapseFilters(Program& program) {
     bool changed = false;
-    visitDepthFirst(program, [&](const Query& query) {
+    visit(program, [&](const Query& query) {
         std::function<Own<Node>(Own<Node>)> filterRewriter = [&](Own<Node> node) -> Own<Node> {
             if (const Filter* filter = as<Filter>(node)) {
                 // true if two consecutive filters in loop nest found

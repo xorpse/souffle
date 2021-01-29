@@ -99,10 +99,10 @@ Own<Clause> TypeAnalysis::createAnnotatedClause(
     std::map<const Argument*, const Argument*> memoryMap;
 
     std::vector<const Argument*> originalAddresses;
-    visitDepthFirst(*clause, [&](const Argument& arg) { originalAddresses.push_back(&arg); });
+    visit(*clause, [&](const Argument& arg) { originalAddresses.push_back(&arg); });
 
     std::vector<const Argument*> cloneAddresses;
-    visitDepthFirst(*annotatedClause, [&](const Argument& arg) { cloneAddresses.push_back(&arg); });
+    visit(*annotatedClause, [&](const Argument& arg) { cloneAddresses.push_back(&arg); });
 
     assert(cloneAddresses.size() == originalAddresses.size());
 
@@ -320,7 +320,7 @@ FunctorOp TypeAnalysis::getPolymorphicOperator(const IntrinsicFunctor& inf) cons
 bool TypeAnalysis::analyseIntrinsicFunctors(const TranslationUnit& translationUnit) {
     bool changed = false;
     const auto& program = translationUnit.getProgram();
-    visitDepthFirst(program, [&](const IntrinsicFunctor& functor) {
+    visit(program, [&](const IntrinsicFunctor& functor) {
         auto candidates = getValidIntrinsicFunctorOverloads(functor);
         if (candidates.empty()) {
             // No valid overloads - mark it as an invalid functor
@@ -354,7 +354,7 @@ bool TypeAnalysis::analyseNumericConstants(const TranslationUnit& translationUni
         numericConstantType[&nc] = ncType;
     };
 
-    visitDepthFirst(program, [&](const NumericConstant& numericConstant) {
+    visit(program, [&](const NumericConstant& numericConstant) {
         // Constant has a fixed type
         if (numericConstant.getFixedType().has_value()) {
             setNumericConstantType(numericConstant, numericConstant.getFixedType().value());
@@ -397,7 +397,7 @@ bool TypeAnalysis::analyseAggregators(const TranslationUnit& translationUnit) {
         aggregatorType[&agg] = overloadedType;
     };
 
-    visitDepthFirst(program, [&](const Aggregator& agg) {
+    visit(program, [&](const Aggregator& agg) {
         if (isOverloadedAggregator(agg.getBaseOperator())) {
             auto* targetExpression = agg.getTargetExpression();
             if (isFloat(targetExpression)) {
@@ -434,7 +434,7 @@ bool TypeAnalysis::analyseBinaryConstraints(const TranslationUnit& translationUn
         constraintType[&bc] = overloadedType;
     };
 
-    visitDepthFirst(program, [&](const BinaryConstraint& binaryConstraint) {
+    visit(program, [&](const BinaryConstraint& binaryConstraint) {
         if (isOverloaded(binaryConstraint.getBaseOperator())) {
             // Get arguments
             auto* leftArg = binaryConstraint.getLHS();
@@ -487,8 +487,7 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
 
     // Analyse user-defined functor types
     const Program& program = translationUnit.getProgram();
-    visitDepthFirst(
-            program, [&](const FunctorDeclaration& fdecl) { udfDeclaration[fdecl.getName()] = &fdecl; });
+    visit(program, [&](const FunctorDeclaration& fdecl) { udfDeclaration[fdecl.getName()] = &fdecl; });
 
     // Rest of the analysis done until fixpoint reached
     bool changed = true;

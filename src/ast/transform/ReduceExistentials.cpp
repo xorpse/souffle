@@ -78,7 +78,7 @@ bool ReduceExistentialsTransformer::transform(TranslationUnit& translationUnit) 
         }
         for (Clause* clause : getClauses(program, *relation)) {
             bool recursive = isRecursiveClause(*clause);
-            visitDepthFirst(*clause, [&](const Atom& atom) {
+            visit(*clause, [&](const Atom& atom) {
                 if (atom.getQualifiedName() == clause->getHead()->getQualifiedName()) {
                     return;
                 }
@@ -99,9 +99,8 @@ bool ReduceExistentialsTransformer::transform(TranslationUnit& translationUnit) 
 
     // TODO (see issue #564): Don't transform relations appearing in aggregators
     //                        due to aggregator issues with unnamed variables.
-    visitDepthFirst(program, [&](const Aggregator& aggr) {
-        visitDepthFirst(
-                aggr, [&](const Atom& atom) { minimalIrreducibleRelations.insert(atom.getQualifiedName()); });
+    visit(program, [&](const Aggregator& aggr) {
+        visit(aggr, [&](const Atom& atom) { minimalIrreducibleRelations.insert(atom.getQualifiedName()); });
     });
 
     // Run a DFS from each 'bad' source
@@ -109,7 +108,7 @@ bool ReduceExistentialsTransformer::transform(TranslationUnit& translationUnit) 
     // also an irreducible node
     std::set<QualifiedName> irreducibleRelations;
     for (QualifiedName relationName : minimalIrreducibleRelations) {
-        relationGraph.visitDepthFirst(
+        relationGraph.visit(
                 relationName, [&](const QualifiedName& subRel) { irreducibleRelations.insert(subRel); });
     }
 

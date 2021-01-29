@@ -38,6 +38,7 @@
 #include "ram/Sequence.h"
 #include "ram/SignedConstant.h"
 #include "ram/Statement.h"
+#include "ram/StringConstant.h"
 #include "ram/SubroutineArgument.h"
 #include "ram/SubroutineReturn.h"
 #include "ram/TupleElement.h"
@@ -151,7 +152,7 @@ Own<ram::Statement> UnitTranslator::generateClearExpiredRelations(
 }
 
 void UnitTranslator::addProvenanceClauseSubroutines(const ast::Program* program) {
-    visitDepthFirst(*program, [&](const ast::Clause& clause) {
+    visit(*program, [&](const ast::Clause& clause) {
         // Skip facts
         if (isFact(clause)) {
             return;
@@ -202,10 +203,10 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
         int functorNumber = 0;
         int aggregateNumber = 0;
         auto getArgInfo = [&](const ast::Argument* arg) -> std::string {
-            if (auto* var = dynamic_cast<const ast::Variable*>(arg)) {
+            if (auto* var = as<ast::Variable>(arg)) {
                 return toString(*var);
             }
-            if (auto* constant = dynamic_cast<const ast::Constant*>(arg)) {
+            if (auto* constant = as<ast::Constant>(arg)) {
                 return toString(*constant);
             }
             if (isA<ast::UnnamedVariable>(arg)) {
@@ -233,22 +234,22 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
         }
         std::stringstream headVariableInfo;
         headVariableInfo << join(headVariables, ",");
-        factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup(headVariableInfo.str())));
+        factArguments.push_back(mk<ram::StringConstant>(headVariableInfo.str()));
 
         // (3) For all atoms || negs:
         //      - atoms: relName,{atom arg info}
         //      - negs: !relName
         for (const auto* literal : clause->getBodyLiterals()) {
-            if (const auto* atom = dynamic_cast<const ast::Atom*>(literal)) {
+            if (const auto* atom = as<ast::Atom>(literal)) {
                 std::string atomDescription = toString(atom->getQualifiedName());
                 for (const auto* arg : atom->getArguments()) {
                     atomDescription.append("," + getArgInfo(arg));
                 }
-                factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup(atomDescription)));
-            } else if (const auto* neg = dynamic_cast<const ast::Negation*>(literal)) {
+                factArguments.push_back(mk<ram::StringConstant>(atomDescription));
+            } else if (const auto* neg = as<ast::Negation>(literal)) {
                 const auto* atom = neg->getAtom();
                 std::string relName = toString(atom->getQualifiedName());
-                factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup("!" + relName)));
+                factArguments.push_back(mk<ram::StringConstant>("!" + relName));
             }
         }
 
@@ -259,12 +260,11 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
             constraintDescription << toBinaryConstraintSymbol(binaryConstraint->getBaseOperator());
             constraintDescription << "," << getArgInfo(binaryConstraint->getLHS());
             constraintDescription << "," << getArgInfo(binaryConstraint->getRHS());
-            factArguments.push_back(
-                    mk<ram::SignedConstant>(symbolTable->lookup(constraintDescription.str())));
+            factArguments.push_back(mk<ram::StringConstant>(constraintDescription.str()));
         }
 
         // (5) The actual clause
-        factArguments.push_back(mk<ram::SignedConstant>(symbolTable->lookup(toString(*clause))));
+        factArguments.push_back(mk<ram::StringConstant>(toString(*clause)));
 
         /* -- Finalising -- */
         // Push in the final clause
@@ -301,7 +301,7 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
 }
 
 Own<ram::Statement> UnitTranslator::makeSubproofSubroutine(const ast::Clause& clause) {
-    return SubproofGenerator(*context, *symbolTable).translateNonRecursiveClause(clause);
+    return SubproofGenerator(*context).translateNonRecursiveClause(clause);
 }
 
 Own<ram::ExistenceCheck> UnitTranslator::makeRamAtomExistenceCheck(
@@ -313,7 +313,7 @@ Own<ram::ExistenceCheck> UnitTranslator::makeRamAtomExistenceCheck(
 
     // Add each value (subroutine argument) to the search query
     for (const auto* arg : atom->getArguments()) {
-        auto translatedValue = context->translateValue(*symbolTable, valueIndex, arg);
+        auto translatedValue = context->translateValue(valueIndex, arg);
         transformVariablesToSubroutineArgs(translatedValue.get(), idToVarName);
         query.push_back(std::move(translatedValue));
     }
@@ -402,9 +402,7 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
     size_t count = 0;
     std::map<int, std::string> idToVarName;
     auto dummyValueIndex = mk<ValueIndex>();
-
-    // Index all actual variables first
-    visitDepthFirst(clause, [&](const ast::Variable& var) {
+    visit(clause, [&](const ast::Variable& var) {
         if (dummyValueIndex->isDefined(var.getName()) || isPrefix("+underscore", var.getName())) {
             return;
         }
@@ -412,11 +410,12 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
         dummyValueIndex->addVarReference(var.getName(), count++, 0);
     });
 
-    // TODO (azreika): index aggregators too, then override the value translator to treat them as variables
+    visit(clause, [&](const ast::Variable& var) {
+        // TODO (azreika): index aggregators too, then override the value translator to treat them as
+        // variables
 
-    // Index all unnamed variables
-    // TODO (azreika): maybe don't unname variables in provenance
-    visitDepthFirst(clause, [&](const ast::Variable& var) {
+        // Index all unnamed variables
+        // TODO (azreika): maybe don't unname variables in provenance
         if (isPrefix("+underscore", var.getName())) {
             idToVarName[count] = var.getName();
             dummyValueIndex->addVarReference(var.getName(), count++, 0);
@@ -440,7 +439,7 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
                     makeIfStatement(std::move(existenceCheck), makeRamReturnFalse(), makeRamReturnTrue());
             appendStmt(searchSequence, std::move(ifStatement));
         } else if (const auto* con = as<ast::Constraint>(lit)) {
-            auto condition = context->translateConstraint(*symbolTable, *dummyValueIndex, con);
+            auto condition = context->translateConstraint(*dummyValueIndex, con);
             transformVariablesToSubroutineArgs(condition.get(), idToVarName);
             auto ifStatement =
                     makeIfStatement(std::move(condition), makeRamReturnTrue(), makeRamReturnFalse());

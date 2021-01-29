@@ -392,7 +392,7 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
     // visit all nodes to collect searches of each relation
 
     // visit all nodes to collect searches of each relation
-    visitDepthFirst(translationUnit.getProgram(), [&](const Node& node) {
+    visit(translationUnit.getProgram(), [&](const Node& node) {
         if (const auto* indexSearch = as<IndexOperation>(node)) {
             relationToSearches[indexSearch->getRelation()].insert(getSearchSignature(indexSearch));
         } else if (const auto* exists = as<ExistenceCheck>(node)) {
@@ -405,7 +405,7 @@ void IndexAnalysis::run(const TranslationUnit& translationUnit) {
     });
 
     // A swap happen between rel A and rel B indicates A should include all indices of B, vice versa.
-    visitDepthFirst(translationUnit.getProgram(), [&](const Swap& swap) {
+    visit(translationUnit.getProgram(), [&](const Swap& swap) {
         // Note: this naive approach will not work if there exists chain or cyclic swapping.
         // e.g.  swap(relA, relB) swap(relB, relC) swap(relC, relA)
         // One need to keep merging the search set until a fixed point where no more index is introduced

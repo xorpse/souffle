@@ -22,10 +22,6 @@
 #include <map>
 #include <vector>
 
-namespace souffle {
-class SymbolTable;
-}
-
 namespace souffle::ast {
 class Aggregator;
 class Argument;
@@ -55,7 +51,7 @@ namespace souffle::ast2ram::seminaive {
 
 class ClauseTranslator : public ast2ram::ClauseTranslator {
 public:
-    ClauseTranslator(const TranslatorContext& context, SymbolTable& symbolTable);
+    ClauseTranslator(const TranslatorContext& context);
     ~ClauseTranslator();
 
     /** Entry points */
@@ -120,8 +116,7 @@ protected:
     Own<ram::Condition> getFunctionalDependencies(const ast::Clause& clause) const;
 
     /** Constant translation */
-    RamDomain getConstantRamRepresentation(SymbolTable& symbolTable, const ast::Constant& constant) const;
-    Own<ram::Expression> translateConstant(SymbolTable& symbolTable, const ast::Constant& constant) const;
+    Own<ram::Expression> translateConstant(const ast::Constant& constant) const;
 
     /** Generator instantiation */
     Own<ram::Operation> instantiateAggregator(Own<ram::Operation> op, const ast::Clause& clause,

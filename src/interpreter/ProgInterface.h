@@ -211,7 +211,7 @@ public:
 
         // Retrieve AST Relations and store them in a map
         std::map<std::string, const ram::Relation*> map;
-        visitDepthFirst(prog, [&](const ram::Relation& rel) { map[rel.getName()] = &rel; });
+        visit(prog, [&](const ram::Relation& rel) { map[rel.getName()] = &rel; });
 
         // Build wrapper relations for Souffle's interface
         for (auto& relHandler : exec.getRelationMap()) {
@@ -232,7 +232,7 @@ public:
             interfaces.push_back(interface);
             bool input = false;
             bool output = false;
-            visitDepthFirst(prog, [&](const ram::IO& io) {
+            visit(prog, [&](const ram::IO& io) {
                 if (map[io.getRelation()] == &rel) {
                     const std::string& op = io.get("operation");
                     if (op == "input") {

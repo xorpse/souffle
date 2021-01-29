@@ -27,7 +27,7 @@ namespace souffle::ast2ram::provenance {
 
 Own<ram::Condition> ConstraintTranslator::translateConstraint(const ast::Literal* lit) {
     assert(lit != nullptr && "literal should be defined");
-    return ConstraintTranslator(context, symbolTable, index)(*lit);
+    return ConstraintTranslator(context, index)(*lit);
 }
 
 Own<ram::Condition> ConstraintTranslator::visit_(type_identity<ast::Negation>, const ast::Negation& neg) {
@@ -37,7 +37,7 @@ Own<ram::Condition> ConstraintTranslator::visit_(type_identity<ast::Negation>, c
 
     // actual arguments
     for (const auto* arg : atom->getArguments()) {
-        values.push_back(context.translateValue(symbolTable, index, arg));
+        values.push_back(context.translateValue(index, arg));
     }
 
     // add rule + level number

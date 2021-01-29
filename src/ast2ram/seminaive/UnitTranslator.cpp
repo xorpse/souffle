@@ -58,7 +58,6 @@
 #include "reports/DebugReport.h"
 #include "reports/ErrorReport.h"
 #include "souffle/BinaryConstraintOps.h"
-#include "souffle/SymbolTable.h"
 #include "souffle/TypeAttribute.h"
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/FunctionalUtil.h"
@@ -103,7 +102,7 @@ Own<ram::Statement> UnitTranslator::generateNonRecursiveRelation(const ast::Rela
         }
 
         // Translate clause
-        Own<ram::Statement> rule = context->translateNonRecursiveClause(*symbolTable, *clause);
+        Own<ram::Statement> rule = context->translateNonRecursiveClause(*clause);
 
         // Add logging
         if (Global::config().has("profile")) {
@@ -236,7 +235,7 @@ VecOwn<ram::Statement> UnitTranslator::generateClauseVersions(
     // Create each version
     VecOwn<ram::Statement> clauseVersions;
     for (size_t version = 0; version < sccAtoms.size(); version++) {
-        appendStmt(clauseVersions, context->translateRecursiveClause(*symbolTable, *clause, scc, version));
+        appendStmt(clauseVersions, context->translateRecursiveClause(*clause, scc, version));
     }
 
     // Check that the correct number of versions have been created
@@ -506,7 +505,6 @@ Own<ram::Sequence> UnitTranslator::generateProgram(const ast::TranslationUnit& t
 Own<ram::TranslationUnit> UnitTranslator::translateUnit(ast::TranslationUnit& tu) {
     /* -- Set-up -- */
     auto ram_start = std::chrono::high_resolution_clock::now();
-    symbolTable = mk<SymbolTable>();
     context = mk<TranslatorContext>(tu);
 
     /* -- Translation -- */
@@ -534,7 +532,7 @@ Own<ram::TranslationUnit> UnitTranslator::translateUnit(ast::TranslationUnit& tu
     }
 
     // Wrap the program into a translation unit
-    return mk<ram::TranslationUnit>(std::move(ramProgram), *symbolTable, errReport, debugReport);
+    return mk<ram::TranslationUnit>(std::move(ramProgram), errReport, debugReport);
 }
 
 }  // namespace souffle::ast2ram::seminaive

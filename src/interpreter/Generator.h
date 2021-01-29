@@ -32,7 +32,6 @@
 #include "ram/Clear.h"
 #include "ram/Condition.h"
 #include "ram/Conjunction.h"
-#include "ram/Constant.h"
 #include "ram/Constraint.h"
 #include "ram/DebugInfo.h"
 #include "ram/EmptinessCheck.h"
@@ -56,6 +55,7 @@
 #include "ram/NestedIntrinsicOperator.h"
 #include "ram/NestedOperation.h"
 #include "ram/Node.h"
+#include "ram/NumericConstant.h"
 #include "ram/Operation.h"
 #include "ram/PackRecord.h"
 #include "ram/Parallel.h"
@@ -74,6 +74,7 @@
 #include "ram/Scan.h"
 #include "ram/Sequence.h"
 #include "ram/Statement.h"
+#include "ram/StringConstant.h"
 #include "ram/SubroutineArgument.h"
 #include "ram/SubroutineReturn.h"
 #include "ram/Swap.h"
@@ -123,7 +124,9 @@ public:
      */
     NodePtr generateTree(const ram::Node& root);
 
-    NodePtr visit_(type_identity<ram::Constant>, const ram::Constant& num) override;
+    NodePtr visit_(type_identity<ram::NumericConstant>, const ram::NumericConstant& num) override;
+
+    NodePtr visit_(type_identity<ram::StringConstant>, const ram::StringConstant& num) override;
 
     NodePtr visit_(type_identity<ram::TupleElement>, const ram::TupleElement& access) override;
 

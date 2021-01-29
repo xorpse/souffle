@@ -28,6 +28,7 @@
 #include "ram/Sequence.h"
 #include "ram/SignedConstant.h"
 #include "ram/Statement.h"
+#include "ram/StringConstant.h"
 #include "ram/TranslationUnit.h"
 #include "reports/DebugReport.h"
 #include "reports/ErrorReport.h"
@@ -81,11 +82,10 @@ const std::string testInterpreterStore(
     std::map<std::string, Own<Statement>> subs;
     Own<ram::Program> prog = mk<Program>(std::move(rels), std::move(main), std::move(subs));
 
-    SymbolTable symTab;
     ErrorReport errReport;
     DebugReport debugReport;
 
-    TranslationUnit translationUnit(std::move(prog), symTab, errReport, debugReport);
+    TranslationUnit translationUnit(std::move(prog), errReport, debugReport);
 
     // configure and execute interpreter
     Own<Engine> interpreter = mk<Engine>(translationUnit);
@@ -272,11 +272,10 @@ TEST(IO_store, SignedChangedDelimiter) {
     std::map<std::string, Own<Statement>> subs;
     Own<Program> prog = mk<Program>(std::move(rels), std::move(main), std::move(subs));
 
-    SymbolTable symTab;
     ErrorReport errReport;
     DebugReport debugReport;
 
-    TranslationUnit translationUnit(std::move(prog), symTab, errReport, debugReport);
+    TranslationUnit translationUnit(std::move(prog), errReport, debugReport);
 
     // configure and execute interpreter
     Own<Engine> interpreter = mk<Engine>(translationUnit);
@@ -328,7 +327,6 @@ TEST(IO_store, MixedTypes) {
             {"attributeNames", "x\ty"}, {"name", "test"}, {"types", types.dump()}};
     std::map<std::string, std::string> ioDirs = std::map<std::string, std::string>(dirs);
 
-    SymbolTable symbolTable;
     ErrorReport errReport;
     DebugReport debugReport;
 
@@ -338,7 +336,7 @@ TEST(IO_store, MixedTypes) {
     exprs.push_back(mk<SignedConstant>(ramBitCast(static_cast<RamUnsigned>(27))));
     exprs.push_back(mk<SignedConstant>(ramBitCast(static_cast<RamFloat>(floatValue))));
     exprs.push_back(mk<SignedConstant>(ramBitCast(static_cast<RamFloat>(floatValue))));
-    exprs.push_back(mk<SignedConstant>(symbolTable.lookup("meow")));
+    exprs.push_back(mk<ram::StringConstant>("meow"));
 
     Own<ram::Statement> main = mk<ram::Sequence>(
             mk<ram::Query>(mk<ram::Project>("test", std::move(exprs))), mk<ram::IO>("test", ioDirs));
@@ -347,7 +345,7 @@ TEST(IO_store, MixedTypes) {
     std::map<std::string, Own<Statement>> subs;
     Own<Program> prog = mk<Program>(std::move(rels), std::move(main), std::move(subs));
 
-    TranslationUnit translationUnit(std::move(prog), symbolTable, errReport, debugReport);
+    TranslationUnit translationUnit(std::move(prog), errReport, debugReport);
 
     // configure and execute interpreter
     Own<Engine> interpreter = mk<Engine>(translationUnit);
@@ -410,11 +408,10 @@ TEST(IO_load, Signed) {
     std::map<std::string, Own<Statement>> subs;
     Own<Program> prog = mk<Program>(std::move(rels), std::move(main), std::move(subs));
 
-    SymbolTable symTab;
     ErrorReport errReport;
     DebugReport debugReport;
 
-    TranslationUnit translationUnit(std::move(prog), symTab, errReport, debugReport);
+    TranslationUnit translationUnit(std::move(prog), errReport, debugReport);
 
     // configure and execute interpreter
     Own<Engine> interpreter = mk<Engine>(translationUnit);
@@ -471,11 +468,10 @@ TEST(IO_load, Float) {
     std::map<std::string, Own<Statement>> subs;
     Own<Program> prog = mk<Program>(std::move(rels), std::move(main), std::move(subs));
 
-    SymbolTable symTab;
     ErrorReport errReport;
     DebugReport debugReport;
 
-    TranslationUnit translationUnit(std::move(prog), symTab, errReport, debugReport);
+    TranslationUnit translationUnit(std::move(prog), errReport, debugReport);
 
     // configure and execute interpreter
     Own<Engine> interpreter = mk<Engine>(translationUnit);
@@ -532,11 +528,10 @@ TEST(IO_load, Unsigned) {
     std::map<std::string, Own<Statement>> subs;
     Own<Program> prog = mk<Program>(std::move(rels), std::move(main), std::move(subs));
 
-    SymbolTable symTab;
     ErrorReport errReport;
     DebugReport debugReport;
 
-    TranslationUnit translationUnit(std::move(prog), symTab, errReport, debugReport);
+    TranslationUnit translationUnit(std::move(prog), errReport, debugReport);
 
     // configure and execute interpreter
     Own<Engine> interpreter = mk<Engine>(translationUnit);
@@ -593,11 +588,10 @@ TEST(IO_load, MixedTypesLoad) {
     std::map<std::string, Own<Statement>> subs;
     Own<Program> prog = mk<Program>(std::move(rels), std::move(main), std::move(subs));
 
-    SymbolTable symTab;
     ErrorReport errReport;
     DebugReport debugReport;
 
-    TranslationUnit translationUnit(std::move(prog), symTab, errReport, debugReport);
+    TranslationUnit translationUnit(std::move(prog), errReport, debugReport);
 
     // configure and execute interpreter
     Own<Engine> interpreter = mk<Engine>(translationUnit);

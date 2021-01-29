@@ -52,7 +52,7 @@ Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
     VecOwn<ram::Expression> values;
     auto args = atom->getArguments();
     for (const auto* arg : args) {
-        values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
+        values.push_back(context.translateValue(*valueIndex, arg));
     }
     values.push_back(mk<ram::UndefValue>());
     values.push_back(mk<ram::UndefValue>());
@@ -67,7 +67,7 @@ Own<ram::Operation> ClauseTranslator::addNegatedAtom(
 
     auto args = atom->getArguments();
     for (const auto* arg : args) {
-        values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
+        values.push_back(context.translateValue(*valueIndex, arg));
     }
 
     // undefined value for rule number
@@ -109,7 +109,7 @@ Own<ram::Expression> ClauseTranslator::getLevelNumber(const ast::Clause& clause)
     VecOwn<ram::Expression> values;
     for (size_t i = 0; i < bodyAtoms.size(); i++) {
         auto levelVar = mk<ast::Variable>(getLevelVariable(i));
-        values.push_back(context.translateValue(symbolTable, *valueIndex, levelVar.get()));
+        values.push_back(context.translateValue(*valueIndex, levelVar.get()));
     }
     assert(!values.empty() && "unexpected empty value set");
 
@@ -153,7 +153,7 @@ Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause
 
     VecOwn<ram::Expression> values;
     for (const auto* arg : head->getArguments()) {
-        values.push_back(context.translateValue(symbolTable, *valueIndex, arg));
+        values.push_back(context.translateValue(*valueIndex, arg));
     }
 
     // add rule number + level number
