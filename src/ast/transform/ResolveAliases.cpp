@@ -226,7 +226,7 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
     // tests whether a value `a` occurs in a term `b`
     auto occurs = [](const Argument& a, const Argument& b) {
         bool res = false;
-        visitDepthFirst(b, [&](const Argument& arg) { res = (res || (arg == a)); });
+        visit(b, [&](const Argument& arg) { res = (res || (arg == a)); });
         return res;
     };
 
@@ -239,7 +239,7 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
                 baseGroundedVariables.insert(var->getName());
             }
         }
-        visitDepthFirst(*atom, [&](const RecordInit& rec) {
+        visit(*atom, [&](const RecordInit& rec) {
             for (const Argument* arg : rec.getArguments()) {
                 if (const auto* var = as<ast::Variable>(arg)) {
                     baseGroundedVariables.insert(var->getName());
@@ -250,7 +250,7 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
 
     // I) extract equations
     std::vector<Equation> equations;
-    visitDepthFirst(clause, [&](const BinaryConstraint& constraint) {
+    visit(clause, [&](const BinaryConstraint& constraint) {
         if (isEqConstraint(constraint.getBaseOperator())) {
             equations.push_back(Equation(constraint.getLHS(), constraint.getRHS()));
         }
@@ -405,7 +405,7 @@ Own<Clause> ResolveAliasesTransformer::removeComplexTermsInAtoms(const Clause& c
     }
 
     // find all functors in records too
-    visitDepthFirst(atoms, [&](const RecordInit& rec) {
+    visit(atoms, [&](const RecordInit& rec) {
         for (const Argument* arg : rec.getArguments()) {
             // ignore if not a functor
             if (!isA<Functor>(arg)) {
@@ -478,7 +478,7 @@ bool ResolveAliasesTransformer::transform(TranslationUnit& translationUnit) {
 
     // get all clauses
     std::vector<const Clause*> clauses;
-    visitDepthFirst(program, [&](const Relation& rel) {
+    visit(program, [&](const Relation& rel) {
         for (const auto& clause : getClauses(program, rel)) {
             clauses.push_back(clause);
         }

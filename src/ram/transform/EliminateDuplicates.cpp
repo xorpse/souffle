@@ -30,7 +30,7 @@ namespace souffle::ram::transform {
 
 bool EliminateDuplicatesTransformer::eliminateDuplicates(Program& program) {
     bool changed = false;
-    visitDepthFirst(program, [&](const Query& query) {
+    visit(program, [&](const Query& query) {
         std::function<Own<Node>(Own<Node>)> filterRewriter = [&](Own<Node> node) -> Own<Node> {
             if (const Filter* filter = as<Filter>(node)) {
                 const Condition* condition = &filter->getCondition();

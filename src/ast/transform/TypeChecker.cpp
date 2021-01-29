@@ -75,7 +75,7 @@ public:
     void run() {
         const Program& program = tu.getProgram();
         for (auto* clause : program.getClauses()) {
-            visitDepthFirstPreOrder(*clause, *this);
+            visit(*clause, *this);
         }
     }
 
@@ -259,7 +259,7 @@ void TypeDeclarationChecker::run() {
 
     // Check if all the branch names are unique in sum types.
     std::map<std::string, std::vector<SrcLocation>> branchToLocation;
-    visitDepthFirst(program.getTypes(), [&](const ast::AlgebraicDataType& type) {
+    visit(program.getTypes(), [&](const ast::AlgebraicDataType& type) {
         for (auto* branch : type.getBranches()) {
             branchToLocation[branch->getConstructor()].push_back(branch->getSrcLoc());
         }

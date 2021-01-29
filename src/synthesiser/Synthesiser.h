@@ -116,7 +116,7 @@ protected:
 
 public:
     explicit Synthesiser(ram::TranslationUnit& tUnit) : translationUnit(tUnit) {
-        visitDepthFirst(tUnit.getProgram(),
+        visit(tUnit.getProgram(),
                 [&](const ram::Relation& relation) { relationMap[relation.getName()] = &relation; });
     }
 

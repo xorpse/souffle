@@ -152,7 +152,7 @@ Own<ram::Statement> UnitTranslator::generateClearExpiredRelations(
 }
 
 void UnitTranslator::addProvenanceClauseSubroutines(const ast::Program* program) {
-    visitDepthFirst(*program, [&](const ast::Clause& clause) {
+    visit(*program, [&](const ast::Clause& clause) {
         // Skip facts
         if (isFact(clause)) {
             return;
@@ -402,9 +402,7 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
     size_t count = 0;
     std::map<int, std::string> idToVarName;
     auto dummyValueIndex = mk<ValueIndex>();
-
-    // Index all actual variables first
-    visitDepthFirst(clause, [&](const ast::Variable& var) {
+    visit(clause, [&](const ast::Variable& var) {
         if (dummyValueIndex->isDefined(var.getName()) || isPrefix("+underscore", var.getName())) {
             return;
         }
@@ -412,11 +410,12 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
         dummyValueIndex->addVarReference(var.getName(), count++, 0);
     });
 
-    // TODO (azreika): index aggregators too, then override the value translator to treat them as variables
+    visit(clause, [&](const ast::Variable& var) {
+        // TODO (azreika): index aggregators too, then override the value translator to treat them as
+        // variables
 
-    // Index all unnamed variables
-    // TODO (azreika): maybe don't unname variables in provenance
-    visitDepthFirst(clause, [&](const ast::Variable& var) {
+        // Index all unnamed variables
+        // TODO (azreika): maybe don't unname variables in provenance
         if (isPrefix("+underscore", var.getName())) {
             idToVarName[count] = var.getName();
             dummyValueIndex->addVarReference(var.getName(), count++, 0);

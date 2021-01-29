@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "souffle/utility/Types.h"
+
 #include <iterator>
 #include <type_traits>
 #include <utility>
@@ -183,7 +185,7 @@ auto operator+(
 
 template <typename Iter, typename F>
 auto transformIter(Iter&& iter, F&& f) {
-    return TransformIterator<std::remove_const_t<std::remove_reference_t<Iter>>, std::remove_reference_t<F>>(
+    return TransformIterator<remove_cvref_t<Iter>, std::remove_reference_t<F>>(
             std::forward<Iter>(iter), std::forward<F>(f));
 }
 
@@ -316,11 +318,6 @@ auto makeDerefRange(Iter&& begin, Iter&& end) {
  */
 template <typename Range, typename F>
 class OwningTransformRange {
-private:
-    // using const_reference = decltype(*std::cbegin(std::declval<Range&>()));
-    // using reference = decltype(*std::begin(std::declval<Range&>()));
-    // using value_type = std::remove_const_t<std::remove_reference_t<reference>>;
-
 public:
     OwningTransformRange(Range&& range, F f) : range(std::move(range)), f(std::move(f)) {}
 

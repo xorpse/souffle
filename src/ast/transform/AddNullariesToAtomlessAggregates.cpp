@@ -34,7 +34,7 @@ namespace souffle::ast::transform {
 bool AddNullariesToAtomlessAggregatesTransformer::transform(TranslationUnit& translationUnit) {
     bool changed{false};
     Program& program = translationUnit.getProgram();
-    visitDepthFirst(program, [&](Aggregator& agg) {
+    visit(program, [&](Aggregator& agg) {
         bool seenAtom{false};
         for (const auto& literal : agg.getBodyLiterals()) {
             if (isA<Atom>(literal)) {

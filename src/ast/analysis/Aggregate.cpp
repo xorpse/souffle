@@ -49,7 +49,7 @@ namespace souffle::ast::analysis {
 std::set<std::string> getLocalVariables(
         const TranslationUnit& tu, const Clause& clause, const Aggregator& aggregate) {
     std::set<std::string> allVariablesInAggregate;
-    visitDepthFirst(aggregate, [&](const Variable& v) { allVariablesInAggregate.insert(v.getName()); });
+    visit(aggregate, [&](const Variable& v) { allVariablesInAggregate.insert(v.getName()); });
     std::set<std::string> injectedVariables = getInjectedVariables(tu, clause, aggregate);
     std::set<std::string> witnessVariables = getWitnessVariables(tu, clause, aggregate);
     std::set<std::string> localVariables;
@@ -151,8 +151,8 @@ std::set<std::string> getWitnessVariables(
  **/
 std::set<std::string> getVariablesOutsideAggregate(const Clause& clause, const Aggregator& aggregate) {
     std::map<std::string, int> variableOccurrences;
-    visitDepthFirst(clause, [&](const Variable& var) { variableOccurrences[var.getName()]++; });
-    visitDepthFirst(aggregate, [&](const Variable& var) { variableOccurrences[var.getName()]--; });
+    visit(clause, [&](const Variable& var) { variableOccurrences[var.getName()]++; });
+    visit(aggregate, [&](const Variable& var) { variableOccurrences[var.getName()]--; });
     std::set<std::string> variablesOutsideAggregate;
     for (auto const& pair : variableOccurrences) {
         std::string v = pair.first;
@@ -166,7 +166,7 @@ std::set<std::string> getVariablesOutsideAggregate(const Clause& clause, const A
 
 std::string findUniqueVariableName(const Clause& clause, std::string base) {
     std::set<std::string> variablesInClause;
-    visitDepthFirst(clause, [&](const Variable& v) { variablesInClause.insert(v.getName()); });
+    visit(clause, [&](const Variable& v) { variablesInClause.insert(v.getName()); });
     int varNum = 0;
     std::string candidate = base;
     while (variablesInClause.find(candidate) != variablesInClause.end()) {
@@ -255,13 +255,13 @@ std::set<std::string> getInjectedVariables(
      **/
     // Step 1
     std::set<std::string> variablesInTargetAggregate;
-    visitDepthFirst(aggregate,
+    visit(aggregate,
             [&](const Variable& variable) { variablesInTargetAggregate.insert(variable.getName()); });
 
     std::set<Own<Aggregator>> ancestorAggregates;
 
-    visitDepthFirst(clause, [&](const Aggregator& ancestor) {
-        visitDepthFirst(ancestor, [&](const Aggregator& agg) {
+    visit(clause, [&](const Aggregator& ancestor) {
+        visit(ancestor, [&](const Aggregator& agg) {
             if (agg == aggregate) {
                 ancestorAggregates.insert(souffle::clone(ancestor));
             }
@@ -352,7 +352,7 @@ std::set<std::string> getInjectedVariables(
     }
     // Remove any variables that occur in the target expression of the aggregate
     if (aggregate.getTargetExpression() != nullptr) {
-        visitDepthFirst(*aggregate.getTargetExpression(),
+        visit(*aggregate.getTargetExpression(),
                 [&](const Variable& v) { injectedVariables.erase(v.getName()); });
     }
 

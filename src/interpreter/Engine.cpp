@@ -281,7 +281,7 @@ void Engine::executeMain() {
         ProfileEventSingleton::instance().setOutputFile(Global::config().get("profile"));
         // Prepare the frequency table for threaded use
         const ram::Program& program = tUnit.getProgram();
-        visitDepthFirst(program, [&](const ram::TupleOperation& node) {
+        visit(program, [&](const ram::TupleOperation& node) {
             if (!node.getProfileText().empty()) {
                 frequencies.emplace(node.getProfileText(), std::deque<std::atomic<size_t>>());
                 frequencies[node.getProfileText()].emplace_back(0);
@@ -306,7 +306,7 @@ void Engine::executeMain() {
 
         // Store count of rules
         size_t ruleCount = 0;
-        visitDepthFirst(program, [&](const ram::Query&) { ++ruleCount; });
+        visit(program, [&](const ram::Query&) { ++ruleCount; });
         ProfileEventSingleton::instance().makeConfigRecord("ruleCount", std::to_string(ruleCount));
 
         Context ctxt;

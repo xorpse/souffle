@@ -37,12 +37,12 @@ int ComplexityAnalysis::getComplexity(const Node* node) const {
 
         // conjunction
         int visit_(type_identity<Conjunction>, const Conjunction& conj) override {
-            return visit(conj.getLHS()) + visit(conj.getRHS());
+            return dispatch(conj.getLHS()) + dispatch(conj.getRHS());
         }
 
         // negation
         int visit_(type_identity<Negation>, const Negation& neg) override {
-            return visit(neg.getOperand());
+            return dispatch(neg.getOperand());
         }
 
         // existence check
@@ -71,7 +71,7 @@ int ComplexityAnalysis::getComplexity(const Node* node) const {
     };
 
     assert((isA<Expression>(node) || isA<Condition>(node)) && "not an expression/condition/operation");
-    return ValueComplexityVisitor(ra).visit(*node);
+    return ValueComplexityVisitor(ra).dispatch(*node);
 }
 
 }  // namespace souffle::ram::analysis

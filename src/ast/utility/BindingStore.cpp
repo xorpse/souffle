@@ -40,9 +40,9 @@ BindingStore::BindingStore(const Clause* clause) {
 void BindingStore::generateBindingDependencies(const Clause* clause) {
     // Grab all relevant constraints (i.e. eq. constrs not involving aggregators)
     std::set<const BinaryConstraint*> relevantEqConstraints;
-    visitDepthFirst(*clause, [&](const BinaryConstraint& bc) {
+    visit(*clause, [&](const BinaryConstraint& bc) {
         bool containsAggregators = false;
-        visitDepthFirst(bc, [&](const Aggregator& /* aggr */) { containsAggregators = true; });
+        visit(bc, [&](const Aggregator& /* aggr */) { containsAggregators = true; });
         if (!containsAggregators && isEqConstraint(bc.getBaseOperator())) {
             relevantEqConstraints.insert(&bc);
         }
@@ -62,7 +62,7 @@ void BindingStore::processEqualityBindings(const Argument* lhs, const Argument* 
 
     // If all variables on the rhs are bound, then lhs is also bound
     BindingStore::ConjBindingSet depSet;
-    visitDepthFirst(*rhs, [&](const Variable& subVar) { depSet.insert(subVar.getName()); });
+    visit(*rhs, [&](const Variable& subVar) { depSet.insert(subVar.getName()); });
     addBindingDependency(var->getName(), depSet);
 
     // If the lhs is bound, then all args in the rec on the rhs are also bound

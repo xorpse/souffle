@@ -204,7 +204,7 @@ void Synthesiser::generateRelationTypeStruct(std::ostream& out, Own<Relation> re
 /** Get referenced relations */
 std::set<const ram::Relation*> Synthesiser::getReferencedRelations(const Operation& op) {
     std::set<const ram::Relation*> res;
-    visitDepthFirst(op, [&](const Node& node) {
+    visit(op, [&](const Node& node) {
         if (auto scan = as<RelationOperation>(node)) {
             res.insert(lookup(scan->getRelation()));
         } else if (auto agg = as<Aggregate>(node)) {
@@ -250,7 +250,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         CodeEmitter(Synthesiser& syn) : synthesiser(syn) {
             rec = [&](auto& out, const auto* value) {
                 out << "ramBitCast(";
-                visit(*value, out);
+                dispatch(*value, out);
                 out << ")";
             };
             recWithDefault = [&](auto& out, const auto* value) {
@@ -303,7 +303,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                     low << supremum;
                 } else {
                     low << "ramBitCast(";
-                    visit(*rangePatternLower[column], low);
+                    dispatch(*rangePatternLower[column], low);
                     low << ")";
                 }
 
@@ -311,7 +311,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                     high << infimum;
                 } else {
                     high << "ramBitCast(";
-                    visit(*rangePatternUpper[column], high);
+                    dispatch(*rangePatternUpper[column], high);
                     high << ")";
                 }
             }
@@ -396,8 +396,8 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 auto conditions = toConjunctionList(&filter->getCondition());
                 for (auto const& cur : conditions) {
                     bool needContext = false;
-                    visitDepthFirst(*cur, [&](const ExistenceCheck&) { needContext = true; });
-                    visitDepthFirst(*cur, [&](const ProvenanceExistenceCheck&) { needContext = true; });
+                    visit(*cur, [&](const ExistenceCheck&) { needContext = true; });
+                    visit(*cur, [&](const ProvenanceExistenceCheck&) { needContext = true; });
                     if (needContext) {
                         requireCtx.push_back(souffle::clone(cur));
                     } else {
@@ -407,7 +407,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 // discharge conditions that do not require a context
                 if (freeOfCtx.size() > 0) {
                     out << "if(";
-                    visit(*toCondition(freeOfCtx), out);
+                    dispatch(*toCondition(freeOfCtx), out);
                     out << ") {\n";
                 }
             }
@@ -419,7 +419,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             // check whether loop nest can be parallelized
             bool isParallel = false;
-            visitDepthFirst(*next, [&](const AbstractParallel&) { isParallel = true; });
+            visit(*next, [&](const AbstractParallel&) { isParallel = true; });
 
             // reset preamble
             preamble.str("");
@@ -437,23 +437,23 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             if (isParallel) {
                 if (requireCtx.size() > 0) {
                     preamble << "if(";
-                    visit(*toCondition(requireCtx), preamble);
+                    dispatch(*toCondition(requireCtx), preamble);
                     preamble << ") {\n";
-                    visit(*next, out);
+                    dispatch(*next, out);
                     out << "}\n";
                 } else {
-                    visit(*next, out);
+                    dispatch(*next, out);
                 }
             } else {
                 out << preamble.str();
                 if (requireCtx.size() > 0) {
                     out << "if(";
-                    visit(*toCondition(requireCtx), out);
+                    dispatch(*toCondition(requireCtx), out);
                     out << ") {\n";
-                    visit(*next, out);
+                    dispatch(*next, out);
                     out << "}\n";
                 } else {
-                    visit(*next, out);
+                    dispatch(*next, out);
                 }
             }
 
@@ -496,7 +496,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         void visit_(type_identity<Sequence>, const Sequence& seq, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             for (const auto& cur : seq.getStatements()) {
-                visit(*cur, out);
+                dispatch(*cur, out);
             }
             PRINT_END_COMMENT(out);
         }
@@ -513,7 +513,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             // a single statement => save the overhead
             if (stmts.size() == 1) {
-                visit(*stmts[0], out);
+                dispatch(*stmts[0], out);
                 PRINT_END_COMMENT(out);
                 return;
             }
@@ -526,7 +526,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             // put each thread in another section
             for (const auto& cur : stmts) {
                 out << "SECTION_START;\n";
-                visit(*cur, out);
+                dispatch(*cur, out);
                 out << "SECTION_END\n";
             }
 
@@ -539,7 +539,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_BEGIN_COMMENT(out);
             out << "iter = 0;\n";
             out << "for(;;) {\n";
-            visit(loop.getBody(), out);
+            dispatch(loop.getBody(), out);
             out << "iter++;\n";
             out << "}\n";
             out << "iter = 0;\n";
@@ -569,7 +569,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         void visit_(type_identity<Exit>, const Exit& exit, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "if(";
-            visit(exit.getCondition(), out);
+            dispatch(exit.getCondition(), out);
             out << ") break;\n";
             PRINT_END_COMMENT(out);
         }
@@ -599,7 +599,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "\tLogger logger(R\"_(" << timer.getMessage() << ")_\",iter, [&](){return " << relName
                 << "->size();});\n";
             // insert statement to be measured
-            visit(timer.getStatement(), out);
+            dispatch(timer.getStatement(), out);
 
             // done
             out << "}\n";
@@ -616,7 +616,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             // create local timer
             out << "\tLogger logger(R\"_(" << timer.getMessage() << ")_\",iter);\n";
             // insert statement to be measured
-            visit(timer.getStatement(), out);
+            dispatch(timer.getStatement(), out);
 
             // done
             out << "}\n";
@@ -630,7 +630,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << ")_\");\n";
 
             // insert statements of the rule
-            visit(dbg.getStatement(), out);
+            dispatch(dbg.getStatement(), out);
             PRINT_END_COMMENT(out);
         }
 
@@ -638,7 +638,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
         void visit_(
                 type_identity<NestedOperation>, const NestedOperation& nested, std::ostream& out) override {
-            visit(nested.getOperation(), out);
+            dispatch(nested.getOperation(), out);
             if (Global::config().has("profile") && Global::config().has("profile-frequency") &&
                     !nested.getProfileText().empty()) {
                 out << "freqs[" << synthesiser.lookupFreqIdx(nested.getProfileText()) << "]++;\n";
@@ -712,7 +712,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 << "*" << relName << ") {\n";
             out << "if( ";
 
-            visit(choice.getCondition(), out);
+            dispatch(choice.getCondition(), out);
 
             out << ") {\n";
 
@@ -747,7 +747,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "for(const auto& env0 : *it) {\n";
             out << "if( ";
 
-            visit(pchoice.getCondition(), out);
+            dispatch(pchoice.getCondition(), out);
 
             out << ") {\n";
 
@@ -850,7 +850,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "for(const auto& env" << identifier << " : range) {\n";
             out << "if( ";
 
-            visit(ichoice.getCondition(), out);
+            dispatch(ichoice.getCondition(), out);
 
             out << ") {\n";
 
@@ -895,7 +895,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "for(const auto& env0 : *it) {\n";
             out << "if( ";
 
-            visit(pichoice.getCondition(), out);
+            dispatch(pichoice.getCondition(), out);
 
             out << ") {\n";
 
@@ -916,7 +916,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             // look up reference
             out << "RamDomain const ref = ";
-            visit(unpack.getExpression(), out);
+            dispatch(unpack.getExpression(), out);
             out << ";\n";
 
             // Handle nil case.
@@ -1068,7 +1068,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             // produce condition inside the loop if necessary
             out << "if( ";
-            visit(aggregate.getCondition(), out);
+            dispatch(aggregate.getCondition(), out);
             out << ") {\n";
 
             out << "shouldRunNested = true;\n";
@@ -1079,14 +1079,14 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case AggregateOp::UMIN:
                 case AggregateOp::MIN:
                     out << "res0 = std::min(res0,ramBitCast<" << type << ">(";
-                    visit(aggregate.getExpression(), out);
+                    dispatch(aggregate.getExpression(), out);
                     out << "));\n";
                     break;
                 case AggregateOp::FMAX:
                 case AggregateOp::UMAX:
                 case AggregateOp::MAX:
                     out << "res0 = std::max(res0,ramBitCast<" << type << ">(";
-                    visit(aggregate.getExpression(), out);
+                    dispatch(aggregate.getExpression(), out);
                     out << "));\n";
                     break;
                 case AggregateOp::COUNT: out << "++res0\n;"; break;
@@ -1095,14 +1095,14 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case AggregateOp::SUM:
                     out << "res0 += "
                         << "ramBitCast<" << type << ">(";
-                    visit(aggregate.getExpression(), out);
+                    dispatch(aggregate.getExpression(), out);
                     out << ");\n";
                     break;
 
                 case AggregateOp::MEAN:
                     out << "res0 += "
                         << "ramBitCast<RamFloat>(";
-                    visit(aggregate.getExpression(), out);
+                    dispatch(aggregate.getExpression(), out);
                     out << ");\n";
                     out << "++res1;\n";
                     break;
@@ -1241,7 +1241,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             // produce condition inside the loop
             out << "if( ";
-            visit(aggregate.getCondition(), out);
+            dispatch(aggregate.getCondition(), out);
             out << ") {\n";
 
             out << "shouldRunNested = true;\n";
@@ -1252,7 +1252,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case AggregateOp::UMIN:
                 case AggregateOp::MIN:
                     out << "res0 = std::min(res0,ramBitCast<" << type << ">(";
-                    visit(aggregate.getExpression(), out);
+                    dispatch(aggregate.getExpression(), out);
                     out << "));\n";
                     if (isGuaranteedToBeMinimum(aggregate)) {
                         out << "break;\n";
@@ -1262,7 +1262,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case AggregateOp::UMAX:
                 case AggregateOp::MAX:
                     out << "res0 = std::max(res0,ramBitCast<" << type << ">(";
-                    visit(aggregate.getExpression(), out);
+                    dispatch(aggregate.getExpression(), out);
                     out << "));\n";
                     break;
                 case AggregateOp::COUNT: out << "++res0\n;"; break;
@@ -1271,14 +1271,14 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case AggregateOp::SUM:
                     out << "res0 += "
                         << "ramBitCast<" << type << ">(";
-                    visit(aggregate.getExpression(), out);
+                    dispatch(aggregate.getExpression(), out);
                     out << ");\n";
                     break;
 
                 case AggregateOp::MEAN:
                     out << "res0 += "
                         << "ramBitCast<RamFloat>(";
-                    visit(aggregate.getExpression(), out);
+                    dispatch(aggregate.getExpression(), out);
                     out << ");\n";
                     out << "++res1;\n";
                     break;
@@ -1420,7 +1420,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             // produce condition inside the loop
             out << "if( ";
-            visit(aggregate.getCondition(), out);
+            dispatch(aggregate.getCondition(), out);
             out << ") {\n";
 
             out << "shouldRunNested = true;\n";
@@ -1430,14 +1430,14 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case AggregateOp::UMIN:
                 case AggregateOp::MIN:
                     out << "res0 = std::min(res0, ramBitCast<" << type << ">(";
-                    visit(aggregate.getExpression(), out);
+                    dispatch(aggregate.getExpression(), out);
                     out << "));\n";
                     break;
                 case AggregateOp::FMAX:
                 case AggregateOp::UMAX:
                 case AggregateOp::MAX:
                     out << "res0 = std::max(res0, ramBitCast<" << type << ">(";
-                    visit(aggregate.getExpression(), out);
+                    dispatch(aggregate.getExpression(), out);
                     out << "));\n";
                     break;
                 case AggregateOp::COUNT: out << "++res0\n;"; break;
@@ -1445,13 +1445,13 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case AggregateOp::USUM:
                 case AggregateOp::SUM:
                     out << "res0 += ramBitCast<" << type << ">(";
-                    visit(aggregate.getExpression(), out);
+                    dispatch(aggregate.getExpression(), out);
                     out << ");\n";
                     break;
 
                 case AggregateOp::MEAN:
                     out << "res0 += ramBitCast<RamFloat>(";
-                    visit(aggregate.getExpression(), out);
+                    dispatch(aggregate.getExpression(), out);
                     out << ");\n";
                     out << "++res1;\n";
                     break;
@@ -1553,7 +1553,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             // produce condition inside the loop
             out << "if( ";
-            visit(aggregate.getCondition(), out);
+            dispatch(aggregate.getCondition(), out);
             out << ") {\n";
 
             out << "shouldRunNested = true;\n";
@@ -1563,14 +1563,14 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case AggregateOp::UMIN:
                 case AggregateOp::MIN:
                     out << "res0 = std::min(res0, ramBitCast<" << type << ">(";
-                    visit(aggregate.getExpression(), out);
+                    dispatch(aggregate.getExpression(), out);
                     out << "));\n";
                     break;
                 case AggregateOp::FMAX:
                 case AggregateOp::UMAX:
                 case AggregateOp::MAX:
                     out << "res0 = std::max(res0,ramBitCast<" << type << ">(";
-                    visit(aggregate.getExpression(), out);
+                    dispatch(aggregate.getExpression(), out);
                     out << "));\n";
                     break;
                 case AggregateOp::COUNT: out << "++res0\n;"; break;
@@ -1580,14 +1580,14 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                     out << "res0 += "
                         << "ramBitCast<" << type << ">(";
                     ;
-                    visit(aggregate.getExpression(), out);
+                    dispatch(aggregate.getExpression(), out);
                     out << ");\n";
                     break;
 
                 case AggregateOp::MEAN:
                     out << "res0 += "
                         << "ramBitCast<RamFloat>(";
-                    visit(aggregate.getExpression(), out);
+                    dispatch(aggregate.getExpression(), out);
                     out << ");\n";
                     out << "++res1;\n";
                     break;
@@ -1616,7 +1616,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         void visit_(type_identity<Filter>, const Filter& filter, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "if( ";
-            visit(filter.getCondition(), out);
+            dispatch(filter.getCondition(), out);
             out << ") {\n";
             visit_(type_identity<NestedOperation>(), filter, out);
             out << "}\n";
@@ -1626,7 +1626,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         void visit_(type_identity<Break>, const Break& breakOp, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "if( ";
-            visit(breakOp.getCondition(), out);
+            dispatch(breakOp.getCondition(), out);
             out << ") break;\n";
             visit_(type_identity<NestedOperation>(), breakOp, out);
             PRINT_END_COMMENT(out);
@@ -1643,7 +1643,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             auto condition = guardedProject.getCondition();
             // guarded conditions
             out << "if( ";
-            visit(*condition, out);
+            dispatch(*condition, out);
             out << ") {\n";
 
             // create projected tuple
@@ -1694,16 +1694,16 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
         void visit_(type_identity<Conjunction>, const Conjunction& conj, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
-            visit(conj.getLHS(), out);
+            dispatch(conj.getLHS(), out);
             out << " && ";
-            visit(conj.getRHS(), out);
+            dispatch(conj.getRHS(), out);
             PRINT_END_COMMENT(out);
         }
 
         void visit_(type_identity<Negation>, const Negation& neg, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << "!(";
-            visit(neg.getOperand(), out);
+            dispatch(neg.getOperand(), out);
             out << ")";
             PRINT_END_COMMENT(out);
         }
@@ -1712,7 +1712,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             // clang-format off
 #define EVAL_CHILD(ty, idx)        \
     out << "ramBitCast<" #ty ">("; \
-    visit(rel.idx(), out);         \
+    dispatch(rel.idx(), out);      \
     out << ")"
 #define COMPARE_NUMERIC(ty, op) \
     out << "(";                 \
@@ -1752,33 +1752,33 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 // strings
                 case BinaryConstraintOp::MATCH: {
                     out << "regex_wrapper(symTable.resolve(";
-                    visit(rel.getLHS(), out);
+                    dispatch(rel.getLHS(), out);
                     out << "),symTable.resolve(";
-                    visit(rel.getRHS(), out);
+                    dispatch(rel.getRHS(), out);
                     out << "))";
                     break;
                 }
                 case BinaryConstraintOp::NOT_MATCH: {
                     out << "!regex_wrapper(symTable.resolve(";
-                    visit(rel.getLHS(), out);
+                    dispatch(rel.getLHS(), out);
                     out << "),symTable.resolve(";
-                    visit(rel.getRHS(), out);
+                    dispatch(rel.getRHS(), out);
                     out << "))";
                     break;
                 }
                 case BinaryConstraintOp::CONTAINS: {
                     out << "(symTable.resolve(";
-                    visit(rel.getRHS(), out);
+                    dispatch(rel.getRHS(), out);
                     out << ").find(symTable.resolve(";
-                    visit(rel.getLHS(), out);
+                    dispatch(rel.getLHS(), out);
                     out << ")) != std::string::npos)";
                     break;
                 }
                 case BinaryConstraintOp::NOT_CONTAINS: {
                     out << "(symTable.resolve(";
-                    visit(rel.getRHS(), out);
+                    dispatch(rel.getRHS(), out);
                     out << ").find(symTable.resolve(";
-                    visit(rel.getLHS(), out);
+                    dispatch(rel.getLHS(), out);
                     out << ")) == std::string::npos)";
                     break;
                 }
@@ -1895,7 +1895,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "if (existenceCheck.empty()) return false; else return ((*existenceCheck.begin())["
                 << arity - auxiliaryArity + 1 << "] <= ";
 
-            visit(*(provExists.getValues()[arity - auxiliaryArity + 1]), out);
+            dispatch(*(provExists.getValues()[arity - auxiliaryArity + 1]), out);
             out << ")";
             out << ";}()\n";
             PRINT_END_COMMENT(out);
@@ -1948,7 +1948,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         out << "symTable.lookup(" #op "({"; \
         for (auto& cur : args) {            \
             out << "symTable.resolve(";     \
-            visit(*cur, out);               \
+            dispatch(*cur, out);            \
             out << "), ";                   \
         }                                   \
         out << "}))";                       \
@@ -1961,7 +1961,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 #define UNARY_OP(opcode, ty, op)                \
     case FunctorOp::opcode: {                   \
         out << "(" #op "(ramBitCast<" #ty ">("; \
-        visit(*args[0], out);                    \
+        dispatch(*args[0], out);                \
         out << ")))";                           \
         break;                                  \
     }
@@ -1976,9 +1976,9 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 #define BINARY_OP_EXPR_EX(ty, op, rhs_post)      \
     {                                            \
         out << "(ramBitCast<" #ty ">(";          \
-        visit(*args[0], out);                     \
+        dispatch(*args[0], out);                 \
         out << ") " #op " ramBitCast<" #ty ">("; \
-        visit(*args[1], out);                     \
+        dispatch(*args[1], out);                 \
         out << rhs_post "))";                    \
         break;                                   \
     }
@@ -2005,9 +2005,9 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 #define BINARY_OP_EXP(opcode, ty, tyTemp)                                                     \
     case FunctorOp::opcode: {                                                                 \
         out << "static_cast<" #ty ">(static_cast<" #tyTemp ">(std::pow(ramBitCast<" #ty ">("; \
-        visit(*args[0], out);                                                                  \
+        dispatch(*args[0], out);                                                              \
         out << "), ramBitCast<" #ty ">(";                                                     \
-        visit(*args[1], out);                                                                  \
+        dispatch(*args[1], out);                                                              \
         out << "))))";                                                                        \
         break;                                                                                \
     }
@@ -2017,7 +2017,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         out << #op "({";                   \
         for (auto& cur : args) {           \
             out << "ramBitCast<" #ty ">("; \
-            visit(*cur, out);               \
+            dispatch(*cur, out);           \
             out << "), ";                  \
         }                                  \
         out << "})";                       \
@@ -2032,13 +2032,13 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 #define CONV_TO_STRING(opcode, ty)                \
     case FunctorOp::opcode: {                     \
         out << "symTable.lookup(std::to_string("; \
-        visit(*args[0], out);                      \
+        dispatch(*args[0], out);                      \
         out << "))";                              \
     } break;
 #define CONV_FROM_STRING(opcode, ty)                                            \
     case FunctorOp::opcode: {                                                   \
         out << "souffle::evaluator::symbol2numeric<" #ty ">(symTable.resolve("; \
-        visit(*args[0], out);                                                    \
+        dispatch(*args[0], out);                                                \
         out << "))";                                                            \
     } break;
             // clang-format on
@@ -2047,13 +2047,13 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             switch (op.getOperator()) {
                 /** Unary Functor Operators */
                 case FunctorOp::ORD: {
-                    visit(*args[0], out);
+                    dispatch(*args[0], out);
                     break;
                 }
                 // TODO: change the signature of `STRLEN` to return an unsigned?
                 case FunctorOp::STRLEN: {
                     out << "static_cast<RamSigned>(symTable.resolve(";
-                    visit(*args[0], out);
+                    dispatch(*args[0], out);
                     out << ").size())";
                     break;
                 }
@@ -2071,7 +2071,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case FunctorOp::I2I:
                 case FunctorOp::U2U:
                 case FunctorOp::S2S: {
-                    visit(*args[0], out);
+                    dispatch(*args[0], out);
                     break;
                 }
 
@@ -2141,12 +2141,12 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                     size_t i = 0;
                     while (i < args.size() - 1) {
                         out << "symTable.resolve(";
-                        visit(*args[i], out);
+                        dispatch(*args[i], out);
                         out << ") + ";
                         i++;
                     }
                     out << "symTable.resolve(";
-                    visit(*args[i], out);
+                    dispatch(*args[i], out);
                     out << "))";
                     break;
                 }
@@ -2155,11 +2155,11 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case FunctorOp::SUBSTR: {
                     out << "symTable.lookup(";
                     out << "substr_wrapper(symTable.resolve(";
-                    visit(*args[0], out);
+                    dispatch(*args[0], out);
                     out << "),(";
-                    visit(*args[1], out);
+                    dispatch(*args[1], out);
                     out << "),(";
-                    visit(*args[2], out);
+                    dispatch(*args[2], out);
                     out << ")))";
                     break;
                 }
@@ -2180,7 +2180,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             auto emitHelper = [&](auto&& func) {
                 tfm::format(out, "%s(%s, [&](auto&& env%d) {\n", func,
-                        join(op.getArguments(), ",", [&](auto& os, auto* arg) { return visit(*arg, os); }),
+                        join(op.getArguments(), ",", [&](auto& os, auto* arg) { return dispatch(*arg, os); }),
                         op.getTupleId());
                 visit_(type_identity<TupleOperation>(), op, out);
                 out << "});\n";
@@ -2210,7 +2210,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 out << name << "(&symTable, &recordTable";
                 for (auto& arg : args) {
                     out << ",";
-                    visit(*arg, out);
+                    dispatch(*arg, out);
                 }
                 out << ")";
             } else {
@@ -2228,22 +2228,22 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                     switch (argTypes[i]) {
                         case TypeAttribute::Signed:
                             out << "((RamSigned)";
-                            visit(*args[i], out);
+                            dispatch(*args[i], out);
                             out << ")";
                             break;
                         case TypeAttribute::Unsigned:
                             out << "((RamUnsigned)";
-                            visit(*args[i], out);
+                            dispatch(*args[i], out);
                             out << ")";
                             break;
                         case TypeAttribute::Float:
                             out << "((RamFloat)";
-                            visit(*args[i], out);
+                            dispatch(*args[i], out);
                             out << ")";
                             break;
                         case TypeAttribute::Symbol:
                             out << "symTable.resolve(";
-                            visit(*args[i], out);
+                            dispatch(*args[i], out);
                             out << ").c_str()";
                             break;
                         case TypeAttribute::ADT:
@@ -2291,7 +2291,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                     out << "ret.push_back(0);\n";
                 } else {
                     out << "ret.push_back(";
-                    visit(*val, out);
+                    dispatch(*val, out);
                     out << ");\n";
                 }
             }
@@ -2310,7 +2310,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
     out << std::setprecision(std::numeric_limits<RamFloat>::max_digits10);
     // emit code
-    CodeEmitter(*this).visit(stmt, out);
+    CodeEmitter(*this).dispatch(stmt, out);
 }
 
 void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& withSharedLibrary) {
@@ -2345,7 +2345,7 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     os << "\n";
     // produce external definitions for user-defined functors
     std::map<std::string, std::tuple<TypeAttribute, std::vector<TypeAttribute>, bool>> functors;
-    visitDepthFirst(prog, [&](const UserDefinedOperator& op) {
+    visit(prog, [&](const UserDefinedOperator& op) {
         if (functors.find(op.getName()) == functors.end()) {
             functors[op.getName()] = std::make_tuple(op.getReturnType(), op.getArgsTypes(), op.isStateful());
         }
@@ -2434,7 +2434,7 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     os << "// -- initialize symbol table --\n";
 
     // issue symbol table with string constants
-    visitDepthFirst(prog, [&](const StringConstant& sc) { convertSymbol2Idx(sc.getConstant()); });
+    visit(prog, [&](const StringConstant& sc) { convertSymbol2Idx(sc.getConstant()); });
     os << "SymbolTable symTable";
     if (!symbolMap.empty()) {
         os << "{\n";
@@ -2454,7 +2454,7 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     if (Global::config().has("profile")) {
         os << "private:\n";
         size_t numFreq = 0;
-        visitDepthFirst(prog, [&](const Statement&) { numFreq++; });
+        visit(prog, [&](const Statement&) { numFreq++; });
         os << "  size_t freqs[" << numFreq << "]{};\n";
         size_t numRead = 0;
         for (auto rel : prog.getRelations()) {
@@ -2486,7 +2486,7 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     std::set<const IO*> storeIOs;
 
     // collect load/store operations/relations
-    visitDepthFirst(prog, [&](const IO& io) {
+    visit(prog, [&](const IO& io) {
         auto op = io.get("operation");
         if (op == "input") {
             loadRelations.insert(io.getRelation());
@@ -2780,7 +2780,7 @@ void runFunction(std::string  inputDirectoryArg   = "",
 
             // issue lock variable for return statements
             bool needLock = false;
-            visitDepthFirst(*sub.second, [&](const SubroutineReturn&) { needLock = true; });
+            visit(*sub.second, [&](const SubroutineReturn&) { needLock = true; });
             if (needLock) {
                 os << "std::mutex lock;\n";
             }

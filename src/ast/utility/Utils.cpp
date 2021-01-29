@@ -57,14 +57,14 @@ std::string pprint(const Node& node) {
 std::vector<const Variable*> getVariables(const Node& root) {
     // simply collect the list of all variables by visiting all variables
     std::vector<const Variable*> vars;
-    visitDepthFirst(root, [&](const Variable& var) { vars.push_back(&var); });
+    visit(root, [&](const Variable& var) { vars.push_back(&var); });
     return vars;
 }
 
 std::vector<const RecordInit*> getRecords(const Node& root) {
     // simply collect the list of all records by visiting all records
     std::vector<const RecordInit*> recs;
-    visitDepthFirst(root, [&](const RecordInit& rec) { recs.push_back(&rec); });
+    visit(root, [&](const RecordInit& rec) { recs.push_back(&rec); });
     return recs;
 }
 
@@ -144,12 +144,10 @@ const Relation* getHeadRelation(const Clause* clause, const Program* program) {
 std::set<const Relation*> getBodyRelations(const Clause* clause, const Program* program) {
     std::set<const Relation*> bodyRelations;
     for (const auto& lit : clause->getBodyLiterals()) {
-        visitDepthFirst(
-                *lit, [&](const Atom& atom) { bodyRelations.insert(getAtomRelation(&atom, program)); });
+        visit(*lit, [&](const Atom& atom) { bodyRelations.insert(getAtomRelation(&atom, program)); });
     }
     for (const auto& arg : clause->getHead()->getArguments()) {
-        visitDepthFirst(
-                *arg, [&](const Atom& atom) { bodyRelations.insert(getAtomRelation(&atom, program)); });
+        visit(*arg, [&](const Atom& atom) { bodyRelations.insert(getAtomRelation(&atom, program)); });
     }
     return bodyRelations;
 }
@@ -171,8 +169,8 @@ bool hasClauseWithAggregatedRelation(const Relation* relation, const Relation* a
         const Program* program, const Literal*& foundLiteral) {
     for (const Clause* cl : getClauses(*program, *relation)) {
         bool hasAgg = false;
-        visitDepthFirst(*cl, [&](const Aggregator& cur) {
-            visitDepthFirst(cur, [&](const Atom& atom) {
+        visit(*cl, [&](const Aggregator& cur) {
+            visit(cur, [&](const Atom& atom) {
                 if (aggRelation == getAtomRelation(&atom, program)) {
                     foundLiteral = &atom;
                     hasAgg = true;
@@ -189,7 +187,7 @@ bool hasClauseWithAggregatedRelation(const Relation* relation, const Relation* a
 bool isRecursiveClause(const Clause& clause) {
     QualifiedName relationName = clause.getHead()->getQualifiedName();
     bool recursive = false;
-    visitDepthFirst(clause.getBodyLiterals(), [&](const Atom& atom) {
+    visit(clause.getBodyLiterals(), [&](const Atom& atom) {
         if (atom.getQualifiedName() == relationName) {
             recursive = true;
         }
@@ -209,7 +207,7 @@ bool isFact(const Clause& clause) {
 
     // and there are no aggregates
     bool hasAggregatesOrMultiResultFunctor = false;
-    visitDepthFirst(*clause.getHead(), [&](const Argument& arg) {
+    visit(*clause.getHead(), [&](const Argument& arg) {
         if (isA<Aggregator>(arg)) {
             hasAggregatesOrMultiResultFunctor = true;
         }
