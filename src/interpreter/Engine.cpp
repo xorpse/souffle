@@ -792,7 +792,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
 #define EMPTINESS_CHECK(Structure, Arity, ...)                         \
     CASE(EmptinessCheck, Structure, Arity)                             \
-        const auto& rel = *static_cast<RelType*>(node->getRelation()); \
+        const auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
         return rel.empty();                                            \
     ESAC(EmptinessCheck)
 
@@ -801,7 +801,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
 #define RELATION_SIZE(Structure, Arity, ...)                           \
     CASE(RelationSize, Structure, Arity)                               \
-        const auto& rel = *static_cast<RelType*>(node->getRelation()); \
+        const auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
         return rel.size();                                             \
     ESAC(RelationSize)
 
@@ -916,7 +916,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
 #define SCAN(Structure, Arity, ...)                                    \
     CASE(Scan, Structure, Arity)                                       \
-        const auto& rel = *static_cast<RelType*>(node->getRelation()); \
+        const auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
         return evalScan(rel, cur, shadow, ctxt);                       \
     ESAC(Scan)
 
@@ -925,7 +925,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
 #define PARALLEL_SCAN(Structure, Arity, ...)                           \
     CASE(ParallelScan, Structure, Arity)                               \
-        const auto& rel = *static_cast<RelType*>(node->getRelation()); \
+        const auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
         return evalParallelScan(rel, cur, shadow, ctxt);               \
     ESAC(ParallelScan)
         FOR_EACH(PARALLEL_SCAN)
@@ -941,7 +941,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
 #define PARALLEL_INDEX_SCAN(Structure, Arity, ...)                     \
     CASE(ParallelIndexScan, Structure, Arity)                          \
-        const auto& rel = *static_cast<RelType*>(node->getRelation()); \
+        const auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
         return evalParallelIndexScan(rel, cur, shadow, ctxt);          \
     ESAC(ParallelIndexScan)
 
@@ -950,7 +950,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
 #define CHOICE(Structure, Arity, ...)                                  \
     CASE(Choice, Structure, Arity)                                     \
-        const auto& rel = *static_cast<RelType*>(node->getRelation()); \
+        const auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
         return evalChoice(rel, cur, shadow, ctxt);                     \
     ESAC(Choice)
 
@@ -959,7 +959,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
 #define PARALLEL_CHOICE(Structure, Arity, ...)                         \
     CASE(ParallelChoice, Structure, Arity)                             \
-        const auto& rel = *static_cast<RelType*>(node->getRelation()); \
+        const auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
         return evalParallelChoice(rel, cur, shadow, ctxt);             \
     ESAC(ParallelChoice)
 
@@ -976,7 +976,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
 #define PARALLEL_INDEX_CHOICE(Structure, Arity, ...)                   \
     CASE(ParallelIndexChoice, Structure, Arity)                        \
-        const auto& rel = *static_cast<RelType*>(node->getRelation()); \
+        const auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
         return evalParallelIndexChoice(rel, cur, shadow, ctxt);        \
     ESAC(ParallelIndexChoice)
 
@@ -1004,7 +1004,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
 #define PARALLEL_AGGREGATE(Structure, Arity, ...)                      \
     CASE(ParallelAggregate, Structure, Arity)                          \
-        const auto& rel = *static_cast<RelType*>(node->getRelation()); \
+        const auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
         return evalParallelAggregate(rel, cur, shadow, ctxt);          \
     ESAC(ParallelAggregate)
 
@@ -1013,7 +1013,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
 #define AGGREGATE(Structure, Arity, ...)                                                                  \
     CASE(Aggregate, Structure, Arity)                                                                     \
-        const auto& rel = *static_cast<RelType*>(node->getRelation());                                    \
+        const auto& rel = *static_cast<RelType*>(shadow.getRelation());                                    \
         return evalAggregate(cur, *shadow.getCondition(), shadow.getExpr(), *shadow.getNestedOperation(), \
                 rel.scan(), ctxt);                                                                        \
     ESAC(Aggregate)
@@ -1065,7 +1065,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
 #define GUARDED_PROJECT(Structure, Arity, ...)                   \
     CASE(GuardedProject, Structure, Arity)                       \
-        auto& rel = *static_cast<RelType*>(node->getRelation()); \
+        auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
         return evalGuardedProject(rel, shadow, ctxt);            \
     ESAC(GuardedProject)
 
@@ -1074,7 +1074,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
 #define PROJECT(Structure, Arity, ...)                           \
     CASE(Project, Structure, Arity)                              \
-        auto& rel = *static_cast<RelType*>(node->getRelation()); \
+        auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
         return evalProject(rel, shadow, ctxt);                   \
     ESAC(Project)
 
@@ -1125,7 +1125,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
         CASE(LogRelationTimer)
             Logger logger(cur.getMessage(), getIterationNumber(),
-                    std::bind(&RelationWrapper::size, node->getRelation()));
+                    std::bind(&RelationWrapper::size, shadow.getRelation()));
             return execute(shadow.getChild(), ctxt);
         ESAC(LogRelationTimer)
 
@@ -1141,7 +1141,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
 #define CLEAR(Structure, Arity, ...)                             \
     CASE(Clear, Structure, Arity)                                \
-        auto& rel = *static_cast<RelType*>(node->getRelation()); \
+        auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
         rel.__purge();                                           \
         return true;                                             \
     ESAC(Clear)
@@ -1155,7 +1155,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
         ESAC(Call)
 
         CASE(LogSize)
-            const auto& rel = *node->getRelation();
+            const auto& rel = *shadow.getRelation();
             ProfileEventSingleton::instance().makeQuantityEvent(
                     cur.getMessage(), rel.size(), getIterationNumber());
             return true;
@@ -1164,7 +1164,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
         CASE(IO)
             const auto& directive = cur.getDirectives();
             const std::string& op = cur.get("operation");
-            auto& rel = *node->getRelation();
+            auto& rel = *shadow.getRelation();
 
             if (op == "input") {
                 try {
