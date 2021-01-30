@@ -122,13 +122,11 @@ souffle::RamDomain my_to_number_fun(
             std::from_chars(strVal.c_str(), strVal.c_str() + strVal.size(), result);
             return result;
         }
-        default:
-            assert(false && "Invalid ADT case");
+        default: assert(false && "Invalid ADT case");
     }
 }
 
-souffle::RamDomain my_identity(
-        souffle::SymbolTable*, souffle::RecordTable*, souffle::RamDomain arg) {
-            return arg;
-        }
+souffle::RamDomain my_identity(souffle::SymbolTable*, souffle::RecordTable*, souffle::RamDomain arg) {
+    return arg;
+}
 }  // end of extern "C"
