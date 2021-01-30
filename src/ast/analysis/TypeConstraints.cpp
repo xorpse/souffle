@@ -539,7 +539,8 @@ void TypeConstraintsAnalysis::visit_(type_identity<UserDefinedFunctor>, const Us
     // I don't particularly like that but am not at a place where I can change the
     // order of the passes/transformers.  So, for now, here's a comment for the next
     // person going doing this rabbit hole.
-    if (!typeAnalysis.hasValidTypeInfo(fun)) {
+    auto const& arguments = fun.getArguments();
+    if (!typeAnalysis.hasValidTypeInfo(fun) || typeAnalysis.getFunctorArity(fun) != arguments.size()) {
         return;
     }
 
@@ -548,8 +549,6 @@ void TypeConstraintsAnalysis::visit_(type_identity<UserDefinedFunctor>, const Us
     addConstraint(isSubtypeOf(functorVar, returnType));
 
     // Add constraints on arguments
-    auto const& arguments = fun.getArguments();
-
     for (size_t i = 0; i < arguments.size(); ++i) {
         Type const& paramType = typeAnalysis.getFunctorParamType(fun, i);
         addConstraint(isSubtypeOf(getVar(arguments[i]), paramType));

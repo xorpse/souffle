@@ -86,6 +86,7 @@ public:
     TypeAttribute getFunctorParamTypeAttribute(const Functor& functor, std::size_t idx) const;
     std::vector<TypeAttribute> getFunctorParamTypeAttributes(const UserDefinedFunctor& functor) const;
 
+    std::size_t getFunctorArity(UserDefinedFunctor const& functor) const;
     bool isStatefulFunctor(const UserDefinedFunctor& udf) const;
     static bool isMultiResultFunctor(const Functor& functor);
 

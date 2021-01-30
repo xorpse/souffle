@@ -75,8 +75,33 @@ public:
     /** Analyse types, clause by clause */
     void run() {
         const Program& program = tu.getProgram();
-        for (auto* clause : program.getClauses()) {
+        for (auto const* clause : program.getClauses()) {
             visit(*clause, *this);
+        }
+
+        for (auto const* decl : program.getFunctorDeclarations()) {
+            if (!typeAnalysis.hasValidTypeInfo(*decl)) {
+                // This could happen if the types mentioned int the functor declaration
+                // are not valid
+                continue;
+            }
+
+            // Only stateful functors can use UDTs
+            auto goodFunctor = [this, stateful = decl->isStateful()](QualifiedName const& tName) {
+                auto attr = getTypeAttribute(typeEnv.getType(tName));
+                return stateful || (attr != TypeAttribute::ADT && attr != TypeAttribute::Record);
+            };
+
+            if (!goodFunctor(decl->getReturnType().getTypeName())) {
+                report.addError(
+                        "Functors which are not stateful cannot use UDTs", decl->getReturnType().getSrcLoc());
+            }
+
+            for (auto const& param : decl->getParams()) {
+                if (!goodFunctor(param->getTypeName())) {
+                    report.addError("Functors which are not stateful cannot use UDTs", param->getSrcLoc());
+                }
+            }
         }
     }
 
@@ -110,7 +135,7 @@ private:
     void visit_(type_identity<UserDefinedFunctor>, const UserDefinedFunctor& fun) override;
     void visit_(type_identity<BinaryConstraint>, const BinaryConstraint& constraint) override;
     void visit_(type_identity<Aggregator>, const Aggregator& aggregator) override;
-};
+};  // namespace souffle::ast::transform
 
 void TypeChecker::verify(TranslationUnit& tu) {
     auto& report = tu.getErrorReport();
@@ -518,11 +543,6 @@ void TypeCheckerImpl::visit_(type_identity<UserDefinedFunctor>, const UserDefine
 
     Type const& returnType = functorAnalysis.getReturnType(fun);
 
-    // Only stateful functors can use UDTs
-    auto canUseUDTs = [stateful = udfd->isStateful()](Type const& type) {
-        return stateful || (!isOfKind(type, TypeAttribute::ADT) && !isOfKind(type, TypeAttribute::Record));
-    };
-
     if (resultTypes.isAll() || resultTypes.size() != 1) {
         std::ostringstream out;
         out << "Invalid use of functor returning " << returnType;
@@ -530,13 +550,9 @@ void TypeCheckerImpl::visit_(type_identity<UserDefinedFunctor>, const UserDefine
     } else {
         Type const& resultType = *resultTypes.begin();
 
-        if (!canUseUDTs(resultType)) {
-            report.addError("Functors which are not stateful cannot use UDTs", fun.getSrcLoc());
-        }
-
-        if (!isSubtypeOf(resultType, returnType)) {
+        if (!isSubtypeOf(returnType, resultType)) {
             std::ostringstream out;
-            out << "Invalid conversion of return type " << returnType << " to " << returnType;
+            out << "Invalid conversion of return type " << returnType << " to " << resultType;
             report.addError(out.str(), fun.getSrcLoc());
         }
     }
@@ -545,7 +561,7 @@ void TypeCheckerImpl::visit_(type_identity<UserDefinedFunctor>, const UserDefine
     auto const arity = params.size();
     auto const& args = fun.getArguments();
     auto const toCheck = std::min(args.size(), arity);
-    if (toCheck != arity) {
+    if (args.size() != arity) {
         std::ostringstream out;
         out << "Functor arity mismatch: Got " << args.size() << " arguments, expecting " << arity;
         report.addError(out.str(), fun.getSrcLoc());
@@ -571,10 +587,6 @@ void TypeCheckerImpl::visit_(type_identity<UserDefinedFunctor>, const UserDefine
             report.addError("Unable to determine type for " + getName(ii), arg->getSrcLoc());
         } else {
             Type const& argType = *argTypes.begin();
-
-            if (!canUseUDTs(argType)) {
-                report.addError("Functors which are not stateful cannot use UDTs", arg->getSrcLoc());
-            }
 
             if (!isSubtypeOf(argType, paramType)) {
                 std::ostringstream out;

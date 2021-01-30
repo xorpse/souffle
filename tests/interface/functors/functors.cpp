@@ -15,6 +15,7 @@
  ***********************************************************************/
 #include "souffle/RecordTable.h"
 #include "souffle/SymbolTable.h"
+#include <charconv>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -103,4 +104,31 @@ souffle::RamDomain myappend(
     }
 }
 
+souffle::RamDomain my_to_number_fun(
+        souffle::SymbolTable* symbolTable, souffle::RecordTable* recordTable, souffle::RamDomain arg) {
+    assert(symbolTable && "NULL symbol table");
+    assert(recordTable && "NULL record table");
+
+    // Argument is a list element [x, l] where
+    // x is a number and l is another list element
+    const souffle::RamDomain* myTuple = recordTable->unpack(arg, 2);
+    // This is ugly and error-prone.  We should provide a higher-level API which
+    // understands the internal data representation for ADTs
+    switch (myTuple[0]) {
+        case 0: return myTuple[1];
+        case 1: {
+            auto const& strVal = symbolTable->resolve(myTuple[1]);
+            souffle::RamDomain result = 0;
+            std::from_chars(strVal.c_str(), strVal.c_str() + strVal.size(), result);
+            return result;
+        }
+        default:
+            assert(false && "Invalid ADT case");
+    }
+}
+
+souffle::RamDomain my_identity(
+        souffle::SymbolTable*, souffle::RecordTable*, souffle::RamDomain arg) {
+            return arg;
+        }
 }  // end of extern "C"

@@ -155,12 +155,17 @@ TypeAttribute TypeAnalysis::getFunctorReturnTypeAttribute(const Functor& functor
     fatal("Missing functor type.");
 }
 
+std::size_t TypeAnalysis::getFunctorArity(UserDefinedFunctor const& functor) const {
+    assert(hasValidTypeInfo(functor) && "type of functor not processed");
+    return udfDeclaration.at(functor.getName())->getArity();
+}
+
 Type const& TypeAnalysis::getFunctorReturnType(const UserDefinedFunctor& functor) const {
     return nameToType(udfDeclaration.at(functor.getName())->getReturnType().getTypeName());
 }
 
 Type const& TypeAnalysis::getFunctorParamType(const UserDefinedFunctor& functor, std::size_t idx) const {
-    return nameToType(udfDeclaration.at(functor.getName())->getParams()[idx]->getTypeName());
+    return nameToType(udfDeclaration.at(functor.getName())->getParams().at(idx)->getTypeName());
 }
 
 TypeAttribute TypeAnalysis::getFunctorParamTypeAttribute(const Functor& functor, std::size_t idx) const {
