@@ -21,7 +21,6 @@
 #include "ram/Choice.h"
 #include "ram/Condition.h"
 #include "ram/Conjunction.h"
-#include "ram/Constant.h"
 #include "ram/Constraint.h"
 #include "ram/EmptinessCheck.h"
 #include "ram/ExistenceCheck.h"
@@ -34,11 +33,13 @@
 #include "ram/IntrinsicOperator.h"
 #include "ram/Negation.h"
 #include "ram/Node.h"
+#include "ram/NumericConstant.h"
 #include "ram/Operation.h"
 #include "ram/PackRecord.h"
 #include "ram/Project.h"
 #include "ram/ProvenanceExistenceCheck.h"
 #include "ram/Scan.h"
+#include "ram/StringConstant.h"
 #include "ram/SubroutineArgument.h"
 #include "ram/SubroutineReturn.h"
 #include "ram/True.h"
@@ -59,8 +60,13 @@ int LevelAnalysis::getLevel(const Node* node) const {
     // visitor
     class ValueLevelVisitor : public Visitor<int> {
     public:
-        // number
-        int visit_(type_identity<Constant>, const Constant&) override {
+        // string constant
+        int visit_(type_identity<StringConstant>, const StringConstant&) override {
+            return -1;
+        }
+
+        // number constant
+        int visit_(type_identity<NumericConstant>, const NumericConstant&) override {
             return -1;
         }
 
@@ -88,71 +94,71 @@ int LevelAnalysis::getLevel(const Node* node) const {
         int visit_(type_identity<IndexScan>, const IndexScan& indexScan) override {
             int level = -1;
             for (auto& index : indexScan.getRangePattern().first) {
-                level = std::max(level, visit(*index));
+                level = std::max(level, dispatch(*index));
             }
             for (auto& index : indexScan.getRangePattern().second) {
-                level = std::max(level, visit(*index));
+                level = std::max(level, dispatch(*index));
             }
             return level;
         }
 
         // choice
         int visit_(type_identity<Choice>, const Choice& choice) override {
-            return std::max(-1, visit(choice.getCondition()));
+            return std::max(-1, dispatch(choice.getCondition()));
         }
 
         // index choice
         int visit_(type_identity<IndexChoice>, const IndexChoice& indexChoice) override {
             int level = -1;
             for (auto& index : indexChoice.getRangePattern().first) {
-                level = std::max(level, visit(*index));
+                level = std::max(level, dispatch(*index));
             }
             for (auto& index : indexChoice.getRangePattern().second) {
-                level = std::max(level, visit(*index));
+                level = std::max(level, dispatch(*index));
             }
-            return std::max(level, visit(indexChoice.getCondition()));
+            return std::max(level, dispatch(indexChoice.getCondition()));
         }
 
         // aggregate
         int visit_(type_identity<Aggregate>, const Aggregate& aggregate) override {
-            return std::max(visit(aggregate.getExpression()), visit(aggregate.getCondition()));
+            return std::max(dispatch(aggregate.getExpression()), dispatch(aggregate.getCondition()));
         }
 
         // index aggregate
         int visit_(type_identity<IndexAggregate>, const IndexAggregate& indexAggregate) override {
             int level = -1;
             for (auto& index : indexAggregate.getRangePattern().first) {
-                level = std::max(level, visit(*index));
+                level = std::max(level, dispatch(*index));
             }
             for (auto& index : indexAggregate.getRangePattern().second) {
-                level = std::max(level, visit(*index));
+                level = std::max(level, dispatch(*index));
             }
-            level = std::max(visit(indexAggregate.getExpression()), level);
-            return std::max(level, visit(indexAggregate.getCondition()));
+            level = std::max(dispatch(indexAggregate.getExpression()), level);
+            return std::max(level, dispatch(indexAggregate.getCondition()));
         }
 
         // unpack record
         int visit_(type_identity<UnpackRecord>, const UnpackRecord& unpack) override {
-            return visit(unpack.getExpression());
+            return dispatch(unpack.getExpression());
         }
 
         // filter
         int visit_(type_identity<Filter>, const Filter& filter) override {
-            return visit(filter.getCondition());
+            return dispatch(filter.getCondition());
         }
 
         // break
         int visit_(type_identity<Break>, const Break& b) override {
-            return visit(b.getCondition());
+            return dispatch(b.getCondition());
         }
 
         // guarded project
         int visit_(type_identity<GuardedProject>, const GuardedProject& guardedProject) override {
             int level = -1;
             for (auto& exp : guardedProject.getValues()) {
-                level = std::max(level, visit(*exp));
+                level = std::max(level, dispatch(*exp));
             }
-            level = std::max(level, visit(*guardedProject.getCondition()));
+            level = std::max(level, dispatch(*guardedProject.getCondition()));
             return level;
         }
 
@@ -160,7 +166,7 @@ int LevelAnalysis::getLevel(const Node* node) const {
         int visit_(type_identity<Project>, const Project& project) override {
             int level = -1;
             for (auto& exp : project.getValues()) {
-                level = std::max(level, visit(*exp));
+                level = std::max(level, dispatch(*exp));
             }
             return level;
         }
@@ -169,7 +175,7 @@ int LevelAnalysis::getLevel(const Node* node) const {
         int visit_(type_identity<SubroutineReturn>, const SubroutineReturn& ret) override {
             int level = -1;
             for (auto& exp : ret.getValues()) {
-                level = std::max(level, visit(*exp));
+                level = std::max(level, dispatch(*exp));
             }
             return level;
         }
@@ -188,7 +194,7 @@ int LevelAnalysis::getLevel(const Node* node) const {
         int visit_(type_identity<IntrinsicOperator>, const IntrinsicOperator& op) override {
             int level = -1;
             for (const auto& arg : op.getArguments()) {
-                level = std::max(level, visit(*arg));
+                level = std::max(level, dispatch(*arg));
             }
             return level;
         }
@@ -197,7 +203,7 @@ int LevelAnalysis::getLevel(const Node* node) const {
         int visit_(type_identity<PackRecord>, const PackRecord& pack) override {
             int level = -1;
             for (const auto& arg : pack.getArguments()) {
-                level = std::max(level, visit(*arg));
+                level = std::max(level, dispatch(*arg));
             }
             return level;
         }
@@ -211,31 +217,31 @@ int LevelAnalysis::getLevel(const Node* node) const {
         int visit_(type_identity<UserDefinedOperator>, const UserDefinedOperator& op) override {
             int level = -1;
             for (const auto& arg : op.getArguments()) {
-                level = std::max(level, visit(*arg));
+                level = std::max(level, dispatch(*arg));
             }
             return level;
         }
 
         // conjunction
         int visit_(type_identity<Conjunction>, const Conjunction& conj) override {
-            return std::max(visit(conj.getLHS()), visit(conj.getRHS()));
+            return std::max(dispatch(conj.getLHS()), dispatch(conj.getRHS()));
         }
 
         // negation
         int visit_(type_identity<Negation>, const Negation& neg) override {
-            return visit(neg.getOperand());
+            return dispatch(neg.getOperand());
         }
 
         // constraint
         int visit_(type_identity<Constraint>, const Constraint& binRel) override {
-            return std::max(visit(binRel.getLHS()), visit(binRel.getRHS()));
+            return std::max(dispatch(binRel.getLHS()), dispatch(binRel.getRHS()));
         }
 
         // existence check
         int visit_(type_identity<ExistenceCheck>, const ExistenceCheck& exists) override {
             int level = -1;
             for (const auto& cur : exists.getValues()) {
-                level = std::max(level, visit(*cur));
+                level = std::max(level, dispatch(*cur));
             }
             return level;
         }
@@ -245,7 +251,7 @@ int LevelAnalysis::getLevel(const Node* node) const {
                 const ProvenanceExistenceCheck& provExists) override {
             int level = -1;
             for (const auto& cur : provExists.getValues()) {
-                level = std::max(level, visit(*cur));
+                level = std::max(level, dispatch(*cur));
             }
             return level;
         }
@@ -263,7 +269,7 @@ int LevelAnalysis::getLevel(const Node* node) const {
 
     assert((isA<Expression>(node) || isA<Condition>(node) || isA<Operation>(node)) &&
             "not an expression/condition/operation");
-    return ValueLevelVisitor().visit(*node);
+    return ValueLevelVisitor().dispatch(*node);
 }
 
 }  // namespace souffle::ram::analysis

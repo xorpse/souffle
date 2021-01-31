@@ -45,9 +45,9 @@ bool RemoveEmptyRelationsTransformer::removeEmptyRelations(TranslationUnit& tran
         emptyRelations.insert(rel->getQualifiedName());
 
         bool usedInAggregate = false;
-        visitDepthFirst(program, [&](const Aggregator& agg) {
+        visit(program, [&](const Aggregator& agg) {
             for (const auto lit : agg.getBodyLiterals()) {
-                visitDepthFirst(*lit, [&](const Atom& atom) {
+                visit(*lit, [&](const Atom& atom) {
                     if (getAtomRelation(&atom, &program) == rel) {
                         usedInAggregate = true;
                     }
@@ -79,7 +79,7 @@ bool RemoveEmptyRelationsTransformer::removeEmptyRelationUses(
     //
     // get all clauses
     std::vector<const Clause*> clauses;
-    visitDepthFirst(program, [&](const Clause& cur) { clauses.push_back(&cur); });
+    visit(program, [&](const Clause& cur) { clauses.push_back(&cur); });
 
     // clean all clauses
     for (const Clause* cl : clauses) {

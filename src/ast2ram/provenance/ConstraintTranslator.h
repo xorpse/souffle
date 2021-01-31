@@ -10,40 +10,38 @@
  *
  * @file ConstraintTranslator.h
  *
- * Abstract class providing an interface for translating an
- * ast::Literal into an equivalent ram::Condition.
- *
  ***********************************************************************/
 
 #pragma once
 
-#include "ast/utility/Visitor.h"
+#include "ast2ram/seminaive/ConstraintTranslator.h"
 #include "souffle/utility/ContainerUtil.h"
 
 namespace souffle::ast {
 class Literal;
-}
+class Negation;
+}  // namespace souffle::ast
 
 namespace souffle::ram {
 class Condition;
 }
 
 namespace souffle::ast2ram {
-
 class TranslatorContext;
 class ValueIndex;
+}  // namespace souffle::ast2ram
 
-class ConstraintTranslator : public ast::Visitor<Own<ram::Condition>> {
+namespace souffle::ast2ram::provenance {
+
+class ConstraintTranslator : public ast2ram::seminaive::ConstraintTranslator {
 public:
     ConstraintTranslator(const TranslatorContext& context, const ValueIndex& index)
-            : context(context), index(index) {}
-    virtual ~ConstraintTranslator() = default;
+            : ast2ram::seminaive::ConstraintTranslator(context, index) {}
 
-    virtual Own<ram::Condition> translateConstraint(const ast::Literal* lit) = 0;
+    Own<ram::Condition> translateConstraint(const ast::Literal* lit) override;
 
-protected:
-    const TranslatorContext& context;
-    const ValueIndex& index;
+    /** -- Visitors -- */
+    Own<ram::Condition> visit_(type_identity<ast::Negation>, const ast::Negation& neg) override;
 };
 
-}  // namespace souffle::ast2ram
+}  // namespace souffle::ast2ram::provenance

@@ -39,11 +39,11 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
 
     std::vector<AggregateWithWitnesses> aggregatesToFix;
 
-    visitDepthFirst(program, [&](Clause& clause) {
-        visitDepthFirst(clause, [&](Aggregator& agg) {
+    visit(program, [&](Clause& clause) {
+        visit(clause, [&](Aggregator& agg) {
             auto witnessVariables = analysis::getWitnessVariables(translationUnit, clause, agg);
             // remove any witness variables that originate from an inner aggregate
-            visitDepthFirst(agg, [&](Aggregator& innerAgg) {
+            visit(agg, [&](Aggregator& innerAgg) {
                 if (agg == innerAgg) {
                     return;
                 }
@@ -80,7 +80,7 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
         for (std::string witness : witnesses) {
             newWitnessVariableName[witness] = analysis::findUniqueVariableName(*clause, witness + "_w");
         }
-        visitDepthFirst(*agg, [&](Variable& var) {
+        visit(*agg, [&](Variable& var) {
             if (witnesses.find(var.getName()) != witnesses.end()) {
                 // if this variable is a witness, we need to replace it with its new name
                 var.setName(newWitnessVariableName[var.getName()]);

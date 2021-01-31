@@ -19,7 +19,6 @@
 #include "ast/Directive.h"
 #include "ast/QualifiedName.h"
 #include "ast/TranslationUnit.h"
-#include "ast/analysis/AuxArity.h"
 #include "ast/analysis/Functor.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/PolymorphicObjects.h"
@@ -50,7 +49,6 @@ TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
     program = &tu.getProgram();
 
     // Set up analyses
-    auxArityAnalysis = tu.getAnalysis<ast::analysis::AuxiliaryArityAnalysis>();
     functorAnalysis = tu.getAnalysis<ast::analysis::FunctorAnalysis>();
     recursiveClauses = tu.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
     sccGraph = tu.getAnalysis<ast::analysis::SCCGraphAnalysis>();
@@ -60,6 +58,18 @@ TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
     typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
     sumTypeBranches = tu.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>();
     polyAnalysis = tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
+
+    // Set up clause nums
+    for (const ast::Relation* rel : program->getRelations()) {
+        const auto& clauses = relationDetail->getClauses(rel->getQualifiedName());
+        size_t count = 1;
+        for (const ast::Clause* clause : relationDetail->getClauses(rel->getQualifiedName())) {
+            if (isFact(*clause)) {
+                clauseNums[clause] = 0;
+            }
+            clauseNums[clause] = count++;
+        }
+    }
 
     // Set up SIPS metric
     std::string sipsChosen = "all-bound";
@@ -80,6 +90,11 @@ TranslatorContext::~TranslatorContext() = default;
 
 bool TranslatorContext::isRecursiveClause(const ast::Clause* clause) const {
     return recursiveClauses->recursive(clause);
+}
+
+size_t TranslatorContext::getClauseNum(const ast::Clause* clause) const {
+    assert(contains(clauseNums, clause) && "clause num should exist for all clauses");
+    return clauseNums.at(clause);
 }
 
 std::string TranslatorContext::getAttributeTypeQualifier(const ast::QualifiedName& name) const {
@@ -135,7 +150,7 @@ std::set<const ast::Relation*> TranslatorContext::getExpiredRelations(size_t scc
     return relationSchedule->schedule().at(scc).expired();
 }
 
-std::set<ast::Clause*> TranslatorContext::getClauses(const ast::QualifiedName& name) const {
+std::vector<ast::Clause*> TranslatorContext::getClauses(const ast::QualifiedName& name) const {
     return relationDetail->getClauses(name);
 }
 
@@ -158,29 +173,6 @@ const std::vector<TypeAttribute>& TranslatorContext::getFunctorArgTypes(
 
 bool TranslatorContext::isStatefulFunctor(const ast::UserDefinedFunctor* udf) const {
     return functorAnalysis->isStateful(udf);
-}
-
-size_t TranslatorContext::getAuxiliaryArity(const ast::Atom* atom) const {
-    return auxArityAnalysis->getArity(atom);
-}
-
-size_t TranslatorContext::getAuxiliaryArity(const ast::Relation* relation) const {
-    return auxArityAnalysis->getArity(relation);
-}
-
-size_t TranslatorContext::getEvaluationArity(const ast::Atom* atom) const {
-    std::string relName = atom->getQualifiedName().toString();
-    if (isPrefix("@info_", relName)) return 0;
-
-    // Get the original relation name
-    if (isPrefix("@delta_", relName)) {
-        relName = stripPrefix("@delta_", relName);
-    } else if (isPrefix("@new_", relName)) {
-        relName = stripPrefix("@new_", relName);
-    }
-
-    const auto* originalRelation = getRelation(ast::QualifiedName(relName));
-    return auxArityAnalysis->getArity(originalRelation);
 }
 
 ast::NumericConstant::Type TranslatorContext::getInferredNumericConstantType(
@@ -217,31 +209,27 @@ int TranslatorContext::getADTBranchId(const ast::BranchInit* adt) const {
     return std::distance(std::begin(branches), iterToBranch);
 }
 
-Own<ram::Statement> TranslatorContext::translateNonRecursiveClause(
-        SymbolTable& symbolTable, const ast::Clause& clause) const {
-    auto clauseTranslator =
-            Own<ClauseTranslator>(translationStrategy->createClauseTranslator(*this, symbolTable));
+Own<ram::Statement> TranslatorContext::translateNonRecursiveClause(const ast::Clause& clause) const {
+    auto clauseTranslator = Own<ClauseTranslator>(translationStrategy->createClauseTranslator(*this));
     return clauseTranslator->translateNonRecursiveClause(clause);
 }
 
-Own<ram::Statement> TranslatorContext::translateRecursiveClause(SymbolTable& symbolTable,
+Own<ram::Statement> TranslatorContext::translateRecursiveClause(
         const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version) const {
-    auto clauseTranslator =
-            Own<ClauseTranslator>(translationStrategy->createClauseTranslator(*this, symbolTable));
+    auto clauseTranslator = Own<ClauseTranslator>(translationStrategy->createClauseTranslator(*this));
     return clauseTranslator->translateRecursiveClause(clause, scc, version);
 }
 
 Own<ram::Expression> TranslatorContext::translateValue(
-        SymbolTable& symbolTable, const ValueIndex& index, const ast::Argument* arg) const {
-    auto valueTranslator =
-            Own<ValueTranslator>(translationStrategy->createValueTranslator(*this, symbolTable, index));
+        const ValueIndex& index, const ast::Argument* arg) const {
+    auto valueTranslator = Own<ValueTranslator>(translationStrategy->createValueTranslator(*this, index));
     return valueTranslator->translateValue(arg);
 }
 
 Own<ram::Condition> TranslatorContext::translateConstraint(
-        SymbolTable& symbolTable, const ValueIndex& index, const ast::Literal* lit) const {
-    auto constraintTranslator = Own<ConstraintTranslator>(
-            translationStrategy->createConstraintTranslator(*this, symbolTable, index));
+        const ValueIndex& index, const ast::Literal* lit) const {
+    auto constraintTranslator =
+            Own<ConstraintTranslator>(translationStrategy->createConstraintTranslator(*this, index));
     return constraintTranslator->translateConstraint(lit);
 }
 

@@ -28,7 +28,7 @@ namespace souffle::ram::transform {
 
 bool ReorderFilterBreak::reorderFilterBreak(Program& program) {
     bool changed = false;
-    visitDepthFirst(program, [&](const Query& query) {
+    visit(program, [&](const Query& query) {
         std::function<Own<Node>(Own<Node>)> filterRewriter = [&](Own<Node> node) -> Own<Node> {
             // find filter-break nesting
             if (const Filter* filter = as<Filter>(node)) {

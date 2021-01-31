@@ -33,7 +33,7 @@ namespace souffle::ram::transform {
 Own<Operation> IfConversionTransformer::rewriteIndexScan(const IndexScan* indexScan) {
     // check whether tuple is used in subsequent operations
     bool tupleNotUsed = true;
-    visitDepthFirst(*indexScan, [&](const TupleElement& element) {
+    visit(*indexScan, [&](const TupleElement& element) {
         if (element.getTupleId() == indexScan->getTupleId()) {
             tupleNotUsed = false;
         }
@@ -41,23 +41,15 @@ Own<Operation> IfConversionTransformer::rewriteIndexScan(const IndexScan* indexS
 
     // if not used, transform the IndexScan operation to an existence check
     if (tupleNotUsed) {
-        // replace IndexScan with an Filter/Existence check
-        VecOwn<Expression> newValues;
-
+        // existence check is only supported for equality predicates on each attribute
         size_t arity = indexScan->getRangePattern().first.size();
         for (size_t i = 0; i < arity; ++i) {
             if (*(indexScan->getRangePattern().first[i]) != *(indexScan->getRangePattern().second[i])) {
                 return nullptr;
             }
         }
-
-        for (auto& cur : indexScan->getRangePattern().second) {
-            Expression* val = nullptr;
-            if (cur != nullptr) {
-                val = cur->clone();
-            }
-            newValues.emplace_back(val);
-        }
+        // replace IndexScan with an Filter/Existence check
+        RamBound newValues = souffle::clone(indexScan->getRangePattern().first);
 
         // check if there is a break statement nested in the Scan - if so, remove it
         Operation* newOp;
@@ -75,7 +67,7 @@ Own<Operation> IfConversionTransformer::rewriteIndexScan(const IndexScan* indexS
 
 bool IfConversionTransformer::convertIndexScans(Program& program) {
     bool changed = false;
-    visitDepthFirst(program, [&](const Query& query) {
+    visit(program, [&](const Query& query) {
         std::function<Own<Node>(Own<Node>)> scanRewriter = [&](Own<Node> node) -> Own<Node> {
             if (const IndexScan* scan = as<IndexScan>(node)) {
                 if (Own<Operation> op = rewriteIndexScan(scan)) {
