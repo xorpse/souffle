@@ -42,7 +42,6 @@ set(SOUFFLE_SOURCES
     ast/UserDefinedFunctor.cpp
     ast/Variable.cpp
     ast/analysis/Aggregate.cpp
-    ast/analysis/AuxArity.cpp
     ast/analysis/ClauseNormalisation.cpp
     ast/analysis/ComponentLookup.cpp
     ast/analysis/Functor.cpp
@@ -67,6 +66,7 @@ set(SOUFFLE_SOURCES
     ast/transform/ComponentInstantiation.cpp
     ast/transform/DebugReporter.cpp
     ast/transform/ExecutionPlanChecker.cpp
+    ast/transform/ExpandEqrels.cpp
     ast/transform/FoldAnonymousRecords.cpp
     ast/transform/GroundedTermsChecker.cpp
     ast/transform/GroundWitnesses.cpp
@@ -80,7 +80,6 @@ set(SOUFFLE_SOURCES
     ast/transform/NormaliseGenerators.cpp
     ast/transform/PartitionBodyLiterals.cpp
     ast/transform/PragmaChecker.cpp
-    ast/transform/Provenance.cpp
     ast/transform/ReduceExistentials.cpp
     ast/transform/RemoveBooleanConstraints.cpp
     ast/transform/RemoveEmptyRelations.cpp
@@ -100,6 +99,7 @@ set(SOUFFLE_SOURCES
     ast/utility/SipsMetric.cpp
     ast/utility/Utils.cpp
     ast2ram/provenance/ClauseTranslator.cpp
+    ast2ram/provenance/ConstraintTranslator.cpp
     ast2ram/provenance/SubproofGenerator.cpp
     ast2ram/provenance/TranslationStrategy.cpp
     ast2ram/provenance/UnitTranslator.cpp

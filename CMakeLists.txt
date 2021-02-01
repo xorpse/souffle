@@ -4,15 +4,23 @@ find_package(Git REQUIRED)
 
 # PACKAGE_VERSION is the full tag with git hash
 execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --always
+                WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+                RESULT_VARIABLE GIT_RESULT
                 OUTPUT_VARIABLE GIT_PACKAGE_VERSION)
+                # FIXME: Use in cmake 3.19 or later
+                # COMMAND_ERROR_IS_FATAL ANY)
 
-string(REGEX REPLACE "\n$" "" PACKAGE_VERSION ${GIT_PACKAGE_VERSION})
+if (NOT GIT_RESULT EQUAL 0)
+    message(FATAL_ERROR "Unable to find git repository")
+endif()
+
+string(REGEX REPLACE "\n$" "" PACKAGE_VERSION "${GIT_PACKAGE_VERSION}")
 message(STATUS "Building souffle version ${PACKAGE_VERSION}")
 
 # SOUFFLE_VERSION only includes the major/minor triplet
-string(REGEX REPLACE "-.*$" "" SOUFFLE_VERSION ${PACKAGE_VERSION})
+string(REGEX REPLACE "-.*$" "" SOUFFLE_VERSION "${PACKAGE_VERSION}")
 
-project(souffle VERSION ${SOUFFLE_VERSION}
+project(souffle VERSION "${SOUFFLE_VERSION}"
                 DESCRIPTION "A datalog compiler"
                 LANGUAGES CXX)
 
@@ -188,11 +196,10 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -fwrapv")
 
 # TODO
 # Tests:
-#  - finish semantic JSON tests
 #  - swig.at
 #  - interface.at
 #  - provenance.at
-# Update README
+# Update README with cmake instructions
 # install target
 # bash completion
 # Doxygen
@@ -202,5 +209,12 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -fwrapv")
 # substitute changelog
 
 enable_testing()
+
 add_subdirectory(src)
-add_subdirectory(tests)
+
+# FIXME: There are a few tests in the src directory, we should
+# migrate them to test to that they can be excluded
+# by the condition below
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    add_subdirectory(tests)
+endif()
