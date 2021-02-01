@@ -166,10 +166,7 @@ inline NodeType constructNodeType(std::string tokBase, const ram::Relation& rel)
 
 class Node {
 public:
-    using RelationHandle = Own<RelationWrapper>;
-
-    Node(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle = nullptr)
-            : type(ty), shadow(sdw), relHandle(relHandle) {}
+    Node(enum NodeType ty, const ram::Node* sdw) : type(ty), shadow(sdw) {}
     virtual ~Node() = default;
 
     /** @brief get node type */
@@ -182,16 +179,9 @@ public:
         return shadow;
     }
 
-    /** @brief get relation from handle */
-    RelationWrapper* getRelation() const {
-        assert(relHandle && "No relation cached\n");
-        return (*relHandle).get();
-    }
-
 protected:
     enum NodeType type;
     const ram::Node* shadow;
-    RelationHandle* const relHandle;
 };
 
 /**
@@ -202,9 +192,8 @@ class CompoundNode : public Node {
     using NodePtrVec = VecOwn<Node>;
 
 public:
-    CompoundNode(enum NodeType ty, const ram::Node* sdw, NodePtrVec children = {},
-            RelationHandle* relHandle = nullptr)
-            : Node(ty, sdw, relHandle), children(std::move(children)) {}
+    CompoundNode(enum NodeType ty, const ram::Node* sdw, NodePtrVec children = {})
+            : Node(ty, sdw), children(std::move(children)) {}
 
     /** @brief get children of node */
     inline const Node* getChild(size_t i) const {
@@ -226,8 +215,8 @@ protected:
  */
 class UnaryNode : public Node {
 public:
-    UnaryNode(enum NodeType ty, const ram::Node* sdw, Own<Node> child, RelationHandle* relHandle = nullptr)
-            : Node(ty, sdw, relHandle), child(std::move(child)) {}
+    UnaryNode(enum NodeType ty, const ram::Node* sdw, Own<Node> child)
+            : Node(ty, sdw), child(std::move(child)) {}
 
     inline const Node* getChild() const {
         return child.get();
@@ -243,9 +232,8 @@ protected:
  */
 class BinaryNode : public Node {
 public:
-    BinaryNode(enum NodeType ty, const ram::Node* sdw, Own<Node> lhs, Own<Node> rhs,
-            RelationHandle* relHandle = nullptr)
-            : Node(ty, sdw, relHandle), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    BinaryNode(enum NodeType ty, const ram::Node* sdw, Own<Node> lhs, Own<Node> rhs)
+            : Node(ty, sdw), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
     /** @brief get left child of node */
     inline const Node* getLhs() const {
@@ -402,6 +390,25 @@ protected:
 };
 
 /**
+ * @class RelationalOperation
+ * @brief Interpreter operation that holds a single relation
+ */
+class RelationalOperation {
+public:
+    using RelationHandle = Own<RelationWrapper>;
+    RelationalOperation(RelationHandle* relHandle) : relHandle(relHandle) {}
+
+    /** @brief get relation from handle */
+    RelationWrapper* getRelation() const {
+        assert(relHandle && "No relation cached\n");
+        return (*relHandle).get();
+    }
+
+private:
+    RelationHandle* const relHandle;
+};
+
+/**
  * @class NumericConstant
  */
 class NumericConstant : public Node {
@@ -516,15 +523,19 @@ class Negation : public UnaryNode {
 /**
  * @class EmptinessCheck
  */
-class EmptinessCheck : public Node {
-    using Node::Node;
+class EmptinessCheck : public Node, public RelationalOperation {
+public:
+    EmptinessCheck(enum NodeType ty, const ram::Node* sdw, RelationHandle* handle)
+            : Node(ty, sdw), RelationalOperation(handle) {}
 };
 
 /**
  * @class RelationSize
  */
-class RelationSize : public Node {
-    using Node::Node;
+class RelationSize : public Node, public RelationalOperation {
+public:
+    RelationSize(enum NodeType ty, const ram::Node* sdw, RelationHandle* handle)
+            : Node(ty, sdw), RelationalOperation(handle) {}
 };
 
 /**
@@ -583,10 +594,10 @@ class TupleOperation : public UnaryNode {
 /**
  * @class Scan
  */
-class Scan : public Node, public NestedOperation {
+class Scan : public Node, public NestedOperation, public RelationalOperation {
 public:
     Scan(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle, Own<Node> nested)
-            : Node(ty, sdw, relHandle), NestedOperation(std::move(nested)) {}
+            : Node(ty, sdw), NestedOperation(std::move(nested)), RelationalOperation(relHandle) {}
 };
 
 /**
@@ -618,12 +629,12 @@ public:
 /**
  * @class Choice
  */
-class Choice : public Node, public ConditionalOperation, public NestedOperation {
+class Choice : public Node, public ConditionalOperation, public NestedOperation, public RelationalOperation {
 public:
     Choice(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle, Own<Node> cond,
             Own<Node> nested)
-            : Node(ty, sdw, relHandle), ConditionalOperation(std::move(cond)),
-              NestedOperation(std::move(nested)) {}
+            : Node(ty, sdw), ConditionalOperation(std::move(cond)), NestedOperation(std::move(nested)),
+              RelationalOperation(relHandle) {}
 };
 
 /**
@@ -670,12 +681,15 @@ protected:
 /**
  * @class Aggregate
  */
-class Aggregate : public Node, public ConditionalOperation, public NestedOperation {
+class Aggregate : public Node,
+                  public ConditionalOperation,
+                  public NestedOperation,
+                  public RelationalOperation {
 public:
     Aggregate(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle, Own<Node> expr,
             Own<Node> filter, Own<Node> nested)
-            : Node(ty, sdw, relHandle), ConditionalOperation(std::move(filter)),
-              NestedOperation(std::move(nested)), expr(std::move(expr)) {}
+            : Node(ty, sdw), ConditionalOperation(std::move(filter)), NestedOperation(std::move(nested)),
+              RelationalOperation(relHandle), expr(std::move(expr)) {}
 
     inline const Node* getExpr() const {
         return expr.get();
@@ -716,8 +730,7 @@ class ParallelIndexAggregate : public IndexAggregate, public AbstractParallel {
 class Break : public Node, public ConditionalOperation, public NestedOperation {
 public:
     Break(enum NodeType ty, const ram::Node* sdw, Own<Node> cond, Own<Node> nested)
-            : Node(ty, sdw, nullptr), ConditionalOperation(std::move(cond)),
-              NestedOperation(std::move(nested)) {}
+            : Node(ty, sdw), ConditionalOperation(std::move(cond)), NestedOperation(std::move(nested)) {}
 };
 
 /**
@@ -726,17 +739,16 @@ public:
 class Filter : public Node, public ConditionalOperation, public NestedOperation {
 public:
     Filter(enum NodeType ty, const ram::Node* sdw, Own<Node> cond, Own<Node> nested)
-            : Node(ty, sdw, nullptr), ConditionalOperation(std::move(cond)),
-              NestedOperation(std::move(nested)) {}
+            : Node(ty, sdw), ConditionalOperation(std::move(cond)), NestedOperation(std::move(nested)) {}
 };
 
 /**
  * @class Project
  */
-class Project : public Node, public SuperOperation {
+class Project : public Node, public SuperOperation, public RelationalOperation {
 public:
     Project(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle, SuperInstruction superInst)
-            : Node(ty, sdw, relHandle), SuperOperation(std::move(superInst)) {}
+            : Node(ty, sdw), SuperOperation(std::move(superInst)), RelationalOperation(relHandle) {}
 };
 
 /**
@@ -787,8 +799,10 @@ class Exit : public UnaryNode {
 /**
  * @class LogRelationTimer
  */
-class LogRelationTimer : public UnaryNode {
-    using UnaryNode::UnaryNode;
+class LogRelationTimer : public UnaryNode, public RelationalOperation {
+public:
+    LogRelationTimer(enum NodeType ty, const ram::Node* sdw, Own<Node> child, RelationHandle* handle)
+            : UnaryNode(ty, sdw, std::move(child)), RelationalOperation(handle) {}
 };
 
 /**
@@ -808,8 +822,10 @@ class DebugInfo : public UnaryNode {
 /**
  * @class Clear
  */
-class Clear : public Node {
-    using Node::Node;
+class Clear : public Node, public RelationalOperation {
+public:
+    Clear(enum NodeType ty, const ram::Node* sdw, RelationHandle* handle)
+            : Node(ty, sdw), RelationalOperation(handle) {}
 };
 
 /**
@@ -831,15 +847,19 @@ private:
 /**
  * @class LogSize
  */
-class LogSize : public Node {
-    using Node::Node;
+class LogSize : public Node, public RelationalOperation {
+public:
+    LogSize(enum NodeType ty, const ram::Node* sdw, RelationHandle* handle)
+            : Node(ty, sdw), RelationalOperation(handle) {}
 };
 
 /**
  * @class IO
  */
-class IO : public Node {
-    using Node::Node;
+class IO : public Node, public RelationalOperation {
+public:
+    IO(enum NodeType ty, const ram::Node* sdw, RelationHandle* handle)
+            : Node(ty, sdw), RelationalOperation(handle) {}
 };
 
 /**
