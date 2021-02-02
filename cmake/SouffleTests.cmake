@@ -72,13 +72,13 @@ function(RUN_SOUFFLE_TEST_HELPER)
 
     # Set up the test directory
     add_test(NAME ${QUALIFIED_TEST_NAME}_setup
-             COMMAND "${CMAKE_SOURCE_DIR}/cmake/setup_test_dir.sh" "${DATA_CHECK_DIR}" "${OUTPUT_DIR}"
+             COMMAND "${PROJECT_SOURCE_DIR}/cmake/setup_test_dir.sh" "${DATA_CHECK_DIR}" "${OUTPUT_DIR}"
                                                     "${PARAM_TEST_NAME}" "${PARAM_EXTRA_DATA}")
     set_tests_properties(${QUALIFIED_TEST_NAME}_setup PROPERTIES
                          LABELS "${PARAM_CATEGORY};${EXEC_STYLE};${POS_LABEL};integration"
                          FIXTURES_SETUP ${FIXTURE_NAME}_directory)
 
-    # Run souffle
+    # Run souffle (through the shell, so we can easily redirect)
     add_test(NAME ${QUALIFIED_TEST_NAME} COMMAND
              sh -c "$<TARGET_FILE:souffle> ${EXTRA_FLAGS} -j8 \\
                                             -D . \\
@@ -96,7 +96,7 @@ function(RUN_SOUFFLE_TEST_HELPER)
 
     # Compare stdout/stderr
     add_test(NAME ${QUALIFIED_TEST_NAME}_compare_std_outputs
-             COMMAND "${CMAKE_SOURCE_DIR}/cmake/check_std_outputs.sh" "${PARAM_TEST_NAME}" "${PARAM_EXTRA_DATA}")
+             COMMAND "${PROJECT_SOURCE_DIR}/cmake/check_std_outputs.sh" "${PARAM_TEST_NAME}" "${PARAM_EXTRA_DATA}")
     set_tests_properties(${QUALIFIED_TEST_NAME}_compare_std_outputs PROPERTIES
                          WORKING_DIRECTORY "${OUTPUT_DIR}"
                          LABELS "${PARAM_CATEGORY};${EXEC_STYLE};${POS_LABEL};integration"
@@ -120,7 +120,7 @@ function(RUN_SOUFFLE_TEST_HELPER)
         endif()
 
         add_test(NAME ${QUALIFIED_TEST_NAME}_compare_csv
-                 COMMAND "${CMAKE_SOURCE_DIR}/cmake/check_test_results.sh"
+                 COMMAND "${PROJECT_SOURCE_DIR}/cmake/check_test_results.sh"
                                                 "${INPUT_DIR}" ${PARAM_EXTRA_DATA} "${EXTRA_BINARY}")
 
         set_tests_properties(${QUALIFIED_TEST_NAME}_compare_csv PROPERTIES

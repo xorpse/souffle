@@ -161,20 +161,52 @@ add_library(libsouffle STATIC
             ${BISON_parser_OUTPUTS}
             )
 
+# Make most of the attributes public.  Note that that's strictly not "correct" but
+# this library is not going to be installed and it makes it easier to build
+# the other targets in this project.  It encapsulates things nicely.
 target_include_directories(libsouffle
                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
                                   "${CMAKE_CURRENT_SOURCE_DIR}"
                                   "${CMAKE_CURRENT_BINARY_DIR}"
                            )
 
+# Set C++ standard to C++17
+target_compile_features(libsouffle
+                        PUBLIC cxx_std_17)
+set_target_properties(libsouffle PROPERTIES CXX_EXTENSIONS OFF)
+
+# FIXME: Re-evaluated the use of -fwrapv.  See my issue #1836
+target_compile_options(libsouffle
+                       PUBLIC "-Wall;-Wextra;-fwrapv")
+
 target_link_libraries(libsouffle
                       PUBLIC OpenMP::OpenMP_CXX
-                             $<$<BOOL:${USE_ZLIB}>:ZLIB::ZLIB>
-                             $<$<BOOL:${USE_SQLITE}>:SQLite::SQLite3>
-                             $<$<BOOL:${USE_CURSES}>:Curses::NCurses>
+                             $<$<BOOL:${SOUFFLE_USE_ZLIB}>:ZLIB::ZLIB>
+                             $<$<BOOL:${SOUFFLE_USE_SQLITE}>:SQLite::SQLite3>
+                             $<$<BOOL:${SOUFFLE_USE_CURSES}>:Curses::NCurses>
                              LibFFI::LibFFI
                              "${CMAKE_DL_LIBS}"
                       )
+
+if (SOUFFLE_DOMAIN_64BIT)
+    target_compile_definitions(libsouffle
+                               PUBLIC RAM_DOMAIN_SIZE=64)
+endif()
+
+if (SOUFFLE_USE_CURSES)
+    target_compile_definitions(libsouffle
+                               PUBLIC USE_NCURSES)
+endif()
+
+if (SOUFFLE_USE_ZLIB)
+    target_compile_definitions(libsouffle
+                               PUBLIC USE_LIBZ)
+endif()
+
+if (SOUFFLE_USE_SQLITE)
+    target_compile_definitions(libsouffle
+                               PUBLIC USE_SQLITE)
+endif()
 
 # The target names "souffle" for the library and "souffle" for the binary
 # clash in cmake.  I could just rename the library (since it's private)
@@ -193,7 +225,7 @@ target_link_libraries(souffle libsouffle)
 # --------------------------------------------------
 # Substitutions for souffle-compile and souffle-config
 # --------------------------------------------------
-# This is a bit fragile but there is actually no better way
+# FIXME: This is a bit fragile but there is actually no better way
 # to do this, AFAIK
 # Maybe we could make a cmake script instead of using shell?
 function(AUTOMAKE_COMPATIBLE_SUBST F_IN F_OUT)
@@ -206,7 +238,7 @@ function(AUTOMAKE_COMPATIBLE_SUBST F_IN F_OUT)
     set(CPPFLAGS "")
 
     # Compile definitions
-    get_property(COMP_DEFS DIRECTORY PROPERTY COMPILE_DEFINITIONS)
+    get_target_property(COMP_DEFS libsouffle COMPILE_DEFINITIONS)
     set(SUBST_DEFS "")
     foreach(DEF ${COMP_DEFS})
         string(APPEND SUBST_DEFS "-D${DEF} ")
@@ -215,34 +247,36 @@ function(AUTOMAKE_COMPATIBLE_SUBST F_IN F_OUT)
     # Compile flags
     string(TOUPPER ${CMAKE_BUILD_TYPE} BT_UPPER)
     # Remove -Wall/-Wextra since the code is not warning-free
-    string(REGEX REPLACE "-Wall|-Wextra" ""  SOUFFLE_CXXFLAGS ${CMAKE_CXX_FLAGS})
+    string(REGEX REPLACE "-Wall|-Wextra" ""  SOUFFLE_CXXFLAGS "${CMAKE_CXX_FLAGS}")
     set(SOUFFLE_CXXFLAGS "${SOUFFLE_CXXFLAGS} ${CMAKE_CXX_FLAGS_${BT_UPPER}} ${SUBST_DEFS} -fopenmp")
 
     # Libraries
     set(LIBS "-l${CMAKE_DL_LIBS} -lpthread")
-    if (USE_SQLITE)
+    if (SOUFFLE_USE_SQLITE)
         string(APPEND LIBS " ${SQLite3_LIBRARY}")
     endif()
 
-    if (USE_ZLIB)
+    if (SOUFFLE_USE_ZLIB)
         string(APPEND LIBS " ${ZLIB_LIBRARY_RELEASE}")
     endif()
 
-    if (USE_CURSES)
+    if (SOUFFLE_USE_CURSES)
         string(APPEND LIBS " ${CURSES_NCURSES_LIBRARY}")
     endif()
 
     configure_file("${F_IN}" "${F_OUT}" @ONLY)
 endfunction()
 
-automake_compatible_subst("${CMAKE_SOURCE_DIR}/src/souffle-compile.in"
+automake_compatible_subst("${CMAKE_CURRENT_SOURCE_DIR}/souffle-compile.in"
                           "${CMAKE_CURRENT_BINARY_DIR}/souffle-compile")
 
-automake_compatible_subst("${CMAKE_SOURCE_DIR}/src/souffle-config.in"
+automake_compatible_subst("${CMAKE_CURRENT_SOURCE_DIR}/souffle-config.in"
                           "${CMAKE_CURRENT_BINARY_DIR}/souffle-config")
 
 # FIXME: Ideally, eventually we will move these out to the "tests" subdirectory
 # now that we have a sane(er?) build system
-add_subdirectory(ast/tests)
-add_subdirectory(ram/tests)
-add_subdirectory(interpreter/tests)
+if (SOUFFLE_ENABLE_TESTING)
+    add_subdirectory(ast/tests)
+    add_subdirectory(ram/tests)
+    add_subdirectory(interpreter/tests)
+endif()

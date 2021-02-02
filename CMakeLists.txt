@@ -1,10 +1,35 @@
+# TODO
+# Add option to run tests from install directory
+# Tests:
+#  - swig.at
+#  - interface.at
+#  - provenance.at
+# Update README with cmake instructions
+# install target
+# bash completion
+# Doxygen
+# Sanitizers
+# clang-format, clang-tidy etc
+# Packaging
+# substitute changelog
+
+# Future TODO/improvements:
+# - Replace all the shell scripts (e.g. souffle-compile and all the testing helpers)
+#   with Python so it's cross-platform.  @b-scholz has agreed it's ok to have Python
+#   as a dependency
+# - See if we can call back into cmake so that we have a better mechanism for building
+#   consistenly rather than trying to thread compile flags etc into e.g. souffle-compile
+# - Make it easier to include Souffle as a subproject using add_subdirectory
+# - Currently, there a few unit tests in the src directory, we should
+#   migrate them to test to that they can be excluded if needed
+
 cmake_minimum_required(VERSION 3.15)
 
 find_package(Git REQUIRED)
 
 # PACKAGE_VERSION is the full tag with git hash
 execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --always
-                WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+                WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
                 RESULT_VARIABLE GIT_RESULT
                 OUTPUT_VARIABLE GIT_PACKAGE_VERSION)
                 # FIXME: Use in cmake 3.19 or later
@@ -23,6 +48,7 @@ string(REGEX REPLACE "-.*$" "" SOUFFLE_VERSION "${PACKAGE_VERSION}")
 project(souffle VERSION "${SOUFFLE_VERSION}"
                 DESCRIPTION "A datalog compiler"
                 LANGUAGES CXX)
+include(CTest)
 
 # Require out-of-source builds
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
@@ -37,43 +63,50 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
+# Tells us whether we're building souffle as a main project
+# or a subprobject
+if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+    set(SOUFFLE_MASTER_PROJECT On)
+else()
+    set(SOUFFLE_MASTER_PROJECT Off)
+endif()
+
+if (SOUFFLE_MASTER_PROJECT AND BUILD_TESTING)
+    set(SOUFFLE_ENABLE_TESTING_DEFAULT ON)
+else()
+    set(SOUFFLE_ENABLE_TESTING_DEFAULT OFF)
+endif()
+
 # --------------------------------------------------
 # User options available from the command line/cache
 # --------------------------------------------------
-option(DOMAIN_64BIT "Enable/Disable 64-bit number values in Datalog tuples" ON)
-option(USE_CURSES "Enable/Disable ncurses-based provenance display" ON)
-option(SWIG "Enable/Disable all SWIG builds" OFF)
-option(SWIG_PYTHON "Enable/Disable Python SWIG" OFF)
-option(SWIG_JAVA "Enable/Disable Java SWIG" OFF)
-option(USE_ZLIB "Enable/Disable use of libz file compression" ON)
-option(USE_SQLITE "Enable/Disable use sqlite IO" ON)
+option(SOUFFLE_DOMAIN_64BIT "Enable/Disable 64-bit number values in Datalog tuples" ON)
+option(SOUFFLE_USE_CURSES "Enable/Disable ncurses-based provenance display" ON)
+option(SOUFFLE_SWIG "Enable/Disable all SWIG builds" OFF)
+option(SOUFFLE_SWIG_PYTHON "Enable/Disable Python SWIG" OFF)
+option(SOUFFLE_SWIG_JAVA "Enable/Disable Java SWIG" OFF)
+option(SOUFFLE_USE_ZLIB "Enable/Disable use of libz file compression" ON)
+option(SOUFFLE_USE_SQLITE "Enable/Disable use sqlite IO" ON)
 # This is how souffle is built by default in Debug
-option(FAST_DEBUG "Enable/Disable ON 'fast debug' mode" ON)
-# NDEBUG = ON means -DNDEBUG on the compiler command line = no cassert
-# Therefor NDEBUG = OFF means keep asserts
-option(NDEBUG "Enable/Disable runtime checks even in release mode" OFF)
+option(SOUFFLE_FAST_DEBUG "Enable/Disable ON 'fast debug' mode" ON)
+# SOUFFLE_NDEBUG = ON means -DNDEBUG on the compiler command line = no cassert
+# Therefor SOUFFLE_NDEBUG = OFF means keep asserts
+option(SOUFFLE_NDEBUG "Enable/Disable runtime checks even in release mode" OFF)
 # Souffle, by default, uses -O3 for release builds
-option(FAST_RELEASE "Enable/Disable 'fast release' mode" ON)
+option(SOUFFLE_FAST_RELEASE "Enable/Disable 'fast release' mode" ON)
 # By default, the "test/example" directory is not part of testing
 # this flag enables the tests to run
-option(TEST_EXAMPLES, "Enable/Disable testing of additional code examples in tests/examples" OFF)
+option(SOUFFLE_TEST_EXAMPLES "Enable/Disable testing of additional code examples in tests/examples" OFF)
+option(SOUFFLE_ENABLE_TESTING "Enable/Disable testing" ${SOUFFLE_ENABLE_TESTING_DEFAULT})
 
 # Add aditional modules to CMake
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 # --------------------------------------------------
-# 32/64-bit domain
-# --------------------------------------------------
-if (DOMAIN_64BIT)
-    add_compile_definitions(RAM_DOMAIN_SIZE=64)
-endif()
-
-# --------------------------------------------------
 # curses libraries for Provenance information
 # --------------------------------------------------
-if (USE_CURSES)
+if (SOUFFLE_USE_CURSES)
     find_package(Curses REQUIRED)
-    add_compile_definitions(USE_NCURSES)
     if(NOT TARGET Curses::NCurses)
         add_library(Curses::NCurses UNKNOWN IMPORTED)
         set_target_properties(Curses::NCurses PROPERTIES
@@ -86,31 +119,24 @@ endif()
 # --------------------------------------------------
 # swig support
 # --------------------------------------------------
-if (SWIG)
+if (SOUFFLE_SWIG)
     # Enable both
-    set(SWIG_PYTHON "ON" CACHE STRING "" FORCE)
-    set(SWIG_JAVA "ON" CACHE STRING "" FORCE)
+    set(SOUFFLE_SWIG_PYTHON "ON" CACHE STRING "" FORCE)
+    set(SOUFFLE_SWIG_JAVA "ON" CACHE STRING "" FORCE)
 endif()
 
-if (SWIG_PYTHON OR SWIG_JAVA)
-    find_package(SWIG REQUIRED)
+if (SOUFFLE_SWIG_PYTHON OR SOUFFLE_SWIG_JAVA)
+    find_package(SOUFFLE_SWIG REQUIRED)
 
-    if (SWIG_PYTHON)
+    if (SOUFFLE_SWIG_PYTHON)
         find_package(Python "3.7" REQUIRED)
     endif()
 
-    if (SWIG_JAVA)
+    if (SOUFFLE_SWIG_JAVA)
         find_package(Java REQUIRED
                      COMPONENTS Development)
     endif()
 endif()
-
-# --------------------------------------------------
-# Set C++ standard globally to C++17
-# --------------------------------------------------
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 # --------------------------------------------------
 # flex and bison
@@ -126,21 +152,21 @@ find_program(MCPP mcpp)
 # --------------------------------------------------
 # libz
 # --------------------------------------------------
-if (USE_ZLIB)
+if (SOUFFLE_USE_ZLIB)
     find_package(ZLIB REQUIRED)
-    add_compile_definitions(USE_LIBZ)
-    # Needed for tests
-    find_program(GZIP_BINARY gzip REQUIRED)
+    if (SOUFFLE_ENABLE_TESTING)
+        find_program(GZIP_BINARY gzip REQUIRED)
+    endif()
 endif()
 
 # --------------------------------------------------
 # sqlite
 # --------------------------------------------------
-if (USE_SQLITE)
+if (SOUFFLE_USE_SQLITE)
     find_package(SQLite3 REQUIRED)
-    add_compile_definitions(USE_SQLITE)
-    # Needed for tests
-    find_program(SQLITE3_BINARY sqlite3 REQUIRED)
+    if (SOUFFLE_ENABLE_TESTING)
+        find_program(SQLITE3_BINARY sqlite3 REQUIRED)
+    endif()
 endif()
 
 # --------------------------------------------------
@@ -169,8 +195,11 @@ configure_file("${PROJECT_SOURCE_DIR}/cmake/config.h.in"
 # --------------------------------------------------
 # Change compile flags
 # --------------------------------------------------
+# FIXME:  We may need to rethink this when building
+# souffle as a subproject since this dirrently manipulates
+# CMAKE_CXX_*_FLAGS and that's considered bad in "modern cmake"
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
-    if (FAST_DEBUG)
+    if (SOUFFLE_FAST_DEBUG)
         string(REGEX REPLACE "-g" "-O0 -g3" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
     endif()
 else()
@@ -180,41 +209,22 @@ else()
             CMAKE_CXX_FLAGS_RELWITHDEBINFO)
 
             # Remove/keep NDEBUG in Release builds
-            if (NOT NDEBUG)
+            if (NOT SOUFFLE_NDEBUG)
                 string(REGEX REPLACE "-DNDEBUG" "" ${FLAG_VAR} "${${FLAG_VAR}}")
             endif()
 
             # Change -O2 to -O3
-            if (FAST_RELEASE)
+            if (SOUFFLE_FAST_RELEASE)
                 string(REGEX REPLACE "-O2" "-O3" ${FLAG_VAR} "${${FLAG_VAR}}")
             endif()
 
     endforeach()
 endif()
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -fwrapv")
-
-# TODO
-# Tests:
-#  - swig.at
-#  - interface.at
-#  - provenance.at
-# Update README with cmake instructions
-# install target
-# bash completion
-# Doxygen
-# Sanitizers
-# clang-format, clang-tidy etc
-# Packaging
-# substitute changelog
-
-enable_testing()
-
+# There are a few tests in src, so add it *after*
+# including CTest
 add_subdirectory(src)
 
-# FIXME: There are a few tests in the src directory, we should
-# migrate them to test to that they can be excluded
-# by the condition below
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+if (SOUFFLE_ENABLE_TESTING)
     add_subdirectory(tests)
 endif()
