@@ -40,7 +40,7 @@ Own<ram::Condition> ConstraintTranslator::visit_(
     auto valLHS = context.translateValue(index, binRel.getLHS());
     auto valRHS = context.translateValue(index, binRel.getRHS());
     return mk<ram::Constraint>(
-            context.getOverloadedBinaryConstraintOperator(&binRel), std::move(valLHS), std::move(valRHS));
+            context.getOverloadedBinaryConstraintOperator(binRel), std::move(valLHS), std::move(valRHS));
 }
 
 Own<ram::Condition> ConstraintTranslator::visit_(type_identity<ast::Negation>, const ast::Negation& neg) {

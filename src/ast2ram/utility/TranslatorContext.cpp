@@ -158,38 +158,38 @@ ast::Relation* TranslatorContext::getRelation(const ast::QualifiedName& name) co
     return relationDetail->getRelation(name);
 }
 
-TypeAttribute TranslatorContext::getFunctorReturnType(const ast::Functor* functor) const {
-    return functorAnalysis->getReturnType(functor);
+TypeAttribute TranslatorContext::getFunctorReturnTypeAttribute(const ast::Functor& functor) const {
+    return functorAnalysis->getReturnTypeAttribute(functor);
 }
 
-TypeAttribute TranslatorContext::getFunctorArgType(const ast::Functor* functor, size_t idx) const {
-    return functorAnalysis->getArgType(functor, idx);
+TypeAttribute TranslatorContext::getFunctorParamTypeAtribute(const ast::Functor& functor, size_t idx) const {
+    return functorAnalysis->getParamTypeAttribute(functor, idx);
 }
 
-const std::vector<TypeAttribute>& TranslatorContext::getFunctorArgTypes(
+std::vector<TypeAttribute> TranslatorContext::getFunctorParamTypeAtributes(
         const ast::UserDefinedFunctor& udf) const {
-    return functorAnalysis->getArgTypes(udf);
+    return functorAnalysis->getParamTypeAttributes(udf);
 }
 
-bool TranslatorContext::isStatefulFunctor(const ast::UserDefinedFunctor* udf) const {
+bool TranslatorContext::isStatefulFunctor(const ast::UserDefinedFunctor& udf) const {
     return functorAnalysis->isStateful(udf);
 }
 
 ast::NumericConstant::Type TranslatorContext::getInferredNumericConstantType(
-        const ast::NumericConstant* nc) const {
+        const ast::NumericConstant& nc) const {
     return polyAnalysis->getInferredType(nc);
 }
 
-AggregateOp TranslatorContext::getOverloadedAggregatorOperator(const ast::Aggregator* aggr) const {
+AggregateOp TranslatorContext::getOverloadedAggregatorOperator(const ast::Aggregator& aggr) const {
     return polyAnalysis->getOverloadedOperator(aggr);
 }
 
 BinaryConstraintOp TranslatorContext::getOverloadedBinaryConstraintOperator(
-        const ast::BinaryConstraint* bc) const {
+        const ast::BinaryConstraint& bc) const {
     return polyAnalysis->getOverloadedOperator(bc);
 }
 
-FunctorOp TranslatorContext::getOverloadedFunctorOp(const ast::IntrinsicFunctor* inf) const {
+FunctorOp TranslatorContext::getOverloadedFunctorOp(const ast::IntrinsicFunctor& inf) const {
     return polyAnalysis->getOverloadedFunctionOp(inf);
 }
 

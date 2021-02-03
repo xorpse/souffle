@@ -16,6 +16,7 @@
  ***********************************************************************/
 
 #include "ast/transform/NormaliseGenerators.h"
+#include "ast/Aggregator.h"
 #include "ast/BinaryConstraint.h"
 #include "ast/IntrinsicFunctor.h"
 #include "ast/Program.h"

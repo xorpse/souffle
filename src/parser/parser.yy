@@ -79,6 +79,10 @@
     #include "souffle/utility/ContainerUtil.h"
     #include "souffle/utility/StringUtil.h"
 
+    #include <ostream>
+    #include <string>
+    #include <vector>
+
     using namespace souffle;
 
     namespace souffle {
@@ -330,7 +334,7 @@
 %type <Mov<Own<ast::ExecutionPlan>>>           exec_plan
 %type <Mov<Own<ast::ExecutionPlan>>>           exec_plan_list
 %type <Mov<Own<ast::Clause>>>                  fact
-%type <Mov<std::vector<TypeAttribute>>>        functor_arg_type_list
+%type <Mov<VecOwn<ast::Attribute>>>            functor_arg_type_list
 %type <Mov<std::string>>                       functor_built_in
 %type <Mov<Own<ast::FunctorDeclaration>>>      functor_decl
 %type <Mov<VecOwn<ast::Atom>>>                 head
@@ -345,12 +349,12 @@
 %type <Mov<VecOwn<ast::Attribute>>>            non_empty_attributes
 %type <Mov<std::vector<std::string>>>          non_empty_variables
 %type <Mov<ast::ExecutionOrder::ExecOrder>>    non_empty_exec_order_list
-%type <Mov<std::vector<TypeAttribute>>>        non_empty_functor_arg_type_list
+%type <Mov<VecOwn<ast::Attribute>>>            non_empty_functor_arg_type_list
+%type <Mov<Own<ast::Attribute>>>               functor_attribute;
 %type <Mov<std::vector<std::pair
             <std::string, std::string>>>>      non_empty_key_value_pairs
 %type <Mov<VecOwn<ast::Relation>>>             non_empty_relation_list
 %type <Mov<Own<ast::Pragma>>>                  pragma
-%type <TypeAttribute>                          predefined_type
 %type <Mov<VecOwn<ast::Attribute>>>            record_type_list
 %type <Mov<VecOwn<ast::Relation>>>             relation_decl
 %type <std::set<RelationTag>>                  relation_tags
@@ -889,34 +893,22 @@ comp_init : INSTANTIATE IDENT EQUALS comp_type { $$ = mk<ast::ComponentInit>($ID
 
 /* Functor declaration */
 functor_decl
-  : FUNCTOR IDENT LPAREN functor_arg_type_list[args] RPAREN COLON predefined_type
-    { $$ = mk<ast::FunctorDeclaration>($IDENT, $args, $predefined_type, false, @$); }
-  | FUNCTOR IDENT LPAREN functor_arg_type_list[args] RPAREN COLON predefined_type STATEFUL
-    { $$ = mk<ast::FunctorDeclaration>($IDENT, $args, $predefined_type, true, @$); }
+  : FUNCTOR IDENT LPAREN functor_arg_type_list[args] RPAREN COLON identifier
+    { $$ = mk<ast::FunctorDeclaration>($IDENT, $args, mk<ast::Attribute>("return_type", $identifier, @identifier), false, @$); }
+  | FUNCTOR IDENT LPAREN functor_arg_type_list[args] RPAREN COLON identifier STATEFUL
+    { $$ = mk<ast::FunctorDeclaration>($IDENT, $args, mk<ast::Attribute>("return_type", $identifier, @identifier), true, @$); }
   ;
 
 /* Functor argument list type */
 functor_arg_type_list : %empty { } | non_empty_functor_arg_type_list { $$ = $1; };
 non_empty_functor_arg_type_list
-  :                                        predefined_type {          $$.push_back($predefined_type); }
-  | non_empty_functor_arg_type_list COMMA  predefined_type { $$ = $1; $$.push_back($predefined_type); }
+  :                                        functor_attribute {          $$.push_back($functor_attribute); }
+  | non_empty_functor_arg_type_list COMMA  functor_attribute { $$ = $1; $$.push_back($functor_attribute); }
   ;
 
-/* Predefined type */
-predefined_type
-  : IDENT {
-        if ($IDENT == "number") {
-            $$ = TypeAttribute::Signed;
-        } else if ($IDENT == "symbol") {
-            $$ = TypeAttribute::Symbol;
-        } else if ($IDENT == "float") {
-            $$ = TypeAttribute::Float;
-        } else if ($IDENT == "unsigned") {
-            $$ = TypeAttribute::Unsigned;
-        } else {
-            driver.error(@IDENT, "[number | symbol | float | unsigned] identifier expected");
-        }
-    }
+functor_attribute
+  : identifier[type] { $$ = mk<ast::Attribute>("", $type, @type); }
+  | IDENT[name] COLON identifier[type] { $$ = mk<ast::Attribute>($name, $type, @type); }
   ;
 
 /**

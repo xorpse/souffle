@@ -39,6 +39,7 @@
 #include "ast/utility/Visitor.h"
 #include "reports/ErrorReport.h"
 #include "souffle/utility/StringUtil.h"
+#include <algorithm>
 #include <map>
 #include <sstream>
 #include <string>
@@ -74,8 +75,33 @@ public:
     /** Analyse types, clause by clause */
     void run() {
         const Program& program = tu.getProgram();
-        for (auto* clause : program.getClauses()) {
+        for (auto const* clause : program.getClauses()) {
             visit(*clause, *this);
+        }
+
+        for (auto const* decl : program.getFunctorDeclarations()) {
+            if (!typeAnalysis.hasValidTypeInfo(*decl)) {
+                // This could happen if the types mentioned int the functor declaration
+                // are not valid
+                continue;
+            }
+
+            // Only stateful functors can use UDTs
+            auto goodFunctor = [this, stateful = decl->isStateful()](QualifiedName const& tName) {
+                auto attr = getTypeAttribute(typeEnv.getType(tName));
+                return stateful || (attr != TypeAttribute::ADT && attr != TypeAttribute::Record);
+            };
+
+            if (!goodFunctor(decl->getReturnType().getTypeName())) {
+                report.addError(
+                        "Functors which are not stateful cannot use UDTs", decl->getReturnType().getSrcLoc());
+            }
+
+            for (auto const& param : decl->getParams()) {
+                if (!goodFunctor(param->getTypeName())) {
+                    report.addError("Functors which are not stateful cannot use UDTs", param->getSrcLoc());
+                }
+            }
         }
     }
 
@@ -109,7 +135,7 @@ private:
     void visit_(type_identity<UserDefinedFunctor>, const UserDefinedFunctor& fun) override;
     void visit_(type_identity<BinaryConstraint>, const BinaryConstraint& constraint) override;
     void visit_(type_identity<Aggregator>, const Aggregator& aggregator) override;
-};
+};  // namespace souffle::ast::transform
 
 void TypeChecker::verify(TranslationUnit& tu) {
     auto& report = tu.getErrorReport();
@@ -375,12 +401,12 @@ void TypeCheckerImpl::visit_(type_identity<NumericConstant>, const NumericConsta
     TypeSet types = typeAnalysis.getTypes(&constant);
 
     // No type could be assigned.
-    if (polyAnalysis.hasInvalidType(&constant)) {
+    if (polyAnalysis.hasInvalidType(constant)) {
         report.addError("Ambiguous constant (unable to deduce type)", constant.getSrcLoc());
         return;
     }
 
-    switch (polyAnalysis.getInferredType(&constant)) {
+    switch (polyAnalysis.getInferredType(constant)) {
         case NumericConstant::Type::Int:
             if (!isOfKind(types, TypeAttribute::Signed)) {
                 report.addError("Number constant (type mismatch)", constant.getSrcLoc());
@@ -484,7 +510,7 @@ void TypeCheckerImpl::visit_(type_identity<TypeCast>, const ast::TypeCast& cast)
 }
 
 void TypeCheckerImpl::visit_(type_identity<IntrinsicFunctor>, const IntrinsicFunctor& fun) {
-    if (!typeAnalysis.hasValidTypeInfo(&fun)) {
+    if (!typeAnalysis.hasValidTypeInfo(fun)) {
         auto args = fun.getArguments();
         if (!isValidFunctorOpArity(fun.getBaseFunctionOp(), args.size())) {
             report.addError("invalid overload (arity mismatch)", fun.getSrcLoc());
@@ -498,61 +524,82 @@ void TypeCheckerImpl::visit_(type_identity<IntrinsicFunctor>, const IntrinsicFun
 
 void TypeCheckerImpl::visit_(type_identity<UserDefinedFunctor>, const UserDefinedFunctor& fun) {
     // check type of result
-    const TypeSet& resultType = typeAnalysis.getTypes(&fun);
+    const TypeSet& resultTypes = typeAnalysis.getTypes(&fun);
+
+    using Type = analysis::Type;
 
     auto const* udfd = getFunctorDeclaration(program, fun.getName());
-    if (udfd == nullptr) {
+    if (udfd == nullptr || !typeAnalysis.hasValidTypeInfo(*udfd)) {
+        // I found this very confusing, hopefully this comment helps someone else.
+        // I assumed that this branch cannot be taken, because the Semantic checker
+        // verifies that every functor has a declaration!  However, it turns out that
+        // the SemanticChecker is *not* the first Transformer which gets run and so
+        // it's not really clear that those invariants hold yet.
+        // I don't particularly like that but am not at a place where I can change the
+        // order of the passes/transformers.  So, for now, here's a comment for the next
+        // person going doing this rabbit hole.
         return;
     }
 
-    TypeAttribute returnType = functorAnalysis.getReturnType(&fun);
+    Type const& returnType = functorAnalysis.getReturnType(fun);
 
-    if (!isOfKind(resultType, returnType)) {
-        switch (returnType) {
-            case TypeAttribute::Signed:
-                report.addError("Non-numeric use for numeric functor", fun.getSrcLoc());
-                break;
-            case TypeAttribute::Unsigned:
-                report.addError("Non-unsigned use for unsigned functor", fun.getSrcLoc());
-                break;
-            case TypeAttribute::Float:
-                report.addError("Non-float use for float functor", fun.getSrcLoc());
-                break;
-            case TypeAttribute::Symbol:
-                report.addError("Non-symbolic use for symbolic functor", fun.getSrcLoc());
-                break;
-            case TypeAttribute::Record: fatal("Invalid return type");
-            case TypeAttribute::ADT: fatal("Invalid return type");
+    if (resultTypes.isAll() || resultTypes.size() != 1) {
+        std::ostringstream out;
+        out << "Invalid use of functor returning " << returnType;
+        report.addError(out.str(), fun.getSrcLoc());
+    } else {
+        Type const& resultType = *resultTypes.begin();
+
+        if (!isSubtypeOf(returnType, resultType)) {
+            std::ostringstream out;
+            out << "Invalid conversion of return type " << returnType << " to " << resultType;
+            report.addError(out.str(), fun.getSrcLoc());
         }
     }
 
-    size_t i = 0;
-    for (auto arg : fun.getArguments()) {
-        TypeAttribute argType = functorAnalysis.getArgType(&fun, i);
-        if (!isOfKind(typeAnalysis.getTypes(arg), argType)) {
-            switch (argType) {
-                case TypeAttribute::Signed:
-                    report.addError("Non-numeric argument for functor", arg->getSrcLoc());
-                    break;
-                case TypeAttribute::Symbol:
-                    report.addError("Non-symbolic argument for functor", arg->getSrcLoc());
-                    break;
-                case TypeAttribute::Unsigned:
-                    report.addError("Non-unsigned argument for functor", arg->getSrcLoc());
-                    break;
-                case TypeAttribute::Float:
-                    report.addError("Non-float argument for functor", arg->getSrcLoc());
-                    break;
-                case TypeAttribute::Record: fatal("Invalid argument type");
-                case TypeAttribute::ADT: fatal("Invalid argument type");
+    auto const& params = udfd->getParams();
+    auto const arity = params.size();
+    auto const& args = fun.getArguments();
+    auto const toCheck = std::min(args.size(), arity);
+    if (args.size() != arity) {
+        std::ostringstream out;
+        out << "Functor arity mismatch: Got " << args.size() << " arguments, expecting " << arity;
+        report.addError(out.str(), fun.getSrcLoc());
+    }
+
+    auto getName = [&params](std::size_t idx) {
+        auto const& name = params[idx]->getName();
+        std::ostringstream out;
+        out << "positional parameter " << idx;
+        if (!name.empty()) {
+            out << " ('" << name << "')";
+        }
+
+        return out.str();
+    };
+
+    for (std::size_t ii = 0; ii < toCheck; ++ii) {
+        auto const& arg = args[ii];
+        Type const& paramType = functorAnalysis.getParamType(fun, ii);
+        TypeSet const& argTypes = typeAnalysis.getTypes(arg);
+
+        if (argTypes.isAll() || argTypes.size() != 1) {
+            report.addError("Unable to determine type for " + getName(ii), arg->getSrcLoc());
+        } else {
+            Type const& argType = *argTypes.begin();
+
+            if (!isSubtypeOf(argType, paramType)) {
+                std::ostringstream out;
+                out << "Invalid conversion of value of type " << argType << " to " << getName(ii)
+                    << " with type " << paramType;
+                report.addError(out.str(), arg->getSrcLoc());
             }
         }
-        ++i;
     }
 }
 
 void TypeCheckerImpl::visit_(type_identity<BinaryConstraint>, const BinaryConstraint& constraint) {
-    auto op = polyAnalysis.getOverloadedOperator(&constraint);
+    auto op = polyAnalysis.getOverloadedOperator(constraint);
     auto left = constraint.getLHS();
     auto right = constraint.getRHS();
     auto opTypesAttrs = getBinaryConstraintTypes(op);
@@ -600,7 +647,7 @@ void TypeCheckerImpl::visit_(type_identity<BinaryConstraint>, const BinaryConstr
 }
 
 void TypeCheckerImpl::visit_(type_identity<Aggregator>, const Aggregator& aggregator) {
-    auto op = polyAnalysis.getOverloadedOperator(&aggregator);
+    auto op = polyAnalysis.getOverloadedOperator(aggregator);
 
     auto aggregatorType = typeAnalysis.getTypes(&aggregator);
 

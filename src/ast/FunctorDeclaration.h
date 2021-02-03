@@ -16,12 +16,13 @@
 
 #pragma once
 
+#include "ast/Attribute.h"
 #include "ast/Node.h"
 #include "parser/SrcLocation.h"
-#include "souffle/TypeAttribute.h"
+#include "souffle/utility/Types.h"
+#include <cstddef>
 #include <iosfwd>
 #include <string>
-#include <vector>
 
 namespace souffle::ast {
 
@@ -35,8 +36,8 @@ namespace souffle::ast {
 
 class FunctorDeclaration : public Node {
 public:
-    FunctorDeclaration(std::string name, std::vector<TypeAttribute> argsTypes, TypeAttribute returnType,
-            bool stateful, SrcLocation loc = {});
+    FunctorDeclaration(std::string name, VecOwn<Attribute> params, Own<Attribute> returnType, bool stateful,
+            SrcLocation loc = {});
 
     /** Return name */
     const std::string& getName() const {
@@ -44,18 +45,18 @@ public:
     }
 
     /** Return type */
-    const std::vector<TypeAttribute>& getArgsTypes() const {
-        return argsTypes;
+    const VecOwn<Attribute>& getParams() const {
+        return params;
     }
 
     /** Get return type */
-    TypeAttribute getReturnType() const {
-        return returnType;
+    Attribute const& getReturnType() const {
+        return *returnType;
     }
 
     /** Return number of arguments */
-    size_t getArity() const {
-        return argsTypes.size();
+    std::size_t getArity() const {
+        return params.size();
     }
 
     /** Check whether functor is stateful */
@@ -76,10 +77,10 @@ private:
     const std::string name;
 
     /** Types of arguments */
-    const std::vector<TypeAttribute> argsTypes;
+    const VecOwn<Attribute> params;
 
     /** Type of the return value */
-    const TypeAttribute returnType;
+    const Own<Attribute> returnType;
 
     /** Stateful flag */
     const bool stateful;

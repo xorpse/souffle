@@ -203,10 +203,10 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
         int functorNumber = 0;
         int aggregateNumber = 0;
         auto getArgInfo = [&](const ast::Argument* arg) -> std::string {
-            if (auto* var = dynamic_cast<const ast::Variable*>(arg)) {
+            if (auto* var = as<ast::Variable>(arg)) {
                 return toString(*var);
             }
-            if (auto* constant = dynamic_cast<const ast::Constant*>(arg)) {
+            if (auto* constant = as<ast::Constant>(arg)) {
                 return toString(*constant);
             }
             if (isA<ast::UnnamedVariable>(arg)) {
@@ -240,13 +240,13 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
         //      - atoms: relName,{atom arg info}
         //      - negs: !relName
         for (const auto* literal : clause->getBodyLiterals()) {
-            if (const auto* atom = dynamic_cast<const ast::Atom*>(literal)) {
+            if (const auto* atom = as<ast::Atom>(literal)) {
                 std::string atomDescription = toString(atom->getQualifiedName());
                 for (const auto* arg : atom->getArguments()) {
                     atomDescription.append("," + getArgInfo(arg));
                 }
                 factArguments.push_back(mk<ram::StringConstant>(atomDescription));
-            } else if (const auto* neg = dynamic_cast<const ast::Negation*>(literal)) {
+            } else if (const auto* neg = as<ast::Negation>(literal)) {
                 const auto* atom = neg->getAtom();
                 std::string relName = toString(atom->getQualifiedName());
                 factArguments.push_back(mk<ram::StringConstant>("!" + relName));

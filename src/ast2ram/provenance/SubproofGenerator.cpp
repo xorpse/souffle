@@ -119,7 +119,7 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
                     BinaryConstraintOp::EQ, std::move(lhs), mk<ram::SubroutineArgument>(i));
             op = mk<ram::Filter>(std::move(constraint), std::move(op));
         } else if (const auto* func = as<ast::Functor>(arg)) {
-            TypeAttribute returnType = context.getFunctorReturnType(func);
+            TypeAttribute returnType = context.getFunctorReturnTypeAttribute(*func);
             auto opEq = returnType == TypeAttribute::Float ? BinaryConstraintOp::FEQ : BinaryConstraintOp::EQ;
             auto lhs = context.translateValue(*valueIndex, func);
             auto constraint = mk<ram::Constraint>(opEq, std::move(lhs), mk<ram::SubroutineArgument>(i));
