@@ -10,6 +10,9 @@
 # script that compiles a generated C++ program and executes it
 #
 
+# Error out if any of the subcommands fail
+set -e
+
 # Show usage
 usage() {
   printf "Name:
@@ -56,7 +59,14 @@ SWIGLANG=""
 
 # find header files of souffle
 HEADER_DIRS=" -I$(dirname $0)/../include -I$(dirname $0)/include "
-HEADER_DIRS="$HEADER_DIRS @CMAKE_HEADER_DIRS@"
+
+# This is ugly.  Once we switch to cmake, we need to figure out a cleaner
+# way to handle things like these.  The headers, and souffle's dependence
+# on this shell script are just a bit strange
+CMAKE_HEADER_DIRS="@CMAKE_HEADER_DIRS@"
+if [ ! -z "$CMAKE_HEADER_DIRS" ]; then
+  HEADER_DIRS="$HEADER_DIRS -I$CMAKE_HEADER_DIRS"
+fi
 
 # Options processing via getopts builtin, it is very limiting but on OSX the
 # default getopt is an old BSD getopt, so need this for portability
@@ -120,8 +130,10 @@ then
   TMP_DIR="$(mktemp -d)"
   BASE_DIR="$(dirname $0)"
 
-  if [ -d "$BASE_DIR/include/souffle/swig" ];
-  then
+  if [ ! -z "$CMAKE_HEADER_DIRS" ]; then
+    cp "$CMAKE_HEADER_DIRS/souffle/swig/SwigInterface.h" "$TMP_DIR"
+    cp "$CMAKE_HEADER_DIRS/souffle/swig/SwigInterface.i" "$TMP_DIR"
+  elif [ -d "$BASE_DIR/include/souffle/swig" ]; then
     cp "$BASE_DIR/include/souffle/swig/SwigInterface.h" "$TMP_DIR"
     cp "$BASE_DIR/include/souffle/swig/SwigInterface.i" "$TMP_DIR"
   else
@@ -135,8 +147,8 @@ then
   # Checks input language and compiles files with local python3 config or local java_home config
   if [ "$SWIGLANG" = "python" ]
   then
-    $CXX -fPIC -c -D__EMBEDDED_SOUFFLE__ SwigInterface_wrap.cxx $dir/$exe.cpp $(python3-config --cflags) $HEADER_DIRS 2>&1
-    $CXX -shared SwigInterface_wrap.o $exe.o $(python3-config --ldflags) -o _SwigInterface.so -lstdc++
+    $CXX -fPIC -c -D__EMBEDDED_SOUFFLE__ $CXXFLAGS $CPPFLAGS SwigInterface_wrap.cxx $dir/$exe.cpp $(python3-config --cflags) $HEADER_DIRS 2>&1
+    $CXX -shared SwigInterface_wrap.o $exe.o $(python3-config --ldflags) -o _SwigInterface.so $LIBS -lstdc++
   elif [ "$SWIGLANG" = "java" ]
   then
     JAVADIR="$(printenv JAVA_HOME || java -XshowSettings:properties -version 2>&1 | grep java.home | sed 's/^.*= //')"
@@ -146,8 +158,8 @@ then
       error "JAVA_HOME environment variable has not been set"
     fi
 
-    $CXX -fPIC -c -D__EMBEDDED_SOUFFLE__ SwigInterface_wrap.cxx $dir/$exe.cpp -I$JAVADIR -I$JAVADIR/include -I$JAVADIR/include/linux  -I$JAVADIR/include/darwin -I/usr/lib/x86_64-linux-gnu/ $HEADER_DIRS 2>&1
-    $CXX -shared SwigInterface_wrap.o $exe.o -o libSwigInterface.so -lstdc++
+    $CXX -fPIC -c -D__EMBEDDED_SOUFFLE__ $CXXFLAGS $CPPFLAGS SwigInterface_wrap.cxx $dir/$exe.cpp -I$JAVADIR -I$JAVADIR/include -I$JAVADIR/include/linux  -I$JAVADIR/include/darwin -I/usr/lib/x86_64-linux-gnu/ $HEADER_DIRS 2>&1
+    $CXX -shared SwigInterface_wrap.o $exe.o -o libSwigInterface.so $LIBS -lstdc++
   fi
 
   # move generated files to same directory as cpp file

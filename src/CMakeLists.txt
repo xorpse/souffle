@@ -233,7 +233,7 @@ function(AUTOMAKE_COMPATIBLE_SUBST F_IN F_OUT)
     # values to substitute
     set(CXX ${CMAKE_CXX_COMPILER})
 
-    set(CMAKE_HEADER_DIRS "-I${CMAKE_CURRENT_SOURCE_DIR}/include")
+    set(CMAKE_HEADER_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
     set(CPPFLAGS "")
 

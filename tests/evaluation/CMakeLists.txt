@@ -1,7 +1,7 @@
 include(SouffleTests)
 
 function(POSITIVE_TEST NAME)
-    positive_souffle_test(${NAME} evaluation)
+    souffle_positive_test(${NAME} evaluation)
 endfunction()
 
 positive_test(access1)

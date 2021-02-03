@@ -126,7 +126,7 @@ if (SOUFFLE_SWIG)
 endif()
 
 if (SOUFFLE_SWIG_PYTHON OR SOUFFLE_SWIG_JAVA)
-    find_package(SOUFFLE_SWIG REQUIRED)
+    find_package(SWIG REQUIRED)
 
     if (SOUFFLE_SWIG_PYTHON)
         find_package(Python "3.7" REQUIRED)

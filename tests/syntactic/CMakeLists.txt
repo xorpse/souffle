@@ -1,11 +1,11 @@
 include(SouffleTests)
 
 function(POSITIVE_TEST NAME)
-    positive_souffle_test(${NAME} syntactic)
+    souffle_positive_test(${NAME} syntactic)
 endfunction()
 
 function(NEGATIVE_TEST NAME)
-    negative_souffle_test(${NAME} syntactic)
+    souffle_negative_test(${NAME} syntactic)
 endfunction()
 
 positive_test(binary)
