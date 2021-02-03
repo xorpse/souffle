@@ -14,20 +14,21 @@ function(SOUFFLE_SETUP_INTEGRATION_TEST_DIR)
     set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_setup PROPERTIES
                          LABELS "${PARAM_TEST_LABELS}"
                          FIXTURES_SETUP ${PARAM_FIXTURE_NAME}_setup)
+
 endfunction()
 
 function(SOUFFLE_RUN_INTEGRATION_TEST)
     cmake_parse_arguments(
         PARAM
         ""
-        "TEST_NAME;QUALIFIED_TEST_NAME;INPUT_DIR;OUTPUT_DIR;EXTRA_DATA;FIXTURE_NAME;SOUFFLE_PARAMS;NEGATIVE"
+        "TEST_NAME;QUALIFIED_TEST_NAME;INPUT_DIR;OUTPUT_DIR;FIXTURE_NAME;SOUFFLE_PARAMS;NEGATIVE"
         "TEST_LABELS"
         ${ARGV}
     )
 
     # Run souffle (through the shell, so we can easily redirect)
-    add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_souffle COMMAND
-             sh -c "$<TARGET_FILE:souffle> ${PARAM_SOUFFLE_PARAMS} \\
+    add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_souffle
+             COMMAND sh -c "set -e; $<TARGET_FILE:souffle> ${PARAM_SOUFFLE_PARAMS} \\
                                            '${PARAM_INPUT_DIR}/${PARAM_TEST_NAME}.dl' \\
                                             1> '${PARAM_TEST_NAME}.out' \\
                                             2> '${PARAM_TEST_NAME}.err'")
@@ -44,15 +45,25 @@ function(SOUFFLE_RUN_INTEGRATION_TEST)
         set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_run_souffle PROPERTIES WILL_FAIL TRUE)
     endif()
 
-    # Compare stdout/stderr
+endfunction()
+
+function(SOUFFLE_COMPARE_STD_OUTPUTS)
+    cmake_parse_arguments(
+        PARAM
+        ""
+        "TEST_NAME;QUALIFIED_TEST_NAME;OUTPUT_DIR;EXTRA_DATA;RUN_AFTER_FIXTURE"
+        "TEST_LABELS"
+        ${ARGV}
+    )
+
     add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_compare_std_outputs
              COMMAND "${PROJECT_SOURCE_DIR}/cmake/check_std_outputs.sh" "${PARAM_TEST_NAME}" "${PARAM_EXTRA_DATA}")
     set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_compare_std_outputs PROPERTIES
                          WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
                          LABELS "${PARAM_TEST_LABELS}"
-                         FIXTURES_REQUIRED ${PARAM_FIXTURE_NAME}_run_souffle)
-
+                         FIXTURES_REQUIRED ${PARAM_RUN_AFTER_FIXTURE})
 endfunction()
+
 
 function(SOUFFLE_COMPARE_CSV)
     cmake_parse_arguments(
@@ -162,10 +173,16 @@ function(SOUFFLE_RUN_TEST_HELPER)
                                  QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
                                  INPUT_DIR ${INPUT_DIR}
                                  OUTPUT_DIR ${OUTPUT_DIR}
-                                 EXTRA_DATA ${PARAM_EXTRA_DATA}
                                  FIXTURE_NAME ${FIXTURE_NAME}
                                  NEGATIVE ${PARAM_NEGATIVE}
                                  SOUFFLE_PARAMS "${EXTRA_FLAGS} -j8 -D . -F '${FACTS_DIR}'"
+                                 TEST_LABELS ${TEST_LABELS})
+
+    souffle_compare_std_outputs(TEST_NAME ${PARAM_TEST_NAME}
+                                 QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
+                                 OUTPUT_DIR ${OUTPUT_DIR}
+                                 EXTRA_DATA ${PARAM_EXTRA_DATA}
+                                 RUN_AFTER_FIXTURE ${FIXTURE_NAME}
                                  TEST_LABELS ${TEST_LABELS})
 
     souffle_compare_csv(QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
@@ -181,13 +198,13 @@ function(SOUFFLE_RUN_PYTHON_SWIG_TEST)
     cmake_parse_arguments(
         PARAM
         ""
-        "PARAM_TEST_NAME;QUALIFIED_TEST_NAME;OUTPUT_DIR;FIXTURE_NAME;TEST_LABELS;FACTS_DIR"
+        "PARAM_TEST_NAME;QUALIFIED_TEST_NAME;INPUT_DIR;OUTPUT_DIR;FIXTURE_NAME;TEST_LABELS;FACTS_DIR"
         ""
         ${ARGV}
     )
 
-    add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_swig COMMAND
-             sh -c "${PYTHON} ${PARAM_INPUT_DIR}/driver.py ${PARAM_FACTS_DIR}
+    add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_swig
+             COMMAND sh -c "set -e; PYTHONPATH=. ${Python_EXECUTABLE} ${PARAM_INPUT_DIR}/driver.py ${PARAM_FACTS_DIR}
                                             1> '${PARAM_TEST_NAME}-python.out' \\
                                             2> '${PARAM_TEST_NAME}-python.err'")
     set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_run_swig PROPERTIES
@@ -198,11 +215,42 @@ function(SOUFFLE_RUN_PYTHON_SWIG_TEST)
                         )
 endfunction()
 
+function(SOUFFLE_RUN_JAVA_SWIG_TEST)
+    cmake_parse_arguments(
+        PARAM
+        ""
+        "PARAM_TEST_NAME;QUALIFIED_TEST_NAME;INPUT_DIR;OUTPUT_DIR;FIXTURE_NAME;TEST_LABELS;FACTS_DIR"
+        ""
+        ${ARGV}
+    )
+
+    add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_compile_java
+             COMMAND sh -c "set -e; ${Java_JAVAC_EXECUTABLE} *.java ${PARAM_INPUT_DIR}/*.java -d ${PARAM_OUTPUT_DIR}")
+    set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_compile_java PROPERTIES
+                         WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
+                         LABELS "${PARAM_TEST_LABELS}"
+                         FIXTURES_SETUP ${PARAM_FIXTURE_NAME}_compile_java
+                         FIXTURES_REQUIRED ${PARAM_FIXTURE_NAME}_run_souffle
+                        )
+
+    add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_swig
+            COMMAND sh -c "set -e; ${Java_JAVA_EXECUTABLE} -Djava.library.path=${PARAM_OUTPUT_DIR} driver \\
+                                            ${PARAM_FACTS_DIR} \\
+                                            1> '${PARAM_TEST_NAME}-java.out' \\
+                                            2> '${PARAM_TEST_NAME}-java.err'")
+    set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_run_swig PROPERTIES
+                         WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
+                         LABELS "${PARAM_TEST_LABELS}"
+                         FIXTURES_SETUP ${PARAM_FIXTURE_NAME}_run_swig
+                         FIXTURES_REQUIRED ${PARAM_FIXTURE_NAME}_compile_java
+                        )
+endfunction()
+
 function(SOUFFLE_RUN_SWIG_TEST_HELPER)
     # PARAM_TEST_NAME - the name of the test, the short directory name under tests/<category>/<test_name>
     cmake_parse_arguments(
         PARAM
-        ""
+        "COMPARE_STDOUT"
         "TEST_NAME;LANGUAGE" #Single valued options
         ""
         ${ARGV}
@@ -217,10 +265,16 @@ function(SOUFFLE_RUN_SWIG_TEST_HELPER)
     set(FIXTURE_NAME ${QUALIFIED_TEST_NAME}_fixture)
     set(TEST_LABELS "swig;${PARAM_LANGUAGE};positive;integration")
 
+    if (PARAM_COMPARE_STDOUT) # This flag will enable additional checking against <testname>-<language>.out
+        # Otherwise, it will be unset and the script won't do anything additional
+        set(EXTRA ${PARAM_LANGUAGE})
+    endif()
+
     souffle_setup_integration_test_dir(TEST_NAME ${PARAM_TEST_NAME}
                                        QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
                                        DATA_CHECK_DIR ${INPUT_DIR}
                                        OUTPUT_DIR ${OUTPUT_DIR}
+                                       EXTRA_DATA ${EXTRA}
                                        FIXTURE_NAME ${FIXTURE_NAME}
                                        TEST_LABELS ${TEST_LABELS})
 
@@ -228,7 +282,6 @@ function(SOUFFLE_RUN_SWIG_TEST_HELPER)
                                  QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
                                  INPUT_DIR ${INPUT_DIR}
                                  OUTPUT_DIR ${OUTPUT_DIR}
-                                 EXTRA_DATA ${PARAM_EXTRA_DATA}
                                  FIXTURE_NAME ${FIXTURE_NAME}
                                  TEST_LABELS "${TEST_LABELS}"
                                  SOUFFLE_PARAMS "-s ${PARAM_LANGUAGE}")
@@ -236,22 +289,39 @@ function(SOUFFLE_RUN_SWIG_TEST_HELPER)
     if (PARAM_LANGUAGE STREQUAL "python")
         souffle_run_python_swig_test(TEST_NAME ${PARAM_TEST_NAME}
                                      QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
+                                     INPUT_DIR ${INPUT_DIR}
                                      OUTPUT_DIR ${OUTPUT_DIR}
                                      FIXTURE_NAME ${FIXTURE_NAME}
                                      FACTS_DIR "${FACTS_DIR}"
                                      TEST_LABELS ${TEST_LABELS})
 
+    elseif (PARAM_LANGUAGE STREQUAL "java")
+        souffle_run_java_swig_test(TEST_NAME ${PARAM_TEST_NAME}
+                                    QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
+                                    INPUT_DIR ${INPUT_DIR}
+                                    OUTPUT_DIR ${OUTPUT_DIR}
+                                    FIXTURE_NAME ${FIXTURE_NAME}
+                                    FACTS_DIR "${FACTS_DIR}"
+                                    TEST_LABELS ${TEST_LABELS})
     else()
         message(FATAL_ERROR "Unknown swig language ${PARAM_LANGUAGE}")
     endif()
 
+    souffle_compare_std_outputs(TEST_NAME ${PARAM_TEST_NAME}
+                                 QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
+                                 OUTPUT_DIR ${OUTPUT_DIR}
+                                 EXTRA_DATA ${EXTRA}
+                                 RUN_AFTER_FIXTURE ${FIXTURE_NAME}_run_swig
+                                 TEST_LABELS ${TEST_LABELS})
+
     souffle_compare_csv(QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
                         INPUT_DIR ${INPUT_DIR}
                         OUTPUT_DIR ${OUTPUT_DIR}
-                        EXTRA_DATA ${PARAM_EXTRA_DATA}
                         RUN_AFTER_FIXTURE ${FIXTURE_NAME}_run_swig
                         NEGATIVE ${PARAM_NEGATIVE}
                         TEST_LABELS ${TEST_LABELS})
+
+
 
 
 endfunction()
@@ -322,10 +392,10 @@ endfunction()
 # swig test which will run python, java or both
 function(SOUFFLE_POSITIVE_SWIG_TEST TEST_NAME)
     if (SOUFFLE_SWIG_PYTHON)
-        souffle_run_swig_test_helper(TEST_NAME ${TEST_NAME} LANGUAGE python)
+        souffle_run_swig_test_helper(TEST_NAME ${TEST_NAME} LANGUAGE python ${ARGN})
     endif()
 
     if (SOUFFLE_SWIG_JAVA)
-        souffle_run_swig_test_helper(TEST_NAME ${TEST_NAME} LANGUAGE java)
+        souffle_run_swig_test_helper(TEST_NAME ${TEST_NAME} LANGUAGE java ${ARGN})
     endif()
 endfunction()

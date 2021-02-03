@@ -6,7 +6,7 @@ TEST_NAME="$3"
 EXTRA_DATA="$4"
 
 mkdir -p "${OUTPUT_DIR}"
-rm -f "${OUTPUT_DIR}"/*
+rm -rf "${OUTPUT_DIR}"/*
 
 if [[ ${EXTRA_DATA} == "json" ]]; then
     # The json tests require additional shenanigans
@@ -17,6 +17,10 @@ if [[ ${EXTRA_DATA} == "json" ]]; then
     done
 else
     cp "${INPUT_DIR}/${TEST_NAME}.out" "${OUTPUT_DIR}/${TEST_NAME}.out.expected"
+
+    if [[ ${EXTRA_DATA} == "python" || ${EXTRA_DATA} == "java" ]]; then
+        cp "${INPUT_DIR}/${TEST_NAME}-${EXTRA_DATA}.out" "${OUTPUT_DIR}/${TEST_NAME}-${EXTRA_DATA}.out.expected"
+    fi
 fi
 
 cp "${INPUT_DIR}/${TEST_NAME}".err "${OUTPUT_DIR}/${TEST_NAME}".err.expected

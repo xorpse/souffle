@@ -13,3 +13,9 @@ fi;
 diff "${TEST_NAME}.out.sorted" "${TEST_NAME}.out.expected.sorted"
 
 diff "${TEST_NAME}.err" "${TEST_NAME}.err.expected"
+
+if [[ ${EXTRA_DATA} == "python" || ${EXTRA_DATA} == "java" ]]; then
+    # We also want to check the output from the swig run
+    sort "${TEST_NAME}-${EXTRA_DATA}.out" > "${TEST_NAME}-${EXTRA_DATA}.out.sorted"
+    diff "${TEST_NAME}-${EXTRA_DATA}.out.sorted" "${TEST_NAME}-${EXTRA_DATA}.out.expected.sorted"
+fi

@@ -135,6 +135,9 @@ if (SOUFFLE_SWIG_PYTHON OR SOUFFLE_SWIG_JAVA)
     if (SOUFFLE_SWIG_JAVA)
         find_package(Java REQUIRED
                      COMPONENTS Development)
+        find_package(JNI REQUIRED)
+        list(APPEND SOUFFLE_JAVA_INCLUDE_PATH ${JAVA_INCLUDE_PATH})
+        list(APPEND SOUFFLE_JAVA_INCLUDE_PATH ${JAVA_INCLUDE_PATH2})
     endif()
 endif()
 
