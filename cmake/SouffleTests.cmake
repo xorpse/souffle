@@ -182,7 +182,7 @@ function(SOUFFLE_RUN_TEST_HELPER)
                                  QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
                                  OUTPUT_DIR ${OUTPUT_DIR}
                                  EXTRA_DATA ${PARAM_EXTRA_DATA}
-                                 RUN_AFTER_FIXTURE ${FIXTURE_NAME}
+                                 RUN_AFTER_FIXTURE ${FIXTURE_NAME}_run_souffle
                                  TEST_LABELS ${TEST_LABELS})
 
     souffle_compare_csv(QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
