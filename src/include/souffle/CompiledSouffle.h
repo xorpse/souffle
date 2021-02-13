@@ -101,7 +101,7 @@ private:
         tuple& operator*() override {
             auto&& value = *it;
             t.rewind();
-            for (size_t i = 0; i < Arity; i++)
+            for (std::size_t i = 0; i < Arity; i++)
                 t[i] = value[i];
             return t;
         }
@@ -133,7 +133,7 @@ public:
         TupleType t;
         assert(&arg.getRelation() == this && "wrong relation");
         assert(arg.size() == Arity && "wrong tuple arity");
-        for (size_t i = 0; i < Arity; i++) {
+        for (std::size_t i = 0; i < Arity; i++) {
             t[i] = arg[i];
         }
         relation.insert(t);
@@ -141,7 +141,7 @@ public:
     bool contains(const tuple& arg) const override {
         TupleType t;
         assert(arg.size() == Arity && "wrong tuple arity");
-        for (size_t i = 0; i < Arity; i++) {
+        for (std::size_t i = 0; i < Arity; i++) {
             t[i] = arg[i];
         }
         return relation.contains(t);
@@ -152,11 +152,11 @@ public:
     std::string getName() const override {
         return name;
     }
-    const char* getAttrType(size_t arg) const override {
+    const char* getAttrType(std::size_t arg) const override {
         assert(arg < Arity && "attribute out of bound");
         return attrTypes[arg];
     }
-    const char* getAttrName(size_t arg) const override {
+    const char* getAttrName(std::size_t arg) const override {
         assert(arg < Arity && "attribute out of bound");
         return attrNames[arg];
     }
@@ -313,7 +313,7 @@ public:
     void insert(const RamDomain* ramDomain) {
         insert_lock.lock();
         t_tuple t;
-        for (size_t i = 0; i < Arity; ++i) {
+        for (std::size_t i = 0; i < Arity; ++i) {
             t.data[i] = ramDomain[i];
         }
         data.push_back(t);

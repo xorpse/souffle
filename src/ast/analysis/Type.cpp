@@ -106,7 +106,7 @@ Own<Clause> TypeAnalysis::createAnnotatedClause(
 
     assert(cloneAddresses.size() == originalAddresses.size());
 
-    for (size_t i = 0; i < originalAddresses.size(); i++) {
+    for (std::size_t i = 0; i < originalAddresses.size(); i++) {
         memoryMap[originalAddresses[i]] = cloneAddresses[i];
     }
 
@@ -252,7 +252,7 @@ IntrinsicFunctors TypeAnalysis::getValidIntrinsicFunctorOverloads(const Intrinsi
         }
 
         // Check that argument types match
-        for (size_t i = 0; i < argTypes.size(); ++i) {
+        for (std::size_t i = 0; i < argTypes.size(); ++i) {
             const auto& expectedType = candidate.params[candidate.variadic ? 0 : i];
             if (!contains(argTypes[i], expectedType)) {
                 return false;

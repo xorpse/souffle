@@ -152,11 +152,11 @@ Engine::Engine(ram::TranslationUnit& tUnit)
 #endif
 }
 
-Engine::RelationHandle& Engine::getRelationHandle(const size_t idx) {
+Engine::RelationHandle& Engine::getRelationHandle(const std::size_t idx) {
     return *relations[idx];
 }
 
-void Engine::swapRelation(const size_t ramRel1, const size_t ramRel2) {
+void Engine::swapRelation(const std::size_t ramRel1, const std::size_t ramRel2) {
     RelationHandle& rel1 = getRelationHandle(ramRel1);
     RelationHandle& rel2 = getRelationHandle(ramRel2);
     std::swap(rel1, rel2);
@@ -189,7 +189,7 @@ VecOwn<Engine::RelationHandle>& Engine::getRelationMap() {
     return relations;
 }
 
-void Engine::createRelation(const ram::Relation& id, const size_t idx) {
+void Engine::createRelation(const ram::Relation& id, const std::size_t idx) {
     if (relations.size() < idx + 1) {
         relations.resize(idx + 1);
     }
@@ -253,7 +253,7 @@ const std::vector<void*>& Engine::loadDLL() {
     return dll;
 }
 
-size_t Engine::getIterationNumber() const {
+std::size_t Engine::getIterationNumber() const {
     return iteration;
 }
 void Engine::incIterationNumber() {
@@ -283,7 +283,7 @@ void Engine::executeMain() {
         const ram::Program& program = tUnit.getProgram();
         visit(program, [&](const ram::TupleOperation& node) {
             if (!node.getProfileText().empty()) {
-                frequencies.emplace(node.getProfileText(), std::deque<std::atomic<size_t>>());
+                frequencies.emplace(node.getProfileText(), std::deque<std::atomic<std::size_t>>());
                 frequencies[node.getProfileText()].emplace_back(0);
             }
         });
@@ -295,7 +295,7 @@ void Engine::executeMain() {
             ProfileEventSingleton::instance().makeConfigRecord(cur.first, cur.second);
         }
         // Store count of relations
-        size_t relationCount = 0;
+        std::size_t relationCount = 0;
         for (auto rel : tUnit.getProgram().getRelations()) {
             if (rel->getName()[0] != '@') {
                 ++relationCount;
@@ -305,7 +305,7 @@ void Engine::executeMain() {
         ProfileEventSingleton::instance().makeConfigRecord("relationCount", std::to_string(relationCount));
 
         // Store count of rules
-        size_t ruleCount = 0;
+        std::size_t ruleCount = 0;
         visit(program, [&](const ram::Query&) { ++ruleCount; });
         ProfileEventSingleton::instance().makeConfigRecord("ruleCount", std::to_string(ruleCount));
 
@@ -313,7 +313,7 @@ void Engine::executeMain() {
         execute(main.get(), ctxt);
         ProfileEventSingleton::instance().stopTimer();
         for (auto const& cur : frequencies) {
-            for (size_t i = 0; i < cur.second.size(); ++i) {
+            for (std::size_t i = 0; i < cur.second.size(); ++i) {
                 ProfileEventSingleton::instance().makeQuantityEvent(cur.first, cur.second[i], i);
             }
         }
@@ -346,7 +346,7 @@ void Engine::executeSubroutine(
     generateIR();
     const ram::Program& program = tUnit.getProgram();
     auto subs = program.getSubroutines();
-    size_t i = distance(subs.begin(), subs.find(name));
+    std::size_t i = distance(subs.begin(), subs.find(name));
     execute(subroutine[i].get(), ctxt);
 }
 
@@ -441,7 +441,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
     {                                                            \
         auto result = EVAL_CHILD(RamDomain, 0);                  \
         auto* result_val = &getSymbolTable().resolve(result);    \
-        for (size_t i = 1; i < args.size(); i++) {               \
+        for (std::size_t i = 1; i < args.size(); i++) {               \
             auto alt = EVAL_CHILD(RamDomain, i);                 \
             if (alt == result) continue;                         \
                                                                  \
@@ -456,7 +456,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 #define MINMAX_OP(ty, op)                           \
     {                                               \
         auto result = EVAL_CHILD(ty, 0);            \
-        for (size_t i = 1; i < args.size(); i++) {  \
+        for (std::size_t i = 1; i < args.size(); i++) {  \
             result = op(result, EVAL_CHILD(ty, i)); \
         }                                           \
         return ramBitCast(result);                  \
@@ -579,7 +579,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
                 case FunctorOp::CAT: {
                     std::stringstream ss;
-                    for (size_t i = 0; i < args.size(); i++) {
+                    for (std::size_t i = 0; i < args.size(); i++) {
                         ss << getSymbolTable().resolve(execute(shadow.getChild(i), ctxt));
                     }
                     return getSymbolTable().lookup(ss.str());
@@ -649,7 +649,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
             auto fn = reinterpret_cast<void (*)()>(getMethodHandle(name));
             if (fn == nullptr) fatal("cannot find user-defined operator `%s`", name);
-            size_t arity = cur.getArguments().size();
+            std::size_t arity = cur.getArguments().size();
 
             if (cur.isStateful()) {
                 // prepare dynamic call environment
@@ -665,7 +665,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                 values[0] = &symbolTable;
                 void* recordTable = (void*)&getRecordTable();
                 values[1] = &recordTable;
-                for (size_t i = 0; i < arity; i++) {
+                for (std::size_t i = 0; i < arity; i++) {
                     intVal[i] = execute(shadow.getChild(i), ctxt);
                     args[i + 2] = &FFI_RamSigned;
                     values[i + 2] = &intVal[i];
@@ -697,7 +697,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                 ffi_arg rc;
 
                 /* Initialize arguments for ffi-call */
-                for (size_t i = 0; i < arity; i++) {
+                for (std::size_t i = 0; i < arity; i++) {
                     RamDomain arg = execute(shadow.getChild(i), ctxt);
                     switch (type[i]) {
                         case TypeAttribute::Symbol:
@@ -762,9 +762,9 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
         CASE(PackRecord)
             auto values = cur.getArguments();
-            size_t arity = values.size();
+            std::size_t arity = values.size();
             RamDomain data[arity];
-            for (size_t i = 0; i < arity; ++i) {
+            for (std::size_t i = 0; i < arity; ++i) {
                 data[i] = execute(shadow.getChild(i), ctxt);
             }
             return getRecordTable().pack(data, arity);
@@ -992,7 +992,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
             }
 
             // update environment variable
-            size_t arity = cur.getArity();
+            std::size_t arity = cur.getArity();
             const RamDomain* tuple = getRecordTable().unpack(ref, arity);
 
             // save reference to temporary value
@@ -1082,7 +1082,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 #undef PROJECT
 
         CASE(SubroutineReturn)
-            for (size_t i = 0; i < cur.getValues().size(); ++i) {
+            for (std::size_t i = 0; i < cur.getValues().size(); ++i) {
                 if (shadow.getChild(i) == nullptr) {
                     ctxt.addReturnValue(0);
                 } else {
@@ -1251,8 +1251,8 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
 template <typename Rel>
 RamDomain Engine::evalExistenceCheck(const ExistenceCheck& shadow, Context& ctxt) {
-    constexpr size_t Arity = Rel::Arity;
-    size_t viewPos = shadow.getViewId();
+    constexpr std::size_t Arity = Rel::Arity;
+    std::size_t viewPos = shadow.getViewId();
 
     if (profileEnabled && !shadow.isTemp()) {
         reads[shadow.getRelationName()]++;
@@ -1297,7 +1297,7 @@ RamDomain Engine::evalExistenceCheck(const ExistenceCheck& shadow, Context& ctxt
 template <typename Rel>
 RamDomain Engine::evalProvenanceExistenceCheck(const ProvenanceExistenceCheck& shadow, Context& ctxt) {
     // construct the pattern tuple
-    constexpr size_t Arity = Rel::Arity;
+    constexpr std::size_t Arity = Rel::Arity;
     const auto& superInfo = shadow.getSuperInst();
 
     // for partial we search for lower and upper boundaries
@@ -1325,7 +1325,7 @@ RamDomain Engine::evalProvenanceExistenceCheck(const ProvenanceExistenceCheck& s
     high[Arity - 1] = MAX_RAM_SIGNED;
 
     // obtain view
-    size_t viewPos = shadow.getViewId();
+    std::size_t viewPos = shadow.getViewId();
 
     // get an equalRange
     auto equalRange = Rel::castView(ctxt.getView(viewPos))->range(low, high);
@@ -1377,14 +1377,14 @@ RamDomain Engine::evalParallelScan(
 
 template <typename Rel>
 RamDomain Engine::evalIndexScan(const ram::IndexScan& cur, const IndexScan& shadow, Context& ctxt) {
-    constexpr size_t Arity = Rel::Arity;
+    constexpr std::size_t Arity = Rel::Arity;
     // create pattern tuple for range query
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> low;
     souffle::Tuple<RamDomain, Arity> high;
     CAL_SEARCH_BOUND(superInfo, low, high);
 
-    size_t viewId = shadow.getViewId();
+    std::size_t viewId = shadow.getViewId();
     auto view = Rel::castView(ctxt.getView(viewId));
     // conduct range query
     for (const auto& tuple : view->range(low, high)) {
@@ -1402,13 +1402,13 @@ RamDomain Engine::evalParallelIndexScan(
     auto viewContext = shadow.getViewContext();
 
     // create pattern tuple for range query
-    constexpr size_t Arity = Rel::Arity;
+    constexpr std::size_t Arity = Rel::Arity;
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> low;
     souffle::Tuple<RamDomain, Arity> high;
     CAL_SEARCH_BOUND(superInfo, low, high);
 
-    size_t indexPos = shadow.getViewId();
+    std::size_t indexPos = shadow.getViewId();
     auto pStream = rel.partitionRange(indexPos, low, high, numOfThreads);
     PARALLEL_START
         Context newCtxt(ctxt);
@@ -1468,13 +1468,13 @@ RamDomain Engine::evalParallelChoice(
 
 template <typename Rel>
 RamDomain Engine::evalIndexChoice(const ram::IndexChoice& cur, const IndexChoice& shadow, Context& ctxt) {
-    constexpr size_t Arity = Rel::Arity;
+    constexpr std::size_t Arity = Rel::Arity;
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> low;
     souffle::Tuple<RamDomain, Arity> high;
     CAL_SEARCH_BOUND(superInfo, low, high);
 
-    size_t viewId = shadow.getViewId();
+    std::size_t viewId = shadow.getViewId();
     auto view = Rel::castView(ctxt.getView(viewId));
 
     for (const auto& tuple : view->range(low, high)) {
@@ -1495,13 +1495,13 @@ RamDomain Engine::evalParallelIndexChoice(const Rel& rel, const ram::ParallelInd
     auto viewInfo = viewContext->getViewInfoForNested();
 
     // create pattern tuple for range query
-    constexpr size_t Arity = Rel::Arity;
+    constexpr std::size_t Arity = Rel::Arity;
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> low;
     souffle::Tuple<RamDomain, Arity> high;
     CAL_SEARCH_BOUND(superInfo, low, high);
 
-    size_t indexPos = shadow.getViewId();
+    std::size_t indexPos = shadow.getViewId();
     auto pStream = rel.partitionRange(indexPos, low, high, numOfThreads);
 
     PARALLEL_START
@@ -1662,14 +1662,14 @@ RamDomain Engine::evalParallelIndexAggregate(
         newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
     }
     // init temporary tuple for this level
-    constexpr size_t Arity = Rel::Arity;
+    constexpr std::size_t Arity = Rel::Arity;
     const auto& superInfo = shadow.getSuperInst();
     // get lower and upper boundaries for iteration
     souffle::Tuple<RamDomain, Arity> low;
     souffle::Tuple<RamDomain, Arity> high;
     CAL_SEARCH_BOUND(superInfo, low, high);
 
-    size_t viewId = shadow.getViewId();
+    std::size_t viewId = shadow.getViewId();
     auto view = Rel::castView(newCtxt.getView(viewId));
 
     return evalAggregate(cur, *shadow.getCondition(), shadow.getExpr(), *shadow.getNestedOperation(),
@@ -1680,13 +1680,13 @@ template <typename Rel>
 RamDomain Engine::evalIndexAggregate(
         const ram::IndexAggregate& cur, const IndexAggregate& shadow, Context& ctxt) {
     // init temporary tuple for this level
-    const size_t Arity = Rel::Arity;
+    const std::size_t Arity = Rel::Arity;
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> low;
     souffle::Tuple<RamDomain, Arity> high;
     CAL_SEARCH_BOUND(superInfo, low, high);
 
-    size_t viewId = shadow.getViewId();
+    std::size_t viewId = shadow.getViewId();
     auto view = Rel::castView(ctxt.getView(viewId));
 
     return evalAggregate(cur, *shadow.getCondition(), shadow.getExpr(), *shadow.getNestedOperation(),
@@ -1695,7 +1695,7 @@ RamDomain Engine::evalIndexAggregate(
 
 template <typename Rel>
 RamDomain Engine::evalProject(Rel& rel, const Project& shadow, Context& ctxt) {
-    constexpr size_t Arity = Rel::Arity;
+    constexpr std::size_t Arity = Rel::Arity;
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> tuple;
     TUPLE_COPY_FROM(tuple, superInfo.first);
@@ -1720,7 +1720,7 @@ RamDomain Engine::evalGuardedProject(Rel& rel, const GuardedProject& shadow, Con
         return true;
     }
 
-    constexpr size_t Arity = Rel::Arity;
+    constexpr std::size_t Arity = Rel::Arity;
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> tuple;
     TUPLE_COPY_FROM(tuple, superInfo.first);

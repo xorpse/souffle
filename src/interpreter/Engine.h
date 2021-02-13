@@ -65,11 +65,11 @@ private:
     /** @brief Generate intermediate representation from RAM */
     void generateIR();
     /** @brief Remove a relation from the environment */
-    void dropRelation(const size_t relId);
+    void dropRelation(const std::size_t relId);
     /** @brief Swap the content of two relations */
-    void swapRelation(const size_t ramRel1, const size_t ramRel2);
+    void swapRelation(const std::size_t ramRel1, const std::size_t ramRel2);
     /** @brief Return a reference to the relation on the given index */
-    RelationHandle& getRelationHandle(const size_t idx);
+    RelationHandle& getRelationHandle(const std::size_t idx);
     /** @brief Return the string symbol table */
     SymbolTable& getSymbolTable() {
         return symbolTable;
@@ -85,7 +85,7 @@ private:
     /** @brief Load DLL */
     const std::vector<void*>& loadDLL();
     /** @brief Return current iteration number for loop operation */
-    size_t getIterationNumber() const;
+    std::size_t getIterationNumber() const;
     /** @brief Increase iteration number by one */
     void incIterationNumber();
     /** @brief Reset iteration number */
@@ -95,7 +95,7 @@ private:
     /** @brief Return the relation map. */
     VecOwn<RelationHandle>& getRelationMap();
     /** @brief Create and add relation into the runtime environment.  */
-    void createRelation(const ram::Relation& id, const size_t idx);
+    void createRelation(const ram::Relation& id, const std::size_t idx);
 
     // -- Defines template for specialized interpreter operation -- */
     template <typename Rel>
@@ -163,15 +163,15 @@ private:
     /** main program */
     Own<Node> main;
     /** Number of threads enabled for this program */
-    size_t numOfThreads;
+    std::size_t numOfThreads;
     /** Profile counter */
     std::atomic<RamDomain> counter{0};
     /** Loop iteration counter */
-    size_t iteration = 0;
+    std::size_t iteration = 0;
     /** Profile for rule frequencies */
-    std::map<std::string, std::deque<std::atomic<size_t>>> frequencies;
+    std::map<std::string, std::deque<std::atomic<std::size_t>>> frequencies;
     /** Profile for relation reads */
-    std::map<std::string, std::atomic<size_t>> reads;
+    std::map<std::string, std::atomic<std::size_t>> reads;
     /** DLL */
     std::vector<void*> dll;
     /** Program */

@@ -235,7 +235,7 @@ private:
                 for (const analysis::Type* field : as<analysis::RecordType>(type)->getFields()) {
                     elementTypes.push_back(getTypeQualifier(*field));
                 }
-                const size_t recordArity = elementTypes.size();
+                const std::size_t recordArity = elementTypes.size();
                 json11::Json recordInfo = json11::Json::object{
                         {"types", std::move(elementTypes)}, {"arity", static_cast<long long>(recordArity)}};
                 records.emplace(getTypeQualifier(type), std::move(recordInfo));
@@ -265,7 +265,7 @@ private:
                 for (const auto field : as<ast::RecordType>(astType)->getFields()) {
                     elementParams.push_back(field->getName());
                 }
-                const size_t recordArity = elementParams.size();
+                const std::size_t recordArity = elementParams.size();
                 json11::Json recordInfo = json11::Json::object{
                         {"params", std::move(elementParams)}, {"arity", static_cast<long long>(recordArity)}};
                 records.emplace(astType->getQualifiedName().toString(), std::move(recordInfo));

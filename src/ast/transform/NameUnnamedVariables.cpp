@@ -33,7 +33,7 @@ namespace souffle::ast::transform {
 bool NameUnnamedVariablesTransformer::transform(TranslationUnit& translationUnit) {
     bool changed = false;
     static constexpr const char* boundPrefix = "+underscore";
-    static size_t underscoreCount = 0;
+    static std::size_t underscoreCount = 0;
 
     struct nameVariables : public NodeMapper {
         mutable bool changed = false;

@@ -215,7 +215,7 @@ TEST(Binary, SignedAdd) {
     auto vecArg1 = testutil::generateRandomVector<RamDomain>(TESTS_PER_OPERATION);
     auto vecArg2 = testutil::generateRandomVector<RamDomain>(TESTS_PER_OPERATION);
 
-    for (size_t i = 0; i < TESTS_PER_OPERATION; ++i) {
+    for (std::size_t i = 0; i < TESTS_PER_OPERATION; ++i) {
         RamDomain arg1 = vecArg1[i];
         RamDomain arg2 = vecArg2[i];
         RamDomain result = evalBinary(functor, arg1, arg2);

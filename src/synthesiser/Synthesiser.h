@@ -51,7 +51,7 @@ private:
     std::map<std::string, unsigned> idxMap;
 
     /** Frequency profiling of non-existence checks */
-    std::map<std::string, size_t> neIdxMap;
+    std::map<std::string, std::size_t> neIdxMap;
 
     /** Cache for generated types for relations */
     std::set<std::string> typeCache;
@@ -92,7 +92,7 @@ protected:
     unsigned lookupFreqIdx(const std::string& txt);
 
     /** Lookup read counter */
-    size_t lookupReadIdx(const std::string& txt);
+    std::size_t lookupReadIdx(const std::string& txt);
 
     /** Lookup relation by relation name */
     const ram::Relation* lookup(const std::string& relName) {

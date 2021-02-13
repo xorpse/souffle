@@ -35,8 +35,9 @@ namespace souffle::ram {
  */
 class Relation : public Node {
 public:
-    Relation(std::string name, size_t arity, size_t auxiliaryArity, std::vector<std::string> attributeNames,
-            std::vector<std::string> attributeTypes, RelationRepresentation representation)
+    Relation(std::string name, std::size_t arity, std::size_t auxiliaryArity,
+            std::vector<std::string> attributeNames, std::vector<std::string> attributeTypes,
+            RelationRepresentation representation)
             : representation(representation), name(std::move(name)), arity(arity),
               auxiliaryArity(auxiliaryArity), attributeNames(std::move(attributeNames)),
               attributeTypes(std::move(attributeTypes)) {
@@ -131,10 +132,10 @@ protected:
     const std::string name;
 
     /** Arity, i.e., number of attributes */
-    const size_t arity;
+    const std::size_t arity;
 
     /** Number of auxiliary attributes (e.g. provenance attributes etc) */
-    const size_t auxiliaryArity;
+    const std::size_t auxiliaryArity;
 
     /** Name of attributes */
     const std::vector<std::string> attributeNames;

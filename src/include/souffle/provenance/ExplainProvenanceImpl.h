@@ -72,7 +72,7 @@ public:
                 tuple >> ruleNum;
 
                 // middle fields are body literals
-                for (size_t i = 1; i + 1 < rel->getArity(); i++) {
+                for (std::size_t i = 1; i + 1 < rel->getArity(); i++) {
                     std::string bodyLit;
                     tuple >> bodyLit;
                     bodyLiterals.push_back(bodyLit);
@@ -89,8 +89,8 @@ public:
         }
     }
 
-    Own<TreeNode> explain(
-            std::string relName, std::vector<RamDomain> tuple, int ruleNum, int levelNum, size_t depthLimit) {
+    Own<TreeNode> explain(std::string relName, std::vector<RamDomain> tuple, int ruleNum, int levelNum,
+            std::size_t depthLimit) {
         std::stringstream joinedArgs;
         joinedArgs << join(decodeArguments(relName, tuple), ", ");
         auto joinedArgsStr = joinedArgs.str();
@@ -108,7 +108,7 @@ public:
             tuple.push_back(levelNum);
 
             // find if subproof exists already
-            size_t idx = 0;
+            std::size_t idx = 0;
             auto it = std::find(subproofs.begin(), subproofs.end(), tuple);
             if (it != subproofs.end()) {
                 idx = it - subproofs.begin();
@@ -132,7 +132,7 @@ public:
         prog.executeSubroutine(relName + "_" + std::to_string(ruleNum) + "_subproof", tuple, ret);
 
         // recursively get nodes for subproofs
-        size_t tupleCurInd = 0;
+        std::size_t tupleCurInd = 0;
         auto bodyRelations = info.at(std::make_pair(relName, ruleNum));
 
         // start from begin + 1 because the first element represents the head atom
@@ -152,8 +152,8 @@ public:
             }
 
             // traverse subroutine return
-            size_t arity;
-            size_t auxiliaryArity;
+            std::size_t arity;
+            std::size_t auxiliaryArity;
             if (isConstraint) {
                 // we only handle binary constraints, and assume arity is 4 to account for hidden provenance
                 // annotations
@@ -213,7 +213,8 @@ public:
         return internalNode;
     }
 
-    Own<TreeNode> explain(std::string relName, std::vector<std::string> args, size_t depthLimit) override {
+    Own<TreeNode> explain(
+            std::string relName, std::vector<std::string> args, std::size_t depthLimit) override {
         auto tuple = argsToNums(relName, args);
         if (tuple.empty()) {
             return mk<LeafNode>("Relation not found");
@@ -231,7 +232,8 @@ public:
         return explain(relName, tuple, ruleNum, levelNum, depthLimit);
     }
 
-    Own<TreeNode> explainSubproof(std::string relName, RamDomain subproofNum, size_t depthLimit) override {
+    Own<TreeNode> explainSubproof(
+            std::string relName, RamDomain subproofNum, std::size_t depthLimit) override {
         if (subproofNum >= (int)subproofs.size()) {
             return mk<LeafNode>("Subproof not found");
         }
@@ -254,7 +256,7 @@ public:
     }
 
     std::vector<std::string> explainNegationGetVariables(
-            std::string relName, std::vector<std::string> args, size_t ruleNum) override {
+            std::string relName, std::vector<std::string> args, std::size_t ruleNum) override {
         std::vector<std::string> variables;
 
         // check that the tuple actually doesn't exist
@@ -283,7 +285,7 @@ public:
         // check that head variable bindings make sense, i.e. for a head like a(x, x), make sure both x are
         // the same value
         std::map<std::string, std::string> headVariableMapping;
-        for (size_t i = 0; i < headVariables.size(); i++) {
+        for (std::size_t i = 0; i < headVariables.size(); i++) {
             if (!isVariable(headVariables[i])) {
                 continue;
             }
@@ -318,7 +320,8 @@ public:
         return uniqueBodyVariables;
     }
 
-    Own<TreeNode> explainNegation(std::string relName, size_t ruleNum, const std::vector<std::string>& tuple,
+    Own<TreeNode> explainNegation(std::string relName, std::size_t ruleNum,
+            const std::vector<std::string>& tuple,
             std::map<std::string, std::string>& bodyVariables) override {
         // construct a vector of unique variables that occur in the rule
         std::vector<std::string> uniqueVariables;
@@ -369,7 +372,7 @@ public:
 
         std::vector<RamDomain> args;
 
-        size_t varCounter = 0;
+        std::size_t varCounter = 0;
 
         // construct arguments to pass in to the subroutine
         // - this contains the variable bindings selected by the user
@@ -413,7 +416,7 @@ public:
                 relName + "(" + joinedArgsStr.str() + ")", "(R" + std::to_string(ruleNum) + ")");
 
         // store the head tuple in bodyVariables so we can print
-        for (size_t i = 0; i < headVariables.size(); i++) {
+        for (std::size_t i = 0; i < headVariables.size(); i++) {
             bodyVariables[headVariables[i]] = tuple[i];
         }
 
@@ -450,7 +453,7 @@ public:
                            << bodyVariables[atomRepresentation[2]];
             } else {
                 childLabel << bodyRel << "(";
-                for (size_t i = 1; i < atomRepresentation.size(); i++) {
+                for (std::size_t i = 1; i < atomRepresentation.size(); i++) {
                     // if it's a non-variable, print either _ for unnamed, or constant value
                     if (!isVariable(atomRepresentation[i])) {
                         childLabel << atomRepresentation[i];
@@ -480,7 +483,7 @@ public:
         return internalNode;
     }
 
-    std::string getRule(std::string relName, size_t ruleNum) override {
+    std::string getRule(std::string relName, std::size_t ruleNum) override {
         auto key = make_pair(relName, ruleNum);
 
         auto rule = rules.find(key);
@@ -613,7 +616,7 @@ public:
         std::vector<Relation*> varRels;
 
         // counter for adding element to varRels
-        size_t idx = 0;
+        std::size_t idx = 0;
 
         // parse arguments in each relation Tuple
         for (const auto& rel : rels) {
@@ -633,7 +636,7 @@ public:
 
             // check if args contain variable
             bool containVar = false;
-            for (size_t j = 0; j < rel.second.size(); ++j) {
+            for (std::size_t j = 0; j < rel.second.size(); ++j) {
                 // arg is a variable
                 if (std::regex_match(rel.second[j], argsMatcher, varRegex)) {
                     containVar = true;
@@ -707,7 +710,7 @@ public:
                 } else {
                     std::cout << "false." << std::endl;
                     std::cout << "Tuple " << rel.first << "(";
-                    for (size_t l = 0; l < rel.second.size() - 1; ++l) {
+                    for (std::size_t l = 0; l < rel.second.size() - 1; ++l) {
                         std::cout << rel.second[l] << ", ";
                     }
                     std::cout << rel.second.back() << ") does not exist" << std::endl;
@@ -731,8 +734,8 @@ public:
     }
 
 private:
-    std::map<std::pair<std::string, size_t>, std::vector<std::string>> info;
-    std::map<std::pair<std::string, size_t>, std::string> rules;
+    std::map<std::pair<std::string, std::size_t>, std::vector<std::string>> info;
+    std::map<std::pair<std::string, std::size_t>, std::string> rules;
     std::vector<std::vector<RamDomain>> subproofs;
     std::vector<std::string> constraintList = {
             "=", "!=", "<", "<=", ">=", ">", "match", "contains", "not_match", "not_contains"};
@@ -806,7 +809,7 @@ private:
             varRelationIterators.push_back(relation->begin());
         }
 
-        size_t solutionCount = 0;
+        std::size_t solutionCount = 0;
         std::stringstream solution;
 
         // iterate through the vector of iterators to find solution
@@ -837,7 +840,7 @@ private:
                 }
                 solution.str(std::string());  // reset solution and process
 
-                size_t c = 0;
+                std::size_t c = 0;
                 for (auto&& var : nameToEquivalence) {
                     auto idx = var.second.getFirstIdx();
                     auto raw = element[idx.first][idx.second];
@@ -869,7 +872,7 @@ private:
             }
 
             // increment the iterators
-            size_t i = varRels.size() - 1;
+            std::size_t i = varRels.size() - 1;
             bool terminate = true;
             for (auto it = varRelationIterators.rbegin(); it != varRelationIterators.rend(); ++it) {
                 if ((++(*it)) != varRels[i]->end()) {
@@ -899,7 +902,7 @@ private:
         bool tupleExist = false;
         for (auto it = relation->begin(); it != relation->end(); ++it) {
             bool eq = true;
-            for (size_t j = 0; j < constTuple.size(); ++j) {
+            for (std::size_t j = 0; j < constTuple.size(); ++j) {
                 if (constTuple[j] != (*it)[j]) {
                     eq = false;
                     break;

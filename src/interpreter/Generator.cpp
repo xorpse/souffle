@@ -51,7 +51,7 @@ NodePtr NodeGenerator::generateTree(const ram::Node& root) {
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::StringConstant>, const ram::StringConstant& sc) {
-    size_t num = engine.getSymbolTable().lookup(sc.getConstant());
+    std::size_t num = engine.getSymbolTable().lookup(sc.getConstant());
     return mk<StringConstant>(I_StringConstant, &sc, num);
 }
 
@@ -128,14 +128,14 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Negation>, const ram::Negation&
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::EmptinessCheck>, const ram::EmptinessCheck& emptiness) {
-    size_t relId = encodeRelation(emptiness.getRelation());
+    std::size_t relId = encodeRelation(emptiness.getRelation());
     auto rel = getRelationHandle(relId);
     NodeType type = constructNodeType("EmptinessCheck", lookup(emptiness.getRelation()));
     return mk<EmptinessCheck>(type, &emptiness, rel);
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::RelationSize>, const ram::RelationSize& size) {
-    size_t relId = encodeRelation(size.getRelation());
+    std::size_t relId = encodeRelation(size.getRelation());
     auto rel = getRelationHandle(relId);
     NodeType type = constructNodeType("RelationSize", lookup(size.getRelation()));
     return mk<RelationSize>(type, &size, rel);
@@ -181,7 +181,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::TupleOperation>, const ram::Tup
 
 NodePtr NodeGenerator::visit_(type_identity<ram::Scan>, const ram::Scan& scan) {
     orderingContext.addTupleWithDefaultOrder(scan.getTupleId(), scan);
-    size_t relId = encodeRelation(scan.getRelation());
+    std::size_t relId = encodeRelation(scan.getRelation());
     auto rel = getRelationHandle(relId);
     NodeType type = constructNodeType("Scan", lookup(scan.getRelation()));
     return mk<Scan>(type, &scan, rel, visit_(type_identity<ram::TupleOperation>(), scan));
@@ -189,7 +189,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Scan>, const ram::Scan& scan) {
 
 NodePtr NodeGenerator::visit_(type_identity<ram::ParallelScan>, const ram::ParallelScan& pScan) {
     orderingContext.addTupleWithDefaultOrder(pScan.getTupleId(), pScan);
-    size_t relId = encodeRelation(pScan.getRelation());
+    std::size_t relId = encodeRelation(pScan.getRelation());
     auto rel = getRelationHandle(relId);
     NodeType type = constructNodeType("ParallelScan", lookup(pScan.getRelation()));
     auto res = mk<ParallelScan>(type, &pScan, rel, visit_(type_identity<ram::TupleOperation>(), pScan));
@@ -208,7 +208,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::IndexScan>, const ram::IndexSca
 NodePtr NodeGenerator::visit_(type_identity<ram::ParallelIndexScan>, const ram::ParallelIndexScan& piscan) {
     orderingContext.addTupleWithIndexOrder(piscan.getTupleId(), piscan);
     SuperInstruction indexOperation = getIndexSuperInstInfo(piscan);
-    size_t relId = encodeRelation(piscan.getRelation());
+    std::size_t relId = encodeRelation(piscan.getRelation());
     auto rel = getRelationHandle(relId);
     NodeType type = constructNodeType("ParallelIndexScan", lookup(piscan.getRelation()));
     auto res = mk<ParallelIndexScan>(type, &piscan, rel, visit_(type_identity<ram::TupleOperation>(), piscan),
@@ -219,7 +219,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::ParallelIndexScan>, const ram::
 
 NodePtr NodeGenerator::visit_(type_identity<ram::Choice>, const ram::Choice& choice) {
     orderingContext.addTupleWithDefaultOrder(choice.getTupleId(), choice);
-    size_t relId = encodeRelation(choice.getRelation());
+    std::size_t relId = encodeRelation(choice.getRelation());
     auto rel = getRelationHandle(relId);
     NodeType type = constructNodeType("Choice", lookup(choice.getRelation()));
     return mk<Choice>(type, &choice, rel, dispatch(choice.getCondition()),
@@ -228,7 +228,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Choice>, const ram::Choice& cho
 
 NodePtr NodeGenerator::visit_(type_identity<ram::ParallelChoice>, const ram::ParallelChoice& pChoice) {
     orderingContext.addTupleWithDefaultOrder(pChoice.getTupleId(), pChoice);
-    size_t relId = encodeRelation(pChoice.getRelation());
+    std::size_t relId = encodeRelation(pChoice.getRelation());
     auto rel = getRelationHandle(relId);
     NodeType type = constructNodeType("ParallelChoice", lookup(pChoice.getRelation()));
     auto res = mk<ParallelChoice>(type, &pChoice, rel, dispatch(pChoice.getCondition()),
@@ -250,7 +250,7 @@ NodePtr NodeGenerator::visit_(
         type_identity<ram::ParallelIndexChoice>, const ram::ParallelIndexChoice& piChoice) {
     orderingContext.addTupleWithIndexOrder(piChoice.getTupleId(), piChoice);
     SuperInstruction indexOperation = getIndexSuperInstInfo(piChoice);
-    size_t relId = encodeRelation(piChoice.getRelation());
+    std::size_t relId = encodeRelation(piChoice.getRelation());
     auto rel = getRelationHandle(relId);
     NodeType type = constructNodeType("ParallelIndexChoice", lookup(piChoice.getRelation()));
     auto res = mk<ParallelIndexChoice>(type, &piChoice, rel, dispatch(piChoice.getCondition()),
@@ -275,7 +275,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Aggregate>, const ram::Aggregat
     NodePtr cond = dispatch(aggregate.getCondition());
     orderingContext.addNewTuple(aggregate.getTupleId(), 1);
     NodePtr nested = visit_(type_identity<ram::TupleOperation>(), aggregate);
-    size_t relId = encodeRelation(aggregate.getRelation());
+    std::size_t relId = encodeRelation(aggregate.getRelation());
     auto rel = getRelationHandle(relId);
     NodeType type = constructNodeType("Aggregate", lookup(aggregate.getRelation()));
     return mk<Aggregate>(type, &aggregate, rel, std::move(expr), std::move(cond), std::move(nested));
@@ -288,7 +288,7 @@ NodePtr NodeGenerator::visit_(
     NodePtr cond = dispatch(pAggregate.getCondition());
     orderingContext.addNewTuple(pAggregate.getTupleId(), 1);
     NodePtr nested = visit_(type_identity<ram::TupleOperation>(), pAggregate);
-    size_t relId = encodeRelation(pAggregate.getRelation());
+    std::size_t relId = encodeRelation(pAggregate.getRelation());
     auto rel = getRelationHandle(relId);
     NodeType type = constructNodeType("ParallelAggregate", lookup(pAggregate.getRelation()));
     auto res = mk<ParallelAggregate>(
@@ -305,7 +305,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::IndexAggregate>, const ram::Ind
     NodePtr cond = dispatch(iAggregate.getCondition());
     orderingContext.addNewTuple(iAggregate.getTupleId(), 1);
     NodePtr nested = visit_(type_identity<ram::TupleOperation>(), iAggregate);
-    size_t relId = encodeRelation(iAggregate.getRelation());
+    std::size_t relId = encodeRelation(iAggregate.getRelation());
     auto rel = getRelationHandle(relId);
     NodeType type = constructNodeType("IndexAggregate", lookup(iAggregate.getRelation()));
     return mk<IndexAggregate>(type, &iAggregate, rel, std::move(expr), std::move(cond), std::move(nested),
@@ -320,7 +320,7 @@ NodePtr NodeGenerator::visit_(
     NodePtr cond = dispatch(piAggregate.getCondition());
     orderingContext.addNewTuple(piAggregate.getTupleId(), 1);
     NodePtr nested = visit_(type_identity<ram::TupleOperation>(), piAggregate);
-    size_t relId = encodeRelation(piAggregate.getRelation());
+    std::size_t relId = encodeRelation(piAggregate.getRelation());
     auto rel = getRelationHandle(relId);
     NodeType type = constructNodeType("ParallelIndexAggregate", lookup(piAggregate.getRelation()));
     auto res = mk<ParallelIndexAggregate>(type, &piAggregate, rel, std::move(expr), std::move(cond),
@@ -339,7 +339,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Filter>, const ram::Filter& fil
 
 NodePtr NodeGenerator::visit_(type_identity<ram::GuardedProject>, const ram::GuardedProject& guardedProject) {
     SuperInstruction superOp = getProjectSuperInstInfo(guardedProject);
-    size_t relId = encodeRelation(guardedProject.getRelation());
+    std::size_t relId = encodeRelation(guardedProject.getRelation());
     auto rel = getRelationHandle(relId);
     NodeType type = constructNodeType("GuardedProject", lookup(guardedProject.getRelation()));
     auto condition = guardedProject.getCondition();
@@ -348,7 +348,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::GuardedProject>, const ram::Gua
 
 NodePtr NodeGenerator::visit_(type_identity<ram::Project>, const ram::Project& project) {
     SuperInstruction superOp = getProjectSuperInstInfo(project);
-    size_t relId = encodeRelation(project.getRelation());
+    std::size_t relId = encodeRelation(project.getRelation());
     auto rel = getRelationHandle(relId);
     NodeType type = constructNodeType("Project", lookup(project.getRelation()));
     return mk<Project>(type, &project, rel, std::move(superOp));
@@ -394,12 +394,12 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Call>, const ram::Call& call) {
     // data array of the Node as the first
     // entry.
     auto subs = engine.tUnit.getProgram().getSubroutines();
-    size_t subroutineId = distance(subs.begin(), subs.find(call.getName()));
+    std::size_t subroutineId = distance(subs.begin(), subs.find(call.getName()));
     return mk<Call>(I_Call, &call, subroutineId);
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::LogRelationTimer>, const ram::LogRelationTimer& timer) {
-    size_t relId = encodeRelation(timer.getRelation());
+    std::size_t relId = encodeRelation(timer.getRelation());
     auto rel = getRelationHandle(relId);
     return mk<LogRelationTimer>(I_LogRelationTimer, &timer, dispatch(timer.getStatement()), rel);
 }
@@ -413,20 +413,20 @@ NodePtr NodeGenerator::visit_(type_identity<ram::DebugInfo>, const ram::DebugInf
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::Clear>, const ram::Clear& clear) {
-    size_t relId = encodeRelation(clear.getRelation());
+    std::size_t relId = encodeRelation(clear.getRelation());
     auto rel = getRelationHandle(relId);
     NodeType type = constructNodeType("Clear", lookup(clear.getRelation()));
     return mk<Clear>(type, &clear, rel);
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::LogSize>, const ram::LogSize& size) {
-    size_t relId = encodeRelation(size.getRelation());
+    std::size_t relId = encodeRelation(size.getRelation());
     auto rel = getRelationHandle(relId);
     return mk<LogSize>(I_LogSize, &size, rel);
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::IO>, const ram::IO& io) {
-    size_t relId = encodeRelation(io.getRelation());
+    std::size_t relId = encodeRelation(io.getRelation());
     auto rel = getRelationHandle(relId);
     return mk<IO>(I_IO, &io, rel);
 }
@@ -478,14 +478,14 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Query>, const ram::Query& query
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::Extend>, const ram::Extend& extend) {
-    size_t src = encodeRelation(extend.getFirstRelation());
-    size_t target = encodeRelation(extend.getSecondRelation());
+    std::size_t src = encodeRelation(extend.getFirstRelation());
+    std::size_t target = encodeRelation(extend.getSecondRelation());
     return mk<Extend>(I_Extend, &extend, src, target);
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::Swap>, const ram::Swap& swap) {
-    size_t src = encodeRelation(swap.getFirstRelation());
-    size_t target = encodeRelation(swap.getSecondRelation());
+    std::size_t src = encodeRelation(swap.getFirstRelation());
+    std::size_t target = encodeRelation(swap.getSecondRelation());
     return mk<Swap>(I_Swap, &swap, src, target);
 }
 
@@ -502,16 +502,16 @@ void NodeGenerator::newQueryBlock() {
     viewId = 0;
 }
 
-size_t NodeGenerator::getNewRelId() {
+std::size_t NodeGenerator::getNewRelId() {
     return relId++;
 }
 
-size_t NodeGenerator::getNextViewId() {
+std::size_t NodeGenerator::getNextViewId() {
     return viewId++;
 }
 
 template <class RamNode>
-size_t NodeGenerator::encodeIndexPos(RamNode& node) {
+std::size_t NodeGenerator::encodeIndexPos(RamNode& node) {
     const std::string& name = node.getRelation();
     ram::analysis::SearchSignature signature = engine.isa->getSearchSignature(&node);
     // A zero signature is equivalent as a full order signature.
@@ -523,12 +523,12 @@ size_t NodeGenerator::encodeIndexPos(RamNode& node) {
     return i;
 };
 
-size_t NodeGenerator::encodeView(const ram::Node* node) {
+std::size_t NodeGenerator::encodeView(const ram::Node* node) {
     auto pos = viewTable.find(node);
     if (pos != viewTable.end()) {
         return pos->second;
     }
-    size_t id = getNextViewId();
+    std::size_t id = getNextViewId();
     viewTable[node] = id;
     return id;
 }
@@ -539,23 +539,23 @@ const ram::Relation& NodeGenerator::lookup(const std::string& relName) {
     return *it->second;
 }
 
-size_t NodeGenerator::getArity(const std::string& relName) {
+std::size_t NodeGenerator::getArity(const std::string& relName) {
     auto rel = lookup(relName);
     return rel.getArity();
 }
 
-size_t NodeGenerator::encodeRelation(const std::string& relName) {
+std::size_t NodeGenerator::encodeRelation(const std::string& relName) {
     auto pos = relTable.find(relName);
     if (pos != relTable.end()) {
         return pos->second;
     }
-    size_t id = getNewRelId();
+    std::size_t id = getNewRelId();
     relTable[relName] = id;
     engine.createRelation(lookup(relName), id);
     return id;
 }
 
-RelationHandle* NodeGenerator::getRelationHandle(const size_t idx) {
+RelationHandle* NodeGenerator::getRelationHandle(const std::size_t idx) {
     return engine.relations[idx].get();
 }
 
@@ -579,13 +579,13 @@ const std::string& NodeGenerator::getViewRelation(const ram::Node* node) {
 }
 
 SuperInstruction NodeGenerator::getIndexSuperInstInfo(const ram::IndexOperation& ramIndex) {
-    size_t arity = getArity(ramIndex.getRelation());
+    std::size_t arity = getArity(ramIndex.getRelation());
     auto interpreterRel = encodeRelation(ramIndex.getRelation());
     auto indexId = encodeIndexPos(ramIndex);
     auto order = (*getRelationHandle(interpreterRel))->getIndexOrder(indexId);
     SuperInstruction indexOperation(arity);
     const auto& first = ramIndex.getRangePattern().first;
-    for (size_t i = 0; i < arity; ++i) {
+    for (std::size_t i = 0; i < arity; ++i) {
         // Note: unlike orderingContext::mapOrder, where we try to decode the order,
         // here we have to encode the order.
         auto& low = first[order[i]];
@@ -605,18 +605,18 @@ SuperInstruction NodeGenerator::getIndexSuperInstInfo(const ram::IndexOperation&
         // TupleElement
         if (isA<ram::TupleElement>(low)) {
             auto lowTuple = as<ram::TupleElement>(low);
-            size_t tupleId = lowTuple->getTupleId();
-            size_t elementId = lowTuple->getElement();
-            size_t newElementId = orderingContext.mapOrder(tupleId, elementId);
+            std::size_t tupleId = lowTuple->getTupleId();
+            std::size_t elementId = lowTuple->getElement();
+            std::size_t newElementId = orderingContext.mapOrder(tupleId, elementId);
             indexOperation.tupleFirst.push_back({i, tupleId, newElementId});
             continue;
         }
 
         // Generic expression
-        indexOperation.exprFirst.push_back(std::pair<size_t, Own<Node>>(i, dispatch(*low)));
+        indexOperation.exprFirst.push_back(std::pair<std::size_t, Own<Node>>(i, dispatch(*low)));
     }
     const auto& second = ramIndex.getRangePattern().second;
-    for (size_t i = 0; i < arity; ++i) {
+    for (std::size_t i = 0; i < arity; ++i) {
         auto& hig = second[order[i]];
 
         // Unbounded
@@ -634,22 +634,22 @@ SuperInstruction NodeGenerator::getIndexSuperInstInfo(const ram::IndexOperation&
         // TupleElement
         if (isA<ram::TupleElement>(hig)) {
             auto highTuple = as<ram::TupleElement>(hig);
-            size_t tupleId = highTuple->getTupleId();
-            size_t elementId = highTuple->getElement();
-            size_t newElementId = orderingContext.mapOrder(tupleId, elementId);
+            std::size_t tupleId = highTuple->getTupleId();
+            std::size_t elementId = highTuple->getElement();
+            std::size_t newElementId = orderingContext.mapOrder(tupleId, elementId);
             indexOperation.tupleSecond.push_back({i, tupleId, newElementId});
             continue;
         }
 
         // Generic expression
-        indexOperation.exprSecond.push_back(std::pair<size_t, Own<Node>>(i, dispatch(*hig)));
+        indexOperation.exprSecond.push_back(std::pair<std::size_t, Own<Node>>(i, dispatch(*hig)));
     }
     return indexOperation;
 }
 
 SuperInstruction NodeGenerator::getExistenceSuperInstInfo(const ram::AbstractExistenceCheck& abstractExist) {
     auto interpreterRel = encodeRelation(abstractExist.getRelation());
-    size_t indexId = 0;
+    std::size_t indexId = 0;
     if (isA<ram::ExistenceCheck>(&abstractExist)) {
         indexId = encodeIndexPos(*as<ram::ExistenceCheck>(abstractExist));
     } else if (isA<ram::ProvenanceExistenceCheck>(&abstractExist)) {
@@ -658,10 +658,10 @@ SuperInstruction NodeGenerator::getExistenceSuperInstInfo(const ram::AbstractExi
         fatal("Unrecognized ram::AbstractExistenceCheck.");
     }
     auto order = (*getRelationHandle(interpreterRel))->getIndexOrder(indexId);
-    size_t arity = getArity(abstractExist.getRelation());
+    std::size_t arity = getArity(abstractExist.getRelation());
     SuperInstruction superOp(arity);
     const auto& children = abstractExist.getValues();
-    for (size_t i = 0; i < arity; ++i) {
+    for (std::size_t i = 0; i < arity; ++i) {
         auto& child = children[order[i]];
 
         // Unbounded
@@ -681,24 +681,24 @@ SuperInstruction NodeGenerator::getExistenceSuperInstInfo(const ram::AbstractExi
         // TupleElement
         if (isA<ram::TupleElement>(child)) {
             auto tuple = as<ram::TupleElement>(child);
-            size_t tupleId = tuple->getTupleId();
-            size_t elementId = tuple->getElement();
-            size_t newElementId = orderingContext.mapOrder(tupleId, elementId);
+            std::size_t tupleId = tuple->getTupleId();
+            std::size_t elementId = tuple->getElement();
+            std::size_t newElementId = orderingContext.mapOrder(tupleId, elementId);
             superOp.tupleFirst.push_back({i, tupleId, newElementId});
             continue;
         }
 
         // Generic expression
-        superOp.exprFirst.push_back(std::pair<size_t, Own<Node>>(i, dispatch(*child)));
+        superOp.exprFirst.push_back(std::pair<std::size_t, Own<Node>>(i, dispatch(*child)));
     }
     return superOp;
 }
 
 SuperInstruction NodeGenerator::getProjectSuperInstInfo(const ram::Project& exist) {
-    size_t arity = getArity(exist.getRelation());
+    std::size_t arity = getArity(exist.getRelation());
     SuperInstruction superOp(arity);
     const auto& children = exist.getValues();
-    for (size_t i = 0; i < arity; ++i) {
+    for (std::size_t i = 0; i < arity; ++i) {
         auto& child = children[i];
         // Constant
         if (isA<ram::NumericConstant>(child)) {
@@ -709,15 +709,15 @@ SuperInstruction NodeGenerator::getProjectSuperInstInfo(const ram::Project& exis
         // TupleElement
         if (isA<ram::TupleElement>(child)) {
             auto tuple = as<ram::TupleElement>(child);
-            size_t tupleId = tuple->getTupleId();
-            size_t elementId = tuple->getElement();
-            size_t newElementId = orderingContext.mapOrder(tupleId, elementId);
+            std::size_t tupleId = tuple->getTupleId();
+            std::size_t elementId = tuple->getElement();
+            std::size_t newElementId = orderingContext.mapOrder(tupleId, elementId);
             superOp.tupleFirst.push_back({i, tupleId, newElementId});
             continue;
         }
 
         // Generic expression
-        superOp.exprFirst.push_back(std::pair<size_t, Own<Node>>(i, dispatch(*child)));
+        superOp.exprFirst.push_back(std::pair<std::size_t, Own<Node>>(i, dispatch(*child)));
     }
     return superOp;
 }
@@ -726,39 +726,39 @@ SuperInstruction NodeGenerator::getProjectSuperInstInfo(const ram::Project& exis
 
 NodeGenerator::OrderingContext::OrderingContext(NodeGenerator& generator) : generator(generator) {}
 
-void NodeGenerator::OrderingContext::addNewTuple(size_t tupleId, size_t arity) {
+void NodeGenerator::OrderingContext::addNewTuple(std::size_t tupleId, std::size_t arity) {
     std::vector<uint32_t> order;
-    for (size_t i = 0; i < arity; ++i) {
+    for (std::size_t i = 0; i < arity; ++i) {
         order.push_back((uint32_t)i);
     }
     insertOrder(tupleId, std::move(order));
 }
 
 template <class RamNode>
-void NodeGenerator::OrderingContext::addTupleWithDefaultOrder(size_t tupleId, const RamNode& node) {
+void NodeGenerator::OrderingContext::addTupleWithDefaultOrder(std::size_t tupleId, const RamNode& node) {
     auto interpreterRel = generator.encodeRelation(node.getRelation());
     insertOrder(tupleId, (*generator.getRelationHandle(interpreterRel))->getIndexOrder(0));
 }
 
 template <class RamNode>
-void NodeGenerator::OrderingContext::addTupleWithIndexOrder(size_t tupleId, const RamNode& node) {
+void NodeGenerator::OrderingContext::addTupleWithIndexOrder(std::size_t tupleId, const RamNode& node) {
     auto interpreterRel = generator.encodeRelation(node.getRelation());
     auto indexId = generator.encodeIndexPos(node);
     auto order = (*generator.getRelationHandle(interpreterRel))->getIndexOrder(indexId);
     insertOrder(tupleId, order);
 }
 
-size_t NodeGenerator::OrderingContext::mapOrder(size_t tupleId, size_t elementId) const {
+std::size_t NodeGenerator::OrderingContext::mapOrder(std::size_t tupleId, std::size_t elementId) const {
     return tupleOrders[tupleId][elementId];
 }
 
-void NodeGenerator::OrderingContext::insertOrder(size_t tupleId, const Order& order) {
+void NodeGenerator::OrderingContext::insertOrder(std::size_t tupleId, const Order& order) {
     if (tupleId >= tupleOrders.size()) {
         tupleOrders.resize(tupleId + 1);
     }
 
     std::vector<uint32_t> decodeOrder(order.size());
-    for (size_t i = 0; i < order.size(); ++i) {
+    for (std::size_t i = 0; i < order.size(); ++i) {
         decodeOrder[order[i]] = i;
     }
 

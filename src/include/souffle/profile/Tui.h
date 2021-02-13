@@ -67,7 +67,7 @@ private:
     std::shared_ptr<Reader> reader;
     InputReader linereader;
     /// Limit results shown. Default value chosen to approximate unlimited
-    size_t resultLimit = 20000;
+    std::size_t resultLimit = 20000;
 
     struct Usage {
         std::chrono::microseconds time;
@@ -266,7 +266,7 @@ public:
         return ss;
     }
 
-    std::stringstream& genJsonRelations(std::stringstream& ss, const std::string& name, size_t maxRows) {
+    std::stringstream& genJsonRelations(std::stringstream& ss, const std::string& name, std::size_t maxRows) {
         const std::shared_ptr<ProgramRun>& run = out.getProgramRun();
 
         auto comma = [&ss](bool& first, const std::string& delimiter = ", ") {
@@ -285,7 +285,7 @@ public:
         });
         maxRows = std::min(rows.size(), maxRows);
 
-        for (size_t i = 0; i < maxRows; ++i) {
+        for (std::size_t i = 0; i < maxRows; ++i) {
             comma(firstRow, ",\n");
 
             Row& row = *rows[i];
@@ -336,7 +336,7 @@ public:
         return ss;
     }
 
-    std::stringstream& genJsonRules(std::stringstream& ss, const std::string& name, size_t maxRows) {
+    std::stringstream& genJsonRules(std::stringstream& ss, const std::string& name, std::size_t maxRows) {
         const std::shared_ptr<ProgramRun>& run = out.getProgramRun();
 
         auto comma = [&ss](bool& first, const std::string& delimiter = ", ") {
@@ -356,7 +356,7 @@ public:
         });
         maxRows = std::min(rows.size(), maxRows);
 
-        for (size_t i = 0; i < maxRows; ++i) {
+        for (std::size_t i = 0; i < maxRows; ++i) {
             Row& row = *rows[i];
 
             std::vector<std::string> part = Tools::split(row[6]->toString(0), ".");
@@ -765,7 +765,7 @@ public:
         usage(rul->getEndtime(), rul->getStarttime());
     }
 
-    std::set<Usage> getUsageStats(size_t width = size_t(-1)) {
+    std::set<Usage> getUsageStats(std::size_t width = std::size_t(-1)) {
         std::set<Usage> usages;
         DirectoryEntry* usageStats = as<DirectoryEntry>(
                 ProfileEventSingleton::instance().getDB().lookupEntry({"program", "usage", "timepoint"}));
@@ -954,7 +954,7 @@ public:
         for (auto& usage : usages) {
             maxMaxRSS = std::max(maxMaxRSS, usage.maxRSS);
         }
-        size_t col = 0;
+        std::size_t col = 0;
         for (const Usage& currentUsage : usages) {
             uint64_t curHeight = height * currentUsage.maxRSS / maxMaxRSS;
             for (uint32_t row = 0; row < curHeight; ++row) {
@@ -1023,13 +1023,13 @@ public:
                 {"program", "configuration", "relationCount"}));
         auto* totalRulesEntry = as<TextEntry>(ProfileEventSingleton::instance().getDB().lookupEntry(
                 {"program", "configuration", "ruleCount"}));
-        size_t totalRelations = 0;
+        std::size_t totalRelations = 0;
         if (totalRelationsEntry != nullptr) {
             totalRelations = std::stoul(totalRelationsEntry->getText());
         } else {
             totalRelations = run->getRelationMap().size();
         }
-        size_t totalRules = 0;
+        std::size_t totalRules = 0;
         if (totalRulesEntry != nullptr) {
             totalRules = std::stoul(totalRulesEntry->getText());
         } else {
@@ -1046,11 +1046,11 @@ public:
 
         // Progress bar
         // Determine number of relations processed
-        size_t processedRelations = run->getRelationMap().size();
-        size_t screenWidth = getTermWidth() - 10;
+        std::size_t processedRelations = run->getRelationMap().size();
+        std::size_t screenWidth = getTermWidth() - 10;
         if (alive && totalRelationsEntry != nullptr) {
             std::cout << "Progress ";
-            for (size_t i = 0; i < screenWidth; ++i) {
+            for (std::size_t i = 0; i < screenWidth; ++i) {
                 if (screenWidth * processedRelations / totalRelations > i) {
                     std::cout << '#';
                 } else {
@@ -1062,28 +1062,28 @@ public:
 
         std::cout << "Slowest relations to fully evaluate\n";
         rel(3, false);
-        for (size_t i = relationTable.getRows().size(); i < 3; ++i) {
+        for (std::size_t i = relationTable.getRows().size(); i < 3; ++i) {
             std::cout << "\n";
         }
         std::cout << "Slowest rules to fully evaluate\n";
         rul(3, false);
-        for (size_t i = ruleTable.getRows().size(); i < 3; ++i) {
+        for (std::size_t i = ruleTable.getRows().size(); i < 3; ++i) {
             std::cout << "\n";
         }
 
         usage(10);
     }
 
-    void setResultLimit(size_t limit) {
+    void setResultLimit(std::size_t limit) {
         resultLimit = limit;
     }
 
-    void rel(size_t limit, bool showLimit = true) {
+    void rel(std::size_t limit, bool showLimit = true) {
         relationTable.sort(sortColumn);
         std::cout << " ----- Relation Table -----\n";
         std::printf("%8s%8s%8s%8s%8s%8s%8s%8s%8s%6s %s\n\n", "TOT_T", "NREC_T", "REC_T", "COPY_T", "LOAD_T",
                 "SAVE_T", "TUPLES", "READS", "TUP/s", "ID", "NAME");
-        size_t count = 0;
+        std::size_t count = 0;
         for (auto& row : Tools::formatTable(relationTable, precision)) {
             if (++count > limit) {
                 if (showLimit) {
@@ -1098,12 +1098,12 @@ public:
         }
     }
 
-    void rul(size_t limit, bool showLimit = true) {
+    void rul(std::size_t limit, bool showLimit = true) {
         ruleTable.sort(sortColumn);
         std::cout << "  ----- Rule Table -----\n";
         std::printf(
                 "%8s%8s%8s%8s%8s%8s %s\n\n", "TOT_T", "NREC_T", "REC_T", "TUPLES", "TUP/s", "ID", "RELATION");
-        size_t count = 0;
+        std::size_t count = 0;
         for (auto& row : Tools::formatTable(ruleTable, precision)) {
             if (++count > limit) {
                 if (showLimit) {
@@ -1265,7 +1265,7 @@ public:
                     std::printf("%4s   %s\n\n", "NO", "COPYTIME");
                     graphByTime(list);
                 } else if (col == "tuples") {
-                    std::vector<size_t> list;
+                    std::vector<std::size_t> list;
                     for (auto& i : iter) {
                         list.emplace_back(i->size());
                     }
@@ -1295,7 +1295,7 @@ public:
                     std::printf("%4s   %s\n\n", "NO", "COPYTIME");
                     graphByTime(list);
                 } else if (col == "tuples") {
-                    std::vector<size_t> list;
+                    std::vector<std::size_t> list;
                     for (auto& i : iter) {
                         list.emplace_back(i->size());
                     }
@@ -1333,10 +1333,10 @@ public:
                     std::printf("%4s   %s\n\n", "NO", "RUNTIME");
                     graphByTime(list);
                 } else if (col == "tuples") {
-                    std::vector<size_t> list;
+                    std::vector<std::size_t> list;
                     for (auto& i : iter) {
                         bool add = false;
-                        size_t totalSize = 0L;
+                        std::size_t totalSize = 0L;
                         for (auto& rul : i->getRules()) {
                             if (rul.second->getId() == c) {
                                 totalSize += rul.second->size();
@@ -1382,7 +1382,7 @@ public:
             std::printf("%4s   %s\n\n", "NO", "COPYTIME");
             graphByTime(list);
         } else if (col == "tuples") {
-            std::vector<size_t> list;
+            std::vector<std::size_t> list;
             for (auto& row : versionTable.rows) {
                 list.emplace_back((*row)[4]->getLongVal());
             }
@@ -1413,8 +1413,8 @@ public:
         }
     }
 
-    void graphBySize(std::vector<size_t> list) {
-        size_t max = 0;
+    void graphBySize(std::vector<std::size_t> list) {
+        std::size_t max = 0;
         for (auto& l : list) {
             if (l > max) {
                 max = l;
@@ -1424,7 +1424,7 @@ public:
         std::reverse(list.begin(), list.end());
         uint32_t i = 0;
         for (auto& l : list) {
-            size_t len = max == 0 ? 0 : 64.0 * l / max;
+            std::size_t len = max == 0 ? 0 : 64.0 * l / max;
             std::string bar = "";
             for (uint32_t j = 0; j < len; j++) {
                 bar += "*";

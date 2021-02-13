@@ -147,7 +147,7 @@ Own<ram::Statement> UnitTranslator::generateNonRecursiveRelation(const ast::Rela
     return mk<ram::Sequence>(std::move(result));
 }
 
-Own<ram::Statement> UnitTranslator::generateStratum(size_t scc) const {
+Own<ram::Statement> UnitTranslator::generateStratum(std::size_t scc) const {
     // Make a new ram statement for the current SCC
     VecOwn<ram::Statement> current;
 
@@ -195,7 +195,7 @@ Own<ram::Statement> UnitTranslator::generateMergeRelations(
     }
 
     // Predicate - project all values
-    for (size_t i = 0; i < rel->getArity(); i++) {
+    for (std::size_t i = 0; i < rel->getArity(); i++) {
         values.push_back(mk<ram::TupleElement>(0, i));
     }
     auto projection = mk<ram::Project>(destRelation, std::move(values));
@@ -234,7 +234,7 @@ VecOwn<ram::Statement> UnitTranslator::generateClauseVersions(
 
     // Create each version
     VecOwn<ram::Statement> clauseVersions;
-    for (size_t version = 0; version < sccAtoms.size(); version++) {
+    for (std::size_t version = 0; version < sccAtoms.size(); version++) {
         appendStmt(clauseVersions, context->translateRecursiveClause(*clause, scc, version));
     }
 
@@ -439,7 +439,7 @@ Own<ram::Relation> UnitTranslator::createRamRelation(
             ramRelationName, arity, 0, attributeNames, attributeTypeQualifiers, representation);
 }
 
-VecOwn<ram::Relation> UnitTranslator::createRamRelations(const std::vector<size_t>& sccOrdering) const {
+VecOwn<ram::Relation> UnitTranslator::createRamRelations(const std::vector<std::size_t>& sccOrdering) const {
     VecOwn<ram::Relation> ramRelations;
     for (const auto& scc : sccOrdering) {
         bool isRecursive = context->isRecursiveSCC(scc);
@@ -472,7 +472,7 @@ Own<ram::Sequence> UnitTranslator::generateProgram(const ast::TranslationUnit& t
             translationUnit.getAnalysis<ast::analysis::TopologicallySortedSCCGraphAnalysis>()->order();
 
     // Create subroutines for each SCC according to topological order
-    for (size_t i = 0; i < sccOrdering.size(); i++) {
+    for (std::size_t i = 0; i < sccOrdering.size(); i++) {
         // Generate the main stratum code
         auto stratum = generateStratum(sccOrdering.at(i));
 
@@ -487,7 +487,7 @@ Own<ram::Sequence> UnitTranslator::generateProgram(const ast::TranslationUnit& t
 
     // Invoke all strata
     VecOwn<ram::Statement> res;
-    for (size_t i = 0; i < sccOrdering.size(); i++) {
+    for (std::size_t i = 0; i < sccOrdering.size(); i++) {
         appendStmt(res, mk<ram::Call>("stratum_" + toString(i)));
     }
 

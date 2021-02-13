@@ -47,7 +47,7 @@ protected:
     void addRamSubroutine(std::string subroutineID, Own<ram::Statement> subroutine);
     virtual Own<ram::Relation> createRamRelation(
             const ast::Relation* baseRelation, std::string ramRelationName) const;
-    virtual VecOwn<ram::Relation> createRamRelations(const std::vector<size_t>& sccOrdering) const;
+    virtual VecOwn<ram::Relation> createRamRelations(const std::vector<std::size_t>& sccOrdering) const;
     Own<ram::Statement> translateRecursiveClauses(
             const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const;
     VecOwn<ram::Statement> generateClauseVersions(
@@ -68,7 +68,7 @@ protected:
     Own<ram::Statement> generateLoadRelation(const ast::Relation* relation) const;
 
     /** Low-level stratum translation */
-    Own<ram::Statement> generateStratum(size_t scc) const;
+    Own<ram::Statement> generateStratum(std::size_t scc) const;
     Own<ram::Statement> generateStratumPreamble(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumPostamble(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumLoopBody(const std::set<const ast::Relation*>& scc) const;

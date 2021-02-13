@@ -42,7 +42,7 @@ namespace souffle::ram::transform {
 using ExpressionPair = std::pair<Own<Expression>, Own<Expression>>;
 
 ExpressionPair MakeIndexTransformer::getExpressionPair(
-        const Constraint* binRelOp, size_t& element, int identifier) {
+        const Constraint* binRelOp, std::size_t& element, int identifier) {
     if (isLessEqual(binRelOp->getOperator())) {
         // Tuple[level, element] <= <expr>
         if (const auto* lhs = as<TupleElement>(binRelOp->getLHS())) {
@@ -86,7 +86,7 @@ ExpressionPair MakeIndexTransformer::getExpressionPair(
 // Retrieves the <expr1> <= Tuple[level, element] <= <expr2> part of the constraint as a pair { <expr1>,
 // <expr2> }
 ExpressionPair MakeIndexTransformer::getLowerUpperExpression(
-        Condition* c, size_t& element, int identifier, RelationRepresentation rep) {
+        Condition* c, std::size_t& element, int identifier, RelationRepresentation rep) {
     if (auto* binRelOp = as<Constraint>(c)) {
         bool interpreter = !Global::config().has("compile") && !Global::config().has("dl-program") &&
                            !Global::config().has("generate") && !Global::config().has("swig");
@@ -234,8 +234,8 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
             return false;
         }
 
-        size_t attr1 = 0;
-        size_t attr2 = 0;
+        std::size_t attr1 = 0;
+        std::size_t attr2 = 0;
         const auto p1 = getExpressionPair(cond1, attr1, identifier);
         const auto p2 = getExpressionPair(cond2, attr2, identifier);
 
@@ -264,8 +264,8 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
     // Build query pattern and remaining condition
     bool seenInequality = false;
 
-    size_t arity = queryPattern.first.size();
-    for (size_t i = 0; i < arity; ++i) {
+    std::size_t arity = queryPattern.first.size();
+    for (std::size_t i = 0; i < arity; ++i) {
         // ignore attributes with no constraints
         if (isUndefValue(queryPattern.first[i].get()) && isUndefValue(queryPattern.second[i].get())) {
             continue;
@@ -278,7 +278,7 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
     }
 
     for (auto& cond : conditionList) {
-        size_t element = 0;
+        std::size_t element = 0;
         Own<Expression> lowerExpression;
         Own<Expression> upperExpression;
         std::tie(lowerExpression, upperExpression) =

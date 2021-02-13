@@ -53,7 +53,7 @@ bool FunctionalConstraint::equal(const Node& node) const {
     if (keys.size() != other.keys.size()) {
         return false;
     }
-    for (size_t i = 0; i < keys.size(); i++) {
+    for (std::size_t i = 0; i < keys.size(); i++) {
         if (!equal_ptr(keys.at(i), other.keys.at(i))) {
             return false;
         }

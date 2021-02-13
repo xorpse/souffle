@@ -170,11 +170,11 @@
 
             // basic ops
             using iterator = typename std::vector<A>::iterator;
-            typename std::vector<A>::value_type& operator[](size_t i) { return value[i]; }
+            typename std::vector<A>::value_type& operator[](std::size_t i) { return value[i]; }
             iterator begin() { return value.begin(); }
             iterator end() { return value.end(); }
             void push_back(A x) { value.push_back(std::move(x)); }
-            size_t size() const { return value.size(); }
+            std::size_t size() const { return value.size(); }
             bool empty() const { return value.empty(); }
           };
         }

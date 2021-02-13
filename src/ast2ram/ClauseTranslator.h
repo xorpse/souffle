@@ -39,7 +39,7 @@ public:
 
     virtual Own<ram::Statement> translateNonRecursiveClause(const ast::Clause& clause) = 0;
     virtual Own<ram::Statement> translateRecursiveClause(
-            const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version) = 0;
+            const ast::Clause& clause, const std::set<const ast::Relation*>& scc, std::size_t version) = 0;
 
 protected:
     const TranslatorContext& context;

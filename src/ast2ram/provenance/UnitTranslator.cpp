@@ -90,14 +90,14 @@ Own<ram::Relation> UnitTranslator::createRamRelation(
 }
 
 std::string UnitTranslator::getInfoRelationName(const ast::Clause* clause) const {
-    size_t clauseID = context->getClauseNum(clause);
+    std::size_t clauseID = context->getClauseNum(clause);
     auto infoRelQualifiedName = clause->getHead()->getQualifiedName();
     infoRelQualifiedName.append("@info");
     infoRelQualifiedName.append(toString(clauseID));
     return getConcreteRelationName(infoRelQualifiedName);
 }
 
-VecOwn<ram::Relation> UnitTranslator::createRamRelations(const std::vector<size_t>& sccOrdering) const {
+VecOwn<ram::Relation> UnitTranslator::createRamRelations(const std::vector<std::size_t>& sccOrdering) const {
     // Regular relations
     auto ramRelations = seminaive::UnitTranslator::createRamRelations(sccOrdering);
 
@@ -119,7 +119,7 @@ VecOwn<ram::Relation> UnitTranslator::createRamRelations(const std::vector<size_
         attributeTypeQualifiers.push_back("s:symbol");
 
         // (3) For all atoms + negs + bcs: rel_<i>:symbol
-        for (size_t i = 0; i < clause->getBodyLiterals().size(); i++) {
+        for (std::size_t i = 0; i < clause->getBodyLiterals().size(); i++) {
             const auto* literal = clause->getBodyLiterals().at(i);
             if (isA<ast::Atom>(literal) || isA<ast::Negation>(literal) ||
                     isA<ast::BinaryConstraint>(literal)) {
@@ -177,7 +177,7 @@ Own<ram::Statement> UnitTranslator::generateMergeRelations(
     VecOwn<ram::Expression> values;
 
     // Predicate - project all values
-    for (size_t i = 0; i < rel->getArity() + 2; i++) {
+    for (std::size_t i = 0; i < rel->getArity() + 2; i++) {
         values.push_back(mk<ram::TupleElement>(0, i));
     }
 
@@ -192,12 +192,12 @@ Own<ram::Statement> UnitTranslator::generateMergeRelations(
 Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* program) {
     VecOwn<ram::Statement> infoClauseCalls;
 
-    size_t stratumCount = context->getNumberOfSCCs();
+    std::size_t stratumCount = context->getNumberOfSCCs();
     for (const auto* clause : program->getClauses()) {
         if (isFact(*clause)) {
             continue;
         }
-        size_t clauseID = context->getClauseNum(clause);
+        std::size_t clauseID = context->getClauseNum(clause);
 
         // Argument info generator
         int functorNumber = 0;
@@ -399,7 +399,7 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
     }
 
     // Keep track of references in a dummy index
-    size_t count = 0;
+    std::size_t count = 0;
     std::map<int, std::string> idToVarName;
     auto dummyValueIndex = mk<ValueIndex>();
     visit(clause, [&](const ast::Variable& var) {
@@ -424,7 +424,7 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
 
     // Create the search sequence
     VecOwn<ram::Statement> searchSequence;
-    size_t litNumber = 0;
+    std::size_t litNumber = 0;
     for (const auto* lit : lits) {
         if (const auto* atom = as<ast::Atom>(lit)) {
             auto existenceCheck = makeRamAtomExistenceCheck(atom, idToVarName, *dummyValueIndex);

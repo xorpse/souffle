@@ -47,8 +47,8 @@ TEST(SymbolTable, Copy) {
 
     auto* b = new SymbolTable(*a);
 
-    size_t a_idx = a->lookup("Hello");
-    size_t b_idx = b->lookup("Hello");
+    std::size_t a_idx = a->lookup("Hello");
+    std::size_t b_idx = b->lookup("Hello");
 
     // hash should be the same
     EXPECT_EQ(a_idx, b_idx);
@@ -75,9 +75,9 @@ TEST(SymbolTable, Assign) {
 
     c = *a;
 
-    size_t a_idx = a->lookup("Hello");
-    size_t b_idx = b.lookup("Hello");
-    size_t c_idx = c.lookup("Hello");
+    std::size_t a_idx = a->lookup("Hello");
+    std::size_t b_idx = b.lookup("Hello");
+    std::size_t c_idx = c.lookup("Hello");
 
     // hash should be the same
     EXPECT_EQ(a_idx, b_idx);

@@ -36,14 +36,14 @@ namespace souffle::ram {
  */
 class TupleElement : public Expression {
 public:
-    TupleElement(size_t ident, size_t elem) : identifier(ident), element(elem) {}
+    TupleElement(std::size_t ident, std::size_t elem) : identifier(ident), element(elem) {}
     /** @brief Get identifier */
     int getTupleId() const {
         return identifier;
     }
 
     /** @brief Get element */
-    size_t getElement() const {
+    std::size_t getElement() const {
         return element;
     }
 
@@ -62,10 +62,10 @@ protected:
     }
 
     /** Identifier for the tuple */
-    const size_t identifier;
+    const std::size_t identifier;
 
     /** Element number */
-    const size_t element;
+    const std::size_t element;
 };
 
 }  // namespace souffle::ram

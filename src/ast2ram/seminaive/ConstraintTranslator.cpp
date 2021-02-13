@@ -45,7 +45,7 @@ Own<ram::Condition> ConstraintTranslator::visit_(
 
 Own<ram::Condition> ConstraintTranslator::visit_(type_identity<ast::Negation>, const ast::Negation& neg) {
     const auto* atom = neg.getAtom();
-    size_t arity = atom->getArity();
+    std::size_t arity = atom->getArity();
 
     if (arity == 0) {
         // for a nullary, negation is a simple emptiness check

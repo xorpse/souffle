@@ -257,7 +257,7 @@ static TypeConstraint satisfiesOverload(const TypeEnvironment& typeEnv, Intrinsi
             overloads = filterNot(std::move(overloads), [&](const IntrinsicFunctorInfo& x) -> bool {
                 if (!x.variadic && args.size() != x.params.size()) return true;  // arity mismatch?
 
-                for (size_t i = 0; i < args.size(); ++i) {
+                for (std::size_t i = 0; i < args.size(); ++i) {
                     if (!possible(x.params[x.variadic ? 0 : i], args[i])) return true;
                 }
 
@@ -275,7 +275,7 @@ static TypeConstraint satisfiesOverload(const TypeEnvironment& typeEnv, Intrinsi
                 // `TypeEnv::getConstantType` is undefined).
                 // Handle this by not imposing constraints on the arguments.
                 if (overload.op != FunctorOp::ORD) {
-                    for (size_t i = 0; i < args.size(); ++i) {
+                    for (std::size_t i = 0; i < args.size(); ++i) {
                         auto argTy = overload.params[overload.variadic ? 0 : i];
                         auto& currArg = assigment[args[i]];
                         auto newArg = subtypesOf(currArg, argTy);
@@ -317,7 +317,7 @@ static TypeConstraint satisfiesOverload(const TypeEnvironment& typeEnv, Intrinsi
  * Constraint on record type and its elements.
  */
 static TypeConstraint isSubtypeOfComponent(
-        const TypeVar& elementVariable, const TypeVar& recordVariable, size_t index) {
+        const TypeVar& elementVariable, const TypeVar& recordVariable, std::size_t index) {
     struct C : public Constraint<TypeVar> {
         TypeVar elementVariable;
         TypeVar recordVariable;
@@ -522,7 +522,7 @@ void TypeConstraintsAnalysis::visit_(type_identity<IntrinsicFunctor>, const Intr
 
     // Add constraints on arguments
     auto arguments = fun.getArguments();
-    for (size_t i = 0; i < arguments.size(); ++i) {
+    for (std::size_t i = 0; i < arguments.size(); ++i) {
         TypeAttribute argType = typeAnalysis.getFunctorParamTypeAttribute(fun, i);
         addConstraint(isSubtypeOf(getVar(arguments[i]), typeEnv.getConstantType(argType)));
     }
@@ -549,7 +549,7 @@ void TypeConstraintsAnalysis::visit_(type_identity<UserDefinedFunctor>, const Us
     addConstraint(isSubtypeOf(functorVar, returnType));
 
     // Add constraints on arguments
-    for (size_t i = 0; i < arguments.size(); ++i) {
+    for (std::size_t i = 0; i < arguments.size(); ++i) {
         Type const& paramType = typeAnalysis.getFunctorParamType(fun, i);
         addConstraint(isSubtypeOf(getVar(arguments[i]), paramType));
     }
@@ -578,7 +578,7 @@ void TypeConstraintsAnalysis::visit_(type_identity<TypeCast>, const ast::TypeCas
 
 void TypeConstraintsAnalysis::visit_(type_identity<RecordInit>, const RecordInit& record) {
     auto arguments = record.getArguments();
-    for (size_t i = 0; i < arguments.size(); ++i) {
+    for (std::size_t i = 0; i < arguments.size(); ++i) {
         addConstraint(isSubtypeOfComponent(getVar(arguments[i]), getVar(record), i));
     }
 }
@@ -610,7 +610,7 @@ void TypeConstraintsAnalysis::visit_(type_identity<BranchInit>, const BranchInit
         }
 
         // Add constraints for each of the branch arguments.
-        for (size_t i = 0; i < branchArgs.size(); ++i) {
+        for (std::size_t i = 0; i < branchArgs.size(); ++i) {
             auto argVar = getVar(branchArgs[i]);
             addConstraint(isSubtypeOf(argVar, *branchTypes[i]));
         }
@@ -649,7 +649,7 @@ void TypeConstraintsAnalysis::iterateOverAtom(
         return;  // error in input program
     }
 
-    for (size_t i = 0; i < atts.size(); i++) {
+    for (std::size_t i = 0; i < atts.size(); i++) {
         const auto& typeName = atts[i]->getTypeName();
         if (typeEnv.isType(typeName)) {
             map(*args[i], typeEnv.getType(typeName));

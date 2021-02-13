@@ -323,7 +323,7 @@ void TypeCheckerImpl::visit_(type_identity<Atom>, const Atom& atom) {
         return;  // error in input program
     }
 
-    for (size_t i = 0; i < attributes.size(); ++i) {
+    for (std::size_t i = 0; i < attributes.size(); ++i) {
         auto& typeName = attributes[i]->getTypeName();
         if (!typeEnv.isType(typeName)) {
             continue;
@@ -477,7 +477,7 @@ void TypeCheckerImpl::visit_(type_identity<BranchInit>, const BranchInit& adt) {
         return;
     }
 
-    for (size_t i = 0; i < args.size(); ++i) {
+    for (std::size_t i = 0; i < args.size(); ++i) {
         auto argTypes = typeAnalysis.getTypes(args[i]);
         bool correctType = all_of(
                 argTypes, [&](const analysis::Type& t) { return isSubtypeOf(t, *argsDeclaredTypes[i]); });

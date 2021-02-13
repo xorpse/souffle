@@ -56,7 +56,7 @@ protected:
         else
             destination << "[";
 
-        for (size_t col = 0; col < arity; ++col) {
+        for (std::size_t col = 0; col < arity; ++col) {
             if (col > 0) {
                 destination << ", ";
             }
@@ -109,7 +109,7 @@ protected:
                     }
 
                     auto&& recordTypes = recordInfo["types"];
-                    const size_t recordArity = recordInfo["arity"].long_value();
+                    const std::size_t recordArity = recordInfo["arity"].long_value();
                     const RamDomain* tuplePtr = recordTable.unpack(currValue, recordArity);
                     worklist.push("]");
                     for (auto i = (long long)(recordArity - 1); i >= 0; --i) {
@@ -164,7 +164,7 @@ protected:
                     }
 
                     auto&& recordTypes = recordInfo["types"];
-                    const size_t recordArity = recordInfo["arity"].long_value();
+                    const std::size_t recordArity = recordInfo["arity"].long_value();
                     const RamDomain* tuplePtr = recordTable.unpack(currValue, recordArity);
                     worklist.push("}");
                     for (auto i = (long long)(recordArity - 1); i >= 0; --i) {

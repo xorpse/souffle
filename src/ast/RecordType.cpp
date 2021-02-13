@@ -29,7 +29,7 @@ std::vector<Attribute*> RecordType::getFields() const {
     return toPtrVector(fields);
 }
 
-void RecordType::setFieldType(size_t idx, QualifiedName type) {
+void RecordType::setFieldType(std::size_t idx, QualifiedName type) {
     fields.at(idx)->setTypeName(std::move(type));
 }
 

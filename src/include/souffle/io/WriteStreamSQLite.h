@@ -56,7 +56,7 @@ protected:
     void writeNullary() override {}
 
     void writeNextTuple(const RamDomain* tuple) override {
-        for (size_t i = 0; i < arity; i++) {
+        for (std::size_t i = 0; i < arity; i++) {
             RamDomain value = 0;  // Silence warning
 
             switch (typeAttributes.at(i)[0]) {

@@ -109,8 +109,8 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
     // index of level argument in argument list
     const auto* head = clause.getHead();
     const auto& headArgs = head->getArguments();
-    size_t levelIndex = clause.getHead()->getArguments().size();
-    for (size_t i = 0; i < head->getArity(); i++) {
+    std::size_t levelIndex = clause.getHead()->getArguments().size();
+    for (std::size_t i = 0; i < head->getArity(); i++) {
         auto arg = headArgs.at(i);
         if (const auto* var = as<ast::Variable>(arg)) {
             // FIXME: float equiv (`FEQ`)
@@ -140,7 +140,7 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
     // add level constraints, i.e., that each body literal has height less than that of the head atom
     for (const auto* lit : clause.getBodyLiterals()) {
         if (const auto* atom = as<ast::Atom>(lit)) {
-            size_t levelNumber = 0;
+            std::size_t levelNumber = 0;
             while (getAtomOrdering(clause).at(levelNumber) != atom) {
                 levelNumber++;
                 assert(levelNumber < getAtomOrdering(clause).size());
@@ -162,7 +162,7 @@ Own<ram::Operation> SubproofGenerator::addBodyLiteralConstraints(
         }
 
         // also add in prev stuff
-        for (size_t i = version + 1; i < sccAtoms.size(); i++) {
+        for (std::size_t i = version + 1; i < sccAtoms.size(); i++) {
             op = addNegatedDeltaAtom(std::move(op), sccAtoms.at(i));
         }
     }
@@ -180,7 +180,7 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
                 values.push_back(context.translateValue(*valueIndex, arg));
             }
             // TODO (azreika): put helper methods for these variables
-            size_t levelNumber = 0;
+            std::size_t levelNumber = 0;
             while (getAtomOrdering(clause).at(levelNumber) != atom) {
                 levelNumber++;
                 assert(levelNumber < getAtomOrdering(clause).size());
@@ -209,7 +209,7 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
     // final provenance negation
     if (isRecursive()) {
         const auto* head = clause.getHead();
-        for (size_t i = 0; i < head->getArguments().size(); i++) {
+        for (std::size_t i = 0; i < head->getArguments().size(); i++) {
             auto arg = head->getArguments().at(i);
             values.push_back(context.translateValue(*valueIndex, arg));
         }
@@ -219,8 +219,8 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
 
     const auto* head = clause.getHead();
     const auto& headArgs = head->getArguments();
-    size_t levelIndex = clause.getHead()->getArguments().size();
-    for (size_t i = 0; i < head->getArity(); i++) {
+    std::size_t levelIndex = clause.getHead()->getArguments().size();
+    for (std::size_t i = 0; i < head->getArity(); i++) {
         auto arg = headArgs.at(i);
         if (const auto* var = as<ast::Variable>(arg)) {
             values.push_back(context.translateValue(*valueIndex, var));
@@ -239,7 +239,7 @@ Own<ram::Operation> SubproofGenerator::generateReturnInstantiatedValues(const as
 
     for (const auto* lit : clause.getBodyLiterals()) {
         if (const auto* atom = as<ast::Atom>(lit)) {
-            size_t levelNumber = 0;
+            std::size_t levelNumber = 0;
             while (getAtomOrdering(clause).at(levelNumber) != atom) {
                 levelNumber++;
                 assert(levelNumber < getAtomOrdering(clause).size());
