@@ -26,7 +26,9 @@ This module will set the following variables if found:
 #]=======================================================================]
 
 # Look for the necessary header
-find_path(LIBFFI_INCLUDE_DIR NAMES ffi.h)
+find_path(LIBFFI_INCLUDE_DIR NAMES ffi.h
+          PATHS /usr /usr/local /opt/local /usr/include/ffi
+          PATH_SUFFIXES include include/ffi include/x86_64-linux-gnu x86_64-linux-gnu)
 mark_as_advanced(LIBFFI_INCLUDE_DIR)
 
 # Look for the necessary library

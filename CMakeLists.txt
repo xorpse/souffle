@@ -1,7 +1,6 @@
 # TODO
 # Add option to run tests from install directory
 # Tests:
-#  - swig.at
 #  - interface.at
 #  - provenance.at
 # Update README with cmake instructions
