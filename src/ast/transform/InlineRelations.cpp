@@ -211,7 +211,7 @@ bool reduceSubstitution(std::vector<std::pair<Argument*, Argument*>>& sub) {
         done = true;
 
         // Try reducing each pair by one step
-        for (size_t i = 0; i < sub.size(); i++) {
+        for (std::size_t i = 0; i < sub.size(); i++) {
             auto currPair = sub[i];
             Argument* lhs = currPair.first;
             Argument* rhs = currPair.second;
@@ -239,7 +239,7 @@ bool reduceSubstitution(std::vector<std::pair<Argument*, Argument*>>& sub) {
                 }
 
                 // Equate all corresponding arguments
-                for (size_t i = 0; i < lhsArgs.size(); i++) {
+                for (std::size_t i = 0; i < lhsArgs.size(); i++) {
                     sub.push_back(std::make_pair(lhsArgs[i], rhsArgs[i]));
                 }
 
@@ -269,7 +269,7 @@ NullableVector<std::pair<Argument*, Argument*>> unifyAtoms(Atom* first, Atom* se
     std::vector<Argument*> secondArgs = second->getArguments();
 
     // Create the initial unification equalities
-    for (size_t i = 0; i < firstArgs.size(); i++) {
+    for (std::size_t i = 0; i < firstArgs.size(); i++) {
         substitution.push_back(std::make_pair(firstArgs[i], secondArgs[i]));
     }
 
@@ -567,7 +567,7 @@ NullableVector<Argument*> getInlinedArgument(Program& program, const Argument* a
         // (At this point we only handle one step of inlining at a time)
         if (!changed) {
             std::vector<Literal*> bodyLiterals = aggr->getBodyLiterals();
-            for (size_t i = 0; i < bodyLiterals.size(); i++) {
+            for (std::size_t i = 0; i < bodyLiterals.size(); i++) {
                 Literal* currLit = bodyLiterals[i];
 
                 NullableVector<std::vector<Literal*>> literalVersions = getInlinedLiteral(program, currLit);
@@ -589,7 +589,7 @@ NullableVector<Argument*> getInlinedArgument(Program& program, const Argument* a
 
                         VecOwn<Literal> newBody;
                         // Add in everything except the current literal being replaced
-                        for (size_t j = 0; j < bodyLiterals.size(); j++) {
+                        for (std::size_t j = 0; j < bodyLiterals.size(); j++) {
                             if (i != j) {
                                 newBody.push_back(souffle::clone(bodyLiterals[j]));
                             }
@@ -636,7 +636,7 @@ NullableVector<Argument*> getInlinedArgument(Program& program, const Argument* a
             }
         }
     } else if (const auto* functor = as<Functor>(arg)) {
-        size_t i = 0;
+        std::size_t i = 0;
         for (auto funArg : functor->getArguments()) {
             // TODO (azreika): use unique pointers
             // try inlining each argument from left to right
@@ -646,7 +646,7 @@ NullableVector<Argument*> getInlinedArgument(Program& program, const Argument* a
                 for (Argument* newArgVersion : argumentVersions.getVector()) {
                     // same functor but with new argument version
                     VecOwn<Argument> argsCopy;
-                    size_t j = 0;
+                    std::size_t j = 0;
                     for (auto& functorArg : functor->getArguments()) {
                         if (j == i) {
                             argsCopy.emplace_back(newArgVersion);
@@ -681,14 +681,14 @@ NullableVector<Argument*> getInlinedArgument(Program& program, const Argument* a
         }
     } else if (const auto* record = as<RecordInit>(arg)) {
         std::vector<Argument*> recordArguments = record->getArguments();
-        for (size_t i = 0; i < recordArguments.size(); i++) {
+        for (std::size_t i = 0; i < recordArguments.size(); i++) {
             Argument* currentRecArg = recordArguments[i];
             NullableVector<Argument*> argumentVersions = getInlinedArgument(program, currentRecArg);
             if (argumentVersions.isValid()) {
                 changed = true;
                 for (Argument* newArgumentVersion : argumentVersions.getVector()) {
                     auto* newRecordArg = new RecordInit();
-                    for (size_t j = 0; j < recordArguments.size(); j++) {
+                    for (std::size_t j = 0; j < recordArguments.size(); j++) {
                         if (i == j) {
                             newRecordArg->addArgument(Own<Argument>(newArgumentVersion));
                         } else {
@@ -725,7 +725,7 @@ NullableVector<Atom*> getInlinedAtom(Program& program, Atom& atom) {
 
     // Try to inline each of the atom's arguments
     std::vector<Argument*> arguments = atom.getArguments();
-    for (size_t i = 0; i < arguments.size(); i++) {
+    for (std::size_t i = 0; i < arguments.size(); i++) {
         Argument* arg = arguments[i];
 
         NullableVector<Argument*> argumentVersions = getInlinedArgument(program, arg);
@@ -738,7 +738,7 @@ NullableVector<Atom*> getInlinedAtom(Program& program, Atom& atom) {
             for (Argument* newArgument : argumentVersions.getVector()) {
                 auto args = atom.getArguments();
                 VecOwn<Argument> newArgs;
-                for (size_t j = 0; j < args.size(); j++) {
+                for (std::size_t j = 0; j < args.size(); j++) {
                     if (j == i) {
                         newArgs.emplace_back(newArgument);
                     } else {
@@ -927,7 +927,7 @@ std::vector<Clause*> getInlinedClause(Program& program, const Clause& clause) {
     // If the head atoms did not need inlining, try inlining atoms nested in the body.
     if (!changed) {
         std::vector<Literal*> bodyLiterals = clause.getBodyLiterals();
-        for (size_t i = 0; i < bodyLiterals.size(); i++) {
+        for (std::size_t i = 0; i < bodyLiterals.size(); i++) {
             Literal* currLit = bodyLiterals[i];
 
             // Three possible cases when trying to inline a literal:

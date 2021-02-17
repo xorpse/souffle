@@ -219,7 +219,7 @@ private:
     bool transform(TranslationUnit& translationUnit) override;
 
     /** Provide a unique name for a positively labelled relation copy. */
-    static QualifiedName getPositiveLabel(const QualifiedName& name, size_t count);
+    static QualifiedName getPositiveLabel(const QualifiedName& name, std::size_t count);
 };
 
 /**

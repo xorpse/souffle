@@ -94,19 +94,19 @@ public:
     }
 
     /** Get attribute type */
-    const char* getAttrType(size_t idx) const override {
+    const char* getAttrType(std::size_t idx) const override {
         assert(idx < getArity() && "exceeded tuple size");
         return types[idx].c_str();
     }
 
     /** Get attribute name */
-    const char* getAttrName(size_t idx) const override {
+    const char* getAttrName(std::size_t idx) const override {
         assert(idx < getArity() && "exceeded tuple size");
         return attrNames[idx].c_str();
     }
 
     /** Get number of tuples in relation */
-    size_t size() const override {
+    std::size_t size() const override {
         return relation.size();
     }
 
@@ -136,7 +136,7 @@ protected:
             tup.rewind();
 
             // construct the tuple to return
-            for (size_t i = 0; i < ramRelationInterface->getArity(); i++) {
+            for (std::size_t i = 0; i < ramRelationInterface->getArity(); i++) {
                 switch (*(ramRelationInterface->getAttrType(i))) {
                     case 's': {
                         std::string s = ramRelationInterface->getSymbolTable().resolve((*it)[i]);

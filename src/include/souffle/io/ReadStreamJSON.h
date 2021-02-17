@@ -60,12 +60,12 @@ public:
 
 protected:
     std::istream& file;
-    size_t pos;
+    std::size_t pos;
     Json jsonSource;
     Json params;
     bool isInitialized;
     bool useObjects;
-    std::map<const std::string, const size_t> paramIndex;
+    std::map<const std::string, const std::size_t> paramIndex;
 
     Own<RamDomain[]> readNextTuple() override {
         // for some reasons we cannot initalized our json objects in constructor
@@ -92,7 +92,7 @@ protected:
                 useObjects = false;
             } else if (jsonSource[0].is_object()) {
                 useObjects = true;
-                size_t index_pos = 0;
+                std::size_t index_pos = 0;
                 for (auto param : params["relation"]["params"].array_items()) {
                     paramIndex.insert(std::make_pair(param.string_value(), index_pos));
                     index_pos++;
@@ -118,7 +118,7 @@ protected:
         const Json& jsonObj = jsonSource[pos];
         assert(jsonObj.is_array() && "the input is not json array");
         pos++;
-        for (size_t i = 0; i < typeAttributes.size(); ++i) {
+        for (std::size_t i = 0; i < typeAttributes.size(); ++i) {
             try {
                 auto&& ty = typeAttributes.at(i);
                 switch (ty[0]) {
@@ -172,9 +172,9 @@ protected:
 
         assert(source.is_array() && "the input is not json array");
         auto&& recordTypes = recordInfo["types"];
-        const size_t recordArity = recordInfo["arity"].long_value();
+        const std::size_t recordArity = recordInfo["arity"].long_value();
         std::vector<RamDomain> recordValues(recordArity);
-        for (size_t i = 0; i < recordArity; ++i) {
+        for (std::size_t i = 0; i < recordArity; ++i) {
             const std::string& recordType = recordTypes[i].string_value();
             switch (recordType[0]) {
                 case 's': {
@@ -219,7 +219,7 @@ protected:
                 if (paramIndex.find(p.first) == paramIndex.end()) {
                     throwError("invalid parameter: ", p.first);
                 }
-                size_t i = paramIndex.at(p.first);
+                std::size_t i = paramIndex.at(p.first);
                 auto&& ty = typeAttributes.at(i);
                 switch (ty[0]) {
                     case 's': {
@@ -257,9 +257,9 @@ protected:
     RamDomain readNextElementObject(const Json& source, const std::string& recordTypeName) {
         auto&& recordInfo = types["records"][recordTypeName];
         const std::string recordName = recordTypeName.substr(2);
-        std::map<const std::string, const size_t> recordIndex;
+        std::map<const std::string, const std::size_t> recordIndex;
 
-        size_t index_pos = 0;
+        std::size_t index_pos = 0;
         for (auto param : params["records"][recordName]["params"].array_items()) {
             recordIndex.insert(std::make_pair(param.string_value(), index_pos));
             index_pos++;
@@ -276,7 +276,7 @@ protected:
 
         assert(source.is_object() && "the input is not json object");
         auto&& recordTypes = recordInfo["types"];
-        const size_t recordArity = recordInfo["arity"].long_value();
+        const std::size_t recordArity = recordInfo["arity"].long_value();
         std::vector<RamDomain> recordValues(recordArity);
         recordValues.reserve(recordIndex.size());
         for (auto readParam : source.object_items()) {
@@ -284,7 +284,7 @@ protected:
             if (recordIndex.find(readParam.first) == recordIndex.end()) {
                 throwError("invalid parameter: ", readParam.first);
             }
-            size_t i = recordIndex.at(readParam.first);
+            std::size_t i = recordIndex.at(readParam.first);
             auto&& type = recordTypes[i].string_value();
             switch (type[0]) {
                 case 's': {

@@ -34,10 +34,10 @@ namespace souffle::ram {
  */
 class SubroutineArgument : public Expression {
 public:
-    SubroutineArgument(size_t number) : number(number) {}
+    SubroutineArgument(std::size_t number) : number(number) {}
 
     /** @brief Get argument */
-    size_t getArgument() const {
+    std::size_t getArgument() const {
         return number;
     }
 
@@ -56,7 +56,7 @@ protected:
     }
 
     /** Argument number */
-    const size_t number;
+    const std::size_t number;
 };
 
 }  // namespace souffle::ram

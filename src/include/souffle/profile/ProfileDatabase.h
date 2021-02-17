@@ -145,12 +145,12 @@ public:
  */
 class SizeEntry : public Entry {
 private:
-    size_t size;  // size
+    std::size_t size;  // size
 public:
-    SizeEntry(const std::string& key, size_t size) : Entry(key), size(size) {}
+    SizeEntry(const std::string& key, std::size_t size) : Entry(key), size(size) {}
 
     // get size
-    size_t getSize() const {
+    std::size_t getSize() const {
         return size;
     }
 
@@ -273,7 +273,7 @@ inline void Visitor::visit(DirectoryEntry& e) {
 
 class Counter : public Visitor {
 private:
-    size_t ctr{0};
+    std::size_t ctr{0};
     std::string key;
 
 public:
@@ -284,7 +284,7 @@ public:
             ctr += e.getSize();
         }
     }
-    size_t getCounter() const {
+    std::size_t getCounter() const {
         return ctr;
     }
 };
@@ -362,7 +362,7 @@ public:
     }
 
     // add size entry
-    void addSizeEntry(std::vector<std::string> qualifier, size_t size) {
+    void addSizeEntry(std::vector<std::string> qualifier, std::size_t size) {
         assert(qualifier.size() > 0 && "no qualifier");
         std::vector<std::string> path(qualifier.begin(), qualifier.end() - 1);
         DirectoryEntry* dir = lookupPath(path);
@@ -406,7 +406,7 @@ public:
     }
 
     // compute sum
-    size_t computeSum(const std::vector<std::string>& qualifier) {
+    std::size_t computeSum(const std::vector<std::string>& qualifier) {
         assert(qualifier.size() > 0 && "no qualifier");
         std::vector<std::string> path(qualifier.begin(), qualifier.end() - 1);
         DirectoryEntry* dir = lookupPath(path);

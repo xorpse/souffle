@@ -130,7 +130,7 @@ unsigned Synthesiser::lookupFreqIdx(const std::string& txt) {
 }
 
 /** Lookup frequency counter */
-size_t Synthesiser::lookupReadIdx(const std::string& txt) {
+std::size_t Synthesiser::lookupReadIdx(const std::string& txt) {
     std::string modifiedTxt = txt;
     std::replace(modifiedTxt.begin(), modifiedTxt.end(), '-', '.');
     static unsigned counter;
@@ -269,13 +269,13 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             std::stringstream high;
 
             // making this distinction for provenance
-            size_t realArity = rel.getArity();
-            size_t arity = rangePatternLower.size();
+            std::size_t realArity = rel.getArity();
+            std::size_t arity = rangePatternLower.size();
 
             low << "Tuple<RamDomain," << realArity << ">{{";
             high << "Tuple<RamDomain," << realArity << ">{{";
 
-            for (size_t column = 0; column < arity; column++) {
+            for (std::size_t column = 0; column < arity; column++) {
                 std::string supremum;
                 std::string infimum;
 
@@ -1863,14 +1863,14 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "_" << isa->getSearchSignature(&provExists);
 
             // parts refers to payload + rule number
-            size_t parts = arity - auxiliaryArity + 1;
+            std::size_t parts = arity - auxiliaryArity + 1;
 
             // make a copy of provExists.getValues() so we can be sure that vals is always the same vector
             // since provExists.getValues() creates a new vector on the stack each time
             auto vals = provExists.getValues();
 
             // sanity check to ensure that all payload values are specified
-            for (size_t i = 0; i < arity - auxiliaryArity; i++) {
+            for (std::size_t i = 0; i < arity - auxiliaryArity; i++) {
                 assert(!isUndefValue(vals[i]) &&
                         "ProvenanceExistenceCheck should always be specified for payload");
             }
@@ -1883,7 +1883,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             rangeBounds.second.seekp(-2, std::ios_base::end);
 
             // extra bounds for provenance height annotations
-            for (size_t i = 0; i < auxiliaryArity - 2; i++) {
+            for (std::size_t i = 0; i < auxiliaryArity - 2; i++) {
                 rangeBounds.first << ",ramBitCast<RamDomain, RamSigned>(MIN_RAM_SIGNED)";
                 rangeBounds.second << ",ramBitCast<RamDomain, RamSigned>(MAX_RAM_SIGNED)";
             }
@@ -2138,7 +2138,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 // strings
                 case FunctorOp::CAT: {
                     out << "symTable.lookup(";
-                    size_t i = 0;
+                    std::size_t i = 0;
                     while (i < args.size() - 1) {
                         out << "symTable.resolve(";
                         dispatch(*args[i], out);
@@ -2221,7 +2221,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 }
                 out << name << "(";
 
-                for (size_t i = 0; i < args.size(); i++) {
+                for (std::size_t i = 0; i < args.size(); i++) {
                     if (i > 0) {
                         out << ",";
                     }
@@ -2353,7 +2353,7 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     });
     os << "extern \"C\" {\n";
     for (const auto& f : functors) {
-        //        size_t arity = f.second.length() - 1;
+        //        std::size_t arity = f.second.length() - 1;
         const std::string& name = f.first;
 
         const auto& functorTypes = f.second;
@@ -2376,7 +2376,7 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
 
         if (stateful) {
             os << "souffle::RamDomain " << name << "(souffle::SymbolTable *, souffle::RecordTable *";
-            for (size_t i = 0; i < argsTypes.size(); i++) {
+            for (std::size_t i = 0; i < argsTypes.size(); i++) {
                 os << ",souffle::RamDomain";
             }
             os << ");\n";
@@ -2415,7 +2415,8 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
 
     // substring wrapper
     os << "private:\n";
-    os << "static inline std::string substr_wrapper(const std::string& str, size_t idx, size_t len) {\n";
+    os << "static inline std::string substr_wrapper(const std::string& str, std::size_t idx, std::size_t "
+          "len) {\n";
     os << "   std::string result; \n";
     os << "   try { result = str.substr(idx,len); } catch(...) { \n";
     os << "     std::cerr << \"warning: wrong index position provided by substr(\\\"\";\n";
@@ -2453,16 +2454,16 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
 
     if (Global::config().has("profile")) {
         os << "private:\n";
-        size_t numFreq = 0;
+        std::size_t numFreq = 0;
         visit(prog, [&](const Statement&) { numFreq++; });
-        os << "  size_t freqs[" << numFreq << "]{};\n";
-        size_t numRead = 0;
+        os << "  std::size_t freqs[" << numFreq << "]{};\n";
+        std::size_t numRead = 0;
         for (auto rel : prog.getRelations()) {
             if (!rel->isTemp()) {
                 numRead++;
             }
         }
-        os << "  size_t reads[" << numRead << "]{};\n";
+        os << "  std::size_t reads[" << numRead << "]{};\n";
     }
 
     // print relation definitions
@@ -2562,7 +2563,7 @@ std::string             inputDirectory;
 std::string             outputDirectory;
 SignalHandler*          signalHandler {SignalHandler::instance()};
 std::atomic<RamDomain>  ctr {};
-std::atomic<size_t>     iter {};
+std::atomic<std::size_t>     iter {};
 bool                    performIO = false;
 
 void runFunction(std::string  inputDirectoryArg   = "",
@@ -2592,7 +2593,7 @@ void runFunction(std::string  inputDirectoryArg   = "",
         os << "{\n"
            << R"_(Logger logger("@runtime;", 0);)_" << '\n';
         // Store count of relations
-        size_t relationCount = 0;
+        std::size_t relationCount = 0;
         for (auto rel : prog.getRelations()) {
             if (rel->getName()[0] != '@') {
                 ++relationCount;
@@ -2752,7 +2753,7 @@ void runFunction(std::string  inputDirectoryArg   = "",
         os << "void executeSubroutine(std::string name, const std::vector<RamDomain>& args, "
               "std::vector<RamDomain>& ret) override {\n";
         // subroutine number
-        size_t subroutineNum = 0;
+        std::size_t subroutineNum = 0;
         for (auto& sub : prog.getSubroutines()) {
             os << "if (name == \"" << sub.first << "\") {\n"
                << "subroutine_" << subroutineNum

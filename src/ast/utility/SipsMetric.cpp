@@ -35,7 +35,7 @@ std::vector<unsigned int> SipsMetric::getReordering(const Clause* clause) const 
     auto atoms = getBodyLiterals<Atom>(*clause);
     std::vector<unsigned int> newOrder(atoms.size());
 
-    size_t numAdded = 0;
+    std::size_t numAdded = 0;
     while (numAdded < atoms.size()) {
         // grab the index of the next atom, based on the SIPS function
         const auto& costs = evaluateCosts(atoms, bindingStore);

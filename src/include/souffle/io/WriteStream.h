@@ -89,14 +89,14 @@ protected:
         }
 
         auto&& recordTypes = recordInfo["types"];
-        const size_t recordArity = recordInfo["arity"].long_value();
+        const std::size_t recordArity = recordInfo["arity"].long_value();
 
         const RamDomain* tuplePtr = recordTable.unpack(value, recordArity);
 
         destination << "[";
 
         // print record's elements
-        for (size_t i = 0; i < recordArity; ++i) {
+        for (std::size_t i = 0; i < recordArity; ++i) {
             if (i > 0) {
                 destination << ", ";
             }
@@ -122,7 +122,7 @@ protected:
 
         assert(!adtInfo.is_null() && "Missing adt type information");
 
-        const size_t numBranches = adtInfo["arity"].long_value();
+        const std::size_t numBranches = adtInfo["arity"].long_value();
         assert(numBranches > 0);
 
         // adt is encoded in one of three possible ways:
@@ -163,7 +163,7 @@ protected:
         }
 
         // Print arguments
-        for (size_t i = 0; i < branchTypes.size(); ++i) {
+        for (std::size_t i = 0; i < branchTypes.size(); ++i) {
             if (i > 0) {
                 destination << ", ";
             }

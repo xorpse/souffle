@@ -60,9 +60,9 @@ protected:
      * @param consumed - if not nullptr: number of characters read.
      *
      */
-    RamDomain readRecord(const std::string& source, const std::string& recordTypeName, size_t pos = 0,
-            size_t* charactersRead = nullptr) {
-        const size_t initial_position = pos;
+    RamDomain readRecord(const std::string& source, const std::string& recordTypeName, std::size_t pos = 0,
+            std::size_t* charactersRead = nullptr) {
+        const std::size_t initial_position = pos;
 
         // Check if record type information are present
         auto&& recordInfo = types["records"][recordTypeName];
@@ -80,15 +80,15 @@ protected:
         }
 
         auto&& recordTypes = recordInfo["types"];
-        const size_t recordArity = recordInfo["arity"].long_value();
+        const std::size_t recordArity = recordInfo["arity"].long_value();
 
         std::vector<RamDomain> recordValues(recordArity);
 
         consumeChar(source, '[', pos);
 
-        for (size_t i = 0; i < recordArity; ++i) {
+        for (std::size_t i = 0; i < recordArity; ++i) {
             const std::string& recordType = recordTypes[i].string_value();
-            size_t consumed = 0;
+            std::size_t consumed = 0;
 
             if (i > 0) {
                 consumeChar(source, ',', pos);
@@ -132,9 +132,9 @@ protected:
         return recordTable.pack(recordValues.data(), recordValues.size());
     }
 
-    RamDomain readADT(const std::string& source, const std::string& adtName, size_t pos = 0,
-            size_t* charactersRead = nullptr) {
-        const size_t initial_position = pos;
+    RamDomain readADT(const std::string& source, const std::string& adtName, std::size_t pos = 0,
+            std::size_t* charactersRead = nullptr) {
+        const std::size_t initial_position = pos;
 
         // Branch will are encoded as one of the:
         // [branchIdx, [branchValues...]]
@@ -185,11 +185,11 @@ protected:
 
         std::vector<RamDomain> branchArgs(branchTypes.size());
 
-        for (size_t i = 0; i < branchTypes.size(); ++i) {
+        for (std::size_t i = 0; i < branchTypes.size(); ++i) {
             auto argType = branchTypes[i].string_value();
             assert(!argType.empty());
 
-            size_t consumed = 0;
+            std::size_t consumed = 0;
 
             if (i > 0) {
                 consumeChar(source, ',', pos);
@@ -249,13 +249,13 @@ protected:
      * Consume preceding whitespace.
      * TODO (darth_tytus): use std::string_view?
      */
-    std::string readAlphanumeric(const std::string& source, size_t& pos) {
+    std::string readAlphanumeric(const std::string& source, std::size_t& pos) {
         consumeWhiteSpace(source, pos);
         if (pos >= source.length()) {
             throw std::invalid_argument("Unexpected end of input");
         }
 
-        const size_t bgn = pos;
+        const std::size_t bgn = pos;
         while (pos < source.length() && std::isalnum(static_cast<unsigned char>(source[pos]))) {
             ++pos;
         }
@@ -263,9 +263,9 @@ protected:
         return source.substr(bgn, pos - bgn);
     }
 
-    std::string readUntil(const std::string& source, const std::string stopChars, const size_t pos,
-            size_t* charactersRead) {
-        size_t endOfSymbol = source.find_first_of(stopChars, pos);
+    std::string readUntil(const std::string& source, const std::string stopChars, const std::size_t pos,
+            std::size_t* charactersRead) {
+        std::size_t endOfSymbol = source.find_first_of(stopChars, pos);
 
         if (endOfSymbol == std::string::npos) {
             throw std::invalid_argument("Unexpected end of input");
@@ -279,7 +279,7 @@ protected:
     /**
      * Read past given character, consuming any preceding whitespace.
      */
-    void consumeChar(const std::string& str, char c, size_t& pos) {
+    void consumeChar(const std::string& str, char c, std::size_t& pos) {
         consumeWhiteSpace(str, pos);
         if (pos >= str.length()) {
             throw std::invalid_argument("Unexpected end of input");
@@ -295,7 +295,7 @@ protected:
     /**
      * Advance position in the string until first non-whitespace character.
      */
-    void consumeWhiteSpace(const std::string& str, size_t& pos) {
+    void consumeWhiteSpace(const std::string& str, std::size_t& pos) {
         while (pos < str.length() && std::isspace(static_cast<unsigned char>(str[pos]))) {
             ++pos;
         }

@@ -254,7 +254,7 @@ std::vector<Atom*> reorderAtoms(const std::vector<Atom*>& atoms, const std::vect
 
     // Create the result
     std::vector<Atom*> result(atoms.size());
-    for (size_t i = 0; i < atoms.size(); i++) {
+    for (std::size_t i = 0; i < atoms.size(); i++) {
         result[i] = atoms[newOrder[i]];
     }
     return result;

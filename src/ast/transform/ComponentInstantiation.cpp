@@ -369,7 +369,7 @@ ComponentContent getInstantiatedContent(Program& program, const ComponentInit& c
         // rename field types in records
         visit(node, [&](ast::RecordType& recordType) {
             auto&& fields = recordType.getFields();
-            for (size_t i = 0; i < fields.size(); i++) {
+            for (std::size_t i = 0; i < fields.size(); i++) {
                 auto& field = fields[i];
                 auto pos = typeNameMapping.find(field->getTypeName());
                 if (pos != typeNameMapping.end()) {
@@ -381,7 +381,7 @@ ComponentContent getInstantiatedContent(Program& program, const ComponentInit& c
         // rename variant types in unions
         visit(node, [&](ast::UnionType& unionType) {
             auto& variants = unionType.getTypes();
-            for (size_t i = 0; i < variants.size(); i++) {
+            for (std::size_t i = 0; i < variants.size(); i++) {
                 auto pos = typeNameMapping.find(variants[i]);
                 if (pos != typeNameMapping.end()) {
                     unionType.setType(i, pos->second);

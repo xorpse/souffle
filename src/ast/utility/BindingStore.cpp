@@ -156,8 +156,8 @@ bool BindingStore::isBound(const Argument* arg) const {
     }
 }
 
-size_t BindingStore::numBoundArguments(const Atom* atom) const {
-    size_t count = 0;
+std::size_t BindingStore::numBoundArguments(const Atom* atom) const {
+    std::size_t count = 0;
     for (const auto* arg : atom->getArguments()) {
         if (isBound(arg)) {
             count++;

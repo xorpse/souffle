@@ -62,7 +62,7 @@ TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
     // Set up clause nums
     for (const ast::Relation* rel : program->getRelations()) {
         const auto& clauses = relationDetail->getClauses(rel->getQualifiedName());
-        size_t count = 1;
+        std::size_t count = 1;
         for (const ast::Clause* clause : relationDetail->getClauses(rel->getQualifiedName())) {
             if (isFact(*clause)) {
                 clauseNums[clause] = 0;
@@ -92,7 +92,7 @@ bool TranslatorContext::isRecursiveClause(const ast::Clause* clause) const {
     return recursiveClauses->recursive(clause);
 }
 
-size_t TranslatorContext::getClauseNum(const ast::Clause* clause) const {
+std::size_t TranslatorContext::getClauseNum(const ast::Clause* clause) const {
     assert(contains(clauseNums, clause) && "clause num should exist for all clauses");
     return clauseNums.at(clause);
 }
@@ -101,11 +101,11 @@ std::string TranslatorContext::getAttributeTypeQualifier(const ast::QualifiedNam
     return getTypeQualifier(typeEnv->getType(name));
 }
 
-size_t TranslatorContext::getNumberOfSCCs() const {
+std::size_t TranslatorContext::getNumberOfSCCs() const {
     return sccGraph->getNumberOfSCCs();
 }
 
-bool TranslatorContext::isRecursiveSCC(size_t scc) const {
+bool TranslatorContext::isRecursiveSCC(std::size_t scc) const {
     return sccGraph->isRecursive(scc);
 }
 
@@ -125,7 +125,7 @@ bool TranslatorContext::hasSizeLimit(const ast::Relation* relation) const {
     return ioType->isLimitSize(relation);
 }
 
-size_t TranslatorContext::getSizeLimit(const ast::Relation* relation) const {
+std::size_t TranslatorContext::getSizeLimit(const ast::Relation* relation) const {
     assert(hasSizeLimit(relation) && "relation does not have a size limit");
     return ioType->getLimitSize(relation);
 }
@@ -134,19 +134,19 @@ const ast::Relation* TranslatorContext::getAtomRelation(const ast::Atom* atom) c
     return ast::getAtomRelation(atom, program);
 }
 
-std::set<const ast::Relation*> TranslatorContext::getRelationsInSCC(size_t scc) const {
+std::set<const ast::Relation*> TranslatorContext::getRelationsInSCC(std::size_t scc) const {
     return sccGraph->getInternalRelations(scc);
 }
 
-std::set<const ast::Relation*> TranslatorContext::getInputRelationsInSCC(size_t scc) const {
+std::set<const ast::Relation*> TranslatorContext::getInputRelationsInSCC(std::size_t scc) const {
     return sccGraph->getInternalInputRelations(scc);
 }
 
-std::set<const ast::Relation*> TranslatorContext::getOutputRelationsInSCC(size_t scc) const {
+std::set<const ast::Relation*> TranslatorContext::getOutputRelationsInSCC(std::size_t scc) const {
     return sccGraph->getInternalOutputRelations(scc);
 }
 
-std::set<const ast::Relation*> TranslatorContext::getExpiredRelations(size_t scc) const {
+std::set<const ast::Relation*> TranslatorContext::getExpiredRelations(std::size_t scc) const {
     return relationSchedule->schedule().at(scc).expired();
 }
 
@@ -162,7 +162,8 @@ TypeAttribute TranslatorContext::getFunctorReturnTypeAttribute(const ast::Functo
     return functorAnalysis->getReturnTypeAttribute(functor);
 }
 
-TypeAttribute TranslatorContext::getFunctorParamTypeAtribute(const ast::Functor& functor, size_t idx) const {
+TypeAttribute TranslatorContext::getFunctorParamTypeAtribute(
+        const ast::Functor& functor, std::size_t idx) const {
     return functorAnalysis->getParamTypeAttribute(functor, idx);
 }
 
@@ -215,7 +216,7 @@ Own<ram::Statement> TranslatorContext::translateNonRecursiveClause(const ast::Cl
 }
 
 Own<ram::Statement> TranslatorContext::translateRecursiveClause(
-        const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version) const {
+        const ast::Clause& clause, const std::set<const ast::Relation*>& scc, std::size_t version) const {
     auto clauseTranslator = Own<ClauseTranslator>(translationStrategy->createClauseTranslator(*this));
     return clauseTranslator->translateRecursiveClause(clause, scc, version);
 }

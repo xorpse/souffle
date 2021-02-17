@@ -43,7 +43,7 @@ public:
     std::vector<Attribute*> getFields() const;
 
     /** Set field type */
-    void setFieldType(size_t idx, QualifiedName type);
+    void setFieldType(std::size_t idx, QualifiedName type);
 
 protected:
     void print(std::ostream& os) const override;

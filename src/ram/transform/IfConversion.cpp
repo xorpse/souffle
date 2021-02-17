@@ -42,8 +42,8 @@ Own<Operation> IfConversionTransformer::rewriteIndexScan(const IndexScan* indexS
     // if not used, transform the IndexScan operation to an existence check
     if (tupleNotUsed) {
         // existence check is only supported for equality predicates on each attribute
-        size_t arity = indexScan->getRangePattern().first.size();
-        for (size_t i = 0; i < arity; ++i) {
+        std::size_t arity = indexScan->getRangePattern().first.size();
+        for (std::size_t i = 0; i < arity; ++i) {
             if (*(indexScan->getRangePattern().first[i]) != *(indexScan->getRangePattern().second[i])) {
                 return nullptr;
             }

@@ -338,7 +338,7 @@ bool NormaliseDatabaseTransformer::partitionIO(TranslationUnit& translationUnit)
         auto newClause = mk<Clause>(relName);
         auto newHeadAtom = newClause->getHead();
         auto newBodyAtom = mk<Atom>(newRelName);
-        for (size_t i = 0; i < rel->getArity(); i++) {
+        for (std::size_t i = 0; i < rel->getArity(); i++) {
             std::stringstream varName;
             varName << "@var" << i;
             newHeadAtom->addArgument(mk<ast::Variable>(varName.str()));
@@ -423,7 +423,7 @@ bool NormaliseDatabaseTransformer::extractIDB(TranslationUnit& translationUnit) 
 
         // Give them identical arguments
         const auto* inputRelation = getRelation(program, inputRelationName);
-        for (size_t i = 0; i < inputRelation->getArity(); i++) {
+        for (std::size_t i = 0; i < inputRelation->getArity(); i++) {
             std::stringstream var;
             var << "@query_x" << i;
             queryHead->addArgument(mk<ast::Variable>(var.str()));
@@ -444,7 +444,7 @@ bool NormaliseDatabaseTransformer::querifyOutputRelations(TranslationUnit& trans
     // Helper method to check if a relation is a single-rule output query
     auto isStrictlyOutput = [&](const Relation* rel) {
         bool strictlyOutput = true;
-        size_t ruleCount = 0;
+        std::size_t ruleCount = 0;
 
         for (const auto* clause : program.getClauses()) {
             // Check if the relation is used in the body of any rules
@@ -498,7 +498,7 @@ bool NormaliseDatabaseTransformer::querifyOutputRelations(TranslationUnit& trans
 
         // Give them identical arguments
         const auto* outputRelation = getRelation(program, outputRelationName);
-        for (size_t i = 0; i < outputRelation->getArity(); i++) {
+        for (std::size_t i = 0; i < outputRelation->getArity(); i++) {
             std::stringstream var;
             var << "@query_x" << i;
             queryHead->addArgument(mk<ast::Variable>(var.str()));
@@ -637,7 +637,7 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
      *
      * Therefore, bound head atom vars should be marked as weakly bound.
      */
-    for (size_t i = 0; i < adornmentMarker.length(); i++) {
+    for (std::size_t i = 0; i < adornmentMarker.length(); i++) {
         const auto* var = as<ast::Variable>(headArgs[i]);
         assert(var != nullptr && "expected only variables in head");
         if (adornmentMarker[i] == 'b') {
@@ -773,7 +773,7 @@ QualifiedName NegativeLabellingTransformer::getNegativeLabel(const QualifiedName
     return newName;
 }
 
-QualifiedName PositiveLabellingTransformer::getPositiveLabel(const QualifiedName& name, size_t count) {
+QualifiedName PositiveLabellingTransformer::getPositiveLabel(const QualifiedName& name, std::size_t count) {
     std::stringstream label;
     label << "@poscopy_" << count;
     QualifiedName labelledName(name);
@@ -815,7 +815,7 @@ bool NegativeLabellingTransformer::transform(TranslationUnit& translationUnit) {
     });
 
     // Copy over the rules for labelled relations one stratum at a time
-    for (size_t stratum = 0; stratum < sccGraph.getNumberOfSCCs(); stratum++) {
+    for (std::size_t stratum = 0; stratum < sccGraph.getNumberOfSCCs(); stratum++) {
         // Check which relations to label in this stratum
         const auto& stratumRels = sccGraph.getInternalRelations(stratum);
         std::map<QualifiedName, QualifiedName> newSccFriendNames;
@@ -861,10 +861,10 @@ bool PositiveLabellingTransformer::transform(TranslationUnit& translationUnit) {
     const auto& relationsToNotLabel = getRelationsToNotLabel(translationUnit);
 
     // Partition the strata into neglabelled and regular
-    std::set<size_t> neglabelledStrata;
-    std::map<size_t, size_t> originalStrataCopyCount;
-    for (size_t stratum = 0; stratum < sccGraph.getNumberOfSCCs(); stratum++) {
-        size_t numNeggedRelations = 0;
+    std::set<std::size_t> neglabelledStrata;
+    std::map<std::size_t, std::size_t> originalStrataCopyCount;
+    for (std::size_t stratum = 0; stratum < sccGraph.getNumberOfSCCs(); stratum++) {
+        std::size_t numNeggedRelations = 0;
         const auto& stratumRels = sccGraph.getInternalRelations(stratum);
 
         // Count how many relations in this node are neglabelled
@@ -887,12 +887,12 @@ bool PositiveLabellingTransformer::transform(TranslationUnit& translationUnit) {
 
     // Keep track of strata that depend on each stratum
     // e.g. T in dependentStrata[S] iff a relation in T depends on a relation in S
-    std::map<size_t, std::set<size_t>> dependentStrata;
-    for (size_t stratum = 0; stratum < sccGraph.getNumberOfSCCs(); stratum++) {
-        dependentStrata[stratum] = std::set<size_t>();
+    std::map<std::size_t, std::set<std::size_t>> dependentStrata;
+    for (std::size_t stratum = 0; stratum < sccGraph.getNumberOfSCCs(); stratum++) {
+        dependentStrata[stratum] = std::set<std::size_t>();
     }
     for (const auto* rel : program.getRelations()) {
-        size_t stratum = sccGraph.getSCC(rel);
+        std::size_t stratum = sccGraph.getSCC(rel);
         precedenceGraph.visit(rel, [&](const auto* dependentRel) {
             dependentStrata[stratum].insert(sccGraph.getSCC(dependentRel));
         });
@@ -900,7 +900,7 @@ bool PositiveLabellingTransformer::transform(TranslationUnit& translationUnit) {
 
     // Label the positive derived literals in the clauses of neglabelled relations
     // Need a new copy of those relations up to that point for each
-    for (size_t stratum = 0; stratum < sccGraph.getNumberOfSCCs(); stratum++) {
+    for (std::size_t stratum = 0; stratum < sccGraph.getNumberOfSCCs(); stratum++) {
         if (!contains(neglabelledStrata, stratum)) continue;
 
         // Rename in the current stratum
@@ -924,8 +924,8 @@ bool PositiveLabellingTransformer::transform(TranslationUnit& translationUnit) {
             for (auto* clause : clauses) {
                 std::map<QualifiedName, QualifiedName> labelledNames;
                 for (const auto& relName : relsToCopy) {
-                    size_t relStratum = sccGraph.getSCC(getRelation(program, relName));
-                    size_t copyCount = originalStrataCopyCount.at(relStratum) + 1;
+                    std::size_t relStratum = sccGraph.getSCC(getRelation(program, relName));
+                    std::size_t copyCount = originalStrataCopyCount.at(relStratum) + 1;
                     labelledNames[relName] = getPositiveLabel(relName, copyCount);
                 }
                 renameAtoms(*clause, labelledNames);
@@ -946,8 +946,8 @@ bool PositiveLabellingTransformer::transform(TranslationUnit& translationUnit) {
                     visit(*clause, [&](const Atom& atom) {
                         const auto& relName = atom.getQualifiedName();
                         if (contains(relationsToNotLabel, relName) || isNegativelyLabelled(relName)) return;
-                        size_t relStratum = sccGraph.getSCC(getRelation(program, relName));
-                        size_t copyCount = originalStrataCopyCount.at(relStratum) + 1;
+                        std::size_t relStratum = sccGraph.getSCC(getRelation(program, relName));
+                        std::size_t copyCount = originalStrataCopyCount.at(relStratum) + 1;
                         labelledNames[relName] = getPositiveLabel(relName, copyCount);
                     });
 
@@ -966,7 +966,7 @@ bool PositiveLabellingTransformer::transform(TranslationUnit& translationUnit) {
     bool changed = false;
     for (const auto& [stratum, numCopies] : originalStrataCopyCount) {
         const auto& stratumRels = sccGraph.getInternalRelations(stratum);
-        for (size_t copy = 0; copy < numCopies; copy++) {
+        for (std::size_t copy = 0; copy < numCopies; copy++) {
             for (auto* rel : stratumRels) {
                 auto newRelation = souffle::clone(rel);
                 newRelation->setQualifiedName(getPositiveLabel(newRelation->getQualifiedName(), copy + 1));
@@ -987,7 +987,7 @@ bool MagicSetCoreTransformer::isAdorned(const QualifiedName& name) {
 
     // Pattern: {[bf]*}
     if (finalQualifier[0] == '{' && finalQualifier[finalQualifier.length() - 1] == '}') {
-        for (size_t i = 1; i < finalQualifier.length() - 1; i++) {
+        for (std::size_t i = 1; i < finalQualifier.length() - 1; i++) {
             char curBindingType = finalQualifier[i];
             if (curBindingType != 'b' && curBindingType != 'f') {
                 return false;
@@ -1003,7 +1003,7 @@ std::string MagicSetCoreTransformer::getAdornment(const QualifiedName& name) {
     auto qualifiers = name.getQualifiers();
     auto finalQualifier = qualifiers[qualifiers.size() - 1];
     std::stringstream binding;
-    for (size_t i = 1; i < finalQualifier.length() - 1; i++) {
+    for (std::size_t i = 1; i < finalQualifier.length() - 1; i++) {
         binding << finalQualifier[i];
     }
     return binding.str();
@@ -1023,7 +1023,7 @@ Own<Atom> MagicSetCoreTransformer::createMagicAtom(const Atom* atom) {
     auto magicAtom = mk<Atom>(getMagicName(origRelName));
 
     auto adornmentMarker = getAdornment(origRelName);
-    for (size_t i = 0; i < args.size(); i++) {
+    for (std::size_t i = 0; i < args.size(); i++) {
         if (adornmentMarker[i] == 'b') {
             magicAtom->addArgument(souffle::clone(args[i]));
         }
@@ -1192,7 +1192,7 @@ bool MagicSetCoreTransformer::transform(TranslationUnit& translationUnit) {
         auto magicRelation = mk<Relation>(getMagicName(origName));
         auto attributes = getRelation(program, origName)->getAttributes();
         auto adornmentMarker = getAdornment(origName);
-        for (size_t i = 0; i < attributes.size(); i++) {
+        for (std::size_t i = 0; i < attributes.size(); i++) {
             if (adornmentMarker[i] == 'b') {
                 magicRelation->addAttribute(souffle::clone(attributes[i]));
             }

@@ -268,7 +268,7 @@ int main(int argc, char** argv) {
         if (Global::config().has("pragma")) {
             std::vector<std::string> configOptions = splitString(Global::config().get("pragma"), ';');
             for (const std::string& option : configOptions) {
-                size_t splitPoint = option.find(':');
+                std::size_t splitPoint = option.find(':');
 
                 std::string optionName = option.substr(0, splitPoint);
                 std::string optionValue = (splitPoint == std::string::npos)

@@ -48,12 +48,12 @@ private:
     std::deque<std::string> numToStr;
 
     /** Map strings to indices. */
-    std::unordered_map<std::string, size_t> strToNum;
+    std::unordered_map<std::string, std::size_t> strToNum;
 
     /** Convenience method to place a new symbol in the table, if it does not exist, and return the index of
      * it. */
-    inline size_t newSymbolOfIndex(const std::string& symbol) {
-        size_t index;
+    inline std::size_t newSymbolOfIndex(const std::string& symbol) {
+        std::size_t index;
         auto it = strToNum.find(symbol);
         if (it == strToNum.end()) {
             index = numToStr.size();
@@ -149,7 +149,7 @@ public:
         {
             auto lease = access.acquire();
             (void)lease;  // avoid warning;
-            auto pos = static_cast<size_t>(index);
+            auto pos = static_cast<std::size_t>(index);
             if (pos >= size()) {
                 // TODO: use different error reporting here!!
                 fatal("Error index out of bounds in call to `SymbolTable::resolve`. index = `%d`", index);
@@ -159,11 +159,11 @@ public:
     }
 
     const std::string& unsafeResolve(const RamDomain index) const {
-        return numToStr[static_cast<size_t>(index)];
+        return numToStr[static_cast<std::size_t>(index)];
     }
 
     /* Return the size of the symbol table, being the number of symbols it currently holds. */
-    size_t size() const {
+    std::size_t size() const {
         return numToStr.size();
     }
 
@@ -221,7 +221,7 @@ public:
     bool contains(const RamDomain index) const {
         auto lease = access.acquire();
         (void)lease;  // avoid warning;
-        auto pos = static_cast<size_t>(index);
+        auto pos = static_cast<std::size_t>(index);
         if (pos >= size()) {
             return false;
         } else {

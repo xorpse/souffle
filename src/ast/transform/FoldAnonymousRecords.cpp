@@ -85,7 +85,7 @@ VecOwn<Literal> FoldAnonymousRecords::expandRecordBinaryConstraint(const BinaryC
     assert(leftChildren.size() == rightChildren.size());
 
     // [a, b..] = [c, d...] → a = c, b = d ...
-    for (size_t i = 0; i < leftChildren.size(); ++i) {
+    for (std::size_t i = 0; i < leftChildren.size(); ++i) {
         auto newConstraint = mk<BinaryConstraint>(constraint.getBaseOperator(),
                 souffle::clone(leftChildren[i]), souffle::clone(rightChildren[i]));
         replacedContraint.push_back(std::move(newConstraint));

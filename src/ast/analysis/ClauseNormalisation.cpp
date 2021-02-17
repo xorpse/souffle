@@ -113,7 +113,7 @@ std::string NormalisedClause::normaliseArgument(const Argument* arg) {
         variables.insert(name);
         return name;
     } else if (as<UnnamedVariable>(arg)) {
-        static size_t countUnnamed = 0;
+        static std::size_t countUnnamed = 0;
         std::stringstream name;
         name << "@min:unnamed:" << countUnnamed++;
         variables.insert(name.str());
@@ -169,7 +169,7 @@ void ClauseNormalisationAnalysis::print(std::ostream& os) const {
     for (const auto& [clause, norm] : normalisations) {
         os << "Normalise(" << *clause << ") = {";
         const auto& els = norm.getElements();
-        for (size_t i = 0; i < els.size(); i++) {
+        for (std::size_t i = 0; i < els.size(); i++) {
             if (i != 0) {
                 os << ", ";
             }

@@ -81,7 +81,7 @@ std::string ClauseTranslator::getClauseString(const ast::Clause& clause) const {
     const auto& cloneAtoms = ast::getBodyLiterals<ast::Atom>(*renamedClone);
     const auto& originalAtoms = ast::getBodyLiterals<ast::Atom>(clause);
     assert(originalAtoms.size() == cloneAtoms.size() && "clone should have same atoms");
-    for (size_t i = 0; i < cloneAtoms.size(); i++) {
+    for (std::size_t i = 0; i < cloneAtoms.size(); i++) {
         auto cloneAtom = cloneAtoms.at(i);
         const auto* originalAtom = originalAtoms.at(i);
         assert(originalAtom->getQualifiedName() == cloneAtom->getQualifiedName() &&
@@ -93,7 +93,7 @@ std::string ClauseTranslator::getClauseString(const ast::Clause& clause) const {
 }
 
 Own<ram::Statement> ClauseTranslator::translateRecursiveClause(
-        const ast::Clause& clause, const std::set<const ast::Relation*>& scc, size_t version) {
+        const ast::Clause& clause, const std::set<const ast::Relation*>& scc, std::size_t version) {
     // Update version config
     sccAtoms = filter(ast::getBodyLiterals<ast::Atom>(clause),
             [&](const ast::Atom* atom) { return contains(scc, context.getAtomRelation(atom)); });
@@ -310,7 +310,7 @@ Own<ram::Operation> ClauseTranslator::addVariableIntroductions(
 
 Own<ram::Operation> ClauseTranslator::instantiateAggregator(
         Own<ram::Operation> op, const ast::Clause& clause, const ast::Aggregator* agg, int curLevel) const {
-    auto addAggEqCondition = [&](Own<ram::Condition> aggr, Own<ram::Expression> value, size_t pos) {
+    auto addAggEqCondition = [&](Own<ram::Condition> aggr, Own<ram::Expression> value, std::size_t pos) {
         if (isUndefValue(value.get())) return aggr;
 
         // TODO: float type equivalence check
@@ -336,7 +336,7 @@ Own<ram::Operation> ClauseTranslator::instantiateAggregator(
     const auto* aggAtom = static_cast<const ast::Atom*>(aggBodyAtoms.at(0));
 
     const auto& aggAtomArgs = aggAtom->getArguments();
-    for (size_t i = 0; i < aggAtomArgs.size(); i++) {
+    for (std::size_t i = 0; i < aggAtomArgs.size(); i++) {
         const auto* arg = aggAtomArgs.at(i);
 
         // variable bindings are issued differently since we don't want self
@@ -387,7 +387,7 @@ Own<ram::Operation> ClauseTranslator::instantiateMultiResultFunctor(
 
 Own<ram::Operation> ClauseTranslator::addGeneratorLevels(
         Own<ram::Operation> op, const ast::Clause& clause) const {
-    size_t curLevel = operators.size() + generators.size() - 1;
+    std::size_t curLevel = operators.size() + generators.size() - 1;
     for (const auto* generator : reverse(generators)) {
         if (auto agg = as<ast::Aggregator>(generator)) {
             op = instantiateAggregator(std::move(op), clause, agg, curLevel);
@@ -403,7 +403,7 @@ Own<ram::Operation> ClauseTranslator::addGeneratorLevels(
 
 Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
         Own<ram::Operation> op, const ast::Atom* atom) const {
-    size_t arity = atom->getArity();
+    std::size_t arity = atom->getArity();
     std::string name = getDeltaRelationName(atom->getQualifiedName());
 
     if (arity == 0) {
@@ -414,7 +414,7 @@ Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
     // else, we construct the atom and create a negation
     VecOwn<ram::Expression> values;
     auto args = atom->getArguments();
-    for (size_t i = 0; i < arity; i++) {
+    for (std::size_t i = 0; i < arity; i++) {
         values.push_back(context.translateValue(*valueIndex, args[i]));
     }
 
@@ -424,7 +424,7 @@ Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
 
 Own<ram::Operation> ClauseTranslator::addNegatedAtom(
         Own<ram::Operation> op, const ast::Clause& /* clause */, const ast::Atom* atom) const {
-    size_t arity = atom->getArity();
+    std::size_t arity = atom->getArity();
     std::string name = getConcreteRelationName(atom->getQualifiedName());
 
     if (arity == 0) {
@@ -435,7 +435,7 @@ Own<ram::Operation> ClauseTranslator::addNegatedAtom(
     // else, we construct the atom and create a negation
     VecOwn<ram::Expression> values;
     auto args = atom->getArguments();
-    for (size_t i = 0; i < arity; i++) {
+    for (std::size_t i = 0; i < arity; i++) {
         values.push_back(context.translateValue(*valueIndex, args[i]));
     }
     return mk<ram::Filter>(
@@ -458,7 +458,7 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
         }
 
         // also add in prev stuff
-        for (size_t i = version + 1; i < sccAtoms.size(); i++) {
+        for (std::size_t i = version + 1; i < sccAtoms.size(); i++) {
             op = addNegatedDeltaAtom(std::move(op), sccAtoms.at(i));
         }
     }
@@ -504,8 +504,8 @@ Own<ram::Operation> ClauseTranslator::addEqualityCheck(
 }
 
 Own<ram::Operation> ClauseTranslator::addConstantConstraints(
-        size_t curLevel, const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op) const {
-    for (size_t i = 0; i < arguments.size(); i++) {
+        std::size_t curLevel, const std::vector<ast::Argument*>& arguments, Own<ram::Operation> op) const {
+    for (std::size_t i = 0; i < arguments.size(); i++) {
         const auto* argument = arguments.at(i);
         if (const auto* numericConstant = as<ast::NumericConstant>(argument)) {
             bool isFloat = context.getInferredNumericConstantType(*numericConstant) ==
@@ -560,7 +560,7 @@ Own<ram::Condition> ClauseTranslator::getFunctionalDependencies(const ast::Claus
         // Grab the necessary head arguments
         VecOwn<ram::Expression> vals;
         VecOwn<ram::Expression> valsCopy;
-        for (size_t i = 0; i < attributes.size(); ++i) {
+        for (std::size_t i = 0; i < attributes.size(); ++i) {
             const auto attribute = attributes[i];
             if (contains(keys, attribute->getName())) {
                 // If this particular source argument matches the head argument, insert it.
@@ -623,7 +623,7 @@ int ClauseTranslator::addGeneratorLevel(const ast::Argument* arg) {
 }
 
 void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::Argument*>& nodeArgs) {
-    for (size_t i = 0; i < nodeArgs.size(); i++) {
+    for (std::size_t i = 0; i < nodeArgs.size(); i++) {
         const auto& arg = nodeArgs.at(i);
 
         // check for variable references
@@ -682,7 +682,7 @@ void ClauseTranslator::indexAggregatorBody(const ast::Aggregator& agg) {
 
     // Add the variable references inside this atom
     const auto& aggAtomArgs = aggAtom->getArguments();
-    for (size_t i = 0; i < aggAtomArgs.size(); i++) {
+    for (std::size_t i = 0; i < aggAtomArgs.size(); i++) {
         const auto* arg = aggAtomArgs.at(i);
         if (const auto* var = as<ast::Variable>(arg)) {
             valueIndex->addVarReference(var->getName(), aggLoc.identifier, (int)i);

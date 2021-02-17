@@ -55,7 +55,7 @@ class SearchSignature {
 public:
     class Iterator;
 
-    explicit SearchSignature(size_t arity);
+    explicit SearchSignature(std::size_t arity);
 
     // array subscript operator
     AttributeConstraint& operator[](std::size_t pos);
@@ -68,11 +68,11 @@ public:
     // helper member functions
     bool empty() const;
     bool precedes(const SearchSignature& other) const;
-    size_t arity() const;
+    std::size_t arity() const;
 
     // create new signatures from these functions
     static SearchSignature getDelta(const SearchSignature& lhs, const SearchSignature& rhs);
-    static SearchSignature getFullSearchSignature(size_t arity);
+    static SearchSignature getFullSearchSignature(std::size_t arity);
 
     // printing
     friend std::ostream& operator<<(std::ostream& out, const SearchSignature& signature);
@@ -80,10 +80,10 @@ public:
     // hashing class
     class Hasher {
     public:
-        size_t operator()(const SearchSignature& searchSignature) const {
+        std::size_t operator()(const SearchSignature& searchSignature) const {
             std::size_t seed = searchSignature.arity();
             for (auto& constraint : searchSignature.constraints) {
-                seed ^= static_cast<size_t>(constraint) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+                seed ^= static_cast<std::size_t>(constraint) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
             }
             return seed;
         }
@@ -382,7 +382,8 @@ public:
 
 protected:
     /** @Brief maps a provided search to its corresponding lexicographical ordering **/
-    size_t map(SearchSignature cols, const OrderCollection& orders, const ChainOrderMap& chainToOrder) const {
+    std::size_t map(
+            SearchSignature cols, const OrderCollection& orders, const ChainOrderMap& chainToOrder) const {
         assert(orders.size() == chainToOrder.size() && "Order and Chain Sizes do not match!!");
 
         // find the chain which contains the search
@@ -402,7 +403,7 @@ protected:
     /** @Brief insert an index based on the delta */
     void insertIndex(LexOrder& ids, SearchSignature delta) const {
         LexOrder backlog;  // add inequalities at the end
-        for (size_t pos = 0; pos < delta.arity(); pos++) {
+        for (std::size_t pos = 0; pos < delta.arity(); pos++) {
             if (delta[pos] == AttributeConstraint::Equal) {
                 ids.push_back(pos);
             } else if (delta[pos] == AttributeConstraint::Inequal) {
