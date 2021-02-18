@@ -33,6 +33,7 @@
 #include "ast/Counter.h"
 #include "ast/FunctionalConstraint.h"
 #include "ast/Functor.h"
+#include "ast/FunctorDeclaration.h"
 #include "ast/IntrinsicFunctor.h"
 #include "ast/Literal.h"
 #include "ast/Negation.h"
@@ -107,6 +108,7 @@ struct Visitor : public souffle::Visitor<R, NodeType, Params...> {
         SOUFFLE_VISITOR_FORWARD(Relation);
         SOUFFLE_VISITOR_FORWARD(Program);
         SOUFFLE_VISITOR_FORWARD(Pragma);
+        SOUFFLE_VISITOR_FORWARD(FunctorDeclaration);
 
         // did not work ...
         fatal("unsupported type: %s", typeid(node).name());
@@ -164,5 +166,6 @@ struct Visitor : public souffle::Visitor<R, NodeType, Params...> {
     SOUFFLE_VISITOR_LINK(Clause, Node);
     SOUFFLE_VISITOR_LINK(Relation, Node);
     SOUFFLE_VISITOR_LINK(Pragma, Node);
+    SOUFFLE_VISITOR_LINK(FunctorDeclaration, Node);
 };
 }  // namespace souffle::ast
