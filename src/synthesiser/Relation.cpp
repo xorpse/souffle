@@ -772,10 +772,10 @@ void IndirectRelation::generateTypeStruct(std::ostream& out) {
         if (eqSize == arity) {
             // if lower == upper we can just do a find
             out << "if (cmp == 0) {\n";
-            out << "    auto pos = find(lower, h);\n";
-            out << "    auto fin = end();\n";
+            out << "    auto pos = ind_" << indNum << ".find(&lower, h.hints_" << indNum << "_lower);\n";
+            out << "    auto fin = ind_" << indNum << ".end();\n";
             out << "    if (pos != fin) {fin = pos; ++fin;}\n";
-            out << "    return make_range(pos, fin);\n";
+            out << "    return range<iterator_" << indNum << ">(pos, fin);\n";
             out << "}\n";
         }
         // if lower > upper then we have an empty range
