@@ -400,7 +400,7 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
 }
 
 Own<Operation> MakeIndexTransformer::rewriteAggregate(const Aggregate* agg) {
-    if (isA<True>(agg->getCondition())) {
+    if (!isA<True>(agg->getCondition())) {
         const Relation& rel = relAnalysis->lookup(agg->getRelation());
         int identifier = agg->getTupleId();
         RamPattern queryPattern;
