@@ -273,18 +273,36 @@ Own<ram::Operation> ClauseTranslator::addAdtUnpack(
     op = addEqualityCheck(std::move(op), mk<ram::TupleElement>(curLevel, 0),
             mk<ram::SignedConstant>(context.getADTBranchId(adt)), false);
 
-    // add remaining constant constraints
-    auto dummyArg = mk<ast::UnnamedVariable>();
+    auto arity = adt->getArguments().size();
+
     std::vector<ast::Argument*> branchArguments;
-    branchArguments.push_back(dummyArg.get());
+    auto dummyArg = mk<ast::UnnamedVariable>();
+
+    if (arity < 2) {
+        // only for ADT with arity less than 2 add padding for branch id
+        branchArguments.push_back(dummyArg.get());
+    }
     for (auto* arg : adt->getArguments()) {
         branchArguments.push_back(arg);
     }
-    op = addConstantConstraints(curLevel, branchArguments, std::move(op));
 
-    // add an unpack level
+    if (arity < 2) {
+        op = addConstantConstraints(curLevel, branchArguments, std::move(op));
+    } else {
+        op = addConstantConstraints(curLevel + 1, branchArguments, std::move(op));
+    }
+
     const Location& loc = valueIndex->getDefinitionPoint(*adt);
-    op = mk<ram::UnpackRecord>(std::move(op), curLevel, makeRamTupleElement(loc), branchArguments.size());
+
+    // add an unpack level for arguments if arity is great than 1
+    if (arity >= 2) {
+        op = mk<ram::UnpackRecord>(
+                std::move(op), curLevel + 1, mk<ram::TupleElement>(curLevel, 1), branchArguments.size());
+    }
+
+    // add an unpack level for main record
+    op = mk<ram::UnpackRecord>(std::move(op), curLevel, makeRamTupleElement(loc), 2);
+
     return op;
 }
 
@@ -301,6 +319,7 @@ Own<ram::Operation> ClauseTranslator::addVariableIntroductions(
         } else if (const auto* adt = as<ast::BranchInit>(curOp)) {
             // add adt arguments through an unpack
             op = addAdtUnpack(std::move(op), adt, i);
+            i--;
         } else {
             fatal("Unsupported AST node for creation of scan-level!");
         }
@@ -644,16 +663,22 @@ void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::
         if (const auto* adt = as<ast::BranchInit>(arg)) {
             valueIndex->setAdtDefinition(*adt, nodeLevel, i);
 
-            // introduce new nesting level for unpack
+            // introduce two new nesting level for unpack
+            // one might not be used if the arity is less than two
             auto unpackLevel = addOperatorLevel(adt);
+            auto argumentUnpackLevel = addOperatorLevel(adt);
 
-            auto dummyArg = mk<ast::UnnamedVariable>();
-            std::vector<ast::Argument*> arguments;
-            arguments.push_back(dummyArg.get());
-            for (auto* arg : adt->getArguments()) {
-                arguments.push_back(arg);
+            if (adt->getArguments().size() >= 2) {
+                indexNodeArguments(argumentUnpackLevel + 1, adt->getArguments());
+            } else {
+                auto dummyArg = mk<ast::UnnamedVariable>();
+                std::vector<ast::Argument*> arguments;
+                arguments.push_back(dummyArg.get());
+                for (auto* arg : adt->getArguments()) {
+                    arguments.push_back(arg);
+                }
+                indexNodeArguments(argumentUnpackLevel, arguments);
             }
-            indexNodeArguments(unpackLevel, arguments);
         }
     }
 }
