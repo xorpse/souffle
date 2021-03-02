@@ -294,7 +294,7 @@ Own<ram::Operation> ClauseTranslator::addAdtUnpack(
 
     const Location& loc = valueIndex->getDefinitionPoint(*adt);
 
-    // add an unpack level for arguments if arity is great than 1
+    // add an unpack level for arguments if arity is greater than 1
     if (arity >= 2) {
         op = mk<ram::UnpackRecord>(
                 std::move(op), curLevel + 1, mk<ram::TupleElement>(curLevel, 1), branchArguments.size());
