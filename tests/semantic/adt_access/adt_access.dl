@@ -6,7 +6,7 @@
  * - <souffle root>/licenses/SOUFFLE-UPL.txt
  */
 
-// Tests whether ADT access is working correctly 
+// Tests whether ADT access is working correctly
 
 ////////////
 // Test 1 //
@@ -18,7 +18,7 @@
 A($br1(1, 2)).
 
 .decl test1()
-test1() :- 
+test1() :-
    A($br1(1, 2)).
 
 ////////////
@@ -31,7 +31,7 @@ test1() :-
 B($br2(1)).
 
 .decl test2()
-test2() :- 
+test2() :-
    B($br2(1)).
 
 ////////////
@@ -44,12 +44,12 @@ test2() :-
 C($br3(1, 2)).
 
 .decl D(e:number,b:number)
-D(left,right) :- 
+D(left,right) :-
    C($br3(left, right)).
 
-.decl test3() 
-test3() :- 
-   D(1,2). 
+.decl test3()
+test3() :-
+   D(1,2).
 
 ////////////
 // Test 4 //
@@ -75,12 +75,12 @@ test4() :-
 .type ADT5 = br5 {} | br6 {}
 
 .decl G(x:ADT5)
-G($br5()). 
-G($br6()). 
+G($br5()).
+G($br6()).
 
-.decl test5() 
-test5() :- 
-   G($br5()), 
+.decl test5()
+test5() :-
+   G($br5()),
    G($br6()).
 
 .output test1, test2, test3, test4, test5
