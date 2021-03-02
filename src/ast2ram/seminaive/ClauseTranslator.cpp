@@ -536,6 +536,12 @@ Own<ram::Operation> ClauseTranslator::addConstantConstraints(
             auto lhs = mk<ram::TupleElement>(curLevel, i);
             auto rhs = translateConstant(*constant);
             op = addEqualityCheck(std::move(op), std::move(lhs), std::move(rhs), false);
+        } else if (const auto* adt = as<ast::BranchInit>(argument)) {
+            if (context.isADTEnum(adt)) {
+                auto lhs = mk<ram::TupleElement>(curLevel, i);
+                auto rhs = mk<ram::SignedConstant>(context.getADTBranchId(adt));
+                op = addEqualityCheck(std::move(op), std::move(lhs), std::move(rhs), false);
+            }
         }
     }
 
@@ -661,23 +667,24 @@ void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::
 
         // check for nested ADT branches
         if (const auto* adt = as<ast::BranchInit>(arg)) {
-            valueIndex->setAdtDefinition(*adt, nodeLevel, i);
+            if (!context.isADTEnum(adt)) {
+                valueIndex->setAdtDefinition(*adt, nodeLevel, i);
+                // introduce two new nesting level for unpack
+                // one might not be used if the arity is less than two
+                auto unpackLevel = addOperatorLevel(adt);
+                auto argumentUnpackLevel = addOperatorLevel(adt);
 
-            // introduce two new nesting level for unpack
-            // one might not be used if the arity is less than two
-            auto unpackLevel = addOperatorLevel(adt);
-            auto argumentUnpackLevel = addOperatorLevel(adt);
-
-            if (adt->getArguments().size() >= 2) {
-                indexNodeArguments(argumentUnpackLevel + 1, adt->getArguments());
-            } else {
-                auto dummyArg = mk<ast::UnnamedVariable>();
-                std::vector<ast::Argument*> arguments;
-                arguments.push_back(dummyArg.get());
-                for (auto* arg : adt->getArguments()) {
-                    arguments.push_back(arg);
+                if (adt->getArguments().size() >= 2) {
+                    indexNodeArguments(argumentUnpackLevel + 1, adt->getArguments());
+                } else {
+                    auto dummyArg = mk<ast::UnnamedVariable>();
+                    std::vector<ast::Argument*> arguments;
+                    arguments.push_back(dummyArg.get());
+                    for (auto* arg : adt->getArguments()) {
+                        arguments.push_back(arg);
+                    }
+                    indexNodeArguments(argumentUnpackLevel, arguments);
                 }
-                indexNodeArguments(argumentUnpackLevel, arguments);
             }
         }
     }
