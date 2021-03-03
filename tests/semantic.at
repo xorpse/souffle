@@ -129,6 +129,7 @@ m4_define([POSITIVE_TEST_SQLITE3],[
 
 ##########################################################################
 
+POSITIVE_TEST([adt_access],[semantic])
 NEGATIVE_TEST([adt_invalid_arity],[semantic])
 NEGATIVE_TEST([adt_invalid_branch],[semantic])
 NEGATIVE_TEST([agg_checks],[semantic])

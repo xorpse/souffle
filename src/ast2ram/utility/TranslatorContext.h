@@ -105,6 +105,7 @@ public:
     /** ADT methods */
     bool isADTEnum(const ast::BranchInit* adt) const;
     int getADTBranchId(const ast::BranchInit* adt) const;
+    bool isADTBranchSimple(const ast::BranchInit* adt) const;
 
     /** Polymorphic objects methods */
     ast::NumericConstant::Type getInferredNumericConstantType(const ast::NumericConstant& nc) const;
