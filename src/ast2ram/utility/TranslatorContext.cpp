@@ -210,6 +210,11 @@ int TranslatorContext::getADTBranchId(const ast::BranchInit* adt) const {
     return std::distance(std::begin(branches), iterToBranch);
 }
 
+bool TranslatorContext::isADTBranchSimple(const ast::BranchInit* adt) const {
+    std::size_t arity = adt->getArguments().size();
+    return arity <= 1;
+}
+
 Own<ram::Statement> TranslatorContext::translateNonRecursiveClause(const ast::Clause& clause) const {
     auto clauseTranslator = Own<ClauseTranslator>(translationStrategy->createClauseTranslator(*this));
     return clauseTranslator->translateNonRecursiveClause(clause);

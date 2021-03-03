@@ -278,15 +278,16 @@ Own<ram::Operation> ClauseTranslator::addAdtUnpack(
     std::vector<ast::Argument*> branchArguments;
     auto dummyArg = mk<ast::UnnamedVariable>();
 
-    if (arity < 2) {
-        // only for ADT with arity less than 2 add padding for branch id
+    if (context.isADTBranchSimple(adt)) {
+        // only for ADT with arity less than two (= simple)
+        // add padding for branch id
         branchArguments.push_back(dummyArg.get());
     }
     for (auto* arg : adt->getArguments()) {
         branchArguments.push_back(arg);
     }
 
-    if (arity < 2) {
+    if (context.isADTBranchSimple(adt)) {
         op = addConstantConstraints(curLevel, branchArguments, std::move(op));
     } else {
         op = addConstantConstraints(curLevel + 1, branchArguments, std::move(op));
@@ -295,7 +296,7 @@ Own<ram::Operation> ClauseTranslator::addAdtUnpack(
     const Location& loc = valueIndex->getDefinitionPoint(*adt);
 
     // add an unpack level for arguments if arity is greater than 1
-    if (arity >= 2) {
+    if (!context.isADTBranchSimple(adt)) {
         op = mk<ram::UnpackRecord>(
                 std::move(op), curLevel + 1, mk<ram::TupleElement>(curLevel, 1), branchArguments.size());
     }
@@ -674,9 +675,7 @@ void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::
                 auto unpackLevel = addOperatorLevel(adt);
                 auto argumentUnpackLevel = addOperatorLevel(adt);
 
-                if (adt->getArguments().size() >= 2) {
-                    indexNodeArguments(argumentUnpackLevel + 1, adt->getArguments());
-                } else {
+                if (context.isADTBranchSimple(adt)) {
                     auto dummyArg = mk<ast::UnnamedVariable>();
                     std::vector<ast::Argument*> arguments;
                     arguments.push_back(dummyArg.get());
@@ -684,6 +683,8 @@ void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::
                         arguments.push_back(arg);
                     }
                     indexNodeArguments(argumentUnpackLevel, arguments);
+                } else {
+                    indexNodeArguments(argumentUnpackLevel + 1, adt->getArguments());
                 }
             }
         }
