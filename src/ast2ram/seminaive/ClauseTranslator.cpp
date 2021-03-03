@@ -273,8 +273,6 @@ Own<ram::Operation> ClauseTranslator::addAdtUnpack(
     op = addEqualityCheck(std::move(op), mk<ram::TupleElement>(curLevel, 0),
             mk<ram::SignedConstant>(context.getADTBranchId(adt)), false);
 
-    auto arity = adt->getArguments().size();
-
     std::vector<ast::Argument*> branchArguments;
     auto dummyArg = mk<ast::UnnamedVariable>();
 
@@ -295,7 +293,7 @@ Own<ram::Operation> ClauseTranslator::addAdtUnpack(
 
     const Location& loc = valueIndex->getDefinitionPoint(*adt);
 
-    // add an unpack level for arguments if arity is greater than 1
+    // add an unpack level for complex branches
     if (!context.isADTBranchSimple(adt)) {
         op = mk<ram::UnpackRecord>(
                 std::move(op), curLevel + 1, mk<ram::TupleElement>(curLevel, 1), branchArguments.size());
