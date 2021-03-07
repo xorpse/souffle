@@ -1,6 +1,6 @@
 #!/bin/sh
 
-travis_retry() {
+retry() {
   local result=0
   local count=1
   while [ $count -le 3 ]; do
@@ -22,14 +22,14 @@ travis_retry() {
 }
 
 # Build dependencies
-travis_retry yum install -y -q autoconf automake bison clang flex gcc gcc-c++ git kernel-devel libffi-devel libtool make mcpp ncurses-devel python3 sqlite sqlite-devel sudo swig zlib-devel
+retry yum install -y -q autoconf automake bison clang flex gcc gcc-c++ git kernel-devel libffi-devel libtool make mcpp ncurses-devel python3 sqlite sqlite-devel sudo swig zlib-devel
 
 # Set up a more recent gcc that supports C++11
-travis_retry yum install -y centos-release-scl
+retry yum install -y centos-release-scl
 
 # Set up the package builder
-travis_retry yum install -y -q rpm-build ruby-devel
-travis_retry gem install --no-ri --no-rdoc rake
-travis_retry gem install --no-ri --no-rdoc fpm
+retry yum install -y -q rpm-build ruby-devel
+retry gem install --no-ri --no-rdoc rake
+retry gem install --no-ri --no-rdoc fpm
 
 fpm --version

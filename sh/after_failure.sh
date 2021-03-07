@@ -12,7 +12,7 @@
 # Author: Nic H.                                                          #
 # Date: 2016-Oct-10                                                       #
 #                                                                         #
-# Cats the contents of the first failed test case to travis's output,     #
+# Cats the contents of the first failed test case to the output,          #
 # allowing us to debug the problem.                                       #
 #=========================================================================#
 
@@ -88,7 +88,7 @@ else
     pretty_print "No test logs found"
 fi
 
-if [ "$TRAVIS_OS_NAME" == "osx" ]
+if [ `uname -a|awk {print $1}` == "Darwin" ]
 then
     pretty_print "OSX Diagnostic Reports"
     for f in ~/Library/Logs/DiagnosticReports/*; do

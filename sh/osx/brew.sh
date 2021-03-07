@@ -20,7 +20,7 @@ chmod 600 ~/.ssh/id_ed25519
 ssh-keyscan github.com > ~/.ssh/known_hosts
 
 # set up git user
-git config --global user.name "travis-deployer"
+git config --global user.name "bot-deployer"
 git config --global user.email "souffle-lang@gmail.com"
 git config --global push.default simple
 

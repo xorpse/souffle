@@ -7,7 +7,7 @@ then
     SOUFFLE_DOCKER_TAG="$(echo ${SOUFFLE_DOCKER_BASE_IMAGE} | sed 's/-base/-test/g')"
     docker build \
         --tag ${SOUFFLE_DOCKER_TAG} \
-        --file .travis/Dockerfile \
+        --file sh/Dockerfile \
         --build-arg CC="${CC}" \
         --build-arg CXX="${CXX}" \
         --build-arg SOUFFLE_CATEGORY="${SOUFFLE_CATEGORY}" \
@@ -28,5 +28,5 @@ else
         cd tests
     fi
     TESTSUITEFLAGS="-j${SOUFFLE_MAKE_JOBS}" make check -j${SOUFFLE_MAKE_JOBS} \
-        || (cd $BASEDIR && .travis/after_failure.sh && false)
+        || (cd $BASEDIR && sh/after_failure.sh && false)
 fi
