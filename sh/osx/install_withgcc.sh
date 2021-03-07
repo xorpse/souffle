@@ -6,7 +6,7 @@ set -e
 set -x
 
 # Install requirements of MAC OS X
-. .travis/osx/install.sh
+. sh/osx/install.sh
 
 rm /usr/local/include/c++ || true
 

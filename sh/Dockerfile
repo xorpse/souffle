@@ -34,4 +34,4 @@ RUN ./bootstrap
 RUN ./configure ${SOUFFLE_CONFIGURE_OPTIONS}
 RUN make -j${SOUFFLE_MAKE_JOBS}
 
-ENTRYPOINT ["./.travis/run_docker.sh", "souffle"]
+ENTRYPOINT ["./sh/run_docker.sh", "souffle"]
