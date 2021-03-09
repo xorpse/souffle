@@ -88,7 +88,7 @@ else
     pretty_print "No test logs found"
 fi
 
-if [ `uname -a|awk {print $1}` == "Darwin" ]
+if [[ "$OSTYPE" == "darwin"* ]]
 then
     pretty_print "OSX Diagnostic Reports"
     for f in ~/Library/Logs/DiagnosticReports/*; do
