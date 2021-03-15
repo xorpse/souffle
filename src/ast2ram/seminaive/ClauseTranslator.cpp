@@ -272,12 +272,13 @@ Own<ram::Operation> ClauseTranslator::addAdtUnpack(
     std::vector<ast::Argument*> branchArguments;
 
     int branchLevel;
+    // only for ADT with arity less than two (= simple)
+    // add padding for branch id
+    auto dummyArg = mk<ast::UnnamedVariable>();
+
     if (context.isADTBranchSimple(adt)) {
         // for ADT with arity < 2, we have a single level
         branchLevel = curLevel;
-        // only for ADT with arity less than two (= simple)
-        // add padding for branch id
-        auto dummyArg = mk<ast::UnnamedVariable>();
         branchArguments.push_back(dummyArg.get());
     } else {
         // for ADT with arity < 2, we have two levels of
