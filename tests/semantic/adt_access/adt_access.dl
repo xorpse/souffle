@@ -83,4 +83,28 @@ test5() :-
    G($br5()),
    G($br6()).
 
-.output test1, test2, test3, test4, test5
+////////////
+// Test 6 //
+////////////
+
+.type ADT6 =
+    A {s:symbol, a:symbol}
+  | B {s:symbol, b:symbol}
+
+.decl input2(a:symbol, b:symbol)
+input2("a","b").
+
+.decl input1(n:ADT6)
+input1($B("c","b")).
+
+.decl res(b:ADT6, a:ADT6)
+res($B(s, b), $A(s, a)) :-
+   input1($B(s, b)),
+   input2(a,b).
+
+.decl test6()
+test6() :-
+   res(_,_).
+
+
+.output test1, test2, test3, test4, test5, test6
