@@ -95,7 +95,7 @@ test5() :-
 input2("a","b").
 
 .decl input1(n:ADT6)
-input1($B("c","b")). 
+input1($B("c","b")).
 
 .decl res(b:ADT6, a:ADT6)
 res($B(s, b), $A(s, a)) :-
@@ -104,7 +104,7 @@ res($B(s, b), $A(s, a)) :-
 
 .decl test6()
 test6() :-
-   res(_,_). 
-    
+   res(_,_).
+
 
 .output test1, test2, test3, test4, test5, test6
