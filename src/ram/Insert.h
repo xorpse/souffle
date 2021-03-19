@@ -33,7 +33,7 @@
 namespace souffle::ram {
 
 /**
- * @class Insert 
+ * @class Insert
  * @brief Insert a tuple into the target relation.
  *
  * For example:
