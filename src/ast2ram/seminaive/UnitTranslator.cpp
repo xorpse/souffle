@@ -36,6 +36,7 @@
 #include "ram/Extend.h"
 #include "ram/Filter.h"
 #include "ram/IO.h"
+#include "ram/Insert.h"
 #include "ram/LogRelationTimer.h"
 #include "ram/LogSize.h"
 #include "ram/LogTimer.h"
@@ -43,7 +44,6 @@
 #include "ram/Negation.h"
 #include "ram/Parallel.h"
 #include "ram/Program.h"
-#include "ram/Project.h"
 #include "ram/Query.h"
 #include "ram/Relation.h"
 #include "ram/RelationSize.h"
@@ -187,19 +187,19 @@ Own<ram::Statement> UnitTranslator::generateMergeRelations(
         const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const {
     VecOwn<ram::Expression> values;
 
-    // Proposition - project if not empty
+    // Proposition - insert if not empty
     if (rel->getArity() == 0) {
-        auto projection = mk<ram::Project>(destRelation, std::move(values));
+        auto insertion = mk<ram::Insert>(destRelation, std::move(values));
         return mk<ram::Query>(mk<ram::Filter>(
-                mk<ram::Negation>(mk<ram::EmptinessCheck>(srcRelation)), std::move(projection)));
+                mk<ram::Negation>(mk<ram::EmptinessCheck>(srcRelation)), std::move(insertion)));
     }
 
-    // Predicate - project all values
+    // Predicate - insert all values
     for (std::size_t i = 0; i < rel->getArity(); i++) {
         values.push_back(mk<ram::TupleElement>(0, i));
     }
-    auto projection = mk<ram::Project>(destRelation, std::move(values));
-    auto stmt = mk<ram::Query>(mk<ram::Scan>(srcRelation, 0, std::move(projection)));
+    auto insertion = mk<ram::Insert>(destRelation, std::move(values));
+    auto stmt = mk<ram::Query>(mk<ram::Scan>(srcRelation, 0, std::move(insertion)));
     if (rel->getRepresentation() == RelationRepresentation::EQREL) {
         return mk<ram::Sequence>(mk<ram::Extend>(destRelation, srcRelation), std::move(stmt));
     }

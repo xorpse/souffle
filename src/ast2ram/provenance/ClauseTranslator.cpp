@@ -26,7 +26,7 @@
 #include "ram/ExistenceCheck.h"
 #include "ram/Expression.h"
 #include "ram/Filter.h"
-#include "ram/GuardedProject.h"
+#include "ram/GuardedInsert.h"
 #include "ram/IntrinsicOperator.h"
 #include "ram/Negation.h"
 #include "ram/Operation.h"
@@ -147,7 +147,7 @@ Own<ram::Operation> ClauseTranslator::addAtomScan(
     return op;
 }
 
-Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause) const {
+Own<ram::Operation> ClauseTranslator::createInsertion(const ast::Clause& clause) const {
     const auto head = clause.getHead();
     auto headRelationName = getClauseAtomName(clause, head);
 
@@ -167,11 +167,11 @@ Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause
 
     // Relations with functional dependency constraints
     if (auto guardedConditions = getFunctionalDependencies(clause)) {
-        return mk<ram::GuardedProject>(headRelationName, std::move(values), std::move(guardedConditions));
+        return mk<ram::GuardedInsert>(headRelationName, std::move(values), std::move(guardedConditions));
     }
 
     // Everything else
-    return mk<ram::Project>(headRelationName, std::move(values));
+    return mk<ram::Insert>(headRelationName, std::move(values));
 }
 
 }  // namespace souffle::ast2ram::provenance

@@ -42,6 +42,7 @@
 #include "ram/IndexAggregate.h"
 #include "ram/IndexChoice.h"
 #include "ram/IndexScan.h"
+#include "ram/Insert.h"
 #include "ram/IntrinsicOperator.h"
 #include "ram/LogRelationTimer.h"
 #include "ram/LogSize.h"
@@ -61,7 +62,6 @@
 #include "ram/ParallelIndexScan.h"
 #include "ram/ParallelScan.h"
 #include "ram/Program.h"
-#include "ram/Project.h"
 #include "ram/ProvenanceExistenceCheck.h"
 #include "ram/Query.h"
 #include "ram/Relation.h"
@@ -213,8 +213,8 @@ std::set<const ram::Relation*> Synthesiser::getReferencedRelations(const Operati
             res.insert(lookup(exists->getRelation()));
         } else if (auto provExists = as<ProvenanceExistenceCheck>(node)) {
             res.insert(lookup(provExists->getRelation()));
-        } else if (auto project = as<Project>(node)) {
-            res.insert(lookup(project->getRelation()));
+        } else if (auto insert = as<Insert>(node)) {
+            res.insert(lookup(insert->getRelation()));
         }
     });
     return res;
@@ -1632,22 +1632,22 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visit_(type_identity<GuardedProject>, const GuardedProject& guardedProject,
+        void visit_(type_identity<GuardedInsert>, const GuardedInsert& guardedInsert,
                 std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
-            const auto* rel = synthesiser.lookup(guardedProject.getRelation());
+            const auto* rel = synthesiser.lookup(guardedInsert.getRelation());
             auto arity = rel->getArity();
             auto relName = synthesiser.getRelationName(rel);
             auto ctxName = "READ_OP_CONTEXT(" + synthesiser.getOpContextName(*rel) + ")";
 
-            auto condition = guardedProject.getCondition();
+            auto condition = guardedInsert.getCondition();
             // guarded conditions
             out << "if( ";
             dispatch(*condition, out);
             out << ") {\n";
 
-            // create projected tuple
-            out << "Tuple<RamDomain," << arity << "> tuple{{" << join(guardedProject.getValues(), ",", rec)
+            // create inserted tuple
+            out << "Tuple<RamDomain," << arity << "> tuple{{" << join(guardedInsert.getValues(), ",", rec)
                 << "}};\n";
 
             // insert tuple
@@ -1660,15 +1660,15 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visit_(type_identity<Project>, const Project& project, std::ostream& out) override {
+        void visit_(type_identity<Insert>, const Insert& insert, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
-            const auto* rel = synthesiser.lookup(project.getRelation());
+            const auto* rel = synthesiser.lookup(insert.getRelation());
             auto arity = rel->getArity();
             auto relName = synthesiser.getRelationName(rel);
             auto ctxName = "READ_OP_CONTEXT(" + synthesiser.getOpContextName(*rel) + ")";
 
-            // create projected tuple
-            out << "Tuple<RamDomain," << arity << "> tuple{{" << join(project.getValues(), ",", rec)
+            // create inserted tuple
+            out << "Tuple<RamDomain," << arity << "> tuple{{" << join(insert.getValues(), ",", rec)
                 << "}};\n";
 
             // insert tuple

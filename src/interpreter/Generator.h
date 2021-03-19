@@ -46,6 +46,7 @@
 #include "ram/IndexChoice.h"
 #include "ram/IndexOperation.h"
 #include "ram/IndexScan.h"
+#include "ram/Insert.h"
 #include "ram/IntrinsicOperator.h"
 #include "ram/LogRelationTimer.h"
 #include "ram/LogSize.h"
@@ -66,7 +67,6 @@
 #include "ram/ParallelIndexScan.h"
 #include "ram/ParallelScan.h"
 #include "ram/Program.h"
-#include "ram/Project.h"
 #include "ram/ProvenanceExistenceCheck.h"
 #include "ram/Query.h"
 #include "ram/Relation.h"
@@ -198,9 +198,9 @@ public:
 
     NodePtr visit_(type_identity<ram::Filter>, const ram::Filter& filter) override;
 
-    NodePtr visit_(type_identity<ram::GuardedProject>, const ram::GuardedProject& guardedPorject) override;
+    NodePtr visit_(type_identity<ram::GuardedInsert>, const ram::GuardedInsert& guardedPorject) override;
 
-    NodePtr visit_(type_identity<ram::Project>, const ram::Project& project) override;
+    NodePtr visit_(type_identity<ram::Insert>, const ram::Insert& insert) override;
 
     NodePtr visit_(type_identity<ram::SubroutineReturn>, const ram::SubroutineReturn& ret) override;
 
@@ -327,12 +327,12 @@ private:
     SuperInstruction getExistenceSuperInstInfo(const ram::AbstractExistenceCheck& abstractExist);
 
     /**
-     * @brief Encode and return the super-instruction information about a project operation
+     * @brief Encode and return the super-instruction information about a insert operation
      *
-     * No reordering needed for projection as project can have more then one target indexes and reordering can
+     * No reordering needed for insertion as insert can have more then one target indexes and reordering can
      * only be done during runtime.
      */
-    SuperInstruction getProjectSuperInstInfo(const ram::Project& exist);
+    SuperInstruction getInsertSuperInstInfo(const ram::Insert& exist);
 
     /** Environment encoding, store a mapping from ram::Node to its operation index id. */
     std::unordered_map<const ram::Node*, std::size_t> indexTable;
