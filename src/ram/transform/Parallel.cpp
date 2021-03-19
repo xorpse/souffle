@@ -41,7 +41,7 @@ bool ParallelTransformer::parallelizeOperations(Program& program) {
             if (const Scan* scan = as<Scan>(node)) {
                 const Relation& rel = relAnalysis->lookup(scan->getRelation());
                 if (scan->getTupleId() == 0 && rel.getArity() > 0) {
-                    if (!isA<Project>(&scan->getOperation())) {
+                    if (!isA<Insert>(&scan->getOperation())) {
                         changed = true;
                         return mk<ParallelScan>(scan->getRelation(), scan->getTupleId(),
                                 souffle::clone(scan->getOperation()), scan->getProfileText());
@@ -94,10 +94,10 @@ bool ParallelTransformer::parallelizeOperations(Program& program) {
             node->apply(makeLambdaRamMapper(parallelRewriter));
             return node;
         };
-        // guardedProject cannot be parallelized
-        bool isGuardedProject = false;
-        visit(query, [&](const GuardedProject&) { isGuardedProject = true; });
-        if (isGuardedProject == false) {
+        // guardedInsert cannot be parallelized
+        bool isGuardedInsert = false;
+        visit(query, [&](const GuardedInsert&) { isGuardedInsert = true; });
+        if (isGuardedInsert == false) {
             const_cast<Query*>(&query)->apply(makeLambdaRamMapper(parallelRewriter));
         }
     });

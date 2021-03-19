@@ -58,7 +58,7 @@
 #include "ram/ParallelIndexScan.h"
 #include "ram/ParallelScan.h"
 #include "ram/Program.h"
-#include "ram/Project.h"
+#include "ram/Insert.h"
 #include "ram/ProvenanceExistenceCheck.h"
 #include "ram/Query.h"
 #include "ram/Relation.h"
@@ -1063,23 +1063,23 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
             return result;
         ESAC(Filter)
 
-#define GUARDED_PROJECT(Structure, Arity, ...)                    \
-    CASE(GuardedProject, Structure, Arity)                        \
+#define GUARDED_INSERT(Structure, Arity, ...)                    \
+    CASE(GuardedInsert, Structure, Arity)                        \
         auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
-        return evalGuardedProject(rel, shadow, ctxt);             \
-    ESAC(GuardedProject)
+        return evalGuardedInsert(rel, shadow, ctxt);             \
+    ESAC(GuardedInsert)
 
-        FOR_EACH(GUARDED_PROJECT)
-#undef GUARDED_PROJECT
+        FOR_EACH(GUARDED_INSERT)
+#undef GUARDED_INSERT
 
-#define PROJECT(Structure, Arity, ...)                            \
-    CASE(Project, Structure, Arity)                               \
+#define INSERT(Structure, Arity, ...)                            \
+    CASE(Insert, Structure, Arity)                               \
         auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
-        return evalProject(rel, shadow, ctxt);                    \
-    ESAC(Project)
+        return evalInsert(rel, shadow, ctxt);                    \
+    ESAC(Insert)
 
-        FOR_EACH(PROJECT)
-#undef PROJECT
+        FOR_EACH(INSERT)
+#undef INSERT
 
         CASE(SubroutineReturn)
             for (std::size_t i = 0; i < cur.getValues().size(); ++i) {
@@ -1694,7 +1694,7 @@ RamDomain Engine::evalIndexAggregate(
 }
 
 template <typename Rel>
-RamDomain Engine::evalProject(Rel& rel, const Project& shadow, Context& ctxt) {
+RamDomain Engine::evalInsert(Rel& rel, const Insert& shadow, Context& ctxt) {
     constexpr std::size_t Arity = Rel::Arity;
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> tuple;
@@ -1715,7 +1715,7 @@ RamDomain Engine::evalProject(Rel& rel, const Project& shadow, Context& ctxt) {
 }
 
 template <typename Rel>
-RamDomain Engine::evalGuardedProject(Rel& rel, const GuardedProject& shadow, Context& ctxt) {
+RamDomain Engine::evalGuardedInsert(Rel& rel, const GuardedInsert& shadow, Context& ctxt) {
     if (!execute(shadow.getCondition(), ctxt)) {
         return true;
     }

@@ -8,14 +8,14 @@
 
 /************************************************************************
  *
- * @file GuardedProject.h
+ * @file GuardedInsert.h
  *
  ***********************************************************************/
 
 #pragma once
 
 #include "ram/ExistenceCheck.h"
-#include "ram/Project.h"
+#include "ram/Insert.h"
 #include "ram/utility/Utils.h"
 #include "souffle/utility/MiscUtil.h"
 #include <cassert>
@@ -29,22 +29,22 @@
 namespace souffle::ram {
 
 /**
- * @class Project
- * @brief Project a result into the target relation.
+ * @class GuardedInsert 
+ * @brief GuardedInsert a result into the target relation.
  *
  * For example:
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * FOR t0 IN A
  *   ...
- *     PROJECT (t0.a, t0.b, t0.c) INTO @new_X IF (c1 /\ c2 /\ ..)
+ *     INSERT (t0.a, t0.b, t0.c) INTO @new_X IF (c1 /\ c2 /\ ..)
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * Where c1, c2 are existenceCheck.
  */
 
-class GuardedProject : public Project {
+class GuardedInsert : public Insert {
 public:
-    GuardedProject(std::string rel, VecOwn<Expression> expressions, Own<Condition> condition = mk<True>())
-            : Project(rel, std::move(expressions)), condition(std::move(condition)) {}
+    GuardedInsert(std::string rel, VecOwn<Expression> expressions, Own<Condition> condition = mk<True>())
+            : Insert(rel, std::move(expressions)), condition(std::move(condition)) {}
 
     /** @brief Get guarded condition */
     const Condition* getCondition() const {
@@ -52,18 +52,18 @@ public:
     }
 
     std::vector<const Node*> getChildNodes() const override {
-        std::vector<const Node*> res = Project::getChildNodes();
+        std::vector<const Node*> res = Insert::getChildNodes();
         res.push_back(condition.get());
         return res;
     }
 
-    Project* clone() const override {
+    GuardedInsert* clone() const override {
         VecOwn<Expression> newValues;
         for (auto& expr : expressions) {
             newValues.emplace_back(expr->clone());
         }
         Own<Condition> newCondition(condition->clone());
-        return new GuardedProject(relation, std::move(newValues), std::move(newCondition));
+        return new GuardedInsert(relation, std::move(newValues), std::move(newCondition));
     }
 
     void apply(const NodeMapper& map) override {
@@ -76,7 +76,7 @@ public:
 protected:
     void print(std::ostream& os, int tabpos) const override {
         os << times(" ", tabpos);
-        os << "PROJECT (" << join(expressions, ", ", print_deref<Own<Expression>>()) << ") INTO " << relation;
+        os << "INSERT (" << join(expressions, ", ", print_deref<Own<Expression>>()) << ") INTO " << relation;
         if (!isTrue(condition.get())) {
             os << " IF " << *condition << std::endl;
         } else {
@@ -85,7 +85,7 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = asAssert<GuardedProject>(node);
+        const auto& other = asAssert<GuardedInsert>(node);
         return relation == other.relation && equal_targets(expressions, other.expressions) &&
                equal_ptr(condition, other.condition);
     }

@@ -32,7 +32,7 @@
 #include "ram/Filter.h"
 #include "ram/LogRelationTimer.h"
 #include "ram/Negation.h"
-#include "ram/Project.h"
+#include "ram/Insert.h"
 #include "ram/Query.h"
 #include "ram/Scan.h"
 #include "ram/Sequence.h"
@@ -176,13 +176,13 @@ Own<ram::Statement> UnitTranslator::generateMergeRelations(
         const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const {
     VecOwn<ram::Expression> values;
 
-    // Predicate - project all values
+    // Predicate - insert all values
     for (std::size_t i = 0; i < rel->getArity() + 2; i++) {
         values.push_back(mk<ram::TupleElement>(0, i));
     }
 
-    auto projection = mk<ram::Project>(destRelation, std::move(values));
-    auto stmt = mk<ram::Query>(mk<ram::Scan>(srcRelation, 0, std::move(projection)));
+    auto insertion = mk<ram::Insert>(destRelation, std::move(values));
+    auto stmt = mk<ram::Query>(mk<ram::Scan>(srcRelation, 0, std::move(insertion)));
     if (rel->getRepresentation() == RelationRepresentation::EQREL) {
         return mk<ram::Sequence>(mk<ram::Extend>(destRelation, srcRelation), std::move(stmt));
     }
@@ -269,8 +269,8 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
         /* -- Finalising -- */
         // Push in the final clause
         std::string infoRelName = getInfoRelationName(clause);
-        auto factProjection = mk<ram::Project>(infoRelName, std::move(factArguments));
-        auto infoClause = mk<ram::Statement, ram::Query>(std::move(factProjection));
+        auto factInsertion = mk<ram::Insert>(infoRelName, std::move(factArguments));
+        auto infoClause = mk<ram::Statement, ram::Query>(std::move(factInsertion));
 
         // Add logging
         if (Global::config().has("profile")) {

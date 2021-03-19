@@ -8,7 +8,7 @@
 
 /************************************************************************
  *
- * @file Project.h
+ * @file Insert.h
  *
  ***********************************************************************/
 
@@ -33,19 +33,19 @@
 namespace souffle::ram {
 
 /**
- * @class Project
- * @brief Project a result into the target relation.
+ * @class Insert 
+ * @brief Insert a tuple into the target relation.
  *
  * For example:
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * FOR t0 IN A
  *   ...
- *     PROJECT (t0.a, t0.b, t0.c) INTO @new_X
+ *     INSERT (t0.a, t0.b, t0.c) INTO @new_X
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-class Project : public Operation {
+class Insert : public Operation {
 public:
-    Project(std::string rel, VecOwn<Expression> expressions)
+    Insert(std::string rel, VecOwn<Expression> expressions)
             : relation(std::move(rel)), expressions(std::move(expressions)) {
         for (auto const& expr : expressions) {
             assert(expr != nullptr && "Expression is a null-pointer");
@@ -70,12 +70,12 @@ public:
         return res;
     }
 
-    Project* clone() const override {
+    Insert* clone() const override {
         VecOwn<Expression> newValues;
         for (auto& expr : expressions) {
             newValues.emplace_back(expr->clone());
         }
-        return new Project(relation, std::move(newValues));
+        return new Insert(relation, std::move(newValues));
     }
 
     void apply(const NodeMapper& map) override {
@@ -87,19 +87,19 @@ public:
 protected:
     void print(std::ostream& os, int tabpos) const override {
         os << times(" ", tabpos);
-        os << "PROJECT (" << join(expressions, ", ", print_deref<Own<Expression>>()) << ") INTO " << relation
+        os << "INSERT (" << join(expressions, ", ", print_deref<Own<Expression>>()) << ") INTO " << relation
            << std::endl;
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = asAssert<Project>(node);
+        const auto& other = asAssert<Insert>(node);
         return relation == other.relation && equal_targets(expressions, other.expressions);
     }
 
     /** Relation name */
     std::string relation;
 
-    /* Values (expressions) for projection */
+    /* Arguments of insert operation */
     VecOwn<Expression> expressions;
 };
 

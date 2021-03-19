@@ -87,8 +87,8 @@ struct RelationWrapper;
     FOR_EACH(Expand, ParallelIndexAggregate)\
     Forward(Break)\
     Forward(Filter)\
-    FOR_EACH(Expand, GuardedProject)\
-    FOR_EACH(Expand, Project)\
+    FOR_EACH(Expand, GuardedInsert)\
+    FOR_EACH(Expand, Insert)\
     Forward(SubroutineReturn)\
     Forward(Sequence)\
     Forward(Parallel)\
@@ -253,7 +253,7 @@ protected:
 /**
  * @class SuperInstruction
  * @brief This class encodes information for a super-instruction, which is
- *        used to eliminate Number and TupleElement in index/project/existence operation.
+ *        used to eliminate Number and TupleElement in index/insert/existence operation.
  */
 class SuperInstruction {
 public:
@@ -283,7 +283,7 @@ public:
 /**
  * @class SuperOperation
  * @brief  node that utilizes the super instruction optimization should
- *        inherit from this class. E.g. ExistenceCheck, Project
+ *        inherit from this class. E.g. ExistenceCheck, Insert
  */
 class SuperOperation {
 public:
@@ -744,22 +744,22 @@ public:
 };
 
 /**
- * @class Project
+ * @class Insert
  */
-class Project : public Node, public SuperOperation, public RelationalOperation {
+class Insert : public Node, public SuperOperation, public RelationalOperation {
 public:
-    Project(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle, SuperInstruction superInst)
+    Insert(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle, SuperInstruction superInst)
             : Node(ty, sdw), SuperOperation(std::move(superInst)), RelationalOperation(relHandle) {}
 };
 
 /**
- * @class GuardedProject
+ * @class GuardedInsert
  */
-class GuardedProject : public Project, public ConditionalOperation {
+class GuardedInsert : public Insert, public ConditionalOperation {
 public:
-    GuardedProject(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle,
+    GuardedInsert(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle,
             SuperInstruction superInst, Own<Node> condition)
-            : Project(ty, sdw, relHandle, std::move(superInst)), ConditionalOperation(std::move(condition)) {}
+            : Insert(ty, sdw, relHandle, std::move(superInst)), ConditionalOperation(std::move(condition)) {}
 };
 
 /**

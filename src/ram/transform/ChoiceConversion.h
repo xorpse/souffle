@@ -34,7 +34,7 @@ namespace souffle::ram::transform {
  * If there exists Scan/IndexScan operations in the RAM, and the
  * variables are used in a subsequent Filter operation but no
  * subsequent operation in the tree (up until and including
- * the Project), the operations are rewritten to Choice/IndexChoice
+ * Insert), the operations are rewritten to Choice/IndexChoice
  * operations.
  *
  * For example,

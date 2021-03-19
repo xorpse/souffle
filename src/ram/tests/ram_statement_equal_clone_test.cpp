@@ -39,7 +39,7 @@
 #include "ram/Operation.h"
 #include "ram/Parallel.h"
 #include "ram/ParallelChoice.h"
-#include "ram/Project.h"
+#include "ram/Insert.h"
 #include "ram/Query.h"
 #include "ram/Relation.h"
 #include "ram/Scan.h"
@@ -128,19 +128,19 @@ TEST(Query, CloneAndEquals) {
     /*
      * QUERY
      *  FOR t0 IN A
-     *   PROJECT (t0.0, t0.2) INTO B
+     *   INSERT (t0.0, t0.2) INTO B
      */
     VecOwn<Expression> a_expressions;
     a_expressions.emplace_back(new TupleElement(0, 0));
     a_expressions.emplace_back(new TupleElement(0, 2));
-    auto a_project = mk<Project>("B", std::move(a_expressions));
-    auto a_scan = mk<Scan>("A", 0, std::move(a_project), "");
+    auto a_insert = mk<Insert>("B", std::move(a_expressions));
+    auto a_scan = mk<Scan>("A", 0, std::move(a_insert), "");
 
     VecOwn<Expression> b_expressions;
     b_expressions.emplace_back(new TupleElement(0, 0));
     b_expressions.emplace_back(new TupleElement(0, 2));
-    auto b_project = mk<Project>("B", std::move(b_expressions));
-    auto b_scan = mk<Scan>("A", 0, std::move(b_project), "");
+    auto b_insert = mk<Insert>("B", std::move(b_expressions));
+    auto b_scan = mk<Scan>("A", 0, std::move(b_insert), "");
 
     Query a(std::move(a_scan));
     Query b(std::move(b_scan));
@@ -230,17 +230,17 @@ TEST(Parallel, CloneAndEquals) {
      *  QUERY
      *   FOR t0 IN A
      *    IF (t0.0 > 0)
-     *     PROJECT (t0.0, t0.2) INTO B
+     *     INSERT (t0.0, t0.2) INTO B
      * END PARALLEL
      * */
 
     VecOwn<Expression> a_expressions;
     a_expressions.emplace_back(new TupleElement(0, 0));
     a_expressions.emplace_back(new TupleElement(0, 2));
-    auto a_project = mk<Project>("B", std::move(a_expressions));
+    auto a_insert = mk<Insert>("B", std::move(a_expressions));
     auto a_cond =
             mk<Filter>(mk<Constraint>(BinaryConstraintOp::GE, mk<TupleElement>(0, 0), mk<SignedConstant>(0)),
-                    std::move(a_project), "");
+                    std::move(a_insert), "");
     auto a_scan = mk<Scan>("A", 0, std::move(a_cond), "");
     auto a_query = mk<Query>(std::move(a_scan));
     Parallel a(std::move(a_query));
@@ -248,10 +248,10 @@ TEST(Parallel, CloneAndEquals) {
     VecOwn<Expression> b_expressions;
     b_expressions.emplace_back(new TupleElement(0, 0));
     b_expressions.emplace_back(new TupleElement(0, 2));
-    auto b_project = mk<Project>("B", std::move(b_expressions));
+    auto b_insert = mk<Insert>("B", std::move(b_expressions));
     auto b_cond =
             mk<Filter>(mk<Constraint>(BinaryConstraintOp::GE, mk<TupleElement>(0, 0), mk<SignedConstant>(0)),
-                    std::move(b_project), "");
+                    std::move(b_insert), "");
     auto b_scan = mk<Scan>("A", 0, std::move(b_cond), "");
     auto b_query = mk<Query>(std::move(b_scan));
     Parallel b(std::move(b_query));
@@ -272,25 +272,25 @@ TEST(Loop, CloneAndEquals) {
      *  QUERY
      *   FOR t0 IN A
      *    IF t0.0 = 4 BREAK
-     *    PROJECT (t0.0) INTO B
+     *    INSERT (t0.0) INTO B
      * END LOOP
      * */
     VecOwn<Expression> a_expressions;
     a_expressions.emplace_back(new TupleElement(0, 0));
-    auto a_project = mk<Project>("B", std::move(a_expressions));
+    auto a_insert = mk<Insert>("B", std::move(a_expressions));
     auto a_break =
             mk<Break>(mk<Constraint>(BinaryConstraintOp::EQ, mk<TupleElement>(0, 0), mk<SignedConstant>(4)),
-                    std::move(a_project), "");
+                    std::move(a_insert), "");
     auto a_scan = mk<Scan>("A", 0, std::move(a_break), "");
     auto a_query = mk<Query>(std::move(a_scan));
     Loop a(std::move(a_query));
 
     VecOwn<Expression> b_expressions;
     b_expressions.emplace_back(new TupleElement(0, 0));
-    auto b_project = mk<Project>("B", std::move(b_expressions));
+    auto b_insert = mk<Insert>("B", std::move(b_expressions));
     auto b_break =
             mk<Break>(mk<Constraint>(BinaryConstraintOp::EQ, mk<TupleElement>(0, 0), mk<SignedConstant>(4)),
-                    std::move(b_project), "");
+                    std::move(b_insert), "");
     auto b_scan = mk<Scan>("A", 0, std::move(b_break), "");
     auto b_query = mk<Query>(std::move(b_scan));
     Loop b(std::move(b_query));
@@ -362,18 +362,18 @@ TEST(DebugInfo, CloneAndEquals) {
     Relation path(
             "path", 4, 1, {"src", "dest", "a", "b"}, {"i", "i", "i", "i"}, RelationRepresentation::DEFAULT);
     /* BEGIN_DEBUG "path(x,y,1,(@level_num_0+1)) :- \n   edge(x,y,_,@level_num_0).\nin file /edge.dl
-     * [17:1-17:26];" QUERY FOR t0 IN edge IF (NOT (edge = ∅)) IF (NOT (t0.0,t0.1,⊥,⊥) ∈ path) PROJECT (t0.0,
+     * [17:1-17:26];" QUERY FOR t0 IN edge IF (NOT (edge = ∅)) IF (NOT (t0.0,t0.1,⊥,⊥) ∈ path) INSERT (t0.0,
      * t0.1, number(1), (t0.3+number(1))) INTO path END DEBUG
      * */
-    VecOwn<Expression> a_project_list;
-    a_project_list.emplace_back(new TupleElement(0, 0));
-    a_project_list.emplace_back(new TupleElement(0, 1));
-    a_project_list.emplace_back(new SignedConstant(1));
-    VecOwn<Expression> a_project_add;
-    a_project_add.emplace_back(new TupleElement(0, 3));
-    a_project_add.emplace_back(new SignedConstant(1));
-    a_project_list.emplace_back(new IntrinsicOperator(FunctorOp::ADD, std::move(a_project_add)));
-    auto a_project = mk<Project>("path", std::move(a_project_list));
+    VecOwn<Expression> a_insert_list;
+    a_insert_list.emplace_back(new TupleElement(0, 0));
+    a_insert_list.emplace_back(new TupleElement(0, 1));
+    a_insert_list.emplace_back(new SignedConstant(1));
+    VecOwn<Expression> a_insert_add;
+    a_insert_add.emplace_back(new TupleElement(0, 3));
+    a_insert_add.emplace_back(new SignedConstant(1));
+    a_insert_list.emplace_back(new IntrinsicOperator(FunctorOp::ADD, std::move(a_insert_add)));
+    auto a_insert = mk<Insert>("path", std::move(a_insert_list));
     VecOwn<Expression> a_filter1_list;
     a_filter1_list.emplace_back(new TupleElement(0, 0));
     a_filter1_list.emplace_back(new TupleElement(0, 1));
@@ -381,7 +381,7 @@ TEST(DebugInfo, CloneAndEquals) {
     a_filter1_list.emplace_back(new UndefValue);
     auto a_existence_check1 = mk<ExistenceCheck>("path", std::move(a_filter1_list));
     auto a_cond1 = mk<Negation>(std::move(a_existence_check1));
-    auto a_filter1 = mk<Filter>(std::move(a_cond1), std::move(a_project), "");
+    auto a_filter1 = mk<Filter>(std::move(a_cond1), std::move(a_insert), "");
     auto a_cond2 = mk<Negation>(mk<EmptinessCheck>("edge"));
     auto a_filter2 = mk<Filter>(std::move(a_cond2), std::move(a_filter1), "");
     auto a_scan = mk<Scan>("edge", 0, std::move(a_filter2), "");
@@ -389,15 +389,15 @@ TEST(DebugInfo, CloneAndEquals) {
     DebugInfo a(std::move(a_query),
             "path(x,y,1,(@level_num_0+1)) :- \n   edge(x,y,_,@level_num_0).\nin file /edge.dl [17:1-17:26];");
 
-    VecOwn<Expression> b_project_list;
-    b_project_list.emplace_back(new TupleElement(0, 0));
-    b_project_list.emplace_back(new TupleElement(0, 1));
-    b_project_list.emplace_back(new SignedConstant(1));
-    VecOwn<Expression> b_project_add;
-    b_project_add.emplace_back(new TupleElement(0, 3));
-    b_project_add.emplace_back(new SignedConstant(1));
-    b_project_list.emplace_back(new IntrinsicOperator(FunctorOp::ADD, std::move(b_project_add)));
-    auto b_project = mk<Project>("path", std::move(b_project_list));
+    VecOwn<Expression> b_insert_list;
+    b_insert_list.emplace_back(new TupleElement(0, 0));
+    b_insert_list.emplace_back(new TupleElement(0, 1));
+    b_insert_list.emplace_back(new SignedConstant(1));
+    VecOwn<Expression> b_insert_add;
+    b_insert_add.emplace_back(new TupleElement(0, 3));
+    b_insert_add.emplace_back(new SignedConstant(1));
+    b_insert_list.emplace_back(new IntrinsicOperator(FunctorOp::ADD, std::move(b_insert_add)));
+    auto b_insert = mk<Insert>("path", std::move(b_insert_list));
     VecOwn<Expression> b_filter1_list;
     b_filter1_list.emplace_back(new TupleElement(0, 0));
     b_filter1_list.emplace_back(new TupleElement(0, 1));
@@ -405,7 +405,7 @@ TEST(DebugInfo, CloneAndEquals) {
     b_filter1_list.emplace_back(new UndefValue);
     auto b_existence_check1 = mk<ExistenceCheck>("path", std::move(b_filter1_list));
     auto b_cond1 = mk<Negation>(std::move(b_existence_check1));
-    auto b_filter1 = mk<Filter>(std::move(b_cond1), std::move(b_project), "");
+    auto b_filter1 = mk<Filter>(std::move(b_cond1), std::move(b_insert), "");
     auto b_cond2 = mk<Negation>(mk<EmptinessCheck>("edge"));
     auto b_filter2 = mk<Filter>(std::move(b_cond2), std::move(b_filter1), "");
     auto b_scan = mk<Scan>("edge", 0, std::move(b_filter2), "");

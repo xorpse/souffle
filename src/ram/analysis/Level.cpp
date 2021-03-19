@@ -36,7 +36,7 @@
 #include "ram/NumericConstant.h"
 #include "ram/Operation.h"
 #include "ram/PackRecord.h"
-#include "ram/Project.h"
+#include "ram/Insert.h"
 #include "ram/ProvenanceExistenceCheck.h"
 #include "ram/Scan.h"
 #include "ram/StringConstant.h"
@@ -152,20 +152,20 @@ int LevelAnalysis::getLevel(const Node* node) const {
             return dispatch(b.getCondition());
         }
 
-        // guarded project
-        int visit_(type_identity<GuardedProject>, const GuardedProject& guardedProject) override {
+        // guarded insert
+        int visit_(type_identity<GuardedInsert>, const GuardedInsert& guardedInsert) override {
             int level = -1;
-            for (auto& exp : guardedProject.getValues()) {
+            for (auto& exp : guardedInsert.getValues()) {
                 level = std::max(level, dispatch(*exp));
             }
-            level = std::max(level, dispatch(*guardedProject.getCondition()));
+            level = std::max(level, dispatch(*guardedInsert.getCondition()));
             return level;
         }
 
-        // project
-        int visit_(type_identity<Project>, const Project& project) override {
+        // insert
+        int visit_(type_identity<Insert>, const Insert& insert) override {
             int level = -1;
-            for (auto& exp : project.getValues()) {
+            for (auto& exp : insert.getValues()) {
                 level = std::max(level, dispatch(*exp));
             }
             return level;

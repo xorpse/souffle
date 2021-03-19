@@ -39,7 +39,7 @@
 #include "ram/False.h"
 #include "ram/Filter.h"
 #include "ram/FloatConstant.h"
-#include "ram/GuardedProject.h"
+#include "ram/GuardedInsert.h"
 #include "ram/IO.h"
 #include "ram/IndexAggregate.h"
 #include "ram/IndexChoice.h"
@@ -66,7 +66,7 @@
 #include "ram/ParallelIndexScan.h"
 #include "ram/ParallelScan.h"
 #include "ram/Program.h"
-#include "ram/Project.h"
+#include "ram/Insert.h"
 #include "ram/ProvenanceExistenceCheck.h"
 #include "ram/Query.h"
 #include "ram/Relation.h"
@@ -140,8 +140,8 @@ struct Visitor : public souffle::Visitor<R, NodeType, Params...> {
         // Operations
         SOUFFLE_VISITOR_FORWARD(Filter);
         SOUFFLE_VISITOR_FORWARD(Break);
-        SOUFFLE_VISITOR_FORWARD(GuardedProject);
-        SOUFFLE_VISITOR_FORWARD(Project);
+        SOUFFLE_VISITOR_FORWARD(GuardedInsert);
+        SOUFFLE_VISITOR_FORWARD(Insert);
         SOUFFLE_VISITOR_FORWARD(SubroutineReturn);
         SOUFFLE_VISITOR_FORWARD(UnpackRecord);
         SOUFFLE_VISITOR_FORWARD(NestedIntrinsicOperator);
@@ -208,8 +208,8 @@ protected:
     SOUFFLE_VISITOR_LINK(Statement, Node);
 
     // -- operations --
-    SOUFFLE_VISITOR_LINK(GuardedProject, Project);
-    SOUFFLE_VISITOR_LINK(Project, Operation);
+    SOUFFLE_VISITOR_LINK(GuardedInsert, Insert);
+    SOUFFLE_VISITOR_LINK(Insert, Operation);
     SOUFFLE_VISITOR_LINK(SubroutineReturn, Operation);
     SOUFFLE_VISITOR_LINK(UnpackRecord, TupleOperation);
     SOUFFLE_VISITOR_LINK(NestedIntrinsicOperator, TupleOperation)
