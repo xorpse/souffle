@@ -41,6 +41,7 @@
 #include "ram/IndexAggregate.h"
 #include "ram/IndexChoice.h"
 #include "ram/IndexScan.h"
+#include "ram/Insert.h"
 #include "ram/IntrinsicOperator.h"
 #include "ram/LogRelationTimer.h"
 #include "ram/LogSize.h"
@@ -58,7 +59,6 @@
 #include "ram/ParallelIndexScan.h"
 #include "ram/ParallelScan.h"
 #include "ram/Program.h"
-#include "ram/Insert.h"
 #include "ram/ProvenanceExistenceCheck.h"
 #include "ram/Query.h"
 #include "ram/Relation.h"
@@ -1063,19 +1063,19 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
             return result;
         ESAC(Filter)
 
-#define GUARDED_INSERT(Structure, Arity, ...)                    \
-    CASE(GuardedInsert, Structure, Arity)                        \
+#define GUARDED_INSERT(Structure, Arity, ...)                     \
+    CASE(GuardedInsert, Structure, Arity)                         \
         auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
-        return evalGuardedInsert(rel, shadow, ctxt);             \
+        return evalGuardedInsert(rel, shadow, ctxt);              \
     ESAC(GuardedInsert)
 
         FOR_EACH(GUARDED_INSERT)
 #undef GUARDED_INSERT
 
-#define INSERT(Structure, Arity, ...)                            \
-    CASE(Insert, Structure, Arity)                               \
+#define INSERT(Structure, Arity, ...)                             \
+    CASE(Insert, Structure, Arity)                                \
         auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
-        return evalInsert(rel, shadow, ctxt);                    \
+        return evalInsert(rel, shadow, ctxt);                     \
     ESAC(Insert)
 
         FOR_EACH(INSERT)
