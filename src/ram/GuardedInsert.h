@@ -29,7 +29,7 @@
 namespace souffle::ram {
 
 /**
- * @class GuardedInsert 
+ * @class GuardedInsert
  * @brief GuardedInsert a result into the target relation.
  *
  * For example:

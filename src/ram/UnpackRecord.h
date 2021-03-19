@@ -81,7 +81,7 @@ public:
 protected:
     void print(std::ostream& os, int tabpos) const override {
         os << times(" ", tabpos);
-        os << "UNPACK t" << getTupleId() <<  " ARITY " << arity << " FROM " << *expression << "\n";
+        os << "UNPACK t" << getTupleId() << " ARITY " << arity << " FROM " << *expression << "\n";
         NestedOperation::print(os, tabpos + 1);
     }
 
