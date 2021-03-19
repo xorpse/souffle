@@ -31,6 +31,7 @@
 #include "ram/IndexAggregate.h"
 #include "ram/IndexChoice.h"
 #include "ram/IndexScan.h"
+#include "ram/Insert.h"
 #include "ram/Negation.h"
 #include "ram/Operation.h"
 #include "ram/PackRecord.h"
@@ -38,7 +39,6 @@
 #include "ram/ParallelIndexChoice.h"
 #include "ram/ParallelIndexScan.h"
 #include "ram/ParallelScan.h"
-#include "ram/Project.h"
 #include "ram/Relation.h"
 #include "ram/Scan.h"
 #include "ram/SignedConstant.h"
@@ -106,28 +106,28 @@ TEST(RamIndexScan, CloneAndEquals) {
     Relation vertex("vertex", 1, 1, {"x"}, {"i"}, RelationRepresentation::DEFAULT);
     // get vertices contain self loop
     // FOR t1 IN edge ON INDEX t1.x = t1.1 AND t1.y = ⊥
-    //  PROJECT (t1.0) INTO vertex
-    VecOwn<Expression> a_project_args;
-    a_project_args.emplace_back(new TupleElement(1, 0));
-    auto a_project = mk<Project>("vertex", std::move(a_project_args));
+    //  INSERT (t1.0) INTO vertex
+    VecOwn<Expression> a_insert_args;
+    a_insert_args.emplace_back(new TupleElement(1, 0));
+    auto a_insert = mk<Insert>("vertex", std::move(a_insert_args));
     RamPattern a_criteria;
     a_criteria.first.emplace_back(new TupleElement(1, 1));
     a_criteria.first.emplace_back(new UndefValue);
     a_criteria.second.emplace_back(new TupleElement(1, 1));
     a_criteria.second.emplace_back(new UndefValue);
 
-    IndexScan a("edge", 1, std::move(a_criteria), std::move(a_project), "IndexScan test");
+    IndexScan a("edge", 1, std::move(a_criteria), std::move(a_insert), "IndexScan test");
 
-    VecOwn<Expression> b_project_args;
-    b_project_args.emplace_back(new TupleElement(1, 0));
-    auto b_project = mk<Project>("vertex", std::move(b_project_args));
+    VecOwn<Expression> b_insert_args;
+    b_insert_args.emplace_back(new TupleElement(1, 0));
+    auto b_insert = mk<Insert>("vertex", std::move(b_insert_args));
     RamPattern b_criteria;
     b_criteria.first.emplace_back(new TupleElement(1, 1));
     b_criteria.first.emplace_back(new UndefValue);
     b_criteria.second.emplace_back(new TupleElement(1, 1));
     b_criteria.second.emplace_back(new UndefValue);
 
-    IndexScan b("edge", 1, std::move(b_criteria), std::move(b_project), "IndexScan test");
+    IndexScan b("edge", 1, std::move(b_criteria), std::move(b_insert), "IndexScan test");
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
@@ -142,30 +142,30 @@ TEST(RamParallelIndexScan, CloneAndEquals) {
     Relation new_edge("new_edge", 2, 1, {"x", "y"}, {"i", "i"}, RelationRepresentation::DEFAULT);
     // get edges direct to vertex 5
     // PARALLEL FOR t1 IN edge ON INDEX t1.x = ⊥ AND t1.y = 5
-    //  PROJECT (t1.0, t1.1) INTO new_edge
-    VecOwn<Expression> a_project_args;
-    a_project_args.emplace_back(new TupleElement(1, 0));
-    a_project_args.emplace_back(new TupleElement(1, 1));
-    auto a_project = mk<Project>("new_edge", std::move(a_project_args));
+    //  INSERT (t1.0, t1.1) INTO new_edge
+    VecOwn<Expression> a_insert_args;
+    a_insert_args.emplace_back(new TupleElement(1, 0));
+    a_insert_args.emplace_back(new TupleElement(1, 1));
+    auto a_insert = mk<Insert>("new_edge", std::move(a_insert_args));
     RamPattern a_criteria;
     a_criteria.first.emplace_back(new UndefValue);
     a_criteria.first.emplace_back(new SignedConstant(5));
     a_criteria.second.emplace_back(new UndefValue);
     a_criteria.second.emplace_back(new SignedConstant(5));
 
-    ParallelIndexScan a("edge", 1, std::move(a_criteria), std::move(a_project), "ParallelIndexScan test");
+    ParallelIndexScan a("edge", 1, std::move(a_criteria), std::move(a_insert), "ParallelIndexScan test");
 
-    VecOwn<Expression> b_project_args;
-    b_project_args.emplace_back(new TupleElement(1, 0));
-    b_project_args.emplace_back(new TupleElement(1, 1));
-    auto b_project = mk<Project>("new_edge", std::move(b_project_args));
+    VecOwn<Expression> b_insert_args;
+    b_insert_args.emplace_back(new TupleElement(1, 0));
+    b_insert_args.emplace_back(new TupleElement(1, 1));
+    auto b_insert = mk<Insert>("new_edge", std::move(b_insert_args));
     RamPattern b_criteria;
     b_criteria.first.emplace_back(new UndefValue);
     b_criteria.first.emplace_back(new SignedConstant(5));
     b_criteria.second.emplace_back(new UndefValue);
     b_criteria.second.emplace_back(new SignedConstant(5));
 
-    ParallelIndexScan b("edge", 1, std::move(b_criteria), std::move(b_project), "ParallelIndexScan test");
+    ParallelIndexScan b("edge", 1, std::move(b_criteria), std::move(b_insert), "ParallelIndexScan test");
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
@@ -475,22 +475,22 @@ TEST(RamBreak, CloneAndEquals) {
     delete c;
 }
 
-TEST(RamProject, CloneAndEquals) {
+TEST(RamInsert, CloneAndEquals) {
     Relation A("A", 2, 1, {"a", "b"}, {"i", "i"}, RelationRepresentation::DEFAULT);
-    // PROJECT (t0.1, t0.3) INTO A
+    // INSERT (t0.1, t0.3) INTO A
     VecOwn<Expression> a_args;
     a_args.emplace_back(new TupleElement(0, 1));
     a_args.emplace_back(new TupleElement(0, 3));
-    Project a("A", std::move(a_args));
+    Insert a("A", std::move(a_args));
 
     VecOwn<Expression> b_args;
     b_args.emplace_back(new TupleElement(0, 1));
     b_args.emplace_back(new TupleElement(0, 3));
-    Project b("A", std::move(b_args));
+    Insert b("A", std::move(b_args));
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    Project* c = a.clone();
+    Insert* c = a.clone();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;

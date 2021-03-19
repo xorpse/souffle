@@ -21,8 +21,8 @@
 #include "interpreter/Engine.h"
 #include "ram/Expression.h"
 #include "ram/IO.h"
+#include "ram/Insert.h"
 #include "ram/Program.h"
-#include "ram/Project.h"
 #include "ram/Query.h"
 #include "ram/Relation.h"
 #include "ram/Sequence.h"
@@ -76,7 +76,7 @@ const std::string testInterpreterStore(
     std::map<std::string, std::string> ioDirs = std::map<std::string, std::string>(dirs);
 
     Own<ram::Statement> main = mk<ram::Sequence>(
-            mk<ram::Query>(mk<ram::Project>("test", std::move(exprs))), mk<ram::IO>("test", ioDirs));
+            mk<ram::Query>(mk<ram::Insert>("test", std::move(exprs))), mk<ram::IO>("test", ioDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -266,7 +266,7 @@ TEST(IO_store, SignedChangedDelimiter) {
     }
 
     Own<ram::Statement> main = mk<ram::Sequence>(
-            mk<ram::Query>(mk<ram::Project>("test", std::move(exprs))), mk<ram::IO>("test", ioDirs));
+            mk<ram::Query>(mk<ram::Insert>("test", std::move(exprs))), mk<ram::IO>("test", ioDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
@@ -339,7 +339,7 @@ TEST(IO_store, MixedTypes) {
     exprs.push_back(mk<ram::StringConstant>("meow"));
 
     Own<ram::Statement> main = mk<ram::Sequence>(
-            mk<ram::Query>(mk<ram::Project>("test", std::move(exprs))), mk<ram::IO>("test", ioDirs));
+            mk<ram::Query>(mk<ram::Insert>("test", std::move(exprs))), mk<ram::IO>("test", ioDirs));
 
     rels.push_back(std::move(myrel));
     std::map<std::string, Own<Statement>> subs;
