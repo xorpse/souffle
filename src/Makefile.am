@@ -313,12 +313,13 @@ souffle_sources = \
         ram/False.h                                        \
         ram/Filter.h                                       \
         ram/FloatConstant.h                                \
-        ram/GuardedProject.h                               \
+        ram/GuardedInsert.h                                \
         ram/IO.h                                           \
         ram/IndexAggregate.h                               \
         ram/IndexChoice.h                                  \
         ram/IndexOperation.h                               \
         ram/IndexScan.h                                    \
+        ram/Insert.h                                       \
         ram/IntrinsicOperator.h                            \
         ram/ListStatement.h                                \
         ram/LogRelationTimer.h                             \
@@ -339,7 +340,6 @@ souffle_sources = \
         ram/ParallelIndexChoice.h                          \
         ram/ParallelIndexScan.h                            \
         ram/Program.h                                      \
-        ram/Project.h                                      \
         ram/ProvenanceExistenceCheck.h                     \
         ram/Query.h                                        \
         ram/Relation.h                                     \

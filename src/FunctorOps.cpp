@@ -218,6 +218,7 @@ const std::vector<IntrinsicFunctorInfo> FUNCTOR_INTRINSICS = {
         OP_1(ORD, Float, Signed),
         OP_1(ORD, Symbol, Signed),
         OP_1(ORD, Record, Signed),
+        OP_1(ORD, ADT, Signed),
 
         VARIADIC(CAT, Symbol),
         OP_1(STRLEN, Symbol, Signed),

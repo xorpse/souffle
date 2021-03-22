@@ -337,21 +337,21 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Filter>, const ram::Filter& fil
     return mk<Filter>(I_Filter, &filter, dispatch(filter.getCondition()), dispatch(filter.getOperation()));
 }
 
-NodePtr NodeGenerator::visit_(type_identity<ram::GuardedProject>, const ram::GuardedProject& guardedProject) {
-    SuperInstruction superOp = getProjectSuperInstInfo(guardedProject);
-    std::size_t relId = encodeRelation(guardedProject.getRelation());
+NodePtr NodeGenerator::visit_(type_identity<ram::GuardedInsert>, const ram::GuardedInsert& guardedInsert) {
+    SuperInstruction superOp = getInsertSuperInstInfo(guardedInsert);
+    std::size_t relId = encodeRelation(guardedInsert.getRelation());
     auto rel = getRelationHandle(relId);
-    NodeType type = constructNodeType("GuardedProject", lookup(guardedProject.getRelation()));
-    auto condition = guardedProject.getCondition();
-    return mk<GuardedProject>(type, &guardedProject, rel, std::move(superOp), dispatch(*condition));
+    NodeType type = constructNodeType("GuardedInsert", lookup(guardedInsert.getRelation()));
+    auto condition = guardedInsert.getCondition();
+    return mk<GuardedInsert>(type, &guardedInsert, rel, std::move(superOp), dispatch(*condition));
 }
 
-NodePtr NodeGenerator::visit_(type_identity<ram::Project>, const ram::Project& project) {
-    SuperInstruction superOp = getProjectSuperInstInfo(project);
-    std::size_t relId = encodeRelation(project.getRelation());
+NodePtr NodeGenerator::visit_(type_identity<ram::Insert>, const ram::Insert& insert) {
+    SuperInstruction superOp = getInsertSuperInstInfo(insert);
+    std::size_t relId = encodeRelation(insert.getRelation());
     auto rel = getRelationHandle(relId);
-    NodeType type = constructNodeType("Project", lookup(project.getRelation()));
-    return mk<Project>(type, &project, rel, std::move(superOp));
+    NodeType type = constructNodeType("Insert", lookup(insert.getRelation()));
+    return mk<Insert>(type, &insert, rel, std::move(superOp));
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::SubroutineReturn>, const ram::SubroutineReturn& ret) {
@@ -694,7 +694,7 @@ SuperInstruction NodeGenerator::getExistenceSuperInstInfo(const ram::AbstractExi
     return superOp;
 }
 
-SuperInstruction NodeGenerator::getProjectSuperInstInfo(const ram::Project& exist) {
+SuperInstruction NodeGenerator::getInsertSuperInstInfo(const ram::Insert& exist) {
     std::size_t arity = getArity(exist.getRelation());
     SuperInstruction superOp(arity);
     const auto& children = exist.getValues();

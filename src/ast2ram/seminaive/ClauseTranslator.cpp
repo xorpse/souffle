@@ -43,11 +43,11 @@
 #include "ram/ExistenceCheck.h"
 #include "ram/Filter.h"
 #include "ram/FloatConstant.h"
-#include "ram/GuardedProject.h"
+#include "ram/GuardedInsert.h"
+#include "ram/Insert.h"
 #include "ram/LogRelationTimer.h"
 #include "ram/Negation.h"
 #include "ram/NestedIntrinsicOperator.h"
-#include "ram/Project.h"
 #include "ram/Query.h"
 #include "ram/Scan.h"
 #include "ram/Sequence.h"
@@ -151,7 +151,7 @@ Own<ram::Statement> ClauseTranslator::createRamFactQuery(const ast::Clause& clau
     assert(!isRecursive() && "recursive clauses cannot have facts");
 
     // Create a fact statement
-    return mk<ram::Query>(createProjection(clause));
+    return mk<ram::Query>(createInsertion(clause));
 }
 
 Own<ram::Statement> ClauseTranslator::createRamRuleQuery(const ast::Clause& clause) {
@@ -162,7 +162,7 @@ Own<ram::Statement> ClauseTranslator::createRamRuleQuery(const ast::Clause& clau
     indexClause(clause);
 
     // Set up the RAM statement bottom-up
-    auto op = createProjection(clause);
+    auto op = createInsertion(clause);
     op = addVariableBindingConstraints(std::move(op));
     op = addBodyLiteralConstraints(clause, std::move(op));
     op = addGeneratorLevels(std::move(op), clause);
@@ -192,7 +192,7 @@ Own<ram::Operation> ClauseTranslator::addVariableBindingConstraints(Own<ram::Ope
     return op;
 }
 
-Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause) const {
+Own<ram::Operation> ClauseTranslator::createInsertion(const ast::Clause& clause) const {
     const auto head = clause.getHead();
     auto headRelationName = getClauseAtomName(clause, head);
 
@@ -204,16 +204,16 @@ Own<ram::Operation> ClauseTranslator::createProjection(const ast::Clause& clause
     // Propositions
     if (head->getArity() == 0) {
         return mk<ram::Filter>(mk<ram::EmptinessCheck>(headRelationName),
-                mk<ram::Project>(headRelationName, std::move(values)));
+                mk<ram::Insert>(headRelationName, std::move(values)));
     }
 
     // Relations with functional dependency constraints
     if (auto guardedConditions = getFunctionalDependencies(clause)) {
-        return mk<ram::GuardedProject>(headRelationName, std::move(values), std::move(guardedConditions));
+        return mk<ram::GuardedInsert>(headRelationName, std::move(values), std::move(guardedConditions));
     }
 
     // Everything else
-    return mk<ram::Project>(headRelationName, std::move(values));
+    return mk<ram::Insert>(headRelationName, std::move(values));
 }
 
 Own<ram::Operation> ClauseTranslator::addAtomScan(
@@ -269,38 +269,42 @@ Own<ram::Operation> ClauseTranslator::addAdtUnpack(
         Own<ram::Operation> op, const ast::BranchInit* adt, int curLevel) const {
     assert(!context.isADTEnum(adt) && "ADT enums should not be unpacked");
 
-    // set branch tag constraint
-    op = addEqualityCheck(std::move(op), mk<ram::TupleElement>(curLevel, 0),
-            mk<ram::SignedConstant>(context.getADTBranchId(adt)), false);
-
     std::vector<ast::Argument*> branchArguments;
+
+    int branchLevel;
+    // only for ADT with arity less than two (= simple)
+    // add padding for branch id
     auto dummyArg = mk<ast::UnnamedVariable>();
 
     if (context.isADTBranchSimple(adt)) {
-        // only for ADT with arity less than two (= simple)
-        // add padding for branch id
+        // for ADT with arity < 2, we have a single level
+        branchLevel = curLevel;
         branchArguments.push_back(dummyArg.get());
+    } else {
+        // for ADT with arity < 2, we have two levels of
+        // nesting, the second one being for the arguments
+        branchLevel = curLevel - 1;
     }
+
     for (auto* arg : adt->getArguments()) {
         branchArguments.push_back(arg);
     }
 
+    // set branch tag constraint
+    op = addEqualityCheck(std::move(op), mk<ram::TupleElement>(branchLevel, 0),
+            mk<ram::SignedConstant>(context.getADTBranchId(adt)), false);
+
     if (context.isADTBranchSimple(adt)) {
-        op = addConstantConstraints(curLevel, branchArguments, std::move(op));
+        op = addConstantConstraints(branchLevel, branchArguments, std::move(op));
     } else {
-        op = addConstantConstraints(curLevel + 1, branchArguments, std::move(op));
+        op = addConstantConstraints(curLevel, branchArguments, std::move(op));
+        op = mk<ram::UnpackRecord>(
+                std::move(op), curLevel, mk<ram::TupleElement>(branchLevel, 1), branchArguments.size());
     }
 
     const Location& loc = valueIndex->getDefinitionPoint(*adt);
-
-    // add an unpack level for complex branches
-    if (!context.isADTBranchSimple(adt)) {
-        op = mk<ram::UnpackRecord>(
-                std::move(op), curLevel + 1, mk<ram::TupleElement>(curLevel, 1), branchArguments.size());
-    }
-
     // add an unpack level for main record
-    op = mk<ram::UnpackRecord>(std::move(op), curLevel, makeRamTupleElement(loc), 2);
+    op = mk<ram::UnpackRecord>(std::move(op), branchLevel, makeRamTupleElement(loc), 2);
 
     return op;
 }
@@ -318,7 +322,11 @@ Own<ram::Operation> ClauseTranslator::addVariableIntroductions(
         } else if (const auto* adt = as<ast::BranchInit>(curOp)) {
             // add adt arguments through an unpack
             op = addAdtUnpack(std::move(op), adt, i);
-            i--;
+            if (!context.isADTBranchSimple(adt)) {
+                // for non-simple ADTs (arity > 1), we introduced two
+                // nesting levels
+                i--;
+            }
         } else {
             fatal("Unsupported AST node for creation of scan-level!");
         }
@@ -558,7 +566,7 @@ Own<ram::Condition> ClauseTranslator::getFunctionalDependencies(const ast::Claus
     const auto& attributes = relation->getAttributes();
     const auto& headArgs = head->getArguments();
 
-    // Impose the functional dependencies of the relation on each PROJECT
+    // Impose the functional dependencies of the relation on each INSERT
     VecOwn<ram::Condition> dependencies;
     std::vector<const ast::FunctionalConstraint*> addedConstraints;
     for (const auto* fd : relation->getFunctionalDependencies()) {
@@ -668,21 +676,19 @@ void ClauseTranslator::indexNodeArguments(int nodeLevel, const std::vector<ast::
         if (const auto* adt = as<ast::BranchInit>(arg)) {
             if (!context.isADTEnum(adt)) {
                 valueIndex->setAdtDefinition(*adt, nodeLevel, i);
-                // introduce two new nesting level for unpack
-                // one might not be used if the arity is less than two
                 auto unpackLevel = addOperatorLevel(adt);
-                auto argumentUnpackLevel = addOperatorLevel(adt);
 
                 if (context.isADTBranchSimple(adt)) {
-                    auto dummyArg = mk<ast::UnnamedVariable>();
                     std::vector<ast::Argument*> arguments;
+                    auto dummyArg = mk<ast::UnnamedVariable>();
                     arguments.push_back(dummyArg.get());
                     for (auto* arg : adt->getArguments()) {
                         arguments.push_back(arg);
                     }
-                    indexNodeArguments(argumentUnpackLevel, arguments);
+                    indexNodeArguments(unpackLevel, arguments);
                 } else {
-                    indexNodeArguments(argumentUnpackLevel + 1, adt->getArguments());
+                    auto argumentUnpackLevel = addOperatorLevel(adt);
+                    indexNodeArguments(argumentUnpackLevel, adt->getArguments());
                 }
             }
         }
