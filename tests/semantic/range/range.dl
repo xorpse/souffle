@@ -57,9 +57,8 @@ f_u(x) :- x = range(5, 5).
 f_u(x) :- x = range(5, 5, 0).
 f_u(x) :- x = range(5, 5, 1).
 
-.decl a(X:number, Y:number, Z:number)
+.decl a(x:number, y:number)
 .output a
-a(X,Y) :- X = range(0,3),
-          Y = range(0,3),
-          X < Y,
-          X + Y = 3.
+a(x,y) :-
+   x = range(1,3),
+   y = range(1,3).
