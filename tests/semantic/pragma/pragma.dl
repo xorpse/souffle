@@ -1,4 +1,3 @@
-.pragma "disable-transformers" "ResolveAliasesTransformer"
 
 .type Word <: symbol
 
@@ -7,7 +6,7 @@
 
 .input words
 
-bigram(w, w1)  :- 
+bigram(w, w1) :-
    words(i,w),
    words(i+1,w1).
 
