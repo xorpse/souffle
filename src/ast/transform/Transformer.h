@@ -33,6 +33,15 @@ public:
 
     virtual std::string getName() const = 0;
 
+    /**
+     * Transformers can be disabled by command line
+     * with --disable-transformer. Default behaviour
+     * is that all transformers can be disabled.
+     */
+    virtual bool isSwitchable() {
+        return true;
+    }
+
     Own<Transformer> clone() const {
         return Own<Transformer>(cloneImpl());
     }
