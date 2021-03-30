@@ -540,7 +540,7 @@ public:
                 if (*rel->getAttrType(i) == 's') {
                     std::string s;
                     tuple >> s;
-                    n = symTable.lookupExisting(s);
+                    n = lookupExisting(s);
                 } else if (*rel->getAttrType(i) == 'f') {
                     RamFloat element;
                     tuple >> element;
@@ -740,6 +740,17 @@ private:
     std::vector<std::string> constraintList = {
             "=", "!=", "<", "<=", ">=", ">", "match", "contains", "not_match", "not_contains"};
 
+    RamDomain lookupExisting(const std::string& symbol) {
+        // only works if run sequentially; check size of symbole
+        std::size_t before = symTable.size();
+        RamDomain idx = symTable.lookup(symbol);
+        std::size_t after = symTable.size();
+        if (before != after) {
+            fatal("Error string not found in call to `SymbolTable::lookup`: `%s`", symbol);
+        }
+        return idx;
+    }
+
     std::tuple<int, int> findTuple(const std::string& relName, std::vector<RamDomain> tup) {
         auto rel = prog.getRelation(relName);
 
@@ -757,7 +768,7 @@ private:
                 if (*rel->getAttrType(i) == 's') {
                     std::string s;
                     tuple >> s;
-                    n = symTable.lookupExisting(s);
+                    n = lookupExisting(s);
                 } else if (*rel->getAttrType(i) == 'f') {
                     RamFloat element;
                     tuple >> element;

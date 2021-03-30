@@ -74,44 +74,14 @@ private:
     }
 
 public:
-    /** Empty constructor. */
     SymbolTable() = default;
-
-    /** Copy constructor, performs a deep copy. */
-    SymbolTable(const SymbolTable& other) : numToStr(other.numToStr), strToNum(other.strToNum) {}
-
-    /** Copy constructor for r-value reference. */
-    SymbolTable(SymbolTable&& other) noexcept {
-        numToStr.swap(other.numToStr);
-        strToNum.swap(other.strToNum);
-    }
-
     SymbolTable(std::initializer_list<std::string> symbols) {
         strToNum.reserve(symbols.size());
         for (const auto& symbol : symbols) {
             newSymbol(symbol);
         }
     }
-
-    /** Destructor, frees memory allocated for all strings. */
     virtual ~SymbolTable() = default;
-
-    /** Assignment operator, performs a deep copy and frees memory allocated for all strings. */
-    SymbolTable& operator=(const SymbolTable& other) {
-        if (this == &other) {
-            return *this;
-        }
-        numToStr = other.numToStr;
-        strToNum = other.strToNum;
-        return *this;
-    }
-
-    /** Assignment operator for r-value references. */
-    SymbolTable& operator=(SymbolTable&& other) noexcept {
-        numToStr.swap(other.numToStr);
-        strToNum.swap(other.strToNum);
-        return *this;
-    }
 
     /** Find the index of a symbol in the table, inserting a new symbol if it does not exist there
      * already. */
@@ -120,19 +90,6 @@ public:
             auto lease = access.acquire();
             (void)lease;  // avoid warning;
             return static_cast<RamDomain>(newSymbolOfIndex(symbol));
-        }
-    }
-
-    /** Finds the index of a symbol in the table, giving an error if it's not found */
-    RamDomain lookupExisting(const std::string& symbol) const {
-        {
-            auto lease = access.acquire();
-            (void)lease;  // avoid warning;
-            auto result = strToNum.find(symbol);
-            if (result == strToNum.end()) {
-                fatal("Error string not found in call to `SymbolTable::lookupExisting`: `%s`", symbol);
-            }
-            return static_cast<RamDomain>(result->second);
         }
     }
 
@@ -167,76 +124,8 @@ public:
         return numToStr.size();
     }
 
-    /** Bulk insert symbols into the table, note that this operation is more efficient than repeated
-     * inserts
-     * of single symbols. */
-    void insert(const std::vector<std::string>& symbols) {
-        {
-            auto lease = access.acquire();
-            (void)lease;  // avoid warning;
-            strToNum.reserve(size() + symbols.size());
-            for (auto& symbol : symbols) {
-                newSymbol(symbol);
-            }
-        }
-    }
-
-    /** Insert a single symbol into the table, not that this operation should not be used if inserting
-     * symbols
-     * in bulk. */
-    void insert(const std::string& symbol) {
-        {
-            auto lease = access.acquire();
-            (void)lease;  // avoid warning;
-            newSymbol(symbol);
-        }
-    }
-
-    /** Print the symbol table to the given stream. */
-    void print(std::ostream& out) const {
-        {
-            out << "SymbolTable: {\n\t";
-            out << join(strToNum, "\n\t",
-                           [](std::ostream& out, const std::pair<std::string, std::size_t>& entry) {
-                               out << entry.first << "\t => " << entry.second;
-                           })
-                << "\n";
-            out << "}\n";
-        }
-    }
-
-    /** Check if the symbol table contains a string */
-    bool contains(const std::string& symbol) const {
-        auto lease = access.acquire();
-        (void)lease;  // avoid warning;
-        auto result = strToNum.find(symbol);
-        if (result == strToNum.end()) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    /** Check if the symbol table contains an index */
-    bool contains(const RamDomain index) const {
-        auto lease = access.acquire();
-        (void)lease;  // avoid warning;
-        auto pos = static_cast<std::size_t>(index);
-        if (pos >= size()) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
     Lock::Lease acquireLock() const {
         return access.acquire();
-    }
-
-    /** Stream operator, used as a convenience for print. */
-    friend std::ostream& operator<<(std::ostream& out, const SymbolTable& table) {
-        table.print(out);
-        return out;
     }
 };
 
