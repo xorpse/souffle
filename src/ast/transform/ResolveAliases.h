@@ -37,7 +37,7 @@ public:
     /**
      * ResolveAliasesTransformer cannot be disabled.
      */
-    bool isSwitchable() {
+    bool isSwitchable() override {
         return false;
     }
 
