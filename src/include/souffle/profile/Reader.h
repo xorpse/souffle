@@ -303,6 +303,7 @@ public:
             if (startTimeEntry != nullptr) {
                 run->setStarttime(startTimeEntry->getTime());
                 run->setEndtime(std::chrono::duration_cast<microseconds>(now().time_since_epoch()));
+                loaded = true;
             }
         } else {
             run->setStarttime(programDuration->getStart());
@@ -312,7 +313,8 @@ public:
 
         auto relations = as<DirectoryEntry>(db.lookupEntry({"program", "relation"}));
         if (relations == nullptr) {
-            // Souffle hasn't generated any profiling information yet.
+            // Souffle hasn't generated any profiling information yet
+            // or program is empty.
             return;
         }
         for (const auto& cur : relations->getKeys()) {
