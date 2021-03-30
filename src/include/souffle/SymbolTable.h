@@ -51,7 +51,7 @@ private:
     std::unordered_map<std::string, std::size_t> strToNum;
 
     /** Convenience method to place a new symbol in the table, if it does not exist, and return the index of
-     * it. */
+     * it; otherwise return the index. */
     inline std::size_t newSymbolOfIndex(const std::string& symbol) {
         std::size_t index;
         auto it = strToNum.find(symbol);
@@ -65,20 +65,15 @@ private:
         return index;
     }
 
-    /** Convenience method to place a new symbol in the table, if it does not exist. */
-    inline void newSymbol(const std::string& symbol) {
-        if (strToNum.find(symbol) == strToNum.end()) {
-            strToNum[symbol] = numToStr.size();
-            numToStr.push_back(symbol);
-        }
-    }
-
 public:
     SymbolTable() = default;
     SymbolTable(std::initializer_list<std::string> symbols) {
         strToNum.reserve(symbols.size());
         for (const auto& symbol : symbols) {
-            newSymbol(symbol);
+            if (strToNum.find(symbol) == strToNum.end()) {
+                strToNum[symbol] = numToStr.size();
+                numToStr.push_back(symbol);
+            }
         }
     }
     virtual ~SymbolTable() = default;
