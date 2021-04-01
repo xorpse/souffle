@@ -393,7 +393,7 @@ Own<Clause> ResolveAliasesTransformer::removeComplexTermsInAtoms(const Clause& c
     for (const Atom* atom : atoms) {
         for (const Argument* arg : atom->getArguments()) {
             // ignore if not a functor
-            if (!isA<Functor>(arg)) {
+            if (!isA<Functor>(arg) && !isA<TypeCast>(arg)) {
                 continue;
             }
 
