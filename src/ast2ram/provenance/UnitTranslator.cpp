@@ -202,6 +202,7 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
         // Argument info generator
         int functorNumber = 0;
         int aggregateNumber = 0;
+        int typecastNumber = 0;
         auto getArgInfo = [&](const ast::Argument* arg) -> std::string {
             if (auto* var = as<ast::Variable>(arg)) {
                 return toString(*var);
@@ -217,6 +218,9 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
             }
             if (isA<ast::Aggregator>(arg)) {
                 return tfm::format("agg_%d", aggregateNumber++);
+            }
+            if (isA<ast::TypeCast>(arg)) {
+                return tfm::format("typecast_%d", typecastNumber++);
             }
             fatal("Unhandled argument type");
         };
@@ -439,11 +443,15 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
                     makeIfStatement(std::move(existenceCheck), makeRamReturnFalse(), makeRamReturnTrue());
             appendStmt(searchSequence, std::move(ifStatement));
         } else if (const auto* con = as<ast::Constraint>(lit)) {
-            auto condition = context->translateConstraint(*dummyValueIndex, con);
-            transformVariablesToSubroutineArgs(condition.get(), idToVarName);
-            auto ifStatement =
-                    makeIfStatement(std::move(condition), makeRamReturnTrue(), makeRamReturnFalse());
-            appendStmt(searchSequence, std::move(ifStatement));
+            bool hasAggregate = false;
+            visit(clause, [&](const ast::Aggregator& var) { hasAggregate = true; });
+            if (!hasAggregate) {
+                auto condition = context->translateConstraint(*dummyValueIndex, con);
+                transformVariablesToSubroutineArgs(condition.get(), idToVarName);
+                auto ifStatement =
+                        makeIfStatement(std::move(condition), makeRamReturnTrue(), makeRamReturnFalse());
+                appendStmt(searchSequence, std::move(ifStatement));
+            }
         }
 
         litNumber++;
