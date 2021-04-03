@@ -76,10 +76,10 @@ struct RelationWrapper;
     FOR_EACH(Expand, ParallelScan)\
     FOR_EACH(Expand, IndexScan)\
     FOR_EACH(Expand, ParallelIndexScan)\
-    FOR_EACH(Expand, Choice)\
-    FOR_EACH(Expand, ParallelChoice)\
-    FOR_EACH(Expand, IndexChoice)\
-    FOR_EACH(Expand, ParallelIndexChoice)\
+    FOR_EACH(Expand, IfExists)\
+    FOR_EACH(Expand, ParallelIfExists)\
+    FOR_EACH(Expand, IndexIfExists)\
+    FOR_EACH(Expand, ParallelIndexIfExists)\
     Forward(UnpackRecord)\
     FOR_EACH(Expand, Aggregate)\
     FOR_EACH(Expand, ParallelAggregate)\
@@ -628,39 +628,39 @@ public:
 };
 
 /**
- * @class Choice
+ * @class IfExists
  */
-class Choice : public Node, public ConditionalOperation, public NestedOperation, public RelationalOperation {
+class IfExists : public Node, public ConditionalOperation, public NestedOperation, public RelationalOperation {
 public:
-    Choice(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle, Own<Node> cond,
+    IfExists(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle, Own<Node> cond,
             Own<Node> nested)
             : Node(ty, sdw), ConditionalOperation(std::move(cond)), NestedOperation(std::move(nested)),
               RelationalOperation(relHandle) {}
 };
 
 /**
- * @class ParallelChoice
+ * @class ParallelIfExists
  */
-class ParallelChoice : public Choice, public AbstractParallel {
-    using Choice::Choice;
+class ParallelIfExists : public IfExists, public AbstractParallel {
+    using IfExists::IfExists;
 };
 
 /**
- * @class IndexChoice
+ * @class IndexIfExists
  */
-class IndexChoice : public Choice, public SuperOperation, public ViewOperation {
+class IndexIfExists : public IfExists, public SuperOperation, public ViewOperation {
 public:
-    IndexChoice(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle, Own<Node> cond,
+    IndexIfExists(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle, Own<Node> cond,
             Own<Node> nested, std::size_t viewId, SuperInstruction superInst)
-            : Choice(ty, sdw, relHandle, std::move(cond), std::move(nested)),
+            : IfExists(ty, sdw, relHandle, std::move(cond), std::move(nested)),
               SuperOperation(std::move(superInst)), ViewOperation(viewId) {}
 };
 
 /**
- * @class ParallelIndexChoice
+ * @class ParallelIndexIfExists
  */
-class ParallelIndexChoice : public IndexChoice, public AbstractParallel {
-    using IndexChoice::IndexChoice;
+class ParallelIndexIfExists : public IndexIfExists, public AbstractParallel {
+    using IndexIfExists::IndexIfExists;
 };
 
 /**

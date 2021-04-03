@@ -288,9 +288,9 @@ souffle_sources = \
         parser/scanner.cc                                  \
         parser/stack.hh                                    \
         ram/AbstractAggregate.h                            \
-        ram/AbstractChoice.h                               \
         ram/AbstractConditional.h                          \
         ram/AbstractExistenceCheck.h                       \
+        ram/AbstractIfExists.h                             \
         ram/AbstractLog.h                                  \
         ram/AbstractOperator.h                             \
         ram/AbstractParallel.h                             \
@@ -299,7 +299,6 @@ souffle_sources = \
         ram/BinRelationStatement.h                         \
         ram/Break.h                                        \
         ram/Call.h                                         \
-        ram/Choice.h                                       \
         ram/Clear.h                                        \
         ram/Condition.h                                    \
         ram/Conjunction.h                                  \
@@ -314,9 +313,10 @@ souffle_sources = \
         ram/Filter.h                                       \
         ram/FloatConstant.h                                \
         ram/GuardedInsert.h                                \
+        ram/IfExists.h                                     \
         ram/IO.h                                           \
         ram/IndexAggregate.h                               \
-        ram/IndexChoice.h                                  \
+        ram/IndexIfExists.h                                \
         ram/IndexOperation.h                               \
         ram/IndexScan.h                                    \
         ram/Insert.h                                       \
@@ -335,9 +335,9 @@ souffle_sources = \
         ram/PackRecord.h                                   \
         ram/Parallel.h                                     \
         ram/ParallelAggregate.h                            \
-        ram/ParallelChoice.h                               \
+        ram/ParallelIfExists.h                             \
         ram/ParallelIndexAggregate.h                       \
-        ram/ParallelIndexChoice.h                          \
+        ram/ParallelIndexIfExists.h                        \
         ram/ParallelIndexScan.h                            \
         ram/Program.h                                      \
         ram/ProvenanceExistenceCheck.h                     \
@@ -373,8 +373,6 @@ souffle_sources = \
         ram/analysis/Level.h                               \
         ram/analysis/Relation.cpp                          \
         ram/analysis/Relation.h                            \
-        ram/transform/ChoiceConversion.cpp                 \
-        ram/transform/ChoiceConversion.h                   \
         ram/transform/CollapseFilters.cpp                  \
         ram/transform/CollapseFilters.h                    \
         ram/transform/Conditional.h                        \
@@ -382,6 +380,8 @@ souffle_sources = \
         ram/transform/EliminateDuplicates.h                \
         ram/transform/ExpandFilter.cpp                     \
         ram/transform/ExpandFilter.h                       \
+        ram/transform/IfExistsConversion.cpp               \
+        ram/transform/IfExistsConversion.h                 \
         ram/transform/HoistAggregate.cpp                   \
         ram/transform/HoistAggregate.h                     \
         ram/transform/HoistConditions.cpp                  \

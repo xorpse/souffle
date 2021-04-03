@@ -8,11 +8,11 @@
 
 /************************************************************************
  *
- * @file ChoiceConversion.cpp
+ * @file IfExistsConversion.cpp
  *
  ***********************************************************************/
 
-#include "ram/transform/ChoiceConversion.h"
+#include "ram/transform/IfExistsConversion.h"
 #include "ram/Condition.h"
 #include "ram/Expression.h"
 #include "ram/Node.h"
@@ -29,7 +29,7 @@
 
 namespace souffle::ram::transform {
 
-Own<Operation> ChoiceConversionTransformer::rewriteScan(const Scan* scan) {
+Own<Operation> IfExistsConversionTransformer::rewriteScan(const Scan* scan) {
     bool transformTuple = false;
 
     // Check that Filter follows the Scan in the loop nest
@@ -48,12 +48,12 @@ Own<Operation> ChoiceConversionTransformer::rewriteScan(const Scan* scan) {
         }
     }
 
-    // Convert the Scan/If pair into a Choice
+    // Convert the Scan/If pair into a IfExists
     if (transformTuple) {
         const auto* filter = as<Filter>(scan->getOperation());
         const int identifier = scan->getTupleId();
 
-        return mk<Choice>(scan->getRelation(), identifier, souffle::clone(filter->getCondition()),
+        return mk<IfExists>(scan->getRelation(), identifier, souffle::clone(filter->getCondition()),
                 souffle::clone(filter->getOperation()), scan->getProfileText());
     }
 
@@ -65,16 +65,16 @@ Own<Operation> ChoiceConversionTransformer::rewriteScan(const Scan* scan) {
         }
     });
 
-    // Convert the Scan into a Choice where True
+    // Convert the Scan into a IfExists where True
     if (!referencedBelow) {
-        return mk<Choice>(scan->getRelation(), scan->getTupleId(), mk<True>(),
+        return mk<IfExists>(scan->getRelation(), scan->getTupleId(), mk<True>(),
                 souffle::clone(scan->getOperation()), scan->getProfileText());
     }
 
     return nullptr;
 }
 
-Own<Operation> ChoiceConversionTransformer::rewriteIndexScan(const IndexScan* indexScan) {
+Own<Operation> IfExistsConversionTransformer::rewriteIndexScan(const IndexScan* indexScan) {
     bool transformTuple = false;
 
     // Check that Filter follows the IndexScan in the loop nest
@@ -94,14 +94,14 @@ Own<Operation> ChoiceConversionTransformer::rewriteIndexScan(const IndexScan* in
         }
     }
 
-    // Convert the IndexScan/If pair into an IndexChoice
+    // Convert the IndexScan/If pair into an IndexIfExists
     if (transformTuple) {
         RamPattern newValues = make_pair(souffle::clone(indexScan->getRangePattern().first),
                 souffle::clone(indexScan->getRangePattern().second));
         const auto* filter = as<Filter>(indexScan->getOperation());
         const int identifier = indexScan->getTupleId();
         const std::string& rel = indexScan->getRelation();
-        return mk<IndexChoice>(rel, identifier, souffle::clone(filter->getCondition()), std::move(newValues),
+        return mk<IndexIfExists>(rel, identifier, souffle::clone(filter->getCondition()), std::move(newValues),
                 souffle::clone(filter->getOperation()), indexScan->getProfileText());
     }
 
@@ -113,18 +113,18 @@ Own<Operation> ChoiceConversionTransformer::rewriteIndexScan(const IndexScan* in
         }
     });
 
-    // Convert the Scan into a Choice where True
+    // Convert the Scan into a IfExists where True
     if (!referencedBelow) {
         RamPattern newValues = make_pair(souffle::clone(indexScan->getRangePattern().first),
                 souffle::clone(indexScan->getRangePattern().second));
-        return mk<IndexChoice>(indexScan->getRelation(), indexScan->getTupleId(), mk<True>(),
+        return mk<IndexIfExists>(indexScan->getRelation(), indexScan->getTupleId(), mk<True>(),
                 std::move(newValues), souffle::clone(indexScan->getOperation()), indexScan->getProfileText());
     }
 
     return nullptr;
 }
 
-bool ChoiceConversionTransformer::convertScans(Program& program) {
+bool IfExistsConversionTransformer::convertScans(Program& program) {
     bool changed = false;
     visit(program, [&](const Query& query) {
         std::function<Own<Node>(Own<Node>)> scanRewriter = [&](Own<Node> node) -> Own<Node> {

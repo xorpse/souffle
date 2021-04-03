@@ -8,7 +8,7 @@
 
 /************************************************************************
  *
- * @file AbstractChoice.h
+ * @file AbstractIfExists.h
  *
  ***********************************************************************/
 
@@ -27,20 +27,20 @@
 namespace souffle::ram {
 
 /**
- * @class AbstractChoice
- * @brief Abstract class for a choice operation
+ * @class AbstractIfExists
+ * @brief Abstract class for an if-exists  operation
  *
  * Finding a single tuple, if it exists, such that a condition holds.
  */
-class AbstractChoice {
+class AbstractIfExists {
 public:
-    AbstractChoice(Own<Condition> cond) : condition(std::move(cond)) {
+    AbstractIfExists(Own<Condition> cond) : condition(std::move(cond)) {
         assert(condition != nullptr && "Condition is a null-pointer");
     }
 
     /** @brief Getter for the condition */
     const Condition& getCondition() const {
-        assert(condition != nullptr && "condition of choice is a null-pointer");
+        assert(condition != nullptr && "condition of if-exists is a null-pointer");
         return *condition;
     }
 
@@ -54,7 +54,7 @@ public:
 
 protected:
     bool equal(const Node& node) const {
-        const auto& other = asAssert<AbstractChoice, AllowCrossCast>(node);
+        const auto& other = asAssert<AbstractIfExists, AllowCrossCast>(node);
         return equal_ptr(condition, other.condition);
     }
 

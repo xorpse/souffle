@@ -119,18 +119,18 @@ private:
             const ParallelIndexScan& shadow, Context& ctxt);
 
     template <typename Rel>
-    RamDomain evalChoice(const Rel& rel, const ram::Choice& cur, const Choice& shadow, Context& ctxt);
+    RamDomain evalIfExists(const Rel& rel, const ram::IfExists& cur, const IfExists& shadow, Context& ctxt);
 
     template <typename Rel>
-    RamDomain evalParallelChoice(
-            const Rel& rel, const ram::ParallelChoice& cur, const ParallelChoice& shadow, Context& ctxt);
+    RamDomain evalParallelIfExists(
+            const Rel& rel, const ram::ParallelIfExists& cur, const ParallelIfExists& shadow, Context& ctxt);
 
     template <typename Rel>
-    RamDomain evalIndexChoice(const ram::IndexChoice& cur, const IndexChoice& shadow, Context& ctxt);
+    RamDomain evalIndexIfExists(const ram::IndexIfExists& cur, const IndexIfExists& shadow, Context& ctxt);
 
     template <typename Rel>
-    RamDomain evalParallelIndexChoice(const Rel& rel, const ram::ParallelIndexChoice& cur,
-            const ParallelIndexChoice& shadow, Context& ctxt);
+    RamDomain evalParallelIndexIfExists(const Rel& rel, const ram::ParallelIndexIfExists& cur,
+            const ParallelIndexIfExists& shadow, Context& ctxt);
 
     template <typename Aggregate, typename Iter>
     RamDomain evalAggregate(const Aggregate& aggregate, const Node& filter, const Node* expression,

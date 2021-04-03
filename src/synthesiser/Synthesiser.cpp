@@ -24,7 +24,7 @@
 #include "ram/AutoIncrement.h"
 #include "ram/Break.h"
 #include "ram/Call.h"
-#include "ram/Choice.h"
+#include "ram/IfExists.h"
 #include "ram/Clear.h"
 #include "ram/Condition.h"
 #include "ram/Conjunction.h"
@@ -40,7 +40,7 @@
 #include "ram/FloatConstant.h"
 #include "ram/IO.h"
 #include "ram/IndexAggregate.h"
-#include "ram/IndexChoice.h"
+#include "ram/IndexIfExists.h"
 #include "ram/IndexScan.h"
 #include "ram/Insert.h"
 #include "ram/IntrinsicOperator.h"
@@ -56,9 +56,9 @@
 #include "ram/PackRecord.h"
 #include "ram/Parallel.h"
 #include "ram/ParallelAggregate.h"
-#include "ram/ParallelChoice.h"
+#include "ram/ParallelIfExists.h"
 #include "ram/ParallelIndexAggregate.h"
-#include "ram/ParallelIndexChoice.h"
+#include "ram/ParallelIndexIfExists.h"
 #include "ram/ParallelIndexScan.h"
 #include "ram/ParallelScan.h"
 #include "ram/Program.h"
@@ -699,12 +699,12 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visit_(type_identity<Choice>, const Choice& choice, std::ostream& out) override {
-            const auto* rel = synthesiser.lookup(choice.getRelation());
+        void visit_(type_identity<IfExists>, const IfExists& ifexists, std::ostream& out) override {
+            const auto* rel = synthesiser.lookup(ifexists.getRelation());
             auto relName = synthesiser.getRelationName(rel);
-            auto identifier = choice.getTupleId();
+            auto identifier = ifexists.getTupleId();
 
-            assert(rel->getArity() > 0 && "AstToRamTranslator failed/no choice for nullaries");
+            assert(rel->getArity() > 0 && "AstToRamTranslator failed/no ifexists for nullaries");
 
             PRINT_BEGIN_COMMENT(out);
 
@@ -712,11 +712,11 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 << "*" << relName << ") {\n";
             out << "if( ";
 
-            dispatch(choice.getCondition(), out);
+            dispatch(ifexists.getCondition(), out);
 
             out << ") {\n";
 
-            visit_(type_identity<TupleOperation>(), choice, out);
+            visit_(type_identity<TupleOperation>(), ifexists, out);
 
             out << "break;\n";
             out << "}\n";
@@ -726,13 +726,13 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         }
 
         void visit_(
-                type_identity<ParallelChoice>, const ParallelChoice& pchoice, std::ostream& out) override {
-            const auto* rel = synthesiser.lookup(pchoice.getRelation());
+                type_identity<ParallelIfExists>, const ParallelIfExists& pifexists, std::ostream& out) override {
+            const auto* rel = synthesiser.lookup(pifexists.getRelation());
             auto relName = synthesiser.getRelationName(rel);
 
-            assert(pchoice.getTupleId() == 0 && "not outer-most loop");
+            assert(pifexists.getTupleId() == 0 && "not outer-most loop");
 
-            assert(rel->getArity() > 0 && "AstToRamTranslator failed/no parallel choice for nullaries");
+            assert(rel->getArity() > 0 && "AstToRamTranslator failed/no parallel ifexists for nullaries");
 
             assert(!preambleIssued && "only first loop can be made parallel");
             preambleIssued = true;
@@ -747,11 +747,11 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "for(const auto& env0 : *it) {\n";
             out << "if( ";
 
-            dispatch(pchoice.getCondition(), out);
+            dispatch(pifexists.getCondition(), out);
 
             out << ") {\n";
 
-            visit_(type_identity<TupleOperation>(), pchoice, out);
+            visit_(type_identity<TupleOperation>(), pifexists, out);
 
             out << "break;\n";
             out << "}\n";
@@ -829,15 +829,15 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visit_(type_identity<IndexChoice>, const IndexChoice& ichoice, std::ostream& out) override {
+        void visit_(type_identity<IndexIfExists>, const IndexIfExists& iifexists, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
-            const auto* rel = synthesiser.lookup(ichoice.getRelation());
+            const auto* rel = synthesiser.lookup(iifexists.getRelation());
             auto relName = synthesiser.getRelationName(rel);
-            auto identifier = ichoice.getTupleId();
+            auto identifier = iifexists.getTupleId();
             auto arity = rel->getArity();
-            const auto& rangePatternLower = ichoice.getRangePattern().first;
-            const auto& rangePatternUpper = ichoice.getRangePattern().second;
-            auto keys = isa->getSearchSignature(&ichoice);
+            const auto& rangePatternLower = iifexists.getRangePattern().first;
+            const auto& rangePatternUpper = iifexists.getRangePattern().second;
+            auto keys = isa->getSearchSignature(&iifexists);
 
             // check list of keys
             assert(arity > 0 && "AstToRamTranslator failed");
@@ -850,11 +850,11 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "for(const auto& env" << identifier << " : range) {\n";
             out << "if( ";
 
-            dispatch(ichoice.getCondition(), out);
+            dispatch(iifexists.getCondition(), out);
 
             out << ") {\n";
 
-            visit_(type_identity<TupleOperation>(), ichoice, out);
+            visit_(type_identity<TupleOperation>(), iifexists, out);
 
             out << "break;\n";
             out << "}\n";
@@ -863,17 +863,17 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visit_(type_identity<ParallelIndexChoice>, const ParallelIndexChoice& pichoice,
+        void visit_(type_identity<ParallelIndexIfExists>, const ParallelIndexIfExists& piifexists,
                 std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
-            const auto* rel = synthesiser.lookup(pichoice.getRelation());
+            const auto* rel = synthesiser.lookup(piifexists.getRelation());
             auto relName = synthesiser.getRelationName(rel);
             auto arity = rel->getArity();
-            const auto& rangePatternLower = pichoice.getRangePattern().first;
-            const auto& rangePatternUpper = pichoice.getRangePattern().second;
-            auto keys = isa->getSearchSignature(&pichoice);
+            const auto& rangePatternLower = piifexists.getRangePattern().first;
+            const auto& rangePatternUpper = piifexists.getRangePattern().second;
+            auto keys = isa->getSearchSignature(&piifexists);
 
-            assert(pichoice.getTupleId() == 0 && "not outer-most loop");
+            assert(piifexists.getTupleId() == 0 && "not outer-most loop");
 
             assert(arity > 0 && "AstToRamTranslator failed");
 
@@ -895,11 +895,11 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "for(const auto& env0 : *it) {\n";
             out << "if( ";
 
-            dispatch(pichoice.getCondition(), out);
+            dispatch(piifexists.getCondition(), out);
 
             out << ") {\n";
 
-            visit_(type_identity<TupleOperation>(), pichoice, out);
+            visit_(type_identity<TupleOperation>(), piifexists, out);
 
             out << "break;\n";
             out << "}\n";

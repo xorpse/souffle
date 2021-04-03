@@ -18,7 +18,7 @@
 #include "ram/Aggregate.h"
 #include "ram/AutoIncrement.h"
 #include "ram/Break.h"
-#include "ram/Choice.h"
+#include "ram/IfExists.h"
 #include "ram/Condition.h"
 #include "ram/Conjunction.h"
 #include "ram/Constraint.h"
@@ -28,7 +28,7 @@
 #include "ram/False.h"
 #include "ram/Filter.h"
 #include "ram/IndexAggregate.h"
-#include "ram/IndexChoice.h"
+#include "ram/IndexIfExists.h"
 #include "ram/IndexScan.h"
 #include "ram/Insert.h"
 #include "ram/IntrinsicOperator.h"
@@ -103,20 +103,20 @@ int LevelAnalysis::getLevel(const Node* node) const {
         }
 
         // choice
-        int visit_(type_identity<Choice>, const Choice& choice) override {
+        int visit_(type_identity<IfExists>, const IfExists& choice) override {
             return std::max(-1, dispatch(choice.getCondition()));
         }
 
         // index choice
-        int visit_(type_identity<IndexChoice>, const IndexChoice& indexChoice) override {
+        int visit_(type_identity<IndexIfExists>, const IndexIfExists& indexIfExists) override {
             int level = -1;
-            for (auto& index : indexChoice.getRangePattern().first) {
+            for (auto& index : indexIfExists.getRangePattern().first) {
                 level = std::max(level, dispatch(*index));
             }
-            for (auto& index : indexChoice.getRangePattern().second) {
+            for (auto& index : indexIfExists.getRangePattern().second) {
                 level = std::max(level, dispatch(*index));
             }
-            return std::max(level, dispatch(indexChoice.getCondition()));
+            return std::max(level, dispatch(indexIfExists.getCondition()));
         }
 
         // aggregate
