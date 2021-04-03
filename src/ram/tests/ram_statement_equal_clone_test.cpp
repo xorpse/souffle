@@ -39,7 +39,7 @@
 #include "ram/Negation.h"
 #include "ram/Operation.h"
 #include "ram/Parallel.h"
-#include "ram/ParallelChoice.h"
+#include "ram/ParallelIfExists.h"
 #include "ram/Query.h"
 #include "ram/Relation.h"
 #include "ram/Scan.h"
@@ -154,7 +154,7 @@ TEST(Query, CloneAndEquals) {
 
     /*
      * QUERY
-     *  PARALLEL CHOICE t1 IN A WHERE (t1.0 = 0)
+     *  PARALLEL IF EXISTS t1 IN A WHERE (t1.0 = 0)
      *   RETURN (t1.2)
      */
     VecOwn<Expression> d_return_value;
@@ -162,16 +162,16 @@ TEST(Query, CloneAndEquals) {
     auto d_return = mk<SubroutineReturn>(std::move(d_return_value));
     // condition t1.0 = 0
     auto d_cond = mk<Constraint>(BinaryConstraintOp::EQ, mk<TupleElement>(1, 0), mk<SignedConstant>(0));
-    auto d_parallel_choice = mk<ParallelChoice>("A", 1, std::move(d_cond), std::move(d_return), "");
+    auto d_parallel_ifexists = mk<ParallelIfExists>("A", 1, std::move(d_cond), std::move(d_return), "");
 
     VecOwn<Expression> e_return_value;
     e_return_value.emplace_back(new TupleElement(1, 0));
     auto e_return = mk<SubroutineReturn>(std::move(e_return_value));
     // condition t1.0 = 0
     auto e_cond = mk<Constraint>(BinaryConstraintOp::EQ, mk<TupleElement>(1, 0), mk<SignedConstant>(0));
-    auto e_parallel_choice = mk<ParallelChoice>("A", 1, std::move(e_cond), std::move(e_return), "");
-    Query d(std::move(d_parallel_choice));
-    Query e(std::move(e_parallel_choice));
+    auto e_parallel_ifexists = mk<ParallelIfExists>("A", 1, std::move(e_cond), std::move(e_return), "");
+    Query d(std::move(d_parallel_ifexists));
+    Query e(std::move(e_parallel_ifexists));
     EXPECT_EQ(d, e);
     EXPECT_NE(&d, &e);
 
