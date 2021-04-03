@@ -434,7 +434,7 @@ int main(int argc, char** argv) {
     /* Report run-time of the parser if verbose flag is set */
     if (Global::config().has("verbose")) {
         auto parser_end = std::chrono::high_resolution_clock::now();
-        std::cout << "Parse Time: " << std::chrono::duration<double>(parser_end - parser_start).count()
+        std::cout << "Parse time: " << std::chrono::duration<double>(parser_end - parser_start).count()
                   << "sec\n";
     }
 
@@ -682,12 +682,18 @@ int main(int argc, char** argv) {
             std::string sourceFilename = baseFilename + ".cpp";
 
             bool withSharedLibrary;
+            auto synthesisStart = std::chrono::high_resolution_clock::now();
             const bool emitToStdOut = Global::config().has("generate", "-");
             if (emitToStdOut)
                 synthesiser->generateCode(std::cout, baseIdentifier, withSharedLibrary);
             else {
                 std::ofstream os{sourceFilename};
                 synthesiser->generateCode(os, baseIdentifier, withSharedLibrary);
+            }
+            if (Global::config().has("verbose")) {
+                auto synthesisEnd = std::chrono::high_resolution_clock::now();
+                std::cout << "Synthesis time: "
+                          << std::chrono::duration<double>(synthesisEnd - synthesisStart).count() << "sec\n";
             }
 
             if (withSharedLibrary) {
@@ -708,22 +714,22 @@ int main(int argc, char** argv) {
                 return cmd;
             };
 
+            auto compileStart = std::chrono::high_resolution_clock::now();
             if (Global::config().has("swig")) {
                 auto compileCmd = findCompileCmd() + " -s " + Global::config().get("swig") + " ";
                 compileToBinary(compileCmd, sourceFilename);
             } else if (Global::config().has("compile")) {
-                auto start = std::chrono::high_resolution_clock::now();
                 compileToBinary(findCompileCmd(), sourceFilename);
                 /* Report overall run-time in verbose mode */
-                if (Global::config().has("verbose")) {
-                    auto end = std::chrono::high_resolution_clock::now();
-                    std::cout << "Compilation Time: " << std::chrono::duration<double>(end - start).count()
-                              << "sec\n";
-                }
                 // run compiled C++ program if requested.
                 if (!Global::config().has("dl-program") && !Global::config().has("swig")) {
                     executeBinary(baseFilename);
                 }
+            }
+            if (Global::config().has("verbose")) {
+                auto compileEnd = std::chrono::high_resolution_clock::now();
+                std::cout << "Compilation time: "
+                          << std::chrono::duration<double>(compileEnd - compileStart).count() << "sec\n";
             }
         }
     } catch (std::exception& e) {
@@ -734,7 +740,7 @@ int main(int argc, char** argv) {
     /* Report overall run-time in verbose mode */
     if (Global::config().has("verbose")) {
         auto souffle_end = std::chrono::high_resolution_clock::now();
-        std::cout << "Total Time: " << std::chrono::duration<double>(souffle_end - souffle_start).count()
+        std::cout << "Total time: " << std::chrono::duration<double>(souffle_end - souffle_start).count()
                   << "sec\n";
     }
 
