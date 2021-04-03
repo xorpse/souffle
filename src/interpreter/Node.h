@@ -630,7 +630,10 @@ public:
 /**
  * @class IfExists
  */
-class IfExists : public Node, public ConditionalOperation, public NestedOperation, public RelationalOperation {
+class IfExists : public Node,
+                 public ConditionalOperation,
+                 public NestedOperation,
+                 public RelationalOperation {
 public:
     IfExists(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle, Own<Node> cond,
             Own<Node> nested)

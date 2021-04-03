@@ -101,8 +101,8 @@ Own<Operation> IfExistsConversionTransformer::rewriteIndexScan(const IndexScan* 
         const auto* filter = as<Filter>(indexScan->getOperation());
         const int identifier = indexScan->getTupleId();
         const std::string& rel = indexScan->getRelation();
-        return mk<IndexIfExists>(rel, identifier, souffle::clone(filter->getCondition()), std::move(newValues),
-                souffle::clone(filter->getOperation()), indexScan->getProfileText());
+        return mk<IndexIfExists>(rel, identifier, souffle::clone(filter->getCondition()),
+                std::move(newValues), souffle::clone(filter->getOperation()), indexScan->getProfileText());
     }
 
     // Check that Relation is not referenced further down in the loop nest

@@ -15,8 +15,8 @@
 #pragma once
 
 #include "ram/AbstractParallel.h"
-#include "ram/IfExists.h"
 #include "ram/Condition.h"
+#include "ram/IfExists.h"
 #include "ram/Node.h"
 #include "ram/Operation.h"
 #include "ram/Relation.h"

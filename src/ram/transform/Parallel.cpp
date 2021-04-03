@@ -51,8 +51,8 @@ bool ParallelTransformer::parallelizeOperations(Program& program) {
                 if (ifexists->getTupleId() == 0) {
                     changed = true;
                     return mk<ParallelIfExists>(ifexists->getRelation(), ifexists->getTupleId(),
-                            souffle::clone(ifexists->getCondition()), souffle::clone(ifexists->getOperation()),
-                            ifexists->getProfileText());
+                            souffle::clone(ifexists->getCondition()),
+                            souffle::clone(ifexists->getOperation()), ifexists->getProfileText());
                 }
             } else if (const IndexScan* indexScan = as<IndexScan>(node)) {
                 if (indexScan->getTupleId() == 0) {
@@ -66,9 +66,10 @@ bool ParallelTransformer::parallelizeOperations(Program& program) {
                 if (indexIfExists->getTupleId() == 0) {
                     changed = true;
                     RamPattern queryPattern = souffle::clone(indexIfExists->getRangePattern());
-                    return mk<ParallelIndexIfExists>(indexIfExists->getRelation(), indexIfExists->getTupleId(),
-                            souffle::clone(indexIfExists->getCondition()), std::move(queryPattern),
-                            souffle::clone(indexIfExists->getOperation()), indexIfExists->getProfileText());
+                    return mk<ParallelIndexIfExists>(indexIfExists->getRelation(),
+                            indexIfExists->getTupleId(), souffle::clone(indexIfExists->getCondition()),
+                            std::move(queryPattern), souffle::clone(indexIfExists->getOperation()),
+                            indexIfExists->getProfileText());
                 }
             } else if (const Aggregate* aggregate = as<Aggregate>(node)) {
                 const Relation& rel = relAnalysis->lookup(aggregate->getRelation());

@@ -24,7 +24,6 @@
 #include "ram/AutoIncrement.h"
 #include "ram/Break.h"
 #include "ram/Call.h"
-#include "ram/IfExists.h"
 #include "ram/Clear.h"
 #include "ram/Condition.h"
 #include "ram/Conjunction.h"
@@ -39,6 +38,7 @@
 #include "ram/Filter.h"
 #include "ram/FloatConstant.h"
 #include "ram/IO.h"
+#include "ram/IfExists.h"
 #include "ram/IndexAggregate.h"
 #include "ram/IndexIfExists.h"
 #include "ram/IndexScan.h"
@@ -725,8 +725,8 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visit_(
-                type_identity<ParallelIfExists>, const ParallelIfExists& pifexists, std::ostream& out) override {
+        void visit_(type_identity<ParallelIfExists>, const ParallelIfExists& pifexists,
+                std::ostream& out) override {
             const auto* rel = synthesiser.lookup(pifexists.getRelation());
             auto relName = synthesiser.getRelationName(rel);
 
@@ -829,7 +829,8 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visit_(type_identity<IndexIfExists>, const IndexIfExists& iifexists, std::ostream& out) override {
+        void visit_(
+                type_identity<IndexIfExists>, const IndexIfExists& iifexists, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             const auto* rel = synthesiser.lookup(iifexists.getRelation());
             auto relName = synthesiser.getRelationName(rel);

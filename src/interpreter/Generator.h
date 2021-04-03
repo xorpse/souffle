@@ -28,7 +28,6 @@
 #include "ram/AutoIncrement.h"
 #include "ram/Break.h"
 #include "ram/Call.h"
-#include "ram/IfExists.h"
 #include "ram/Clear.h"
 #include "ram/Condition.h"
 #include "ram/Conjunction.h"
@@ -42,6 +41,7 @@
 #include "ram/False.h"
 #include "ram/Filter.h"
 #include "ram/IO.h"
+#include "ram/IfExists.h"
 #include "ram/IndexAggregate.h"
 #include "ram/IndexIfExists.h"
 #include "ram/IndexOperation.h"
@@ -254,7 +254,8 @@ private:
 
         /** @brief Bind tuple with the default order.
          *
-         * This is usually used for tuples created by non-indexed operations. Such as Scan, Aggregate, IfExists.
+         * This is usually used for tuples created by non-indexed operations. Such as Scan, Aggregate,
+         * IfExists.
          * */
         template <class RamNode>
         void addTupleWithDefaultOrder(std::size_t tupleId, const RamNode& node);

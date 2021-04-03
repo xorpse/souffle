@@ -26,7 +26,6 @@
 #include "ram/AutoIncrement.h"
 #include "ram/Break.h"
 #include "ram/Call.h"
-#include "ram/IfExists.h"
 #include "ram/Clear.h"
 #include "ram/Conjunction.h"
 #include "ram/Constraint.h"
@@ -38,6 +37,7 @@
 #include "ram/False.h"
 #include "ram/Filter.h"
 #include "ram/IO.h"
+#include "ram/IfExists.h"
 #include "ram/IndexAggregate.h"
 #include "ram/IndexIfExists.h"
 #include "ram/IndexScan.h"
@@ -948,19 +948,19 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
         FOR_EACH(PARALLEL_INDEX_SCAN)
 #undef PARALLEL_INDEX_SCAN
 
-#define IFEXISTS(Structure, Arity, ...)                                   \
-    CASE(IfExists, Structure, Arity)                                      \
+#define IFEXISTS(Structure, Arity, ...)                                 \
+    CASE(IfExists, Structure, Arity)                                    \
         const auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
-        return evalIfExists(rel, cur, shadow, ctxt);                      \
+        return evalIfExists(rel, cur, shadow, ctxt);                    \
     ESAC(IfExists)
 
         FOR_EACH(IFEXISTS)
 #undef IFEXISTS
 
-#define PARALLEL_IFEXISTS(Structure, Arity, ...)                          \
-    CASE(ParallelIfExists, Structure, Arity)                              \
+#define PARALLEL_IFEXISTS(Structure, Arity, ...)                        \
+    CASE(ParallelIfExists, Structure, Arity)                            \
         const auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
-        return evalParallelIfExists(rel, cur, shadow, ctxt);              \
+        return evalParallelIfExists(rel, cur, shadow, ctxt);            \
     ESAC(ParallelIfExists)
 
         FOR_EACH(PARALLEL_IFEXISTS)
@@ -974,10 +974,10 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
         FOR_EACH(INDEX_IFEXISTS)
 #undef INDEX_IFEXISTS
 
-#define PARALLEL_INDEX_IFEXISTS(Structure, Arity, ...)                    \
-    CASE(ParallelIndexIfExists, Structure, Arity)                         \
+#define PARALLEL_INDEX_IFEXISTS(Structure, Arity, ...)                  \
+    CASE(ParallelIndexIfExists, Structure, Arity)                       \
         const auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
-        return evalParallelIndexIfExists(rel, cur, shadow, ctxt);         \
+        return evalParallelIndexIfExists(rel, cur, shadow, ctxt);       \
     ESAC(ParallelIndexIfExists)
 
         FOR_EACH(PARALLEL_INDEX_IFEXISTS)
@@ -1429,7 +1429,8 @@ RamDomain Engine::evalParallelIndexScan(
 }
 
 template <typename Rel>
-RamDomain Engine::evalIfExists(const Rel& rel, const ram::IfExists& cur, const IfExists& shadow, Context& ctxt) {
+RamDomain Engine::evalIfExists(
+        const Rel& rel, const ram::IfExists& cur, const IfExists& shadow, Context& ctxt) {
     // use simple iterator
     for (const auto& tuple : rel.scan()) {
         ctxt[cur.getTupleId()] = tuple.data();
@@ -1467,7 +1468,8 @@ RamDomain Engine::evalParallelIfExists(
 }
 
 template <typename Rel>
-RamDomain Engine::evalIndexIfExists(const ram::IndexIfExists& cur, const IndexIfExists& shadow, Context& ctxt) {
+RamDomain Engine::evalIndexIfExists(
+        const ram::IndexIfExists& cur, const IndexIfExists& shadow, Context& ctxt) {
     constexpr std::size_t Arity = Rel::Arity;
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> low;
