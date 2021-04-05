@@ -217,44 +217,44 @@ NodePtr NodeGenerator::visit_(type_identity<ram::ParallelIndexScan>, const ram::
     return res;
 }
 
-NodePtr NodeGenerator::visit_(type_identity<ram::Choice>, const ram::Choice& choice) {
-    orderingContext.addTupleWithDefaultOrder(choice.getTupleId(), choice);
-    std::size_t relId = encodeRelation(choice.getRelation());
+NodePtr NodeGenerator::visit_(type_identity<ram::IfExists>, const ram::IfExists& ifexists) {
+    orderingContext.addTupleWithDefaultOrder(ifexists.getTupleId(), ifexists);
+    std::size_t relId = encodeRelation(ifexists.getRelation());
     auto rel = getRelationHandle(relId);
-    NodeType type = constructNodeType("Choice", lookup(choice.getRelation()));
-    return mk<Choice>(type, &choice, rel, dispatch(choice.getCondition()),
-            visit_(type_identity<ram::TupleOperation>(), choice));
+    NodeType type = constructNodeType("IfExists", lookup(ifexists.getRelation()));
+    return mk<IfExists>(type, &ifexists, rel, dispatch(ifexists.getCondition()),
+            visit_(type_identity<ram::TupleOperation>(), ifexists));
 }
 
-NodePtr NodeGenerator::visit_(type_identity<ram::ParallelChoice>, const ram::ParallelChoice& pChoice) {
-    orderingContext.addTupleWithDefaultOrder(pChoice.getTupleId(), pChoice);
-    std::size_t relId = encodeRelation(pChoice.getRelation());
+NodePtr NodeGenerator::visit_(type_identity<ram::ParallelIfExists>, const ram::ParallelIfExists& pIfExists) {
+    orderingContext.addTupleWithDefaultOrder(pIfExists.getTupleId(), pIfExists);
+    std::size_t relId = encodeRelation(pIfExists.getRelation());
     auto rel = getRelationHandle(relId);
-    NodeType type = constructNodeType("ParallelChoice", lookup(pChoice.getRelation()));
-    auto res = mk<ParallelChoice>(type, &pChoice, rel, dispatch(pChoice.getCondition()),
-            visit_(type_identity<ram::TupleOperation>(), pChoice));
+    NodeType type = constructNodeType("ParallelIfExists", lookup(pIfExists.getRelation()));
+    auto res = mk<ParallelIfExists>(type, &pIfExists, rel, dispatch(pIfExists.getCondition()),
+            visit_(type_identity<ram::TupleOperation>(), pIfExists));
     res->setViewContext(parentQueryViewContext);
     return res;
 }
 
-NodePtr NodeGenerator::visit_(type_identity<ram::IndexChoice>, const ram::IndexChoice& iChoice) {
-    orderingContext.addTupleWithIndexOrder(iChoice.getTupleId(), iChoice);
-    SuperInstruction indexOperation = getIndexSuperInstInfo(iChoice);
-    NodeType type = constructNodeType("IndexChoice", lookup(iChoice.getRelation()));
-    return mk<IndexChoice>(type, &iChoice, nullptr, dispatch(iChoice.getCondition()),
-            visit_(type_identity<ram::TupleOperation>(), iChoice), encodeView(&iChoice),
+NodePtr NodeGenerator::visit_(type_identity<ram::IndexIfExists>, const ram::IndexIfExists& iIfExists) {
+    orderingContext.addTupleWithIndexOrder(iIfExists.getTupleId(), iIfExists);
+    SuperInstruction indexOperation = getIndexSuperInstInfo(iIfExists);
+    NodeType type = constructNodeType("IndexIfExists", lookup(iIfExists.getRelation()));
+    return mk<IndexIfExists>(type, &iIfExists, nullptr, dispatch(iIfExists.getCondition()),
+            visit_(type_identity<ram::TupleOperation>(), iIfExists), encodeView(&iIfExists),
             std::move(indexOperation));
 }
 
 NodePtr NodeGenerator::visit_(
-        type_identity<ram::ParallelIndexChoice>, const ram::ParallelIndexChoice& piChoice) {
-    orderingContext.addTupleWithIndexOrder(piChoice.getTupleId(), piChoice);
-    SuperInstruction indexOperation = getIndexSuperInstInfo(piChoice);
-    std::size_t relId = encodeRelation(piChoice.getRelation());
+        type_identity<ram::ParallelIndexIfExists>, const ram::ParallelIndexIfExists& piIfExists) {
+    orderingContext.addTupleWithIndexOrder(piIfExists.getTupleId(), piIfExists);
+    SuperInstruction indexOperation = getIndexSuperInstInfo(piIfExists);
+    std::size_t relId = encodeRelation(piIfExists.getRelation());
     auto rel = getRelationHandle(relId);
-    NodeType type = constructNodeType("ParallelIndexChoice", lookup(piChoice.getRelation()));
-    auto res = mk<ParallelIndexChoice>(type, &piChoice, rel, dispatch(piChoice.getCondition()),
-            dispatch(piChoice.getOperation()), encodeIndexPos(piChoice), std::move(indexOperation));
+    NodeType type = constructNodeType("ParallelIndexIfExists", lookup(piIfExists.getRelation()));
+    auto res = mk<ParallelIndexIfExists>(type, &piIfExists, rel, dispatch(piIfExists.getCondition()),
+            dispatch(piIfExists.getOperation()), encodeIndexPos(piIfExists), std::move(indexOperation));
     res->setViewContext(parentQueryViewContext);
     return res;
 }

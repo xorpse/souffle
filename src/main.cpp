@@ -70,7 +70,6 @@
 #include "ram/Node.h"
 #include "ram/Program.h"
 #include "ram/TranslationUnit.h"
-#include "ram/transform/ChoiceConversion.h"
 #include "ram/transform/CollapseFilters.h"
 #include "ram/transform/Conditional.h"
 #include "ram/transform/EliminateDuplicates.h"
@@ -78,6 +77,7 @@
 #include "ram/transform/HoistAggregate.h"
 #include "ram/transform/HoistConditions.h"
 #include "ram/transform/IfConversion.h"
+#include "ram/transform/IfExistsConversion.h"
 #include "ram/transform/Loop.h"
 #include "ram/transform/MakeIndex.h"
 #include "ram/transform/Parallel.h"
@@ -603,7 +603,7 @@ int main(int argc, char** argv) {
         Own<Transformer> ramTransform = mk<TransformerSequence>(
                 mk<LoopTransformer>(mk<TransformerSequence>(mk<ExpandFilterTransformer>(),
                         mk<HoistConditionsTransformer>(), mk<MakeIndexTransformer>())),
-                mk<IfConversionTransformer>(), mk<ChoiceConversionTransformer>(),
+                mk<IfConversionTransformer>(), mk<IfExistsConversionTransformer>(),
                 mk<CollapseFiltersTransformer>(), mk<TupleIdTransformer>(),
                 mk<LoopTransformer>(
                         mk<TransformerSequence>(mk<HoistAggregateTransformer>(), mk<TupleIdTransformer>())),
