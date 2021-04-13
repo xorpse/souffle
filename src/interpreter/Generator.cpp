@@ -51,7 +51,7 @@ NodePtr NodeGenerator::generateTree(const ram::Node& root) {
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::StringConstant>, const ram::StringConstant& sc) {
-    std::size_t num = engine.getSymbolTable().lookup(sc.getConstant());
+    std::size_t num = engine.getSymbolTable().encode(sc.getConstant());
     return mk<StringConstant>(I_StringConstant, &sc, num);
 }
 

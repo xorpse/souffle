@@ -96,7 +96,7 @@ protected:
             assert(currType.length() > 2 && "Invalid type length");
             switch (currType[0]) {
                 // since some strings may need to be escaped, we use dump here
-                case 's': destination << Json(symbolTable.unsafeResolve(currValue)).dump(); break;
+                case 's': destination << Json(symbolTable.unsafeDecode(currValue)).dump(); break;
                 case 'i': destination << currValue; break;
                 case 'u': destination << (int)ramBitCast<RamUnsigned>(currValue); break;
                 case 'f': destination << ramBitCast<RamFloat>(currValue); break;
@@ -151,7 +151,7 @@ protected:
             assert(currType.length() > 2 && "Invalid type length");
             switch (currType[0]) {
                 // since some strings may need to be escaped, we use dump here
-                case 's': destination << Json(symbolTable.unsafeResolve(currValue)).dump(); break;
+                case 's': destination << Json(symbolTable.unsafeDecode(currValue)).dump(); break;
                 case 'i': destination << currValue; break;
                 case 'u': destination << (int)ramBitCast<RamUnsigned>(currValue); break;
                 case 'f': destination << ramBitCast<RamFloat>(currValue); break;

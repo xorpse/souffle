@@ -29,14 +29,14 @@ namespace souffle::test {
 TEST(SymbolTable, Basics) {
     SymbolTable table;
 
-    EXPECT_STREQ("Hello", table.resolve(table.lookup(table.resolve(table.lookup("Hello")))));
+    EXPECT_STREQ("Hello", table.decode(table.encode(table.decode(table.encode("Hello")))));
 
-    EXPECT_EQ(table.lookup("Hello"), table.lookup(table.resolve(table.lookup("Hello"))));
+    EXPECT_EQ(table.encode("Hello"), table.encode(table.decode(table.encode("Hello"))));
 
-    EXPECT_STREQ("Hello", table.resolve(table.lookup(table.resolve(table.lookup("Hello")))));
+    EXPECT_STREQ("Hello", table.decode(table.encode(table.decode(table.encode("Hello")))));
 
-    EXPECT_EQ(table.lookup("Hello"),
-            table.lookup(table.resolve(table.lookup(table.resolve(table.lookup("Hello"))))));
+    EXPECT_EQ(table.encode("Hello"),
+            table.encode(table.decode(table.encode(table.decode(table.encode("Hello"))))));
 }
 
 TEST(SymbolTable, Inserts) {

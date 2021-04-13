@@ -1,6 +1,6 @@
 /*
  * Souffle - A Datalog Compiler
- * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved
+ * Copyright (c) 2021, The Souffle Developers. All rights reserved
  * Licensed under the Universal Permissive License v 1.0 as shown at:
  * - https://opensource.org/licenses/UPL
  * - <souffle root>/licenses/SOUFFLE-UPL.txt
@@ -10,7 +10,7 @@
  *
  * @file SymbolTable.h
  *
- * Data container to store symbols of the Datalog program.
+ * Encodes/decodes symbols to numbers (and vice versa). 
  *
  ***********************************************************************/
 
@@ -35,19 +35,17 @@ namespace souffle {
 /**
  * @class SymbolTable
  *
- * Global pool of re-usable strings
- *
- * SymbolTable stores Datalog symbols and converts them to numbers and vice versa.
+ * SymbolTable encodes symbols to numbers and decodes numbers to symbols.
  */
 class SymbolTable {
 private:
     /** A lock to synchronize parallel accesses */
     mutable Lock access;
 
-    /** Map indices to strings. */
+    /** Stores symbol indices to symbols information */
     std::deque<std::string> numToStr;
 
-    /** Map strings to indices. */
+    /** Stores symbols to symbol indices information */
     std::unordered_map<std::string, std::size_t> strToNum;
 
     /** Convenience method to place a new symbol in the table, if it does not exist, and return the index of
@@ -76,11 +74,16 @@ public:
             }
         }
     }
+
     virtual ~SymbolTable() = default;
 
-    /** Find the index of a symbol in the table, inserting a new symbol if it does not exist there
-     * already. */
-    RamDomain lookup(const std::string& symbol) {
+    /* Obtain the size of the symbol table. */
+    std::size_t size() const {
+        return numToStr.size();
+    }
+
+    /** Encode a symbol to a symbol index; this method is thread-safe.  */ 
+    RamDomain encode(const std::string& symbol) {
         {
             auto lease = access.acquire();
             (void)lease;  // avoid warning;
@@ -88,39 +91,40 @@ public:
         }
     }
 
-    /** Find the index of a symbol in the table, inserting a new symbol if it does not exist there
-     * already. */
-    RamDomain unsafeLookup(const std::string& symbol) {
-        return static_cast<RamDomain>(newSymbolOfIndex(symbol));
-    }
-
-    /** Find a symbol in the table by its index, note that this gives an error if the index is out of
-     * bounds.
-     */
-    const std::string& resolve(const RamDomain index) const {
+    /** Decode a symbol index to a symbol; this method is thread-safe.  */
+    const std::string& decode(const RamDomain index) const {
         {
             auto lease = access.acquire();
             (void)lease;  // avoid warning;
             auto pos = static_cast<std::size_t>(index);
             if (pos >= size()) {
                 // TODO: use different error reporting here!!
-                fatal("Error index out of bounds in call to `SymbolTable::resolve`. index = `%d`", index);
+                fatal("Error index out of bounds in call to `SymbolTable::decode`. index = `%d`", index);
             }
             return numToStr[pos];
         }
     }
 
-    const std::string& unsafeResolve(const RamDomain index) const {
-        return numToStr[static_cast<std::size_t>(index)];
-    }
 
-    /* Return the size of the symbol table, being the number of symbols it currently holds. */
-    std::size_t size() const {
-        return numToStr.size();
-    }
-
+    /** Acquire symbol table lock */ 
     Lock::Lease acquireLock() const {
         return access.acquire();
+    }
+
+    /**
+     * Encode a symbol to a symbol index; this method is not thread-safe.
+     * The lock must be acquired explicitly.
+     */ 
+    RamDomain unsafeEncode(const std::string& symbol) {
+        return static_cast<RamDomain>(newSymbolOfIndex(symbol));
+    }
+
+    /** 
+     * Decode an symbol index to symbol; this method is not thread-safe. 
+     * The lock must be acquired explicitly.
+     */ 
+    const std::string& unsafeDecode(const RamDomain index) const {
+        return numToStr[static_cast<std::size_t>(index)];
     }
 };
 

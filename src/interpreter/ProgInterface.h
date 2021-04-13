@@ -139,7 +139,7 @@ protected:
             for (std::size_t i = 0; i < ramRelationInterface->getArity(); i++) {
                 switch (*(ramRelationInterface->getAttrType(i))) {
                     case 's': {
-                        std::string s = ramRelationInterface->getSymbolTable().resolve((*it)[i]);
+                        std::string s = ramRelationInterface->getSymbolTable().decode((*it)[i]);
                         tup << s;
                         break;
                     }
