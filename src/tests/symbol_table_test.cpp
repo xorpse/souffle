@@ -40,7 +40,7 @@ TEST(SymbolTable, Basics) {
 }
 
 TEST(SymbolTable, Inserts) {
-    SymbolTable X({{"A", "B", "C", "D"}});
+    SymbolTable X({"A", "B", "C", "D"});
     EXPECT_EQ(X.size(), 4);
 }
 
