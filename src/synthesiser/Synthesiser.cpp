@@ -2243,7 +2243,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                             out << ")";
                             break;
                         case TypeAttribute::Symbol:
-                            out << "symTable.deode(";
+                            out << "symTable.decode(";
                             dispatch(*args[i], out);
                             out << ").c_str()";
                             break;
