@@ -61,7 +61,7 @@ protected:
         types = Json::parse(rwOperation.at("types"), parseErrors);
         assert(parseErrors.size() == 0 && "Internal JSON parsing failed.");
 
-        auxiliaryArity = RamSignedFromString(getOr(rwOperation,"auxArity","0"));
+        auxiliaryArity = RamSignedFromString(getOr(rwOperation, "auxArity", "0"));
 
         setupFromJson();
     }
