@@ -10,7 +10,7 @@
  *
  * @file SymbolTable.h
  *
- * Encodes/decodes symbols to numbers (and vice versa). 
+ * Encodes/decodes symbols to numbers (and vice versa).
  *
  ***********************************************************************/
 
@@ -82,7 +82,7 @@ public:
         return numToStr.size();
     }
 
-    /** Encode a symbol to a symbol index; this method is thread-safe.  */ 
+    /** Encode a symbol to a symbol index; this method is thread-safe.  */
     RamDomain encode(const std::string& symbol) {
         {
             auto lease = access.acquire();
@@ -105,8 +105,7 @@ public:
         }
     }
 
-
-    /** Acquire symbol table lock */ 
+    /** Acquire symbol table lock */
     Lock::Lease acquireLock() const {
         return access.acquire();
     }
@@ -114,15 +113,15 @@ public:
     /**
      * Encode a symbol to a symbol index; this method is not thread-safe.
      * The lock must be acquired explicitly.
-     */ 
+     */
     RamDomain unsafeEncode(const std::string& symbol) {
         return static_cast<RamDomain>(newSymbolOfIndex(symbol));
     }
 
-    /** 
-     * Decode an symbol index to symbol; this method is not thread-safe. 
+    /**
+     * Decode an symbol index to symbol; this method is not thread-safe.
      * The lock must be acquired explicitly.
-     */ 
+     */
     const std::string& unsafeDecode(const RamDomain index) const {
         return numToStr[static_cast<std::size_t>(index)];
     }
