@@ -193,8 +193,8 @@ public:
                 if (isOrderedBinaryConstraintOp(rawBinOp)) {
                     joinedConstraint << subproofTuple[0] << " " << bodyRel << " " << subproofTuple[1];
                 } else {
-                    joinedConstraint << bodyRel << "(\"" << symTable.resolve(subproofTuple[0]) << "\", \""
-                                     << symTable.resolve(subproofTuple[1]) << "\")";
+                    joinedConstraint << bodyRel << "(\"" << symTable.decode(subproofTuple[0]) << "\", \""
+                                     << symTable.decode(subproofTuple[1]) << "\")";
                 }
 
                 internalNode->add_child(mk<LeafNode>(joinedConstraint.str()));
@@ -388,10 +388,10 @@ public:
             if (variableTypes[var] == 's') {
                 if (varValue.size() >= 2 && varValue[0] == '"' && varValue[varValue.size() - 1] == '"') {
                     auto originalStr = varValue.substr(1, varValue.size() - 2);
-                    args.push_back(symTable.lookup(originalStr));
+                    args.push_back(symTable.encode(originalStr));
                 } else {
                     // assume no quotation marks
-                    args.push_back(symTable.lookup(varValue));
+                    args.push_back(symTable.encode(varValue));
                 }
             } else {
                 args.push_back(std::stoi(varValue));
@@ -661,7 +661,7 @@ public:
                                       << std::endl;
                             return;
                         }
-                        rd = prog.getSymbolTable().lookup(argsMatcher[1]);
+                        rd = prog.getSymbolTable().encode(argsMatcher[1]);
                         break;
                     case 'f':
                         if (!canBeParsedAsRamFloat(rel.second[j])) {
@@ -723,7 +723,7 @@ public:
         }
 
         // if varRels size is 0, all given tuples only contain constant args and exist, no variable to
-        // resolve, Output true and return
+        // decode, Output true and return
         if (varRels.size() == 0) {
             std::cout << "true." << std::endl;
             return;
@@ -743,10 +743,10 @@ private:
     RamDomain lookupExisting(const std::string& symbol) {
         // only works if run sequentially; check size of symbole
         std::size_t before = symTable.size();
-        RamDomain idx = symTable.lookup(symbol);
+        RamDomain idx = symTable.encode(symbol);
         std::size_t after = symTable.size();
         if (before != after) {
-            fatal("Error string not found in call to `SymbolTable::lookup`: `%s`", symbol);
+            fatal("Error string not found in call to `SymbolTable::encode`: `%s`", symbol);
         }
         return idx;
     }
@@ -861,7 +861,7 @@ private:
                         case 'i': solution << ramBitCast<RamSigned>(raw); break;
                         case 'f': solution << ramBitCast<RamFloat>(raw); break;
                         case 'u': solution << ramBitCast<RamUnsigned>(raw); break;
-                        case 's': solution << prog.getSymbolTable().resolve(raw); break;
+                        case 's': solution << prog.getSymbolTable().decode(raw); break;
                         default: fatal("invalid type: `%c`", var.second.getType());
                     }
 

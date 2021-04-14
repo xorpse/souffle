@@ -78,10 +78,10 @@ souffle::RamDomain mycat(souffle::SymbolTable* symbolTable, souffle::RecordTable
         souffle::RamDomain arg1, souffle::RamDomain arg2) {
     assert(symbolTable && "NULL symbol table");
     assert(recordTable && "NULL record table");
-    const std::string& sarg1 = symbolTable->resolve(arg1);
-    const std::string& sarg2 = symbolTable->resolve(arg2);
+    const std::string& sarg1 = symbolTable->decode(arg1);
+    const std::string& sarg2 = symbolTable->decode(arg2);
     std::string result = sarg1 + sarg2;
-    return symbolTable->lookup(result);
+    return symbolTable->encode(result);
 }
 
 souffle::RamDomain myappend(
@@ -117,7 +117,7 @@ souffle::RamDomain my_to_number_fun(
     switch (myTuple[0]) {
         case 0: return myTuple[1];
         case 1: {
-            auto const& strVal = symbolTable->resolve(myTuple[1]);
+            auto const& strVal = symbolTable->decode(myTuple[1]);
             souffle::RamDomain result = 0;
             std::from_chars(strVal.c_str(), strVal.c_str() + strVal.size(), result);
             return result;

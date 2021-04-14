@@ -233,7 +233,7 @@ protected:
             case 'i': return tfm::format("%d", ramBitCast<RamSigned>(value));
             case 'u': return tfm::format("%d", ramBitCast<RamUnsigned>(value));
             case 'f': return tfm::format("%f", ramBitCast<RamFloat>(value));
-            case 's': return tfm::format("\"%s\"", symTable.resolve(value));
+            case 's': return tfm::format("\"%s\"", symTable.decode(value));
             case 'r': return tfm::format("record #%d", value);
             default: fatal("unhandled type attr code");
         }
@@ -246,7 +246,7 @@ protected:
             case 'f': return ramBitCast(RamFloatFromString(value));
             case 's':
                 assert(2 <= value.size() && value[0] == '"' && value.back() == '"');
-                return symTable.lookup(value.substr(1, value.size() - 2));
+                return symTable.encode(value.substr(1, value.size() - 2));
             case 'r': fatal("not implemented");
             default: fatal("unhandled type attr code");
         }

@@ -96,7 +96,7 @@ protected:
             consumeWhiteSpace(source, pos);
             switch (recordType[0]) {
                 case 's': {
-                    recordValues[i] = symbolTable.unsafeLookup(readUntil(source, ",]", pos, &consumed));
+                    recordValues[i] = symbolTable.unsafeEncode(readUntil(source, ",]", pos, &consumed));
                     break;
                 }
                 case 'i': {
@@ -198,7 +198,7 @@ protected:
 
             switch (argType[0]) {
                 case 's': {
-                    branchArgs[i] = symbolTable.unsafeLookup(readUntil(source, ",)", pos, &consumed));
+                    branchArgs[i] = symbolTable.unsafeEncode(readUntil(source, ",)", pos, &consumed));
                     break;
                 }
                 case 'i': {

@@ -1723,9 +1723,9 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
     out << ")";                 \
     break
 #define COMPARE_STRING(op)                \
-    out << "(symTable.resolve(";          \
+    out << "(symTable.decode(";           \
     EVAL_CHILD(RamDomain, getLHS);        \
-    out << ") " #op " symTable.resolve("; \
+    out << ") " #op " symTable.decode(";  \
     EVAL_CHILD(RamDomain, getRHS);        \
     out << "))";                          \
     break
@@ -1752,33 +1752,33 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
                 // strings
                 case BinaryConstraintOp::MATCH: {
-                    out << "regex_wrapper(symTable.resolve(";
+                    out << "regex_wrapper(symTable.decode(";
                     dispatch(rel.getLHS(), out);
-                    out << "),symTable.resolve(";
+                    out << "),symTable.decode(";
                     dispatch(rel.getRHS(), out);
                     out << "))";
                     break;
                 }
                 case BinaryConstraintOp::NOT_MATCH: {
-                    out << "!regex_wrapper(symTable.resolve(";
+                    out << "!regex_wrapper(symTable.decode(";
                     dispatch(rel.getLHS(), out);
-                    out << "),symTable.resolve(";
+                    out << "),symTable.decode(";
                     dispatch(rel.getRHS(), out);
                     out << "))";
                     break;
                 }
                 case BinaryConstraintOp::CONTAINS: {
-                    out << "(symTable.resolve(";
+                    out << "(symTable.decode(";
                     dispatch(rel.getRHS(), out);
-                    out << ").find(symTable.resolve(";
+                    out << ").find(symTable.decode(";
                     dispatch(rel.getLHS(), out);
                     out << ")) != std::string::npos)";
                     break;
                 }
                 case BinaryConstraintOp::NOT_CONTAINS: {
-                    out << "(symTable.resolve(";
+                    out << "(symTable.decode(";
                     dispatch(rel.getRHS(), out);
-                    out << ").find(symTable.resolve(";
+                    out << ").find(symTable.decode(";
                     dispatch(rel.getLHS(), out);
                     out << ")) == std::string::npos)";
                     break;
@@ -1946,9 +1946,9 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 type_identity<IntrinsicOperator>, const IntrinsicOperator& op, std::ostream& out) override {
 #define MINMAX_SYMBOL(op)                   \
     {                                       \
-        out << "symTable.lookup(" #op "({"; \
+        out << "symTable.encode(" #op "({"; \
         for (auto& cur : args) {            \
-            out << "symTable.resolve(";     \
+            out << "symTable.decode(";      \
             dispatch(*cur, out);            \
             out << "), ";                   \
         }                                   \
@@ -2032,13 +2032,13 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
 #define CONV_TO_STRING(opcode, ty)                \
     case FunctorOp::opcode: {                     \
-        out << "symTable.lookup(std::to_string("; \
-        dispatch(*args[0], out);                      \
+        out << "symTable.encode(std::to_string("; \
+        dispatch(*args[0], out);                  \
         out << "))";                              \
     } break;
 #define CONV_FROM_STRING(opcode, ty)                                            \
     case FunctorOp::opcode: {                                                   \
-        out << "souffle::evaluator::symbol2numeric<" #ty ">(symTable.resolve("; \
+        out << "souffle::evaluator::symbol2numeric<" #ty ">(symTable.decode(";  \
         dispatch(*args[0], out);                                                \
         out << "))";                                                            \
     } break;
@@ -2053,7 +2053,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 }
                 // TODO: change the signature of `STRLEN` to return an unsigned?
                 case FunctorOp::STRLEN: {
-                    out << "static_cast<RamSigned>(symTable.resolve(";
+                    out << "static_cast<RamSigned>(symTable.decode(";
                     dispatch(*args[0], out);
                     out << ").size())";
                     break;
@@ -2138,15 +2138,15 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
                 // strings
                 case FunctorOp::CAT: {
-                    out << "symTable.lookup(";
+                    out << "symTable.encode(";
                     std::size_t i = 0;
                     while (i < args.size() - 1) {
-                        out << "symTable.resolve(";
+                        out << "symTable.decode(";
                         dispatch(*args[i], out);
                         out << ") + ";
                         i++;
                     }
-                    out << "symTable.resolve(";
+                    out << "symTable.decode(";
                     dispatch(*args[i], out);
                     out << "))";
                     break;
@@ -2154,8 +2154,8 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
                 /** Ternary Functor Operators */
                 case FunctorOp::SUBSTR: {
-                    out << "symTable.lookup(";
-                    out << "substr_wrapper(symTable.resolve(";
+                    out << "symTable.encode(";
+                    out << "substr_wrapper(symTable.decode(";
                     dispatch(*args[0], out);
                     out << "),(";
                     dispatch(*args[1], out);
@@ -2218,7 +2218,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 const std::vector<TypeAttribute>& argTypes = op.getArgsTypes();
 
                 if (op.getReturnType() == TypeAttribute::Symbol) {
-                    out << "symTable.lookup(";
+                    out << "symTable.encode(";
                 }
                 out << name << "(";
 
@@ -2243,7 +2243,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                             out << ")";
                             break;
                         case TypeAttribute::Symbol:
-                            out << "symTable.resolve(";
+                            out << "symTable.decode(";
                             dispatch(*args[i], out);
                             out << ").c_str()";
                             break;

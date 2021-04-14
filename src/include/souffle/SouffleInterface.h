@@ -563,7 +563,7 @@ public:
     tuple& operator<<(const std::string& str) {
         assert(pos < size() && "exceeded tuple's size");
         assert(*relation.getAttrType(pos) == 's' && "wrong element type");
-        array[pos++] = relation.getSymbolTable().lookup(str);
+        array[pos++] = relation.getSymbolTable().encode(str);
         return *this;
     }
 
@@ -620,7 +620,7 @@ public:
     tuple& operator>>(std::string& str) {
         assert(pos < size() && "exceeded tuple's size");
         assert(*relation.getAttrType(pos) == 's' && "wrong element type");
-        str = relation.getSymbolTable().resolve(array[pos++]);
+        str = relation.getSymbolTable().decode(array[pos++]);
         return *this;
     }
 
