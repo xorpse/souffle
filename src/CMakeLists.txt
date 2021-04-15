@@ -124,7 +124,7 @@ set(SOUFFLE_SOURCES
     ram/analysis/Index.cpp
     ram/analysis/Level.cpp
     ram/analysis/Relation.cpp
-    ram/transform/ChoiceConversion.cpp
+    ram/transform/IfExistsConversion.cpp
     ram/transform/CollapseFilters.cpp
     ram/transform/EliminateDuplicates.cpp
     ram/transform/ExpandFilter.cpp
