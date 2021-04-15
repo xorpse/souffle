@@ -15,11 +15,11 @@
  ***********************************************************************/
 
 #pragma once
+
 #include <cstddef>
 #include <utility>
 #include <vector>
 
-#pragma once
 namespace souffle {
 
 class ParserDriver;
