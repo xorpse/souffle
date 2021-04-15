@@ -277,6 +277,7 @@ souffle_sources = \
         interpreter/ProgInterface.h                        \
         interpreter/Relation.h                             \
         interpreter/Util.h                                 \
+        parser/Helper.h                                    \
         parser/ParserDriver.cpp                            \
         parser/ParserDriver.h                              \
         parser/ParserUtils.cpp                             \
