@@ -20,7 +20,6 @@
 #include "RelationTag.h"
 #include "ram/Aggregate.h"
 #include "ram/Break.h"
-#include "ram/Choice.h"
 #include "ram/Condition.h"
 #include "ram/Conjunction.h"
 #include "ram/Constraint.h"
@@ -28,15 +27,16 @@
 #include "ram/ExistenceCheck.h"
 #include "ram/Expression.h"
 #include "ram/Filter.h"
+#include "ram/IfExists.h"
 #include "ram/IndexAggregate.h"
-#include "ram/IndexChoice.h"
+#include "ram/IndexIfExists.h"
 #include "ram/IndexScan.h"
 #include "ram/Insert.h"
 #include "ram/Negation.h"
 #include "ram/Operation.h"
 #include "ram/PackRecord.h"
-#include "ram/ParallelChoice.h"
-#include "ram/ParallelIndexChoice.h"
+#include "ram/ParallelIfExists.h"
+#include "ram/ParallelIndexIfExists.h"
 #include "ram/ParallelIndexScan.h"
 #include "ram/ParallelScan.h"
 #include "ram/Relation.h"
@@ -175,10 +175,10 @@ TEST(RamParallelIndexScan, CloneAndEquals) {
     delete c;
 }
 
-TEST(RamChoice, CloneAndEquals) {
+TEST(RamIfExists, CloneAndEquals) {
     Relation edge("edge", 2, 1, {"x", "y"}, {"i", "i"}, RelationRepresentation::DEFAULT);
     // choose an edge not adjcent to vertex 5
-    // CHOICE t1 IN edge WHERE NOT t1.0 = 5 AND NOT t1.1 = 5
+    // IF EXISTS t1 IN edge WHERE NOT t1.0 = 5 AND NOT t1.1 = 5
     //  RETURN (t1.0, t1.1)
     VecOwn<Expression> a_return_args;
     a_return_args.emplace_back(new TupleElement(1, 0));
@@ -191,7 +191,7 @@ TEST(RamChoice, CloneAndEquals) {
             mk<Constraint>(BinaryConstraintOp::EQ, mk<TupleElement>(1, 1), mk<SignedConstant>(5));
     auto a_neg2 = mk<Negation>(std::move(a_constraint2));
     auto a_cond = mk<Conjunction>(std::move(a_neg1), std::move(a_neg2));
-    Choice a("edge", 1, std::move(a_cond), std::move(a_return), "Choice test");
+    IfExists a("edge", 1, std::move(a_cond), std::move(a_return), "IfExists test");
 
     VecOwn<Expression> b_return_args;
     b_return_args.emplace_back(new TupleElement(1, 0));
@@ -204,21 +204,21 @@ TEST(RamChoice, CloneAndEquals) {
             mk<Constraint>(BinaryConstraintOp::EQ, mk<TupleElement>(1, 1), mk<SignedConstant>(5));
     auto b_neg2 = mk<Negation>(std::move(b_constraint2));
     auto b_cond = mk<Conjunction>(std::move(b_neg1), std::move(b_neg2));
-    Choice b("edge", 1, std::move(b_cond), std::move(b_return), "Choice test");
+    IfExists b("edge", 1, std::move(b_cond), std::move(b_return), "IfExists test");
 
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    Choice* c = a.clone();
+    IfExists* c = a.clone();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
 }
 
-TEST(RamParallelChoice, CloneAndEquals) {
+TEST(RamParallelIfExists, CloneAndEquals) {
     Relation edge("edge", 2, 1, {"x", "y"}, {"i", "i"}, RelationRepresentation::DEFAULT);
     // parallel choose an edge not adjcent to vertex 5
-    // PARALLEL CHOICE t1 IN edge WHERE NOT t1.0 = 5 AND NOT t1.1 = 5
+    // PARALLEL IF EXISTS t1 IN edge WHERE NOT t1.0 = 5 AND NOT t1.1 = 5
     //  RETURN (t1.0, t1.1)
     VecOwn<Expression> a_return_args;
     a_return_args.emplace_back(new TupleElement(1, 0));
@@ -231,7 +231,7 @@ TEST(RamParallelChoice, CloneAndEquals) {
             mk<Constraint>(BinaryConstraintOp::EQ, mk<TupleElement>(1, 1), mk<SignedConstant>(5));
     auto a_neg2 = mk<Negation>(std::move(a_constraint2));
     auto a_cond = mk<Conjunction>(std::move(a_neg1), std::move(a_neg2));
-    ParallelChoice a("edge", 1, std::move(a_cond), std::move(a_return), "ParallelChoice test");
+    ParallelIfExists a("edge", 1, std::move(a_cond), std::move(a_return), "ParallelIfExists test");
 
     VecOwn<Expression> b_return_args;
     b_return_args.emplace_back(new TupleElement(1, 0));
@@ -244,18 +244,18 @@ TEST(RamParallelChoice, CloneAndEquals) {
             mk<Constraint>(BinaryConstraintOp::EQ, mk<TupleElement>(1, 1), mk<SignedConstant>(5));
     auto b_neg2 = mk<Negation>(std::move(b_constraint2));
     auto b_cond = mk<Conjunction>(std::move(b_neg1), std::move(b_neg2));
-    ParallelChoice b("edge", 1, std::move(b_cond), std::move(b_return), "ParallelChoice test");
+    ParallelIfExists b("edge", 1, std::move(b_cond), std::move(b_return), "ParallelIfExists test");
 
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    ParallelChoice* c = a.clone();
+    ParallelIfExists* c = a.clone();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
 }
 
-TEST(RamIndexChoice, CloneAndEquals) {
+TEST(RamIndexIfExists, CloneAndEquals) {
     Relation edge("edge", 2, 1, {"x", "y"}, {"i", "i"}, RelationRepresentation::DEFAULT);
     // FOR t1 IN edge ON INDEX t1.x = 5 AND t1.y = ⊥
     // WHERE NOT t1.1 = 5
@@ -271,8 +271,8 @@ TEST(RamIndexChoice, CloneAndEquals) {
     a_criteria.first.emplace_back(new UndefValue);
     a_criteria.second.emplace_back(new SignedConstant(5));
     a_criteria.second.emplace_back(new UndefValue);
-    IndexChoice a(
-            "edge", 1, std::move(a_neg), std::move(a_criteria), std::move(a_return), "IndexChoice test");
+    IndexIfExists a(
+            "edge", 1, std::move(a_neg), std::move(a_criteria), std::move(a_return), "IndexIfExists test");
 
     VecOwn<Expression> b_return_args;
     b_return_args.emplace_back(new TupleElement(1, 0));
@@ -285,18 +285,18 @@ TEST(RamIndexChoice, CloneAndEquals) {
     b_criteria.first.emplace_back(new UndefValue);
     b_criteria.second.emplace_back(new SignedConstant(5));
     b_criteria.second.emplace_back(new UndefValue);
-    IndexChoice b(
-            "edge", 1, std::move(b_neg), std::move(b_criteria), std::move(b_return), "IndexChoice test");
+    IndexIfExists b(
+            "edge", 1, std::move(b_neg), std::move(b_criteria), std::move(b_return), "IndexIfExists test");
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    IndexChoice* c = a.clone();
+    IndexIfExists* c = a.clone();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
 }
 
-TEST(RamiParallelIndexChoice, CloneAndEquals) {
+TEST(RamiParallelIndexIfExists, CloneAndEquals) {
     Relation edge("edge", 2, 1, {"x", "y"}, {"i", "i"}, RelationRepresentation::DEFAULT);
     // PARALLEL FOR t1 IN edge ON INDEX t1.x = 5 AND t1.y = ⊥
     // WHERE NOT t1.1 = 5
@@ -312,8 +312,8 @@ TEST(RamiParallelIndexChoice, CloneAndEquals) {
     a_criteria.first.emplace_back(new UndefValue);
     a_criteria.second.emplace_back(new SignedConstant(5));
     a_criteria.second.emplace_back(new UndefValue);
-    ParallelIndexChoice a(
-            "edge", 1, std::move(a_neg), std::move(a_criteria), std::move(a_return), "IndexChoice test");
+    ParallelIndexIfExists a(
+            "edge", 1, std::move(a_neg), std::move(a_criteria), std::move(a_return), "IndexIfExists test");
 
     VecOwn<Expression> b_return_args;
     b_return_args.emplace_back(new TupleElement(1, 0));
@@ -326,12 +326,12 @@ TEST(RamiParallelIndexChoice, CloneAndEquals) {
     b_criteria.first.emplace_back(new UndefValue);
     b_criteria.second.emplace_back(new SignedConstant(5));
     b_criteria.second.emplace_back(new UndefValue);
-    ParallelIndexChoice b(
-            "edge", 1, std::move(b_neg), std::move(b_criteria), std::move(b_return), "IndexChoice test");
+    ParallelIndexIfExists b(
+            "edge", 1, std::move(b_neg), std::move(b_criteria), std::move(b_return), "IndexIfExists test");
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    ParallelIndexChoice* c = a.clone();
+    ParallelIndexIfExists* c = a.clone();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;

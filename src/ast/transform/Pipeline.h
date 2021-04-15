@@ -74,7 +74,7 @@ public:
         for (auto& i : pipeline) {
             if (auto* mt = as<MetaTransformer>(i)) {
                 mt->disableTransformers(transforms);
-            } else if (transforms.find(i->getName()) != transforms.end()) {
+            } else if (transforms.find(i->getName()) != transforms.end() && i->isSwitchable()) {
                 i = mk<NullTransformer>();
             }
         }

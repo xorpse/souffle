@@ -8,7 +8,7 @@
 
 /************************************************************************
  *
- * @file Choice.h
+ * @file IfExists.h
  *
  * Defines the Operation of a relational algebra query.
  *
@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ram/AbstractChoice.h"
+#include "ram/AbstractIfExists.h"
 #include "ram/Condition.h"
 #include "ram/Node.h"
 #include "ram/Operation.h"
@@ -36,7 +36,7 @@
 namespace souffle::ram {
 
 /**
- * @class Choice
+ * @class IfExists
  * @brief Find a tuple in a relation such that a given condition holds.
  *
  * Only one tuple is returned (if one exists), even
@@ -46,44 +46,44 @@ namespace souffle::ram {
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *  QUERY
  *   ...
- *    CHOICE t1 IN A WHERE (t1.x, t1.y) NOT IN A
+ *    IF ∃ t1 IN A WHERE (t1.x, t1.y) NOT IN A
  *      ...
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-class Choice : public RelationOperation, public AbstractChoice {
+class IfExists : public RelationOperation, public AbstractIfExists {
 public:
-    Choice(std::string rel, std::size_t ident, Own<Condition> cond, Own<Operation> nested,
+    IfExists(std::string rel, std::size_t ident, Own<Condition> cond, Own<Operation> nested,
             std::string profileText = "")
             : RelationOperation(rel, ident, std::move(nested), std::move(profileText)),
-              AbstractChoice(std::move(cond)) {}
+              AbstractIfExists(std::move(cond)) {}
 
     void apply(const NodeMapper& map) override {
         RelationOperation::apply(map);
-        AbstractChoice::apply(map);
+        AbstractIfExists::apply(map);
     }
 
-    Choice* clone() const override {
-        return new Choice(relation, getTupleId(), souffle::clone(condition), souffle::clone(getOperation()),
+    IfExists* clone() const override {
+        return new IfExists(relation, getTupleId(), souffle::clone(condition), souffle::clone(getOperation()),
                 getProfileText());
     }
 
     std::vector<const Node*> getChildNodes() const override {
-        return {nestedOperation.get(), AbstractChoice::getChildNodes().at(0)};
+        return {nestedOperation.get(), AbstractIfExists::getChildNodes().at(0)};
     }
 
 protected:
     void print(std::ostream& os, int tabpos) const override {
         os << times(" ", tabpos);
-        os << "CHOICE t" << getTupleId();
-        os << " IN " << getRelation();
+        os << "IF ∃t" << getTupleId();
+        os << " IN " << relation;
         os << " WHERE " << getCondition();
         os << std::endl;
         RelationOperation::print(os, tabpos + 1);
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = asAssert<Choice>(node);
-        return RelationOperation::equal(other) && AbstractChoice::equal(other);
+        const auto& other = asAssert<IfExists>(node);
+        return RelationOperation::equal(other) && AbstractIfExists::equal(other);
     }
 };
 

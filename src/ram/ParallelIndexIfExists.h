@@ -8,7 +8,7 @@
 
 /************************************************************************
  *
- * @file ParallelIndexChoice.h
+ * @file ParallelIndexIfExists.h
  *
  ***********************************************************************/
 
@@ -18,7 +18,7 @@
 #include "ram/AbstractParallel.h"
 #include "ram/Condition.h"
 #include "ram/Expression.h"
-#include "ram/IndexChoice.h"
+#include "ram/IndexIfExists.h"
 #include "ram/IndexOperation.h"
 #include "ram/NestedOperation.h"
 #include "ram/Node.h"
@@ -40,26 +40,26 @@
 namespace souffle::ram {
 
 /**
- * @class ParallelIndexChoice
+ * @class ParallelIndexIfExists
  * @brief Use an index to find a tuple in a relation such that a given condition holds in parallel.
  *
  * For example:
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *  QUERY
  *   ...
- *    PARALLEL CHOICE A AS t1 ON INDEX t1.x=10 AND t1.y = 20
+ *    PARALLEL IF ∃t1 in A1  ON INDEX t1.x=10 AND t1.y = 20
  *    WHERE (t1.x, t1.y) NOT IN A
  *      ...
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-class ParallelIndexChoice : public IndexChoice, public AbstractParallel {
+class ParallelIndexIfExists : public IndexIfExists, public AbstractParallel {
 public:
-    ParallelIndexChoice(std::string rel, int ident, Own<Condition> cond, RamPattern queryPattern,
+    ParallelIndexIfExists(std::string rel, int ident, Own<Condition> cond, RamPattern queryPattern,
             Own<Operation> nested, std::string profileText = "")
-            : IndexChoice(
+            : IndexIfExists(
                       rel, ident, std::move(cond), std::move(queryPattern), std::move(nested), profileText) {}
 
-    ParallelIndexChoice* clone() const override {
+    ParallelIndexIfExists* clone() const override {
         RamPattern resQueryPattern;
         for (const auto& i : queryPattern.first) {
             resQueryPattern.first.emplace_back(i->clone());
@@ -67,7 +67,7 @@ public:
         for (const auto& i : queryPattern.second) {
             resQueryPattern.second.emplace_back(i->clone());
         }
-        auto* res = new ParallelIndexChoice(relation, getTupleId(), souffle::clone(condition),
+        auto* res = new ParallelIndexIfExists(relation, getTupleId(), souffle::clone(condition),
                 std::move(resQueryPattern), souffle::clone(getOperation()), getProfileText());
         return res;
     }
@@ -75,7 +75,7 @@ public:
 protected:
     void print(std::ostream& os, int tabpos) const override {
         os << times(" ", tabpos);
-        os << "PARALLEL CHOICE " << relation << " AS t" << getTupleId();
+        os << "PARALLEL IF ∃t" << getTupleId() << " IN " << relation;
         printIndex(os);
         os << " WHERE " << getCondition();
         os << std::endl;

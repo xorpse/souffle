@@ -215,7 +215,7 @@ public:
 
     void runProf() {
         if (!loaded && !f_name.empty()) {
-            std::cout << "Error: File cannot be floaded\n";
+            std::cout << "Error: File cannot be loaded\n";
             return;
         }
         if (loaded) {

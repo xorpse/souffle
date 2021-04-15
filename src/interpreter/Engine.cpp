@@ -26,7 +26,6 @@
 #include "ram/AutoIncrement.h"
 #include "ram/Break.h"
 #include "ram/Call.h"
-#include "ram/Choice.h"
 #include "ram/Clear.h"
 #include "ram/Conjunction.h"
 #include "ram/Constraint.h"
@@ -38,8 +37,9 @@
 #include "ram/False.h"
 #include "ram/Filter.h"
 #include "ram/IO.h"
+#include "ram/IfExists.h"
 #include "ram/IndexAggregate.h"
-#include "ram/IndexChoice.h"
+#include "ram/IndexIfExists.h"
 #include "ram/IndexScan.h"
 #include "ram/Insert.h"
 #include "ram/IntrinsicOperator.h"
@@ -53,9 +53,9 @@
 #include "ram/PackRecord.h"
 #include "ram/Parallel.h"
 #include "ram/ParallelAggregate.h"
-#include "ram/ParallelChoice.h"
+#include "ram/ParallelIfExists.h"
 #include "ram/ParallelIndexAggregate.h"
-#include "ram/ParallelIndexChoice.h"
+#include "ram/ParallelIndexIfExists.h"
 #include "ram/ParallelIndexScan.h"
 #include "ram/ParallelScan.h"
 #include "ram/Program.h"
@@ -440,12 +440,12 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 #define MINMAX_OP_SYM(op)                                        \
     {                                                            \
         auto result = EVAL_CHILD(RamDomain, 0);                  \
-        auto* result_val = &getSymbolTable().resolve(result);    \
-        for (std::size_t i = 1; i < args.size(); i++) {               \
+        auto* result_val = &getSymbolTable().decode(result);     \
+        for (std::size_t i = 1; i < args.size(); i++) {          \
             auto alt = EVAL_CHILD(RamDomain, i);                 \
             if (alt == result) continue;                         \
                                                                  \
-            const auto& alt_val = getSymbolTable().resolve(alt); \
+            const auto& alt_val = getSymbolTable().decode(alt);  \
             if (*result_val op alt_val) {                        \
                 result_val = &alt_val;                           \
                 result = alt;                                    \
@@ -472,10 +472,10 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
         return ramBitCast(func(x)); \
     }
 #define CONV_TO_STRING(op, ty)                                                             \
-    case FunctorOp::op: return getSymbolTable().lookup(std::to_string(EVAL_CHILD(ty, 0)));
+    case FunctorOp::op: return getSymbolTable().encode(std::to_string(EVAL_CHILD(ty, 0)));
 #define CONV_FROM_STRING(op, ty)                              \
     case FunctorOp::op: return evaluator::symbol2numeric<ty>( \
-        getSymbolTable().resolve(EVAL_CHILD(RamDomain, 0)));
+        getSymbolTable().decode(EVAL_CHILD(RamDomain, 0)));
             // clang-format on
 
             const auto& args = cur.getArguments();
@@ -483,7 +483,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                 /** Unary Functor Operators */
                 case FunctorOp::ORD: return execute(shadow.getChild(0), ctxt);
                 case FunctorOp::STRLEN:
-                    return getSymbolTable().resolve(execute(shadow.getChild(0), ctxt)).size();
+                    return getSymbolTable().decode(execute(shadow.getChild(0), ctxt)).size();
                 case FunctorOp::NEG: return -execute(shadow.getChild(0), ctxt);
                 case FunctorOp::FNEG: {
                     RamDomain result = execute(shadow.getChild(0), ctxt);
@@ -580,14 +580,14 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                 case FunctorOp::CAT: {
                     std::stringstream ss;
                     for (std::size_t i = 0; i < args.size(); i++) {
-                        ss << getSymbolTable().resolve(execute(shadow.getChild(i), ctxt));
+                        ss << getSymbolTable().decode(execute(shadow.getChild(i), ctxt));
                     }
-                    return getSymbolTable().lookup(ss.str());
+                    return getSymbolTable().encode(ss.str());
                 }
                 /** Ternary Functor Operators */
                 case FunctorOp::SUBSTR: {
                     auto symbol = execute(shadow.getChild(0), ctxt);
-                    const std::string& str = getSymbolTable().resolve(symbol);
+                    const std::string& str = getSymbolTable().decode(symbol);
                     auto idx = execute(shadow.getChild(1), ctxt);
                     auto len = execute(shadow.getChild(2), ctxt);
                     std::string sub_str;
@@ -597,7 +597,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                         std::cerr << "warning: wrong index position provided by substr(\"";
                         std::cerr << str << "\"," << (int32_t)idx << "," << (int32_t)len << ") functor.\n";
                     }
-                    return getSymbolTable().lookup(sub_str);
+                    return getSymbolTable().encode(sub_str);
                 }
 
                 case FunctorOp::RANGE:
@@ -702,7 +702,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                     switch (type[i]) {
                         case TypeAttribute::Symbol:
                             args[i] = &FFI_Symbol;
-                            strVal[i] = getSymbolTable().resolve(arg).c_str();
+                            strVal[i] = getSymbolTable().decode(arg).c_str();
                             values[i] = &strVal[i];
                             break;
                         case TypeAttribute::Signed:
@@ -748,7 +748,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                 switch (cur.getReturnType()) {
                     case TypeAttribute::Signed: return static_cast<RamDomain>(rc);
                     case TypeAttribute::Symbol:
-                        return getSymbolTable().lookup(reinterpret_cast<const char*>(rc));
+                        return getSymbolTable().encode(reinterpret_cast<const char*>(rc));
 
                     case TypeAttribute::Unsigned: return ramBitCast(static_cast<RamUnsigned>(rc));
                     case TypeAttribute::Float: return ramBitCast(static_cast<RamFloat>(rc));
@@ -828,8 +828,8 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
         // clang-format off
 #define COMPARE_NUMERIC(ty, op) return EVAL_LEFT(ty) op EVAL_RIGHT(ty)
 #define COMPARE_STRING(op)                                        \
-    return (getSymbolTable().resolve(EVAL_LEFT(RamDomain)) op \
-            getSymbolTable().resolve(EVAL_RIGHT(RamDomain)))
+    return (getSymbolTable().decode(EVAL_LEFT(RamDomain)) op \
+            getSymbolTable().decode(EVAL_RIGHT(RamDomain)))
 #define COMPARE_EQ_NE(opCode, op)                                         \
     case BinaryConstraintOp::   opCode: COMPARE_NUMERIC(RamDomain  , op); \
     case BinaryConstraintOp::F##opCode: COMPARE_NUMERIC(RamFloat   , op);
@@ -852,8 +852,8 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                 case BinaryConstraintOp::MATCH: {
                     RamDomain left = execute(shadow.getLhs(), ctxt);
                     RamDomain right = execute(shadow.getRhs(), ctxt);
-                    const std::string& pattern = getSymbolTable().resolve(left);
-                    const std::string& text = getSymbolTable().resolve(right);
+                    const std::string& pattern = getSymbolTable().decode(left);
+                    const std::string& text = getSymbolTable().decode(right);
                     bool result = false;
                     try {
                         result = std::regex_match(text, std::regex(pattern));
@@ -866,8 +866,8 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                 case BinaryConstraintOp::NOT_MATCH: {
                     RamDomain left = execute(shadow.getLhs(), ctxt);
                     RamDomain right = execute(shadow.getRhs(), ctxt);
-                    const std::string& pattern = getSymbolTable().resolve(left);
-                    const std::string& text = getSymbolTable().resolve(right);
+                    const std::string& pattern = getSymbolTable().decode(left);
+                    const std::string& text = getSymbolTable().decode(right);
                     bool result = false;
                     try {
                         result = !std::regex_match(text, std::regex(pattern));
@@ -880,15 +880,15 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                 case BinaryConstraintOp::CONTAINS: {
                     RamDomain left = execute(shadow.getLhs(), ctxt);
                     RamDomain right = execute(shadow.getRhs(), ctxt);
-                    const std::string& pattern = getSymbolTable().resolve(left);
-                    const std::string& text = getSymbolTable().resolve(right);
+                    const std::string& pattern = getSymbolTable().decode(left);
+                    const std::string& text = getSymbolTable().decode(right);
                     return text.find(pattern) != std::string::npos;
                 }
                 case BinaryConstraintOp::NOT_CONTAINS: {
                     RamDomain left = execute(shadow.getLhs(), ctxt);
                     RamDomain right = execute(shadow.getRhs(), ctxt);
-                    const std::string& pattern = getSymbolTable().resolve(left);
-                    const std::string& text = getSymbolTable().resolve(right);
+                    const std::string& pattern = getSymbolTable().decode(left);
+                    const std::string& text = getSymbolTable().decode(right);
                     return text.find(pattern) == std::string::npos;
                 }
             }
@@ -948,40 +948,40 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
         FOR_EACH(PARALLEL_INDEX_SCAN)
 #undef PARALLEL_INDEX_SCAN
 
-#define CHOICE(Structure, Arity, ...)                                   \
-    CASE(Choice, Structure, Arity)                                      \
+#define IFEXISTS(Structure, Arity, ...)                                 \
+    CASE(IfExists, Structure, Arity)                                    \
         const auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
-        return evalChoice(rel, cur, shadow, ctxt);                      \
-    ESAC(Choice)
+        return evalIfExists(rel, cur, shadow, ctxt);                    \
+    ESAC(IfExists)
 
-        FOR_EACH(CHOICE)
-#undef CHOICE
+        FOR_EACH(IFEXISTS)
+#undef IFEXISTS
 
-#define PARALLEL_CHOICE(Structure, Arity, ...)                          \
-    CASE(ParallelChoice, Structure, Arity)                              \
+#define PARALLEL_IFEXISTS(Structure, Arity, ...)                        \
+    CASE(ParallelIfExists, Structure, Arity)                            \
         const auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
-        return evalParallelChoice(rel, cur, shadow, ctxt);              \
-    ESAC(ParallelChoice)
+        return evalParallelIfExists(rel, cur, shadow, ctxt);            \
+    ESAC(ParallelIfExists)
 
-        FOR_EACH(PARALLEL_CHOICE)
-#undef PARALLEL_CHOICE
+        FOR_EACH(PARALLEL_IFEXISTS)
+#undef PARALLEL_IFEXISTS
 
-#define INDEX_CHOICE(Structure, Arity, ...)                 \
-    CASE(IndexChoice, Structure, Arity)                     \
-        return evalIndexChoice<RelType>(cur, shadow, ctxt); \
-    ESAC(IndexChoice)
+#define INDEX_IFEXISTS(Structure, Arity, ...)                 \
+    CASE(IndexIfExists, Structure, Arity)                     \
+        return evalIndexIfExists<RelType>(cur, shadow, ctxt); \
+    ESAC(IndexIfExists)
 
-        FOR_EACH(INDEX_CHOICE)
-#undef INDEX_CHOICE
+        FOR_EACH(INDEX_IFEXISTS)
+#undef INDEX_IFEXISTS
 
-#define PARALLEL_INDEX_CHOICE(Structure, Arity, ...)                    \
-    CASE(ParallelIndexChoice, Structure, Arity)                         \
+#define PARALLEL_INDEX_IFEXISTS(Structure, Arity, ...)                  \
+    CASE(ParallelIndexIfExists, Structure, Arity)                       \
         const auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
-        return evalParallelIndexChoice(rel, cur, shadow, ctxt);         \
-    ESAC(ParallelIndexChoice)
+        return evalParallelIndexIfExists(rel, cur, shadow, ctxt);       \
+    ESAC(ParallelIndexIfExists)
 
-        FOR_EACH(PARALLEL_INDEX_CHOICE)
-#undef PARALLEL_INDEX_CHOICE
+        FOR_EACH(PARALLEL_INDEX_IFEXISTS)
+#undef PARALLEL_INDEX_IFEXISTS
 
         CASE(UnpackRecord)
             RamDomain ref = execute(shadow.getExpr(), ctxt);
@@ -1429,7 +1429,8 @@ RamDomain Engine::evalParallelIndexScan(
 }
 
 template <typename Rel>
-RamDomain Engine::evalChoice(const Rel& rel, const ram::Choice& cur, const Choice& shadow, Context& ctxt) {
+RamDomain Engine::evalIfExists(
+        const Rel& rel, const ram::IfExists& cur, const IfExists& shadow, Context& ctxt) {
     // use simple iterator
     for (const auto& tuple : rel.scan()) {
         ctxt[cur.getTupleId()] = tuple.data();
@@ -1442,8 +1443,8 @@ RamDomain Engine::evalChoice(const Rel& rel, const ram::Choice& cur, const Choic
 }
 
 template <typename Rel>
-RamDomain Engine::evalParallelChoice(
-        const Rel& rel, const ram::ParallelChoice& cur, const ParallelChoice& shadow, Context& ctxt) {
+RamDomain Engine::evalParallelIfExists(
+        const Rel& rel, const ram::ParallelIfExists& cur, const ParallelIfExists& shadow, Context& ctxt) {
     auto viewContext = shadow.getViewContext();
 
     auto pStream = rel.partitionScan(numOfThreads);
@@ -1467,7 +1468,8 @@ RamDomain Engine::evalParallelChoice(
 }
 
 template <typename Rel>
-RamDomain Engine::evalIndexChoice(const ram::IndexChoice& cur, const IndexChoice& shadow, Context& ctxt) {
+RamDomain Engine::evalIndexIfExists(
+        const ram::IndexIfExists& cur, const IndexIfExists& shadow, Context& ctxt) {
     constexpr std::size_t Arity = Rel::Arity;
     const auto& superInfo = shadow.getSuperInst();
     souffle::Tuple<RamDomain, Arity> low;
@@ -1488,8 +1490,8 @@ RamDomain Engine::evalIndexChoice(const ram::IndexChoice& cur, const IndexChoice
 }
 
 template <typename Rel>
-RamDomain Engine::evalParallelIndexChoice(const Rel& rel, const ram::ParallelIndexChoice& cur,
-        const ParallelIndexChoice& shadow, Context& ctxt) {
+RamDomain Engine::evalParallelIndexIfExists(const Rel& rel, const ram::ParallelIndexIfExists& cur,
+        const ParallelIndexIfExists& shadow, Context& ctxt) {
     auto viewContext = shadow.getViewContext();
 
     auto viewInfo = viewContext->getViewInfoForNested();

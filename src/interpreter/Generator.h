@@ -28,7 +28,6 @@
 #include "ram/AutoIncrement.h"
 #include "ram/Break.h"
 #include "ram/Call.h"
-#include "ram/Choice.h"
 #include "ram/Clear.h"
 #include "ram/Condition.h"
 #include "ram/Conjunction.h"
@@ -42,8 +41,9 @@
 #include "ram/False.h"
 #include "ram/Filter.h"
 #include "ram/IO.h"
+#include "ram/IfExists.h"
 #include "ram/IndexAggregate.h"
-#include "ram/IndexChoice.h"
+#include "ram/IndexIfExists.h"
 #include "ram/IndexOperation.h"
 #include "ram/IndexScan.h"
 #include "ram/Insert.h"
@@ -61,9 +61,9 @@
 #include "ram/PackRecord.h"
 #include "ram/Parallel.h"
 #include "ram/ParallelAggregate.h"
-#include "ram/ParallelChoice.h"
+#include "ram/ParallelIfExists.h"
 #include "ram/ParallelIndexAggregate.h"
-#include "ram/ParallelIndexChoice.h"
+#include "ram/ParallelIndexIfExists.h"
 #include "ram/ParallelIndexScan.h"
 #include "ram/ParallelScan.h"
 #include "ram/Program.h"
@@ -174,14 +174,14 @@ public:
 
     NodePtr visit_(type_identity<ram::ParallelIndexScan>, const ram::ParallelIndexScan& piscan) override;
 
-    NodePtr visit_(type_identity<ram::Choice>, const ram::Choice& choice) override;
+    NodePtr visit_(type_identity<ram::IfExists>, const ram::IfExists& ifexists) override;
 
-    NodePtr visit_(type_identity<ram::ParallelChoice>, const ram::ParallelChoice& pChoice) override;
+    NodePtr visit_(type_identity<ram::ParallelIfExists>, const ram::ParallelIfExists& pIfExists) override;
 
-    NodePtr visit_(type_identity<ram::IndexChoice>, const ram::IndexChoice& iChoice) override;
+    NodePtr visit_(type_identity<ram::IndexIfExists>, const ram::IndexIfExists& iIfExists) override;
 
     NodePtr visit_(
-            type_identity<ram::ParallelIndexChoice>, const ram::ParallelIndexChoice& piChoice) override;
+            type_identity<ram::ParallelIndexIfExists>, const ram::ParallelIndexIfExists& piIfExists) override;
 
     NodePtr visit_(type_identity<ram::UnpackRecord>, const ram::UnpackRecord& unpack) override;
 
@@ -254,7 +254,8 @@ private:
 
         /** @brief Bind tuple with the default order.
          *
-         * This is usually used for tuples created by non-indexed operations. Such as Scan, Aggregate, Choice.
+         * This is usually used for tuples created by non-indexed operations. Such as Scan, Aggregate,
+         * IfExists.
          * */
         template <class RamNode>
         void addTupleWithDefaultOrder(std::size_t tupleId, const RamNode& node);
@@ -262,7 +263,7 @@ private:
         /** @brief Bind tuple with the corresponding index order.
          *
          * This is usually used for tuples created by indexed operations. Such as IndexScan, IndexAggregate,
-         * IndexChoice.
+         * IndexIfExists.
          * */
         template <class RamNode>
         void addTupleWithIndexOrder(std::size_t tupleId, const RamNode& node);

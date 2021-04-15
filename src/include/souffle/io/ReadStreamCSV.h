@@ -93,7 +93,7 @@ protected:
                 auto&& ty = typeAttributes.at(inputMap[column]);
                 switch (ty[0]) {
                     case 's': {
-                        tuple[inputMap[column]] = symbolTable.unsafeLookup(element);
+                        tuple[inputMap[column]] = symbolTable.unsafeEncode(element);
                         charactersRead = element.size();
                         break;
                     }

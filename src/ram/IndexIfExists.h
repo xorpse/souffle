@@ -8,13 +8,13 @@
 
 /************************************************************************
  *
- * @file IndexChoice.h
+ * @file IndexIfExists.h
  *
  ***********************************************************************/
 
 #pragma once
 
-#include "ram/AbstractChoice.h"
+#include "ram/AbstractIfExists.h"
 #include "ram/Condition.h"
 #include "ram/Expression.h"
 #include "ram/IndexOperation.h"
@@ -36,7 +36,7 @@
 namespace souffle::ram {
 
 /**
- * @class IndexChoice
+ * @class IndexIfExists
  * @brief Use an index to find a tuple in a relation such that a given condition holds.
  *
  * Only one tuple is returned (if one exists), even
@@ -46,18 +46,18 @@ namespace souffle::ram {
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *  QUERY
  *   ...
- *    CHOICE A AS t1 ON INDEX t1.x=10 AND t1.y = 20
+ *    IF ∃ t1 in A ON INDEX t1.x=10 AND t1.y = 20
  *    WHERE (t1.x, t1.y) NOT IN A
  *      ...
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-class IndexChoice : public IndexOperation, public AbstractChoice {
+class IndexIfExists : public IndexOperation, public AbstractIfExists {
 public:
-    IndexChoice(std::string rel, int ident, Own<Condition> cond, RamPattern queryPattern,
+    IndexIfExists(std::string rel, int ident, Own<Condition> cond, RamPattern queryPattern,
             Own<Operation> nested, std::string profileText = "")
 
             : IndexOperation(rel, ident, std::move(queryPattern), std::move(nested), std::move(profileText)),
-              AbstractChoice(std::move(cond)) {
+              AbstractIfExists(std::move(cond)) {
         assert(getRangePattern().first.size() == getRangePattern().second.size() && "Arity mismatch");
     }
 
@@ -69,16 +69,16 @@ public:
         for (auto& pattern : queryPattern.second) {
             pattern = map(std::move(pattern));
         }
-        AbstractChoice::apply(map);
+        AbstractIfExists::apply(map);
     }
 
     std::vector<const Node*> getChildNodes() const override {
         auto res = IndexOperation::getChildNodes();
-        res.push_back(AbstractChoice::getChildNodes().at(0));
+        res.push_back(AbstractIfExists::getChildNodes().at(0));
         return res;
     }
 
-    IndexChoice* clone() const override {
+    IndexIfExists* clone() const override {
         RamPattern resQueryPattern;
         for (const auto& i : queryPattern.first) {
             resQueryPattern.first.emplace_back(i->clone());
@@ -86,7 +86,7 @@ public:
         for (const auto& i : queryPattern.second) {
             resQueryPattern.second.emplace_back(i->clone());
         }
-        auto* res = new IndexChoice(relation, getTupleId(), souffle::clone(condition),
+        auto* res = new IndexIfExists(relation, getTupleId(), souffle::clone(condition),
                 std::move(resQueryPattern), souffle::clone(getOperation()), getProfileText());
         return res;
     }
@@ -94,7 +94,7 @@ public:
 protected:
     void print(std::ostream& os, int tabpos) const override {
         os << times(" ", tabpos);
-        os << "CHOICE " << relation << " AS t" << getTupleId();
+        os << "IF ∃t" << getTupleId() << " IN " << relation;
         printIndex(os);
         os << " WHERE " << getCondition();
         os << std::endl;
@@ -102,8 +102,8 @@ protected:
     }
 
     bool equal(const Node& node) const override {
-        const auto& other = asAssert<IndexChoice>(node);
-        return IndexOperation::equal(other) && AbstractChoice::equal(other);
+        const auto& other = asAssert<IndexIfExists>(node);
+        return IndexOperation::equal(other) && AbstractIfExists::equal(other);
     }
 };
 

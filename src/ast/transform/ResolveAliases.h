@@ -35,6 +35,13 @@ public:
     }
 
     /**
+     * ResolveAliasesTransformer cannot be disabled.
+     */
+    bool isSwitchable() override {
+        return false;
+    }
+
+    /**
      * Converts the given clause into a version without variables aliasing
      * grounded variables.
      *

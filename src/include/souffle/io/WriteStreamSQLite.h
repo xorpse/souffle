@@ -103,7 +103,7 @@ private:
     }
 
     uint64_t getSymbolTableIDFromDB(int index) {
-        if (sqlite3_bind_text(symbolSelectStatement, 1, symbolTable.unsafeResolve(index).c_str(), -1,
+        if (sqlite3_bind_text(symbolSelectStatement, 1, symbolTable.unsafeDecode(index).c_str(), -1,
                     SQLITE_TRANSIENT) != SQLITE_OK) {
             throwError("SQLite error in sqlite3_bind_text: ");
         }
@@ -120,7 +120,7 @@ private:
             return dbSymbolTable[index];
         }
 
-        if (sqlite3_bind_text(symbolInsertStatement, 1, symbolTable.unsafeResolve(index).c_str(), -1,
+        if (sqlite3_bind_text(symbolInsertStatement, 1, symbolTable.unsafeDecode(index).c_str(), -1,
                     SQLITE_TRANSIENT) != SQLITE_OK) {
             throwError("SQLite error in sqlite3_bind_text: ");
         }

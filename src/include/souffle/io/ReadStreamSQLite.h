@@ -73,7 +73,7 @@ protected:
             try {
                 auto&& ty = typeAttributes.at(column);
                 switch (ty[0]) {
-                    case 's': tuple[column] = symbolTable.unsafeLookup(element); break;
+                    case 's': tuple[column] = symbolTable.unsafeEncode(element); break;
                     case 'i':
                     case 'u':
                     case 'f':
