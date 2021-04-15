@@ -34,6 +34,7 @@
 
 /* -- Dependencies -- */
 %code requires {
+#pragma once
     #include "AggregateOp.h"
     #include "FunctorOps.h"
     #include "ast/Aggregator.h"
