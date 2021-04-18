@@ -48,10 +48,17 @@ public:
             SymbolTable& symbolTable, RecordTable& recordTable)
             : ReadStream(rwOperation, symbolTable, recordTable),
               delimiter(getOr(rwOperation, "delimiter", "\t")), file(file), lineNumber(0),
-              inputMap(getInputColumnMap(rwOperation, static_cast<unsigned int>(arity))) {
+              inputMap(getInputColumnMap(rwOperation, static_cast<unsigned int>(arity))){
         while (inputMap.size() < arity) {
             int size = static_cast<int>(inputMap.size());
             inputMap[size] = size;
+        }
+
+        rfc4180 = (getOr(rwOperation,"rfc4180", "false") == "true");
+        if (rfc4180 && delimiter.find('"') != std::string::npos) {
+            std::stringstream errorMessage;
+            errorMessage << "CSV delimiter cannot contain '\"' character when rfc4180 is enabled.";
+            throw std::invalid_argument(errorMessage.str());
         }
     }
 
@@ -79,11 +86,10 @@ protected:
         ++lineNumber;
 
         std::size_t start = 0;
-        std::size_t end = 0;
         std::size_t columnsFilled = 0;
         for (uint32_t column = 0; columnsFilled < arity; column++) {
             std::size_t charactersRead = 0;
-            std::string element = nextElement(line, start, end);
+            std::string element = nextElement(line, start);
             if (inputMap.count(column) == 0) {
                 continue;
             }
@@ -156,9 +162,59 @@ protected:
         return value;
     }
 
-    std::string nextElement(const std::string& line, std::size_t& start, std::size_t& end) {
+    std::string nextElement(const std::string& line, std::size_t& start) {
         std::string element;
 
+        if (rfc4180) {
+          if (line[start] == '"') {
+            // quoted field
+            const std::size_t end = line.length();
+            std::size_t pos = start + 1;
+            bool foundEndQuote = false;
+            while (pos < end) {
+              char c = line[pos++];
+              if (c == '"' && (pos < end) && line[pos] == '"') {
+                // two double-quote => one double-quote
+                element.push_back('"');
+                ++pos;
+              } else if (c == '"') {
+                foundEndQuote = true;
+                break;
+              } else {
+                element.push_back(c);
+              }
+            }
+
+            if (!foundEndQuote) {
+              // missing closing quote
+              std::stringstream errorMessage;
+              errorMessage << "Unbalanced field quote in line " << lineNumber << "; ";
+              throw std::invalid_argument(errorMessage.str());
+            }
+
+            // field must be immediately followed by delimiter or end of line
+            if (pos != line.length()) {
+              std::size_t nextDelimiter = line.find(delimiter, pos);
+              if (nextDelimiter != pos) {
+                std::stringstream errorMessage;
+                errorMessage << "Separator expected immediately after quoted field in line " << lineNumber << "; ";
+                throw std::invalid_argument(errorMessage.str());
+              }
+            }
+
+            start = pos + delimiter.size();
+            return element;
+          } else {
+            // non-quoted field, span until next delimiter or end of line
+            const std::size_t end = std::min(line.find(delimiter, start), line.length());
+            element = line.substr(start, end - start);
+            start = end + delimiter.size();
+
+            return element;
+          }
+        }
+
+        std::size_t end = start;
         // Handle record/tuple delimiter coincidence.
         if (delimiter.find(',') != std::string::npos) {
             int record_parens = 0;
@@ -190,7 +246,7 @@ protected:
             // Handle the end-of-the-line case where parenthesis are unbalanced.
             if (record_parens != 0) {
                 std::stringstream errorMessage;
-                errorMessage << "Unbalanced record parenthesis " << lineNumber << "; ";
+                errorMessage << "Unbalanced record parenthesis in line " << lineNumber << "; ";
                 throw std::invalid_argument(errorMessage.str());
             }
         } else {
@@ -238,6 +294,7 @@ protected:
     std::istream& file;
     std::size_t lineNumber;
     std::map<int, int> inputMap;
+    bool rfc4180;
 };
 
 class ReadFileCSV : public ReadStreamCSV {

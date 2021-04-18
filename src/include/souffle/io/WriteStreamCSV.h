@@ -42,9 +42,13 @@ protected:
     WriteStreamCSV(const std::map<std::string, std::string>& rwOperation, const SymbolTable& symbolTable,
             const RecordTable& recordTable)
             : WriteStream(rwOperation, symbolTable, recordTable),
-              delimiter(getOr(rwOperation, "delimiter", "\t")){};
+              delimiter(getOr(rwOperation, "delimiter", "\t")) {
+                rfc4180 = (getOr(rwOperation, "rfc4180", "false") == std::string("true"));
+              };
 
     const std::string delimiter;
+
+    bool rfc4180 = false;
 
     void writeNextTupleCSV(std::ostream& destination, const RamDomain* tuple) {
         writeNextTupleElement(destination, typeAttributes.at(0), tuple[0]);
@@ -57,14 +61,60 @@ protected:
         destination << "\n";
     }
 
+    virtual void outputSymbol(std::ostream& destination, const std::string& value) {
+        outputSymbol(destination, value, false);
+    }
+
+    void outputSymbol(std::ostream& destination, const std::string& value, bool fieldValue) {
+        if (rfc4180) {
+            if (!fieldValue) {
+                destination << '"';
+            }
+            destination << '"';
+
+            const std::size_t end = value.length();
+            for (std::size_t pos = 0; pos < end; ++pos) {
+                char ch = value[pos];
+                if (ch == '"') {
+                    destination << '\\';
+                    destination << '"';
+                }
+                destination << ch;
+            }
+
+            if (!fieldValue) {
+                destination << '"';
+            }
+            destination << '"';
+        } else {
+            destination << value;
+        }
+    }
+
     void writeNextTupleElement(std::ostream& destination, const std::string& type, RamDomain value) {
         switch (type[0]) {
-            case 's': destination << symbolTable.unsafeDecode(value); break;
+            case 's': outputSymbol(destination, symbolTable.unsafeDecode(value), true); break;
             case 'i': destination << value; break;
             case 'u': destination << ramBitCast<RamUnsigned>(value); break;
             case 'f': destination << ramBitCast<RamFloat>(value); break;
-            case 'r': outputRecord(destination, value, type); break;
-            case '+': outputADT(destination, value, type); break;
+            case 'r':
+                if (rfc4180) {
+                    destination << '"';
+                }
+                outputRecord(destination, value, type);
+                if (rfc4180) {
+                    destination << '"';
+                }
+                break;
+            case '+':
+                if (rfc4180) {
+                    destination << '"';
+                }
+                outputADT(destination, value, type);
+                if (rfc4180) {
+                    destination << '"';
+                }
+                break;
             default: fatal("unsupported type attribute: `%c`", type[0]);
         }
     }
