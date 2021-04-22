@@ -38,7 +38,6 @@ Node::NodeVec FunctionalConstraint::getChildNodesImpl() const {
 }
 
 void FunctionalConstraint::print(std::ostream& os) const {
-    os << "keys ";
     if (keys.size() > 1) {
         os << "(";
     }
