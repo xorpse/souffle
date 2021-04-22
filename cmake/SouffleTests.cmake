@@ -175,7 +175,11 @@ function(SOUFFLE_RUN_TEST_HELPER)
                                  OUTPUT_DIR ${OUTPUT_DIR}
                                  FIXTURE_NAME ${FIXTURE_NAME}
                                  NEGATIVE ${PARAM_NEGATIVE}
-                                 SOUFFLE_PARAMS "${EXTRA_FLAGS} -j8 -D . -F '${FACTS_DIR}'"
+                                 if (OPENMP_FOUND)
+                                    SOUFFLE_PARAMS "${EXTRA_FLAGS} -j8 -D . -F '${FACTS_DIR}'"
+                                 else()
+                                    SOUFFLE_PARAMS "${EXTRA_FLAGS} -D . -F '${FACTS_DIR}'"
+                                 endif()
                                  TEST_LABELS ${TEST_LABELS})
 
     souffle_compare_std_outputs(TEST_NAME ${PARAM_TEST_NAME}

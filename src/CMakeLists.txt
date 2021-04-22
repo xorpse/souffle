@@ -179,14 +179,25 @@ set_target_properties(libsouffle PROPERTIES CXX_EXTENSIONS OFF)
 target_compile_options(libsouffle
                        PUBLIC "-Wall;-Wextra;-fwrapv")
 
-target_link_libraries(libsouffle
+
+# FIXME: Better to have a library list 
+if (OPENMP_FOUND)
+    target_link_libraries(libsouffle
                       PUBLIC OpenMP::OpenMP_CXX
                              $<$<BOOL:${SOUFFLE_USE_ZLIB}>:ZLIB::ZLIB>
                              $<$<BOOL:${SOUFFLE_USE_SQLITE}>:SQLite::SQLite3>
                              $<$<BOOL:${SOUFFLE_USE_CURSES}>:Curses::NCurses>
                              LibFFI::LibFFI
-                             "${CMAKE_DL_LIBS}"
-                      )
+                             "${CMAKE_DL_LIBS}")
+else()
+    target_link_libraries(libsouffle
+                      PUBLIC $<$<BOOL:${SOUFFLE_USE_ZLIB}>:ZLIB::ZLIB>
+                             $<$<BOOL:${SOUFFLE_USE_SQLITE}>:SQLite::SQLite3>
+                             $<$<BOOL:${SOUFFLE_USE_CURSES}>:Curses::NCurses>
+                             LibFFI::LibFFI
+                             "${CMAKE_DL_LIBS}")
+endif()
+
 
 if (SOUFFLE_DOMAIN_64BIT)
     target_compile_definitions(libsouffle
