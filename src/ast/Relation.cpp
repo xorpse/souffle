@@ -57,7 +57,10 @@ Node::NodeVec Relation::getChildNodesImpl() const {
 
 void Relation::print(std::ostream& os) const {
     os << ".decl " << getQualifiedName() << "(" << join(attributes, ", ") << ")" << join(qualifiers, " ")
-       << " " << representation << " choice-domain " << join(functionalDependencies, ", ");
+       << " " << representation;
+    if (!functionalDependencies.empty()) {
+        os << " choice-domain " << join(functionalDependencies, ", ");
+    }
 }
 
 bool Relation::equal(const Node& node) const {
