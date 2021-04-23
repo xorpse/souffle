@@ -1,0 +1,25 @@
+name: CI-testing
+
+on: pull_request
+
+jobs:
+  basic:
+    runs-on: [self-hosted, plang7]
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    
+    - name: code-style
+      run:  sh/run_test_format.sh
+      
+    - name: setup
+      run: ./bootstrap && ./configure
+      
+    - name: make
+      run: make -j4
+      
+    - name: check
+      run: TESTSUITEFLAGS=-j4 make check -j4 || (sh/after_failure.sh && false)
