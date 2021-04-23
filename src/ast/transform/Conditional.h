@@ -74,7 +74,7 @@ public:
     }
 
 private:
-    ConditionalTransformer* cloneImpl() const override {
+    ConditionalTransformer* cloning() const override {
         return new ConditionalTransformer(condition, souffle::clone(transformer));
     }
 

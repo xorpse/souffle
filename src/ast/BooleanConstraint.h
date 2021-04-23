@@ -51,7 +51,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    BooleanConstraint* cloneImpl() const override;
+    BooleanConstraint* cloning() const override;
 
 private:
     /** Truth value of Boolean constraint */

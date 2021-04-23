@@ -28,7 +28,7 @@ void BranchDeclaration::print(std::ostream& os) const {
     os << tfm::format("%s {%s}", constructor, join(fields, ", "));
 }
 
-BranchDeclaration* BranchDeclaration::cloneImpl() const {
+BranchDeclaration* BranchDeclaration::cloning() const {
     return new BranchDeclaration(constructor, souffle::clone(fields), getSrcLoc());
 }
 

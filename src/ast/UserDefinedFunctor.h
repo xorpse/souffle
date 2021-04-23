@@ -46,7 +46,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    UserDefinedFunctor* cloneImpl() const override;
+    UserDefinedFunctor* cloning() const override;
 
 private:
     /** Name */

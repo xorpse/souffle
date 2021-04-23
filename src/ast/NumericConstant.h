@@ -48,7 +48,7 @@ public:
 private:
     bool equal(const Node& node) const override;
 
-    NumericConstant* cloneImpl() const override;
+    NumericConstant* cloning() const override;
 
 private:
     std::optional<Type> fixedType;

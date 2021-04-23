@@ -36,7 +36,7 @@ public:
     void verify(TranslationUnit& translationUnit);
 
 private:
-    TypeChecker* cloneImpl() const override {
+    TypeChecker* cloning() const override {
         return new TypeChecker();
     }
 

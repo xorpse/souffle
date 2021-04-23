@@ -42,7 +42,7 @@ bool FunctorDeclaration::equal(const Node& node) const {
            stateful == other.stateful;
 }
 
-FunctorDeclaration* FunctorDeclaration::cloneImpl() const {
+FunctorDeclaration* FunctorDeclaration::cloning() const {
     return new FunctorDeclaration(
             name, souffle::clone(params), souffle::clone(returnType), stateful, getSrcLoc());
 }

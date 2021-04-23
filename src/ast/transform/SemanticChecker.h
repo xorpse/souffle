@@ -31,7 +31,7 @@ public:
     }
 
 private:
-    SemanticChecker* cloneImpl() const override {
+    SemanticChecker* cloning() const override {
         return new SemanticChecker();
     }
 

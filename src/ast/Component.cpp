@@ -150,7 +150,7 @@ bool Component::equal(const Node& node) const {
            // clang-format off
 }
 
-Component* Component::cloneImpl() const {
+Component* Component::cloning() const {
     auto* res = new Component();
     res->componentType = souffle::clone(componentType);
     res->baseComponents = souffle::clone(baseComponents);

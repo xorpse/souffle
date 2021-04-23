@@ -109,7 +109,7 @@ private:
     /** Abstract equality check for two AST nodes */
     virtual bool equal(const Node& /* other */) const;
 
-    virtual Node* cloneImpl() const = 0;
+    virtual Node* cloning() const = 0;
 
 private:
     /** Source location of a syntactic element */

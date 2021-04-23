@@ -95,7 +95,7 @@ protected:
     }
 
 private:
-    PipelineTransformer* cloneImpl() const override {
+    PipelineTransformer* cloning() const override {
         VecOwn<Transformer> transformers;
         for (const auto& transformer : pipeline) {
             transformers.push_back(souffle::clone(transformer));

@@ -32,7 +32,7 @@ public:
     void verify(TranslationUnit& translationUnit);
 
 private:
-    GroundedTermsChecker* cloneImpl() const override {
+    GroundedTermsChecker* cloning() const override {
         return new GroundedTermsChecker();
     }
 

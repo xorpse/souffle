@@ -20,7 +20,7 @@ void RecordInit::print(std::ostream& os) const {
     os << "[" << join(args) << "]";
 }
 
-RecordInit* RecordInit::cloneImpl() const {
+RecordInit* RecordInit::cloning() const {
     return new RecordInit(souffle::clone(args), getSrcLoc());
 }
 }  // namespace souffle::ast

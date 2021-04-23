@@ -27,7 +27,7 @@ public:
     }
 
 private:
-    ComponentInstantiationTransformer* cloneImpl() const override {
+    ComponentInstantiationTransformer* cloning() const override {
         return new ComponentInstantiationTransformer();
     }
 

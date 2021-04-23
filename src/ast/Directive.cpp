@@ -50,7 +50,7 @@ bool Directive::equal(const Node& node) const {
     return other.type == type && other.name == name && other.parameters == parameters;
 }
 
-Directive* Directive::cloneImpl() const {
+Directive* Directive::cloning() const {
     auto res = new Directive(type, name, getSrcLoc());
     res->parameters = parameters;
     return res;

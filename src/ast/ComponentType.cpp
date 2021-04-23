@@ -29,7 +29,7 @@ bool ComponentType::equal(const Node& node) const {
     return name == other.name && typeParams == other.typeParams;
 }
 
-ComponentType* ComponentType::cloneImpl() const {
+ComponentType* ComponentType::cloning() const {
     return new ComponentType(name, typeParams, getSrcLoc());
 }
 

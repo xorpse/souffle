@@ -67,7 +67,7 @@ public:
     static Own<Clause> removeComplexTermsInAtoms(const Clause& clause);
 
 private:
-    ResolveAliasesTransformer* cloneImpl() const override {
+    ResolveAliasesTransformer* cloning() const override {
         return new ResolveAliasesTransformer();
     }
 

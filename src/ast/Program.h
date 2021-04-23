@@ -118,7 +118,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    Program* cloneImpl() const override;
+    Program* cloning() const override;
 
 private:
     /** Program types  */

@@ -27,7 +27,7 @@ bool Variable::equal(const Node& node) const {
     return name == other.name;
 }
 
-Variable* Variable::cloneImpl() const {
+Variable* Variable::cloning() const {
     return new Variable(name, getSrcLoc());
 }
 }  // namespace souffle::ast

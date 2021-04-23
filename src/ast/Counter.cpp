@@ -15,7 +15,7 @@ void Counter::print(std::ostream& os) const {
     os << "$";
 }
 
-Counter* Counter::cloneImpl() const {
+Counter* Counter::cloning() const {
     return new Counter(getSrcLoc());
 }
 

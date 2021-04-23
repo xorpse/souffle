@@ -43,11 +43,11 @@ public:
     }
 
     Own<Transformer> clone() const {
-        return Own<Transformer>(cloneImpl());
+        return Own<Transformer>(cloning());
     }
 
 private:
-    virtual Transformer* cloneImpl() const = 0;
+    virtual Transformer* cloning() const = 0;
 };
 
 }  // namespace souffle::ast::transform

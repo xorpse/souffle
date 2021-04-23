@@ -48,7 +48,7 @@ public:
     static bool materializeAggregationQueries(TranslationUnit& translationUnit);
 
 private:
-    MaterializeAggregationQueriesTransformer* cloneImpl() const override {
+    MaterializeAggregationQueriesTransformer* cloning() const override {
         return new MaterializeAggregationQueriesTransformer();
     }
 

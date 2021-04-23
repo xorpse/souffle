@@ -45,7 +45,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    ExecutionOrder* cloneImpl() const override;
+    ExecutionOrder* cloning() const override;
 
 private:
     /** Literal order of body (starting from 1) */
