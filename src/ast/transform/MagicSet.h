@@ -65,7 +65,7 @@ public:
     }
 
 private:
-    MagicSetTransformer* cloneImpl() const override {
+    MagicSetTransformer* cloning() const override {
         return new MagicSetTransformer();
     }
 
@@ -116,7 +116,7 @@ public:
     }
 
 private:
-    NormaliseDatabaseTransformer* cloneImpl() const override {
+    NormaliseDatabaseTransformer* cloning() const override {
         return new NormaliseDatabaseTransformer();
     }
 
@@ -169,7 +169,7 @@ public:
     }
 
 private:
-    LabelDatabaseTransformer* cloneImpl() const override {
+    LabelDatabaseTransformer* cloning() const override {
         return new LabelDatabaseTransformer();
     }
 
@@ -189,7 +189,7 @@ public:
     }
 
 private:
-    NegativeLabellingTransformer* cloneImpl() const override {
+    NegativeLabellingTransformer* cloning() const override {
         return new NegativeLabellingTransformer();
     }
 
@@ -212,7 +212,7 @@ public:
     }
 
 private:
-    PositiveLabellingTransformer* cloneImpl() const override {
+    PositiveLabellingTransformer* cloning() const override {
         return new PositiveLabellingTransformer();
     }
 
@@ -234,7 +234,7 @@ public:
     }
 
 private:
-    AdornDatabaseTransformer* cloneImpl() const override {
+    AdornDatabaseTransformer* cloning() const override {
         return new AdornDatabaseTransformer();
     }
 
@@ -290,7 +290,7 @@ public:
     }
 
 private:
-    MagicSetCoreTransformer* cloneImpl() const override {
+    MagicSetCoreTransformer* cloning() const override {
         return new MagicSetCoreTransformer();
     }
 

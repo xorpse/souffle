@@ -81,7 +81,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    Directive* cloneImpl() const override;
+    Directive* cloning() const override;
 
 private:
     /** Type of directive */

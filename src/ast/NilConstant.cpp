@@ -12,7 +12,7 @@ namespace souffle::ast {
 
 NilConstant::NilConstant(SrcLocation loc) : Constant("nil", std::move(loc)) {}
 
-NilConstant* NilConstant::cloneImpl() const {
+NilConstant* NilConstant::cloning() const {
     return new NilConstant(getSrcLoc());
 }
 

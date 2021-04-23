@@ -38,7 +38,7 @@ public:
     }
 
 private:
-    ComponentChecker* cloneImpl() const override {
+    ComponentChecker* cloning() const override {
         return new ComponentChecker();
     }
 

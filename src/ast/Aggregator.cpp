@@ -55,7 +55,7 @@ bool Aggregator::equal(const Node& node) const {
            equal_targets(body, other.body);
 }
 
-Aggregator* Aggregator::cloneImpl() const {
+Aggregator* Aggregator::cloning() const {
     return new Aggregator(baseOperator, souffle::clone(targetExpression), souffle::clone(body), getSrcLoc());
 }
 

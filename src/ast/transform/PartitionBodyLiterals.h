@@ -42,7 +42,7 @@ public:
     }
 
 private:
-    PartitionBodyLiteralsTransformer* cloneImpl() const override {
+    PartitionBodyLiteralsTransformer* cloning() const override {
         return new PartitionBodyLiteralsTransformer();
     }
 

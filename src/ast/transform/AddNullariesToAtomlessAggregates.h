@@ -38,7 +38,7 @@ public:
     }
 
 private:
-    AddNullariesToAtomlessAggregatesTransformer* cloneImpl() const override {
+    AddNullariesToAtomlessAggregatesTransformer* cloning() const override {
         return new AddNullariesToAtomlessAggregatesTransformer();
     }
 

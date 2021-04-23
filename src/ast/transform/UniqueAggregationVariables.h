@@ -30,7 +30,7 @@ public:
     }
 
 private:
-    UniqueAggregationVariablesTransformer* cloneImpl() const override {
+    UniqueAggregationVariablesTransformer* cloning() const override {
         return new UniqueAggregationVariablesTransformer();
     }
 

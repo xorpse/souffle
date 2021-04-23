@@ -30,7 +30,7 @@ bool UserDefinedFunctor::equal(const Node& node) const {
     return name == other.name && Functor::equal(node);
 }
 
-UserDefinedFunctor* UserDefinedFunctor::cloneImpl() const {
+UserDefinedFunctor* UserDefinedFunctor::cloning() const {
     return new UserDefinedFunctor(name, souffle::clone(args), getSrcLoc());
 }
 

@@ -42,7 +42,7 @@ public:
             const analysis::NormalisedClause& left, const analysis::NormalisedClause& right);
 
 private:
-    MinimiseProgramTransformer* cloneImpl() const override {
+    MinimiseProgramTransformer* cloning() const override {
         return new MinimiseProgramTransformer();
     }
 

@@ -105,7 +105,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    Relation* cloneImpl() const override;
+    Relation* cloning() const override;
 
 private:
     /** Name of relation */

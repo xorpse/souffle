@@ -26,7 +26,7 @@ bool ExecutionOrder::equal(const Node& node) const {
     return order == other.order;
 }
 
-ExecutionOrder* ExecutionOrder::cloneImpl() const {
+ExecutionOrder* ExecutionOrder::cloning() const {
     return new ExecutionOrder(order, getSrcLoc());
 }
 

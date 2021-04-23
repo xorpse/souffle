@@ -39,7 +39,7 @@ public:
     }
 
 private:
-    ResolveAnonymousRecordAliasesTransformer* cloneImpl() const override {
+    ResolveAnonymousRecordAliasesTransformer* cloning() const override {
         return new ResolveAnonymousRecordAliasesTransformer();
     }
 

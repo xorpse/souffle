@@ -45,7 +45,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    SubsetType* cloneImpl() const override;
+    SubsetType* cloning() const override;
 
 private:
     /** Base type */

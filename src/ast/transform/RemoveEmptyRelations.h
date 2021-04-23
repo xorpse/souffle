@@ -39,7 +39,7 @@ public:
     static bool removeEmptyRelations(TranslationUnit& translationUnit);
 
 private:
-    RemoveEmptyRelationsTransformer* cloneImpl() const override {
+    RemoveEmptyRelationsTransformer* cloning() const override {
         return new RemoveEmptyRelationsTransformer();
     }
 

@@ -35,7 +35,7 @@ bool BooleanConstraint::equal(const Node& node) const {
     return truthValue == other.truthValue;
 }
 
-BooleanConstraint* BooleanConstraint::cloneImpl() const {
+BooleanConstraint* BooleanConstraint::cloning() const {
     return new BooleanConstraint(truthValue, getSrcLoc());
 }
 

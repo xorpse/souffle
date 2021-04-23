@@ -52,7 +52,7 @@ public:
     }
 
 private:
-    FoldAnonymousRecords* cloneImpl() const override {
+    FoldAnonymousRecords* cloning() const override {
         return new FoldAnonymousRecords();
     }
 

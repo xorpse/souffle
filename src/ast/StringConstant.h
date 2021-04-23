@@ -35,7 +35,7 @@ protected:
     void print(std::ostream& os) const override;
 
 private:
-    StringConstant* cloneImpl() const override;
+    StringConstant* cloning() const override;
 };
 
 }  // namespace souffle::ast

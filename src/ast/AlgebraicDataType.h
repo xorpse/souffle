@@ -50,7 +50,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    AlgebraicDataType* cloneImpl() const override;
+    AlgebraicDataType* cloning() const override;
 
 private:
     /** The list of branches for this sum type. */

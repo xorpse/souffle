@@ -66,7 +66,7 @@ bool FunctionalConstraint::equivalentConstraint(const FunctionalConstraint& othe
     return true;
 }
 
-FunctionalConstraint* FunctionalConstraint::cloneImpl() const {
+FunctionalConstraint* FunctionalConstraint::cloning() const {
     return new FunctionalConstraint(souffle::clone(keys), getSrcLoc());
 }
 

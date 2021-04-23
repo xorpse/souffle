@@ -85,7 +85,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    Clause* cloneImpl() const override;
+    Clause* cloning() const override;
 
 private:
     /** Head of the clause */

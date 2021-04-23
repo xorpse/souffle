@@ -64,7 +64,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    FunctionalConstraint* cloneImpl() const override;
+    FunctionalConstraint* cloning() const override;
 
 private:
     /* Functional constraint */

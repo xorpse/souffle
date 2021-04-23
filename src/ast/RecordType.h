@@ -51,7 +51,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    RecordType* cloneImpl() const override;
+    RecordType* cloning() const override;
 
 private:
     /** record fields */

@@ -33,7 +33,7 @@ protected:
     void print(std::ostream& os) const override;
 
 private:
-    Counter* cloneImpl() const override;
+    Counter* cloning() const override;
 };
 
 }  // namespace souffle::ast
