@@ -41,7 +41,7 @@ void FunctionalConstraint::print(std::ostream& os) const {
     if (keys.size() > 1) {
         os << "(" << join(keys, ",", print_deref<Own<ast::Variable>>()) << ")";
     } else {
-        os << join(keys, ",", print_deref<Own<ast::Variable>>()); 
+        os << join(keys, ",", print_deref<Own<ast::Variable>>());
     }
 }
 
