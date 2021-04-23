@@ -31,13 +31,13 @@ namespace souffle::ast {
  *
  * Representing a functional dependency
  * Example:
- * .decl rel(x:symbol, y:symbol, z:number) keys x
+ * .decl rel(x:symbol, y:symbol, z:number) choice-domain x
  * The functional constraint "x" makes sure every x in the rel uniquely defines an element.
  *
- * .decl rel(x:symbol, y:symbol, z:number) keys x, y
+ * .decl rel(x:symbol, y:symbol, z:number) choice-domain x, y
  * A relation can have more then one key, each key uniquely defines an element in the relation.
  *
- * .decl rel(x:symbol, y:symbol, z:number) keys (x, y)
+ * .decl rel(x:symbol, y:symbol, z:number) choice-domain (x, y)
  * Multiple attributes can serve as a single key, the pair (x,y) uniquely defines an element in the relation.
  */
 class FunctionalConstraint : public Constraint {
