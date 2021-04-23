@@ -1,16 +1,19 @@
 name: CI-testing
 
-on: pull_request
+on: 
+  pull_request:
+    types: [opened, synchronize]
+  workflow_dispatch:
 
 jobs:
-  basic:
+  CI-testing:
     runs-on: [self-hosted, plang7]
 
     steps:
     - name: checkout
       uses: actions/checkout@v2
       with:
-        fetch-depth: 0
+        fetch-depth: 2
     
     - name: code-style
       run:  sh/run_test_format.sh
