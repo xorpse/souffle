@@ -22,5 +22,3 @@ c(2, 5).
 comp.c(2, 0).
 comp.c(2, 5).
 .output comp.b
-
-
