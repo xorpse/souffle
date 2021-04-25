@@ -31,7 +31,7 @@ public:
 private:
     bool transform(TranslationUnit& translationUnit) override;
 
-    NormaliseGeneratorsTransformer* cloneImpl() const override {
+    NormaliseGeneratorsTransformer* cloning() const override {
         return new NormaliseGeneratorsTransformer();
     }
 };

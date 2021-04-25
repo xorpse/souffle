@@ -46,7 +46,7 @@ public:
     static Clause* reorderClauseWithSips(const SipsMetric& sips, const Clause* clause);
 
 private:
-    ReorderLiteralsTransformer* cloneImpl() const override {
+    ReorderLiteralsTransformer* cloning() const override {
         return new ReorderLiteralsTransformer();
     }
 

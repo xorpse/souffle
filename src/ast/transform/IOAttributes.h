@@ -56,7 +56,7 @@ public:
     }
 
 private:
-    IOAttributesTransformer* cloneImpl() const override {
+    IOAttributesTransformer* cloning() const override {
         return new IOAttributesTransformer();
     }
 

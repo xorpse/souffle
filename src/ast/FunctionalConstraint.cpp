@@ -38,27 +38,16 @@ Node::NodeVec FunctionalConstraint::getChildNodesImpl() const {
 }
 
 void FunctionalConstraint::print(std::ostream& os) const {
-    os << "keys ";
     if (keys.size() > 1) {
-        os << "(";
-    }
-    os << join(keys, ",", print_deref<Own<ast::Variable>>());
-    if (keys.size() > 1) {
-        os << ")";
+        os << "(" << join(keys, ",", print_deref<Own<ast::Variable>>()) << ")";
+    } else {
+        os << join(keys, ",", print_deref<Own<ast::Variable>>());
     }
 }
 
 bool FunctionalConstraint::equal(const Node& node) const {
     const auto& other = asAssert<FunctionalConstraint>(node);
-    if (keys.size() != other.keys.size()) {
-        return false;
-    }
-    for (std::size_t i = 0; i < keys.size(); i++) {
-        if (!equal_ptr(keys.at(i), other.keys.at(i))) {
-            return false;
-        }
-    }
-    return true;
+    return equal_targets(keys, other.keys);
 }
 
 bool FunctionalConstraint::equivalentConstraint(const FunctionalConstraint& other) const {
@@ -77,7 +66,7 @@ bool FunctionalConstraint::equivalentConstraint(const FunctionalConstraint& othe
     return true;
 }
 
-FunctionalConstraint* FunctionalConstraint::cloneImpl() const {
+FunctionalConstraint* FunctionalConstraint::cloning() const {
     return new FunctionalConstraint(souffle::clone(keys), getSrcLoc());
 }
 

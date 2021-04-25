@@ -31,7 +31,7 @@ public:
     }
 
 private:
-    RemoveBooleanConstraintsTransformer* cloneImpl() const override {
+    RemoveBooleanConstraintsTransformer* cloning() const override {
         return new RemoveBooleanConstraintsTransformer();
     }
 

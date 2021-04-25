@@ -46,7 +46,7 @@ public:
     }
 
 private:
-    GroundWitnessesTransformer* cloneImpl() const override {
+    GroundWitnessesTransformer* cloning() const override {
         return new GroundWitnessesTransformer();
     }
 

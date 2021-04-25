@@ -30,7 +30,7 @@ public:
     }
 
 private:
-    RemoveRedundantRelationsTransformer* cloneImpl() const override {
+    RemoveRedundantRelationsTransformer* cloning() const override {
         return new RemoveRedundantRelationsTransformer();
     }
 

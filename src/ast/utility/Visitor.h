@@ -54,9 +54,9 @@
 #include "ast/UnnamedVariable.h"
 #include "ast/UserDefinedFunctor.h"
 #include "ast/Variable.h"
-#include "souffle/Visitor.h"
 #include "souffle/utility/FunctionalUtil.h"
 #include "souffle/utility/MiscUtil.h"
+#include "souffle/utility/Visitor.h"
 
 namespace souffle::ast {
 /**

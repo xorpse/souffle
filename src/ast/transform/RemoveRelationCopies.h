@@ -43,7 +43,7 @@ public:
     static bool removeRelationCopies(TranslationUnit& translationUnit);
 
 private:
-    RemoveRelationCopiesTransformer* cloneImpl() const override {
+    RemoveRelationCopiesTransformer* cloning() const override {
         return new RemoveRelationCopiesTransformer();
     }
 

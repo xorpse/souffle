@@ -45,7 +45,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    Variable* cloneImpl() const override;
+    Variable* cloning() const override;
 
 private:
     /** Name */

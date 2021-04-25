@@ -39,7 +39,7 @@ public:
     }
 
 private:
-    IODefaultsTransformer* cloneImpl() const override {
+    IODefaultsTransformer* cloning() const override {
         return new IODefaultsTransformer();
     }
 

@@ -30,7 +30,7 @@ bool Attribute::equal(const Node& node) const {
     return name == other.name && typeName == other.typeName;
 }
 
-Attribute* Attribute::cloneImpl() const {
+Attribute* Attribute::cloning() const {
     return new Attribute(name, typeName, getSrcLoc());
 }
 

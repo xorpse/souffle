@@ -63,7 +63,7 @@ protected:
 private:
     NodeVec getChildNodesImpl() const override;
 
-    ComponentInit* cloneImpl() const override;
+    ComponentInit* cloning() const override;
 
 private:
     /** Instance name */

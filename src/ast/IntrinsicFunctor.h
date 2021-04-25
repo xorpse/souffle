@@ -58,7 +58,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    IntrinsicFunctor* cloneImpl() const override;
+    IntrinsicFunctor* cloning() const override;
 
 private:
     /** Function */

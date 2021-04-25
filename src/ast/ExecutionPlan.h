@@ -55,7 +55,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    ExecutionPlan* cloneImpl() const override;
+    ExecutionPlan* cloning() const override;
 
 private:
     /** Mapping versions of clauses to execution orders */

@@ -58,17 +58,24 @@ Node::NodeVec Relation::getChildNodesImpl() const {
 void Relation::print(std::ostream& os) const {
     os << ".decl " << getQualifiedName() << "(" << join(attributes, ", ") << ")" << join(qualifiers, " ")
        << " " << representation;
+    if (!functionalDependencies.empty()) {
+        os << " choice-domain " << join(functionalDependencies, ", ");
+    }
 }
 
 bool Relation::equal(const Node& node) const {
     const auto& other = asAssert<Relation>(node);
-    return name == other.name && equal_targets(attributes, other.attributes);
+    return name == other.name && equal_targets(attributes, other.attributes) &&
+           qualifiers == other.qualifiers &&
+           equal_targets(functionalDependencies, other.functionalDependencies) &&
+           representation == other.representation;
 }
 
-Relation* Relation::cloneImpl() const {
+Relation* Relation::cloning() const {
     auto res = new Relation(name, getSrcLoc());
     res->attributes = souffle::clone(attributes);
     res->qualifiers = qualifiers;
+    res->functionalDependencies = souffle::clone(functionalDependencies);
     res->representation = representation;
     return res;
 }

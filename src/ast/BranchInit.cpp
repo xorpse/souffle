@@ -28,7 +28,7 @@ bool BranchInit::equal(const Node& node) const {
     return (constructor == other.constructor) && equal_targets(args, other.args);
 }
 
-BranchInit* BranchInit::cloneImpl() const {
+BranchInit* BranchInit::cloning() const {
     return new BranchInit(constructor, souffle::clone(args), getSrcLoc());
 }
 

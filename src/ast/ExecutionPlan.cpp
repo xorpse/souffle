@@ -55,7 +55,7 @@ bool ExecutionPlan::equal(const Node& node) const {
     return equal_targets(plans, other.plans);
 }
 
-ExecutionPlan* ExecutionPlan::cloneImpl() const {
+ExecutionPlan* ExecutionPlan::cloning() const {
     auto res = mk<ExecutionPlan>(getSrcLoc());
     for (auto& plan : plans) {
         res->setOrderFor(plan.first, souffle::clone(plan.second));

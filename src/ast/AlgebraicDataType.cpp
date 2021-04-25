@@ -34,7 +34,7 @@ bool AlgebraicDataType::equal(const Node& node) const {
     return getQualifiedName() == other.getQualifiedName() && branches == other.branches;
 }
 
-AlgebraicDataType* AlgebraicDataType::cloneImpl() const {
+AlgebraicDataType* AlgebraicDataType::cloning() const {
     return new AlgebraicDataType(getQualifiedName(), souffle::clone(branches), getSrcLoc());
 }
 

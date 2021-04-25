@@ -36,7 +36,7 @@ protected:
     void print(std::ostream& os) const override;
 
 private:
-    RecordInit* cloneImpl() const override;
+    RecordInit* cloning() const override;
 };
 
 }  // namespace souffle::ast
