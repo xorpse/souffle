@@ -249,7 +249,7 @@ void SemanticCheckerImpl::checkAtom(const Atom& atom) {
 
     if (r->getArity() != atom.getArity()) {
         report.addError(
-                "Mismatching arity of relation " + toString(atom.getQualifiedName()), atom.getSrcLoc());
+                "Mismatching arity of relation " + toString(atom.getQualifiedName()) + " (expected " + toString(r->getArity())+", got " + toString(atom.getArity())+")", atom.getSrcLoc());
     }
 
     for (const Argument* arg : atom.getArguments()) {
