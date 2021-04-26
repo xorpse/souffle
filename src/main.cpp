@@ -467,7 +467,7 @@ int main(int argc, char** argv) {
             mk<ast::transform::ResolveAliasesTransformer>(),
             mk<ast::transform::RemoveRelationCopiesTransformer>(),
             mk<ast::transform::RemoveEmptyRelationsTransformer>(),
-            mk<ast::transform::RemoveRedundantRelationsTransformer>(), souffle::clone(equivalencePipeline));
+            mk<ast::transform::RemoveRedundantRelationsTransformer>(), clone(equivalencePipeline));
 
     // Partitioning pipeline
     auto partitionPipeline =

@@ -36,7 +36,7 @@ public:
     }
 
 private:
-    NameUnnamedVariablesTransformer* cloneImpl() const override {
+    NameUnnamedVariablesTransformer* cloning() const override {
         return new NameUnnamedVariablesTransformer();
     }
 

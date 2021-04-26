@@ -67,10 +67,10 @@ void RuleBody::conjunct(RuleBody other) {
             clause cur;
 
             for (const auto& lit : clauseA) {
-                cur.emplace_back(lit.clone());
+                cur.emplace_back(lit.cloneImpl());
             }
             for (const auto& lit : clauseB) {
-                insert(cur, lit.clone());
+                insert(cur, lit.cloneImpl());
             }
 
             insert(res, std::move(cur));

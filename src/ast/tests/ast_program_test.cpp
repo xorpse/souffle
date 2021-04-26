@@ -93,9 +93,9 @@ TEST(Program, Parse) {
         Own<TranslationUnit> tu = ParserDriver::parseTranslationUnit(DL, e, d); \
         Program& program = tu->getProgram();                                    \
         EXPECT_EQ(program, program);                                            \
-        Own<Program> clone(souffle::clone(program));                            \
-        EXPECT_NE(clone.get(), &program);                                       \
-        EXPECT_EQ(*clone, program);                                             \
+        Own<Program> cl(clone(program));                                        \
+        EXPECT_NE(cl.get(), &program);                                          \
+        EXPECT_EQ(*cl, program);                                                \
     }
 
 TESTASTCLONEANDEQUAL(Program,

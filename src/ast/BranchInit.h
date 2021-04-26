@@ -49,7 +49,7 @@ private:
     /** Implements the node comparison for this node type */
     bool equal(const Node& node) const override;
 
-    BranchInit* cloneImpl() const override;
+    BranchInit* cloning() const override;
 
 private:
     /** The adt branch constructor */

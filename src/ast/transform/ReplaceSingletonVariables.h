@@ -32,7 +32,7 @@ public:
     }
 
 private:
-    ReplaceSingletonVariablesTransformer* cloneImpl() const override {
+    ReplaceSingletonVariablesTransformer* cloning() const override {
         return new ReplaceSingletonVariablesTransformer();
     }
 

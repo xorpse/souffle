@@ -55,10 +55,10 @@ public:
         return res;
     }
 
-    PackRecord* clone() const override {
+    PackRecord* cloning() const override {
         auto* res = new PackRecord({});
         for (auto& cur : arguments) {
-            res->arguments.emplace_back(cur->clone());
+            res->arguments.emplace_back(cur->cloning());
         }
         return res;
     }

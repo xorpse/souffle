@@ -92,7 +92,7 @@ Own<Clause> TypeAnalysis::createAnnotatedClause(
      *  (2) Keep track of the addresses of equivalent arguments in the cloned clause
      * Method (2) was chosen to avoid having to recompute the analysis each time.
      */
-    auto annotatedClause = souffle::clone(clause);
+    auto annotatedClause = clone(clause);
 
     // Maps x -> y, where x is the address of an argument in the original clause, and y
     // is the address of the equivalent argument in the clone.

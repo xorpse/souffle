@@ -19,7 +19,7 @@ void StringConstant::print(std::ostream& os) const {
     os << "\"" << getConstant() << "\"";
 }
 
-StringConstant* StringConstant::cloneImpl() const {
+StringConstant* StringConstant::cloning() const {
     return new StringConstant(getConstant(), getSrcLoc());
 }
 

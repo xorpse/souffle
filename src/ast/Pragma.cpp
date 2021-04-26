@@ -25,7 +25,7 @@ bool Pragma::equal(const Node& node) const {
     return other.key == key && other.value == value;
 }
 
-Pragma* Pragma::cloneImpl() const {
+Pragma* Pragma::cloning() const {
     return new Pragma(key, value, getSrcLoc());
 }
 

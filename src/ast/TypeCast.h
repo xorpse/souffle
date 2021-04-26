@@ -55,7 +55,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    TypeCast* cloneImpl() const override;
+    TypeCast* cloning() const override;
 
 private:
     /** Casted value */

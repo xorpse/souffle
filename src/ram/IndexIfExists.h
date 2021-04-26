@@ -78,16 +78,16 @@ public:
         return res;
     }
 
-    IndexIfExists* clone() const override {
+    IndexIfExists* cloning() const override {
         RamPattern resQueryPattern;
         for (const auto& i : queryPattern.first) {
-            resQueryPattern.first.emplace_back(i->clone());
+            resQueryPattern.first.emplace_back(i->cloning());
         }
         for (const auto& i : queryPattern.second) {
-            resQueryPattern.second.emplace_back(i->clone());
+            resQueryPattern.second.emplace_back(i->cloning());
         }
-        auto* res = new IndexIfExists(relation, getTupleId(), souffle::clone(condition),
-                std::move(resQueryPattern), souffle::clone(getOperation()), getProfileText());
+        auto* res = new IndexIfExists(relation, getTupleId(), clone(condition), std::move(resQueryPattern),
+                clone(getOperation()), getProfileText());
         return res;
     }
 

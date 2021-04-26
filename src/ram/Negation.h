@@ -54,8 +54,8 @@ public:
         return {operand.get()};
     }
 
-    Negation* clone() const override {
-        return new Negation(souffle::clone(operand));
+    Negation* cloning() const override {
+        return new Negation(clone(operand));
     }
 
     void apply(const NodeMapper& map) override {

@@ -87,8 +87,8 @@ bool Clause::equal(const Node& node) const {
            equal_ptr(plan, other.plan);
 }
 
-Clause* Clause::cloneImpl() const {
-    return new Clause(souffle::clone(head), souffle::clone(bodyLiterals), souffle::clone(plan), getSrcLoc());
+Clause* Clause::cloning() const {
+    return new Clause(clone(head), clone(bodyLiterals), clone(plan), getSrcLoc());
 }
 
 }  // namespace souffle::ast

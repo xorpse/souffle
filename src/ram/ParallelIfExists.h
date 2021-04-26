@@ -50,9 +50,9 @@ public:
             std::string profileText = "")
             : IfExists(rel, ident, std::move(cond), std::move(nested), profileText) {}
 
-    ParallelIfExists* clone() const override {
-        return new ParallelIfExists(relation, getTupleId(), souffle::clone(condition),
-                souffle::clone(getOperation()), getProfileText());
+    ParallelIfExists* cloning() const override {
+        return new ParallelIfExists(
+                relation, getTupleId(), clone(condition), clone(getOperation()), getProfileText());
     }
 
 protected:

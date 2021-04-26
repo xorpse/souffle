@@ -44,51 +44,52 @@ bool ParallelTransformer::parallelizeOperations(Program& program) {
                     if (!isA<Insert>(&scan->getOperation())) {
                         changed = true;
                         return mk<ParallelScan>(scan->getRelation(), scan->getTupleId(),
-                                souffle::clone(scan->getOperation()), scan->getProfileText());
+                                clone(scan->getOperation()), scan->getProfileText());
                     }
                 }
             } else if (const IfExists* ifexists = as<IfExists>(node)) {
                 if (ifexists->getTupleId() == 0) {
                     changed = true;
                     return mk<ParallelIfExists>(ifexists->getRelation(), ifexists->getTupleId(),
-                            souffle::clone(ifexists->getCondition()),
-                            souffle::clone(ifexists->getOperation()), ifexists->getProfileText());
+                            clone(ifexists->getCondition()), clone(ifexists->getOperation()),
+                            ifexists->getProfileText());
                 }
             } else if (const IndexScan* indexScan = as<IndexScan>(node)) {
                 if (indexScan->getTupleId() == 0) {
                     changed = true;
-                    RamPattern queryPattern = souffle::clone(indexScan->getRangePattern());
+                    RamPattern queryPattern = clone(indexScan->getRangePattern());
                     return mk<ParallelIndexScan>(indexScan->getRelation(), indexScan->getTupleId(),
-                            std::move(queryPattern), souffle::clone(indexScan->getOperation()),
+                            std::move(queryPattern), clone(indexScan->getOperation()),
                             indexScan->getProfileText());
                 }
             } else if (const IndexIfExists* indexIfExists = as<IndexIfExists>(node)) {
                 if (indexIfExists->getTupleId() == 0) {
                     changed = true;
-                    RamPattern queryPattern = souffle::clone(indexIfExists->getRangePattern());
+                    RamPattern queryPattern = clone(indexIfExists->getRangePattern());
                     return mk<ParallelIndexIfExists>(indexIfExists->getRelation(),
-                            indexIfExists->getTupleId(), souffle::clone(indexIfExists->getCondition()),
-                            std::move(queryPattern), souffle::clone(indexIfExists->getOperation()),
+                            indexIfExists->getTupleId(), clone(indexIfExists->getCondition()),
+                            std::move(queryPattern), clone(indexIfExists->getOperation()),
                             indexIfExists->getProfileText());
                 }
             } else if (const Aggregate* aggregate = as<Aggregate>(node)) {
                 const Relation& rel = relAnalysis->lookup(aggregate->getRelation());
                 if (aggregate->getTupleId() == 0 && !rel.isNullary()) {
                     changed = true;
-                    return mk<ParallelAggregate>(Own<Operation>(aggregate->getOperation().clone()),
+                    return mk<ParallelAggregate>(Own<Operation>(aggregate->getOperation().cloning()),
                             aggregate->getFunction(), aggregate->getRelation(),
-                            Own<Expression>(aggregate->getExpression().clone()),
-                            Own<Condition>(aggregate->getCondition().clone()), aggregate->getTupleId());
+                            Own<Expression>(aggregate->getExpression().cloning()),
+                            Own<Condition>(aggregate->getCondition().cloning()), aggregate->getTupleId());
                 }
             } else if (const IndexAggregate* indexAggregate = as<IndexAggregate>(node)) {
                 const Relation& rel = relAnalysis->lookup(indexAggregate->getRelation());
                 if (indexAggregate->getTupleId() == 0 && !rel.isNullary()) {
                     changed = true;
-                    RamPattern queryPattern = souffle::clone(indexAggregate->getRangePattern());
-                    return mk<ParallelIndexAggregate>(Own<Operation>(indexAggregate->getOperation().clone()),
+                    RamPattern queryPattern = clone(indexAggregate->getRangePattern());
+                    return mk<ParallelIndexAggregate>(
+                            Own<Operation>(indexAggregate->getOperation().cloning()),
                             indexAggregate->getFunction(), indexAggregate->getRelation(),
-                            Own<Expression>(indexAggregate->getExpression().clone()),
-                            Own<Condition>(indexAggregate->getCondition().clone()), std::move(queryPattern),
+                            Own<Expression>(indexAggregate->getExpression().cloning()),
+                            Own<Condition>(indexAggregate->getCondition().cloning()), std::move(queryPattern),
                             indexAggregate->getTupleId());
                 }
             }

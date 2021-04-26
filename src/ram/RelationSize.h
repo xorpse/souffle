@@ -49,7 +49,7 @@ public:
         return relation;
     }
 
-    RelationSize* clone() const override {
+    RelationSize* cloning() const override {
         return new RelationSize(relation);
     }
 

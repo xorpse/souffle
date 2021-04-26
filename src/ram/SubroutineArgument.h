@@ -41,7 +41,7 @@ public:
         return number;
     }
 
-    SubroutineArgument* clone() const override {
+    SubroutineArgument* cloning() const override {
         return new SubroutineArgument(number);
     }
 

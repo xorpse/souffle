@@ -70,7 +70,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    FunctorDeclaration* cloneImpl() const override;
+    FunctorDeclaration* cloning() const override;
 
 private:
     /** Name of functor */

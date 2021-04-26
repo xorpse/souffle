@@ -33,7 +33,7 @@ protected:
     void print(std::ostream& os) const override;
 
 private:
-    UnnamedVariable* cloneImpl() const override;
+    UnnamedVariable* cloning() const override;
 };
 
 }  // namespace souffle::ast

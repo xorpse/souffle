@@ -42,9 +42,8 @@ bool FunctorDeclaration::equal(const Node& node) const {
            stateful == other.stateful;
 }
 
-FunctorDeclaration* FunctorDeclaration::cloneImpl() const {
-    return new FunctorDeclaration(
-            name, souffle::clone(params), souffle::clone(returnType), stateful, getSrcLoc());
+FunctorDeclaration* FunctorDeclaration::cloning() const {
+    return new FunctorDeclaration(name, clone(params), clone(returnType), stateful, getSrcLoc());
 }
 
 }  // namespace souffle::ast

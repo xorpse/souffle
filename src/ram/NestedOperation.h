@@ -52,7 +52,7 @@ public:
         assert(nestedOperation != nullptr);
     }
 
-    NestedOperation* clone() const override = 0;
+    NestedOperation* cloning() const override = 0;
 
     /** @brief Get nested operation */
     Operation& getOperation() const {

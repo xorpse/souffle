@@ -34,7 +34,7 @@ public:
     }
 
 private:
-    ReduceExistentialsTransformer* cloneImpl() const override {
+    ReduceExistentialsTransformer* cloning() const override {
         return new ReduceExistentialsTransformer();
     }
 

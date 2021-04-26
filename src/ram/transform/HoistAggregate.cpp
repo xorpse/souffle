@@ -46,9 +46,9 @@ bool HoistAggregateTransformer::hoistAggregate(Program& program) {
                 assert(tupleOp != nullptr && "aggregate conversion to tuple operation failed");
                 if (rla->getLevel(tupleOp) == -1 && !priorTupleOp) {
                     changed = true;
-                    newAgg = souffle::clone(tupleOp);
-                    assert(newAgg != nullptr && "failed to make a clone");
-                    return souffle::clone(tupleOp->getOperation());
+                    newAgg = clone(tupleOp);
+                    assert(newAgg != nullptr && "failed to make a cloning");
+                    return clone(tupleOp->getOperation());
                 }
             } else if (isA<TupleOperation>(node)) {
                 // tuple operation that is a non-aggregate
@@ -59,7 +59,7 @@ bool HoistAggregateTransformer::hoistAggregate(Program& program) {
         };
         const_cast<Query*>(&query)->apply(makeLambdaRamMapper(aggRewriter));
         if (newAgg != nullptr) {
-            newAgg->rewrite(&newAgg->getOperation(), souffle::clone(query.getOperation()));
+            newAgg->rewrite(&newAgg->getOperation(), clone(query.getOperation()));
             const_cast<Query*>(&query)->rewrite(&query.getOperation(), std::move(newAgg));
         }
     });
@@ -82,9 +82,9 @@ bool HoistAggregateTransformer::hoistAggregate(Program& program) {
                     if (dataDepLevel != priorOpLevel) {
                         changed = true;
                         newLevel = dataDepLevel;
-                        newAgg = souffle::clone(tupleOp);
-                        assert(newAgg != nullptr && "failed to make a clone");
-                        return souffle::clone(tupleOp->getOperation());
+                        newAgg = clone(tupleOp);
+                        assert(newAgg != nullptr && "failed to make a cloning");
+                        return clone(tupleOp->getOperation());
                     }
                 }
             } else if (const TupleOperation* tupleOp = as<TupleOperation>(node)) {
@@ -93,7 +93,7 @@ bool HoistAggregateTransformer::hoistAggregate(Program& program) {
             node->apply(makeLambdaRamMapper(aggRewriter));
             if (auto* search = as<TupleOperation>(node)) {
                 if (newAgg != nullptr && search->getTupleId() == newLevel) {
-                    newAgg->rewrite(&newAgg->getOperation(), souffle::clone(search->getOperation()));
+                    newAgg->rewrite(&newAgg->getOperation(), clone(search->getOperation()));
                     search->rewrite(&search->getOperation(), std::move(newAgg));
                 }
             }

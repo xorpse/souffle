@@ -40,8 +40,8 @@ public:
         return ramBitCast<RamUnsigned>(constant);
     }
 
-    /** Create clone */
-    UnsignedConstant* clone() const override {
+    /** Create cloning */
+    UnsignedConstant* cloning() const override {
         return new UnsignedConstant(getValue());
     }
 

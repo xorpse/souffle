@@ -71,7 +71,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    Aggregator* cloneImpl() const override;
+    Aggregator* cloning() const override;
 
 private:
     /** Aggregate (base type) operator */

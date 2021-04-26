@@ -43,7 +43,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    Pragma* cloneImpl() const override;
+    Pragma* cloning() const override;
 
 private:
     /** Name of the key */

@@ -70,7 +70,7 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
         // be added to the rule body
         VecOwn<Literal> aggregateLiterals;
         for (const auto& literal : agg->getBodyLiterals()) {
-            aggregateLiterals.push_back(souffle::clone(literal));
+            aggregateLiterals.push_back(clone(literal));
         }
         // 1a. TODO: Be sure to rename any INNER witnesses! They have no meaning here and should just be made
         // into (For now I won't allow multi-leveled witnesses) an anonymous variable.
@@ -96,7 +96,7 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
             std::unique_ptr<Node> operator()(std::unique_ptr<Node> node) const override {
                 if (auto* variable = as<Variable>(node)) {
                     if (variable->getName() == targetVariable) {
-                        auto replacement = souffle::clone(aggregate);
+                        auto replacement = clone(aggregate);
                         return replacement;
                     }
                 }
@@ -112,7 +112,7 @@ bool GroundWitnessesTransformer::transform(TranslationUnit& translationUnit) {
             // 4. Finally add these new grounding literals for the witness
             // to the body of the clause and voila! We've grounded
             // the witness(es)! Yay!
-            clause->addToBody(souffle::clone(literal));
+            clause->addToBody(clone(literal));
         }
     }
     return !aggregatesToFix.empty();

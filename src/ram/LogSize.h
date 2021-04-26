@@ -40,7 +40,7 @@ public:
         return message;
     }
 
-    LogSize* clone() const override {
+    LogSize* cloning() const override {
         return new LogSize(relation, message);
     }
 

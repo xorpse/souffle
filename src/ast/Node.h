@@ -78,7 +78,7 @@ public:
     }
 
     /** Create a clone (i.e. deep copy) of this node */
-    Own<Node> clone() const;
+    Own<Node> cloneImpl() const;
 
     /** Apply the mapper to all child nodes */
     virtual void apply(const NodeMapper& /* mapper */);
@@ -109,7 +109,7 @@ private:
     /** Abstract equality check for two AST nodes */
     virtual bool equal(const Node& /* other */) const;
 
-    virtual Node* cloneImpl() const = 0;
+    virtual Node* cloning() const = 0;
 
 private:
     /** Source location of a syntactic element */

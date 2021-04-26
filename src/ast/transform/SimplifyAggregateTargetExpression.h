@@ -33,7 +33,7 @@ public:
     }
 
 private:
-    SimplifyAggregateTargetExpressionTransformer* cloneImpl() const override {
+    SimplifyAggregateTargetExpressionTransformer* cloning() const override {
         return new SimplifyAggregateTargetExpressionTransformer();
     }
 

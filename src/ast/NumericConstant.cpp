@@ -26,7 +26,7 @@ bool NumericConstant::equal(const Node& node) const {
     return Constant::equal(node) && fixedType == other.fixedType;
 }
 
-NumericConstant* NumericConstant::cloneImpl() const {
+NumericConstant* NumericConstant::cloning() const {
     return new NumericConstant(getConstant(), getFixedType(), getSrcLoc());
 }
 

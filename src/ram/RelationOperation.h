@@ -40,7 +40,7 @@ public:
     RelationOperation(std::string rel, int ident, Own<Operation> nested, std::string profileText = "")
             : TupleOperation(ident, std::move(nested), std::move(profileText)), relation(std::move(rel)) {}
 
-    RelationOperation* clone() const override = 0;
+    RelationOperation* cloning() const override = 0;
 
     /** @brief Get search relation */
     const std::string& getRelation() const {

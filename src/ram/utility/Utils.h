@@ -60,7 +60,7 @@ inline VecOwn<Condition> toConjunctionList(const Condition* condition) {
                 conditionsToProcess.push(&ramConj->getLHS());
                 conditionsToProcess.push(&ramConj->getRHS());
             } else {
-                conditionList.emplace_back(condition->clone());
+                conditionList.emplace_back(condition->cloning());
             }
         }
     }
@@ -79,9 +79,9 @@ inline Own<Condition> toCondition(const VecOwn<Condition>& conds) {
     Own<Condition> result;
     for (auto const& cur : conds) {
         if (result == nullptr) {
-            result = souffle::clone(cur);
+            result = clone(cur);
         } else {
-            result = mk<Conjunction>(std::move(result), souffle::clone(cur));
+            result = mk<Conjunction>(std::move(result), clone(cur));
         }
     }
     return result;

@@ -64,10 +64,10 @@ public:
         return stateful;
     }
 
-    UserDefinedOperator* clone() const override {
+    UserDefinedOperator* cloning() const override {
         auto* res = new UserDefinedOperator(name, argsTypes, returnType, stateful, {});
         for (auto& cur : arguments) {
-            Expression* arg = cur->clone();
+            Expression* arg = cur->cloning();
             res->arguments.emplace_back(arg);
         }
         return res;

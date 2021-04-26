@@ -33,7 +33,7 @@ public:
     }
 
 private:
-    RemoveRedundantSumsTransformer* cloneImpl() const override {
+    RemoveRedundantSumsTransformer* cloning() const override {
         return new RemoveRedundantSumsTransformer();
     }
 

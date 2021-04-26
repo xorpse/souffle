@@ -59,16 +59,16 @@ public:
             : IndexIfExists(
                       rel, ident, std::move(cond), std::move(queryPattern), std::move(nested), profileText) {}
 
-    ParallelIndexIfExists* clone() const override {
+    ParallelIndexIfExists* cloning() const override {
         RamPattern resQueryPattern;
         for (const auto& i : queryPattern.first) {
-            resQueryPattern.first.emplace_back(i->clone());
+            resQueryPattern.first.emplace_back(i->cloning());
         }
         for (const auto& i : queryPattern.second) {
-            resQueryPattern.second.emplace_back(i->clone());
+            resQueryPattern.second.emplace_back(i->cloning());
         }
-        auto* res = new ParallelIndexIfExists(relation, getTupleId(), souffle::clone(condition),
-                std::move(resQueryPattern), souffle::clone(getOperation()), getProfileText());
+        auto* res = new ParallelIndexIfExists(relation, getTupleId(), clone(condition),
+                std::move(resQueryPattern), clone(getOperation()), getProfileText());
         return res;
     }
 

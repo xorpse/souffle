@@ -86,8 +86,8 @@ VecOwn<Literal> FoldAnonymousRecords::expandRecordBinaryConstraint(const BinaryC
 
     // [a, b..] = [c, d...] → a = c, b = d ...
     for (std::size_t i = 0; i < leftChildren.size(); ++i) {
-        auto newConstraint = mk<BinaryConstraint>(constraint.getBaseOperator(),
-                souffle::clone(leftChildren[i]), souffle::clone(rightChildren[i]));
+        auto newConstraint = mk<BinaryConstraint>(
+                constraint.getBaseOperator(), clone(leftChildren[i]), clone(rightChildren[i]));
         replacedContraint.push_back(std::move(newConstraint));
     }
 
@@ -126,18 +126,18 @@ void FoldAnonymousRecords::transformClause(const Clause& clause, VecOwn<Clause>&
 
                 // Else: repeated inequality.
             } else {
-                newBody.push_back(souffle::clone(literal));
+                newBody.push_back(clone(literal));
             }
 
             // else, we simply copy the literal.
         } else {
-            newBody.push_back(souffle::clone(literal));
+            newBody.push_back(clone(literal));
         }
     }
 
     // If no inequality: create a single modified clause.
     if (neqConstraint == nullptr) {
-        auto newClause = souffle::clone(clause);
+        auto newClause = clone(clause);
         newClause->setBodyLiterals(std::move(newBody));
         newClauses.emplace_back(std::move(newClause));
 
@@ -146,8 +146,8 @@ void FoldAnonymousRecords::transformClause(const Clause& clause, VecOwn<Clause>&
         auto transformedLiterals = expandRecordBinaryConstraint(*neqConstraint);
 
         for (auto it = begin(transformedLiterals); it != end(transformedLiterals); ++it) {
-            auto newClause = souffle::clone(clause);
-            auto copyBody = souffle::clone(newBody);
+            auto newClause = clone(clause);
+            auto copyBody = clone(newBody);
             copyBody.push_back(std::move(*it));
 
             newClause->setBodyLiterals(std::move(copyBody));
@@ -168,7 +168,7 @@ bool FoldAnonymousRecords::transform(TranslationUnit& translationUnit) {
             changed = true;
             transformClause(*clause, newClauses);
         } else {
-            newClauses.emplace_back(souffle::clone(clause));
+            newClauses.emplace_back(clone(clause));
         }
     }
 

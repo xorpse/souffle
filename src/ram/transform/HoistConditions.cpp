@@ -50,9 +50,9 @@ bool HoistConditionsTransformer::hoistConditions(Program& program) {
                 // delete the filter operation and collect condition
                 if (rla->getLevel(&condition) == -1) {
                     changed = true;
-                    newCondition = addCondition(std::move(newCondition), souffle::clone(condition));
+                    newCondition = addCondition(std::move(newCondition), clone(condition));
                     node->apply(makeLambdaRamMapper(filterRewriter));
-                    return souffle::clone(filter->getOperation());
+                    return clone(filter->getOperation());
                 }
             }
             node->apply(makeLambdaRamMapper(filterRewriter));
@@ -64,7 +64,7 @@ bool HoistConditionsTransformer::hoistConditions(Program& program) {
             // insert new filter operation at outer-most level of the query
             changed = true;
             auto* nestedOp = const_cast<Operation*>(&mQuery->getOperation());
-            mQuery->rewrite(nestedOp, mk<Filter>(std::move(newCondition), souffle::clone(nestedOp)));
+            mQuery->rewrite(nestedOp, mk<Filter>(std::move(newCondition), clone(nestedOp)));
         }
     });
 
@@ -78,9 +78,9 @@ bool HoistConditionsTransformer::hoistConditions(Program& program) {
                 // delete the filter operation and collect condition
                 if (rla->getLevel(&condition) == search.getTupleId()) {
                     changed = true;
-                    newCondition = addCondition(std::move(newCondition), souffle::clone(condition));
+                    newCondition = addCondition(std::move(newCondition), clone(condition));
                     node->apply(makeLambdaRamMapper(filterRewriter));
-                    return souffle::clone(filter->getOperation());
+                    return clone(filter->getOperation());
                 }
             }
             node->apply(makeLambdaRamMapper(filterRewriter));
@@ -92,7 +92,7 @@ bool HoistConditionsTransformer::hoistConditions(Program& program) {
             // insert new filter operation after the search operation
             changed = true;
             tupleOp->rewrite(&tupleOp->getOperation(),
-                    mk<Filter>(std::move(newCondition), souffle::clone(tupleOp->getOperation())));
+                    mk<Filter>(std::move(newCondition), clone(tupleOp->getOperation())));
         }
     });
     return changed;

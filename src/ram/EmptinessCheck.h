@@ -52,7 +52,7 @@ public:
         return relation;
     }
 
-    EmptinessCheck* clone() const override {
+    EmptinessCheck* cloning() const override {
         return new EmptinessCheck(relation);
     }
 

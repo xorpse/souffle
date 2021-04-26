@@ -55,7 +55,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    Attribute* cloneImpl() const override;
+    Attribute* cloning() const override;
 
 private:
     /** Attribute name */
