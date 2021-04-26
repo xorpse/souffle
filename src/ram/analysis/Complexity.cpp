@@ -32,6 +32,8 @@ namespace souffle::ram::analysis {
 int ComplexityAnalysis::getComplexity(const Node* node) const {
     // visitor
     class ValueComplexityVisitor : public Visitor<int> {
+        using Visitor<int>::visit_;
+
     public:
         ValueComplexityVisitor(RelationAnalysis* relAnalysis) : ra(relAnalysis) {}
 

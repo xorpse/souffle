@@ -38,7 +38,7 @@ public:
         return constant;
     }
 
-    StringConstant* clone() const override {
+    StringConstant* cloning() const override {
         return new StringConstant(constant);
     }
 

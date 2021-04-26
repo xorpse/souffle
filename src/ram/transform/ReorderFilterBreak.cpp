@@ -35,9 +35,8 @@ bool ReorderFilterBreak::reorderFilterBreak(Program& program) {
                 if (const Break* br = as<Break>(filter->getOperation())) {
                     changed = true;
                     // convert to break-filter nesting
-                    node = mk<Break>(souffle::clone(br->getCondition()),
-                            mk<Filter>(souffle::clone(filter->getCondition()),
-                                    souffle::clone(br->getOperation())));
+                    node = mk<Break>(clone(br->getCondition()),
+                            mk<Filter>(clone(filter->getCondition()), clone(br->getOperation())));
                 }
             }
             node->apply(makeLambdaRamMapper(filterRewriter));

@@ -72,7 +72,7 @@ public:
     Substitution() = default;
 
     Substitution(const std::string& var, const Argument* arg) {
-        varToTerm.insert(std::make_pair(var, souffle::clone(arg)));
+        varToTerm.insert(std::make_pair(var, clone(arg)));
     }
 
     ~Substitution() = default;
@@ -98,7 +98,7 @@ public:
                 if (auto var = as<ast::Variable>(node)) {
                     auto pos = map.find(var->getName());
                     if (pos != map.end()) {
-                        return souffle::clone(pos->second);
+                        return clone(pos->second);
                     }
                 }
 
@@ -139,7 +139,7 @@ public:
         for (const auto& pair : sub.varToTerm) {
             if (varToTerm.find(pair.first) == varToTerm.end()) {
                 // not seen yet, add it in
-                varToTerm.insert(std::make_pair(pair.first, souffle::clone(pair.second)));
+                varToTerm.insert(std::make_pair(pair.first, clone(pair.second)));
             }
         }
     }
@@ -170,11 +170,11 @@ public:
     Own<Argument> lhs;
     Own<Argument> rhs;
 
-    Equation(const Argument& lhs, const Argument& rhs) : lhs(souffle::clone(lhs)), rhs(souffle::clone(rhs)) {}
+    Equation(const Argument& lhs, const Argument& rhs) : lhs(clone(lhs)), rhs(clone(rhs)) {}
 
-    Equation(const Argument* lhs, const Argument* rhs) : lhs(souffle::clone(lhs)), rhs(souffle::clone(rhs)) {}
+    Equation(const Argument* lhs, const Argument* rhs) : lhs(clone(lhs)), rhs(clone(rhs)) {}
 
-    Equation(const Equation& other) : lhs(souffle::clone(other.lhs)), rhs(souffle::clone(other.rhs)) {}
+    Equation(const Equation& other) : lhs(clone(other.lhs)), rhs(clone(other.rhs)) {}
 
     Equation(Equation&& other) = default;
 
@@ -358,7 +358,7 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
     }
 
     // III) compute resulting clause
-    return substitution(souffle::clone(clause));
+    return substitution(clone(clause));
 }
 
 Own<Clause> ResolveAliasesTransformer::removeTrivialEquality(const Clause& clause) {
@@ -375,7 +375,7 @@ Own<Clause> ResolveAliasesTransformer::removeTrivialEquality(const Clause& claus
             }
         }
 
-        res->addToBody(souffle::clone(literal));
+        res->addToBody(clone(literal));
     }
 
     // done
@@ -383,7 +383,7 @@ Own<Clause> ResolveAliasesTransformer::removeTrivialEquality(const Clause& claus
 }
 
 Own<Clause> ResolveAliasesTransformer::removeComplexTermsInAtoms(const Clause& clause) {
-    Own<Clause> res(souffle::clone(clause));
+    Own<Clause> res(clone(clause));
 
     // get list of atoms
     std::vector<Atom*> atoms = getBodyLiterals<Atom>(*res);
@@ -426,7 +426,7 @@ Own<Clause> ResolveAliasesTransformer::removeComplexTermsInAtoms(const Clause& c
     static int varCounter = 0;
     for (const Argument* arg : terms) {
         // create a new mapping for this term
-        auto term = souffle::clone(arg);
+        auto term = clone(arg);
         auto newVariable = mk<ast::Variable>(" _tmp_" + toString(varCounter++));
         termToVar.push_back(std::make_pair(std::move(term), std::move(newVariable)));
     }
@@ -444,7 +444,7 @@ Own<Clause> ResolveAliasesTransformer::removeComplexTermsInAtoms(const Clause& c
                 auto& variable = pair.second;
 
                 if (*term == *node) {
-                    return souffle::clone(variable);
+                    return clone(variable);
                 }
             }
 
@@ -465,8 +465,7 @@ Own<Clause> ResolveAliasesTransformer::removeComplexTermsInAtoms(const Clause& c
         auto& term = pair.first;
         auto& variable = pair.second;
 
-        res->addToBody(
-                mk<BinaryConstraint>(BinaryConstraintOp::EQ, souffle::clone(variable), souffle::clone(term)));
+        res->addToBody(mk<BinaryConstraint>(BinaryConstraintOp::EQ, clone(variable), clone(term)));
     }
 
     return res;

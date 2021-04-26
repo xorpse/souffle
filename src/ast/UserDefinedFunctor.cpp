@@ -31,7 +31,7 @@ bool UserDefinedFunctor::equal(const Node& node) const {
 }
 
 UserDefinedFunctor* UserDefinedFunctor::cloning() const {
-    return new UserDefinedFunctor(name, souffle::clone(args), getSrcLoc());
+    return new UserDefinedFunctor(name, clone(args), getSrcLoc());
 }
 
 }  // namespace souffle::ast

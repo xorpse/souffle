@@ -38,7 +38,7 @@ bool ReorderConditionsTransformer::reorderConditions(Program& program) {
                 VecOwn<Condition> sortedConds;
                 VecOwn<Condition> condList = toConjunctionList(condition);
                 for (auto& cond : condList) {
-                    sortedConds.emplace_back(cond->clone());
+                    sortedConds.emplace_back(cond->cloning());
                 }
                 std::sort(sortedConds.begin(), sortedConds.end(), [&](Own<Condition>& a, Own<Condition>& b) {
                     return rca->getComplexity(a.get()) < rca->getComplexity(b.get());
@@ -48,7 +48,7 @@ bool ReorderConditionsTransformer::reorderConditions(Program& program) {
                             [](Own<Condition>& a, Own<Condition>& b) { return *a == *b; })) {
                     changed = true;
                     node = mk<Filter>(
-                            Own<Condition>(toCondition(sortedConds)), souffle::clone(filter->getOperation()));
+                            Own<Condition>(toCondition(sortedConds)), clone(filter->getOperation()));
                 }
             }
             node->apply(makeLambdaRamMapper(filterRewriter));

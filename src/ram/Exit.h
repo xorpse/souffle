@@ -56,8 +56,8 @@ public:
         return {condition.get()};
     }
 
-    Exit* clone() const override {
-        return new Exit(souffle::clone(condition));
+    Exit* cloning() const override {
+        return new Exit(clone(condition));
     }
 
     void apply(const NodeMapper& map) override {

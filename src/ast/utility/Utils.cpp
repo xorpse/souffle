@@ -117,7 +117,7 @@ void removeRelationClauses(TranslationUnit& tu, const QualifiedName& name) {
     // Make copies of the clauses to avoid use-after-delete for equivalent clauses
     std::set<Own<Clause>> clausesToRemove;
     for (const auto* clause : relDetail.getClauses(name)) {
-        clausesToRemove.insert(souffle::clone(clause));
+        clausesToRemove.insert(clone(clause));
     }
     for (const auto& clause : clausesToRemove) {
         program.removeClause(clause.get());
@@ -236,11 +236,11 @@ bool isDeltaRelation(const QualifiedName& name) {
 }
 
 Own<Clause> cloneHead(const Clause& clause) {
-    auto clone = mk<Clause>(souffle::clone(clause.getHead()), clause.getSrcLoc());
+    auto myClone = mk<Clause>(clone(clause.getHead()), clause.getSrcLoc());
     if (clause.getExecutionPlan() != nullptr) {
-        clone->setExecutionPlan(souffle::clone(clause.getExecutionPlan()));
+        myClone->setExecutionPlan(clone(clause.getExecutionPlan()));
     }
-    return clone;
+    return myClone;
 }
 
 std::vector<Atom*> reorderAtoms(const std::vector<Atom*>& atoms, const std::vector<unsigned int>& newOrder) {
@@ -287,7 +287,7 @@ Clause* reorderAtoms(const Clause* clause, const std::vector<unsigned int>& newO
             // Atoms should be reordered
             literalToAdd = bodyLiterals[atomPositions[newOrder[currentAtom++]]];
         }
-        newClause->addToBody(souffle::clone(literalToAdd));
+        newClause->addToBody(clone(literalToAdd));
     }
 
     // FIXME: tomp - fix ownership
@@ -313,7 +313,7 @@ bool renameAtoms(Node& node, const std::map<QualifiedName, QualifiedName>& oldTo
             node->apply(*this);
             if (auto* atom = as<Atom>(node)) {
                 if (contains(oldToNew, atom->getQualifiedName())) {
-                    auto renamedAtom = souffle::clone(atom);
+                    auto renamedAtom = clone(atom);
                     renamedAtom->setQualifiedName(oldToNew.at(atom->getQualifiedName()));
                     changed = true;
                     return renamedAtom;

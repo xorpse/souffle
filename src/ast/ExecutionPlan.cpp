@@ -58,7 +58,7 @@ bool ExecutionPlan::equal(const Node& node) const {
 ExecutionPlan* ExecutionPlan::cloning() const {
     auto res = mk<ExecutionPlan>(getSrcLoc());
     for (auto& plan : plans) {
-        res->setOrderFor(plan.first, souffle::clone(plan.second));
+        res->setOrderFor(plan.first, clone(plan.second));
     }
     return res.release();
 }

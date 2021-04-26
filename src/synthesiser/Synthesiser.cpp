@@ -222,6 +222,8 @@ std::set<const ram::Relation*> Synthesiser::getReferencedRelations(const Operati
 
 void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
     class CodeEmitter : public ram::Visitor<void, Node const, std::ostream&> {
+        using ram::Visitor<void, Node const, std::ostream&>::visit_;
+
     private:
         Synthesiser& synthesiser;
         IndexAnalysis* const isa = synthesiser.getTranslationUnit().getAnalysis<IndexAnalysis>();
@@ -399,9 +401,9 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                     visit(*cur, [&](const ExistenceCheck&) { needContext = true; });
                     visit(*cur, [&](const ProvenanceExistenceCheck&) { needContext = true; });
                     if (needContext) {
-                        requireCtx.push_back(souffle::clone(cur));
+                        requireCtx.push_back(clone(cur));
                     } else {
-                        freeOfCtx.push_back(souffle::clone(cur));
+                        freeOfCtx.push_back(clone(cur));
                     }
                 }
                 // discharge conditions that do not require a context

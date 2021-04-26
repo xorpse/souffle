@@ -47,10 +47,10 @@ bool RemoveRedundantSumsTransformer::transform(TranslationUnit& translationUnit)
                         // Duplicate the body of the aggregate
                         VecOwn<Literal> newBody;
                         for (const auto& lit : agg->getBodyLiterals()) {
-                            newBody.push_back(souffle::clone(lit));
+                            newBody.push_back(clone(lit));
                         }
                         count->setBody(std::move(newBody));
-                        auto number = souffle::clone(constant);
+                        auto number = clone(constant);
                         // Now it's constant * count : { ... }
                         auto result = mk<IntrinsicFunctor>("*", std::move(number), std::move(count));
 

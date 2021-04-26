@@ -61,10 +61,10 @@ public:
         return res;
     }
 
-    SubroutineReturn* clone() const override {
+    SubroutineReturn* cloning() const override {
         VecOwn<Expression> newValues;
         for (auto& expr : expressions) {
-            newValues.emplace_back(expr->clone());
+            newValues.emplace_back(expr->cloning());
         }
         return new SubroutineReturn(std::move(newValues));
     }

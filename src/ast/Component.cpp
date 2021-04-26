@@ -40,7 +40,7 @@ std::vector<Type*> Component::getTypes() const {
 }
 
 void Component::copyBaseComponents(const Component& other) {
-    baseComponents = souffle::clone(other.baseComponents);
+    baseComponents = clone(other.baseComponents);
 }
 
 void Component::addRelation(Own<Relation> r) {
@@ -152,14 +152,14 @@ bool Component::equal(const Node& node) const {
 
 Component* Component::cloning() const {
     auto* res = new Component();
-    res->componentType = souffle::clone(componentType);
-    res->baseComponents = souffle::clone(baseComponents);
-    res->components = souffle::clone(components);
-    res->instantiations = souffle::clone(instantiations);
-    res->types = souffle::clone(types);
-    res->relations = souffle::clone(relations);
-    res->clauses = souffle::clone(clauses);
-    res->directives = souffle::clone(directives);
+    res->componentType = clone(componentType);
+    res->baseComponents = clone(baseComponents);
+    res->components = clone(components);
+    res->instantiations = clone(instantiations);
+    res->types = clone(types);
+    res->relations = clone(relations);
+    res->clauses = clone(clauses);
+    res->directives = clone(directives);
     res->overrideRules = overrideRules;
     return res;
 }

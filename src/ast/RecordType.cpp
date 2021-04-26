@@ -43,7 +43,7 @@ bool RecordType::equal(const Node& node) const {
 }
 
 RecordType* RecordType::cloning() const {
-    return new RecordType(getQualifiedName(), souffle::clone(fields), getSrcLoc());
+    return new RecordType(getQualifiedName(), clone(fields), getSrcLoc());
 }
 
 }  // namespace souffle::ast

@@ -62,9 +62,9 @@ public:
         AbstractIfExists::apply(map);
     }
 
-    IfExists* clone() const override {
-        return new IfExists(relation, getTupleId(), souffle::clone(condition), souffle::clone(getOperation()),
-                getProfileText());
+    IfExists* cloning() const override {
+        return new IfExists(
+                relation, getTupleId(), clone(condition), clone(getOperation()), getProfileText());
     }
 
     std::vector<const Node*> getChildNodes() const override {

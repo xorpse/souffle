@@ -180,10 +180,10 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
         if (transformable) {
             // append the weak version of inequality
             toAppend.emplace_back(mk<Constraint>(convertStrictToWeakIneqConstraint(binRelOp->getOperator()),
-                    souffle::clone(binRelOp->getLHS()), souffle::clone(binRelOp->getRHS())));
+                    clone(binRelOp->getLHS()), clone(binRelOp->getRHS())));
             // append the != constraint
             toAppend.emplace_back(mk<Constraint>(convertStrictToNotEqualConstraint(binRelOp->getOperator()),
-                    souffle::clone(binRelOp->getLHS()), souffle::clone(binRelOp->getRHS())));
+                    clone(binRelOp->getLHS()), clone(binRelOp->getRHS())));
 
             // remove the strict version of inequality
             it = conditionList.erase(it);
@@ -334,19 +334,19 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
                 // simply hoist <expr1> = <expr2> to the outer loop
                 if (newLowerBound && newUpperBound) {
                     addCondition(mk<Constraint>(
-                            getEqConstraint(type), souffle::clone(lowerBound), std::move(lowerExpression)));
+                            getEqConstraint(type), clone(lowerBound), std::move(lowerExpression)));
                 }
                 // new lower bound i.e. Tuple[level, element] >= <expr2>
                 // we need to hoist <expr1> >= <expr2> to the outer loop
                 else if (newLowerBound && !newUpperBound) {
-                    addCondition(mk<Constraint>(getGreaterEqualConstraint(type), souffle::clone(lowerBound),
-                            std::move(lowerExpression)));
+                    addCondition(mk<Constraint>(
+                            getGreaterEqualConstraint(type), clone(lowerBound), std::move(lowerExpression)));
                 }
                 // new upper bound i.e. Tuple[level, element] <= <expr2>
                 // we need to hoist <expr1> <= <expr2> to the outer loop
                 else if (!newLowerBound && newUpperBound) {
-                    addCondition(mk<Constraint>(getLessEqualConstraint(type), souffle::clone(lowerBound),
-                            std::move(upperExpression)));
+                    addCondition(mk<Constraint>(
+                            getLessEqualConstraint(type), clone(lowerBound), std::move(upperExpression)));
                 }
                 // if either bound is defined but they aren't equal we must consider the cases for updating
                 // them note that at this point we know that if we have a lower/upper bound it can't be the
@@ -357,14 +357,14 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
                     // if Tuple[level, element] >= <expr1> and we see Tuple[level, element] = <expr2>
                     // need to hoist <expr2> >= <expr1> to the outer loop
                     if (!firstLowerBound) {
-                        addCondition(mk<Constraint>(getGreaterEqualConstraint(type),
-                                souffle::clone(lowerExpression), std::move(lowerBound)));
+                        addCondition(mk<Constraint>(getGreaterEqualConstraint(type), clone(lowerExpression),
+                                std::move(lowerBound)));
                     }
                     // if Tuple[level, element] <= <expr1> and we see Tuple[level, element] = <expr2>
                     // need to hoist <expr2> <= <expr1> to the outer loop
                     if (!firstUpperBound) {
-                        addCondition(mk<Constraint>(getLessEqualConstraint(type),
-                                souffle::clone(upperExpression), std::move(upperBound)));
+                        addCondition(mk<Constraint>(
+                                getLessEqualConstraint(type), clone(upperExpression), std::move(upperBound)));
                     }
                     // finally replace bounds with equality constraint
                     lowerBound = std::move(lowerExpression);
@@ -413,9 +413,9 @@ Own<Operation> MakeIndexTransformer::rewriteAggregate(const Aggregate* agg) {
         Own<Condition> condition = constructPattern(rel.getAttributeTypes(), queryPattern, indexable,
                 toConjunctionList(&agg->getCondition()), identifier, rel.getRepresentation());
         if (indexable) {
-            return mk<IndexAggregate>(souffle::clone(agg->getOperation()), agg->getFunction(),
-                    agg->getRelation(), souffle::clone(agg->getExpression()), std::move(condition),
-                    std::move(queryPattern), agg->getTupleId());
+            return mk<IndexAggregate>(clone(agg->getOperation()), agg->getFunction(), agg->getRelation(),
+                    clone(agg->getExpression()), std::move(condition), std::move(queryPattern),
+                    agg->getTupleId());
         }
     }
     return nullptr;
@@ -435,7 +435,7 @@ Own<Operation> MakeIndexTransformer::rewriteScan(const Scan* scan) {
         Own<Condition> condition = constructPattern(rel.getAttributeTypes(), queryPattern, indexable,
                 toConjunctionList(&filter->getCondition()), identifier, rel.getRepresentation());
         if (indexable) {
-            Own<Operation> op = souffle::clone(filter->getOperation());
+            Own<Operation> op = clone(filter->getOperation());
             if (!isTrue(condition.get())) {
                 op = mk<Filter>(std::move(condition), std::move(op));
             }
@@ -463,7 +463,7 @@ Own<Operation> MakeIndexTransformer::rewriteIndexScan(const IndexScan* iscan) {
         if (indexable) {
             // Merge Index Pattern here
 
-            Own<Operation> op = souffle::clone(filter->getOperation());
+            Own<Operation> op = clone(filter->getOperation());
             if (!isTrue(condition.get())) {
                 op = mk<Filter>(std::move(condition), std::move(op));
             }

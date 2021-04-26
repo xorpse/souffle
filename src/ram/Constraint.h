@@ -72,8 +72,8 @@ public:
         return {lhs.get(), rhs.get()};
     }
 
-    Constraint* clone() const override {
-        return new Constraint(op, souffle::clone(lhs), souffle::clone(rhs));
+    Constraint* cloning() const override {
+        return new Constraint(op, clone(lhs), clone(rhs));
     }
 
     void apply(const NodeMapper& map) override {

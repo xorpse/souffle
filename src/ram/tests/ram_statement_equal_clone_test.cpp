@@ -8,9 +8,9 @@
 
 /************************************************************************
  *
- * @file ram_statement_equal_clone_test.cpp
+ * @file ram_statement_equal_cloning_test.cpp
  *
- * Tests equal and clone function of Statement classes.
+ * Tests equal and cloning function of Statement classes.
  *
  ***********************************************************************/
 
@@ -72,7 +72,7 @@ TEST(IO1, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    IO* c = a.clone();
+    IO* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -86,7 +86,7 @@ TEST(Clear, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    Clear* c = a.clone();
+    Clear* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -101,7 +101,7 @@ TEST(Extend, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    Extend* c = a.clone();
+    Extend* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -116,7 +116,7 @@ TEST(Swap, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    Swap* c = a.clone();
+    Swap* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -147,7 +147,7 @@ TEST(Query, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    Query* c = a.clone();
+    Query* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -175,7 +175,7 @@ TEST(Query, CloneAndEquals) {
     EXPECT_EQ(d, e);
     EXPECT_NE(&d, &e);
 
-    Query* f = d.clone();
+    Query* f = d.cloning();
     EXPECT_EQ(d, *f);
     EXPECT_NE(&d, f);
     delete f;
@@ -188,7 +188,7 @@ TEST(Sequence, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    Sequence* c = a.clone();
+    Sequence* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -201,7 +201,7 @@ TEST(Sequence, CloneAndEquals) {
     EXPECT_EQ(d, e);
     EXPECT_NE(&d, &e);
 
-    Sequence* f = d.clone();
+    Sequence* f = d.cloning();
     EXPECT_EQ(d, *f);
     EXPECT_NE(&d, f);
     delete f;
@@ -216,7 +216,7 @@ TEST(Sequence, CloneAndEquals) {
     EXPECT_EQ(g, h);
     EXPECT_NE(&g, &h);
 
-    Sequence* i = g.clone();
+    Sequence* i = g.cloning();
     EXPECT_EQ(g, *i);
     EXPECT_NE(&g, i);
     delete i;
@@ -259,7 +259,7 @@ TEST(Parallel, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    Parallel* c = a.clone();
+    Parallel* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -297,7 +297,7 @@ TEST(Loop, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    Loop* c = a.clone();
+    Loop* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -310,7 +310,7 @@ TEST(Exit, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    Exit* c = a.clone();
+    Exit* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -330,7 +330,7 @@ TEST(LogRelationTimer, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    LogRelationTimer* c = a.clone();
+    LogRelationTimer* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -350,7 +350,7 @@ TEST(LogTimer, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    LogTimer* c = a.clone();
+    LogTimer* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -416,7 +416,7 @@ TEST(DebugInfo, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    DebugInfo* c = a.clone();
+    DebugInfo* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -429,7 +429,7 @@ TEST(LogSize, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    LogSize* c = a.clone();
+    LogSize* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;

@@ -39,7 +39,7 @@ public:
         assert(condition != nullptr && "Condition is a null-pointer");
     }
 
-    AbstractConditional* clone() const override = 0;
+    AbstractConditional* cloning() const override = 0;
 
     /** @brief Get condition that must be satisfied */
     const Condition& getCondition() const {

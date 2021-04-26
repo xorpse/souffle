@@ -29,7 +29,7 @@ void BranchDeclaration::print(std::ostream& os) const {
 }
 
 BranchDeclaration* BranchDeclaration::cloning() const {
-    return new BranchDeclaration(constructor, souffle::clone(fields), getSrcLoc());
+    return new BranchDeclaration(constructor, clone(fields), getSrcLoc());
 }
 
 }  // namespace souffle::ast

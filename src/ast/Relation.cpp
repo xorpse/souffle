@@ -73,9 +73,9 @@ bool Relation::equal(const Node& node) const {
 
 Relation* Relation::cloning() const {
     auto res = new Relation(name, getSrcLoc());
-    res->attributes = souffle::clone(attributes);
+    res->attributes = clone(attributes);
     res->qualifiers = qualifiers;
-    res->functionalDependencies = souffle::clone(functionalDependencies);
+    res->functionalDependencies = clone(functionalDependencies);
     res->representation = representation;
     return res;
 }

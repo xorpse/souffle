@@ -122,7 +122,7 @@ Own<D> downCast(Own<B> ptr) {
 
 template <typename A>
 std::enable_if_t<!std::is_pointer_v<A> && !is_range_v<A>, Own<A>> clone(const A& node) {
-    return detail::downCast<A>(node.clone());
+    return detail::downCast<A>(node.cloneImpl());
 }
 
 template <typename A>

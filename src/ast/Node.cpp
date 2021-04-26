@@ -25,7 +25,7 @@ bool Node::operator==(const Node& other) const {
     return typeid(*this) == typeid(*&other) && equal(other);
 }
 
-Own<Node> Node::clone() const {
+Own<Node> Node::cloneImpl() const {
     return Own<Node>(cloning());
 }
 

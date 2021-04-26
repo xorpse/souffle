@@ -48,8 +48,7 @@ bool EliminateDuplicatesTransformer::eliminateDuplicates(Program& program) {
                 }
                 if (eliminatedDuplicate) {
                     changed = true;
-                    node = mk<Filter>(
-                            Own<Condition>(toCondition(conds)), souffle::clone(filter->getOperation()));
+                    node = mk<Filter>(Own<Condition>(toCondition(conds)), clone(filter->getOperation()));
                 }
             }
             node->apply(makeLambdaRamMapper(filterRewriter));

@@ -68,9 +68,8 @@ public:
         return res;
     }
 
-    UnpackRecord* clone() const override {
-        return new UnpackRecord(
-                souffle::clone(getOperation()), getTupleId(), souffle::clone(getExpression()), arity);
+    UnpackRecord* cloning() const override {
+        return new UnpackRecord(clone(getOperation()), getTupleId(), clone(getExpression()), arity);
     }
 
     void apply(const NodeMapper& map) override {

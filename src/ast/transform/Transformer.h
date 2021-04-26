@@ -42,7 +42,7 @@ public:
         return true;
     }
 
-    Own<Transformer> clone() const {
+    Own<Transformer> cloneImpl() const {
         return Own<Transformer>(cloning());
     }
 

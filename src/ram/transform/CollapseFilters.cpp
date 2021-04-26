@@ -40,16 +40,16 @@ bool CollapseFiltersTransformer::collapseFilters(Program& program) {
                 VecOwn<Condition> conditions;
 
                 const Filter* prevFilter = filter;
-                conditions.emplace_back(filter->getCondition().clone());
+                conditions.emplace_back(filter->getCondition().cloning());
                 while (auto* nextFilter = as<Filter>(prevFilter->getOperation())) {
                     canCollapse = true;
-                    conditions.emplace_back(nextFilter->getCondition().clone());
+                    conditions.emplace_back(nextFilter->getCondition().cloning());
                     prevFilter = nextFilter;
                 }
 
                 if (canCollapse) {
                     changed = true;
-                    node = mk<Filter>(toCondition(conditions), souffle::clone(prevFilter->getOperation()),
+                    node = mk<Filter>(toCondition(conditions), clone(prevFilter->getOperation()),
                             prevFilter->getProfileText());
                 }
             }

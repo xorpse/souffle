@@ -45,7 +45,7 @@ public:
         return name;
     }
 
-    Call* clone() const override {
+    Call* cloning() const override {
         return new Call(name);
     }
 

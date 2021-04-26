@@ -8,9 +8,9 @@
 
 /************************************************************************
  *
- * @file ram_operation_equal_clone_test.cpp
+ * @file ram_operation_equal_cloning_test.cpp
  *
- * Tests equal and clone function of Condition classes.
+ * Tests equal and cloning function of Condition classes.
  *
  ***********************************************************************/
 
@@ -72,7 +72,7 @@ TEST(RamScan, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    Scan* c = a.clone();
+    Scan* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -95,7 +95,7 @@ TEST(RamParallelScan, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    ParallelScan* c = a.clone();
+    ParallelScan* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -131,7 +131,7 @@ TEST(RamIndexScan, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    IndexScan* c = a.clone();
+    IndexScan* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -169,7 +169,7 @@ TEST(RamParallelIndexScan, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    ParallelIndexScan* c = a.clone();
+    ParallelIndexScan* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -209,7 +209,7 @@ TEST(RamIfExists, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    IfExists* c = a.clone();
+    IfExists* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -249,7 +249,7 @@ TEST(RamParallelIfExists, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    ParallelIfExists* c = a.clone();
+    ParallelIfExists* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -290,7 +290,7 @@ TEST(RamIndexIfExists, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    IndexIfExists* c = a.clone();
+    IndexIfExists* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -331,7 +331,7 @@ TEST(RamiParallelIndexIfExists, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    ParallelIndexIfExists* c = a.clone();
+    ParallelIndexIfExists* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -353,7 +353,7 @@ TEST(RamAggregate, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    Aggregate* c = a.clone();
+    Aggregate* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -390,7 +390,7 @@ TEST(RamIndexAggregate, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    IndexAggregate* c = a.clone();
+    IndexAggregate* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -419,7 +419,7 @@ TEST(RamUnpackedRecord, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    UnpackRecord* c = a.clone();
+    UnpackRecord* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -447,7 +447,7 @@ TEST(RamFilter, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    Filter* c = a.clone();
+    Filter* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -469,7 +469,7 @@ TEST(RamBreak, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    Break* c = a.clone();
+    Break* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -490,7 +490,7 @@ TEST(RamInsert, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    Insert* c = a.clone();
+    Insert* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -510,7 +510,7 @@ TEST(RamSubroutineReturn, CloneAndEquals) {
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    SubroutineReturn* c = a.clone();
+    SubroutineReturn* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;
@@ -526,7 +526,7 @@ TEST(RamSubroutineReturn, CloneAndEquals) {
     EXPECT_EQ(d, e);
     EXPECT_NE(&d, &e);
 
-    SubroutineReturn* f = d.clone();
+    SubroutineReturn* f = d.cloning();
     EXPECT_EQ(d, *f);
     EXPECT_NE(&d, f);
     delete f;
