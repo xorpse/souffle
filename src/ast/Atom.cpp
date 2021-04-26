@@ -62,7 +62,7 @@ bool Atom::equal(const Node& node) const {
 }
 
 Atom* Atom::cloning() const {
-    return new Atom(name, souffle::clone(arguments), getSrcLoc());
+    return new Atom(name, clone(arguments), getSrcLoc());
 }
 
 }  // namespace souffle::ast

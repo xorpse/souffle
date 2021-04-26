@@ -47,6 +47,6 @@ bool ComponentInit::equal(const Node& node) const {
 }
 
 ComponentInit* ComponentInit::cloning() const {
-    return new ComponentInit(instanceName, souffle::clone(componentType), getSrcLoc());
+    return new ComponentInit(instanceName, clone(componentType), getSrcLoc());
 }
 }  // namespace souffle::ast

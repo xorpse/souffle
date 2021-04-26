@@ -35,7 +35,7 @@ bool AlgebraicDataType::equal(const Node& node) const {
 }
 
 AlgebraicDataType* AlgebraicDataType::cloning() const {
-    return new AlgebraicDataType(getQualifiedName(), souffle::clone(branches), getSrcLoc());
+    return new AlgebraicDataType(getQualifiedName(), clone(branches), getSrcLoc());
 }
 
 }  // namespace souffle::ast

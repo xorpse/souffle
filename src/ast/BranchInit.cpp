@@ -29,7 +29,7 @@ bool BranchInit::equal(const Node& node) const {
 }
 
 BranchInit* BranchInit::cloning() const {
-    return new BranchInit(constructor, souffle::clone(args), getSrcLoc());
+    return new BranchInit(constructor, clone(args), getSrcLoc());
 }
 
 }  // namespace souffle::ast

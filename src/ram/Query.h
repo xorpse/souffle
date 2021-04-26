@@ -58,8 +58,8 @@ public:
         return {operation.get()};
     }
 
-    Query* clone() const override {
-        return new Query(souffle::clone(operation));
+    Query* cloning() const override {
+        return new Query(clone(operation));
     }
 
     void apply(const NodeMapper& map) override {

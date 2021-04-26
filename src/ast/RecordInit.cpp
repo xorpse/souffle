@@ -21,6 +21,6 @@ void RecordInit::print(std::ostream& os) const {
 }
 
 RecordInit* RecordInit::cloning() const {
-    return new RecordInit(souffle::clone(args), getSrcLoc());
+    return new RecordInit(clone(args), getSrcLoc());
 }
 }  // namespace souffle::ast

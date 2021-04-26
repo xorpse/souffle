@@ -372,7 +372,7 @@ void UnitTranslator::transformVariablesToSubroutineArgs(
 
 Own<ram::Sequence> UnitTranslator::makeIfStatement(
         Own<ram::Condition> condition, Own<ram::Operation> trueOp, Own<ram::Operation> falseOp) const {
-    auto negatedCondition = mk<ram::Negation>(souffle::clone(condition));
+    auto negatedCondition = mk<ram::Negation>(clone(condition));
 
     auto trueBranch = mk<ram::Query>(mk<ram::Filter>(std::move(condition), std::move(trueOp)));
     auto falseBranch = mk<ram::Query>(mk<ram::Filter>(std::move(negatedCondition), std::move(falseOp)));
@@ -444,7 +444,7 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
             appendStmt(searchSequence, std::move(ifStatement));
         } else if (const auto* con = as<ast::Constraint>(lit)) {
             bool hasAggregate = false;
-            visit(clause, [&](const ast::Aggregator& var) { hasAggregate = true; });
+            visit(clause, [&](const ast::Aggregator&) { hasAggregate = true; });
             if (!hasAggregate) {
                 auto condition = context->translateConstraint(*dummyValueIndex, con);
                 transformVariablesToSubroutineArgs(condition.get(), idToVarName);

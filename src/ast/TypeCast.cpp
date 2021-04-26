@@ -45,6 +45,6 @@ bool TypeCast::equal(const Node& node) const {
 }
 
 TypeCast* TypeCast::cloning() const {
-    return new TypeCast(souffle::clone(value), type, getSrcLoc());
+    return new TypeCast(clone(value), type, getSrcLoc());
 }
 }  // namespace souffle::ast

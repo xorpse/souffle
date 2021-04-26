@@ -47,7 +47,7 @@ public:
         return element;
     }
 
-    TupleElement* clone() const override {
+    TupleElement* cloning() const override {
         return new TupleElement(identifier, element);
     }
 

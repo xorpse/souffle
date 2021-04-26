@@ -366,7 +366,7 @@ bool MinimiseProgramTransformer::reduceSingletonRelations(TranslationUnit& trans
             if (auto* atom = as<Atom>(node)) {
                 auto pos = canonicalName.find(atom->getQualifiedName());
                 if (pos != canonicalName.end()) {
-                    auto newAtom = souffle::clone(atom);
+                    auto newAtom = clone(atom);
                     newAtom->setQualifiedName(pos->second);
                     return newAtom;
                 }
@@ -397,7 +397,7 @@ bool MinimiseProgramTransformer::removeRedundantClauses(TranslationUnit& transla
     std::set<Own<Clause>> clausesToRemove;
     for (const auto* clause : program.getClauses()) {
         if (isRedundant(clause)) {
-            clausesToRemove.insert(souffle::clone(clause));
+            clausesToRemove.insert(clone(clause));
         }
     }
 
@@ -425,14 +425,14 @@ bool MinimiseProgramTransformer::reduceClauseBodies(TranslationUnit& translation
         }
 
         if (!redundantPositions.empty()) {
-            auto minimisedClause = mk<Clause>(souffle::clone(clause->getHead()));
+            auto minimisedClause = mk<Clause>(clone(clause->getHead()));
             for (std::size_t i = 0; i < bodyLiterals.size(); i++) {
                 if (!contains(redundantPositions, i)) {
-                    minimisedClause->addToBody(souffle::clone(bodyLiterals[i]));
+                    minimisedClause->addToBody(clone(bodyLiterals[i]));
                 }
             }
             clausesToAdd.insert(std::move(minimisedClause));
-            clausesToRemove.insert(souffle::clone(clause));
+            clausesToRemove.insert(clone(clause));
         }
     }
 
@@ -440,7 +440,7 @@ bool MinimiseProgramTransformer::reduceClauseBodies(TranslationUnit& translation
         program.removeClause(clause.get());
     }
     for (auto& clause : clausesToAdd) {
-        program.addClause(souffle::clone(clause));
+        program.addClause(clone(clause));
     }
 
     return !clausesToAdd.empty();

@@ -114,6 +114,7 @@ class NodeGenerator : public ram::Visitor<Own<Node>> {
     using NodePtr = Own<Node>;
     using NodePtrVec = std::vector<NodePtr>;
     using RelationHandle = Own<RelationWrapper>;
+    using ram::Visitor<Own<Node>>::visit_;
 
 public:
     NodeGenerator(Engine& engine);

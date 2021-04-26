@@ -49,14 +49,14 @@ Own<Operation> IfConversionTransformer::rewriteIndexScan(const IndexScan* indexS
             }
         }
         // replace IndexScan with an Filter/Existence check
-        RamBound newValues = souffle::clone(indexScan->getRangePattern().first);
+        RamBound newValues = clone(indexScan->getRangePattern().first);
 
         // check if there is a break statement nested in the Scan - if so, remove it
         Operation* newOp;
         if (const auto* breakOp = as<Break>(indexScan->getOperation())) {
-            newOp = breakOp->getOperation().clone();
+            newOp = breakOp->getOperation().cloning();
         } else {
-            newOp = indexScan->getOperation().clone();
+            newOp = indexScan->getOperation().cloning();
         }
 
         return mk<Filter>(mk<ExistenceCheck>(indexScan->getRelation(), std::move(newValues)),

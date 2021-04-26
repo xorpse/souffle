@@ -72,7 +72,7 @@ public:
 
 private:
     WhileTransformer* cloning() const override {
-        return new WhileTransformer(condition, souffle::clone(transformer));
+        return new WhileTransformer(condition, clone(transformer));
     }
 
     bool transform(TranslationUnit& translationUnit) override {

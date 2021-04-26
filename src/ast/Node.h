@@ -78,7 +78,7 @@ public:
     }
 
     /** Create a clone (i.e. deep copy) of this node */
-    Own<Node> clone() const;
+    Own<Node> cloneImpl() const;
 
     /** Apply the mapper to all child nodes */
     virtual void apply(const NodeMapper& /* mapper */);

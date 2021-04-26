@@ -38,7 +38,7 @@ bool IntrinsicFunctor::equal(const Node& node) const {
 }
 
 IntrinsicFunctor* IntrinsicFunctor::cloning() const {
-    return new IntrinsicFunctor(function, souffle::clone(args), getSrcLoc());
+    return new IntrinsicFunctor(function, clone(args), getSrcLoc());
 }
 
 }  // namespace souffle::ast

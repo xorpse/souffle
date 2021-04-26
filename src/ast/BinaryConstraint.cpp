@@ -44,7 +44,7 @@ bool BinaryConstraint::equal(const Node& node) const {
 }
 
 BinaryConstraint* BinaryConstraint::cloning() const {
-    return new BinaryConstraint(operation, souffle::clone(lhs), souffle::clone(rhs), getSrcLoc());
+    return new BinaryConstraint(operation, clone(lhs), clone(rhs), getSrcLoc());
 }
 
 }  // namespace souffle::ast

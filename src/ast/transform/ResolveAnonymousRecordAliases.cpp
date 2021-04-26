@@ -103,7 +103,7 @@ bool ResolveAnonymousRecordAliasesTransformer::replaceNamedVariables(Translation
             if (auto variable = as<ast::Variable>(node)) {
                 auto iteratorToRecord = varToRecordMap.find(variable->getName());
                 if (iteratorToRecord != varToRecordMap.end()) {
-                    return souffle::clone(iteratorToRecord->second);
+                    return clone(iteratorToRecord->second);
                 }
             }
 

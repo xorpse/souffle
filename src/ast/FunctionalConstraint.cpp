@@ -67,7 +67,7 @@ bool FunctionalConstraint::equivalentConstraint(const FunctionalConstraint& othe
 }
 
 FunctionalConstraint* FunctionalConstraint::cloning() const {
-    return new FunctionalConstraint(souffle::clone(keys), getSrcLoc());
+    return new FunctionalConstraint(clone(keys), getSrcLoc());
 }
 
 }  // namespace souffle::ast

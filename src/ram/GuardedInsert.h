@@ -57,12 +57,12 @@ public:
         return res;
     }
 
-    GuardedInsert* clone() const override {
+    GuardedInsert* cloning() const override {
         VecOwn<Expression> newValues;
         for (auto& expr : expressions) {
-            newValues.emplace_back(expr->clone());
+            newValues.emplace_back(expr->cloning());
         }
-        Own<Condition> newCondition(condition->clone());
+        Own<Condition> newCondition(condition->cloning());
         return new GuardedInsert(relation, std::move(newValues), std::move(newCondition));
     }
 

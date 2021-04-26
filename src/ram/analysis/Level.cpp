@@ -59,6 +59,8 @@ namespace souffle::ram::analysis {
 int LevelAnalysis::getLevel(const Node* node) const {
     // visitor
     class ValueLevelVisitor : public Visitor<int> {
+        using Visitor<int>::visit_;
+
     public:
         // string constant
         int visit_(type_identity<StringConstant>, const StringConstant&) override {
