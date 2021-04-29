@@ -11,6 +11,7 @@
 
 .functor factorial(unsigned):unsigned
 .functor rnd(float):number
+.functor incr(float):float
 
 .decl A(x:number)
 A(@foo(1,"123")) :- true.
@@ -50,6 +51,13 @@ R(@rnd(-1.1231)) :- true.
 R(@rnd(0.7)) :- true.
 R(@rnd(0.2)) :- true.
 .output R
+
+.decl I(i:float)
+I(@incr(-12.35)) :- true.
+I(@incr(-1.1231)) :- true.
+I(@incr(0.7)) :- true.
+I(@incr(0.2)) :- true.
+.output I
 
 // Testing stateful functors
 
