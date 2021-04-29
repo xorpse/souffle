@@ -29,7 +29,7 @@ public:
     }
 
 private:
-    PragmaChecker* cloneImpl() const override {
+    PragmaChecker* cloning() const override {
         return new PragmaChecker();
     }
 

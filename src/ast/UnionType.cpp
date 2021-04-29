@@ -33,7 +33,7 @@ bool UnionType::equal(const Node& node) const {
     return getQualifiedName() == other.getQualifiedName() && types == other.types;
 }
 
-UnionType* UnionType::cloneImpl() const {
+UnionType* UnionType::cloning() const {
     return new UnionType(getQualifiedName(), types, getSrcLoc());
 }
 

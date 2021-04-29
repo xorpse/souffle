@@ -53,8 +53,8 @@ Own<Operation> IfExistsConversionTransformer::rewriteScan(const Scan* scan) {
         const auto* filter = as<Filter>(scan->getOperation());
         const int identifier = scan->getTupleId();
 
-        return mk<IfExists>(scan->getRelation(), identifier, souffle::clone(filter->getCondition()),
-                souffle::clone(filter->getOperation()), scan->getProfileText());
+        return mk<IfExists>(scan->getRelation(), identifier, clone(filter->getCondition()),
+                clone(filter->getOperation()), scan->getProfileText());
     }
 
     // Check that Relation is not referenced further down in the loop nest
@@ -67,8 +67,8 @@ Own<Operation> IfExistsConversionTransformer::rewriteScan(const Scan* scan) {
 
     // Convert the Scan into a IfExists where True
     if (!referencedBelow) {
-        return mk<IfExists>(scan->getRelation(), scan->getTupleId(), mk<True>(),
-                souffle::clone(scan->getOperation()), scan->getProfileText());
+        return mk<IfExists>(scan->getRelation(), scan->getTupleId(), mk<True>(), clone(scan->getOperation()),
+                scan->getProfileText());
     }
 
     return nullptr;
@@ -96,13 +96,13 @@ Own<Operation> IfExistsConversionTransformer::rewriteIndexScan(const IndexScan* 
 
     // Convert the IndexScan/If pair into an IndexIfExists
     if (transformTuple) {
-        RamPattern newValues = make_pair(souffle::clone(indexScan->getRangePattern().first),
-                souffle::clone(indexScan->getRangePattern().second));
+        RamPattern newValues = make_pair(
+                clone(indexScan->getRangePattern().first), clone(indexScan->getRangePattern().second));
         const auto* filter = as<Filter>(indexScan->getOperation());
         const int identifier = indexScan->getTupleId();
         const std::string& rel = indexScan->getRelation();
-        return mk<IndexIfExists>(rel, identifier, souffle::clone(filter->getCondition()),
-                std::move(newValues), souffle::clone(filter->getOperation()), indexScan->getProfileText());
+        return mk<IndexIfExists>(rel, identifier, clone(filter->getCondition()), std::move(newValues),
+                clone(filter->getOperation()), indexScan->getProfileText());
     }
 
     // Check that Relation is not referenced further down in the loop nest
@@ -115,10 +115,10 @@ Own<Operation> IfExistsConversionTransformer::rewriteIndexScan(const IndexScan* 
 
     // Convert the Scan into a IfExists where True
     if (!referencedBelow) {
-        RamPattern newValues = make_pair(souffle::clone(indexScan->getRangePattern().first),
-                souffle::clone(indexScan->getRangePattern().second));
+        RamPattern newValues = make_pair(
+                clone(indexScan->getRangePattern().first), clone(indexScan->getRangePattern().second));
         return mk<IndexIfExists>(indexScan->getRelation(), indexScan->getTupleId(), mk<True>(),
-                std::move(newValues), souffle::clone(indexScan->getOperation()), indexScan->getProfileText());
+                std::move(newValues), clone(indexScan->getOperation()), indexScan->getProfileText());
     }
 
     return nullptr;

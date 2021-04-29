@@ -170,7 +170,7 @@ bool PartitionBodyLiteralsTransformer::transform(TranslationUnit& translationUni
                     }
                 });
                 if (associated) {
-                    disconnectedClause->addToBody(souffle::clone(bodyLiteral));
+                    disconnectedClause->addToBody(clone(bodyLiteral));
                 }
             }
 
@@ -184,7 +184,7 @@ bool PartitionBodyLiteralsTransformer::transform(TranslationUnit& translationUni
 
         // Create the replacement clause
         // a(x) <- b(x), c(y), d(z). --> a(x) <- newrel0(), newrel1(), b(x).
-        auto replacementClause = mk<Clause>(souffle::clone(clause.getHead()),
+        auto replacementClause = mk<Clause>(clone(clause.getHead()),
                 VecOwn<Literal>(replacementAtoms.begin(), replacementAtoms.end()), nullptr,
                 clause.getSrcLoc());
 
@@ -199,7 +199,7 @@ bool PartitionBodyLiteralsTransformer::transform(TranslationUnit& translationUni
                 }
             });
             if (associated || !hasVariables) {
-                replacementClause->addToBody(souffle::clone(bodyLiteral));
+                replacementClause->addToBody(clone(bodyLiteral));
             }
         }
 

@@ -32,7 +32,7 @@ public:
     NilConstant(SrcLocation loc = {});
 
 private:
-    NilConstant* cloneImpl() const override;
+    NilConstant* cloning() const override;
 };
 
 }  // namespace souffle::ast

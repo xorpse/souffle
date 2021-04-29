@@ -248,8 +248,9 @@ void SemanticCheckerImpl::checkAtom(const Atom& atom) {
     }
 
     if (r->getArity() != atom.getArity()) {
-        report.addError(
-                "Mismatching arity of relation " + toString(atom.getQualifiedName()), atom.getSrcLoc());
+        report.addError("Mismatching arity of relation " + toString(atom.getQualifiedName()) + " (expected " +
+                                toString(r->getArity()) + ", got " + toString(atom.getArity()) + ")",
+                atom.getSrcLoc());
     }
 
     for (const Argument* arg : atom.getArguments()) {
@@ -358,7 +359,7 @@ void SemanticCheckerImpl::checkAggregator(const Aggregator& aggregator) {
             }
             // Get the literal containing the aggregator and put it into a dummy clause
             // so we can get information about groundedness
-            dummyClauseAggregator.addToBody(souffle::clone(parentLiteral));
+            dummyClauseAggregator.addToBody(clone(parentLiteral));
         });
     });
 
@@ -366,7 +367,7 @@ void SemanticCheckerImpl::checkAggregator(const Aggregator& aggregator) {
         visit(parentLiteral, [&](const Aggregator& /* otherAggregate */) {
             // Create the other aggregate's dummy clause
             Clause dummyClauseOther("dummy");
-            dummyClauseOther.addToBody(souffle::clone(parentLiteral));
+            dummyClauseOther.addToBody(clone(parentLiteral));
             // Check dependency between the aggregator and this one
             if (isDependent(dummyClauseAggregator, dummyClauseOther) &&
                     isDependent(dummyClauseOther, dummyClauseAggregator)) {
@@ -682,7 +683,7 @@ static const std::vector<SrcLocation> usesInvalidWitness(
     }
 
     auto aggregateSubclause = mk<Clause>("*");
-    aggregateSubclause->setBodyLiterals(souffle::clone(aggregate.getBodyLiterals()));
+    aggregateSubclause->setBodyLiterals(clone(aggregate.getBodyLiterals()));
 
     struct InnerAggregateMasker : public NodeMapper {
         mutable int numReplaced = 0;

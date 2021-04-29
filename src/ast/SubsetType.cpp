@@ -25,7 +25,7 @@ bool SubsetType::equal(const Node& node) const {
     return getQualifiedName() == other.getQualifiedName() && baseType == other.baseType;
 }
 
-SubsetType* SubsetType::cloneImpl() const {
+SubsetType* SubsetType::cloning() const {
     return new SubsetType(getQualifiedName(), getBaseType(), getSrcLoc());
 }
 

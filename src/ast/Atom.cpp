@@ -61,8 +61,8 @@ bool Atom::equal(const Node& node) const {
     return name == other.name && equal_targets(arguments, other.arguments);
 }
 
-Atom* Atom::cloneImpl() const {
-    return new Atom(name, souffle::clone(arguments), getSrcLoc());
+Atom* Atom::cloning() const {
+    return new Atom(name, clone(arguments), getSrcLoc());
 }
 
 }  // namespace souffle::ast

@@ -51,7 +51,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    Negation* cloneImpl() const override;
+    Negation* cloning() const override;
 
 private:
     /** Negated atom */

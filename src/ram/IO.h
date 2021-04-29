@@ -50,7 +50,7 @@ public:
         return directives.at(key);
     }
 
-    IO* clone() const override {
+    IO* cloning() const override {
         return new IO(relation, directives);
     }
 

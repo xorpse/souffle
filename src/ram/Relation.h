@@ -94,7 +94,7 @@ public:
         return name < other.name;
     }
 
-    Relation* clone() const override {
+    Relation* cloning() const override {
         return new Relation(name, arity, auxiliaryArity, attributeNames, attributeTypes, representation);
     }
 

@@ -68,7 +68,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    Atom* cloneImpl() const override;
+    Atom* cloning() const override;
 
 private:
     /** Name of atom */

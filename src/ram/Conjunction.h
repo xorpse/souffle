@@ -65,8 +65,8 @@ public:
         return {lhs.get(), rhs.get()};
     }
 
-    Conjunction* clone() const override {
-        return new Conjunction(souffle::clone(lhs), souffle::clone(rhs));
+    Conjunction* cloning() const override {
+        return new Conjunction(clone(lhs), clone(rhs));
     }
 
     void apply(const NodeMapper& map) override {

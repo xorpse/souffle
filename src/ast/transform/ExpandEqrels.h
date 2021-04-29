@@ -29,7 +29,7 @@ public:
     }
 
 private:
-    ExpandEqrelsTransformer* cloneImpl() const override {
+    ExpandEqrelsTransformer* cloning() const override {
         return new ExpandEqrelsTransformer();
     }
 

@@ -29,7 +29,7 @@ public:
     }
 
 private:
-    ExecutionPlanChecker* cloneImpl() const override {
+    ExecutionPlanChecker* cloning() const override {
         return new ExecutionPlanChecker();
     }
 

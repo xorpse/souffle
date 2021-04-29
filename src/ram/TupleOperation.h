@@ -34,7 +34,7 @@ public:
     TupleOperation(int ident, Own<Operation> nested, std::string profileText = "")
             : NestedOperation(std::move(nested), std::move(profileText)), identifier(ident) {}
 
-    TupleOperation* clone() const override = 0;
+    TupleOperation* cloning() const override = 0;
 
     /** @brief Get identifier */
     int getTupleId() const {

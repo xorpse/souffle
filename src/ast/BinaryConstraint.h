@@ -69,7 +69,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    BinaryConstraint* cloneImpl() const override;
+    BinaryConstraint* cloning() const override;
 
 private:
     /** Constraint (base) operator */

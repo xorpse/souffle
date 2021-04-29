@@ -50,7 +50,7 @@ protected:
     void print(std::ostream& os) const override;
 
 private:
-    BranchDeclaration* cloneImpl() const override;
+    BranchDeclaration* cloning() const override;
 
 private:
     std::string constructor;

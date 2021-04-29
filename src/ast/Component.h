@@ -117,7 +117,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    Component* cloneImpl() const override;
+    Component* cloning() const override;
 
 private:
     /** Name of component and its formal component arguments. */

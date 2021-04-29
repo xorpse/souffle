@@ -182,7 +182,7 @@ void collectContent(Program& program, const Component& component, const TypeBind
     // and continue with the local types
     for (const auto& cur : component.getTypes()) {
         // create a clone
-        Own<ast::Type> type(souffle::clone(cur));
+        Own<ast::Type> type(clone(cur));
 
         // instantiate elements of union types
         visit(*type, [&](ast::UnionType& type) {
@@ -211,7 +211,7 @@ void collectContent(Program& program, const Component& component, const TypeBind
     // and the local relations
     for (const auto& cur : component.getRelations()) {
         // create a clone
-        Own<Relation> rel(souffle::clone(cur));
+        Own<Relation> rel(clone(cur));
 
         // update attribute types
         for (Attribute* attr : rel->getAttributes()) {
@@ -228,7 +228,7 @@ void collectContent(Program& program, const Component& component, const TypeBind
     // and the local directive directives
     for (const auto& directive : component.getDirectives()) {
         // create a clone
-        Own<Directive> instantiatedIO(souffle::clone(directive));
+        Own<Directive> instantiatedIO(clone(directive));
 
         res.add(instantiatedIO, report);
     }
@@ -245,10 +245,10 @@ void collectContent(Program& program, const Component& component, const TypeBind
         if (overridden.count(cur->getHead()->getQualifiedName().getQualifiers()[0]) == 0) {
             Relation* rel = index[cur->getHead()->getQualifiedName()];
             if (rel != nullptr) {
-                Own<Clause> instantiatedClause(souffle::clone(cur));
+                Own<Clause> instantiatedClause(clone(cur));
                 res.add(instantiatedClause, report);
             } else {
-                orphans.emplace_back(souffle::clone(cur));
+                orphans.emplace_back(clone(cur));
             }
         }
     }
@@ -259,7 +259,7 @@ void collectContent(Program& program, const Component& component, const TypeBind
         Relation* rel = index[cur->getHead()->getQualifiedName()];
         if (rel != nullptr) {
             // add orphan to current instance and delete from orphan list
-            Own<Clause> instantiatedClause(souffle::clone(cur));
+            Own<Clause> instantiatedClause(clone(cur));
             res.add(instantiatedClause, report);
             iter = orphans.erase(iter);
         } else {

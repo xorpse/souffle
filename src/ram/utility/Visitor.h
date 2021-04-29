@@ -88,9 +88,9 @@
 #include "ram/UnpackRecord.h"
 #include "ram/UnsignedConstant.h"
 #include "ram/UserDefinedOperator.h"
-#include "souffle/Visitor.h"
 #include "souffle/utility/FunctionalUtil.h"
 #include "souffle/utility/MiscUtil.h"
+#include "souffle/utility/Visitor.h"
 #include <cstddef>
 #include <functional>
 #include <type_traits>

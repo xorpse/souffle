@@ -55,8 +55,8 @@ bool Aggregator::equal(const Node& node) const {
            equal_targets(body, other.body);
 }
 
-Aggregator* Aggregator::cloneImpl() const {
-    return new Aggregator(baseOperator, souffle::clone(targetExpression), souffle::clone(body), getSrcLoc());
+Aggregator* Aggregator::cloning() const {
+    return new Aggregator(baseOperator, clone(targetExpression), clone(body), getSrcLoc());
 }
 
 Node::NodeVec Aggregator::getChildNodesImpl() const {

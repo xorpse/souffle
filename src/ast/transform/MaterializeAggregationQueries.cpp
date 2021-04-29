@@ -125,7 +125,7 @@ void MaterializeAggregationQueriesTransformer::groundInjectedParameters(
                 VecOwn<Literal> newBody;
                 for (const auto& lit : aggregate->getBodyLiterals()) {
                     if (auto* atom = as<Atom>(lit)) {
-                        newBody.push_back(mk<Negation>(souffle::clone(atom)));
+                        newBody.push_back(mk<Negation>(clone(atom)));
                     }
                 }
                 aggregate->setBody(std::move(newBody));
@@ -135,7 +135,7 @@ void MaterializeAggregationQueriesTransformer::groundInjectedParameters(
         }
     };
 
-    auto aggClauseInnerAggregatesMasked = souffle::clone(aggClause);
+    auto aggClauseInnerAggregatesMasked = clone(aggClause);
     aggClauseInnerAggregatesMasked->setHead(mk<Atom>("*"));
     NegateAggregateAtoms update;
     aggClauseInnerAggregatesMasked->apply(update);
@@ -191,7 +191,7 @@ void MaterializeAggregationQueriesTransformer::groundInjectedParameters(
             }
             // 2. Variable must be grounded by this literal.
             auto singleLiteralClause = mk<Clause>("*");
-            singleLiteralClause->addToBody(souffle::clone(lit));
+            singleLiteralClause->addToBody(clone(lit));
             bool variableGroundedByLiteral = false;
             for (const auto& argPair : analysis::getGroundedTerms(translationUnit, *singleLiteralClause)) {
                 const auto* var = as<ast::Variable>(argPair.first);
@@ -221,7 +221,7 @@ void MaterializeAggregationQueriesTransformer::groundInjectedParameters(
                 for (auto arg : atom->getArguments()) {
                     if (auto* var = as<ast::Variable>(arg)) {
                         if (var->getName() == ungroundedVariableName) {
-                            arguments.emplace_back(souffle::clone(arg));
+                            arguments.emplace_back(clone(arg));
                             continue;
                         }
                     }
@@ -230,7 +230,7 @@ void MaterializeAggregationQueriesTransformer::groundInjectedParameters(
 
                 auto groundingAtom =
                         mk<Atom>(atom->getQualifiedName(), std::move(arguments), atom->getSrcLoc());
-                aggClause.addToBody(souffle::clone(groundingAtom));
+                aggClause.addToBody(clone(groundingAtom));
                 alreadyGrounded.insert(ungroundedVariableName);
             }
         }
@@ -282,7 +282,7 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
             auto aggregateBodyRelationName = analysis::findUniqueRelationName(program, "__agg_subclause");
             // quickly copy in all the literals from the aggregate body
             auto aggClause = mk<Clause>(aggregateBodyRelationName);
-            aggClause->setBodyLiterals(souffle::clone(agg.getBodyLiterals()));
+            aggClause->setBodyLiterals(clone(agg.getBodyLiterals()));
             if (agg.getBaseOperator() == AggregateOp::COUNT) {
                 instantiateUnnamedVariables(*aggClause);
             }
@@ -332,7 +332,7 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
                         continue;
                     }
                 }
-                args.emplace_back(souffle::clone(arg));
+                args.emplace_back(clone(arg));
             }
             auto aggAtom =
                     mk<Atom>(aggClauseHead->getQualifiedName(), std::move(args), aggClauseHead->getSrcLoc());

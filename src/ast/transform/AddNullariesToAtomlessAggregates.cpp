@@ -59,7 +59,7 @@ bool AddNullariesToAtomlessAggregatesTransformer::transform(TranslationUnit& tra
         }
         VecOwn<Literal> newBody;
         for (const auto& lit : agg.getBodyLiterals()) {
-            newBody.push_back(souffle::clone(lit));
+            newBody.push_back(clone(lit));
         }
         newBody.push_back(mk<Atom>(relName));
         agg.setBody(std::move(newBody));

@@ -191,16 +191,16 @@ void Program::addInstantiation(Own<ComponentInit> instantiation) {
     instantiations.push_back(std::move(instantiation));
 }
 
-Program* Program::cloneImpl() const {
+Program* Program::cloning() const {
     auto res = new Program();
-    res->pragmas = souffle::clone(pragmas);
-    res->components = souffle::clone(components);
-    res->instantiations = souffle::clone(instantiations);
-    res->types = souffle::clone(types);
-    res->functors = souffle::clone(functors);
-    res->relations = souffle::clone(relations);
-    res->clauses = souffle::clone(clauses);
-    res->directives = souffle::clone(directives);
+    res->pragmas = clone(pragmas);
+    res->components = clone(components);
+    res->instantiations = clone(instantiations);
+    res->types = clone(types);
+    res->functors = clone(functors);
+    res->relations = clone(relations);
+    res->clauses = clone(clauses);
+    res->directives = clone(directives);
     return res;
 }
 

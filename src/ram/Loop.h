@@ -56,8 +56,8 @@ public:
         return {body.get()};
     }
 
-    Loop* clone() const override {
-        return new Loop(souffle::clone(body));
+    Loop* cloning() const override {
+        return new Loop(clone(body));
     }
 
     void apply(const NodeMapper& map) override {

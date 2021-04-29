@@ -79,7 +79,7 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
     });
     for (auto pair : pairs) {
         // Clone the aggregate that we're going to be deleting.
-        auto aggregate = souffle::clone(pair.first);
+        auto aggregate = clone(pair.first);
         Clause* clause = pair.second;
         // synthesise an aggregate relation
         // __agg_rel_0()
@@ -98,13 +98,13 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
         assert(!curArgType.empty() && "unexpected empty typeset");
 
         // __agg_single(z) :- ...
-        aggHead->addArgument(souffle::clone(variable));
+        aggHead->addArgument(clone(variable));
         aggRel->addAttribute(mk<Attribute>(variableName, curArgType.begin()->getName()));
 
         //    A(x) :- x = sum .., B(x).
         // -> A(x) :- x = z, B(x), __agg_single(z).
-        auto equalityLiteral = mk<BinaryConstraint>(
-                BinaryConstraintOp::EQ, souffle::clone(variable), souffle::clone(aggregate));
+        auto equalityLiteral =
+                mk<BinaryConstraint>(BinaryConstraintOp::EQ, clone(variable), clone(aggregate));
         // __agg_single(z) :- z = sum ...
         aggClause->addToBody(std::move(equalityLiteral));
 
@@ -121,7 +121,7 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
             Own<Node> operator()(Own<Node> node) const override {
                 if (auto* current = as<Aggregator>(node)) {
                     if (*current == aggregate) {
-                        auto replacement = souffle::clone(variable);
+                        auto replacement = clone(variable);
                         assert(replacement != nullptr);
                         return replacement;
                     }
@@ -132,7 +132,7 @@ bool MaterializeSingletonAggregationTransformer::transform(TranslationUnit& tran
         };
         replaceAggregate update(*aggregate, std::move(variable));
         clause->apply(update);
-        clause->addToBody(souffle::clone(*aggHead));
+        clause->addToBody(clone(*aggHead));
     }
     return pairs.size() > 0;
 }

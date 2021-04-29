@@ -62,7 +62,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    ComponentType* cloneImpl() const override;
+    ComponentType* cloning() const override;
 
 private:
     /** Component name */

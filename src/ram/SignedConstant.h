@@ -40,8 +40,8 @@ public:
         return constant;
     }
 
-    /** Create clone */
-    SignedConstant* clone() const override {
+    /** Create cloning */
+    SignedConstant* cloning() const override {
         return new SignedConstant(getValue());
     }
 

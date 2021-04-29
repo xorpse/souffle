@@ -70,10 +70,10 @@ public:
         return res;
     }
 
-    Insert* clone() const override {
+    Insert* cloning() const override {
         VecOwn<Expression> newValues;
         for (auto& expr : expressions) {
-            newValues.emplace_back(expr->clone());
+            newValues.emplace_back(expr->cloning());
         }
         return new Insert(relation, std::move(newValues));
     }

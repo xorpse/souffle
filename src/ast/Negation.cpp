@@ -36,8 +36,8 @@ bool Negation::equal(const Node& node) const {
     return equal_ptr(atom, other.atom);
 }
 
-Negation* Negation::cloneImpl() const {
-    return new Negation(souffle::clone(atom), getSrcLoc());
+Negation* Negation::cloning() const {
+    return new Negation(clone(atom), getSrcLoc());
 }
 
 }  // namespace souffle::ast

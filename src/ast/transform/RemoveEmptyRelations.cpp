@@ -118,10 +118,10 @@ bool RemoveEmptyRelationsTransformer::removeEmptyRelationUses(
                 for (Literal* lit : cl->getBodyLiterals()) {
                     if (auto* neg = as<Negation>(lit)) {
                         if (neg->getAtom()->getQualifiedName() != emptyRelationName) {
-                            res->addToBody(souffle::clone(lit));
+                            res->addToBody(clone(lit));
                         }
                     } else {
-                        res->addToBody(souffle::clone(lit));
+                        res->addToBody(clone(lit));
                     }
                 }
 

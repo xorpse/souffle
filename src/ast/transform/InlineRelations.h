@@ -32,7 +32,7 @@ public:
     }
 
 private:
-    InlineRelationsTransformer* cloneImpl() const override {
+    InlineRelationsTransformer* cloning() const override {
         return new InlineRelationsTransformer();
     }
 

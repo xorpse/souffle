@@ -47,10 +47,10 @@ public:
         return operation;
     }
 
-    IntrinsicOperator* clone() const override {
+    IntrinsicOperator* cloning() const override {
         VecOwn<Expression> argsCopy;
         for (auto& arg : arguments) {
-            argsCopy.emplace_back(arg->clone());
+            argsCopy.emplace_back(arg->cloning());
         }
         return new IntrinsicOperator(operation, std::move(argsCopy));
     }

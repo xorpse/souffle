@@ -97,9 +97,9 @@ std::set<std::string> getWitnessVariables(
     };
 
     auto aggregatorlessClause = mk<Clause>("*");
-    aggregatorlessClause->setBodyLiterals(souffle::clone(clause.getBodyLiterals()));
+    aggregatorlessClause->setBodyLiterals(clone(clause.getBodyLiterals()));
 
-    auto negatedHead = mk<Negation>(souffle::clone(clause.getHead()));
+    auto negatedHead = mk<Negation>(clone(clause.getHead()));
     aggregatorlessClause->addToBody(std::move(negatedHead));
 
     // Replace all aggregates with variables
@@ -113,7 +113,7 @@ std::set<std::string> getWitnessVariables(
     // 2. Create an aggregate clause so that we can check
     // that it IS this aggregate giving a grounding to the candidate variable.
     auto aggregateSubclause = mk<Clause>("*");
-    aggregateSubclause->setBodyLiterals(souffle::clone(aggregate.getBodyLiterals()));
+    aggregateSubclause->setBodyLiterals(clone(aggregate.getBodyLiterals()));
 
     std::set<std::string> witnessVariables;
     auto isGroundedInAggregateSubclause = analysis::getGroundedTerms(tu, *aggregateSubclause);
@@ -263,7 +263,7 @@ std::set<std::string> getInjectedVariables(
     visit(clause, [&](const Aggregator& ancestor) {
         visit(ancestor, [&](const Aggregator& agg) {
             if (agg == aggregate) {
-                ancestorAggregates.insert(souffle::clone(ancestor));
+                ancestorAggregates.insert(clone(ancestor));
             }
         });
     });
@@ -321,14 +321,14 @@ std::set<std::string> getInjectedVariables(
         }
     };
     // 2. make a clone of the clause and then apply that mapper onto it
-    auto clauseCopy = souffle::clone(clause);
+    auto clauseCopy = clone(clause);
     auto tweakedClause = mk<Clause>("*");
-    tweakedClause->setBodyLiterals(souffle::clone(clause.getBodyLiterals()));
+    tweakedClause->setBodyLiterals(clone(clause.getBodyLiterals()));
 
     // copy in the head as a negated atom
-    tweakedClause->addToBody(mk<Negation>(souffle::clone(clause.getHead())));
+    tweakedClause->addToBody(mk<Negation>(clone(clause.getHead())));
     // copy in body literals and also add the old head as a negated atom
-    ReplaceAggregatesWithVariables update(std::move(ancestorAggregates), souffle::clone(aggregate));
+    ReplaceAggregatesWithVariables update(std::move(ancestorAggregates), clone(aggregate));
     tweakedClause->apply(update);
     // the update will now tell us which variables we need to ground!
     auto groundingAtom = mk<Atom>("+grounding_atom");

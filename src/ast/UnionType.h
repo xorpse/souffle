@@ -61,7 +61,7 @@ protected:
 private:
     bool equal(const Node& node) const override;
 
-    UnionType* cloneImpl() const override;
+    UnionType* cloning() const override;
 
 private:
     /** List of unioned types */

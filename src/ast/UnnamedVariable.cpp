@@ -15,7 +15,7 @@ void UnnamedVariable::print(std::ostream& os) const {
     os << "_";
 }
 
-UnnamedVariable* UnnamedVariable::cloneImpl() const {
+UnnamedVariable* UnnamedVariable::cloning() const {
     return new UnnamedVariable(getSrcLoc());
 }
 

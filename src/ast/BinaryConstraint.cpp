@@ -43,8 +43,8 @@ bool BinaryConstraint::equal(const Node& node) const {
     return operation == other.operation && equal_ptr(lhs, other.lhs) && equal_ptr(rhs, other.rhs);
 }
 
-BinaryConstraint* BinaryConstraint::cloneImpl() const {
-    return new BinaryConstraint(operation, souffle::clone(lhs), souffle::clone(rhs), getSrcLoc());
+BinaryConstraint* BinaryConstraint::cloning() const {
+    return new BinaryConstraint(operation, clone(lhs), clone(rhs), getSrcLoc());
 }
 
 }  // namespace souffle::ast

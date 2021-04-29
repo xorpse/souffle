@@ -40,8 +40,8 @@ public:
         return ramBitCast<RamFloat>(constant);
     }
 
-    /** Create clone */
-    FloatConstant* clone() const override {
+    /** Create cloning */
+    FloatConstant* cloning() const override {
         return new FloatConstant(getValue());
     }
 

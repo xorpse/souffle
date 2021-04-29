@@ -69,8 +69,8 @@ public:
     }
 
 private:
-    FixpointTransformer* cloneImpl() const override {
-        return new FixpointTransformer(souffle::clone(transformer));
+    FixpointTransformer* cloning() const override {
+        return new FixpointTransformer(clone(transformer));
     }
 
     bool transform(TranslationUnit& translationUnit) override {

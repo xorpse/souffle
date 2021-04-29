@@ -331,7 +331,7 @@ bool NormaliseDatabaseTransformer::partitionIO(TranslationUnit& translationUnit)
         // Create a new intermediate input relation, I'
         auto newRelation = mk<Relation>(newRelName);
         for (const auto* attr : rel->getAttributes()) {
-            newRelation->addAttribute(souffle::clone(attr));
+            newRelation->addAttribute(clone(attr));
         }
 
         // Add the rule I <- I'
@@ -352,7 +352,7 @@ bool NormaliseDatabaseTransformer::partitionIO(TranslationUnit& translationUnit)
         for (const auto* io : program.getDirectives()) {
             if (io->getQualifiedName() == relName && io->getType() == ast::DirectiveType::input) {
                 // New relation inherits the old input rules
-                auto newIO = souffle::clone(io);
+                auto newIO = clone(io);
                 newIO->setQualifiedName(newRelName);
                 iosToAdd.insert(std::move(newIO));
 
@@ -364,7 +364,7 @@ bool NormaliseDatabaseTransformer::partitionIO(TranslationUnit& translationUnit)
             program.removeDirective(io);
         }
         for (auto& io : iosToAdd) {
-            program.addDirective(souffle::clone(io));
+            program.addDirective(clone(io));
         }
 
         // Add in the new relation and the copy clause
@@ -408,7 +408,7 @@ bool NormaliseDatabaseTransformer::extractIDB(TranslationUnit& translationUnit) 
         inputToIntermediate[inputRelationName] = intermediateName;
 
         // Add the relation
-        auto intermediateRelation = souffle::clone(getRelation(program, inputRelationName));
+        auto intermediateRelation = clone(getRelation(program, inputRelationName));
         intermediateRelation->setQualifiedName(intermediateName);
         program.addRelation(std::move(intermediateRelation));
     }
@@ -483,7 +483,7 @@ bool NormaliseDatabaseTransformer::querifyOutputRelations(TranslationUnit& trans
         outputToIntermediate[outputRelationName] = intermediateName;
 
         // Add the relation
-        auto intermediateRelation = souffle::clone(getRelation(program, outputRelationName));
+        auto intermediateRelation = clone(getRelation(program, outputRelationName));
         intermediateRelation->setQualifiedName(intermediateName);
         program.addRelation(std::move(intermediateRelation));
     }
@@ -534,13 +534,12 @@ bool NormaliseDatabaseTransformer::normaliseArguments(TranslationUnit& translati
 
                 // Add the constraints to this level
                 VecOwn<Literal> newBodyLiterals;
-                append(newBodyLiterals, souffle::cloneRange(aggr->getBodyLiterals()));
-                append(newBodyLiterals, souffle::cloneRange(subConstraints));
+                append(newBodyLiterals, cloneRange(aggr->getBodyLiterals()));
+                append(newBodyLiterals, cloneRange(subConstraints));
 
                 // Update the node to reflect normalised aggregator
                 node = aggr->getTargetExpression() != nullptr
-                               ? mk<Aggregator>(aggr->getBaseOperator(),
-                                         souffle::clone(aggr->getTargetExpression()),
+                               ? mk<Aggregator>(aggr->getBaseOperator(), clone(aggr->getTargetExpression()),
                                          std::move(newBodyLiterals))
                                : mk<Aggregator>(aggr->getBaseOperator(), nullptr, std::move(newBodyLiterals));
             } else {
@@ -561,7 +560,7 @@ bool NormaliseDatabaseTransformer::normaliseArguments(TranslationUnit& translati
 
                     // Link other variables back to their original value with a `<var> = <arg>` constraint
                     constraints.insert(mk<BinaryConstraint>(
-                            BinaryConstraintOp::EQ, mk<ast::Variable>(name.str()), souffle::clone(arg)));
+                            BinaryConstraintOp::EQ, mk<ast::Variable>(name.str()), clone(arg)));
                     return mk<ast::Variable>(name.str());
                 }
             }
@@ -598,7 +597,7 @@ bool NormaliseDatabaseTransformer::normaliseArguments(TranslationUnit& translati
             }
         });
 
-        clause->addToBody(souffle::clone<Literal>(constraintsToAdd));
+        clause->addToBody(clone<Literal>(constraintsToAdd));
         changed |= changeCount != 0;
     }
 
@@ -652,7 +651,7 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
     if (clause->getExecutionPlan() != nullptr) {
         assert(contains(weaklyIgnoredRelations, clause->getHead()->getQualifiedName()) &&
                 "clauses with plans should be ignored");
-        adornedClause->setExecutionPlan(souffle::clone(clause->getExecutionPlan()));
+        adornedClause->setExecutionPlan(clone(clause->getExecutionPlan()));
     }
 
     // Create the head atom
@@ -662,7 +661,7 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
     for (const auto* arg : headArgs) {
         const auto* var = as<ast::Variable>(arg);
         assert(var != nullptr && "expected only variables in head");
-        adornedHeadAtom->addArgument(souffle::clone(var));
+        adornedHeadAtom->addArgument(clone(var));
     }
 
     // Add in adorned body literals
@@ -678,7 +677,7 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
 
         if (!isA<Atom>(lit)) {
             // Non-atoms are added directly
-            adornedBodyLiterals.push_back(souffle::clone(lit));
+            adornedBodyLiterals.push_back(clone(lit));
             continue;
         }
 
@@ -700,7 +699,7 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
         queueAdornment(atom->getQualifiedName(), atomAdornment.str());
 
         // Add the adorned version to the clause
-        auto adornedBodyAtom = souffle::clone(atom);
+        auto adornedBodyAtom = clone(atom);
         adornedBodyAtom->setQualifiedName(currAtomAdornmentID);
         adornedBodyLiterals.push_back(std::move(adornedBodyAtom));
 
@@ -740,7 +739,7 @@ bool AdornDatabaseTransformer::transform(TranslationUnit& translationUnit) {
 
             auto adornedRelation = mk<Relation>(getAdornmentID(relName, adornmentMarker));
             for (const auto* attr : rel->getAttributes()) {
-                adornedRelation->addAttribute(souffle::clone(attr));
+                adornedRelation->addAttribute(clone(attr));
             }
             program.addRelation(std::move(adornedRelation));
         }
@@ -748,7 +747,7 @@ bool AdornDatabaseTransformer::transform(TranslationUnit& translationUnit) {
         // Adorn every clause correspondingly
         for (const auto* clause : getClauses(program, relName)) {
             if (adornmentMarker == "") {
-                redundantClauses.push_back(souffle::clone(clause));
+                redundantClauses.push_back(clone(clause));
             }
             auto adornedClause = adornClause(clause, adornmentMarker);
             adornedClauses.push_back(std::move(adornedClause));
@@ -761,7 +760,7 @@ bool AdornDatabaseTransformer::transform(TranslationUnit& translationUnit) {
     }
 
     for (auto& clause : adornedClauses) {
-        program.addClause(souffle::clone(clause));
+        program.addClause(clone(clause));
     }
 
     return !adornedClauses.empty() || !redundantClauses.empty();
@@ -830,7 +829,7 @@ bool NegativeLabellingTransformer::transform(TranslationUnit& translationUnit) {
         for (const auto* rel : stratumRels) {
             if (contains(relationsToNotLabel, rel->getQualifiedName())) continue;
             for (auto* clause : getClauses(program, rel->getQualifiedName())) {
-                auto neggedClause = souffle::clone(clause);
+                auto neggedClause = clone(clause);
                 renameAtoms(*neggedClause, newSccFriendNames);
                 clausesToAdd.insert(std::move(neggedClause));
             }
@@ -841,14 +840,14 @@ bool NegativeLabellingTransformer::transform(TranslationUnit& translationUnit) {
     for (const auto& relName : relationsToLabel) {
         const auto* originalRel = getRelation(program, relName);
         assert(originalRel != nullptr && "unlabelled relation does not exist");
-        auto labelledRelation = souffle::clone(originalRel);
+        auto labelledRelation = clone(originalRel);
         labelledRelation->setQualifiedName(getNegativeLabel(relName));
         program.addRelation(std::move(labelledRelation));
     }
 
     // Add in all the negged clauses
     for (const auto& clause : clausesToAdd) {
-        program.addClause(souffle::clone(clause));
+        program.addClause(clone(clause));
     }
 
     return !relationsToLabel.empty();
@@ -952,7 +951,7 @@ bool PositiveLabellingTransformer::transform(TranslationUnit& translationUnit) {
                     });
 
                     // Rename atoms accordingly
-                    auto labelledClause = souffle::clone(clause);
+                    auto labelledClause = clone(clause);
                     renameAtoms(*labelledClause, labelledNames);
                     program.addClause(std::move(labelledClause));
                 }
@@ -968,7 +967,7 @@ bool PositiveLabellingTransformer::transform(TranslationUnit& translationUnit) {
         const auto& stratumRels = sccGraph.getInternalRelations(stratum);
         for (std::size_t copy = 0; copy < numCopies; copy++) {
             for (auto* rel : stratumRels) {
-                auto newRelation = souffle::clone(rel);
+                auto newRelation = clone(rel);
                 newRelation->setQualifiedName(getPositiveLabel(newRelation->getQualifiedName(), copy + 1));
                 program.addRelation(std::move(newRelation));
                 changed = true;
@@ -1025,7 +1024,7 @@ Own<Atom> MagicSetCoreTransformer::createMagicAtom(const Atom* atom) {
     auto adornmentMarker = getAdornment(origRelName);
     for (std::size_t i = 0; i < args.size(); i++) {
         if (adornmentMarker[i] == 'b') {
-            magicAtom->addArgument(souffle::clone(args[i]));
+            magicAtom->addArgument(clone(args[i]));
         }
     }
 
@@ -1088,7 +1087,7 @@ Own<Clause> MagicSetCoreTransformer::createMagicClause(const Atom* atom,
         const VecOwn<Atom>& constrainingAtoms, const std::vector<const BinaryConstraint*> eqConstraints) {
     auto magicClause = mk<Clause>(createMagicAtom(atom));
     // Add in all constraining atoms
-    magicClause->setBodyLiterals(souffle::clone<Literal>(constrainingAtoms));
+    magicClause->setBodyLiterals(clone<Literal>(constrainingAtoms));
     auto magicHead = magicClause->getHead();
 
     // Get the set of all variables that will be relevant to the magic clause
@@ -1106,7 +1105,7 @@ Own<Clause> MagicSetCoreTransformer::createMagicClause(const Atom* atom,
             }
         });
 
-        if (addConstraint) magicClause->addToBody(souffle::clone(eqConstraint));
+        if (addConstraint) magicClause->addToBody(clone(eqConstraint));
     }
 
     return magicClause;
@@ -1136,7 +1135,7 @@ bool MagicSetCoreTransformer::transform(TranslationUnit& translationUnit) {
 
     /** Perform the Magic Set Transformation */
     for (const auto* clause : program.getClauses()) {
-        clausesToRemove.insert(souffle::clone(clause));
+        clausesToRemove.insert(clone(clause));
 
         const auto* head = clause->getHead();
         auto relName = head->getQualifiedName();
@@ -1144,13 +1143,13 @@ bool MagicSetCoreTransformer::transform(TranslationUnit& translationUnit) {
         // (1) Add the refined clause
         if (!isAdorned(relName)) {
             // Unadorned relations need not be refined, as every possible tuple is relevant
-            clausesToAdd.insert(souffle::clone(clause));
+            clausesToAdd.insert(clone(clause));
         } else {
             // Refine the clause with a prepended magic atom
             auto magicAtom = createMagicAtom(head);
-            auto refinedClause = mk<Clause>(souffle::clone(head));
-            refinedClause->addToBody(souffle::clone(magicAtom));
-            refinedClause->addToBody(souffle::clone(clause->getBodyLiterals()));
+            auto refinedClause = mk<Clause>(clone(head));
+            refinedClause->addToBody(clone(magicAtom));
+            refinedClause->addToBody(clone(clause->getBodyLiterals()));
             clausesToAdd.insert(std::move(refinedClause));
         }
 
@@ -1166,19 +1165,19 @@ bool MagicSetCoreTransformer::transform(TranslationUnit& translationUnit) {
             const auto* atom = as<Atom>(lit);
             if (atom == nullptr) continue;
             if (!isAdorned(atom->getQualifiedName())) {
-                atomsToTheLeft.push_back(souffle::clone(atom));
+                atomsToTheLeft.push_back(clone(atom));
                 continue;
             }
 
             // Need to create a magic rule
             auto magicClause = createMagicClause(atom, atomsToTheLeft, eqConstraints);
-            atomsToTheLeft.push_back(souffle::clone(atom));
+            atomsToTheLeft.push_back(clone(atom));
             clausesToAdd.insert(std::move(magicClause));
         }
     }
 
     for (auto& clause : clausesToAdd) {
-        program.addClause(souffle::clone(clause));
+        program.addClause(clone(clause));
     }
     for (const auto& clause : clausesToRemove) {
         program.removeClause(clause.get());
@@ -1194,7 +1193,7 @@ bool MagicSetCoreTransformer::transform(TranslationUnit& translationUnit) {
         auto adornmentMarker = getAdornment(origName);
         for (std::size_t i = 0; i < attributes.size(); i++) {
             if (adornmentMarker[i] == 'b') {
-                magicRelation->addAttribute(souffle::clone(attributes[i]));
+                magicRelation->addAttribute(clone(attributes[i]));
             }
         }
         changed = true;

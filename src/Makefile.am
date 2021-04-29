@@ -447,8 +447,7 @@ soufflepublic_HEADERS = \
         include/souffle/SignalHandler.h                    \
         include/souffle/SouffleInterface.h                 \
         include/souffle/SymbolTable.h                      \
-        include/souffle/TypeAttribute.h                    \
-        include/souffle/Visitor.h
+        include/souffle/TypeAttribute.h
 
 souffledatastructuredir = $(soufflepublicdir)/datastructure
 
@@ -538,7 +537,8 @@ souffleutility_HEADERS = \
         include/souffle/utility/Types.h                    \
         include/souffle/utility/json11.h                   \
         include/souffle/utility/span.h                     \
-        include/souffle/utility/tinyformat.h
+        include/souffle/utility/tinyformat.h               \
+        include/souffle/utility/Visitor.h
 
 # files to clean
 CLEANFILES = $(BUILT_SOURCES)  parser/parser.cc parser/scanner.cc parser/parser.hh parser/stack.hh

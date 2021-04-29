@@ -203,6 +203,7 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
         int functorNumber = 0;
         int aggregateNumber = 0;
         int typecastNumber = 0;
+        int termNumber = 0;
         auto getArgInfo = [&](const ast::Argument* arg) -> std::string {
             if (auto* var = as<ast::Variable>(arg)) {
                 return toString(*var);
@@ -222,7 +223,13 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
             if (isA<ast::TypeCast>(arg)) {
                 return tfm::format("typecast_%d", typecastNumber++);
             }
-            fatal("Unhandled argument type");
+            if (isA<ast::Term>(arg)) {
+                return tfm::format("term_%d", termNumber++);
+            }
+            if (isA<ast::Counter>(arg)) {
+                fatal("Unhandled argument type: Counter");
+            }
+            fatal("Unhandled unknown argument type");
         };
 
         // Generate clause head arguments
@@ -372,7 +379,7 @@ void UnitTranslator::transformVariablesToSubroutineArgs(
 
 Own<ram::Sequence> UnitTranslator::makeIfStatement(
         Own<ram::Condition> condition, Own<ram::Operation> trueOp, Own<ram::Operation> falseOp) const {
-    auto negatedCondition = mk<ram::Negation>(souffle::clone(condition));
+    auto negatedCondition = mk<ram::Negation>(clone(condition));
 
     auto trueBranch = mk<ram::Query>(mk<ram::Filter>(std::move(condition), std::move(trueOp)));
     auto falseBranch = mk<ram::Query>(mk<ram::Filter>(std::move(negatedCondition), std::move(falseOp)));
@@ -444,7 +451,7 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
             appendStmt(searchSequence, std::move(ifStatement));
         } else if (const auto* con = as<ast::Constraint>(lit)) {
             bool hasAggregate = false;
-            visit(clause, [&](const ast::Aggregator& var) { hasAggregate = true; });
+            visit(clause, [&](const ast::Aggregator&) { hasAggregate = true; });
             if (!hasAggregate) {
                 auto condition = context->translateConstraint(*dummyValueIndex, con);
                 transformVariablesToSubroutineArgs(condition.get(), idToVarName);

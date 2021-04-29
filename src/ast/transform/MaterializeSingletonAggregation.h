@@ -37,7 +37,7 @@ public:
     }
 
 private:
-    MaterializeSingletonAggregationTransformer* cloneImpl() const override {
+    MaterializeSingletonAggregationTransformer* cloning() const override {
         return new MaterializeSingletonAggregationTransformer();
     }
 
