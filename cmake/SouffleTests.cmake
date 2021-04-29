@@ -403,3 +403,9 @@ function(SOUFFLE_POSITIVE_SWIG_TEST TEST_NAME)
         souffle_run_swig_test_helper(TEST_NAME ${TEST_NAME} LANGUAGE java ${ARGN})
     endif()
 endfunction()
+
+# swig test which will run python, java or both
+function(SOUFFLE_POSITIVE_FUNCTOR_TEST TEST_NAME)
+    souffle_run_test(TEST_NAME ${TEST_NAME}
+                     CATEGORY ${CATEGORY})
+endfunction()
