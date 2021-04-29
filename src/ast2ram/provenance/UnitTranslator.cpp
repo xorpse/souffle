@@ -203,6 +203,7 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
         int functorNumber = 0;
         int aggregateNumber = 0;
         int typecastNumber = 0;
+        int termNumber = 0;
         auto getArgInfo = [&](const ast::Argument* arg) -> std::string {
             if (auto* var = as<ast::Variable>(arg)) {
                 return toString(*var);
@@ -222,7 +223,13 @@ Own<ram::Sequence> UnitTranslator::generateInfoClauses(const ast::Program* progr
             if (isA<ast::TypeCast>(arg)) {
                 return tfm::format("typecast_%d", typecastNumber++);
             }
-            fatal("Unhandled argument type");
+            if (isA<ast::Term>(arg)) {
+                return tfm::format("term_%d", termNumber++);
+            }
+            if (isA<ast::Counter>(arg)) {
+                fatal("Unhandled argument type: Counter");
+            }
+            fatal("Unhandled unknown argument type");
         };
 
         // Generate clause head arguments
