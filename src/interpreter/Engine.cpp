@@ -647,8 +647,8 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
         CASE(UserDefinedOperator)
             const std::string& name = cur.getName();
 
-            auto fn = reinterpret_cast<void (*)()>(getMethodHandle(name));
-            if (fn == nullptr) fatal("cannot find user-defined operator `%s`", name);
+            auto userFunctor = reinterpret_cast<void (*)()>(getMethodHandle(name));
+            if (userFunctor == nullptr) fatal("cannot find user-defined operator `%s`", name);
             std::size_t arity = cur.getArguments().size();
 
             if (cur.isStateful()) {
@@ -680,11 +680,10 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                     fatal("Failed to prepare CIF for user-defined operator `%s`; error code = %d", name,
                             prepStatus);
                 }
-                ffi_call(&cif, fn, &rc, values);
+                ffi_call(&cif, userFunctor, &rc, values);
                 return static_cast<RamDomain>(rc);
             } else {
-                // get name and type
-                const std::vector<TypeAttribute>& type = cur.getArgsTypes();
+                const std::vector<TypeAttribute>& types = cur.getArgsTypes();
 
                 // prepare dynamic call environment
                 ffi_cif cif;
@@ -694,12 +693,11 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                 RamUnsigned uintVal[arity];
                 RamFloat floatVal[arity];
                 const char* strVal[arity];
-                ffi_arg rc;
 
                 /* Initialize arguments for ffi-call */
                 for (std::size_t i = 0; i < arity; i++) {
                     RamDomain arg = execute(shadow.getChild(i), ctxt);
-                    switch (type[i]) {
+                    switch (types[i]) {
                         case TypeAttribute::Symbol:
                             args[i] = &FFI_Symbol;
                             strVal[i] = getSymbolTable().decode(arg).c_str();
@@ -728,7 +726,6 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                 // Get codomain.
                 auto codomain = &FFI_RamSigned;
                 switch (cur.getReturnType()) {
-                    // initialize for string value.
                     case TypeAttribute::Symbol: codomain = &FFI_Symbol; break;
                     case TypeAttribute::Signed: codomain = &FFI_RamSigned; break;
                     case TypeAttribute::Unsigned: codomain = &FFI_RamUnsigned; break;
@@ -743,19 +740,28 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                     fatal("Failed to prepare CIF for user-defined operator `%s`; error code = %d", name,
                             prepStatus);
                 }
-                ffi_call(&cif, fn, &rc, values);
 
-                switch (cur.getReturnType()) {
-                    case TypeAttribute::Signed: return static_cast<RamDomain>(rc);
-                    case TypeAttribute::Symbol:
-                        return getSymbolTable().encode(reinterpret_cast<const char*>(rc));
+                // Call †he functor and return
+                // Float return type needs special treatment, see https://stackoverflow.com/q/61577543
+                if (cur.getReturnType() == TypeAttribute::Float) {
+                    RamFloat rvalue;
+                    ffi_call(&cif, userFunctor, &rvalue, values);
+                    return ramBitCast(rvalue);
+                } else {
+                    ffi_arg rvalue;
+                    ffi_call(&cif, userFunctor, &rvalue, values);
 
-                    case TypeAttribute::Unsigned: return ramBitCast(static_cast<RamUnsigned>(rc));
-                    case TypeAttribute::Float: return ramBitCast(static_cast<RamFloat>(rc));
-                    case TypeAttribute::ADT: fatal("Not implemented");
-                    case TypeAttribute::Record: fatal("Not implemented");
+                    switch (cur.getReturnType()) {
+                        case TypeAttribute::Signed: return static_cast<RamDomain>(rvalue);
+                        case TypeAttribute::Symbol:
+                            return getSymbolTable().encode(reinterpret_cast<const char*>(rvalue));
+                        case TypeAttribute::Unsigned: return ramBitCast(static_cast<RamUnsigned>(rvalue));
+                        case TypeAttribute::Float: fatal("Floats must be handled seperately");
+                        case TypeAttribute::ADT: fatal("Not implemented");
+                        case TypeAttribute::Record: fatal("Not implemented");
+                    }
+                    fatal("Unsupported user defined operator");
                 }
-                fatal("Unsupported user defined operator");
             }
 
         ESAC(UserDefinedOperator)

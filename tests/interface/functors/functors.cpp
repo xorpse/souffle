@@ -73,6 +73,10 @@ FF_int rnd(FF_float x) {
     return round(x);
 }
 
+FF_float incr(FF_float x) {
+    return x + 1.0;
+}
+
 // Stateful Functors
 souffle::RamDomain mycat(souffle::SymbolTable* symbolTable, souffle::RecordTable* recordTable,
         souffle::RamDomain arg1, souffle::RamDomain arg2) {
