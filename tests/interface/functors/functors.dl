@@ -19,14 +19,15 @@ A(@goo("1234",2)) :- true.
 
 .output A
 
-.decl I(x:number) inline
-I(1) :- 1 < 5.
+.decl InlineRel(x:number) inline
+InlineRel(1) :- 1 < 5.
+
 
 .decl B(x:symbol)
 B(@hoo()) :- true.
 
 // Test functor use with inlined relations
-B(@ioo(x)) :- I(x), I(@foo(x, @ioo(x))).
+B(@ioo(x)) :- InlineRel(x), InlineRel((@foo(x, @ioo(x)))).
 
 .output B
 
@@ -53,10 +54,10 @@ R(@rnd(0.2)) :- true.
 .output R
 
 .decl I(i:float)
-I(@incr(-12.35)) :- true.
-I(@incr(-1.1231)) :- true.
-I(@incr(0.7)) :- true.
-I(@incr(0.2)) :- true.
+I(@incr(-1)) :- true.
+I(@incr(-2)) :- true.
+I(@incr(0)) :- true.
+I(@incr(1)) :- true.
 .output I
 
 // Testing stateful functors
