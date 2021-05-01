@@ -116,11 +116,15 @@ function(SOUFFLE_RUN_TEST_HELPER)
     #                        Usually just "facts" but can be different when running multi-tests
     cmake_parse_arguments(
         PARAM
-        "COMPILED;NEGATIVE;MULTI_TEST" # Options
+        "COMPILED;FUNCTORS;NEGATIVE;MULTI_TEST" # Options
         "TEST_NAME;CATEGORY;FACTS_DIR_NAME;EXTRA_DATA" #Single valued options
         ""
         ${ARGV}
     )
+
+    if (PARAM_FUNCTORS) 
+        set(EXTRA_FLAGS "-lfunctors")
+    endif() 
 
     if (PARAM_COMPILED)
         set(EXTRA_FLAGS "-c")
@@ -406,6 +410,5 @@ endfunction()
 
 # swig test which will run python, java or both
 function(SOUFFLE_POSITIVE_FUNCTOR_TEST TEST_NAME)
-    souffle_run_test(TEST_NAME ${TEST_NAME}
-                     CATEGORY ${CATEGORY})
+        souffle_run_test_helper(TEST_NAME ${TEST_NAME} FUNCTORS ${ARGN})
 endfunction()
