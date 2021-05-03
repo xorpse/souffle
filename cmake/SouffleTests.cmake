@@ -106,6 +106,7 @@ function(SOUFFLE_RUN_TEST_HELPER)
     # PARAM_CATEGORY - e.g. syntactic, example etc.
     # PARAM_TEST_NAME - the name of the test, the short directory name under tests/<category>/<test_name>
     # PARAM_COMPILED - with or without -c
+    # PARAM_FUNCTORS - with -L for finding functor library in the testsuite  
     # PARAM_NEGATIVE - should it fail or not
     # PARAM_MULTI_TEST - used to distinguish "multi-tests", sort of left over from automake
     #                           Basically, the same test dir has multiple sets of facts/outputs
@@ -122,10 +123,6 @@ function(SOUFFLE_RUN_TEST_HELPER)
         ${ARGV}
     )
 
-    if (PARAM_FUNCTORS) 
-        set(EXTRA_FLAGS "-L${CMAKE_CURRENT_BINARY_DIR}/${PARAM_TEST_NAME}")
-    endif() 
-
     if (PARAM_COMPILED)
         set(EXTRA_FLAGS "-c")
         set(EXEC_STYLE "compiled")
@@ -133,6 +130,10 @@ function(SOUFFLE_RUN_TEST_HELPER)
     else()
         set(EXEC_STYLE "interpreted")
         set(SHORT_EXEC_STYLE "")
+    endif()
+
+    if (PARAM_FUNCTORS)
+        set(EXTRA_FLAGS "${EXTRA_FLAGS} -L${CMAKE_CURRENT_BINARY_DIR}/${PARAM_TEST_NAME}")
     endif()
 
     if (NOT PARAM_FACTS_DIR_NAME)
@@ -411,4 +412,5 @@ endfunction()
 # swig test which will run python, java or both
 function(SOUFFLE_POSITIVE_FUNCTOR_TEST TEST_NAME)
         souffle_run_test_helper(TEST_NAME ${TEST_NAME} FUNCTORS ${ARGN})
+        souffle_run_test_helper(TEST_NAME ${TEST_NAME} COMPILED FUNCTORS ${ARGN})
 endfunction()
