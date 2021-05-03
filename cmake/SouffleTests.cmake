@@ -123,7 +123,7 @@ function(SOUFFLE_RUN_TEST_HELPER)
     )
 
     if (PARAM_FUNCTORS) 
-        set(EXTRA_FLAGS "-lfunctors")
+        set(EXTRA_FLAGS "-L${CMAKE_CURRENT_BINARY_DIR}/${PARAM_TEST_NAME}")
     endif() 
 
     if (PARAM_COMPILED)
