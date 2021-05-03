@@ -8,3 +8,7 @@ set_target_properties(functors PROPERTIES CXX_EXTENSIONS OFF)
 target_compile_options(functors
                        PUBLIC "-Wall;-Wextra;-fwrapv")
 
+if (SOUFFLE_DOMAIN_64BIT)
+    target_compile_definitions(functors
+                               PUBLIC RAM_DOMAIN_SIZE=64)
+endif()
