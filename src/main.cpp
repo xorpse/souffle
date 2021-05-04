@@ -313,6 +313,7 @@ int main(int argc, char** argv) {
             if (!Global::config().has("jobs", "auto")) {
                 throw std::runtime_error("-j/--jobs may only be set to 'auto' or an integer greater than 0.");
             }
+            // set jobs to zero to indicate the synthesiser and interpreter to use the system default.
             Global::config().set("jobs", "0");
         }
 #else
