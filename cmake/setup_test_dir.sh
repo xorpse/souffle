@@ -25,6 +25,10 @@ else
     if [ ${EXTRA_DATA} = "python" ] || [ ${EXTRA_DATA} = "java" ]; then
         cp "${INPUT_DIR}/${TEST_NAME}-${EXTRA_DATA}.out" "${OUTPUT_DIR}/${TEST_NAME}-${EXTRA_DATA}.out.expected"
     fi
+
+    if [ ${EXTRA_DATA} = "provenance" ]; then
+        cp "${INPUT_DIR}/${TEST_NAME}.in" "${OUTPUT_DIR}/${TEST_NAME}.in"
+    fi
 fi
 
 cp "${INPUT_DIR}/${TEST_NAME}".err "${OUTPUT_DIR}/${TEST_NAME}".err.expected
