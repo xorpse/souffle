@@ -212,6 +212,9 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
     // tests whether something is a record
     auto isRec = [&](const Argument& arg) { return isA<RecordInit>(&arg); };
 
+    // tests whether something is a ADT
+    auto isAdt = [&](const Argument& arg) { return isA<BranchInit>(&arg); };
+
     // tests whether something is a generator
     auto isGenerator = [&](const Argument& arg) {
         // aggregators
@@ -241,6 +244,13 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
         }
         visit(*atom, [&](const RecordInit& rec) {
             for (const Argument* arg : rec.getArguments()) {
+                if (const auto* var = as<ast::Variable>(arg)) {
+                    baseGroundedVariables.insert(var->getName());
+                }
+            }
+        });
+        visit(*atom, [&](const BranchInit& adt) {
+            for (const Argument* arg : adt.getArguments()) {
                 if (const auto* var = as<ast::Variable>(arg)) {
                     baseGroundedVariables.insert(var->getName());
                 }
@@ -342,7 +352,7 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
         assert(!occurs(v, t));
 
         // #8:  t is a record   => add mapping
-        if (isRec(t)) {
+        if (isRec(t) || isAdt(t)) {
             newMapping(v.getName(), &t);
             continue;
         }
@@ -404,9 +414,22 @@ Own<Clause> ResolveAliasesTransformer::removeComplexTermsInAtoms(const Clause& c
         }
     }
 
-    // find all functors in records too
+    // find all functors in records/ADTs too
     visit(atoms, [&](const RecordInit& rec) {
         for (const Argument* arg : rec.getArguments()) {
+            // ignore if not a functor
+            if (!isA<Functor>(arg)) {
+                continue;
+            }
+
+            // add this functor if not seen yet
+            if (!any_of(terms, [&](const Argument* cur) { return *cur == *arg; })) {
+                terms.push_back(arg);
+            }
+        }
+    });
+    visit(atoms, [&](const BranchInit& adt) {
+        for (const Argument* arg : adt.getArguments()) {
             // ignore if not a functor
             if (!isA<Functor>(arg)) {
                 continue;
