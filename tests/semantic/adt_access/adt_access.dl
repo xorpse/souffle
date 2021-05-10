@@ -143,7 +143,6 @@ add(vn, op1) :-
   vn = $VirtualNodeValue(n),
   n = $VBinaryNode(op1).
 
-.output add
 .decl test8()
 test8() :-
   count:{add(_,_)} = 2.
