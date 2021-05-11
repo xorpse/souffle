@@ -230,8 +230,8 @@ int main(int argc, char** argv) {
                 {"swig", 's', "LANG", "", false,
                         "Generate SWIG interface for given language. The values <LANG> accepts is java and "
                         "python. "},
-                {"library-dir", 'L', "DIR", "", false, "Specify directory for library files."},
-                {"libraries", 'l', "FILE", "", false, "Specify libraries."},
+                {"library-dir", 'L', "DIR", "", true, "Specify directory for library files."},
+                {"libraries", 'l', "FILE", "", true, "Specify libraries."},
                 {"no-warn", 'w', "", "", false, "Disable warnings."},
                 {"magic-transform", 'm', "RELATIONS", "", false,
                         "Enable magic set transformation changes on the given relations, use '*' "
@@ -313,6 +313,7 @@ int main(int argc, char** argv) {
             if (!Global::config().has("jobs", "auto")) {
                 throw std::runtime_error("-j/--jobs may only be set to 'auto' or an integer greater than 0.");
             }
+            // set jobs to zero to indicate the synthesiser and interpreter to use the system default.
             Global::config().set("jobs", "0");
         }
 #else

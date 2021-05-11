@@ -148,6 +148,9 @@ Engine::Engine(ram::TranslationUnit& tUnit)
 #ifdef _OPENMP
     if (numOfThreads > 0) {
         omp_set_num_threads(numOfThreads);
+    } else {
+        // Update threads to the system default
+        numOfThreads = omp_get_num_threads();
     }
 #endif
 }
