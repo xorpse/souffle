@@ -96,6 +96,7 @@ option(SOUFFLE_FAST_RELEASE "Enable/Disable 'fast release' mode" ON)
 # this flag enables the tests to run
 option(SOUFFLE_TEST_EXAMPLES "Enable/Disable testing of additional code examples in tests/examples" OFF)
 option(SOUFFLE_ENABLE_TESTING "Enable/Disable testing" ${SOUFFLE_ENABLE_TESTING_DEFAULT})
+option(SOUFFLE_GENERATE_DOXYGEN "Generate Doxygen files (html;htmlhelp;man;rtf;xml;latex)" "")
 
 # Add aditional modules to CMake
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
@@ -205,6 +206,39 @@ endif()
 if (SOUFFLE_SANITISE_MEMORY)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=thread")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
+endif()
+
+# --------------------------------------------------
+# Doxygen
+# --------------------------------------------------
+if (SOUFFLE_GENERATE_DOXYGEN)
+    find_package(Doxygen REQUIRED dot)
+    set(DOXYGEN_IN "${PROJECT_SOURCE_DIR}/doxygen.in")
+    set(DOXYGEN_CFG "${PROJECT_SOURCE_DIR}/Doxyfile")
+    set(DOXYGEN_DIR "${PROJECT_SOURCE_DIR}/doc")
+
+    if ("htmlhelp" IN_LIST SOUFFLE_GENERATE_DOXYGEN)
+        set(DOXYGEN_GENERATE_HTMLHELP "YES")
+    endif()
+    if ("man" IN_LIST SOUFFLE_GENERATE_DOXYGEN)
+        set(DOXYGEN_GENERATE_MAN "YES")
+    endif()
+    if ("rtf" IN_LIST SOUFFLE_GENERATE_DOXYGEN)
+        set(DOXYGEN_GENERATE_RTF "YES")
+    endif()
+    if ("xml" IN_LIST SOUFFLE_GENERATE_DOXYGEN)
+        set(DOXYGEN_GENERATE_XML "YES")
+    endif()
+    if ("latex" IN_LIST SOUFFLE_GENERATE_DOXYGEN)
+        set(DOXYGEN_GENERATE_LATEX "YES")
+    endif()
+
+    configure_file(${DOXYGEN_IN} ${DOXYGEN_CFG})
+
+    add_custom_target(doxygen
+        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_CFG}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Generating API documentation with Doxygen")
 endif()
 
 # --------------------------------------------------
