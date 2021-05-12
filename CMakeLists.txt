@@ -83,6 +83,7 @@ option(SOUFFLE_SWIG_PYTHON "Enable/Disable Python SWIG" OFF)
 option(SOUFFLE_SWIG_JAVA "Enable/Disable Java SWIG" OFF)
 option(SOUFFLE_USE_ZLIB "Enable/Disable use of libz file compression" ON)
 option(SOUFFLE_USE_SQLITE "Enable/Disable use sqlite IO" ON)
+option(SOUFFLE_SANITISE_MEMORY "Enable/Disable memory sanitiser" OFF)
 # This is how souffle is built by default in Debug
 option(SOUFFLE_FAST_DEBUG "Enable/Disable ON 'fast debug' mode" ON)
 # SOUFFLE_NDEBUG = ON means -DNDEBUG on the compiler command line = no cassert
@@ -189,6 +190,13 @@ if (OPENMP_FOUND)
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
+# --------------------------------------------------
+# Memory Sanitiser
+# --------------------------------------------------
+if (SOUFFLE_SANITISE_MEMORY)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address,leak")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,leak")
+endif()
 # --------------------------------------------------
 # Generate the config file
 # --------------------------------------------------
