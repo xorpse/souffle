@@ -84,6 +84,7 @@ option(SOUFFLE_SWIG_JAVA "Enable/Disable Java SWIG" OFF)
 option(SOUFFLE_USE_ZLIB "Enable/Disable use of libz file compression" ON)
 option(SOUFFLE_USE_SQLITE "Enable/Disable use sqlite IO" ON)
 option(SOUFFLE_SANITISE_MEMORY "Enable/Disable memory sanitiser" OFF)
+option(SOUFFLE_SANITISE_THREAD "Enable/Disable thread sanitiser" OFF)
 # This is how souffle is built by default in Debug
 option(SOUFFLE_FAST_DEBUG "Enable/Disable ON 'fast debug' mode" ON)
 # SOUFFLE_NDEBUG = ON means -DNDEBUG on the compiler command line = no cassert
@@ -197,6 +198,15 @@ if (SOUFFLE_SANITISE_MEMORY)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address,leak")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,leak")
 endif()
+
+# --------------------------------------------------
+# Thread Sanitiser
+# --------------------------------------------------
+if (SOUFFLE_SANITISE_MEMORY)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=thread")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
+endif()
+
 # --------------------------------------------------
 # Generate the config file
 # --------------------------------------------------
