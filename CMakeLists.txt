@@ -3,8 +3,6 @@
 # Update README with cmake instructions
 # install target
 # bash completion
-# Doxygen
-# Sanitizers
 # clang-format, clang-tidy etc
 # Packaging
 # substitute changelog
