@@ -1,8 +1,5 @@
 # TODO
 # Add option to run tests from install directory
-# Tests:
-#  - interface.at
-#  - provenance.at
 # Update README with cmake instructions
 # install target
 # bash completion
