@@ -2,4 +2,12 @@
 add_subdirectory(functors)
 
 souffle_positive_functor_test(functors CATEGORY interface)
+souffle_positive_cpp_test(contain_insert)
+souffle_positive_cpp_test(get_symboltabletype)
 souffle_positive_cpp_test(insert_for)
+souffle_positive_cpp_test(insert_print)
+souffle_positive_cpp_test(load_print)
+souffle_positive_cpp_test(repeat_analysis)
+souffle_positive_cpp_test(signal_error)
+souffle_positive_cpp_test(tuple_insertion_diff_element_type)
+souffle_positive_cpp_test(tuple_insertion_diff_relation)
