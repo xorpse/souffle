@@ -170,6 +170,9 @@ target_include_directories(libsouffle
                                   "${CMAKE_CURRENT_BINARY_DIR}"
                            )
 
+# install souffle directory 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/souffle DESTINATION include) 
+
 # Set C++ standard to C++17
 target_compile_features(libsouffle
                         PUBLIC cxx_std_17)
@@ -232,6 +235,7 @@ set_target_properties(libsouffle PROPERTIES OUTPUT_NAME "souffle")
 add_executable(souffle
                main.cpp)
 target_link_libraries(souffle libsouffle)
+install(TARGETS souffle DESTINATION bin)
 
 # --------------------------------------------------
 # Substitutions for souffle-compile and souffle-config
@@ -259,7 +263,10 @@ function(AUTOMAKE_COMPATIBLE_SUBST F_IN F_OUT)
     string(TOUPPER ${CMAKE_BUILD_TYPE} BT_UPPER)
     # Remove -Wall/-Wextra since the code is not warning-free
     string(REGEX REPLACE "-Wall|-Wextra" ""  SOUFFLE_CXXFLAGS "${CMAKE_CXX_FLAGS}")
-    set(SOUFFLE_CXXFLAGS "${SOUFFLE_CXXFLAGS} ${CMAKE_CXX_FLAGS_${BT_UPPER}} ${SUBST_DEFS} -fopenmp")
+    set(SOUFFLE_CXXFLAGS "${SOUFFLE_CXXFLAGS} ${CMAKE_CXX_FLAGS_${BT_UPPER}} ${SUBST_DEFS}")
+    if (OPENMP_FOUND)
+       set(SOUFFLE_CXXFLAGS "${SOUFFLE_CXXFLAGS} -fopenmp")
+    endif()
 
     # Libraries
     set(LIBS "-l${CMAKE_DL_LIBS} -lpthread")
@@ -283,6 +290,9 @@ automake_compatible_subst("${CMAKE_CURRENT_SOURCE_DIR}/souffle-compile.in"
 
 automake_compatible_subst("${CMAKE_CURRENT_SOURCE_DIR}/souffle-config.in"
                           "${CMAKE_CURRENT_BINARY_DIR}/souffle-config")
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/souffle-config ${CMAKE_CURRENT_BINARY_DIR}/souffle-compile DESTINATION bin)
+            
 
 # FIXME: Ideally, eventually we will move these out to the "tests" subdirectory
 # now that we have a sane(er?) build system
