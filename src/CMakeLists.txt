@@ -291,8 +291,11 @@ automake_compatible_subst("${CMAKE_CURRENT_SOURCE_DIR}/souffle-compile.in"
 automake_compatible_subst("${CMAKE_CURRENT_SOURCE_DIR}/souffle-config.in"
                           "${CMAKE_CURRENT_BINARY_DIR}/souffle-config")
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/souffle-config ${CMAKE_CURRENT_BINARY_DIR}/souffle-compile DESTINATION bin)
-            
+install(FILES 
+         ${CMAKE_CURRENT_BINARY_DIR}/souffle-config 
+         ${CMAKE_CURRENT_BINARY_DIR}/souffle-compile 
+        DESTINATION bin
+        PERMISSIONS WORLD_EXECUTE)
 
 # FIXME: Ideally, eventually we will move these out to the "tests" subdirectory
 # now that we have a sane(er?) build system
