@@ -246,7 +246,13 @@ install(TARGETS souffle DESTINATION bin)
 function(AUTOMAKE_COMPATIBLE_SUBST F_IN F_OUT)
     # enclose in scope so we can create the
     # values to substitute
-    set(CXX ${CMAKE_CXX_COMPILER})
+
+    # Mac OS X check 
+    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        set(CXX "/usr/bin/c++") 
+    else() 
+        set(CXX ${CMAKE_CXX_COMPILER})
+    endif()
 
     set(CMAKE_HEADER_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
@@ -269,7 +275,12 @@ function(AUTOMAKE_COMPATIBLE_SUBST F_IN F_OUT)
     endif()
 
     # Libraries
-    set(LIBS "-l${CMAKE_DL_LIBS} -lpthread")
+    set(LIBS "-lpthread")
+
+    if (CMAKE_DL_LIBS) 
+       string(APPEND LIBS " -l${CMAKE_DL_LIBS}")
+    endif()
+
     if (SOUFFLE_USE_SQLITE)
         string(APPEND LIBS " ${SQLite3_LIBRARY}")
     endif()
@@ -288,14 +299,7 @@ endfunction()
 automake_compatible_subst("${CMAKE_CURRENT_SOURCE_DIR}/souffle-compile.in"
                           "${CMAKE_CURRENT_BINARY_DIR}/souffle-compile")
 
-automake_compatible_subst("${CMAKE_CURRENT_SOURCE_DIR}/souffle-config.in"
-                          "${CMAKE_CURRENT_BINARY_DIR}/souffle-config")
-
-install(FILES 
-         ${CMAKE_CURRENT_BINARY_DIR}/souffle-config 
-         ${CMAKE_CURRENT_BINARY_DIR}/souffle-compile 
-        DESTINATION bin
-        PERMISSIONS WORLD_EXECUTE)
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/souffle-compile DESTINATION bin)
 
 # FIXME: Ideally, eventually we will move these out to the "tests" subdirectory
 # now that we have a sane(er?) build system

@@ -1,7 +1,6 @@
 # TODO
 # Add option to run tests from install directory
 # Update README with cmake instructions
-# install target
 # bash completion
 # clang-format, clang-tidy etc
 # Packaging
@@ -281,3 +280,4 @@ add_subdirectory(src)
 if (SOUFFLE_ENABLE_TESTING)
     add_subdirectory(tests)
 endif()
+
