@@ -238,7 +238,7 @@ target_link_libraries(souffle libsouffle)
 install(TARGETS souffle DESTINATION bin)
 
 # --------------------------------------------------
-# Substitutions for souffle-compile and souffle-config
+# Substitutions for souffle-compile 
 # --------------------------------------------------
 # FIXME: This is a bit fragile but there is actually no better way
 # to do this, AFAIK
