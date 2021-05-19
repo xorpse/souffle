@@ -142,7 +142,6 @@ set(SOUFFLE_SOURCES
     synthesiser/Relation.cpp
 )
 
-
 # --------------------------------------------------
 # Flex/Bison
 # --------------------------------------------------
@@ -236,6 +235,20 @@ add_executable(souffle
                main.cpp)
 target_link_libraries(souffle libsouffle)
 install(TARGETS souffle DESTINATION bin)
+
+# --------------------------------------------------
+# Souffle's profiler binary
+# --------------------------------------------------
+
+
+add_executable(souffle-profiler
+               souffle_prof.cpp)
+target_include_directories(souffle-profiler PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+install(TARGETS souffle-profiler DESTINATION bin)
+
+# Set C++ standard to C++17
+target_compile_features(souffle-profiler
+                        PUBLIC cxx_std_17)
 
 # --------------------------------------------------
 # Substitutions for souffle-compile 
