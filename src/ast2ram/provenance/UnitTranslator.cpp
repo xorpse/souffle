@@ -450,9 +450,12 @@ Own<ram::Statement> UnitTranslator::makeNegationSubproofSubroutine(const ast::Cl
                     makeIfStatement(std::move(existenceCheck), makeRamReturnFalse(), makeRamReturnTrue());
             appendStmt(searchSequence, std::move(ifStatement));
         } else if (const auto* con = as<ast::Constraint>(lit)) {
-            bool hasAggregate = false;
-            visit(clause, [&](const ast::Aggregator&) { hasAggregate = true; });
-            if (!hasAggregate) {
+            bool hasComplexity = false;
+            visit(clause, [&](const ast::Aggregator&) { hasComplexity = true; });
+            visit(clause, [&](const ast::IntrinsicFunctor& f) {
+                if (f.getBaseFunctionOp() == "range") hasComplexity = true;
+            });
+            if (!hasComplexity) {
                 auto condition = context->translateConstraint(*dummyValueIndex, con);
                 transformVariablesToSubroutineArgs(condition.get(), idToVarName);
                 auto ifStatement =
