@@ -387,7 +387,7 @@ struct t_eqrel {
 
     public:
         iterator_1() = default;
-        iterator_1(const nested_iterator& iter) : nested(iter), value(orderOut(*iter)) {}
+        iterator_1(const nested_iterator& iter) : nested(iter), value(reorder(*iter)) {}
         iterator_1(const iterator_1& other) = default;
         iterator_1& operator=(const iterator_1& other) = default;
         bool operator==(const iterator_1& other) const {
@@ -404,7 +404,7 @@ struct t_eqrel {
         }
         iterator_1& operator++() {
             ++nested;
-            value = orderOut(*nested);
+            value = reorder(*nested);
             return *this;
         }
     };
@@ -459,7 +459,7 @@ struct t_eqrel {
         return lowerUpperRange_10(lower, upper, h);
     }
     range<iterator_1> lowerUpperRange_01(const t_tuple& lower, const t_tuple& upper, context& h) const {
-        auto r = ind.template getBoundaries<1>(orderIn(lower), h.hints);
+        auto r = ind.template getBoundaries<1>(reorder(lower), h.hints);
         return make_range(iterator_1(r.begin()), iterator_1(r.end()));
     }
     range<iterator_1> lowerUpperRange_01(const t_tuple& lower, const t_tuple& upper) const {
@@ -493,20 +493,14 @@ struct t_eqrel {
     iterator end() const {
         return iterator(ind.end());
     }
+    static t_tuple reorder(const t_tuple& t) {
+        t_tuple res;
+        res[0] = t[1];
+        res[1] = t[0];
+        return res;
+    }
     void printStatistics(std::ostream& o) const {
         o << " eqrel index: no hint statistics supported\n";
-    }
-    static t_tuple orderIn(const t_tuple& t) {
-        t_tuple res;
-        res[0] = t[1];
-        res[1] = t[0];
-        return res;
-    }
-    static t_tuple orderOut(const t_tuple& t) {
-        t_tuple res;
-        res[0] = t[1];
-        res[1] = t[0];
-        return res;
     }
 };
 
