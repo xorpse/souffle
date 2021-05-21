@@ -499,9 +499,7 @@ struct t_eqrel {
         res[1] = t[0];
         return res;
     }
-    void printStatistics(std::ostream& o) const {
-        o << " eqrel index: no hint statistics supported\n";
-    }
+    void printStatistics(std::ostream& /* o */) const {}
 };
 
 }  // namespace souffle
