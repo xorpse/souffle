@@ -36,7 +36,7 @@ public:
 
 protected:
     void print(std::ostream& os) const override {
-        os << "true";
+        os << "TRUE";
     }
 };
 

@@ -47,7 +47,7 @@ public:
 
 protected:
     void print(std::ostream& os) const override {
-        os << "argument(" << number << ")";
+        os << "ARGUMENT(" << number << ")";
     }
 
     bool equal(const Node& node) const override {

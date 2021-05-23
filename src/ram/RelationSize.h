@@ -55,7 +55,7 @@ public:
 
 protected:
     void print(std::ostream& os) const override {
-        os << "size(" << relation << ")";
+        os << "SIZE(" << relation << ")";
     }
 
     bool equal(const Node& node) const override {

@@ -47,7 +47,7 @@ public:
 
 protected:
     void print(std::ostream& os) const override {
-        os << "number(" << constant << ")";
+        os << "NUMBER(" << constant << ")";
     }
 };
 

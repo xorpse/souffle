@@ -47,7 +47,7 @@ public:
 
 protected:
     void print(std::ostream& os) const override {
-        os << "unsigned(" << getValue() << ")";
+        os << "UNSIGNED(" << getValue() << ")";
     }
 };
 
