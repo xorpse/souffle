@@ -1,5 +1,11 @@
 include(SouffleTests)
 
+# provenance test 
+function(SOUFFLE_PROVENANCE_TEST TEST_NAME)
+    souffle_run_test_helper(TEST_NAME ${TEST_NAME} CATEGORY provenance)
+    souffle_run_test_helper(TEST_NAME ${TEST_NAME} COMPILED CATEGORY provenance)
+endfunction()
+
 souffle_provenance_test(components)
 souffle_provenance_test(constraints)
 souffle_provenance_test(cprog1)

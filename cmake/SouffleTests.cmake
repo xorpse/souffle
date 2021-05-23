@@ -75,7 +75,6 @@ function(SOUFFLE_COMPARE_STD_OUTPUTS)
                          FIXTURES_REQUIRED ${PARAM_RUN_AFTER_FIXTURE})
 endfunction()
 
-
 function(SOUFFLE_COMPARE_CSV)
     cmake_parse_arguments(
         PARAM
@@ -96,21 +95,18 @@ function(SOUFFLE_COMPARE_CSV)
                 set(EXTRA_BINARY "")
             else()
                 message(FATAL_ERROR "Unknown extra data type ${PARAM_EXTRA_DATA}")
+            endif()
         endif()
-    endif()
 
-    add_test(NAME ${QUALIFIED_TEST_NAME}_compare_csv
+        add_test(NAME ${QUALIFIED_TEST_NAME}_compare_csv
              COMMAND "${PROJECT_SOURCE_DIR}/cmake/check_test_results.sh"
                                             "${PARAM_INPUT_DIR}" ${PARAM_EXTRA_DATA} "${EXTRA_BINARY}")
 
-    set_tests_properties(${QUALIFIED_TEST_NAME}_compare_csv PROPERTIES
+        set_tests_properties(${QUALIFIED_TEST_NAME}_compare_csv PROPERTIES
                         WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
                         LABELS "${PARAM_TEST_LABELS}"
                         FIXTURES_REQUIRED ${PARAM_RUN_AFTER_FIXTURE})
-endif()
-
-
-
+    endif()
 endfunction()
 
 function(SOUFFLE_RUN_TEST_HELPER)
@@ -214,305 +210,6 @@ function(SOUFFLE_RUN_TEST_HELPER)
                         TEST_LABELS ${TEST_LABELS})
 endfunction()
 
-function(SOUFFLE_RUN_PYTHON_SWIG_TEST)
-    cmake_parse_arguments(
-        PARAM
-        ""
-        "PARAM_TEST_NAME;QUALIFIED_TEST_NAME;INPUT_DIR;OUTPUT_DIR;FIXTURE_NAME;TEST_LABELS;FACTS_DIR"
-        ""
-        ${ARGV}
-    )
-
-    add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_swig
-             COMMAND sh -c "set -e; PYTHONPATH=. ${Python_EXECUTABLE} ${PARAM_INPUT_DIR}/driver.py ${PARAM_FACTS_DIR}
-                                            1> '${PARAM_TEST_NAME}-python.out' \\
-                                            2> '${PARAM_TEST_NAME}-python.err'")
-    set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_run_swig PROPERTIES
-                         WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
-                         LABELS "${PARAM_TEST_LABELS}"
-                         FIXTURES_SETUP ${PARAM_FIXTURE_NAME}_run_swig
-                         FIXTURES_REQUIRED ${PARAM_FIXTURE_NAME}_run_souffle
-                        )
-endfunction()
-
-function(SOUFFLE_RUN_JAVA_SWIG_TEST)
-    cmake_parse_arguments(
-        PARAM
-        ""
-        "PARAM_TEST_NAME;QUALIFIED_TEST_NAME;INPUT_DIR;OUTPUT_DIR;FIXTURE_NAME;TEST_LABELS;FACTS_DIR"
-        ""
-        ${ARGV}
-    )
-
-    add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_compile_java
-             COMMAND sh -c "set -e; ${Java_JAVAC_EXECUTABLE} *.java ${PARAM_INPUT_DIR}/*.java -d ${PARAM_OUTPUT_DIR}")
-    set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_compile_java PROPERTIES
-                         WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
-                         LABELS "${PARAM_TEST_LABELS}"
-                         FIXTURES_SETUP ${PARAM_FIXTURE_NAME}_compile_java
-                         FIXTURES_REQUIRED ${PARAM_FIXTURE_NAME}_run_souffle
-                        )
-
-    add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_swig
-            COMMAND sh -c "set -e; ${Java_JAVA_EXECUTABLE} -Djava.library.path=${PARAM_OUTPUT_DIR} driver \\
-                                            ${PARAM_FACTS_DIR} \\
-                                            1> '${PARAM_TEST_NAME}-java.out' \\
-                                            2> '${PARAM_TEST_NAME}-java.err'")
-    set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_run_swig PROPERTIES
-                         WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
-                         LABELS "${PARAM_TEST_LABELS}"
-                         FIXTURES_SETUP ${PARAM_FIXTURE_NAME}_run_swig
-                         FIXTURES_REQUIRED ${PARAM_FIXTURE_NAME}_compile_java
-                        )
-endfunction()
-
-function(SOUFFLE_RUN_PROF_TEST)
-    cmake_parse_arguments(
-        PARAM
-        ""
-        "PARAM_TEST_NAME;QUALIFIED_TEST_NAME;INPUT_DIR;OUTPUT_DIR;FIXTURE_NAME;TEST_LABELS;FACTS_DIR"
-        ""
-        ${ARGV}
-    )
-
-    add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_prof
-             COMMAND sh -c "set -e;  $<TARGET_FILE:souffle-profile> ${OUTPUT_DIR}/${TEST_NAME}.prof -c 'R2'")
-
-    set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_compile_cpp PROPERTIES
-                         WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
-                         LABELS "${PARAM_TEST_LABELS}"
-                         FIXTURES_SETUP ${PARAM_FIXTURE_NAME}_run_prof
-                         FIXTURES_REQUIRED ${PARAM_FIXTURE_NAME}_run_souffle
-                        )
-endfunction()
-
-
-function(SOUFFLE_RUN_CPP_TEST)
-    cmake_parse_arguments(
-        PARAM
-        ""
-        "PARAM_TEST_NAME;QUALIFIED_TEST_NAME;INPUT_DIR;OUTPUT_DIR;FIXTURE_NAME;TEST_LABELS;FACTS_DIR"
-        ""
-        ${ARGV}
-    )
-
-
-    add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_compile_cpp
-             COMMAND sh -c "set -e; ${CMAKE_CXX_COMPILER} --std=c++17 -D__EMBEDDED_SOUFFLE__  -I${CMAKE_SOURCE_DIR}/src/include ${TEST_NAME}.cpp ${PARAM_INPUT_DIR}/driver.cpp -o ${TEST_NAME}")
-    set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_compile_cpp PROPERTIES
-                         WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
-                         LABELS "${PARAM_TEST_LABELS}"
-                         FIXTURES_SETUP ${PARAM_FIXTURE_NAME}_compile_cpp
-                         FIXTURES_REQUIRED ${PARAM_FIXTURE_NAME}_run_souffle
-                        )
-
-    add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_cpp
-            COMMAND sh -c "set -e; ./${TEST_NAME} >${TEST_NAME}.out 2>${TEST_NAME}.err")
-    set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_run_cpp PROPERTIES
-                         WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
-                         LABELS "${PARAM_TEST_LABELS}"
-                         FIXTURES_SETUP ${PARAM_FIXTURE_NAME}_run_cpp
-                         FIXTURES_REQUIRED ${PARAM_FIXTURE_NAME}_compile_cpp
-                        )
-endfunction()
-
-function(SOUFFLE_RUN_SWIG_TEST_HELPER)
-    # PARAM_TEST_NAME - the name of the test, the short directory name under tests/<category>/<test_name>
-    cmake_parse_arguments(
-        PARAM
-        "COMPARE_STDOUT"
-        "TEST_NAME;LANGUAGE" #Single valued options
-        ""
-        ${ARGV}
-    )
-
-    set(INPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${PARAM_LANGUAGE}/${PARAM_TEST_NAME}")
-    set(FACTS_DIR "${INPUT_DIR}/facts")
-    set(OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/${PARAM_LANGUAGE}/${PARAM_TEST_NAME}")
-    # Give the test a name which has good info about it when running
-    # People can then search for the test by the name, or the labels we create
-    set(QUALIFIED_TEST_NAME swig/${PARAM_LANGUAGE}/${PARAM_TEST_NAME})
-    set(FIXTURE_NAME ${QUALIFIED_TEST_NAME}_fixture)
-    set(TEST_LABELS "swig;${PARAM_LANGUAGE};positive;integration")
-
-    if (PARAM_COMPARE_STDOUT) # This flag will enable additional checking against <testname>-<language>.out
-        # Otherwise, it will be unset and the script won't do anything additional
-        set(EXTRA ${PARAM_LANGUAGE})
-    endif()
-
-    souffle_setup_integration_test_dir(TEST_NAME ${PARAM_TEST_NAME}
-                                       QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
-                                       DATA_CHECK_DIR ${INPUT_DIR}
-                                       OUTPUT_DIR ${OUTPUT_DIR}
-                                       EXTRA_DATA ${EXTRA}
-                                       FIXTURE_NAME ${FIXTURE_NAME}
-                                       TEST_LABELS ${TEST_LABELS})
-
-    souffle_run_integration_test(TEST_NAME ${PARAM_TEST_NAME}
-                                 QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
-                                 INPUT_DIR ${INPUT_DIR}
-                                 OUTPUT_DIR ${OUTPUT_DIR}
-                                 FIXTURE_NAME ${FIXTURE_NAME}
-                                 TEST_LABELS "${TEST_LABELS}"
-                                 SOUFFLE_PARAMS "-s ${PARAM_LANGUAGE}")
-
-    if (PARAM_LANGUAGE STREQUAL "python")
-        souffle_run_python_swig_test(TEST_NAME ${PARAM_TEST_NAME}
-                                     QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
-                                     INPUT_DIR ${INPUT_DIR}
-                                     OUTPUT_DIR ${OUTPUT_DIR}
-                                     FIXTURE_NAME ${FIXTURE_NAME}
-                                     FACTS_DIR "${FACTS_DIR}"
-                                     TEST_LABELS ${TEST_LABELS})
-
-    elseif (PARAM_LANGUAGE STREQUAL "java")
-        souffle_run_java_swig_test(TEST_NAME ${PARAM_TEST_NAME}
-                                    QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
-                                    INPUT_DIR ${INPUT_DIR}
-                                    OUTPUT_DIR ${OUTPUT_DIR}
-                                    FIXTURE_NAME ${FIXTURE_NAME}
-                                    FACTS_DIR "${FACTS_DIR}"
-                                    TEST_LABELS ${TEST_LABELS})
-    else()
-        message(FATAL_ERROR "Unknown swig language ${PARAM_LANGUAGE}")
-    endif()
-
-    souffle_compare_std_outputs(TEST_NAME ${PARAM_TEST_NAME}
-                                 QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
-                                 OUTPUT_DIR ${OUTPUT_DIR}
-                                 EXTRA_DATA ${EXTRA}
-                                 RUN_AFTER_FIXTURE ${FIXTURE_NAME}_run_swig
-                                 TEST_LABELS ${TEST_LABELS})
-
-    souffle_compare_csv(QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
-                        INPUT_DIR ${INPUT_DIR}
-                        OUTPUT_DIR ${OUTPUT_DIR}
-                        RUN_AFTER_FIXTURE ${FIXTURE_NAME}_run_swig
-                        NEGATIVE ${PARAM_NEGATIVE}
-                        TEST_LABELS ${TEST_LABELS})
-
-
-
-
-endfunction()
-
-function(SOUFFLE_RUN_CPP_TEST_HELPER)
-    # PARAM_TEST_NAME - the name of the test, the short directory name under tests/<category>/<test_name>
-    cmake_parse_arguments(
-        PARAM
-        "COMPARE_STDOUT"
-        "TEST_NAME" #Single valued options
-        ""
-        ${ARGV}
-    )
-
-    set(INPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${PARAM_TEST_NAME}")
-    set(FACTS_DIR "${INPUT_DIR}/facts")
-    set(OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/${PARAM_TEST_NAME}")
-    # Give the test a name which has good info about it when running
-    # People can then search for the test by the name, or the labels we create
-    set(QUALIFIED_TEST_NAME interface/${PARAM_TEST_NAME})
-    set(FIXTURE_NAME ${QUALIFIED_TEST_NAME}_fixture)
-    set(TEST_LABELS "positive;integration")
-
-    souffle_setup_integration_test_dir(TEST_NAME ${PARAM_TEST_NAME}
-                                       QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
-                                       DATA_CHECK_DIR ${INPUT_DIR}
-                                       OUTPUT_DIR ${OUTPUT_DIR}
-                                       EXTRA_DATA ${EXTRA}
-                                       FIXTURE_NAME ${FIXTURE_NAME}
-                                       TEST_LABELS ${TEST_LABELS})
-
-    souffle_run_integration_test(TEST_NAME ${PARAM_TEST_NAME}
-                                 QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
-                                 INPUT_DIR ${INPUT_DIR}
-                                 OUTPUT_DIR ${OUTPUT_DIR}
-                                 FIXTURE_NAME ${FIXTURE_NAME}
-                                 TEST_LABELS "${TEST_LABELS}"
-                                 SOUFFLE_PARAMS "-g ${OUTPUT_DIR}/${TEST_NAME}.cpp")
-        
-    souffle_run_cpp_test(TEST_NAME ${PARAM_TEST_NAME}
-                         QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
-                         INPUT_DIR ${INPUT_DIR}
-                         OUTPUT_DIR ${OUTPUT_DIR}
-                         FIXTURE_NAME ${FIXTURE_NAME}
-                         FACTS_DIR "${FACTS_DIR}"
-                         TEST_LABELS ${TEST_LABELS})
-
-    souffle_compare_std_outputs(TEST_NAME ${PARAM_TEST_NAME}
-                                 QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
-                                 OUTPUT_DIR ${OUTPUT_DIR}
-                                 EXTRA_DATA ${EXTRA}
-                                 RUN_AFTER_FIXTURE ${FIXTURE_NAME}_run_cpp
-                                 TEST_LABELS ${TEST_LABELS})
-
-    souffle_compare_csv(QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
-                        INPUT_DIR ${INPUT_DIR}
-                        OUTPUT_DIR ${OUTPUT_DIR}
-                        RUN_AFTER_FIXTURE ${FIXTURE_NAME}_run_cpp
-                        NEGATIVE ${PARAM_NEGATIVE}
-                        TEST_LABELS ${TEST_LABELS})
-
-endfunction()
-
-function(SOUFFLE_RUN_PROF_TEST_HELPER)
-    # PARAM_TEST_NAME - the name of the test, the short directory name under tests/<category>/<test_name>
-    cmake_parse_arguments(
-        PARAM
-        "COMPARE_STDOUT"
-        "TEST_NAME" #Single valued options
-        ""
-        ${ARGV}
-    )
-
-    set(INPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${PARAM_TEST_NAME}")
-    set(FACTS_DIR "${INPUT_DIR}/facts")
-    set(OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/${PARAM_TEST_NAME}")
-    # Give the test a name which has good info about it when running
-    # People can then search for the test by the name, or the labels we create
-    set(QUALIFIED_TEST_NAME profile/${PARAM_TEST_NAME})
-    set(FIXTURE_NAME ${QUALIFIED_TEST_NAME}_fixture)
-    set(TEST_LABELS "positive;integration")
-
-    souffle_setup_integration_test_dir(TEST_NAME ${PARAM_TEST_NAME}
-                                       QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
-                                       DATA_CHECK_DIR ${INPUT_DIR}
-                                       OUTPUT_DIR ${OUTPUT_DIR}
-                                       EXTRA_DATA ${EXTRA}
-                                       FIXTURE_NAME ${FIXTURE_NAME}
-                                       TEST_LABELS ${TEST_LABELS})
-
-    souffle_run_integration_test(TEST_NAME ${PARAM_TEST_NAME}
-                                 QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
-                                 INPUT_DIR ${INPUT_DIR}
-                                 OUTPUT_DIR ${OUTPUT_DIR}
-                                 FIXTURE_NAME ${FIXTURE_NAME}
-                                 TEST_LABELS "${TEST_LABELS}"
-                                 SOUFFLE_PARAMS "-p ${OUTPUT_DIR}/${TEST_NAME}.prof")
-        
-    souffle_run_prof_test(TEST_NAME ${PARAM_TEST_NAME}
-                         QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
-                         INPUT_DIR ${INPUT_DIR}
-                         OUTPUT_DIR ${OUTPUT_DIR}
-                         FIXTURE_NAME ${FIXTURE_NAME}
-                         FACTS_DIR "${FACTS_DIR}"
-                         TEST_LABELS ${TEST_LABELS})
-
-    souffle_compare_std_outputs(TEST_NAME ${PARAM_TEST_NAME}
-                                 QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
-                                 OUTPUT_DIR ${OUTPUT_DIR}
-                                 EXTRA_DATA ${EXTRA}
-                                 RUN_AFTER_FIXTURE ${FIXTURE_NAME}_run_cpp
-                                 TEST_LABELS ${TEST_LABELS})
-
-    souffle_compare_csv(QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
-                        INPUT_DIR ${INPUT_DIR}
-                        OUTPUT_DIR ${OUTPUT_DIR}
-                        RUN_AFTER_FIXTURE ${FIXTURE_NAME}_run_cpp
-                        NEGATIVE ${PARAM_NEGATIVE}
-                        TEST_LABELS ${TEST_LABELS})
-
-endfunction()
 
 # --------------------------------------------------
 # Here are the "user-facing" testing functions
@@ -577,35 +274,5 @@ function(SOUFFLE_POSITIVE_MULTI_TEST)
     endforeach()
 endfunction()
 
-# swig test which will run python, java or both
-function(SOUFFLE_POSITIVE_SWIG_TEST TEST_NAME)
-    if (SOUFFLE_SWIG_PYTHON)
-        souffle_run_swig_test_helper(TEST_NAME ${TEST_NAME} LANGUAGE python ${ARGN})
-    endif()
 
-    if (SOUFFLE_SWIG_JAVA)
-        souffle_run_swig_test_helper(TEST_NAME ${TEST_NAME} LANGUAGE java ${ARGN})
-    endif()
-endfunction()
 
-# swig test which will run python, java or both
-function(SOUFFLE_POSITIVE_FUNCTOR_TEST TEST_NAME)
-        souffle_run_test_helper(TEST_NAME ${TEST_NAME} FUNCTORS ${ARGN})
-        souffle_run_test_helper(TEST_NAME ${TEST_NAME} COMPILED FUNCTORS ${ARGN})
-endfunction()
-
-# cpp test which will compile Souffle programs externally
-function(SOUFFLE_POSITIVE_CPP_TEST TEST_NAME)
-    souffle_run_cpp_test_helper(TEST_NAME ${TEST_NAME} ${ARGN})
-endfunction()
-
-# cpp test which will compile Souffle programs externally
-function(SOUFFLE_POSITIVE_PROF_TEST TEST_NAME)
-    souffle_run_prof_test_helper(TEST_NAME ${TEST_NAME} ${ARGN})
-endfunction()
-
-# provenance test 
-function(SOUFFLE_PROVENANCE_TEST TEST_NAME)
-    souffle_run_test_helper(TEST_NAME ${TEST_NAME} CATEGORY provenance)
-    souffle_run_test_helper(TEST_NAME ${TEST_NAME} COMPILED CATEGORY provenance)
-endfunction()
