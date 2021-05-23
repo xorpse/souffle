@@ -8,11 +8,14 @@ function(SOUFFLE_RUN_PROF_TEST)
         ""
         ${ARGV}
     )
+    # Run souffle (through the shell, so we can easily redirect)
+
+    set(SOUFFLEPROF_CMD "set -e$<SEMICOLON> $<TARGET_FILE:souffleprof> ${OUTPUT_DIR}/${TEST_NAME}.prof -c 'R2'")
 
     add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_prof
-             COMMAND sh -c "set -e;  $<TARGET_FILE:souffle-profile> ${OUTPUT_DIR}/${TEST_NAME}.prof -c 'R2'")
+        COMMAND sh -c "${SOUFFLEPROF_CMD}")
 
-    set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_compile_cpp PROPERTIES
+    set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_run_prof PROPERTIES
                          WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
                          LABELS "${PARAM_TEST_LABELS}"
                          FIXTURES_SETUP ${PARAM_FIXTURE_NAME}_run_prof
@@ -69,19 +72,19 @@ function(SOUFFLE_RUN_PROF_TEST_HELPER)
                                  QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
                                  OUTPUT_DIR ${OUTPUT_DIR}
                                  EXTRA_DATA ${EXTRA}
-                                 RUN_AFTER_FIXTURE ${FIXTURE_NAME}_run_cpp
+                                 RUN_AFTER_FIXTURE ${FIXTURE_NAME}_run_prof
                                  TEST_LABELS ${TEST_LABELS})
 
     souffle_compare_csv(QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
                         INPUT_DIR ${INPUT_DIR}
                         OUTPUT_DIR ${OUTPUT_DIR}
-                        RUN_AFTER_FIXTURE ${FIXTURE_NAME}_run_cpp
+                        RUN_AFTER_FIXTURE ${FIXTURE_NAME}_run_prof
                         NEGATIVE ${PARAM_NEGATIVE}
                         TEST_LABELS ${TEST_LABELS})
 
 endfunction()
 
-# cpp test which will compile Souffle programs externally
+# prof test which will compile Souffle programs externally
 function(SOUFFLE_POSITIVE_PROF_TEST TEST_NAME)
     souffle_run_prof_test_helper(TEST_NAME ${TEST_NAME} ${ARGN})
 endfunction()

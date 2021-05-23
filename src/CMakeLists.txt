@@ -241,13 +241,13 @@ install(TARGETS souffle DESTINATION bin)
 # --------------------------------------------------
 
 
-add_executable(souffle-profiler
+add_executable(souffleprof
                souffle_prof.cpp)
-target_include_directories(souffle-profiler PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-install(TARGETS souffle-profiler DESTINATION bin)
+target_include_directories(souffleprof PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+install(TARGETS souffleprof DESTINATION bin)
 
 # Set C++ standard to C++17
-target_compile_features(souffle-profiler
+target_compile_features(souffleprof
                         PUBLIC cxx_std_17)
 
 # --------------------------------------------------
