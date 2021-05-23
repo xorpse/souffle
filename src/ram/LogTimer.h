@@ -66,9 +66,9 @@ public:
 
 protected:
     void print(std::ostream& os, int tabpos) const override {
-        os << times(" ", tabpos) << "START_TIMER \"" << stringify(message) << "\"" << std::endl;
+        os << times(" ", tabpos) << "TIMER \"" << stringify(message) << "\"" << std::endl;
         Statement::print(statement.get(), os, tabpos + 1);
-        os << times(" ", tabpos) << "END_TIMER" << std::endl;
+        os << times(" ", tabpos) << "END TIMER" << std::endl;
     }
 };
 

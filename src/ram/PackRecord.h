@@ -71,8 +71,8 @@ public:
 
 protected:
     void print(std::ostream& os) const override {
-        os << "[" << join(arguments, ",", [](std::ostream& out, const Own<Expression>& arg) { out << *arg; })
-           << "]";
+        os << "PACK("
+           << join(arguments, ",", [](std::ostream& out, const Own<Expression>& arg) { out << *arg; }) << ")";
     }
 
     bool equal(const Node& node) const override {

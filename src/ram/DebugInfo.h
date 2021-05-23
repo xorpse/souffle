@@ -58,9 +58,9 @@ public:
 
 protected:
     void print(std::ostream& os, int tabpos) const override {
-        os << times(" ", tabpos) << "BEGIN_DEBUG \"" << stringify(message) << "\"" << std::endl;
+        os << times(" ", tabpos) << "DEBUG \"" << stringify(message) << "\"" << std::endl;
         Statement::print(statement.get(), os, tabpos + 1);
-        os << times(" ", tabpos) << "END_DEBUG" << std::endl;
+        os << times(" ", tabpos) << "END DEBUG" << std::endl;
     }
 };
 

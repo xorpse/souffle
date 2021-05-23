@@ -60,9 +60,9 @@ public:
 protected:
     void print(std::ostream& os, int tabpos) const override {
         os << times(" ", tabpos);
-        os << "PARALLEL t" << getTupleId() << ".0=";
+        os << "PARALLEL t" << getTupleId() << ".0 = ";
         AbstractAggregate::print(os, tabpos);
-        os << "FOR ALL t" << getTupleId() << " ∈ " << relation;
+        os << "FOR ALL t" << getTupleId() << " IN " << relation;
         if (!isTrue(condition.get())) {
             os << " WHERE " << getCondition();
         }

@@ -75,7 +75,7 @@ public:
 protected:
     void print(std::ostream& os, int tabpos) const override {
         os << times(" ", tabpos);
-        os << "PARALLEL IF ∃t" << getTupleId() << " IN " << relation;
+        os << "PARALLEL IF EXISTS t" << getTupleId() << " IN " << relation;
         printIndex(os);
         os << " WHERE " << getCondition();
         os << std::endl;

@@ -46,7 +46,7 @@ public:
 
 protected:
     void print(std::ostream& os, int tabpos) const override {
-        os << times(" ", tabpos) << "LOGSIZE " << relation;
+        os << times(" ", tabpos) << "LOG SIZE " << relation;
         os << " TEXT "
            << "\"" << stringify(message) << "\"";
         os << std::endl;

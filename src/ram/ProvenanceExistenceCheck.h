@@ -47,7 +47,7 @@ public:
 
 protected:
     void print(std::ostream& os) const override {
-        os << "prov";
+        os << "PROV ";
         AbstractExistenceCheck::print(os);
     }
 };

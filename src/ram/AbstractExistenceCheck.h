@@ -77,7 +77,7 @@ public:
 
 protected:
     void print(std::ostream& os) const override {
-        os << "(" << join(values, ",") << ") ∈ " << relation;
+        os << "(" << join(values, ",") << ") IN " << relation;
     }
 
     bool equal(const Node& node) const override {

@@ -11,7 +11,6 @@ set -x
 brew install automake autoconf bison libtool mcpp libffi swig
 brew link --force bison
 brew link --force libffi
-brew unlink gcc
 brew install gcc@10
 brew link gcc@10
 

@@ -58,7 +58,7 @@ public:
 
 protected:
     void print(std::ostream& os) const override {
-        os << "(" << relation << " = ∅)";
+        os << "ISEMPTY(" << relation << ")";
     }
 
     bool equal(const Node& node) const override {

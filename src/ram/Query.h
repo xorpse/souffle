@@ -41,6 +41,7 @@ namespace souffle::ram {
  *   FOR t0 in A
  *     FOR t1 in B
  *       ...
+ * END QUERY
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
 class Query : public Statement {
@@ -70,6 +71,7 @@ protected:
     void print(std::ostream& os, int tabpos) const override {
         os << times(" ", tabpos) << "QUERY" << std::endl;
         operation->print(os, tabpos + 1);
+        os << times(" ", tabpos) << "END QUERY" << std::endl;
     }
 
     bool equal(const Node& node) const override {

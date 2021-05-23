@@ -94,7 +94,7 @@ public:
 protected:
     void print(std::ostream& os, int tabpos) const override {
         os << times(" ", tabpos);
-        os << "IF ∃t" << getTupleId() << " IN " << relation;
+        os << "IF EXISTS t" << getTupleId() << " IN " << relation;
         printIndex(os);
         os << " WHERE " << getCondition();
         os << std::endl;
