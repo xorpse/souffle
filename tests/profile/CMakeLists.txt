@@ -1,0 +1,4 @@
+include(SouffleTests)
+
+souffle_positive_prof_test(lrg_attr_id)
+souffle_positive_prof_test(recursive)

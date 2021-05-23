@@ -432,7 +432,7 @@ souffle_CPPFLAGS = -I$(srcdir)/include
 souffle_profile_SOURCES = souffle_prof.cpp
 souffle_profile_CPPFLAGS = $(souffle_CPPFLAGS)
 
-dist_bin_SCRIPTS = souffle-compile souffle-config
+dist_bin_SCRIPTS = souffle-compile
 
 EXTRA_DIST = parser/parser.yy parser/scanner.ll
 

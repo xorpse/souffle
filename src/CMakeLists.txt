@@ -142,7 +142,6 @@ set(SOUFFLE_SOURCES
     synthesiser/Relation.cpp
 )
 
-
 # --------------------------------------------------
 # Flex/Bison
 # --------------------------------------------------
@@ -169,6 +168,9 @@ target_include_directories(libsouffle
                                   "${CMAKE_CURRENT_SOURCE_DIR}"
                                   "${CMAKE_CURRENT_BINARY_DIR}"
                            )
+
+# install souffle directory 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/souffle DESTINATION include) 
 
 # Set C++ standard to C++17
 target_compile_features(libsouffle
@@ -232,9 +234,24 @@ set_target_properties(libsouffle PROPERTIES OUTPUT_NAME "souffle")
 add_executable(souffle
                main.cpp)
 target_link_libraries(souffle libsouffle)
+install(TARGETS souffle DESTINATION bin)
 
 # --------------------------------------------------
-# Substitutions for souffle-compile and souffle-config
+# Souffle's profiler binary
+# --------------------------------------------------
+
+
+add_executable(souffle-profiler
+               souffle_prof.cpp)
+target_include_directories(souffle-profiler PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+install(TARGETS souffle-profiler DESTINATION bin)
+
+# Set C++ standard to C++17
+target_compile_features(souffle-profiler
+                        PUBLIC cxx_std_17)
+
+# --------------------------------------------------
+# Substitutions for souffle-compile 
 # --------------------------------------------------
 # FIXME: This is a bit fragile but there is actually no better way
 # to do this, AFAIK
@@ -242,7 +259,13 @@ target_link_libraries(souffle libsouffle)
 function(AUTOMAKE_COMPATIBLE_SUBST F_IN F_OUT)
     # enclose in scope so we can create the
     # values to substitute
-    set(CXX ${CMAKE_CXX_COMPILER})
+
+    # Mac OS X check 
+    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        set(CXX "/usr/bin/c++") 
+    else() 
+        set(CXX ${CMAKE_CXX_COMPILER})
+    endif()
 
     set(CMAKE_HEADER_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
@@ -259,10 +282,18 @@ function(AUTOMAKE_COMPATIBLE_SUBST F_IN F_OUT)
     string(TOUPPER ${CMAKE_BUILD_TYPE} BT_UPPER)
     # Remove -Wall/-Wextra since the code is not warning-free
     string(REGEX REPLACE "-Wall|-Wextra" ""  SOUFFLE_CXXFLAGS "${CMAKE_CXX_FLAGS}")
-    set(SOUFFLE_CXXFLAGS "${SOUFFLE_CXXFLAGS} ${CMAKE_CXX_FLAGS_${BT_UPPER}} ${SUBST_DEFS} -fopenmp")
+    set(SOUFFLE_CXXFLAGS "${SOUFFLE_CXXFLAGS} ${CMAKE_CXX_FLAGS_${BT_UPPER}} ${SUBST_DEFS}")
+    if (OPENMP_FOUND)
+       set(SOUFFLE_CXXFLAGS "${SOUFFLE_CXXFLAGS} -fopenmp")
+    endif()
 
     # Libraries
-    set(LIBS "-l${CMAKE_DL_LIBS} -lpthread")
+    set(LIBS "-lpthread")
+
+    if (CMAKE_DL_LIBS) 
+       string(APPEND LIBS " -l${CMAKE_DL_LIBS}")
+    endif()
+
     if (SOUFFLE_USE_SQLITE)
         string(APPEND LIBS " ${SQLite3_LIBRARY}")
     endif()
@@ -281,8 +312,7 @@ endfunction()
 automake_compatible_subst("${CMAKE_CURRENT_SOURCE_DIR}/souffle-compile.in"
                           "${CMAKE_CURRENT_BINARY_DIR}/souffle-compile")
 
-automake_compatible_subst("${CMAKE_CURRENT_SOURCE_DIR}/souffle-config.in"
-                          "${CMAKE_CURRENT_BINARY_DIR}/souffle-config")
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/souffle-compile DESTINATION bin)
 
 # FIXME: Ideally, eventually we will move these out to the "tests" subdirectory
 # now that we have a sane(er?) build system
