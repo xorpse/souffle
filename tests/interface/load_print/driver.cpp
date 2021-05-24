@@ -33,15 +33,10 @@ void error(std::string txt) {
  * Main program
  */
 int main(int argc, char** argv) {
-    // check number of arguments
-    if (argc != 2) {
-        error("wrong number of arguments!");
-    }
-
     // create instance of program "load_print"
     if (SouffleProgram* prog = ProgramFactory::newInstance("load_print")) {
         // load all input relations from current directory
-        prog->loadAll(argv[1]);
+        prog->loadAll();
 
         // run program
         prog->run();
