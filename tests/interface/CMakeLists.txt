@@ -28,7 +28,7 @@ function(SOUFFLE_RUN_CPP_TEST)
                         )
 
     add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_cpp
-            COMMAND sh -c "set -e; ./${TEST_NAME} >${TEST_NAME}.out 2>${TEST_NAME}.err")
+            COMMAND sh -c "set -e; ./${TEST_NAME} ${FACTS_DIR} >${TEST_NAME}.out 2>${TEST_NAME}.err")
     set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_run_cpp PROPERTIES
                          WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
                          LABELS "${PARAM_TEST_LABELS}"
