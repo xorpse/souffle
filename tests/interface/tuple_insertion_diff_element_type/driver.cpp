@@ -28,7 +28,7 @@ using namespace souffle;
  */
 void error(std::string txt) {
     std::cerr << "error: " << txt << "\n";
-    exit(1);
+    exit(0);
 }
 
 /**
