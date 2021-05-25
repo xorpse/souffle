@@ -28,7 +28,7 @@ using namespace souffle;
  */
 void handler(int /* n */) {
     std::cerr << "handler invoked." << std::endl;
-    exit(1);
+    exit(0);
 }
 
 /**
