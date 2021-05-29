@@ -13,12 +13,12 @@
  ***********************************************************************/
 
 #include "ast/transform/ReplaceSingletonVariables.h"
+#include "ast/BranchInit.h"
 #include "ast/Clause.h"
 #include "ast/Constraint.h"
 #include "ast/Node.h"
 #include "ast/Program.h"
 #include "ast/RecordInit.h"
-#include "ast/BranchInit.h"
 #include "ast/Relation.h"
 #include "ast/TranslationUnit.h"
 #include "ast/UnnamedVariable.h"
