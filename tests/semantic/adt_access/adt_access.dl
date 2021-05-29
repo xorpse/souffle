@@ -152,7 +152,7 @@ test8() :-
 ////////////
 
 .type VirtualNode =
-  VNV { variable: symbol }       
+  VNV { variable: symbol }
 
 .decl value_num(f: symbol, n: VirtualNode)
 .decl var_max(f: symbol)
