@@ -18,6 +18,7 @@
 #include "ast/Node.h"
 #include "ast/Program.h"
 #include "ast/RecordInit.h"
+#include "ast/BranchInit.h"
 #include "ast/Relation.h"
 #include "ast/TranslationUnit.h"
 #include "ast/UnnamedVariable.h"
@@ -71,10 +72,13 @@ bool ReplaceSingletonVariablesTransformer::transform(TranslationUnit& translatio
             std::set<std::string> ignoredVars;
 
             // Don't unname singleton variables occurring in records.
-            // TODO (azreika): remove this check once issue #420 is fixed
-            std::set<std::string> recordVars;
             visit(*clause, [&](const RecordInit& rec) {
                 visit(rec, [&](const ast::Variable& var) { ignoredVars.insert(var.getName()); });
+            });
+
+            // Don't unname singleton variables occurring in ADTs
+            visit(*clause, [&](const BranchInit& adt) {
+                visit(adt, [&](const ast::Variable& var) { ignoredVars.insert(var.getName()); });
             });
 
             // Don't unname singleton variables occuring in constraints.
