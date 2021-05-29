@@ -151,10 +151,10 @@ test8() :-
 // Test 9 //
 ////////////
 
-.type VirtualNode =
+.type VirtualNode2 =
   VNV { variable: symbol }
 
-.decl value_num(f: symbol, n: VirtualNode)
+.decl value_num(f: symbol, n: VirtualNode2)
 .decl var_max(f: symbol)
 
 value_num(func, $VNV("v")) :-
@@ -168,6 +168,6 @@ var_max(func) :-
 
 .decl test9()
 test9() :-
-  count:{var_max(_,_)} = 1.
+  count:{var_max(_)} = 1.
 
 .output test1, test2, test3, test4, test5, test6, test7, test8, test9
