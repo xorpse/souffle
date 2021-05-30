@@ -57,9 +57,9 @@ int main(int argc, char** argv) {
             // Output the symbol table
             auto st = people->getSymbolTable();
 
-            for(int i=0;i<st.size();i++) {
-              std::cout << st.decode(i) << "\t=> " << i <<  std::endl; 
-            } 
+            for (int i = 0; i < st.size(); i++) {
+                std::cout << st.decode(i) << "\t=> " << i << std::endl;
+            }
         } else {
             error("cannot find relation people");
         }
