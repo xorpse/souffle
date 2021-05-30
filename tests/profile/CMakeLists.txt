@@ -10,17 +10,20 @@ function(SOUFFLE_RUN_PROF_TEST)
     )
     # Run souffle (through the shell, so we can easily redirect)
 
-    set(SOUFFLEPROF_CMD "set -e$<SEMICOLON> $<TARGET_FILE:souffleprof> ${OUTPUT_DIR}/${TEST_NAME}.prof -c 'R2'")
 
-    add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_prof
-        COMMAND sh -c "${SOUFFLEPROF_CMD}")
-
-    set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_run_prof PROPERTIES
+    SET(CMD_LIST "rel;rel R2;rul;rul C2.1;rul id N2.1;graph R2 copy_t;graph C2.1 tot_t;graph ver C2.1 tuples;top;help")
+    foreach(CMD IN LISTS CMD_LIST) 
+       SET(CMD_NAME "${PARAM_QUALIFIED_TEST_NAME}_run_prof_${CMD}")
+       string(REPLACE " " "_" CMD_NAME ${CMD_NAME})
+       SET(CMD_EXEC "set -e$<SEMICOLON> $<TARGET_FILE:souffleprof> ${OUTPUT_DIR}/${TEST_NAME}.prof -c '${CMD}' >'${CMD}.out'")
+       add_test(NAME "${CMD_NAME}" COMMAND sh -c "${CMD_EXEC}")
+       set_tests_properties("${CMD_NAME}" PROPERTIES
                          WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
                          LABELS "${PARAM_TEST_LABELS}"
-                         FIXTURES_SETUP ${PARAM_FIXTURE_NAME}_run_prof
+                         FIXTURES_SETUP "${CMD_NAME}"
                          FIXTURES_REQUIRED ${PARAM_FIXTURE_NAME}_run_souffle
                         )
+    endforeach()
 endfunction()
 
 
