@@ -1,3 +1,9 @@
+# Souffle - A Datalog Compiler
+# Copyright (c) 2021 The Souffle Developers. All rights reserved
+# Licensed under the Universal Permissive License v 1.0 as shown at:
+# - https://opensource.org/licenses/UPL
+# - <souffle root>/licenses/SOUFFLE-UPL.txt
+
 include(SouffleTests)
 
 function(SOUFFLE_RUN_PROF_TEST)
@@ -34,7 +40,7 @@ function(SOUFFLE_RUN_PROF_TEST)
 
        SET(CMD_EXEC "[[ `cat '${CMD}.out'|wc -l` == `cat '${INPUT_DIR}/out/${CMD}.out'|wc -l` ]]")
 
-       add_test(NAME "${CMD_NAME_CMP}" COMMAND sh -c "${CMD_EXEC}")
+       add_test(NAME "${CMD_NAME_CMP}" COMMAND bash -c "${CMD_EXEC}")
 
        set_tests_properties("${CMD_NAME_CMP}" PROPERTIES
                          WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
