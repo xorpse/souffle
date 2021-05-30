@@ -15,6 +15,7 @@
  ***********************************************************************/
 
 #include "parser/ParserDriver.h"
+#include "parser/parser.hh"
 #include "Global.h"
 #include "ast/Clause.h"
 #include "ast/Component.h"

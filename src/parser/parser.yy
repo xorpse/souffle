@@ -17,7 +17,7 @@
 %require "3.0.2"
 
 %defines
-%define parser_class_name {parser}
+%define api.parser.class {parser}
 %define api.token.constructor
 %define api.value.type variant
 %define parse.assert
@@ -34,7 +34,6 @@
 
 /* -- Dependencies -- */
 %code requires {
-#pragma once
     #include "AggregateOp.h"
     #include "FunctorOps.h"
     #include "ast/Aggregator.h"
@@ -91,6 +90,14 @@
 
     using yyscan_t = void*;
 
+    struct scanner_data {
+        SrcLocation yylloc;
+
+        /* Stack of parsed files */
+        std::string yyfilename;
+    };
+
+
     #define YY_NULLPTR nullptr
 
     /* Macro to update locations as parsing proceeds */
@@ -109,7 +116,9 @@
 }
 
 %code {
-    #include "parser/ParserDriver.h"
+   #include "parser/ParserDriver.h"
+   #define YY_DECL yy::parser::symbol_type yylex(souffle::ParserDriver& driver, yyscan_t yyscanner)
+   YY_DECL;
 }
 
 %param { ParserDriver &driver }
