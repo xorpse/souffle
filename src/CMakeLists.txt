@@ -260,12 +260,7 @@ function(AUTOMAKE_COMPATIBLE_SUBST F_IN F_OUT)
     # enclose in scope so we can create the
     # values to substitute
 
-    # Mac OS X check 
-    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-        set(CXX "/usr/bin/c++") 
-    else() 
-        set(CXX ${CMAKE_CXX_COMPILER})
-    endif()
+    set(CXX ${CMAKE_CXX_COMPILER})
 
     set(CMAKE_HEADER_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
