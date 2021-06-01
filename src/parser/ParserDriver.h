@@ -29,7 +29,6 @@
 #include "ast/TranslationUnit.h"
 #include "ast/Type.h"
 #include "parser/SrcLocation.h"
-#include "parser/parser.hh"
 #include "reports/DebugReport.h"
 #include <cstdio>
 #include <memory>
@@ -38,15 +37,6 @@
 #include <vector>
 
 namespace souffle {
-
-using yyscan_t = void*;
-
-struct scanner_data {
-    SrcLocation yylloc;
-
-    /* Stack of parsed files */
-    std::string yyfilename;
-};
 
 class ParserDriver {
 public:
@@ -90,6 +80,3 @@ public:
 };
 
 }  // end of namespace souffle
-
-#define YY_DECL yy::parser::symbol_type yylex(souffle::ParserDriver& driver, yyscan_t yyscanner)
-YY_DECL;

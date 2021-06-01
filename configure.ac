@@ -37,6 +37,9 @@ dnl Do not set default CFLAGS and CXXFLAGS
 ENV_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS=" -fwrapv "
 
+dnl This is here for CMAKE build compatibility
+AC_SUBST(CMAKE_HEADER_DIRS)
+
 # Disable provenance
 AC_ARG_ENABLE(
   [ncurses],
@@ -293,6 +296,6 @@ AC_SUBST(SOUFFLE_CXXFLAGS)
 CXXFLAGS="-Wall -Wextra $CXXFLAGS $ENV_CXXFLAGS"
 
 AC_OUTPUT(
-  [ src/souffle-compile src/souffle-config debian/changelog ],
-  [ chmod +x src/souffle-compile src/souffle-config ]
+  [ src/souffle-compile debian/changelog ],
+  [ chmod +x src/souffle-compile ]
 )

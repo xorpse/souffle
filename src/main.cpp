@@ -399,7 +399,7 @@ int main(int argc, char** argv) {
     }
 
     /* Create the pipe to establish a communication between cpp and souffle */
-    std::string cmd = ::which("mcpp");
+    std::string cmd = which("mcpp");
 
     if (!isExecutable(cmd)) {
         throw std::runtime_error("failed to locate mcpp pre-processor");
@@ -707,7 +707,7 @@ int main(int argc, char** argv) {
             }
 
             auto findCompileCmd = [&] {
-                auto cmd = ::findTool("souffle-compile", souffleExecutable, ".");
+                auto cmd = findTool("souffle-compile", souffleExecutable, ".");
                 /* Fail if a souffle-compile executable is not found */
                 if (!isExecutable(cmd)) {
                     throw std::runtime_error("failed to locate souffle-compile");

@@ -36,10 +36,14 @@
 
     #include "ast/Program.h"
 
-    #include "parser/ParserDriver.h"
     #include "parser/parser.hh"
     #include "parser/SrcLocation.h"
+    #include "parser/ParserDriver.h"
+
     #define YYLTYPE SrcLocation
+
+    #define YY_DECL yy::parser::symbol_type yylex(souffle::ParserDriver& driver, yyscan_t yyscanner)
+    YY_DECL;
 
     #include "souffle/RamTypes.h"
 
