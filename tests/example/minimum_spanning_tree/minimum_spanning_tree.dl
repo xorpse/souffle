@@ -118,4 +118,4 @@ prims_trace(step, edge_id, x, y, w) :-
 .decl minimum_spanning_tree(c:number)
 minimum_spanning_tree(sum w : { prims_trace(_,_,_,_,w) }).
 
-.output minimum_spanning_tree 
+.output minimum_spanning_tree

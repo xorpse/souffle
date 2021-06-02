@@ -52,7 +52,7 @@ knapsack_iteration(nil, count : array(_,_) - 1, cap, 0) :- capacity(cap).
 knapsack_iteration(list, index-1, 0, value) :- knapsack_iteration(list, index, 0, value), index >= 0.
 
 // otherwise exhaust the item and decrement
-knapsack_iteration([[val,weight],amount,rest],index-1,remaining_cap, value+(val/weight)*amount) :- 
+knapsack_iteration([[val,weight],amount,rest],index-1,remaining_cap, value+(val/weight)*amount) :-
 	knapsack_iteration(rest, index, cap, value),
 	array(index, [val,weight]),
 	index >= 0,
