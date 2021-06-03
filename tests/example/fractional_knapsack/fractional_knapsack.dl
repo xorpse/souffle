@@ -40,13 +40,13 @@ next(v1,w1,v2,w2) :- item_ratio(r1,v1,w1),
 next(v1,w1,v2,w2) :- next_candidate(v1,w1,v2,w2).
 
 
-.decl array(index:number, p:Item)
-array(0,[v,w]) :- first(v,w).
-array(i+1,[v2,w2]) :- array(i,[v1,w1]), next(v1,w1,v2,w2).
+.decl item_array(index:number, p:Item)
+item_array(0,[v,w]) :- first(v,w).
+item_array(i+1,[v2,w2]) :- item_array(i,[v1,w1]), next(v1,w1,v2,w2).
 
 
 .decl knapsack_iteration(knapsack:List, index:number, weight:float, value:float)
-knapsack_iteration(nil, count : array(_,_) - 1, cap, 0) :- capacity(cap).
+knapsack_iteration(nil, count : item_array(_,_) - 1, cap, 0) :- capacity(cap).
 
 // skip over iteration if we have exhausted capacity
 knapsack_iteration(list, index-1, 0, value) :- knapsack_iteration(list, index, 0, value), index >= 0.
@@ -54,7 +54,7 @@ knapsack_iteration(list, index-1, 0, value) :- knapsack_iteration(list, index, 0
 // otherwise exhaust the item and decrement
 knapsack_iteration([[val,weight],amount,rest],index-1,remaining_cap, value+(val/weight)*amount) :-
 	knapsack_iteration(rest, index, cap, value),
-	array(index, [val,weight]),
+	item_array(index, [val,weight]),
 	index >= 0,
 	amount = min(cap,weight),
 	remaining_cap = cap - amount,
