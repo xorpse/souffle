@@ -267,7 +267,7 @@ protected:
         return source.substr(bgn, pos - bgn);
     }
 
-    std::string readUntil(const std::string& source, const std::string stopChars, const std::size_t pos,
+    std::string readUntil(const std::string& source, const std::string& stopChars, const std::size_t pos,
             std::size_t* charactersRead) {
         std::size_t endOfSymbol = source.find_first_of(stopChars, pos);
 
@@ -280,8 +280,7 @@ protected:
         return source.substr(pos, *charactersRead);
     }
 
-    std::string readQuotedSymbol(
-            const std::string& source, std::size_t pos, std::size_t* charactersRead) {
+    std::string readQuotedSymbol(const std::string& source, std::size_t pos, std::size_t* charactersRead) {
         const std::size_t start = pos;
         const std::size_t end = source.length();
 
@@ -295,10 +294,10 @@ protected:
         bool escaped = false;
         while (pos < end) {
             if (escaped) {
-              hasEscaped = true;
-              escaped = false;
-              ++pos;
-              continue;
+                hasEscaped = true;
+                escaped = false;
+                ++pos;
+                continue;
             }
 
             const char c = source[pos];
@@ -347,15 +346,14 @@ protected:
      * It is either a double-quoted symbol with backslash-escaped chars, or the
      * longuest sequence that do not contains any of the given stopChars.
      * */
-    std::string readSymbol(const std::string& source, const std::string stopChars, const std::size_t pos,
+    std::string readSymbol(const std::string& source, const std::string& stopChars, const std::size_t pos,
             std::size_t* charactersRead) {
-      if (source[pos] == '"') {
-        return readQuotedSymbol(source, pos, charactersRead);
-      } else {
-        return readUntil(source, stopChars, pos, charactersRead);
-      }
+        if (source[pos] == '"') {
+            return readQuotedSymbol(source, pos, charactersRead);
+        } else {
+            return readUntil(source, stopChars, pos, charactersRead);
+        }
     }
-
 
     /**
      * Read past given character, consuming any preceding whitespace.

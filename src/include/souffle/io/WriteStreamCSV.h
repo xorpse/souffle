@@ -43,8 +43,8 @@ protected:
             const RecordTable& recordTable)
             : WriteStream(rwOperation, symbolTable, recordTable),
               delimiter(getOr(rwOperation, "delimiter", "\t")) {
-                rfc4180 = (getOr(rwOperation, "rfc4180", "false") == std::string("true"));
-              };
+        rfc4180 = (getOr(rwOperation, "rfc4180", "false") == std::string("true"));
+    };
 
     const std::string delimiter;
 

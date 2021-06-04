@@ -78,7 +78,7 @@ protected:
     }
 
     virtual void outputSymbol(std::ostream& destination, const std::string& value) {
-      destination << value;
+        destination << value;
     }
 
     void outputRecord(std::ostream& destination, const RamDomain value, const std::string& name) {

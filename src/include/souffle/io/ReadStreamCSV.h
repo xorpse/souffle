@@ -48,13 +48,13 @@ public:
             SymbolTable& symbolTable, RecordTable& recordTable)
             : ReadStream(rwOperation, symbolTable, recordTable),
               delimiter(getOr(rwOperation, "delimiter", "\t")), file(file), lineNumber(0),
-              inputMap(getInputColumnMap(rwOperation, static_cast<unsigned int>(arity))){
+              inputMap(getInputColumnMap(rwOperation, static_cast<unsigned int>(arity))) {
         while (inputMap.size() < arity) {
             int size = static_cast<int>(inputMap.size());
             inputMap[size] = size;
         }
 
-        rfc4180 = (getOr(rwOperation,"rfc4180", "false") == "true");
+        rfc4180 = (getOr(rwOperation, "rfc4180", "false") == "true");
         if (rfc4180 && delimiter.find('"') != std::string::npos) {
             std::stringstream errorMessage;
             errorMessage << "CSV delimiter cannot contain '\"' character when rfc4180 is enabled.";
@@ -166,52 +166,53 @@ protected:
         std::string element;
 
         if (rfc4180) {
-          if (line[start] == '"') {
-            // quoted field
-            const std::size_t end = line.length();
-            std::size_t pos = start + 1;
-            bool foundEndQuote = false;
-            while (pos < end) {
-              char c = line[pos++];
-              if (c == '"' && (pos < end) && line[pos] == '"') {
-                // two double-quote => one double-quote
-                element.push_back('"');
-                ++pos;
-              } else if (c == '"') {
-                foundEndQuote = true;
-                break;
-              } else {
-                element.push_back(c);
-              }
+            if (line[start] == '"') {
+                // quoted field
+                const std::size_t end = line.length();
+                std::size_t pos = start + 1;
+                bool foundEndQuote = false;
+                while (pos < end) {
+                    char c = line[pos++];
+                    if (c == '"' && (pos < end) && line[pos] == '"') {
+                        // two double-quote => one double-quote
+                        element.push_back('"');
+                        ++pos;
+                    } else if (c == '"') {
+                        foundEndQuote = true;
+                        break;
+                    } else {
+                        element.push_back(c);
+                    }
+                }
+
+                if (!foundEndQuote) {
+                    // missing closing quote
+                    std::stringstream errorMessage;
+                    errorMessage << "Unbalanced field quote in line " << lineNumber << "; ";
+                    throw std::invalid_argument(errorMessage.str());
+                }
+
+                // field must be immediately followed by delimiter or end of line
+                if (pos != line.length()) {
+                    std::size_t nextDelimiter = line.find(delimiter, pos);
+                    if (nextDelimiter != pos) {
+                        std::stringstream errorMessage;
+                        errorMessage << "Separator expected immediately after quoted field in line "
+                                     << lineNumber << "; ";
+                        throw std::invalid_argument(errorMessage.str());
+                    }
+                }
+
+                start = pos + delimiter.size();
+                return element;
+            } else {
+                // non-quoted field, span until next delimiter or end of line
+                const std::size_t end = std::min(line.find(delimiter, start), line.length());
+                element = line.substr(start, end - start);
+                start = end + delimiter.size();
+
+                return element;
             }
-
-            if (!foundEndQuote) {
-              // missing closing quote
-              std::stringstream errorMessage;
-              errorMessage << "Unbalanced field quote in line " << lineNumber << "; ";
-              throw std::invalid_argument(errorMessage.str());
-            }
-
-            // field must be immediately followed by delimiter or end of line
-            if (pos != line.length()) {
-              std::size_t nextDelimiter = line.find(delimiter, pos);
-              if (nextDelimiter != pos) {
-                std::stringstream errorMessage;
-                errorMessage << "Separator expected immediately after quoted field in line " << lineNumber << "; ";
-                throw std::invalid_argument(errorMessage.str());
-              }
-            }
-
-            start = pos + delimiter.size();
-            return element;
-          } else {
-            // non-quoted field, span until next delimiter or end of line
-            const std::size_t end = std::min(line.find(delimiter, start), line.length());
-            element = line.substr(start, end - start);
-            start = end + delimiter.size();
-
-            return element;
-          }
         }
 
         std::size_t end = start;
