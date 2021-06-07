@@ -15,7 +15,6 @@ uint32_t get_rightmost_unset_bit(uint32_t n) {
             return 1 << index;
         }
     }
-
     return 0;
 }
 }
