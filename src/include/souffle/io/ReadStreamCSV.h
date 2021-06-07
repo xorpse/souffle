@@ -47,18 +47,18 @@ public:
     ReadStreamCSV(std::istream& file, const std::map<std::string, std::string>& rwOperation,
             SymbolTable& symbolTable, RecordTable& recordTable)
             : ReadStream(rwOperation, symbolTable, recordTable),
-              delimiter(getOr(rwOperation, "delimiter", "\t")), file(file), lineNumber(0),
+              rfc4180(getOr(rwOperation, "rfc4180", "false") == std::string("true")),
+              delimiter(getOr(rwOperation, "delimiter", (rfc4180 ? "," : "\t"))), file(file), lineNumber(0),
               inputMap(getInputColumnMap(rwOperation, static_cast<unsigned int>(arity))) {
-        while (inputMap.size() < arity) {
-            int size = static_cast<int>(inputMap.size());
-            inputMap[size] = size;
-        }
-
-        rfc4180 = (getOr(rwOperation, "rfc4180", "false") == "true");
         if (rfc4180 && delimiter.find('"') != std::string::npos) {
             std::stringstream errorMessage;
             errorMessage << "CSV delimiter cannot contain '\"' character when rfc4180 is enabled.";
             throw std::invalid_argument(errorMessage.str());
+        }
+
+        while (inputMap.size() < arity) {
+            int size = static_cast<int>(inputMap.size());
+            inputMap[size] = size;
         }
     }
 
@@ -291,11 +291,11 @@ protected:
         return inputColumnMap;
     }
 
+    const bool rfc4180;
     const std::string delimiter;
     std::istream& file;
     std::size_t lineNumber;
     std::map<int, int> inputMap;
-    bool rfc4180;
 };
 
 class ReadFileCSV : public ReadStreamCSV {

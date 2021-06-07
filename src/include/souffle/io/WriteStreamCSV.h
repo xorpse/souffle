@@ -42,13 +42,18 @@ protected:
     WriteStreamCSV(const std::map<std::string, std::string>& rwOperation, const SymbolTable& symbolTable,
             const RecordTable& recordTable)
             : WriteStream(rwOperation, symbolTable, recordTable),
-              delimiter(getOr(rwOperation, "delimiter", "\t")) {
-        rfc4180 = (getOr(rwOperation, "rfc4180", "false") == std::string("true"));
+              rfc4180(getOr(rwOperation, "rfc4180", "false") == std::string("true")),
+              delimiter(getOr(rwOperation, "delimiter", (rfc4180 ? "," : "\t"))) {
+        if (rfc4180 && delimiter.find('"') != std::string::npos) {
+            std::stringstream errorMessage;
+            errorMessage << "CSV delimiter cannot contain '\"' character when rfc4180 is enabled.";
+            throw std::invalid_argument(errorMessage.str());
+        }
     };
 
-    const std::string delimiter;
+    const bool rfc4180;
 
-    bool rfc4180 = false;
+    const std::string delimiter;
 
     void writeNextTupleCSV(std::ostream& destination, const RamDomain* tuple) {
         writeNextTupleElement(destination, typeAttributes.at(0), tuple[0]);
