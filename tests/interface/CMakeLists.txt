@@ -108,7 +108,7 @@ function(SOUFFLE_POSITIVE_CPP_TEST TEST_NAME)
 endfunction()
 
 souffle_positive_functor_test(functors CATEGORY interface)
-souffle_positive_functor_test(graph_colouring CATEGORY interface)
+souffle_positive_functor_test(graph_coloring CATEGORY interface)
 souffle_positive_cpp_test(contain_insert)
 souffle_positive_cpp_test(get_symboltabletype)
 souffle_positive_cpp_test(insert_for)
