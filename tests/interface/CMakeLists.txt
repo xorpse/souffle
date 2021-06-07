@@ -6,7 +6,7 @@
 
 # Make sure that the functor library is built 
 add_subdirectory(functors)
-add_subdirectory(graph_colouring)
+add_subdirectory(graph_coloring)
 
 # swig test which will run python, java or both
 function(SOUFFLE_POSITIVE_FUNCTOR_TEST TEST_NAME)
