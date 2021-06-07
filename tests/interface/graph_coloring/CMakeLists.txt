@@ -4,14 +4,15 @@
 # - https://opensource.org/licenses/UPL
 # - <souffle root>/licenses/SOUFFLE-UPL.txt
 
-add_library(functors SHARED functors.cpp)
-target_include_directories(functors PRIVATE "${CMAKE_SOURCE_DIR}/src/include")
+add_library(gcfunctors SHARED functors.cpp)
+target_include_directories(gcfunctors PRIVATE "${CMAKE_SOURCE_DIR}/src/include")
 
-target_compile_features(functors
+target_compile_features(gcfunctors
                         PUBLIC cxx_std_17)
-set_target_properties(functors PROPERTIES CXX_EXTENSIONS OFF)
+set_target_properties(gcfunctors PROPERTIES CXX_EXTENSIONS OFF) 
+set_target_properties(gcfunctors PROPERTIES OUTPUT_NAME "functors") 
 
-target_compile_options(functors
+target_compile_options(gcfunctors
                        PUBLIC "-Wall;-Wextra;-fwrapv")
 
 if (SOUFFLE_DOMAIN_64BIT)
