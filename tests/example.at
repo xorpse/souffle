@@ -4,6 +4,44 @@
 # - https://opensource.org/licenses/UPL
 # - <souffle root>/licenses/SOUFFLE-UPL.txt
 
+dnl Execute a positive functor test case
+dnl $1 -- test case
+dnl $2 -- category
+m4_define([TEST_EVAL_FUNCTOR],[
+  m4_define([TESTNAME],[$1])
+  m4_define([CATEGORY],[$2])
+  m4_define([TESTDIR],[$TESTS/CATEGORY/TESTNAME])
+  m4_define([PROGRAM],[TESTDIR/TESTNAME.dl])
+  m4_define([FACTS],[TESTDIR/facts])
+  if [[ ! -z "$SOUFFLE_TESTS_MSVC_VARS" ]]; then
+    AT_CHECK(["$SOUFFLE" -g $1.cpp -D. -F FACTS PROGRAM 1>TESTNAME.out 2>TESTNAME.err], [0])
+    AT_CHECK([SOUFFLE_INC=$SOUFFLE_INC $at_dir/msvc-interface-functor-test.sh TESTDIR TESTNAME FACTS PROGRAM], [0])
+    cp -r FACTS ./
+    AT_CHECK([./$1.exe 1>TESTNAME.out 2>>TESTNAME.err], [0])
+    dos2unix --quiet TESTNAME.out TESTNAME.err
+  else
+    dnl copy libs from where they were built
+    cp ../../example/graph_coloring/.libs/libfunctors* .
+    # hack for System Integrity Protection (on Travis)
+    # TODO (darth_tytus): Investigate a better solution.
+    cp ../../example/graph_coloring/.libs/libfunctors.dylib /usr/local/lib/ 2>/dev/null
+    # invoke souffle
+    AT_CHECK(["$SOUFFLE" FLAGS -D. -F FACTS PROGRAM 1>TESTNAME.out 2>TESTNAME.err], [0])
+  fi
+  SORTED_SAME_FILES([*.csv],[TESTDIR])
+  SAME_FILE([TESTNAME.out],[TESTDIR/TESTNAME.out])
+  SAME_FILE([TESTNAME.err],[TESTDIR/TESTNAME.err])
+])
+
+dnl Positive user-defined functor testcase for Souffle
+dnl $1 -- test name
+dnl $2 -- category
+m4_define([POSITIVE_FUNCTOR_TEST],[
+  TEST_GROUP([$1],[
+    TEST_EVAL_FUNCTOR([$1],[$2])
+  ])
+])
+
 dnl Positive test cases for evaluating Datalog programs
 
 POSITIVE_TEST([2sat],[example])
@@ -25,6 +63,7 @@ POSITIVE_TEST([cliquer],[example])
 POSITIVE_TEST([comp-parametrized-inherit],[example])
 POSITIVE_TEST([comp-parametrized-multilvl],[example])
 POSITIVE_TEST([comp-parametrized],[example])
+POSITIVE_TEST([convex_hull],[example])
 POSITIVE_TEST([counter],[example])
 POSITIVE_TEST([degree],[example])
 POSITIVE_TEST([dfa],[example])
@@ -48,10 +87,12 @@ POSITIVE_TEST([fib1],[example])
 POSITIVE_TEST([flights],[example])
 POSITIVE_TEST([flights2],[example])
 POSITIVE_TEST([floydwarshall],[example])
+POSITIVE_TEST([fractional_knapsack],[example])
 POSITIVE_TEST([func],[example])
 POSITIVE_TEST([game2],[example])
 POSITIVE_TEST([grad],[example])
 POSITIVE_TEST([graph],[example])
+POSITIVE_FUNCTOR_TEST([graph_coloring],[example])
 POSITIVE_TEST([grid],[example])
 POSITIVE_TEST([highest_degree],[example])
 POSITIVE_TEST([hmmer],[example])
@@ -70,6 +111,7 @@ POSITIVE_TEST([magic_prime2],[example])
 POSITIVE_TEST([magic_pointsto],[example])
 POSITIVE_TEST([metro],[example])
 POSITIVE_TEST([minesweeper],[example])
+POSITIVE_TEST([minimum_spanning_tree],[example])
 POSITIVE_TEST([minpath1],[example])
 POSITIVE_TEST([minpath2],[example])
 POSITIVE_TEST([minpath3],[example])
