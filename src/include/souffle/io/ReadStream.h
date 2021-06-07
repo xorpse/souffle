@@ -96,7 +96,7 @@ protected:
             consumeWhiteSpace(source, pos);
             switch (recordType[0]) {
                 case 's': {
-                    recordValues[i] = symbolTable.unsafeEncode(readUntil(source, ",]", pos, &consumed));
+                    recordValues[i] = symbolTable.unsafeEncode(readSymbol(source, ",]", pos, &consumed));
                     break;
                 }
                 case 'i': {
@@ -199,7 +199,7 @@ protected:
 
             switch (argType[0]) {
                 case 's': {
-                    branchArgs[i] = symbolTable.unsafeEncode(readUntil(source, ",)", pos, &consumed));
+                    branchArgs[i] = symbolTable.unsafeEncode(readSymbol(source, ",)", pos, &consumed));
                     break;
                 }
                 case 'i': {
@@ -267,7 +267,7 @@ protected:
         return source.substr(bgn, pos - bgn);
     }
 
-    std::string readUntil(const std::string& source, const std::string stopChars, const std::size_t pos,
+    std::string readUntil(const std::string& source, const std::string& stopChars, const std::size_t pos,
             std::size_t* charactersRead) {
         std::size_t endOfSymbol = source.find_first_of(stopChars, pos);
 
@@ -278,6 +278,81 @@ protected:
         *charactersRead = endOfSymbol - pos;
 
         return source.substr(pos, *charactersRead);
+    }
+
+    std::string readQuotedSymbol(const std::string& source, std::size_t pos, std::size_t* charactersRead) {
+        const std::size_t start = pos;
+        const std::size_t end = source.length();
+
+        const char quoteMark = source[pos];
+        ++pos;
+
+        const std::size_t startOfSymbol = pos;
+        std::size_t endOfSymbol = std::string::npos;
+        bool hasEscaped = false;
+
+        bool escaped = false;
+        while (pos < end) {
+            if (escaped) {
+                hasEscaped = true;
+                escaped = false;
+                ++pos;
+                continue;
+            }
+
+            const char c = source[pos];
+            if (c == quoteMark) {
+                endOfSymbol = pos;
+                ++pos;
+                break;
+            }
+            if (c == '\\') {
+                escaped = true;
+            }
+            ++pos;
+        }
+
+        if (endOfSymbol == std::string::npos) {
+            throw std::invalid_argument("Unexpected end of input");
+        }
+
+        *charactersRead = pos - start;
+
+        std::size_t lengthOfSymbol = endOfSymbol - startOfSymbol;
+
+        // fast handling of symbol without escape sequence
+        if (!hasEscaped) {
+            return source.substr(startOfSymbol, lengthOfSymbol);
+        } else {
+            // slow handling of symbol with escape sequence
+            std::string symbol;
+            symbol.reserve(lengthOfSymbol);
+            bool escaped = false;
+            for (std::size_t pos = startOfSymbol; pos < endOfSymbol; ++pos) {
+                char ch = source[pos];
+                if (escaped || ch != '\\') {
+                    symbol.push_back(ch);
+                    escaped = false;
+                } else {
+                    escaped = true;
+                }
+            }
+            return symbol;
+        }
+    }
+
+    /**
+     * Read the next symbol.
+     * It is either a double-quoted symbol with backslash-escaped chars, or the
+     * longuest sequence that do not contains any of the given stopChars.
+     * */
+    std::string readSymbol(const std::string& source, const std::string& stopChars, const std::size_t pos,
+            std::size_t* charactersRead) {
+        if (source[pos] == '"') {
+            return readQuotedSymbol(source, pos, charactersRead);
+        } else {
+            return readUntil(source, stopChars, pos, charactersRead);
+        }
     }
 
     /**

@@ -282,6 +282,7 @@ AC_CONFIG_FILES([
   tests/Makefile
   tests/atlocal
   tests/interface/functors/Makefile
+  tests/interface/graph_coloring/Makefile
 ])
 AC_CONFIG_LINKS([utilities/bash-completion/completions/souffle:debian/souffle.bash-completion])
 
