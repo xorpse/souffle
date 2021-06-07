@@ -6,13 +6,13 @@
 
 # Make sure that the functor library is built 
 add_subdirectory(functors)
+add_subdirectory(graph_colouring)
 
 # swig test which will run python, java or both
 function(SOUFFLE_POSITIVE_FUNCTOR_TEST TEST_NAME)
         souffle_run_test_helper(TEST_NAME ${TEST_NAME} FUNCTORS ${ARGN})
         souffle_run_test_helper(TEST_NAME ${TEST_NAME} COMPILED FUNCTORS ${ARGN})
 endfunction()
-
 
 function(SOUFFLE_RUN_CPP_TEST)
     cmake_parse_arguments(
@@ -108,6 +108,7 @@ function(SOUFFLE_POSITIVE_CPP_TEST TEST_NAME)
 endfunction()
 
 souffle_positive_functor_test(functors CATEGORY interface)
+souffle_positive_functor_test(graph_colouring CATEGORY interface)
 souffle_positive_cpp_test(contain_insert)
 souffle_positive_cpp_test(get_symboltabletype)
 souffle_positive_cpp_test(insert_for)
@@ -118,5 +119,5 @@ souffle_positive_cpp_test(tuple_insertion_diff_element_type)
 souffle_positive_cpp_test(tuple_insertion_diff_relation)
 
 # The following test fails because we use -g (instead -o) 
-# (This neeads to be investigated) 
+# TODO: (This neeads to be investigated) 
 # souffle_positive_cpp_test(repeat_analysis)
