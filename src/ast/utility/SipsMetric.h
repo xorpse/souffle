@@ -100,6 +100,17 @@ protected:
             const std::vector<Atom*> atoms, const BindingStore& bindingStore) const override;
 };
 
+/** Goal: prioritise (1) all-bound, then (2) max number of bound vars, then (3) left-most, but use deltas as a
+ * tiebreaker between these. */
+class MaxBoundDeltaSips : public SipsMetric {
+public:
+    MaxBoundDeltaSips() = default;
+
+protected:
+    std::vector<double> evaluateCosts(
+            const std::vector<Atom*> atoms, const BindingStore& bindingStore) const override;
+};
+
 /** Goal: prioritise max ratio of bound args */
 class MaxRatioSips : public SipsMetric {
 public:
