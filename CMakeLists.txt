@@ -34,15 +34,25 @@ execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --always
                 # FIXME: Use in cmake 3.19 or later
                 # COMMAND_ERROR_IS_FATAL ANY)
 
+# Figure out the version number, depends on whether building from the git repo
 if (NOT GIT_RESULT EQUAL 0)
-    message(FATAL_ERROR "Unable to find git repository")
+    # Not building from a git clone
+    message(WARNING "Unable to find git repository: version number will be incomplete")
+    set(PACKAGE_VERSION "UNKOWN")
+    set(SOUFFLE_VERSION "")
+else()
+    string(REGEX REPLACE "\n$" "" PACKAGE_VERSION "${GIT_PACKAGE_VERSION}")
+    message(STATUS "Building souffle version ${PACKAGE_VERSION}")
+
+    # SOUFFLE_VERSION only includes the major/minor triplet
+    string(REGEX REPLACE "-.*$" "" SOUFFLE_VERSION "${PACKAGE_VERSION}")
+
+    # If building from a shallow clone where tag is not available.
+    if (NOT ${SOUFFLE_VERSION} MATCHES "^[0-9.]+$")
+        message(WARNING "Cannot find a valid tag: cmake project version will be incomplete")
+        set (SOUFFLE_VERSION "")
+    endif()
 endif()
-
-string(REGEX REPLACE "\n$" "" PACKAGE_VERSION "${GIT_PACKAGE_VERSION}")
-message(STATUS "Building souffle version ${PACKAGE_VERSION}")
-
-# SOUFFLE_VERSION only includes the major/minor triplet
-string(REGEX REPLACE "-.*$" "" SOUFFLE_VERSION "${PACKAGE_VERSION}")
 
 project(souffle VERSION "${SOUFFLE_VERSION}"
                 DESCRIPTION "A datalog compiler"
