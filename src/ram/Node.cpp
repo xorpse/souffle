@@ -14,8 +14,6 @@
  *
  ***********************************************************************/
 
-#pragma once
-
 #include "ram/Node.h"
 #include <cassert>
 #include <functional>
