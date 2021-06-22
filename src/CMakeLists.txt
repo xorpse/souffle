@@ -126,6 +126,7 @@ set(SOUFFLE_SOURCES
     parser/ParserDriver.cpp
     parser/ParserUtils.cpp
     parser/SrcLocation.cpp
+    ram/Node.cpp
     ram/analysis/Complexity.cpp
     ram/analysis/Index.cpp
     ram/analysis/Level.cpp
