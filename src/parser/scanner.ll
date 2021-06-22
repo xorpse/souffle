@@ -197,8 +197,38 @@ WS [ \t\r\v\f]
                                         return yy::parser::make_IDENT(yytext, yylloc);
                                       }
 \"(\\.|[^"\\])*\"                     {
-                                        yytext[strlen(yytext)-1]=0;
-                                        return yy::parser::make_STRING(&yytext[1], yylloc);
+                                        std::string result;
+                                        size_t end = strlen(yytext) - 1;
+                                        bool error = false;
+                                        char error_char;
+                                        for (size_t i = 1; i < end; i++) {
+                                            if (yytext[i] == '\\' && i + 1 < end) {
+                                                switch (yytext[i+1]) {
+                                                    case '"':  result += '"'; break;
+                                                    case '\'': result += '\''; break;
+                                                    case '\\': result += '\\'; break;
+                                                    case 'a':  result += '\a'; break;
+                                                    case 'b':  result += '\b'; break;
+                                                    case 'f':  result += '\f'; break;
+                                                    case 'n':  result += '\n'; break;
+                                                    case 'r':  result += '\r'; break;
+                                                    case 't':  result += '\t'; break;
+                                                    case 'v':  result += '\v'; break;
+                                                    default:
+                                                        error_char = yytext[i+1];
+                                                        error = true;
+                                                        break;
+                                                }
+                                                i++;
+                                            } else {
+                                                result += yytext[i];
+                                            }
+                                            if (error) {
+                                                break;
+                                            }
+                                        }
+                                        if (error) driver.error(yylloc, std::string("Unknown escape sequence \\") + error_char);
+                                        return yy::parser::make_STRING(result, yylloc);
                                       }
 \#.*$                                 {
                                         char fname[yyleng+1];
