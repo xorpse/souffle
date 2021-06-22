@@ -949,18 +949,31 @@ std::vector<Clause*> getInlinedClause(Program& program, const Clause& clause) {
 
                 // Create the base clause with the current literal removed
                 auto baseClause = cloneHead(clause);
-                for (Literal* oldLit : bodyLiterals) {
-                    if (currLit != oldLit) {
-                        baseClause->addToBody(clone(oldLit));
-                    }
-                }
 
                 for (std::vector<Literal*> const& body : bodyVersions) {
                     auto replacementClause = clone(baseClause);
+                    // insert literals appearing before the one inlined
+                    for (Literal* oldLit : bodyLiterals) {
+                        if (currLit != oldLit) {
+                            replacementClause->addToBody(clone(oldLit));
+                        } else {
+                            break;
+                        }
+                    }
 
                     // Add in the current set of literals replacing the inlined literal
                     // In Case 2, each body contains exactly one literal
                     replacementClause->addToBody(VecOwn<Literal>(body.begin(), body.end()));
+
+                    // insert literals appearing after the one inlined
+                    bool seen = false;
+                    for (Literal* oldLit : bodyLiterals) {
+                        if (currLit != oldLit && seen) {
+                            replacementClause->addToBody(clone(oldLit));
+                        } else if (currLit == oldLit) {
+                            seen = true;
+                        }
+                    }
 
                     // FIXME: This is a horrible hack.  Should convert
                     // versions to hold Own<>
