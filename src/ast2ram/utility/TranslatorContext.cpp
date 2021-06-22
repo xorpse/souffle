@@ -61,7 +61,6 @@ TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
 
     // Set up clause nums
     for (const ast::Relation* rel : program->getRelations()) {
-        const auto& clauses = relationDetail->getClauses(rel->getQualifiedName());
         std::size_t count = 1;
         for (const ast::Clause* clause : relationDetail->getClauses(rel->getQualifiedName())) {
             if (isFact(*clause)) {
