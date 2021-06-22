@@ -90,14 +90,6 @@
 
     using yyscan_t = void*;
 
-    struct scanner_data {
-        SrcLocation yylloc;
-
-        /* Stack of parsed files */
-        std::string yyfilename;
-    };
-
-
     #define YY_NULLPTR nullptr
 
     /* Macro to update locations as parsing proceeds */

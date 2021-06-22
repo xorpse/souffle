@@ -14,7 +14,7 @@
  *
  ***********************************************************************/
 %option reentrant
-%option extra-type="struct scanner_data *"
+%option extra-type="struct ScannerInfo *"
 %{
 
 #if defined(__clang__)
