@@ -79,7 +79,8 @@ public:
     }
 };
 
-struct scanner_data {
+/** Information struct for scanner */
+struct ScannerInfo {
     SrcLocation yylloc;
 
     /* Stack of parsed files */
