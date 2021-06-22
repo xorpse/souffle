@@ -150,7 +150,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::ExistenceCheck>, const ram::Exi
             isTotal = false;
         }
     }
-    auto ramRelation = lookup(exists.getRelation());
+    const auto& ramRelation = lookup(exists.getRelation());
     NodeType type = constructNodeType("ExistenceCheck", ramRelation);
     return mk<ExistenceCheck>(type, &exists, isTotal, encodeView(&exists), std::move(superOp),
             ramRelation.isTemp(), ramRelation.getName());
@@ -540,7 +540,7 @@ const ram::Relation& NodeGenerator::lookup(const std::string& relName) {
 }
 
 std::size_t NodeGenerator::getArity(const std::string& relName) {
-    auto rel = lookup(relName);
+    const auto& rel = lookup(relName);
     return rel.getArity();
 }
 

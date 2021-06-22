@@ -10,7 +10,7 @@
  *
  * @file Node.h
  *
- * Declaration of RAM node and mappers for RAM nodes
+ * Declaration of RAM node
  *
  ***********************************************************************/
 
@@ -36,10 +36,10 @@ class NodeMapper;
  */
 class Node {
 public:
-    /*
-     * @brief A virtual destructor for RAM nodes
-     */
+    Node() = default;
+    Node(Node const&) = delete;
     virtual ~Node() = default;
+    Node& operator=(Node const&) = delete;
 
     /**
      * @brief Equivalence check for two RAM nodes
@@ -68,19 +68,7 @@ public:
     /**
      * @brief Rewrite a child node
      */
-    virtual void rewrite(const Node* oldNode, Own<Node> newNode) {
-        assert(oldNode != nullptr && "old node is a null-pointer");
-        assert(newNode != nullptr && "new node is a null-pointer");
-        std::function<Own<Node>(Own<Node>)> rewriter = [&](Own<Node> node) -> Own<Node> {
-            if (oldNode == node.get()) {
-                return std::move(newNode);
-            } else {
-                node->apply(makeLambdaRamMapper(rewriter));
-                return node;
-            }
-        };
-        apply(makeLambdaRamMapper(rewriter));
-    };
+    virtual void rewrite(const Node* oldNode, Own<Node> newNode);
 
     /**
      * @brief Obtain list of all embedded child nodes
