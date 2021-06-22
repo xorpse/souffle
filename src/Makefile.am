@@ -331,6 +331,7 @@ souffle_sources = \
         ram/NestedIntrinsicOperator.h                      \
         ram/NestedOperation.h                              \
         ram/Node.h                                         \
+        ram/Node.cpp                                       \
         ram/NumericConstant.h                              \
         ram/Operation.h                                    \
         ram/PackRecord.h                                   \
