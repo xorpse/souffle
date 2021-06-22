@@ -79,4 +79,11 @@ public:
     }
 };
 
+struct scanner_data {
+    SrcLocation yylloc;
+
+    /* Stack of parsed files */
+    std::string yyfilename;
+};
+
 }  // end of namespace souffle
