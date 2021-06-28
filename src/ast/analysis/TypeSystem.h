@@ -94,7 +94,6 @@ protected:
     QualifiedName name;
 };
 
-
 /**
  * Constant Type Class
  *
