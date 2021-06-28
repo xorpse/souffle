@@ -94,30 +94,6 @@ protected:
     QualifiedName name;
 };
 
-/**
- * Primitive Type Class
- *
- * Primitive types in Souffle are the actual computational
- * domains. Currently, we have number, unsigned, float,
- * and symbol. This class are pre-built and are concrete
- * types in the RAM (not user-defined types).
- *
- * PrimitiveType = Number | Unsigned |
- *                 Float | Symbol
- */
-class PrimitiveType : public SubsetType {
-public:
-    void print(std::ostream& out) const override {
-        out << name;
-    }
-
-protected:
-    PrimitiveType(const TypeEnvironment& environment, const QualifiedName& name, const ConstantType& base)
-            : Type(environment, name), SubsetType(environment, name, base) {}
-
-private:
-    friend class TypeEnvironment;
-};
 
 /**
  * Constant Type Class
@@ -162,6 +138,31 @@ private:
 
     /** Base type */
     const Type& baseType;
+};
+
+/**
+ * Primitive Type Class
+ *
+ * Primitive types in Souffle are the actual computational
+ * domains. Currently, we have number, unsigned, float,
+ * and symbol. This class are pre-built and are concrete
+ * types in the RAM (not user-defined types).
+ *
+ * PrimitiveType = Number | Unsigned |
+ *                 Float | Symbol
+ */
+class PrimitiveType : public SubsetType {
+public:
+    void print(std::ostream& out) const override {
+        out << name;
+    }
+
+protected:
+    PrimitiveType(const TypeEnvironment& environment, const QualifiedName& name, const ConstantType& base)
+            : Type(environment, name), SubsetType(environment, name, base) {}
+
+private:
+    friend class TypeEnvironment;
 };
 
 /**
