@@ -297,3 +297,8 @@ if (SOUFFLE_ENABLE_TESTING)
     add_subdirectory(tests)
 endif()
 
+
+SET(CPACK_GENERATOR "DEB")
+SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Maintainer")
+INCLUDE(CPack)
+
