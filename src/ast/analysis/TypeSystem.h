@@ -87,7 +87,7 @@ protected:
     Type(const TypeEnvironment& environment, QualifiedName name)
             : environment(environment), name(std::move(name)) {}
 
-    /** A reference to the type environment that the type is associated to. */
+    /** Type environment of type */
     const TypeEnvironment& environment;
 
     /** Qualified type name */
