@@ -43,8 +43,8 @@ class TypeEnvironment;
  * Abstract Type Class
  *
  * A type in Souffle can be either a primitive type,
- * a constant type, a union type, a subset type, a
- * union type, a record type, an algebraic data-type.
+ * a constant type, a subset type, a union type, a
+ * record type, an algebraic data-type.
  *
  * Type = PrimitiveType | ConstantType | SubsetType |
  *        UnionType | RecordType | AlgebraicDataType
