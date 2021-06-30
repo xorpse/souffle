@@ -138,18 +138,18 @@ TEMPLATE_TEST(PackUnpack, Vector, std::size_t VectorSize, VectorSize) {
 
 // special version of the test for vector of size 0
 SPECIALIZE_TEMPLATE_TEST(PackUnpack, Vector, 0) {
-  RecordTable recordTable;
+    RecordTable recordTable;
 
-  std::vector<RamDomain> toPack(0);
+    std::vector<RamDomain> toPack(0);
 
-  RamDomain tupleRef = recordTable.pack(toPack.data(), 0);
+    RamDomain tupleRef = recordTable.pack(toPack.data(), 0);
 
-  // empty record has reference 0
-  EXPECT_EQ(tupleRef, 1);
-  const RamDomain* unpacked{recordTable.unpack(tupleRef, 0)};
+    // empty record has reference 0
+    EXPECT_EQ(tupleRef, 1);
+    const RamDomain* unpacked{recordTable.unpack(tupleRef, 0)};
 
-  // unpacking empty record returns nullptr
-  EXPECT_EQ(unpacked, nullptr);
+    // unpacking empty record returns nullptr
+    EXPECT_EQ(unpacked, nullptr);
 }
 
 INSTANTIATE_TEMPLATE_TEST(PackUnpack, Vector, 0);
