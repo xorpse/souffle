@@ -164,5 +164,4 @@ INSTANTIATE_TEMPLATE_TEST(PackUnpack, Vector, 11);
 INSTANTIATE_TEMPLATE_TEST(PackUnpack, Vector, 23);
 INSTANTIATE_TEMPLATE_TEST(PackUnpack, Vector, 59);
 
-
 }  // namespace souffle::test
