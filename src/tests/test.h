@@ -168,7 +168,7 @@ public:
     }
 };
 
-#define PASTE(x, y) x ## y
+#define PASTE(x, y) x##y
 #define PASTE2(x, y) PASTE(x, y)
 
 #define TEST(a, b)                                                       \
@@ -193,8 +193,7 @@ public:
     template <>                           \
     void test_##a##_##b<P>::run()
 
-#define INSTANTIATE_TEMPLATE_TEST(a, b, V) \
-    test_##a##_##b<V> PASTE2(Test_##a##_##b##_, __LINE__)(#a, #b, #V)
+#define INSTANTIATE_TEMPLATE_TEST(a, b, V) test_##a##_##b<V> PASTE2(Test_##a##_##b##_, __LINE__)(#a, #b, #V)
 
 #define S(x) #x
 #define S_(x) S(x)
