@@ -19,7 +19,6 @@
 #include "souffle/RamTypes.h"
 #include "souffle/RecordTable.h"
 #include <algorithm>
-#include <execution>
 #include <functional>
 #include <iostream>
 #include <limits>
@@ -71,7 +70,7 @@ TEMPLATE_TEST(PackUnpack, Tuple, std::size_t TupleSize, TupleSize) {
 
     // Generate and pack the tuples
     for (std::size_t i = 0; i < NUMBER_OF_TESTS; ++i) {
-        std::generate(std::execution::seq, toPack[i].begin(), toPack[i].end(), rnd);
+        std::generate(toPack[i].begin(), toPack[i].end(), rnd);
         tupleRef[i] = pack(recordTable, toPack[i]);
         EXPECT_LT(0, tupleRef[i]);
     }
@@ -122,7 +121,7 @@ TEMPLATE_TEST(PackUnpack, Vector, std::size_t VectorSize, VectorSize) {
     // Generate and pack the tuples
     for (std::size_t i = 0; i < NUMBER_OF_TESTS; ++i) {
         toPack[i].resize(vectorSize);
-        std::generate(std::execution::seq, toPack[i].begin(), toPack[i].end(), rnd);
+        std::generate(toPack[i].begin(), toPack[i].end(), rnd);
         tupleRef[i] = recordTable.pack(toPack[i].data(), vectorSize);
         EXPECT_LT(0, tupleRef[i]);
     }
