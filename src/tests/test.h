@@ -168,6 +168,9 @@ public:
     }
 };
 
+#define PASTE(x, y) x##y
+#define PASTE2(x, y) PASTE(x, y)
+
 #define TEST(a, b)                                                       \
     class test_##a##_##b : public TestCase {                             \
     public:                                                              \
@@ -175,6 +178,22 @@ public:
         void run();                                                      \
     } Test_##a##_##b(#a, #b);                                            \
     void test_##a##_##b::run()
+
+#define TEMPLATE_TEST(a, b, Param, P)                                                       \
+    template <Param>                                                                        \
+    class test_##a##_##b : public TestCase {                                                \
+    public:                                                                                 \
+        test_##a##_##b(std::string g, std::string t, std::string k) : TestCase(g, t + k) {} \
+        void run();                                                                         \
+    };                                                                                      \
+    template <Param>                                                                        \
+    void test_##a##_##b<P>::run()
+
+#define SPECIALIZE_TEMPLATE_TEST(a, b, P) \
+    template <>                           \
+    void test_##a##_##b<P>::run()
+
+#define INSTANTIATE_TEMPLATE_TEST(a, b, V) test_##a##_##b<V> PASTE2(Test_##a##_##b##_, __LINE__)(#a, #b, #V)
 
 #define S(x) #x
 #define S_(x) S(x)
