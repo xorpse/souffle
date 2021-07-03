@@ -1,0 +1,29 @@
+name: GitHub Actions Demo
+on: [push]
+jobs:
+  Create-Packages:
+    matrix:
+      os: [ubuntu-latest]
+      domain: [32bit, 64bit]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+
+    - name: install-deps
+      run: sudo sh/setup/install_ubuntu_deps.sh
+
+    - name: setup-32bit-domain
+      if: ${{ matrix.domain == '32bit' }}
+      run: cmake -S . -B build
+
+    - name: setup-64bit-domain
+      if: ${{ matrix.domain == '64bit' }}
+      run: cmake -S . -B build -DSOUFFLE_DOMAIN_64BIT=ON
+
+    - name: package
+      run: cmake --build ./build --parallel 6 --target package
+
+    - name: check
+      run: cd build && ls -la
