@@ -1,10 +1,13 @@
-name: GitHub Actions Demo
+name: Create Packages
 on: [push]
+
 jobs:
   Create-Packages:
-    matrix:
-      os: [ubuntu-latest]
-      domain: [32bit, 64bit]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        domain: [32bit, 64bit]
     runs-on: ${{ matrix.os }}
 
     steps:
