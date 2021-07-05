@@ -6,30 +6,44 @@ jobs:
     strategy:
       fail-fast: false
 
-    # Ubuntu 20.04 64-bit
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
-    steps:
-    - name: checkout
+#    steps:
+#    - name: checkout
+#      uses: actions/checkout@v2
+#
+#    - name: install-deps
+#      run: sudo sh/setup/install_ubuntu_deps.sh
+#
+#    - name: setup-64bit-domain
+#      run: cmake -S . -B build -DSOUFFLE_DOMAIN_64BIT=ON
+#
+#    - name: package
+#      run: cmake --build ./build --parallel 6 --target package
+#
+#    - name: check
+#      run: cd build && ls -la
+#
+#    - name: Push to packagecloud.io
+#      uses: lpenz/ghaction-packagecloud@v0.3
+#      with:
+#        user: souffle-lang
+#        repository: souffle-test/ubuntu/hirsute
+#        directory: build
+#      env:
+#        PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
+
+
+    # To use this repository's private action, check out the repository
+    - name: Checkout
       uses: actions/checkout@v2
 
-    - name: install-deps
-      run: sudo sh/setup/install_ubuntu_deps.sh
-
-    - name: setup-64bit-domain
-      run: cmake -S . -B build -DSOUFFLE_DOMAIN_64BIT=ON
-
-    - name: package
-      run: cmake --build ./build --parallel 6 --target package
-
-    - name: check
-      run: cd build && ls -la
-
-    - name: Push to packagecloud.io
-      uses: lpenz/ghaction-packagecloud@v0.3
+    - name: Store GCC information in a file
+      # Private action is stored in the following directory
+      uses: ./.github/actions/create-package/ubuntu/21.04/64bit/
       with:
-        user: souffle-lang
-        repository: souffle-test/ubuntu/hirsute
-        directory: build
-      env:
-        PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
+        package_cloud_api_key: ${{ secrets.PACKAGECLOUD_TOKEN }}
+
+
+
+

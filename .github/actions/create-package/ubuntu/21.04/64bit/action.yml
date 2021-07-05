@@ -1,12 +1,12 @@
 name: Package for Ubuntu 21.04 64bit
 description: Package for Ubuntu 21.04 64bit
-# inputs:
-  # command:
-    # description: 'Command to run'
-    # required: true
-    # default: 'lsb_release -a'
+inputs:
+  package_cloud_api_key:
+    description: 'Package Cloud API Key'
+    required: true
+    default: ''
 runs:
   using: 'docker'
   image: 'Dockerfile'
-  # args:
-    # - ${{ inputs.command }}
+  args:
+    - ${{ inputs.package_cloud_api_key }}

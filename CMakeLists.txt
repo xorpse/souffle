@@ -333,9 +333,8 @@ SET(CPACK_THREADS 0)
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
 	get_linux_lsb_release_information()
     if (LSB_RELEASE_ID_SHORT MATCHES "Ubuntu")
-		# Generate both DEB and RPM packages
-		SET(CPACK_GENERATOR "DEB;RPM")
-		
+		# Generate just DEB
+		SET(CPACK_GENERATOR "DEB")
 		# --------------------------------------------------
 		# Variables relevent to DEB packages
 		# --------------------------------------------------
@@ -346,8 +345,13 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux")
 		# Auto-generate any runtime dependencies that are required
 		SET(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 
-		# Below is how you generate packages for different Debian architectures
+		# Architectures are actually auto-detected so no need to set this variable
 		# SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386")
+	endif()
+
+    if (LSB_RELEASE_ID_SHORT MATCHES "Fedora")
+		# Generate both DEB and RPM packages
+		SET(CPACK_GENERATOR "RPM")
 
 		# --------------------------------------------------
 		# Variables relevent to RPM packages
