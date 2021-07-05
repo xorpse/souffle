@@ -1,0 +1,12 @@
+name: Package for Ubuntu 21.04 64bit
+description: Package for Ubuntu 21.04 64bit
+# inputs:
+  # command:
+    # description: 'Command to run'
+    # required: true
+    # default: 'lsb_release -a'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  # args:
+    # - ${{ inputs.command }}
