@@ -1,16 +1,17 @@
 FROM ubuntu:21.04
 
+ARG DEBIAN_FRONTEND=noninteractive
+
 # Create a souffle directory
 WORKDIR /souffle
+
+# Install build dependencies
+RUN apt update && apt -y install sudo autoconf automake bison build-essential clang doxygen flex g++ git libffi-dev libncurses5-dev libtool libsqlite3-dev make mcpp python sqlite zlib1g-dev
 
 # Copy everything into souffle directory
 COPY . .
 
-# Get package manager ready
-RUN apt update && apt -y install sudo
-
 # Install dependencies to build souffle
-RUN sudo sh/setup/install_ubuntu_deps.sh
-
+# RUN sudo sh/setup/install_ubuntu_deps.sh
 
 ENTRYPOINT [".github/actions/create-package/entrypoint.sh"]
