@@ -33,16 +33,16 @@ jobs:
 #      env:
 #        PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
 
+    steps:
+      # To use this repository's private action, check out the repository
+      - name: Checkout
+        uses: actions/checkout@v2
 
-    # To use this repository's private action, check out the repository
-    - name: Checkout
-      uses: actions/checkout@v2
-
-    - name: Store GCC information in a file
-      # Private action is stored in the following directory
-      uses: ./.github/actions/create-package/ubuntu/21.04/64bit/
-      with:
-        package_cloud_api_key: ${{ secrets.PACKAGECLOUD_TOKEN }}
+      - name: Store GCC information in a file
+        # Private action is stored in the following directory
+        uses: ./.github/actions/create-package/ubuntu/21.04/64bit/
+        with:
+          package_cloud_api_key: ${{ secrets.PACKAGECLOUD_TOKEN }}
 
 
 
