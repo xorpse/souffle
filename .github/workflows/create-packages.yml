@@ -5,10 +5,9 @@ jobs:
   Create-Packages:
     strategy:
       fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-        domain: [32bit, 64bit]
-    runs-on: ${{ matrix.os }}
+
+    # Ubuntu 20.04 64-bit
+    runs-on: ubuntu-20.04
 
     steps:
     - name: checkout
@@ -17,12 +16,7 @@ jobs:
     - name: install-deps
       run: sudo sh/setup/install_ubuntu_deps.sh
 
-    - name: setup-32bit-domain
-      if: ${{ matrix.domain == '32bit' }}
-      run: cmake -S . -B build
-
     - name: setup-64bit-domain
-      if: ${{ matrix.domain == '64bit' }}
       run: cmake -S . -B build -DSOUFFLE_DOMAIN_64BIT=ON
 
     - name: package
@@ -30,3 +24,12 @@ jobs:
 
     - name: check
       run: cd build && ls -la
+
+    - name: Push to packagecloud.io
+      uses: lpenz/ghaction-packagecloud@v0.3
+      with:
+        user: souffle-lang
+        repository: souffle-test/ubuntu/hirsute
+        directory: build
+      env:
+        PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
