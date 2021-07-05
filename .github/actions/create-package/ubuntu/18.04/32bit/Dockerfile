@@ -12,7 +12,7 @@ RUN apt update && apt -y install sudo autoconf automake bison build-essential cl
 RUN apt -y install lsb-release
 
 # Install dependencies for packagecloud CLI
-RUN apt-get install ruby-full
+RUN apt-get -y install ruby-full
 RUN gem install package_cloud
 
 # Copy everything into souffle directory
