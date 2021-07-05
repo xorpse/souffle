@@ -13,7 +13,7 @@ FROM i386/ubuntu:18.04
 
 RUN apt update
 # Install dependencies for packagecloud CLI
-RUN apt -y install ruby-full
+RUN apt -y install ruby-full sudo
 RUN gem update --system
 RUN sudo gem install package_cloud
 

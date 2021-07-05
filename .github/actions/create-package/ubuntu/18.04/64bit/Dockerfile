@@ -12,7 +12,7 @@ FROM ubuntu:18.04
 # RUN apt -y install lsb-release
 RUN apt update
 # Install dependencies for packagecloud CLI
-RUN apt -y install ruby-full ruby-dev
+RUN apt -y install ruby-full ruby-dev sudo
 RUN gem update --system
 RUN sudo gem install package_cloud
 
