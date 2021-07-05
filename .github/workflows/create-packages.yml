@@ -2,7 +2,7 @@ name: Create Packages
 on: [push]
 
 jobs:
-  Package-Ubuntu-21.04-64bit:
+  Package-Ubuntu-2104-64bit:
     strategy:
       fail-fast: false
 
@@ -18,7 +18,7 @@ jobs:
         with:
           package_cloud_api_key: ${{ secrets.PACKAGECLOUD_TOKEN }}
 
-  Package-Ubuntu-18.04-64bit:
+  Package-Ubuntu-1804-64bit:
     strategy:
       fail-fast: false
 
@@ -34,7 +34,7 @@ jobs:
         with:
           package_cloud_api_key: ${{ secrets.packagecloud_token }}
 
-  Package-Ubuntu-18.04-32bit:
+  Package-Ubuntu-1804-32bit:
     strategy:
       fail-fast: false
 
