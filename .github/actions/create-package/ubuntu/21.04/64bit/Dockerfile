@@ -21,4 +21,4 @@ COPY . .
 # Install dependencies to build souffle
 # RUN sudo sh/setup/install_ubuntu_deps.sh
 
-ENTRYPOINT [".github/actions/create-package/entrypoint.sh"]
+ENTRYPOINT [".github/actions/create-package/ubuntu/21.04/64bit/entrypoint.sh"]

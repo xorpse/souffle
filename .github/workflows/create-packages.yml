@@ -38,7 +38,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Store GCC information in a file
+      - name: Package souffle
         # Private action is stored in the following directory
         uses: ./.github/actions/create-package/ubuntu/21.04/64bit/
         with:
