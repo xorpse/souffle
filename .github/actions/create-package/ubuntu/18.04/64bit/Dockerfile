@@ -10,7 +10,7 @@ FROM ubuntu:18.04
 #
 # # For CMakeLists.txt to figure out the specific version of Ubuntu
 # RUN apt -y install lsb-release
-
+RUN apt update
 # Install dependencies for packagecloud CLI
 RUN apt -y install ruby-full ruby-dev
 RUN gem update --system
