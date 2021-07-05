@@ -13,7 +13,9 @@ RUN apt -y install lsb-release
 
 # Install dependencies for packagecloud CLI
 RUN apt -y install ruby-full ruby-dev
-RUN sudo gem install package_cloud
+RUN gem install bundler
+RUN bundle update rake
+RUN gem install package_cloud
 
 # Copy everything into souffle directory
 COPY . .
