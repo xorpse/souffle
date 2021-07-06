@@ -13,6 +13,11 @@ ARG DEBIAN_FRONTEND=noninteractive
 # Create a souffle directory
 WORKDIR /souffle
 
+# Makes sure we are installing the latest version of CMake
+RUN apt update && \
+	apt -y install gpg wget && \
+	echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ bionic main' | sudo tee /etc/apt/sources.list.d/kitware.list >/dev/null
+
 # Install souffle build dependencies
 RUN apt update && apt -y install sudo autoconf automake bison build-essential clang doxygen flex g++ git libffi-dev libncurses5-dev libtool libsqlite3-dev make mcpp python sqlite zlib1g-dev cmake
 
