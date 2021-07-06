@@ -23,7 +23,7 @@ RUN apt -y install lsb-release
 COPY --from=ruby-img /usr/local/bundle/bin/package_cloud /usr/local/bin
 
 # Copy everything into souffle directory
-COPY . .
+COPY --from=ruby-img /souffle .
 
 # Install dependencies to build souffle
 # RUN sudo sh/setup/install_ubuntu_deps.sh
