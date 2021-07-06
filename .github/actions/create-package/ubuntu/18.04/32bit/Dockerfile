@@ -1,3 +1,7 @@
+# --------------------------------------------------
+# Installing ruby for packagecloud
+# --------------------------------------------------
+
 FROM ruby:latest AS ruby-img
 
 RUN gem install package_cloud
