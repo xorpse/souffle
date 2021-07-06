@@ -1,4 +1,4 @@
-FROM ruby:latest AS ruby
+FROM ruby:latest AS ruby-img
 
 RUN gem install package_cloud
 
@@ -20,10 +20,10 @@ RUN apt update && apt -y install sudo autoconf automake bison build-essential cl
 RUN apt -y install lsb-release
 
 # Get package cloud CLI tool
-COPY --from=ruby /usr/local/bundle/bin/package_cloud /usr/local/bin
+COPY --from=ruby-img /usr/local/bundle/bin/package_cloud /usr/local/bin
 
 # Copy everything into souffle directory
-COPY --from=ruby /souffle/* ./
+COPY . .
 
 # Install dependencies to build souffle
 # RUN sudo sh/setup/install_ubuntu_deps.sh
