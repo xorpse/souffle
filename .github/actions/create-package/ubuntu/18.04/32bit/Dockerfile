@@ -18,6 +18,7 @@ WORKDIR /souffle
 
 # Makes sure we are installing the latest version of CMake
 RUN apt update && \
+	apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DE19EB17684BA42D && \
 	apt -y install gpg wget sudo && \
 	echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ bionic main' | sudo tee /etc/apt/sources.list.d/kitware.list >/dev/null
 
