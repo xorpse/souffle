@@ -6,6 +6,9 @@ WORKDIR /souffle
 
 COPY . .
 
+# --------------------------------------------------
+# CPack configuration
+# --------------------------------------------------
 FROM i386/ubuntu:18.04
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -15,11 +18,12 @@ WORKDIR /souffle
 
 # Makes sure we are installing the latest version of CMake
 RUN apt update && \
-	apt -y install gpg wget && \
+	apt -y install gpg wget sudo && \
 	echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ bionic main' | sudo tee /etc/apt/sources.list.d/kitware.list >/dev/null
 
 # Install souffle build dependencies
-RUN apt update && apt -y install sudo autoconf automake bison build-essential clang doxygen flex g++ git libffi-dev libncurses5-dev libtool libsqlite3-dev make mcpp python sqlite zlib1g-dev cmake
+RUN apt update && \
+	apt -y install autoconf automake bison build-essential clang doxygen flex g++ git libffi-dev libncurses5-dev libtool libsqlite3-dev make mcpp python sqlite zlib1g-dev cmake
 
 # For CMakeLists.txt to figure out the specific version of Ubuntu
 RUN apt -y install lsb-release
