@@ -1,11 +1,10 @@
 FROM ruby:latest AS ruby
 
+RUN gem install package_cloud
+
 WORKDIR /souffle
 
 COPY . .
-
-RUN gem install package_cloud
-
 
 FROM i386/ubuntu:18.04
 
@@ -24,7 +23,7 @@ RUN apt -y install lsb-release
 COPY --from=ruby /usr/local/bundle/bin/package_cloud /usr/local/bin
 
 # Copy everything into souffle directory
-COPY --from=ruby /souffle .
+COPY --from=ruby /souffle/* .
 
 # Install dependencies to build souffle
 # RUN sudo sh/setup/install_ubuntu_deps.sh
