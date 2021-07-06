@@ -1,3 +1,7 @@
+FROM ruby:latest
+
+RUN gem install package_cloud
+
 FROM ubuntu:18.04
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -11,10 +15,8 @@ RUN apt update && apt -y install sudo autoconf automake bison build-essential cl
 # For CMakeLists.txt to figure out the specific version of Ubuntu
 RUN apt -y install lsb-release
 
-# Install dependencies for packagecloud CLI
-RUN apt -y install ruby-full
-RUN sudo apt-get -y install ruby-all-dev
-RUN sudo gem install package_cloud -v 0.2.45
+# Get package cloud CLI tool
+COPY --from=0 /usr/local/bundle/bin/package_cloud /usr/local/bin
 
 # Copy everything into souffle directory
 COPY . .
