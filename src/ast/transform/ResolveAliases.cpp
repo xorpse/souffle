@@ -501,8 +501,12 @@ bool ResolveAliasesTransformer::transform(TranslationUnit& translationUnit) {
     // get all clauses
     std::vector<const Clause*> clauses;
     visit(program, [&](const Relation& rel) {
-        for (const auto& clause : getClauses(program, rel)) {
-            clauses.push_back(clause);
+        const auto& qualifiers = rel.getQualifiers();
+        // Don't resolve clauses of inlined relations
+        if (qualifiers.count(RelationQualifier::INLINE) == 0) {
+            for (const auto& clause : getClauses(program, rel)) {
+                clauses.push_back(clause);
+            }
         }
     });
 
