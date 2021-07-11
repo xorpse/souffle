@@ -216,7 +216,7 @@ endif()
 # --------------------------------------------------
 # Thread Sanitiser
 # --------------------------------------------------
-if (SOUFFLE_SANITISE_MEMORY)
+if (SOUFFLE_SANITISE_THREAD)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=thread")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
 endif()
@@ -296,4 +296,3 @@ add_subdirectory(src)
 if (SOUFFLE_ENABLE_TESTING)
     add_subdirectory(tests)
 endif()
-
