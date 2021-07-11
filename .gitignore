@@ -42,6 +42,8 @@ doc
 .DS_Store
 
 .vscode
+# cmake generated file used by various tools
+/compile_commands.json
 
 stamp-h1
 
