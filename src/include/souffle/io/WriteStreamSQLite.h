@@ -15,6 +15,7 @@
 #pragma once
 
 #include "souffle/RamTypes.h"
+#include "souffle/RecordTable.h"
 #include "souffle/SymbolTable.h"
 #include "souffle/io/WriteStream.h"
 #include <cassert>
@@ -30,8 +31,6 @@
 #include <sqlite3.h>
 
 namespace souffle {
-
-class RecordTable;
 
 class WriteStreamSQLite : public WriteStream {
 public:
@@ -103,7 +102,7 @@ private:
     }
 
     uint64_t getSymbolTableIDFromDB(int index) {
-        if (sqlite3_bind_text(symbolSelectStatement, 1, symbolTable.unsafeDecode(index).c_str(), -1,
+        if (sqlite3_bind_text(symbolSelectStatement, 1, symbolTable.decode(index).c_str(), -1,
                     SQLITE_TRANSIENT) != SQLITE_OK) {
             throwError("SQLite error in sqlite3_bind_text: ");
         }
@@ -120,7 +119,7 @@ private:
             return dbSymbolTable[index];
         }
 
-        if (sqlite3_bind_text(symbolInsertStatement, 1, symbolTable.unsafeDecode(index).c_str(), -1,
+        if (sqlite3_bind_text(symbolInsertStatement, 1, symbolTable.decode(index).c_str(), -1,
                     SQLITE_TRANSIENT) != SQLITE_OK) {
             throwError("SQLite error in sqlite3_bind_text: ");
         }

@@ -44,8 +44,6 @@ public:
         if (summary) {
             return writeSize(relation.size());
         }
-        auto lease = symbolTable.acquireLock();
-        (void)lease;  // silence "unused variable" warning
         if (arity == 0) {
             if (relation.begin() != relation.end()) {
                 writeNullary();
@@ -113,7 +111,7 @@ protected:
                 case 'i': destination << recordValue; break;
                 case 'f': destination << ramBitCast<RamFloat>(recordValue); break;
                 case 'u': destination << ramBitCast<RamUnsigned>(recordValue); break;
-                case 's': outputSymbol(destination, symbolTable.unsafeDecode(recordValue)); break;
+                case 's': outputSymbol(destination, symbolTable.decode(recordValue)); break;
                 case 'r': outputRecord(destination, recordValue, recordType); break;
                 case '+': outputADT(destination, recordValue, recordType); break;
                 default: fatal("Unsupported type attribute: `%c`", recordType[0]);
@@ -178,7 +176,7 @@ protected:
                 case 'i': destination << branchArgs[i]; break;
                 case 'f': destination << ramBitCast<RamFloat>(branchArgs[i]); break;
                 case 'u': destination << ramBitCast<RamUnsigned>(branchArgs[i]); break;
-                case 's': outputSymbol(destination, symbolTable.unsafeDecode(branchArgs[i])); break;
+                case 's': outputSymbol(destination, symbolTable.decode(branchArgs[i])); break;
                 case 'r': outputRecord(destination, branchArgs[i], argType); break;
                 case '+': outputADT(destination, branchArgs[i], argType); break;
                 default: fatal("Unsupported type attribute: `%c`", argType[0]);

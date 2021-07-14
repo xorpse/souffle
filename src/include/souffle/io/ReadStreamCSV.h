@@ -15,6 +15,7 @@
 #pragma once
 
 #include "souffle/RamTypes.h"
+#include "souffle/RecordTable.h"
 #include "souffle/SymbolTable.h"
 #include "souffle/io/ReadStream.h"
 #include "souffle/utility/ContainerUtil.h"
@@ -40,7 +41,6 @@
 #include <vector>
 
 namespace souffle {
-class RecordTable;
 
 class ReadStreamCSV : public ReadStream {
 public:
@@ -99,7 +99,7 @@ protected:
                 auto&& ty = typeAttributes.at(inputMap[column]);
                 switch (ty[0]) {
                     case 's': {
-                        tuple[inputMap[column]] = symbolTable.unsafeEncode(element);
+                        tuple[inputMap[column]] = symbolTable.encode(element);
                         charactersRead = element.size();
                         break;
                     }

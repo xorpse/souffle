@@ -17,6 +17,7 @@
 #pragma once
 
 #include "souffle/RamTypes.h"
+#include "souffle/datastructure/ConcurrentFlyweight.hpp"
 #include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/ParallelUtil.h"
 #include "souffle/utility/StreamUtil.h"
@@ -32,98 +33,54 @@
 
 namespace souffle {
 
-/**
- * @class SymbolTable
- *
- * SymbolTable encodes symbols to numbers and decodes numbers to symbols.
- */
-class SymbolTable {
+class SymbolTable : protected FlyweightImpl<std::string> {
 private:
-    /** A lock to synchronize parallel accesses */
-    mutable Lock access;
-
-    /** Stores symbol indices to symbols information */
-    std::deque<std::string> numToStr;
-
-    /** Stores symbols to symbol indices information */
-    std::unordered_map<std::string, std::size_t> strToNum;
-
-    /** Convenience method to place a new symbol in the table, if it does not exist, and return the index of
-     * it; otherwise return the index. */
-    inline std::size_t newSymbolOfIndex(const std::string& symbol) {
-        std::size_t index;
-        auto it = strToNum.find(symbol);
-        if (it == strToNum.end()) {
-            index = numToStr.size();
-            strToNum[symbol] = index;
-            numToStr.push_back(symbol);
-        } else {
-            index = it->second;
-        }
-        return index;
-    }
+    using Base = FlyweightImpl<std::string>;
 
 public:
+    using iterator = typename Base::iterator;
+
     SymbolTable() = default;
-    SymbolTable(std::initializer_list<std::string> symbols) {
-        strToNum.reserve(symbols.size());
+
+    SymbolTable(std::initializer_list<std::string> symbols) : Base(symbols.size()) {
         for (const auto& symbol : symbols) {
-            if (strToNum.find(symbol) == strToNum.end()) {
-                strToNum[symbol] = numToStr.size();
-                numToStr.push_back(symbol);
-            }
+            findOrInsert(symbol);
         }
     }
 
-    virtual ~SymbolTable() = default;
-
-    /* Obtain the size of the symbol table. */
-    std::size_t size() const {
-        return numToStr.size();
+    iterator begin() const {
+        return Base::begin();
     }
 
-    /** Encode a symbol to a symbol index; this method is thread-safe.  */
+    iterator end() const {
+        return Base::end();
+    }
+
+    bool weakContains(const std::string& symbol) const {
+        return Base::weakContains(symbol);
+    }
+
     RamDomain encode(const std::string& symbol) {
-        {
-            auto lease = access.acquire();
-            (void)lease;  // avoid warning;
-            return static_cast<RamDomain>(newSymbolOfIndex(symbol));
-        }
+        return Base::findOrInsert(symbol).first;
     }
 
-    /** Decode a symbol index to a symbol; this method is thread-safe.  */
     const std::string& decode(const RamDomain index) const {
-        {
-            auto lease = access.acquire();
-            (void)lease;  // avoid warning;
-            auto pos = static_cast<std::size_t>(index);
-            if (pos >= size()) {
-                // TODO: use different error reporting here!!
-                fatal("Error index out of bounds in call to `SymbolTable::decode`. index = `%d`", index);
-            }
-            return numToStr[pos];
-        }
+        return Base::fetch(index);
     }
 
-    /** Acquire symbol table lock */
-    Lock::Lease acquireLock() const {
-        return access.acquire();
-    }
-
-    /**
-     * Encode a symbol to a symbol index; this method is not thread-safe.
-     * The lock must be acquired explicitly.
-     */
+    /// Kept for API compatibility.
     RamDomain unsafeEncode(const std::string& symbol) {
-        return static_cast<RamDomain>(newSymbolOfIndex(symbol));
+        return encode(symbol);
     }
 
-    /**
-     * Decode an symbol index to symbol; this method is not thread-safe.
-     * The lock must be acquired explicitly.
-     */
+    /// Kept for API compatibility.
     const std::string& unsafeDecode(const RamDomain index) const {
-        return numToStr[static_cast<std::size_t>(index)];
+        return decode(index);
+    }
+
+    std::pair<RamDomain, bool> findOrInsert(const std::string& symbol) {
+        auto Res = Base::findOrInsert(symbol);
+        return std::make_pair(Res.first, Res.second);
     }
 };
 

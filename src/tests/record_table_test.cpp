@@ -33,7 +33,7 @@ namespace souffle::test {
 #define NUMBER_OF_TESTS 100
 
 TEST(Pack, Tuple) {
-    RecordTable recordTable;
+    SpecializedRecordTable<3> recordTable;
     const Tuple<RamDomain, 3> tuple = {{1, 2, 3}};
 
     RamDomain ref = pack(recordTable, tuple);
@@ -52,7 +52,7 @@ TEMPLATE_TEST(PackUnpack, Tuple, std::size_t TupleSize, TupleSize) {
     using tupleType = Tuple<RamDomain, TupleSize>;
     constexpr std::size_t tupleSize = TupleSize;
 
-    RecordTable recordTable;
+    SpecializedRecordTable<3> recordTable;
 
     // Setup random number generation
     std::default_random_engine randomGenerator(3);
@@ -110,7 +110,7 @@ TEMPLATE_TEST(PackUnpack, Vector, std::size_t VectorSize, VectorSize) {
     auto random = std::bind(distribution, randomGenerator);
     auto rnd = [&]() { return random(); };
 
-    RecordTable recordTable;
+    SpecializedRecordTable<VectorSize> recordTable;
 
     // Tuples that will be packed
     std::vector<std::vector<RamDomain>> toPack(NUMBER_OF_TESTS);
@@ -137,13 +137,13 @@ TEMPLATE_TEST(PackUnpack, Vector, std::size_t VectorSize, VectorSize) {
 
 // special version of the test for vector of size 0
 SPECIALIZE_TEMPLATE_TEST(PackUnpack, Vector, 0) {
-    RecordTable recordTable;
+    SpecializedRecordTable<0> recordTable;
 
     std::vector<RamDomain> toPack(0);
 
     RamDomain tupleRef = recordTable.pack(toPack.data(), 0);
 
-    // empty record has reference 0
+    // empty record has reference 1
     EXPECT_EQ(tupleRef, 1);
     const RamDomain* unpacked{recordTable.unpack(tupleRef, 0)};
 

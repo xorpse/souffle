@@ -41,7 +41,11 @@ TEST(SymbolTable, Basics) {
 
 TEST(SymbolTable, Inserts) {
     SymbolTable X({"A", "B", "C", "D"});
-    EXPECT_EQ(X.size(), 4);
+    std::vector<std::string> V;
+    for (const auto& It : X) {
+        V.push_back(It.first);
+    }
+    EXPECT_EQ(V.size(), 4);
 }
 
 }  // namespace souffle::test

@@ -15,6 +15,7 @@
 #pragma once
 
 #include "souffle/RamTypes.h"
+#include "souffle/RecordTable.h"
 #include "souffle/SymbolTable.h"
 #include "souffle/io/ReadStream.h"
 #include "souffle/utility/ContainerUtil.h"
@@ -37,7 +38,6 @@
 #include <vector>
 
 namespace souffle {
-class RecordTable;
 
 template <typename... T>
 [[noreturn]] static void throwError(T const&... t) {
@@ -123,7 +123,7 @@ protected:
                 auto&& ty = typeAttributes.at(i);
                 switch (ty[0]) {
                     case 's': {
-                        tuple[i] = symbolTable.unsafeEncode(jsonObj[i].string_value());
+                        tuple[i] = symbolTable.encode(jsonObj[i].string_value());
                         break;
                     }
                     case 'r': {
@@ -178,7 +178,7 @@ protected:
             const std::string& recordType = recordTypes[i].string_value();
             switch (recordType[0]) {
                 case 's': {
-                    recordValues[i] = symbolTable.unsafeEncode(source[i].string_value());
+                    recordValues[i] = symbolTable.encode(source[i].string_value());
                     break;
                 }
                 case 'r': {
@@ -223,7 +223,7 @@ protected:
                 auto&& ty = typeAttributes.at(i);
                 switch (ty[0]) {
                     case 's': {
-                        tuple[i] = symbolTable.unsafeEncode(p.second.string_value());
+                        tuple[i] = symbolTable.encode(p.second.string_value());
                         break;
                     }
                     case 'r': {
@@ -288,7 +288,7 @@ protected:
             auto&& type = recordTypes[i].string_value();
             switch (type[0]) {
                 case 's': {
-                    recordValues[i] = symbolTable.unsafeEncode(readParam.second.string_value());
+                    recordValues[i] = symbolTable.encode(readParam.second.string_value());
                     break;
                 }
                 case 'r': {

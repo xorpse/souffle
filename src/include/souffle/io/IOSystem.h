@@ -15,6 +15,7 @@
 #pragma once
 
 #include "souffle/RamTypes.h"
+#include "souffle/RecordTable.h"
 #include "souffle/SymbolTable.h"
 #include "souffle/io/ReadStream.h"
 #include "souffle/io/ReadStreamCSV.h"
@@ -34,7 +35,6 @@
 #include <string>
 
 namespace souffle {
-class RecordTable;
 
 class IOSystem {
 public:

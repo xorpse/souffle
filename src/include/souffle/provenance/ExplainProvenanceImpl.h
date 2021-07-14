@@ -741,14 +741,11 @@ private:
             "=", "!=", "<", "<=", ">=", ">", "match", "contains", "not_match", "not_contains"};
 
     RamDomain lookupExisting(const std::string& symbol) {
-        // only works if run sequentially; check size of symbole
-        std::size_t before = symTable.size();
-        RamDomain idx = symTable.encode(symbol);
-        std::size_t after = symTable.size();
-        if (before != after) {
-            fatal("Error string not found in call to `SymbolTable::encode`: `%s`", symbol);
+        auto Res = symTable.findOrInsert(symbol);
+        if (Res.second) {
+            fatal("Error string did not exist before call to `SymbolTable::findOrInsert`: `%s`", symbol);
         }
-        return idx;
+        return Res.first;
     }
 
     std::tuple<int, int> findTuple(const std::string& relName, std::vector<RamDomain> tup) {

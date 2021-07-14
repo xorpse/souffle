@@ -15,6 +15,7 @@
 #pragma once
 
 #include "souffle/RamTypes.h"
+#include "souffle/RecordTable.h"
 #include "souffle/SymbolTable.h"
 #include "souffle/io/ReadStream.h"
 #include "souffle/utility/MiscUtil.h"
@@ -30,7 +31,6 @@
 #include <sqlite3.h>
 
 namespace souffle {
-class RecordTable;
 
 class ReadStreamSQLite : public ReadStream {
 public:
@@ -73,7 +73,7 @@ protected:
             try {
                 auto&& ty = typeAttributes.at(column);
                 switch (ty[0]) {
-                    case 's': tuple[column] = symbolTable.unsafeEncode(element); break;
+                    case 's': tuple[column] = symbolTable.encode(element); break;
                     case 'i':
                     case 'u':
                     case 'f':

@@ -2452,6 +2452,7 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     // declare record table
     os << "// -- initialize record table --\n";
 
+    // TODO use SpecializedRecordTable<some arities>
     os << "RecordTable recordTable;"
        << "\n";
 
