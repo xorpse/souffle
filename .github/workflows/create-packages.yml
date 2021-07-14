@@ -34,35 +34,52 @@ jobs:
         with:
           package_cloud_api_key: ${{ secrets.PACKAGECLOUD_TOKEN }}
 
-  Package-Ubuntu-1804-64bit:
+  Package-Fedora-34-64bit:
     strategy:
       fail-fast: false
 
     runs-on: ubuntu-latest
     steps:
-      # to use this repository's private action, check out the repository
-      - name: checkout
+      # To use this repository's private action, check out the repository
+      - name: Checkout
         uses: actions/checkout@v2
 
-      - name: package souffle
-        # private action is stored in the following directory
-        uses: ./.github/actions/create-package/ubuntu/18.04/64bit/
+      - name: Package souffle
+        # Private action is stored in the following directory
+        uses: ./.github/actions/create-package/fedora/34/64bit/
         with:
-          package_cloud_api_key: ${{ secrets.packagecloud_token }}
+          package_cloud_api_key: ${{ secrets.PACKAGECLOUD_TOKEN }}
 
-  Package-Ubuntu-1804-32bit:
-    strategy:
-      fail-fast: false
-
-    runs-on: ubuntu-latest
-    steps:
-      # to use this repository's private action, check out the repository
-      - name: checkout
-        uses: actions/checkout@v2
-
-      - name: package souffle
-        # private action is stored in the following directory
-        uses: ./.github/actions/create-package/ubuntu/18.04/32bit/
-        with:
-          package_cloud_api_key: ${{ secrets.packagecloud_token }}
-
+#   Package-Ubuntu-1804-64bit:
+#     strategy:
+#       fail-fast: false
+#
+#     runs-on: ubuntu-latest
+#     steps:
+#       # to use this repository's private action, check out the repository
+#       - name: checkout
+#         uses: actions/checkout@v2
+#
+#       - name: package souffle
+#         # private action is stored in the following directory
+#         uses: ./.github/actions/create-package/ubuntu/18.04/64bit/
+#         with:
+#           package_cloud_api_key: ${{ secrets.packagecloud_token }}
+#
+#   Package-Ubuntu-1804-32bit:
+#     strategy:
+#       fail-fast: false
+#
+#     runs-on: ubuntu-latest
+#     steps:
+#       # to use this repository's private action, check out the repository
+#       - name: checkout
+#         uses: actions/checkout@v2
+#
+#       - name: package souffle
+#         # private action is stored in the following directory
+#         uses: ./.github/actions/create-package/ubuntu/18.04/32bit/
+#         with:
+#           package_cloud_api_key: ${{ secrets.packagecloud_token }}
+#
+#

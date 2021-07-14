@@ -25,4 +25,4 @@ ENV ARCHITECTURE "64bit"
 ENV PKG_EXTENSION ".deb"
 ENV PKG_CLOUD_OS_NAME "ubuntu/focal"
 
-CMD [".github/actions/create-package/entrypoint.sh"]
+ENTRYPOINT [".github/actions/create-package/entrypoint.sh"]
