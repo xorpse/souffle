@@ -11,7 +11,8 @@ jobs:
       # To use this repository's private action, check out the repository
       - name: Checkout
         uses: actions/checkout@v2
-
+        with:
+          fetch-depth: 0
       - name: Package souffle
         # Private action is stored in the following directory
         uses: ./.github/actions/create-package/ubuntu/21.04/64bit/
@@ -27,7 +28,8 @@ jobs:
       # To use this repository's private action, check out the repository
       - name: Checkout
         uses: actions/checkout@v2
-
+        with:
+          fetch-depth: 0
       - name: Package souffle
         # Private action is stored in the following directory
         uses: ./.github/actions/create-package/ubuntu/20.04/64bit/
@@ -43,7 +45,8 @@ jobs:
       # To use this repository's private action, check out the repository
       - name: Checkout
         uses: actions/checkout@v2
-
+        with:
+          fetch-depth: 0
       - name: Package souffle
         # Private action is stored in the following directory
         uses: ./.github/actions/create-package/fedora/34/64bit/
