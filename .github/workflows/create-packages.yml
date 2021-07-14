@@ -2,21 +2,37 @@ name: Create Packages
 on: [push]
 
 jobs:
-#  Package-Ubuntu-2104-64bit:
-#    strategy:
-#      fail-fast: false
-#
-#    runs-on: ubuntu-latest
-#    steps:
-#      # To use this repository's private action, check out the repository
-#      - name: Checkout
-#        uses: actions/checkout@v2
-#
-#      - name: Package souffle
-#        # Private action is stored in the following directory
-#        uses: ./.github/actions/create-package/ubuntu/21.04/64bit/
-#        with:
-#          package_cloud_api_key: ${{ secrets.PACKAGECLOUD_TOKEN }}
+  Package-Ubuntu-2104-64bit:
+    strategy:
+      fail-fast: false
+
+    runs-on: ubuntu-latest
+    steps:
+      # To use this repository's private action, check out the repository
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Package souffle
+        # Private action is stored in the following directory
+        uses: ./.github/actions/create-package/ubuntu/21.04/64bit/
+        with:
+          package_cloud_api_key: ${{ secrets.PACKAGECLOUD_TOKEN }}
+
+  Package-Ubuntu-2004-64bit:
+    strategy:
+      fail-fast: false
+
+    runs-on: ubuntu-latest
+    steps:
+      # To use this repository's private action, check out the repository
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Package souffle
+        # Private action is stored in the following directory
+        uses: ./.github/actions/create-package/ubuntu/20.04/64bit/
+        with:
+          package_cloud_api_key: ${{ secrets.PACKAGECLOUD_TOKEN }}
 
   Package-Ubuntu-1804-64bit:
     strategy:
