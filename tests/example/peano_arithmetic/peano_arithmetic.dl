@@ -5,21 +5,21 @@
 // - <souffle root>/licenses/SOUFFLE-UPL.txt
 
 // S-Expression
-// An S-Expression constitutes an arithmetic term in Peano's axiomtic 
-// approach for numbers.  
+// An S-Expression constitutes an arithmetic term in Peano's axiomtic
+// approach for numbers.
 .type SExpr = Zero {} |
               Succ {arg:SExpr} |
               Add {left:SExpr, right:SExpr} |
               Mul {left:SExpr, right:SExpr}
 
-// Input expression(s) 
+// Input expression(s)
 .decl A(x:SExpr)
 
-// this represents the expression 2 * (1 + 1) 
+// this represents the expression 2 * (1 + 1)
 A($Mul($Succ($Succ($Zero)), $Add($Succ($Zero()),$Succ($Zero())))).
 
-// Represents the symmetric reflexive transitive closure of the 
-// reduction relation usign an equivalence relation in Souffle. 
+// Represents the symmetric reflexive transitive closure of the
+// reduction relation usign an equivalence relation in Souffle.
 .decl S(e1:SExpr, e2:SExpr) eqrel
 
 // Populate input
@@ -27,11 +27,11 @@ S(e, e) :-
    A(e).
 
 // Deconstruct S-Expression into its sub-expressions and put
-// each sub-expression into its own class. 
+// each sub-expression into its own class.
 
 // a <-*> a if s(a) in dom(S)
 S(a, a) :-
-   term = $Succ(a), 
+   term = $Succ(a),
    S(term, term).
 
 // a <-*> a, b <-*> b if a + b in dom(S)
@@ -66,9 +66,9 @@ S(pattern, $Zero()) :-
   pattern = $Mul(_a, $Zero()),
   S(pattern, pattern).
 
-// Reconstruct S-Expression using natural numbers only 
-// It is important to reconstruct with normalized sub-terms 
-// only; otherwise we will have a non-terminating program. 
+// Reconstruct S-Expression using natural numbers only
+// It is important to reconstruct with normalized sub-terms
+// only; otherwise we will have a non-terminating program.
 
 //  s(a) => s(a'), if a <-*> a' and a' is a number.
 S($Succ(ap), x) :-
@@ -92,19 +92,19 @@ S($Mul(na,nb), x) :-
   isNormalform(na),
   isNormalform(nb).
 
-// Set of all normalized terms in the domain of S 
+// Set of all normalized terms in the domain of S
 .decl isNormalform(s:SExpr)
-isNormalform($Zero()). 
-isNormalform($Succ(a)) :- 
-  pattern = $Succ(a), 
+isNormalform($Zero()).
+isNormalform($Succ(a)) :-
+  pattern = $Succ(a),
   S(pattern, pattern),
-  isNormalform(a). 
+  isNormalform(a).
 
-// Retrieve output 
+// Retrieve output
 .decl Result(x:SExpr, y:SExpr)
-Result(x,y) :- 
+Result(x,y) :-
    A(x),
-   S(x,y), 
+   S(x,y),
    isNormalform(y).
 
 .output Result
