@@ -31,6 +31,8 @@ profiler_html/
 
 doc
 
+# used by clangd
+/.cache
 .idea/
 *build*/
 
