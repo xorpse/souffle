@@ -42,7 +42,7 @@ c2(x, y) :- b2(x, y), !a2(x, y).
 
 //
 // tests constraints in the head of an inlined relation
-// (See issue #1966) 
+// (See issue #1966)
 //
 
 .decl A3(x:number, y:number) inline
