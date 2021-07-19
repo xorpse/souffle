@@ -102,17 +102,31 @@ bool normaliseInlinedHeads(Program& program) {
 
             // Set up the head arguments in the new clause
             for (Argument* arg : clause->getHead()->getArguments()) {
-                if (auto* constant = as<Constant>(arg)) {
-                    // Found a constant in the head, so replace it with a variable
+                bool isConstrained = false;
+                if (auto* var = as<Variable>(arg)) {
+                    for (Argument* prevVar : clauseHead->getArguments()) {
+                        // check whether same variable showing up in head again
+                        if (*prevVar == *var) {
+                            isConstrained = true;
+                            break;
+                        }
+                    }
+                } else {
+                    // this is a complex term (constant, functor, etc.)
+                    // and needs to be replaced.
+                    isConstrained = true;
+                }
+                if (isConstrained) {
+                    // Found a non-variable/reoccurring in the head, so replace it with a new variable
+                    // and construct a new equivalence constraint with the argument term.
                     std::stringstream newVar;
                     newVar << "<new_var_" << newVarCount++ << ">";
                     clauseHead->addArgument(mk<ast::Variable>(newVar.str()));
 
                     // Add a body constraint to set the variable's value to be the original constant
                     newClause->addToBody(mk<BinaryConstraint>(
-                            BinaryConstraintOp::EQ, mk<ast::Variable>(newVar.str()), clone(constant)));
+                            BinaryConstraintOp::EQ, mk<ast::Variable>(newVar.str()), clone(arg)));
                 } else {
-                    // Already a variable
                     clauseHead->addArgument(clone(arg));
                 }
             }

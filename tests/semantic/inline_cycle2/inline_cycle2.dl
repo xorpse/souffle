@@ -39,3 +39,17 @@ a2(x, y) :- x = y.
 b2(1,2).
 c2(x, y) :- b2(x, y), !a2(x, y).
 .output c2
+
+//
+// tests constraints in the head of an inlined relation
+// (See issue #1966) 
+//
+
+.decl A3(x:number, y:number) inline
+A3(x,x) :- true.
+
+.decl B3,C3(x:number, y:number)
+B3(1,2).
+C3(x,y) :- B3(x,y), !A3(x,y).
+.output C3
+
