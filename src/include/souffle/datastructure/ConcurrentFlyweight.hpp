@@ -222,6 +222,14 @@ public:
             const KeyFactory& key_factory = KeyFactory())
             : ConcurrentFlyweight(8, false, hash, key_equal, key_factory) {}
 
+    virtual ~ConcurrentFlyweight() {
+        for (lane_id I = 0; I < MaxHandles; ++I) {
+            if (Handles[I].NextNode) {
+                delete Handles[I].NextNode;
+            }
+        }
+    }
+
     /** Return a concurrent iterator on the first element. */
     Iterator begin(const lane_id H) const {
         return Iterator(this, H);
@@ -293,7 +301,7 @@ private:
     struct Handle {
         /// Slot where this handle will store its next value
         int64_t NextSlot = -1;
-        node_type NextNode;
+        node_type NextNode = nullptr;
     };
 
     // The concurrency manager.
