@@ -216,9 +216,10 @@ endif()
 
 # --------------------------------------------------
 # libffi
+
 # --------------------------------------------------
 if (SOUFFLE_USE_LIBFFI)
-  find_package(LibFFI REQUIRED)
+  find_package(LibFFI CONFIG REQUIRED)
 endif()
 
 # --------------------------------------------------

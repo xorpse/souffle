@@ -211,14 +211,14 @@ if (OPENMP_FOUND)
                              $<$<BOOL:${SOUFFLE_USE_ZLIB}>:ZLIB::ZLIB>
                              $<$<BOOL:${SOUFFLE_USE_SQLITE}>:SQLite::SQLite3>
                              $<$<BOOL:${SOUFFLE_USE_CURSES}>:Curses::NCurses>
-                             $<$<BOOL:${SOUFFLE_USE_LIBFFI}>:LibFFI::LibFFI>
+                             $<$<BOOL:${SOUFFLE_USE_LIBFFI}>:libffi>
                              "${CMAKE_DL_LIBS}")
 else()
     target_link_libraries(libsouffle
                       PUBLIC $<$<BOOL:${SOUFFLE_USE_ZLIB}>:ZLIB::ZLIB>
                              $<$<BOOL:${SOUFFLE_USE_SQLITE}>:SQLite::SQLite3>
                              $<$<BOOL:${SOUFFLE_USE_CURSES}>:Curses::NCurses>
-                             $<$<BOOL:${SOUFFLE_USE_LIBFFI}>:LibFFI::LibFFI>
+                             $<$<BOOL:${SOUFFLE_USE_LIBFFI}>:libffi>
                              "${CMAKE_DL_LIBS}")
 endif()
 
