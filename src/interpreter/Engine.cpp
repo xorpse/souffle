@@ -111,7 +111,16 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+#ifdef _MSC_VER
+#define dlopen(libname, flags) LoadLibrary((libname))
+#define dlsym(lib, fn) GetProcAddress(static_cast<HMODULE>(lib), (fn))
+#else
 #include <dlfcn.h>
+#endif
+
+// Dynamic-size arrays are not compatible with all compilers, so make it unique pointers of array type
+#define dynarray(type, name, size) std::unique_ptr<type[]> name = std::make_unique<type[]>(size)
 
 #ifdef USE_LIBFFI
 #include <ffi.h>
@@ -123,7 +132,11 @@ namespace souffle::interpreter {
 #ifdef __APPLE__
 #define dynamicLibSuffix ".dylib";
 #else
+#ifdef _MSC_VER
+#define dynamicLibSuffix ".dll";
+#else
 #define dynamicLibSuffix ".so";
+#endif
 #endif
 
 // Aliases for foreign function interface.
@@ -364,12 +377,12 @@ const std::vector<void*>& Engine::loadDLL() {
         auto paths = Global::config().getMany("library-dir");
         // Set up our paths to have a library appended
         for (std::string& path : paths) {
-            if (path.back() != '/') {
-                path += '/';
+            if (path.back() != pathSeparator) {
+                path += pathSeparator;
             }
         }
 
-        if (library.find('/') != std::string::npos) {
+        if (library.find(pathSeparator) != std::string::npos) {
             paths.clear();
         }
 
@@ -820,8 +833,8 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                 }
 #ifdef USE_LIBFFI
                 // prepare dynamic call environment
-                void* values[arity + 2];
-                RamDomain intVal[arity];
+                dynarray(void*, values, arity + 2);
+                dynarray(RamDomain, intVal, arity);
                 RamDomain rc;
 
                 /* Initialize arguments for ffi-call */
@@ -852,11 +865,11 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
 #ifdef USE_LIBFFI
                 // prepare dynamic call environment
-                void* values[arity];
-                RamDomain intVal[arity];
-                RamUnsigned uintVal[arity];
-                RamFloat floatVal[arity];
-                const char* strVal[arity];
+                dynarray(void*, values, arity);
+                dynarray(RamDomain, intVal, arity);
+                dynarray(RamUnsigned, uintVal, arity);
+                dynarray(RamFloat, floatVal, arity);
+                dynarray(const char*, strVal, arity);
 
                 /* Initialize arguments for ffi-call */
                 for (std::size_t i = 0; i < arity; i++) {
@@ -912,11 +925,11 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
         CASE(PackRecord)
             auto values = cur.getArguments();
             std::size_t arity = values.size();
-            RamDomain data[arity];
+            dynarray(RamDomain, data, arity);
             for (std::size_t i = 0; i < arity; ++i) {
                 data[i] = execute(shadow.getChild(i), ctxt);
             }
-            return getRecordTable().pack(data, arity);
+            return getRecordTable().pack(data.get(), arity);
         ESAC(PackRecord)
 
         CASE(SubroutineArgument)
@@ -1523,7 +1536,14 @@ RamDomain Engine::evalParallelScan(
         for (const auto& info : viewInfo) {
             newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
         }
+#if defined _OPENMP && _OPENMP < 200805
+        auto count = std::distance(pStream.begin(), pStream.end());
+        auto b = pStream.begin();
+        pfor(int i = 0; i < count; i++) {
+            auto it = b + i;
+#else
         pfor(auto it = pStream.begin(); it < pStream.end(); it++) {
+#endif
             for (const auto& tuple : *it) {
                 newCtxt[cur.getTupleId()] = tuple.data();
                 if (!execute(shadow.getNestedOperation(), newCtxt)) {
@@ -1576,7 +1596,14 @@ RamDomain Engine::evalParallelIndexScan(
         for (const auto& info : viewInfo) {
             newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
         }
+#if defined _OPENMP && _OPENMP < 200805
+        auto count = std::distance(pStream.begin(), pStream.end());
+        auto b = pStream.begin();
+        pfor(int i = 0; i < count; i++) {
+            auto it = b + i;
+#else
         pfor(auto it = pStream.begin(); it < pStream.end(); it++) {
+#endif
             for (const auto& tuple : *it) {
                 newCtxt[cur.getTupleId()] = tuple.data();
                 if (!execute(shadow.getNestedOperation(), newCtxt)) {
@@ -1614,7 +1641,14 @@ RamDomain Engine::evalParallelIfExists(
         for (const auto& info : viewInfo) {
             newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
         }
+#if defined _OPENMP && _OPENMP < 200805
+        auto count = std::distance(pStream.begin(), pStream.end());
+        auto b = pStream.begin();
+        pfor(int i = 0; i < count; i++) {
+            auto it = b + i;
+#else
         pfor(auto it = pStream.begin(); it < pStream.end(); it++) {
+#endif
             for (const auto& tuple : *it) {
                 newCtxt[cur.getTupleId()] = tuple.data();
                 if (execute(shadow.getCondition(), newCtxt)) {
@@ -1671,7 +1705,14 @@ RamDomain Engine::evalParallelIndexIfExists(const Rel& rel, const ram::ParallelI
         for (const auto& info : viewInfo) {
             newCtxt.createView(*getRelationHandle(info[0]), info[1], info[2]);
         }
+#if defined _OPENMP && _OPENMP < 200805
+        auto count = std::distance(pStream.begin(), pStream.end());
+        auto b = pStream.begin();
+        pfor(int i = 0; i < count; i++) {
+            auto it = b + i;
+#else
         pfor(auto it = pStream.begin(); it < pStream.end(); it++) {
+#endif
             for (const auto& tuple : *it) {
                 newCtxt[cur.getTupleId()] = tuple.data();
                 if (execute(shadow.getCondition(), newCtxt)) {

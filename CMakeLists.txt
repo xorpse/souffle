@@ -99,6 +99,7 @@ option(SOUFFLE_GENERATE_DOXYGEN "Generate Doxygen files (html;htmlhelp;man;rtf;x
 option(SOUFFLE_CODE_COVERAGE "Enable coverage reporting" OFF)
 option(SOUFFLE_BASH_COMPLETION "Enable/Disable bash completion" OFF)
 option(SOUFFLE_USE_LIBFFI "Enable/Disable use of libffi" ON)
+option(SOUFFLE_CUSTOM_GETOPTLONG "Enable/Disable custom getopt_long implementation" OFF)
 
 cmake_dependent_option(SOUFFLE_USE_LIBCPP "Link to libc++ instead of libstdc++" ON
     "CMAKE_CXX_COMPILER_ID STREQUAL Clang" OFF)
@@ -119,6 +120,10 @@ if (SOUFFLE_USE_LIBCPP)
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -lc++abi")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -lc++abi")
 endif()
+
+if (MSVC)
+  set(CMAKE_FIND_LIBRARY_PREFIXES ";lib")
+endif ()
 
 # --------------------------------------------------
 # curses libraries for Provenance information
@@ -216,10 +221,9 @@ endif()
 
 # --------------------------------------------------
 # libffi
-
 # --------------------------------------------------
 if (SOUFFLE_USE_LIBFFI)
-  find_package(LibFFI CONFIG REQUIRED)
+  find_package(libffi CONFIG REQUIRED)
 endif()
 
 # --------------------------------------------------
@@ -368,6 +372,7 @@ IF (SOUFFLE_BASH_COMPLETION)
 endif()
 
 
+if (NOT MSVC)
 # --------------------------------------------------
 # CPack configuration
 # --------------------------------------------------
@@ -426,4 +431,5 @@ if (CHECK_OS_RESULT EQUAL 0)
         # SET(CPACK_RPM_PACKAGE_AUTOREQPROV "no")
         INCLUDE(CPack)
 	endif()
+endif()
 endif()
