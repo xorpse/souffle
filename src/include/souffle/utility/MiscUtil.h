@@ -55,6 +55,8 @@
 #define __builtin_popcountll __popcnt64
 
 #if defined(_MSC_VER)
+#include <intrin.h>
+#pragma intrinsic(_BitScanForward64)
 constexpr unsigned long __builtin_ctz(unsigned long value) {
     unsigned long trailing_zeroes = 0;
     while ((value = value >> 1) ^ 1) {
@@ -63,7 +65,7 @@ constexpr unsigned long __builtin_ctz(unsigned long value) {
     return trailing_zeroes;
 }
 
-inline int __builtin_ctzll(unsigned long long value) {
+constexpr int __builtin_ctzll(unsigned long long value) {
     unsigned long trailing_zero = 0;
 
     if (_BitScanForward64(&trailing_zero, value)) {
