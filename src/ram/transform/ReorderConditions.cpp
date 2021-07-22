@@ -33,8 +33,7 @@ bool ReorderConditionsTransformer::reorderConditions(Program& program) {
     bool changed = false;
     visit(program, [&](const Query& query) {
         std::function<Own<Node>(Own<Node>)> filterRewriter = [&](Own<Node> node) -> Own<Node> {
-            if (const Filter* filter = as<Filter>(node)) {
-                const Condition* condition = &filter->getCondition();
+            if (const Condition* condition = as<Condition>(node)) {
                 VecOwn<Condition> sortedConds;
                 VecOwn<Condition> condList = toConjunctionList(condition);
                 for (auto& cond : condList) {
@@ -43,12 +42,11 @@ bool ReorderConditionsTransformer::reorderConditions(Program& program) {
                 std::sort(sortedConds.begin(), sortedConds.end(), [&](Own<Condition>& a, Own<Condition>& b) {
                     return rca->getComplexity(a.get()) < rca->getComplexity(b.get());
                 });
+                auto sorted_node = toCondition(sortedConds);
 
-                if (!std::equal(sortedConds.begin(), sortedConds.end(), condList.begin(),
-                            [](Own<Condition>& a, Own<Condition>& b) { return *a == *b; })) {
+                if (sorted_node != node) {
                     changed = true;
-                    node = mk<Filter>(
-                            Own<Condition>(toCondition(sortedConds)), clone(filter->getOperation()));
+                    node = std::move(sorted_node);
                 }
             }
             node->apply(makeLambdaRamMapper(filterRewriter));

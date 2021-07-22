@@ -57,6 +57,14 @@ int ComplexityAnalysis::getComplexity(const Node* node) const {
             return 2;
         }
 
+        int visit_(type_identity<Constraint>, const Constraint& c) override {
+            return dispatch(c.getLHS()) + dispatch(c.getRHS());
+        }
+
+        int visit_(type_identity<UserDefinedOperator>, const UserDefinedOperator&) override {
+            return 10;
+        }
+
         // emptiness check
         int visit_(type_identity<EmptinessCheck>, const EmptinessCheck& emptiness) override {
             // emptiness check for nullary relations is for free; others have weight one
