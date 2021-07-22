@@ -256,7 +256,7 @@ Own<Condition> MakeIndexTransformer::constructPattern(const std::vector<std::str
         }
 
         // at this point we are guaranteed that attr1 and attr2 are set
-        return attr1 <= attr2;
+        return attr1 < attr2;
     };
 
     std::sort(conditionList.begin(), conditionList.end(), cmp);
