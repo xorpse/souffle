@@ -225,21 +225,27 @@ if (MSVC)
     target_compile_definitions(libsouffle PUBLIC USE_CUSTOM_GETOPTLONG)
 endif (MSVC)
 
-# FIXME: Better to have a library list
+if (SOUFFLE_USE_LIBFFI)
+if (libffi_FOUND)
+  target_link_libraries(libsouffle PUBLIC libffi)
+else ()
+  target_link_libraries(libsouffle PUBLIC LibFFI::LibFFI)
+endif ()
+endif ()
+
+# FIXME: Better to have a library list 
 if (OPENMP_FOUND)
     target_link_libraries(libsouffle
                       PUBLIC OpenMP::OpenMP_CXX
                              $<$<BOOL:${SOUFFLE_USE_ZLIB}>:ZLIB::ZLIB>
                              $<$<BOOL:${SOUFFLE_USE_SQLITE}>:SQLite::SQLite3>
                              $<$<BOOL:${SOUFFLE_USE_CURSES}>:Curses::NCurses>
-                             $<$<BOOL:${SOUFFLE_USE_LIBFFI}>:libffi>
                              "${CMAKE_DL_LIBS}")
 else()
     target_link_libraries(libsouffle
                       PUBLIC $<$<BOOL:${SOUFFLE_USE_ZLIB}>:ZLIB::ZLIB>
                              $<$<BOOL:${SOUFFLE_USE_SQLITE}>:SQLite::SQLite3>
                              $<$<BOOL:${SOUFFLE_USE_CURSES}>:Curses::NCurses>
-                             $<$<BOOL:${SOUFFLE_USE_LIBFFI}>:libffi>
                              "${CMAKE_DL_LIBS}")
 endif()
 
