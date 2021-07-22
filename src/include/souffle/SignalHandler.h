@@ -31,6 +31,8 @@
 #define STDERR_FILENO 2 /* Standard error output.  */
 #else
 #include <unistd.h>
+#else
+#define STDERR_FILENO 2
 #endif
 
 namespace souffle {
