@@ -296,3 +296,75 @@ add_subdirectory(src)
 if (SOUFFLE_ENABLE_TESTING)
     add_subdirectory(tests)
 endif()
+
+
+# --------------------------------------------------
+# Utility function to help us distinguish between Linux distros when packaging
+# --------------------------------------------------
+
+function(get_linux_lsb_release_information)
+    find_program(LSB_RELEASE_EXEC lsb_release)
+    if(NOT LSB_RELEASE_EXEC)
+        message(FATAL_ERROR "Could not detect lsb_release executable, can not gather required information")
+    endif()
+
+    execute_process(COMMAND "${LSB_RELEASE_EXEC}" --short --id OUTPUT_VARIABLE LSB_RELEASE_ID_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND "${LSB_RELEASE_EXEC}" --short --release OUTPUT_VARIABLE LSB_RELEASE_VERSION_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND "${LSB_RELEASE_EXEC}" --short --codename OUTPUT_VARIABLE LSB_RELEASE_CODENAME_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    set(LSB_RELEASE_ID_SHORT "${LSB_RELEASE_ID_SHORT}" PARENT_SCOPE)
+    set(LSB_RELEASE_VERSION_SHORT "${LSB_RELEASE_VERSION_SHORT}" PARENT_SCOPE)
+    set(LSB_RELEASE_CODENAME_SHORT "${LSB_RELEASE_CODENAME_SHORT}" PARENT_SCOPE)
+endfunction()
+
+# --------------------------------------------------
+# CPack configuration
+# --------------------------------------------------
+
+SET(CPACK_PACKAGE_CONTACT "Patrick H.")
+SET(CPACK_PACKAGE_DESCRIPTION "Souffle - A Datalog Compiler")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A Datalog Compiler")
+
+# Use all available threads (primarily for compression of files)
+SET(CPACK_THREADS 0)
+
+# --------------------------------------------------
+# CPack configuration for Linux
+# --------------------------------------------------
+if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+	get_linux_lsb_release_information()
+    if (LSB_RELEASE_ID_SHORT MATCHES "Ubuntu")
+		# Generate just DEB
+		SET(CPACK_GENERATOR "DEB")
+		# --------------------------------------------------
+		# Variables relevent to DEB packages
+		# --------------------------------------------------
+
+		# Specifying runtime dependencies
+		set(CPACK_DEBIAN_PACKAGE_DEPENDS "g++ (>= 7), libffi-dev, libncurses5-dev, libsqlite3-dev, mcpp, zlib1g-dev")
+
+		# Auto-generate any runtime dependencies that are required
+		SET(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+
+		# Architectures are actually auto-detected so no need to set this variable
+		# SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386")
+	endif()
+
+    if (LSB_RELEASE_ID_SHORT MATCHES "Fedora")
+		# Generate both DEB and RPM packages
+		SET(CPACK_GENERATOR "RPM")
+
+		# --------------------------------------------------
+		# Variables relevent to RPM packages
+		# --------------------------------------------------
+
+		# Specifying runtime dependencies
+		set(CPACK_RPM_PACKAGE_REQUIRES "g++ >= 7, libffi, libffi-devel, ncurses-devel, libsqlite3x, mcpp, zlib-devel")
+
+		# Don't auto-detect dependencies and provides
+		SET(CPACK_RPM_PACKAGE_AUTOREQPROV "no")
+	endif()
+endif()
+
+
+INCLUDE(CPack)
