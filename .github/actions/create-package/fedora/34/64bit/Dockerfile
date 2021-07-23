@@ -14,6 +14,9 @@ RUN gpg --keyserver keyserver.ubuntu.com --recv-keys 409B6B1796C275462A170311380
 	curl -sSL https://get.rvm.io | bash -s stable
 RUN /bin/bash -l -c ". /etc/profile.d/rvm.sh && rvm install 2.7.4 && gem install package_cloud"
 
+# Install package_cloud
+RUN sudo gem install package_cloud
+
 # Copy everything into souffle directory
 COPY . .
 
