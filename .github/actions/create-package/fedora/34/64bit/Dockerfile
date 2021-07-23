@@ -20,7 +20,7 @@ COPY . .
 # Install dependencies to build souffle
 # RUN sudo sh/setup/install_ubuntu_deps.sh
 
-ENV ARCHITECTURE "64bit"
+ENV DOMAIN_SIZE "64bit"
 ENV PKG_EXTENSION ".rpm"
 ENV PKG_CLOUD_OS_NAME "fedora/34"
 
