@@ -1,5 +1,5 @@
-name: Package for Ubuntu 21.04 64bit
-description: Package for Ubuntu 21.04 64bit
+name: Package for Ubuntu 18.04 64bit
+description: Package for Ubuntu 18.04 64bit
 inputs:
   package_cloud_api_key:
     description: 'Package Cloud API Key'
