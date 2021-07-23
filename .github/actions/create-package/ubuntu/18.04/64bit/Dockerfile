@@ -52,7 +52,7 @@ COPY --from=ruby-img /souffle .
 # Install dependencies to build souffle
 # RUN sudo sh/setup/install_ubuntu_deps.sh
 
-ENV ARCHITECTURE "64bit"
+ENV DOMAIN_SIZE "64bit"
 ENV PKG_EXTENSION ".deb"
 ENV PKG_CLOUD_OS_NAME "ubuntu/bionic"
 

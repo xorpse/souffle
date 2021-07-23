@@ -3,7 +3,7 @@
 PACKAGE_CLOUD_API_KEY="$1"
 
 # Run the build command
-case "$ARCHITECTURE" in
+case "$DOMAIN_SIZE" in
   	"64bit")
 		cmake -S . -B ./build -DSOUFFLE_DOMAIN_64BIT=ON
     ;;
@@ -18,4 +18,5 @@ cmake --build ./build --parallel "$(nproc)" --target package
 
 cd build
 
+# Upload the package to packagecloud.io
 PACKAGECLOUD_TOKEN="$PACKAGE_CLOUD_API_KEY" package_cloud push souffle-lang/souffle-test/$PKG_CLOUD_OS_NAME "$(ls *$PKG_EXTENSION | head -n1)"
