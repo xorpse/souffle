@@ -102,17 +102,31 @@ bool normaliseInlinedHeads(Program& program) {
 
             // Set up the head arguments in the new clause
             for (Argument* arg : clause->getHead()->getArguments()) {
-                if (auto* constant = as<Constant>(arg)) {
-                    // Found a constant in the head, so replace it with a variable
+                bool isConstrained = false;
+                if (auto* var = as<Variable>(arg)) {
+                    for (Argument* prevVar : clauseHead->getArguments()) {
+                        // check whether same variable showing up in head again
+                        if (*prevVar == *var) {
+                            isConstrained = true;
+                            break;
+                        }
+                    }
+                } else {
+                    // this is a complex term (constant, functor, etc.)
+                    // and needs to be replaced.
+                    isConstrained = true;
+                }
+                if (isConstrained) {
+                    // Found a non-variable/reoccurring in the head, so replace it with a new variable
+                    // and construct a new equivalence constraint with the argument term.
                     std::stringstream newVar;
                     newVar << "<new_var_" << newVarCount++ << ">";
                     clauseHead->addArgument(mk<ast::Variable>(newVar.str()));
 
                     // Add a body constraint to set the variable's value to be the original constant
                     newClause->addToBody(mk<BinaryConstraint>(
-                            BinaryConstraintOp::EQ, mk<ast::Variable>(newVar.str()), clone(constant)));
+                            BinaryConstraintOp::EQ, mk<ast::Variable>(newVar.str()), clone(arg)));
                 } else {
-                    // Already a variable
                     clauseHead->addArgument(clone(arg));
                 }
             }
@@ -949,18 +963,31 @@ std::vector<Clause*> getInlinedClause(Program& program, const Clause& clause) {
 
                 // Create the base clause with the current literal removed
                 auto baseClause = cloneHead(clause);
-                for (Literal* oldLit : bodyLiterals) {
-                    if (currLit != oldLit) {
-                        baseClause->addToBody(clone(oldLit));
-                    }
-                }
 
                 for (std::vector<Literal*> const& body : bodyVersions) {
                     auto replacementClause = clone(baseClause);
+                    // insert literals appearing before the one inlined
+                    for (Literal* oldLit : bodyLiterals) {
+                        if (currLit != oldLit) {
+                            replacementClause->addToBody(clone(oldLit));
+                        } else {
+                            break;
+                        }
+                    }
 
                     // Add in the current set of literals replacing the inlined literal
                     // In Case 2, each body contains exactly one literal
                     replacementClause->addToBody(VecOwn<Literal>(body.begin(), body.end()));
+
+                    // insert literals appearing after the one inlined
+                    bool seen = false;
+                    for (Literal* oldLit : bodyLiterals) {
+                        if (currLit != oldLit && seen) {
+                            replacementClause->addToBody(clone(oldLit));
+                        } else if (currLit == oldLit) {
+                            seen = true;
+                        }
+                    }
 
                     // FIXME: This is a horrible hack.  Should convert
                     // versions to hold Own<>

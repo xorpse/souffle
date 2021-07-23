@@ -216,7 +216,7 @@ endif()
 # --------------------------------------------------
 # Thread Sanitiser
 # --------------------------------------------------
-if (SOUFFLE_SANITISE_MEMORY)
+if (SOUFFLE_SANITISE_THREAD)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=thread")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
 endif()
@@ -297,6 +297,7 @@ if (SOUFFLE_ENABLE_TESTING)
     add_subdirectory(tests)
 endif()
 
+
 # --------------------------------------------------
 # Utility function to help us distinguish between Linux distros when packaging
 # --------------------------------------------------
@@ -367,4 +368,3 @@ endif()
 
 
 INCLUDE(CPack)
-
