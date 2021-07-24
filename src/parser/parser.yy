@@ -270,8 +270,8 @@
 %type <Mov<std::vector<ast::QualifiedName>>>   type_params
 %type <Mov<std::vector<ast::QualifiedName>>>   type_param_list
 %type <Mov<std::vector<ast::QualifiedName>>>   union_type_list
-%type <Mov<VecOwn<ast::BranchDeclaration>>>    sum_branch_list
-%type <Mov<Own<ast::BranchDeclaration>>>       sum_branch
+%type <Mov<VecOwn<ast::BranchDeclaration>>>    adt_branch_list
+%type <Mov<Own<ast::BranchDeclaration>>>       adt_branch
 
 /* -- Operator precedence -- */
 %left L_OR
@@ -333,7 +333,7 @@ type
   : TYPE IDENT SUBTYPE qualified_name    { $$ = mk<ast::SubsetType>($2, $4, @$); }
   | TYPE IDENT EQUALS  union_type_list   { $$ = mk<ast::UnionType>($2, $4, @$); }
   | TYPE IDENT EQUALS  record_type_list  { $$ = mk<ast::RecordType>($2, $4, @$); }
-  | TYPE IDENT EQUALS  sum_branch_list   { $$ = mk<ast::AlgebraicDataType>($2, $4, @$); }
+  | TYPE IDENT EQUALS  adt_branch_list   { $$ = mk<ast::AlgebraicDataType>($2, $4, @$); }
     /* deprecated subset type forms */
   | NUMBER_TYPE IDENT { $$ = driver.mkDeprecatedSubType($IDENT, "number", @$); }
   | SYMBOL_TYPE IDENT { $$ = driver.mkDeprecatedSubType($IDENT, "symbol", @$); }
@@ -346,12 +346,12 @@ union_type_list
   | union_type_list PIPE  qualified_name { $$ = $1; $$.push_back($qualified_name); }
   ;
 
-sum_branch_list
-  : sum_branch                      { $$.push_back($sum_branch); }
-  | sum_branch_list PIPE sum_branch { $$ = $1; $$.push_back($sum_branch); }
+adt_branch_list
+  : adt_branch                      { $$.push_back($adt_branch); }
+  | adt_branch_list PIPE adt_branch { $$ = $1; $$.push_back($adt_branch); }
   ;
 
-sum_branch
+adt_branch
   : IDENT[name] LBRACE RBRACE
     { $$ = mk<ast::BranchDeclaration>($name, VecOwn<ast::Attribute>{}, @$); }
   | IDENT[name] LBRACE non_empty_attributes[attributes] RBRACE
