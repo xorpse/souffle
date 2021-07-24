@@ -1,5 +1,5 @@
+#include <cmath>
 #include <iostream>
-#include <bits/stdc++.h>
 using namespace std;
 
 extern "C" {
