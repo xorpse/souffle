@@ -22,7 +22,8 @@
 #include <cstddef>
 #include <new>
 
-#ifdef __cpp_lib_hardware_interference_size
+#if defined(__cpp_lib_hardware_interference_size) && \
+        (!defined(__APPLE__))  // https://bugs.llvm.org/show_bug.cgi?id=41423
 using std::hardware_constructive_interference_size;
 using std::hardware_destructive_interference_size;
 #else
