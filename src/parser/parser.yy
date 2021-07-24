@@ -243,7 +243,7 @@
 %type <Mov<std::string>>                       functor_built_in
 %type <Mov<Own<ast::FunctorDeclaration>>>      functor_decl
 %type <Mov<VecOwn<ast::Atom>>>                 head
-%type <Mov<ast::QualifiedName>>                identifier
+%type <Mov<ast::QualifiedName>>                qualified_name
 %type <Mov<VecOwn<ast::Directive>>>            directive_list
 %type <Mov<VecOwn<ast::Directive>>>            directive_head
 %type <ast::DirectiveType>                     directive_head_decl
@@ -316,13 +316,12 @@ unit
   ;
 
 /**
- * Identifiers
+ * Qualified Names 
  */
 
-identifier
-  :                 IDENT { $$ = $IDENT; }
-    /* TODO (azreika): in next version: DOT -> DOUBLECOLON */
-  | identifier DOT  IDENT { $$ = $1; $$->append($IDENT); }
+qualified_name
+  : IDENT                     { $$ = $IDENT; }
+  | qualified_name DOT  IDENT { $$ = $1; $$->append($IDENT); }
   ;
 
 /**
@@ -331,7 +330,7 @@ identifier
 
 /* Type declarations */
 type
-  : TYPE IDENT SUBTYPE IDENT             { $$ = mk<ast::SubsetType>($2, $4, @$); }
+  : TYPE IDENT SUBTYPE qualified_name    { $$ = mk<ast::SubsetType>($2, $4, @$); }
   | TYPE IDENT EQUALS  union_type_list   { $$ = mk<ast::UnionType>($2, $4, @$); }
   | TYPE IDENT EQUALS  record_type_list  { $$ = mk<ast::RecordType>($2, $4, @$); }
   | TYPE IDENT EQUALS  sum_branch_list   { $$ = mk<ast::AlgebraicDataType>($2, $4, @$); }
@@ -343,12 +342,12 @@ type
 
 /* Union type argument declarations */
 union_type_list
-  :                       identifier {          $$.push_back($identifier); }
-  | union_type_list PIPE  identifier { $$ = $1; $$.push_back($identifier); }
+  : qualified_name                       { $$.push_back($qualified_name); }
+  | union_type_list PIPE  qualified_name { $$ = $1; $$.push_back($qualified_name); }
   ;
 
 sum_branch_list
-  : sum_branch                      {          $$.push_back($sum_branch); }
+  : sum_branch                      { $$.push_back($sum_branch); }
   | sum_branch_list PIPE sum_branch { $$ = $1; $$.push_back($sum_branch); }
   ;
 
@@ -393,7 +392,7 @@ relation_decl
 
 /* List of relation names to declare */
 non_empty_relation_list
-  :                               IDENT {          $$.push_back(mk<ast::Relation>($1, @1)); }
+  : IDENT                               {          $$.push_back(mk<ast::Relation>($1, @1)); }
   | non_empty_relation_list COMMA IDENT { $$ = $1; $$.push_back(mk<ast::Relation>($3, @3)); }
   ;
 
@@ -415,7 +414,7 @@ non_empty_attributes
   ;
 
 attribute
-  : IDENT[name] COLON identifier[type] { $$ = mk<ast::Attribute>($name, $type, @type); }
+  : IDENT[name] COLON qualified_name[type] { $$ = mk<ast::Attribute>($name, $type, @type); }
   ;
 
 /* Relation tags */
@@ -574,7 +573,7 @@ term
   ;
 
 /* Rule body atom */
-atom : identifier LPAREN arg_list RPAREN { $$ = mk<ast::Atom>($identifier, $arg_list, @$); };
+atom : qualified_name LPAREN arg_list RPAREN { $$ = mk<ast::Atom>($qualified_name, $arg_list, @$); };
 
 /* Rule literal constraints */
 constraint
@@ -617,17 +616,11 @@ arg
   | DOLLAR      { $$ = mk<ast::Counter        >(@$); }
   | IDENT       { $$ = mk<ast::Variable       >($IDENT, @$); }
   | NIL         { $$ = mk<ast::NilConstant    >(@$); }
-
-  /* TODO (azreika): in next version: prepend records with identifiers */
-  | LBRACKET arg_list RBRACKET { $$ = mk<ast::RecordInit>($arg_list, @$); }
-
-  // Branch of adt
+  | LBRACKET arg_list RBRACKET                  { $$ = mk<ast::RecordInit>($arg_list, @$); }
   | DOLLAR IDENT[branch] LPAREN arg_list RPAREN { $$ = mk<ast::BranchInit>($branch, $arg_list, @$); }
   | DOLLAR IDENT[branch]                        { $$ = mk<ast::BranchInit>($branch, VecOwn<ast::Argument>{}, @$); }
-
-  |     LPAREN arg                  RPAREN { $$ = $2; }
-  | AS  LPAREN arg COMMA identifier RPAREN { $$ = mk<ast::TypeCast>($3, $identifier, @$); }
-
+  | LPAREN arg RPAREN                           { $$ = $2; }
+  | AS LPAREN arg COMMA qualified_name RPAREN   { $$ = mk<ast::TypeCast>($3, $qualified_name, @$); }
   | AT IDENT         LPAREN arg_list RPAREN { $$ = mk<ast::UserDefinedFunctor>($IDENT, *$arg_list, @$); }
   | functor_built_in LPAREN arg_list RPAREN { $$ = mk<ast::IntrinsicFunctor>($functor_built_in, *$arg_list, @$); }
 
@@ -798,10 +791,10 @@ comp_init : INSTANTIATE IDENT EQUALS comp_type { $$ = mk<ast::ComponentInit>($ID
 
 /* Functor declaration */
 functor_decl
-  : FUNCTOR IDENT LPAREN functor_arg_type_list[args] RPAREN COLON identifier
-    { $$ = mk<ast::FunctorDeclaration>($IDENT, $args, mk<ast::Attribute>("return_type", $identifier, @identifier), false, @$); }
-  | FUNCTOR IDENT LPAREN functor_arg_type_list[args] RPAREN COLON identifier STATEFUL
-    { $$ = mk<ast::FunctorDeclaration>($IDENT, $args, mk<ast::Attribute>("return_type", $identifier, @identifier), true, @$); }
+  : FUNCTOR IDENT LPAREN functor_arg_type_list[args] RPAREN COLON qualified_name
+    { $$ = mk<ast::FunctorDeclaration>($IDENT, $args, mk<ast::Attribute>("return_type", $qualified_name, @qualified_name), false, @$); }
+  | FUNCTOR IDENT LPAREN functor_arg_type_list[args] RPAREN COLON qualified_name STATEFUL
+    { $$ = mk<ast::FunctorDeclaration>($IDENT, $args, mk<ast::Attribute>("return_type", $qualified_name, @qualified_name), true, @$); }
   ;
 
 /* Functor argument list type */
@@ -812,8 +805,8 @@ non_empty_functor_arg_type_list
   ;
 
 functor_attribute
-  : identifier[type] { $$ = mk<ast::Attribute>("", $type, @type); }
-  | IDENT[name] COLON identifier[type] { $$ = mk<ast::Attribute>($name, $type, @type); }
+  : qualified_name[type] { $$ = mk<ast::Attribute>("", $type, @type); }
+  | IDENT[name] COLON qualified_name[type] { $$ = mk<ast::Attribute>($name, $type, @type); }
   ;
 
 /**
@@ -861,8 +854,8 @@ directive_list
 /* IO relation list */
 /* use a dummy `ast::DirectiveType` for now. `directive_head` will replace it */
 relation_directive_list
-  :                         identifier {          $$.push_back(mk<ast::Directive>(ast::DirectiveType::input, $1, @1)); }
-  | relation_directive_list COMMA  identifier { $$ = $1; $$.push_back(mk<ast::Directive>(ast::DirectiveType::input, $3, @3)); }
+  :                         qualified_name {          $$.push_back(mk<ast::Directive>(ast::DirectiveType::input, $1, @1)); }
+  | relation_directive_list COMMA  qualified_name { $$ = $1; $$.push_back(mk<ast::Directive>(ast::DirectiveType::input, $3, @3)); }
   ;
 
 /* Key-value pairs */
