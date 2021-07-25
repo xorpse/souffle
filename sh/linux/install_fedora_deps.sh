@@ -22,7 +22,7 @@ retry() {
 }
 
 # Build dependencies
-retry yum install -y -q autoconf automake bison clang doxygen flex gcc gcc-c++ git kernel-devel libffi-devel libtool make mcpp ncurses-devel python sqlite sqlite-devel sudo swig zlib-devel
+retry yum install -y -q bison clang doxygen flex gcc gcc-c++ git kernel-devel libffi-devel libtool make mcpp ncurses-devel python sqlite sqlite-devel sudo swig zlib-devel
 
 # Set up the package builder
 retry yum install -y -q rpm-build ruby-devel

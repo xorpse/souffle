@@ -22,7 +22,7 @@ retry() {
 }
 
 # Build dependencies
-retry yum install -y -q autoconf automake bison clang flex gcc gcc-c++ git kernel-devel libffi-devel libtool make mcpp ncurses-devel python3 sqlite sqlite-devel sudo swig zlib-devel
+retry yum install -y -q bison clang flex gcc gcc-c++ git kernel-devel libffi-devel libtool make mcpp ncurses-devel python3 sqlite sqlite-devel sudo swig zlib-devel
 
 # Set up a more recent gcc that supports C++11
 retry yum install -y centos-release-scl
