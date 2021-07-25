@@ -4,7 +4,7 @@ FROM fedora:34
 WORKDIR /souffle
 
 # Install souffle build dependencies
-RUN yum -y install autoconf automake bison clang doxygen flex g++ git libffi libffi-devel ncurses-devel libtool libsqlite3x make mcpp python sqlite sqlite-devel zlib-devel cmake
+RUN yum -y install bash-completion autoconf automake bison clang doxygen flex g++ git libffi libffi-devel ncurses-devel libtool libsqlite3x make mcpp python sqlite sqlite-devel zlib-devel cmake
 
 # For CMakeLists.txt to figure out the specific version of Ubuntu. Also installing rpmbuild so that we can package our app into an rpm file
 RUN yum -y install redhat-lsb rpm-build
