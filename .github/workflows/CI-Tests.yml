@@ -49,7 +49,7 @@ jobs:
       run: make -j6
       
     - name: check
-      run: TESTSUITEFLAGS=-j6 make check -j6 || (sh/after_failure.sh && false)
+      run: TESTSUITEFLAGS=-j make check -j || (sh/after_failure.sh && false)
 
   Ubuntu-CMake:
     needs: Code-Style
@@ -82,7 +82,7 @@ jobs:
       run: cmake --build build -j6
       
     - name: check
-      run: cd build && ctest --output-on-failure --progress -j6
+      run: cd build && ctest --output-on-failure --progress -j
 
   OSX:
     needs: Code-Style
@@ -104,7 +104,7 @@ jobs:
       run: make -j6
       
     - name: check
-      run: TESTSUITEFLAGS=-j6 make check -j6 || (sh/after_failure.sh && false)
+      run: TESTSUITEFLAGS=-j make check -j || (sh/after_failure.sh && false)
 
   Memory-Check:
     needs: Code-Style
@@ -127,6 +127,6 @@ jobs:
       
     - name: check
       run: >
-        TESTSUITEFLAGS=-j4 
+        TESTSUITEFLAGS=-j 
         SOUFFLE_CATEGORY=Syntactic,Semantic,FastEvaluation,Profile,Interface,Provenance 
-        make check -j4 || (sh/after_failure.sh && false)
+        make check -j || (sh/after_failure.sh && false)
