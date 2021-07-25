@@ -328,6 +328,9 @@ SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A Datalog Compiler")
 # Use all available threads (primarily for compression of files)
 SET(CPACK_THREADS 0)
 
+# Make sure changelog, bash-completion and other important files in debian directory is also packaged
+SET(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/debian/changelog.in" "${CMAKE_SOURCE_DIR}/debian/souffle.bash-completion" "${CMAKE_SOURCE_DIR}/debian/rules" "${CMAKE_SOURCE_DIR}/debian/copyright")
+
 # --------------------------------------------------
 # CPack configuration for Linux
 # --------------------------------------------------

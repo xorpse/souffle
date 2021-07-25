@@ -29,7 +29,7 @@ RUN apt-get update && \
 
 # Install souffle build dependencies
 RUN apt-get update && \
-	apt-get -y install autoconf automake bison build-essential clang doxygen flex g++ git libffi-dev libncurses5-dev libtool libsqlite3-dev make mcpp python sqlite zlib1g-dev cmake
+	apt-get -y install bash-completion autoconf automake bison build-essential clang doxygen flex g++ git libffi-dev libncurses5-dev libtool libsqlite3-dev make mcpp python sqlite zlib1g-dev cmake
 
 # For CMakeLists.txt to figure out the specific version of Ubuntu
 RUN apt-get -y install lsb-release

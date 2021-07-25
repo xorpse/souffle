@@ -30,7 +30,7 @@ RUN apt-get update && \
 
 # Install souffle build dependencies
 RUN apt-get update && \
-	apt-get -y install autoconf automake bison build-essential clang doxygen flex g++ git libffi-dev libncurses5-dev libtool libsqlite3-dev make mcpp python sqlite zlib1g-dev cmake
+	apt-get -y install bash-completion autoconf automake bison build-essential clang doxygen flex g++ git libffi-dev libncurses5-dev libtool libsqlite3-dev make mcpp python sqlite zlib1g-dev cmake
 
 # Ubuntu 18.04 ships with g++ version 7, which is problematic
 RUN apt-get -y install software-properties-common && \
