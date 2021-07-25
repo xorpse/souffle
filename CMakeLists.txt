@@ -300,6 +300,23 @@ endif()
 
 
 # --------------------------------------------------
+# Installing bash completion file
+# --------------------------------------------------
+find_package (bash-completion)
+if (BASH_COMPLETION_FOUND)
+    message(STATUS "Using bash completion dir ${BASH_COMPLETION_COMPLETIONSDIR}")
+else()
+    set (BASH_COMPLETION_COMPLETIONSDIR "/etc/bash_completion.d")
+    message (STATUS "Using fallback bash completion dir ${BASH_COMPLETION_COMPLETIONSDIR}")
+endif()
+
+install(
+    FILES "${CMAKE_SOURCE_DIR}/debian/souffle.bash-completion"
+    DESTINATION ${BASH_COMPLETION_COMPLETIONSDIR}
+    RENAME "souffle"
+)
+
+# --------------------------------------------------
 # Utility function to help us distinguish between Linux distros when packaging
 # --------------------------------------------------
 
@@ -329,8 +346,8 @@ SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A Datalog Compiler")
 # Use all available threads (primarily for compression of files)
 SET(CPACK_THREADS 0)
 
-# Make sure changelog, bash-completion and other important files in debian directory is also packaged
-SET(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/debian/changelog.in" "${CMAKE_SOURCE_DIR}/debian/souffle.bash-completion" "${CMAKE_SOURCE_DIR}/debian/rules" "${CMAKE_SOURCE_DIR}/debian/copyright")
+# Make sure changelog, bash-completion and other important files in debian directory also packaged
+SET(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/debian/changelog.in" "${CMAKE_SOURCE_DIR}/debian/souffle.bash-completion" "${CMAKE_SOURCE_DIR}/debian/copyright")
 
 # --------------------------------------------------
 # CPack configuration for Linux

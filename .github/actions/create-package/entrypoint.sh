@@ -2,8 +2,6 @@
 
 PACKAGE_CLOUD_API_KEY="$1"
 
-PACKAGECLOUD_TOKEN="$PACKAGE_CLOUD_API_KEY" package_cloud yank souffle-lang/souffle-test/ubuntu/hirsute souffle_3734596_amd64.deb
-
 # Run the build command
 case "$DOMAIN_SIZE" in
   	"64bit")

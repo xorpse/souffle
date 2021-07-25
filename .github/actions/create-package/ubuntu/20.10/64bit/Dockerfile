@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:20.10
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -42,6 +42,6 @@ COPY . .
 
 ENV DOMAIN_SIZE "64bit"
 ENV PKG_EXTENSION ".deb"
-ENV PKG_CLOUD_OS_NAME "ubuntu/focal"
+ENV PKG_CLOUD_OS_NAME "ubuntu/groovy"
 
 ENTRYPOINT [".github/actions/create-package/entrypoint.sh"]
