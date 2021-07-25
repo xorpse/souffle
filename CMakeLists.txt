@@ -294,6 +294,7 @@ endif()
 add_subdirectory(src)
 
 if (SOUFFLE_ENABLE_TESTING)
+    add_subdirectory(src/tests)
     add_subdirectory(tests)
 endif()
 

@@ -187,17 +187,19 @@ function(SOUFFLE_RUN_TEST_HELPER)
                                        FIXTURE_NAME ${FIXTURE_NAME}
                                        TEST_LABELS ${TEST_LABELS})
 
+    if (OPENMP_FOUND)
+        set(SOUFFLE_PARAMS "${EXTRA_FLAGS} -j8 -D . -F '${FACTS_DIR}'")
+    else()
+        set(SOUFFLE_PARAMS "${EXTRA_FLAGS} -D . -F '${FACTS_DIR}'")
+    endif()
+
     souffle_run_integration_test(TEST_NAME ${PARAM_TEST_NAME}
                                  QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
                                  INPUT_DIR ${INPUT_DIR}
                                  OUTPUT_DIR ${OUTPUT_DIR}
                                  FIXTURE_NAME ${FIXTURE_NAME}
                                  NEGATIVE ${PARAM_NEGATIVE}
-                                 if (OPENMP_FOUND)
-                                    SOUFFLE_PARAMS "${EXTRA_FLAGS} -j8 -D . -F '${FACTS_DIR}'"
-                                 else()
-                                    SOUFFLE_PARAMS "${EXTRA_FLAGS} -D . -F '${FACTS_DIR}'"
-                                 endif()
+                                 SOUFFLE_PARAMS ${SOUFFLE_PARAMS}
                                  TEST_LABELS ${TEST_LABELS})
 
     souffle_compare_std_outputs(TEST_NAME ${PARAM_TEST_NAME}
