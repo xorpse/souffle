@@ -183,7 +183,7 @@ public:
         const auto Guard = Lanes.guard(H);
         const size_t Bucket = HashValue % BucketCount;
 
-        BucketList* L = Buckets[Bucket].load(std::memory_order_relaxed);
+        BucketList* L = Buckets[Bucket].load(std::memory_order_consume);
         while (L != nullptr) {
             if (EqualTo(L->Value.first, X)) {
                 // found the key
@@ -331,7 +331,8 @@ public:
             // Try to insert the key in front of the bucket's list.
             // This operation also performs step 4) because LastKnownHead is
             // updated in the process.
-            if (Buckets[Bucket].compare_exchange_strong(LastKnownHead, Node)) {
+            if (Buckets[Bucket].compare_exchange_strong(
+                        LastKnownHead, Node, std::memory_order_release, std::memory_order_relaxed)) {
                 // 9)
                 Inserted = true;
                 NewSize = ++Size;
