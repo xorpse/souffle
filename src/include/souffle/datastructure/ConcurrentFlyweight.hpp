@@ -369,7 +369,7 @@ public:
     ~OmpFlyweight() {}
 
     iterator begin() const {
-        const int ThreadNum = omp_get_thread_num();
+        const int ThreadNum = omp_get_thread_num() % MaxHandles;
         return Base::begin(static_cast<lane_id>(ThreadNum));
     }
 
@@ -379,18 +379,18 @@ public:
 
     template <typename K>
     bool weakContains(const K& X) const {
-        const int ThreadNum = omp_get_thread_num();
+        const int ThreadNum = omp_get_thread_num() % MaxHandles;
         return Base::weakContains(static_cast<lane_id>(ThreadNum), X);
     }
 
     const Key& fetch(const index_type Idx) const {
-        const int ThreadNum = omp_get_thread_num();
+        const int ThreadNum = omp_get_thread_num() % MaxHandles;
         return Base::fetch(static_cast<lane_id>(ThreadNum), Idx);
     }
 
     template <class... Args>
     std::pair<index_type, bool> findOrInsert(Args&&... Xs) {
-        const int ThreadNum = omp_get_thread_num();
+        const int ThreadNum = omp_get_thread_num() % MaxHandles;
         return Base::findOrInsert(static_cast<lane_id>(ThreadNum), std::forward<Args>(Xs)...);
     }
 };

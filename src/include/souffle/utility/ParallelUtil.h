@@ -600,8 +600,10 @@ private:
         alignas(hardware_destructive_interference_size) std::mutex Access;
     };
 
+protected:
     const std::size_t Size;
 
+private:
     mutable std::vector<Lane> Lanes;
 
     alignas(hardware_destructive_interference_size) mutable std::mutex BeforeLockAll;
@@ -620,31 +622,31 @@ public:
     }
 
     unique_lock_type guard() const {
-        return Base::guard(omp_get_thread_num());
+        return Base::guard(omp_get_thread_num() % Size);
     }
 
     void lock() const {
-        return Base::lock(omp_get_thread_num());
+        return Base::lock(omp_get_thread_num() % Size);
     }
 
     void unlock() const {
-        return Base::unlock(omp_get_thread_num());
+        return Base::unlock(omp_get_thread_num() % Size);
     }
 
     void beforeLockAllBut() const {
-        return Base::beforeLockAllBut(omp_get_thread_num());
+        return Base::beforeLockAllBut(omp_get_thread_num() % Size);
     }
 
     void beforeUnlockAllBut() const {
-        return Base::beforeUnlockAllBut(omp_get_thread_num());
+        return Base::beforeUnlockAllBut(omp_get_thread_num() % Size);
     }
 
     void lockAllBut() const {
-        return Base::lockAllBut(omp_get_thread_num());
+        return Base::lockAllBut(omp_get_thread_num() % Size);
     }
 
     void unlockAllBut() const {
-        return Base::unlockAllBut(omp_get_thread_num());
+        return Base::unlockAllBut(omp_get_thread_num() % Size);
     }
 };
 
