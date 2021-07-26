@@ -65,7 +65,7 @@ jobs:
       run: sh/setup/install_macos_deps.sh
 
     - name: setup-32bit-domain
-      run: CXX=/usr/bin/c++ cmake -S . -B build
+      run: CMAKE_CXX_COMPILER=/usr/bin/c++ CXX=/usr/bin/c++ cmake -S . -B build
 
     - name: make
       run: cmake --build build -j6
