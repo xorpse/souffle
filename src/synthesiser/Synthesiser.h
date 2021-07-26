@@ -39,7 +39,7 @@ namespace souffle::synthesiser {
 class Synthesiser {
 private:
     /** Record Table */
-    RecordTable recordTable;
+    // RecordTable recordTable;
 
     /** RAM translation unit */
     ram::TranslationUnit& translationUnit;
@@ -67,7 +67,7 @@ private:
 
 protected:
     /** Get record table */
-    const RecordTable& getRecordTable();
+    // const RecordTable& getRecordTable();
 
     /** Convert RAM identifier */
     const std::string convertRamIdent(const std::string& name);
@@ -115,7 +115,8 @@ protected:
     }
 
 public:
-    explicit Synthesiser(ram::TranslationUnit& tUnit) : translationUnit(tUnit) {
+    explicit Synthesiser(/*const std::size_t laneCount, */ ram::TranslationUnit& tUnit)
+            : /*recordTable(laneCount),*/ translationUnit(tUnit) {
         visit(tUnit.getProgram(),
                 [&](const ram::Relation& relation) { relationMap[relation.getName()] = &relation; });
     }

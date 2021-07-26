@@ -339,6 +339,7 @@ struct SpecializedRecordFactory<0> {
 class RecordMap {
 public:
     virtual ~RecordMap() {}
+    virtual void setNumLanes(const std::size_t NumLanes) = 0;
     virtual RamDomain pack(const std::vector<RamDomain>& Vector) = 0;
     virtual RamDomain pack(const RamDomain* Tuple) = 0;
     virtual RamDomain pack(const std::initializer_list<RamDomain>& List) = 0;
@@ -355,12 +356,16 @@ class GenericRecordMap : public RecordMap,
     const std::size_t Arity;
 
 public:
-    explicit GenericRecordMap(const std::size_t arity)
-            : Base(8, true, details::GenericRecordHash(arity), details::GenericRecordEqual(arity),
+    explicit GenericRecordMap(const std::size_t lane_count, const std::size_t arity)
+            : Base(lane_count, 8, true, details::GenericRecordHash(arity), details::GenericRecordEqual(arity),
                       details::GenericRecordFactory(arity)),
               Arity(arity) {}
 
     virtual ~GenericRecordMap() {}
+
+    void setNumLanes(const std::size_t NumLanes) override {
+        Base::setNumLanes(NumLanes);
+    }
 
     /** @brief converts record to a record reference */
     RamDomain pack(const std::vector<RamDomain>& Vector) override {
@@ -399,9 +404,14 @@ class SpecializedRecordMap
     using Base = FlyweightImpl<Record, RecordHash, RecordEqual, RecordFactory>;
 
 public:
-    SpecializedRecordMap() : Base(8, true, RecordHash(), RecordEqual(), RecordFactory()) {}
+    SpecializedRecordMap(const std::size_t LaneCount)
+            : Base(LaneCount, 8, true, RecordHash(), RecordEqual(), RecordFactory()) {}
 
     virtual ~SpecializedRecordMap() {}
+
+    void setNumLanes(const std::size_t NumLanes) {
+        Base::setNumLanes(NumLanes);
+    }
 
     /** @brief converts record to a record reference */
     RamDomain pack(const std::vector<RamDomain>& Vector) override {
@@ -441,9 +451,11 @@ class SpecializedRecordMap<0> : public RecordMap {
     const RamDomain* EmptyRecordData = nullptr;
 
 public:
-    SpecializedRecordMap() {}
+    SpecializedRecordMap(const std::size_t /* LaneCount */) {}
 
     virtual ~SpecializedRecordMap() {}
+
+    void setNumLanes(const std::size_t) {}
 
     /** @brief converts record to a record reference */
     RamDomain pack(const std::vector<RamDomain>& Vector) override {
@@ -474,13 +486,14 @@ class RecordTableInterface {
 public:
     virtual ~RecordTableInterface() {}
 
+    virtual void setNumLanes(const std::size_t NumLanes) = 0;
+
     virtual RamDomain pack(const RamDomain* Tuple, const std::size_t Arity) = 0;
 
     virtual const RamDomain* unpack(const RamDomain Ref, const std::size_t Arity) const = 0;
 };
 
 /** A concurrent Record Table with some specialized record maps. */
-// SpecializedCount is the number of specialized maps to create for arities [0 .. SpecializedCount-1] .
 template <std::size_t... SpecializedArities>
 class SpecializedRecordTable : public RecordTableInterface {
 private:
@@ -500,22 +513,34 @@ private:
             Maps.reserve(Size);
             Maps.resize(Size);
         }
-        Maps[Arity] = new SpecializedRecordMap<Arity>();
+        Maps[Arity] = new SpecializedRecordMap<Arity>(Lanes.lanes());
         if constexpr (sizeof...(Arities) > 0) {
             CreateSpecializedMaps<Arities...>();
         }
     }
 
 public:
-    SpecializedRecordTable() : Size(0) {
-        // details::constexpr_for<0, SpecializedCount, 1>(
-        //        [&](auto Arity) { Maps[Arity] = new SpecializedRecordMap<Arity>(); });
+    /** @brief Construct a record table with the number of concurrent access lanes. */
+    SpecializedRecordTable(const std::size_t LaneCount) : Size(0), Lanes(LaneCount) {
         CreateSpecializedMaps<SpecializedArities...>();
     }
+
+    SpecializedRecordTable() : SpecializedRecordTable(1) {}
 
     virtual ~SpecializedRecordTable() {
         for (auto Map : Maps) {
             delete Map;
+        }
+    }
+
+    /**
+     * @brief set the number of concurrent access lanes.
+     * Not thread-safe, use only when the datastructure is not being used.
+     */
+    virtual void setNumLanes(const std::size_t NumLanes) {
+        Lanes.setNumLanes(NumLanes);
+        for (auto& Map : Maps) {
+            Map->setNumLanes(NumLanes);
         }
     }
 
@@ -532,15 +557,15 @@ public:
     }
 
 private:
+    /** @brief lookup RecordMap for a given arity; the map for that arity must exist. */
     RecordMap& lookupMap(const std::size_t Arity) const {
-        if (Arity >= Size) {
-        }
+        assert(Arity < Size && "Lookup for an arity while there is no record for that arity.");
         auto* Map = Maps[Arity];
-        if (Map == nullptr) {
-        }
+        assert(Map != nullptr && "Lookup for an arity while there is no record for that arity.");
         return *Map;
     }
 
+    /** @brief lookup RecordMap for a given arity; if it does not exist, create new RecordMap */
     RecordMap& lookupMap(const std::size_t Arity) {
         if (Arity < Size) {
             auto* Map = Maps[Arity];
@@ -549,11 +574,12 @@ private:
             }
         }
 
-        tryCreateMap(Arity);
+        createMap(Arity);
         return *Maps[Arity];
     }
 
-    void tryCreateMap(const std::size_t Arity) {
+    /** @brief create the RecordMap for the given arity. */
+    void createMap(const std::size_t Arity) {
         Lanes.beforeLockAllBut();
         if (Arity < Size && Maps[Arity] != nullptr) {
             // Map of required arity has been created concurrently
@@ -567,7 +593,7 @@ private:
             Maps.reserve(Size);
             Maps.resize(Size);
         }
-        Maps[Arity] = new GenericRecordMap(Arity);
+        Maps[Arity] = new GenericRecordMap(Lanes.lanes(), Arity);
 
         Lanes.beforeUnlockAllBut();
         Lanes.unlockAllBut();

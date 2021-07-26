@@ -71,8 +71,7 @@ struct Factory {
  * thanks to an exponential growth strategy.
  */
 template <class LanesPolicy, class Key, class T, class Hash = std::hash<Key>,
-        class KeyEqual = std::equal_to<Key>, class KeyFactory = details::Factory<Key>,
-        std::size_t MaxHandles = 16>
+        class KeyEqual = std::equal_to<Key>, class KeyFactory = details::Factory<Key>>
 class ConcurrentInsertOnlyHashMap {
 public:
     class Node;
@@ -121,19 +120,16 @@ private:
         BucketList* Next;
     };
 
-    struct Handle {
-        BucketList* NextBucketList = nullptr;
-    };
-
 public:
     /**
      * @brief Construct a hash-map with at least the given number of buckets.
      *
      * Load-factor is initialized to 1.0.
      */
-    ConcurrentInsertOnlyHashMap(const std::size_t Bucket_Count, const Hash& hash = Hash(),
-            const KeyEqual& key_equal = KeyEqual(), const KeyFactory& key_factory = KeyFactory())
-            : Lanes(MaxHandles), Hasher(hash), EqualTo(key_equal), Factory(key_factory) {
+    ConcurrentInsertOnlyHashMap(const std::size_t LaneCount, const std::size_t Bucket_Count,
+            const Hash& hash = Hash(), const KeyEqual& key_equal = KeyEqual(),
+            const KeyFactory& key_factory = KeyFactory())
+            : Lanes(LaneCount), Hasher(hash), EqualTo(key_equal), Factory(key_factory) {
         Size = 0;
         BucketCount = details::GreaterOrEqualPrime(Bucket_Count);
         if (BucketCount == 0) {
@@ -158,6 +154,10 @@ public:
                 delete (BL);
             }
         }
+    }
+
+    void setNumLanes(const std::size_t NumLanes) {
+        Lanes.setNumLanes(NumLanes);
     }
 
     /** @brief Create a fresh node initialized with the given value and a
@@ -286,7 +286,6 @@ public:
 
         // 1)
         const size_t HashValue = Hasher(std::forward<Args>(Xs)...);
-        assert(H < MaxHandles);
 
         // 2)
         Lanes.lock(H);  // prevent the datastructure from growing
@@ -361,9 +360,6 @@ public:
 private:
     // The concurrent lanes manager.
     LanesPolicy Lanes;
-
-    /// A handle for each concurrent lane.
-    std::array<Handle, MaxHandles> Handles;
 
     /// Hash function.
     Hash Hasher;

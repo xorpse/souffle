@@ -22,7 +22,7 @@ namespace souffle {
  *
  */
 template <class LanesPolicy, class Key, class Hash = std::hash<Key>, class KeyEqual = std::equal_to<Key>,
-        class KeyFactory = details::Factory<Key>, std::size_t MaxHandles = 16>
+        class KeyFactory = details::Factory<Key>>
 class ConcurrentFlyweight {
 public:
     using lane_id = typename LanesPolicy::lane_id;
@@ -152,7 +152,7 @@ public:
         /** Find next slot after Slot that is maybe unassigned. */
         void FindNextMaybeUnassignedSlot() {
             NextMaybeUnassignedSlot = End;
-            for (lane_id I = 0; I < MaxHandles; ++I) {
+            for (lane_id I = 0; I < This->Lanes.lanes(); ++I) {
                 const auto Lane = This->Lanes.guard(I);
                 if (This->Handles[I].NextSlot > Slot && This->Handles[I].NextSlot < NextMaybeUnassignedSlot) {
                     NextMaybeUnassignedSlot = This->Handles[I].NextSlot;
@@ -203,31 +203,49 @@ public:
     using iterator = Iterator;
 
     /// Initialize the datastructure with the given capacity.
-    ConcurrentFlyweight(const std::size_t InitialCapacity, const bool ReserveFirst, const Hash& hash = Hash(),
-            const KeyEqual& key_equal = KeyEqual(), const KeyFactory& key_factory = KeyFactory())
-            : Lanes(MaxHandles), Mapping(InitialCapacity, hash, key_equal, key_factory) {
+    ConcurrentFlyweight(const std::size_t LaneCount, const std::size_t InitialCapacity,
+            const bool ReserveFirst, const Hash& hash = Hash(), const KeyEqual& key_equal = KeyEqual(),
+            const KeyFactory& key_factory = KeyFactory())
+            : Lanes(LaneCount), HandleCount(LaneCount),
+              Mapping(LaneCount, InitialCapacity, hash, key_equal, key_factory) {
         Slots = std::make_unique<const value_type*[]>(InitialCapacity);
+        Handles = std::make_unique<Handle[]>(HandleCount);
         NextSlot = (ReserveFirst ? 1 : 0);
         MaxSlotBeforeGrow = InitialCapacity - 1;
     }
 
     /// Initialize the datastructure with a capacity of 8 elements.
-    ConcurrentFlyweight(const bool ReserveFirst, const Hash& hash = Hash(),
+    ConcurrentFlyweight(const std::size_t LaneCount, const bool ReserveFirst, const Hash& hash = Hash(),
             const KeyEqual& key_equal = KeyEqual(), const KeyFactory& key_factory = KeyFactory())
 
-            : ConcurrentFlyweight(8, ReserveFirst, hash, key_equal, key_factory) {}
+            : ConcurrentFlyweight(LaneCount, 8, ReserveFirst, hash, key_equal, key_factory) {}
 
     /// Initialize the datastructure with a capacity of 8 elements.
-    ConcurrentFlyweight(const Hash& hash = Hash(), const KeyEqual& key_equal = KeyEqual(),
-            const KeyFactory& key_factory = KeyFactory())
-            : ConcurrentFlyweight(8, false, hash, key_equal, key_factory) {}
+    ConcurrentFlyweight(const std::size_t LaneCount, const Hash& hash = Hash(),
+            const KeyEqual& key_equal = KeyEqual(), const KeyFactory& key_factory = KeyFactory())
+            : ConcurrentFlyweight(LaneCount, 8, false, hash, key_equal, key_factory) {}
 
     virtual ~ConcurrentFlyweight() {
-        for (lane_id I = 0; I < MaxHandles; ++I) {
+        for (lane_id I = 0; I < HandleCount; ++I) {
             if (Handles[I].NextNode) {
                 delete Handles[I].NextNode;
             }
         }
+    }
+
+    /**
+     * Change the number of lanes and possibly grow the number of handles.
+     * Do not use while threads are using this datastructure.
+     */
+    void setNumLanes(const std::size_t NumLanes) {
+        if (NumLanes > HandleCount) {
+            std::unique_ptr<Handle[]> NextHandles = std::make_unique<Handle[]>(NumLanes);
+            std::copy(Handles.get(), Handles.get() + HandleCount, NextHandles.get());
+            Handles.swap(NextHandles);
+            HandleCount = NumLanes;
+        }
+        Mapping.setNumLanes(NumLanes);
+        Lanes.setNumLanes(NumLanes);
     }
 
     /** Return a concurrent iterator on the first element. */
@@ -294,8 +312,7 @@ public:
     }
 
 private:
-    using map_type =
-            ConcurrentInsertOnlyHashMap<LanesPolicy, Key, index_type, Hash, KeyEqual, KeyFactory, MaxHandles>;
+    using map_type = ConcurrentInsertOnlyHashMap<LanesPolicy, Key, index_type, Hash, KeyEqual, KeyFactory>;
     using node_type = typename map_type::node_type;
 
     struct Handle {
@@ -304,11 +321,16 @@ private:
         node_type NextNode = nullptr;
     };
 
+protected:
     // The concurrency manager.
     LanesPolicy Lanes;
 
+private:
+    // Number of handles
+    std::size_t HandleCount;
+
     // Handle for each concurrent lane.
-    std::array<Handle, MaxHandles> Handles;
+    std::unique_ptr<Handle[]> Handles;
 
     // Slots[I] points to the value associated with index I.
     std::unique_ptr<const value_type*[]> Slots;
@@ -352,25 +374,23 @@ private:
 #ifdef _OPENMP
 /** A Flyweight datastructure with concurrent access specialized for OpenMP. */
 template <class Key, class Hash = std::hash<Key>, class KeyEqual = std::equal_to<Key>,
-        class KeyFactory = details::Factory<Key>, std::size_t MaxHandles = 16>
-class OmpFlyweight
-        : protected ConcurrentFlyweight<MutexConcurrentLanes, Key, Hash, KeyEqual, KeyFactory, MaxHandles> {
+        class KeyFactory = details::Factory<Key>>
+class OmpFlyweight : protected ConcurrentFlyweight<ConcurrentLanes, Key, Hash, KeyEqual, KeyFactory> {
 public:
-    using Base = ConcurrentFlyweight<MutexConcurrentLanes, Key, Hash, KeyEqual, KeyFactory, MaxHandles>;
+    using Base = ConcurrentFlyweight<ConcurrentLanes, Key, Hash, KeyEqual, KeyFactory>;
     using index_type = typename Base::index_type;
     using lane_id = typename Base::lane_id;
     using iterator = typename Base::iterator;
 
-    explicit OmpFlyweight(const std::size_t InitialCapacity = 8, const bool ReserveFirst = false,
-            const Hash& hash = Hash(), const KeyEqual& key_equal = KeyEqual(),
-            const KeyFactory& key_factory = KeyFactory())
-            : Base(InitialCapacity, ReserveFirst, hash, key_equal, key_factory) {}
+    explicit OmpFlyweight(const std::size_t LaneCount, const std::size_t InitialCapacity = 8,
+            const bool ReserveFirst = false, const Hash& hash = Hash(),
+            const KeyEqual& key_equal = KeyEqual(), const KeyFactory& key_factory = KeyFactory())
+            : Base(LaneCount, InitialCapacity, ReserveFirst, hash, key_equal, key_factory) {}
 
     ~OmpFlyweight() {}
 
     iterator begin() const {
-        const int ThreadNum = omp_get_thread_num() % MaxHandles;
-        return Base::begin(static_cast<lane_id>(ThreadNum));
+        return Base::begin(Base::Lanes.threadLane());
     }
 
     iterator end() const {
@@ -379,19 +399,16 @@ public:
 
     template <typename K>
     bool weakContains(const K& X) const {
-        const int ThreadNum = omp_get_thread_num() % MaxHandles;
-        return Base::weakContains(static_cast<lane_id>(ThreadNum), X);
+        return Base::weakContains(Base::Lanes.threadLane(), X);
     }
 
     const Key& fetch(const index_type Idx) const {
-        const int ThreadNum = omp_get_thread_num() % MaxHandles;
-        return Base::fetch(static_cast<lane_id>(ThreadNum), Idx);
+        return Base::fetch(Base::Lanes.threadLane(), Idx);
     }
 
     template <class... Args>
     std::pair<index_type, bool> findOrInsert(Args&&... Xs) {
-        const int ThreadNum = omp_get_thread_num() % MaxHandles;
-        return Base::findOrInsert(static_cast<lane_id>(ThreadNum), std::forward<Args>(Xs)...);
+        return Base::findOrInsert(Base::Lanes.threadLane(), std::forward<Args>(Xs)...);
     }
 };
 #endif
@@ -402,19 +419,18 @@ public:
  * Reuse the concurrent flyweight with a single access handle.
  */
 template <class Key, class Hash = std::hash<Key>, class KeyEqual = std::equal_to<Key>,
-        class KeyFactory = details::Factory<Key>, std::size_t MaxHandles = 1>
-class SeqFlyweight
-        : public ConcurrentFlyweight<SeqConcurrentLanes, Key, Hash, KeyEqual, KeyFactory, MaxHandles> {
+        class KeyFactory = details::Factory<Key>>
+class SeqFlyweight : protected ConcurrentFlyweight<SeqConcurrentLanes, Key, Hash, KeyEqual, KeyFactory> {
 public:
-    using Base = ConcurrentFlyweight<SeqConcurrentLanes, Key, Hash, KeyEqual, KeyFactory, MaxHandles>;
+    using Base = ConcurrentFlyweight<SeqConcurrentLanes, Key, Hash, KeyEqual, KeyFactory>;
     using index_type = typename Base::index_type;
     using lane_id = typename Base::lane_id;
     using iterator = typename Base::iterator;
 
-    explicit SeqFlyweight(const std::size_t InitialCapacity = 8, const bool ReserveFirst = false,
-            const Hash& hash = Hash(), const KeyEqual& key_equal = KeyEqual(),
-            const KeyFactory& key_factory = KeyFactory())
-            : Base(InitialCapacity, ReserveFirst, hash, key_equal, key_factory) {}
+    explicit SeqFlyweight(const std::size_t NumLanes, const std::size_t InitialCapacity = 8,
+            const bool ReserveFirst = false, const Hash& hash = Hash(),
+            const KeyEqual& key_equal = KeyEqual(), const KeyFactory& key_factory = KeyFactory())
+            : Base(NumLanes, InitialCapacity, ReserveFirst, hash, key_equal, key_factory) {}
 
     ~SeqFlyweight() {}
 

@@ -188,6 +188,7 @@ set_target_properties(libsouffle PROPERTIES CXX_EXTENSIONS OFF)
 target_compile_options(libsouffle
                        PUBLIC "-Wall;-Wextra;-fwrapv")
 
+target_link_libraries(libsouffle PRIVATE Threads::Threads)
 
 # FIXME: Better to have a library list 
 if (OPENMP_FOUND)

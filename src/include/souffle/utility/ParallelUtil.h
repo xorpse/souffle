@@ -20,6 +20,7 @@
 #include <atomic>
 #include <cassert>
 #include <cstddef>
+#include <memory>
 #include <new>
 
 #if defined(__cpp_lib_hardware_interference_size) && \
@@ -117,8 +118,12 @@ constexpr std::size_t hardware_destructive_interference_size = 2 * sizeof(max_al
 namespace souffle {
 
 struct SeqConcurrentLanes {
+    struct TrivialLock {
+        ~TrivialLock() {}
+    };
+
     using lane_id = std::size_t;
-    using unique_lock_type = bool;
+    using unique_lock_type = TrivialLock;
 
     explicit SeqConcurrentLanes(std::size_t = 1) {}
     SeqConcurrentLanes(const SeqConcurrentLanes&) = delete;
@@ -126,12 +131,14 @@ struct SeqConcurrentLanes {
 
     virtual ~SeqConcurrentLanes() {}
 
-    std::size_t tracks() const {
+    std::size_t lanes() const {
         return 1;
     }
 
+    void setNumLanes(const std::size_t) {}
+
     unique_lock_type guard(const lane_id) const {
-        return true;
+        return TrivialLock();
     }
 
     void lock(const lane_id) const {
@@ -519,15 +526,35 @@ struct MutexConcurrentLanes {
     using lane_id = std::size_t;
     using unique_lock_type = std::unique_lock<std::mutex>;
 
-    explicit MutexConcurrentLanes(std::size_t Sz = 16) : Size(Sz), Lanes(Sz) {}
+    explicit MutexConcurrentLanes(const std::size_t Sz) : Size(Sz), Attribution(attribution(Sz)) {
+        Lanes = std::make_unique<Lane[]>(Sz);
+    }
     MutexConcurrentLanes(const MutexConcurrentLanes&) = delete;
     MutexConcurrentLanes(MutexConcurrentLanes&&) = delete;
 
     virtual ~MutexConcurrentLanes() {}
 
-    // Return the number of tracks.
-    std::size_t tracks() const {
+    // Return the number of lanes.
+    std::size_t lanes() const {
         return Size;
+    }
+
+    // Select a lane
+    lane_id getLane(std::size_t I) const {
+        if (Attribution == lane_attribution::mod_power_of_2) {
+            return I & (Size - 1);
+        } else {
+            return I % Size;
+        }
+    }
+
+    /** Change the number of lanes.
+     * DO not use while threads are using this object.
+     */
+    void setNumLanes(const std::size_t NumLanes) {
+        Size = (NumLanes == 0 ? 1 : NumLanes);
+        Attribution = attribution(Size);
+        Lanes = std::make_unique<Lane[]>(Size);
     }
 
     unique_lock_type guard(const lane_id Lane) const {
@@ -596,57 +623,83 @@ struct MutexConcurrentLanes {
     }
 
 private:
+    enum lane_attribution { mod_power_of_2, mod_other };
+
     struct Lane {
         alignas(hardware_destructive_interference_size) std::mutex Access;
     };
 
+    static constexpr lane_attribution attribution(const std::size_t Sz) {
+        assert(Sz > 0);
+        if ((Sz & (Sz - 1)) == 0) {
+            // Sz is a power of 2
+            return lane_attribution::mod_power_of_2;
+        } else {
+            return lane_attribution::mod_other;
+        }
+    }
+
 protected:
-    const std::size_t Size;
+    std::size_t Size;
+    lane_attribution Attribution;
 
 private:
-    mutable std::vector<Lane> Lanes;
+    mutable std::unique_ptr<Lane[]> Lanes;
 
     alignas(hardware_destructive_interference_size) mutable std::mutex BeforeLockAll;
 };
 
-class ConcurrentLanes : protected MutexConcurrentLanes {
+class ConcurrentLanes : public MutexConcurrentLanes {
     using Base = MutexConcurrentLanes;
 
 public:
-    explicit ConcurrentLanes(std::size_t Sz = MAX_THREADS) : MutexConcurrentLanes(Sz) {}
+    using lane_id = Base::lane_id;
+    using Base::beforeLockAllBut;
+    using Base::beforeUnlockAllBut;
+    using Base::guard;
+    using Base::lock;
+    using Base::lockAllBut;
+    using Base::unlock;
+    using Base::unlockAllBut;
+
+    explicit ConcurrentLanes(const std::size_t Sz) : MutexConcurrentLanes(Sz) {}
     ConcurrentLanes(const ConcurrentLanes&) = delete;
     ConcurrentLanes(ConcurrentLanes&&) = delete;
 
-    std::size_t tracks() const {
-        return Base::tracks();
+    lane_id threadLane() const {
+        return getLane(static_cast<std::size_t>(omp_get_thread_num()));
+    }
+
+    void setNumLanes(const std::size_t NumLanes) {
+        Base::setNumLanes(NumLanes == 0 ? omp_get_max_threads() : NumLanes);
     }
 
     unique_lock_type guard() const {
-        return Base::guard(omp_get_thread_num() % Size);
+        return Base::guard(threadLane());
     }
 
     void lock() const {
-        return Base::lock(omp_get_thread_num() % Size);
+        return Base::lock(threadLane());
     }
 
     void unlock() const {
-        return Base::unlock(omp_get_thread_num() % Size);
+        return Base::unlock(threadLane());
     }
 
     void beforeLockAllBut() const {
-        return Base::beforeLockAllBut(omp_get_thread_num() % Size);
+        return Base::beforeLockAllBut(threadLane());
     }
 
     void beforeUnlockAllBut() const {
-        return Base::beforeUnlockAllBut(omp_get_thread_num() % Size);
+        return Base::beforeUnlockAllBut(threadLane());
     }
 
     void lockAllBut() const {
-        return Base::lockAllBut(omp_get_thread_num() % Size);
+        return Base::lockAllBut(threadLane());
     }
 
     void unlockAllBut() const {
-        return Base::unlockAllBut(omp_get_thread_num() % Size);
+        return Base::unlockAllBut(threadLane());
     }
 };
 
@@ -756,42 +809,45 @@ struct ConcurrentLanes : protected SeqConcurrentLanes {
     using lane_id = SeqConcurrentLanes::lane_id;
     using unique_lock_type = SeqConcurrentLanes::unique_lock_type;
 
+    using Base::lanes;
+    using Base::setNumLanes;
+
     explicit ConcurrentLanes(std::size_t Sz = MAX_THREADS) : Base(Sz) {}
     ConcurrentLanes(const ConcurrentLanes&) = delete;
     ConcurrentLanes(ConcurrentLanes&&) = delete;
 
     virtual ~ConcurrentLanes() {}
 
-    std::size_t tracks() const {
-        return Base::tracks();
+    lane_id threadLane() const {
+        return 0;
     }
 
     unique_lock_type guard() const {
-        return Base::guard(0);
+        return Base::guard(threadLane());
     }
 
     void lock() const {
-        return Base::lock(0);
+        return Base::lock(threadLane());
     }
 
     void unlock() const {
-        return Base::unlock(0);
+        return Base::unlock(threadLane());
     }
 
     void beforeLockAllBut() const {
-        return Base::beforeLockAllBut(0);
+        return Base::beforeLockAllBut(threadLane());
     }
 
     void beforeUnlockAllBut() const {
-        return Base::beforeUnlockAllBut(0);
+        return Base::beforeUnlockAllBut(threadLane());
     }
 
     void lockAllBut() const {
-        return Base::lockAllBut(0);
+        return Base::lockAllBut(threadLane());
     }
 
     void unlockAllBut() const {
-        return Base::unlockAllBut(0);
+        return Base::unlockAllBut(threadLane());
     }
 };
 

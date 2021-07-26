@@ -137,23 +137,31 @@ namespace souffle::interpreter {
 
 namespace {
 constexpr RamDomain RAM_BIT_SHIFT_MASK = RAM_DOMAIN_SIZE - 1;
+
+#ifdef _OPENMP
+std::size_t number_of_threads(const std::size_t user_specified) {
+    if (user_specified > 0) {
+        omp_set_num_threads(user_specified);
+        return user_specified;
+    } else {
+        return omp_get_max_threads();
+    }
+}
+#else
+std::size_t number_of_threads(const std::size_t) {
+    return 1;
+}
+#endif
+
 }
 
 Engine::Engine(ram::TranslationUnit& tUnit)
         : profileEnabled(Global::config().has("profile")),
           frequencyCounterEnabled(Global::config().has("profile-frequency")),
           isProvenance(Global::config().has("provenance")),
-          numOfThreads(std::stoi(Global::config().get("jobs"))), tUnit(tUnit),
-          isa(tUnit.getAnalysis<ram::analysis::IndexAnalysis>()) {
-#ifdef _OPENMP
-    if (numOfThreads > 0) {
-        omp_set_num_threads(numOfThreads);
-    } else {
-        // Update threads to the system default
-        numOfThreads = omp_get_max_threads();
-    }
-#endif
-}
+          numOfThreads(number_of_threads(std::stoi(Global::config().get("jobs")))), tUnit(tUnit),
+          isa(tUnit.getAnalysis<ram::analysis::IndexAnalysis>()), recordTable(numOfThreads),
+          symbolTable(numOfThreads) {}
 
 Engine::RelationHandle& Engine::getRelationHandle(const std::size_t idx) {
     return *relations[idx];

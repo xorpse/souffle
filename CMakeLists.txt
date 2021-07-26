@@ -96,6 +96,7 @@ option(SOUFFLE_SWIG_PYTHON "Enable/Disable Python SWIG" OFF)
 option(SOUFFLE_SWIG_JAVA "Enable/Disable Java SWIG" OFF)
 option(SOUFFLE_USE_ZLIB "Enable/Disable use of libz file compression" ON)
 option(SOUFFLE_USE_SQLITE "Enable/Disable use sqlite IO" ON)
+option(SOUFFLE_USE_OPENMP "Enable/Disable use of openmp if available" ON)
 option(SOUFFLE_SANITISE_MEMORY "Enable/Disable memory sanitiser" OFF)
 option(SOUFFLE_SANITISE_THREAD "Enable/Disable thread sanitiser" OFF)
 # This is how souffle is built by default in Debug
@@ -198,11 +199,13 @@ find_package(Threads REQUIRED)
 # --------------------------------------------------
 # OpenMP
 # --------------------------------------------------
-find_package(OpenMP)
-if (OPENMP_FOUND)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+if (SOUFFLE_USE_OPENMP)
+  find_package(OpenMP)
+  if (OPENMP_FOUND)
+      set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+      set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+  endif()
 endif()
 
 # --------------------------------------------------

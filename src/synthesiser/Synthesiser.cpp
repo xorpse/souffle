@@ -2752,6 +2752,12 @@ void runFunction(std::string  inputDirectoryArg   = "",
     os << "return recordTable;\n";
     os << "}\n";  // end of getRecordTable() method
 
+    os << "void setNumThreads(std::size_t numThreadsValue) override {\n";
+    os << "SouffleProgram::setNumThreads(numThreadsValue);\n";
+    os << "symTable.setNumLanes(getNumThreads());\n";
+    os << "recordTable.setNumLanes(getNumThreads());\n";
+    os << "}\n";  // end of setNumThreads
+
     if (!prog.getSubroutines().empty()) {
         // generate subroutine adapter
         os << "void executeSubroutine(std::string name, const std::vector<RamDomain>& args, "
@@ -2824,7 +2830,7 @@ void runFunction(std::string  inputDirectoryArg   = "",
     // hidden hooks
     os << "SouffleProgram *newInstance_" << id << "(){return new " << classname << ";}\n";
     os << "SymbolTable *getST_" << id << "(SouffleProgram *p){return &reinterpret_cast<" << classname
-       << "*>(p)->symTable;}\n";
+       << "*>(p)->getSymbolTable();}\n";
 
     os << "\n#ifdef __EMBEDDED_SOUFFLE__\n";
     os << "class factory_" << classname << ": public souffle::ProgramFactory {\n";
