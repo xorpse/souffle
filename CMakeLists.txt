@@ -107,7 +107,8 @@ option(SOUFFLE_NDEBUG "Enable/Disable runtime checks even in release mode" OFF)
 option(SOUFFLE_FAST_RELEASE "Enable/Disable 'fast release' mode" ON)
 # By default, the "test/example" directory is not part of testing
 # this flag enables the tests to run
-option(SOUFFLE_TEST_EXAMPLES "Enable/Disable testing of additional code examples in tests/examples" OFF)
+option(SOUFFLE_TEST_EXAMPLES "Enable/Disable testing of code examples in tests/examples" OFF)
+option(SOUFFLE_TEST_EVALUATION "Enable/Disable testing of evaluation examples in tests/examples" ON)
 option(SOUFFLE_ENABLE_TESTING "Enable/Disable testing" ${SOUFFLE_ENABLE_TESTING_DEFAULT})
 option(SOUFFLE_GENERATE_DOXYGEN "Generate Doxygen files (html;htmlhelp;man;rtf;xml;latex)" "")
 

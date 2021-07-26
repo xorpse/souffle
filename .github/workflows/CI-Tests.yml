@@ -87,7 +87,7 @@ jobs:
       run: sudo sh/setup/install_ubuntu_deps.sh
 
     - name: setup-with-memory-sanitizer
-      run: cmake -S . -B build -DSOUFFLE_SANITISE_MEMORY=ON
+      run: cmake -S . -B build -DSOUFFLE_SANITISE_MEMORY=ON -DSOUFFLE_TEST_EVALUATION=OFF
 
     - name: make
       run: cmake --build build -j6
