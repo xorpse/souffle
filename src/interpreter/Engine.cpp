@@ -153,7 +153,7 @@ std::size_t number_of_threads(const std::size_t) {
 }
 #endif
 
-}
+}  // namespace
 
 Engine::Engine(ram::TranslationUnit& tUnit)
         : profileEnabled(Global::config().has("profile")),
