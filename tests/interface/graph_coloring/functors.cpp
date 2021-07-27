@@ -1,5 +1,7 @@
 #include <cmath>
+#include <cstdint>
 #include <iostream>
+
 using namespace std;
 
 extern "C" {

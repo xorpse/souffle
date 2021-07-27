@@ -108,7 +108,8 @@ option(SOUFFLE_NDEBUG "Enable/Disable runtime checks even in release mode" OFF)
 option(SOUFFLE_FAST_RELEASE "Enable/Disable 'fast release' mode" ON)
 # By default, the "test/example" directory is not part of testing
 # this flag enables the tests to run
-option(SOUFFLE_TEST_EXAMPLES "Enable/Disable testing of additional code examples in tests/examples" OFF)
+option(SOUFFLE_TEST_EXAMPLES "Enable/Disable testing of code examples in tests/examples" OFF)
+option(SOUFFLE_TEST_EVALUATION "Enable/Disable testing of evaluation examples in tests/examples" ON)
 option(SOUFFLE_ENABLE_TESTING "Enable/Disable testing" ${SOUFFLE_ENABLE_TESTING_DEFAULT})
 option(SOUFFLE_GENERATE_DOXYGEN "Generate Doxygen files (html;htmlhelp;man;rtf;xml;latex)" "")
 
@@ -297,9 +298,27 @@ endif()
 add_subdirectory(src)
 
 if (SOUFFLE_ENABLE_TESTING)
+    add_subdirectory(src/tests)
     add_subdirectory(tests)
 endif()
 
+
+# --------------------------------------------------
+# Installing bash completion file
+# --------------------------------------------------
+find_package (bash-completion)
+if (BASH_COMPLETION_FOUND)
+    message(STATUS "Using bash completion dir ${BASH_COMPLETION_COMPLETIONSDIR}")
+else()
+    set (BASH_COMPLETION_COMPLETIONSDIR "/etc/bash_completion.d")
+    message (STATUS "Using fallback bash completion dir ${BASH_COMPLETION_COMPLETIONSDIR}")
+endif()
+
+install(
+    FILES "${CMAKE_SOURCE_DIR}/debian/souffle.bash-completion"
+    DESTINATION ${BASH_COMPLETION_COMPLETIONSDIR}
+    RENAME "souffle"
+)
 
 # --------------------------------------------------
 # Utility function to help us distinguish between Linux distros when packaging
@@ -330,6 +349,9 @@ SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A Datalog Compiler")
 
 # Use all available threads (primarily for compression of files)
 SET(CPACK_THREADS 0)
+
+# Make sure changelog, bash-completion and other important files in debian directory also packaged
+SET(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/debian/changelog.in" "${CMAKE_SOURCE_DIR}/debian/souffle.bash-completion" "${CMAKE_SOURCE_DIR}/debian/copyright")
 
 # --------------------------------------------------
 # CPack configuration for Linux
