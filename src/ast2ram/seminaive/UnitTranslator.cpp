@@ -383,6 +383,9 @@ Own<ram::Statement> UnitTranslator::generateLoadRelation(const ast::Relation* re
         for (const auto& [key, value] : load->getParameters()) {
             directives.insert(std::make_pair(key, unescape(value)));
         }
+        if (Global::config().has("no-warn")) {
+            directives.insert(std::make_pair("no-warn", "true"));
+        }
         addAuxiliaryArity(relation, directives);
 
         // Create the resultant load statement, with profile information
@@ -393,7 +396,6 @@ Own<ram::Statement> UnitTranslator::generateLoadRelation(const ast::Relation* re
                     LogStatement::tRelationLoadTime(ramRelationName, relation->getSrcLoc());
             loadStmt = mk<ram::LogRelationTimer>(std::move(loadStmt), logTimerStatement, ramRelationName);
         }
-
         appendStmt(loadStmts, std::move(loadStmt));
     }
     return mk<ram::Sequence>(std::move(loadStmts));
@@ -417,7 +419,6 @@ Own<ram::Statement> UnitTranslator::generateStoreRelation(const ast::Relation* r
                     LogStatement::tRelationSaveTime(ramRelationName, relation->getSrcLoc());
             storeStmt = mk<ram::LogRelationTimer>(std::move(storeStmt), logTimerStatement, ramRelationName);
         }
-
         appendStmt(storeStmts, std::move(storeStmt));
     }
     return mk<ram::Sequence>(std::move(storeStmts));
