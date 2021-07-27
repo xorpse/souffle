@@ -163,7 +163,6 @@ Engine::Engine(ram::TranslationUnit& tUnit)
           isa(tUnit.getAnalysis<ram::analysis::IndexAnalysis>()), recordTable(numOfThreads),
           symbolTable(numOfThreads) {}
 
-
 Engine::RelationHandle& Engine::getRelationHandle(const std::size_t idx) {
     return *relations[idx];
 }
