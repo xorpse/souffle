@@ -39,7 +39,7 @@ MAXIMUM_LINES="200"
 
 # print some program data
 pretty_print "Installed tools"
-for exe in git gcc g++ clang clang++ automake autoconf flex bison; do
+for exe in git gcc g++ clang clang++ flex bison; do
     which $exe
     ($exe --version 2>/dev/null >/dev/null && $exe --version ) || $exe -version
     echo
