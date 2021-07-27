@@ -18,39 +18,6 @@ jobs:
     - name: clang-format
       run: sh/run_test_format.sh
       
-  Ubuntu:
-    needs: Code-Style
-    timeout-minutes: 150
-
-    strategy: 
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-        domain: [32bit, 64bit]
-
-    runs-on: ${{ matrix.os }}
-
-    steps:
-    - name: checkout
-      uses: actions/checkout@v2
-    
-    - name: install-deps
-      run: sudo sh/setup/install_ubuntu_deps.sh
-
-    - name: setup-32bit-domain
-      if: ${{ matrix.domain == '32bit' }}
-      run: ./bootstrap && ./configure
-
-    - name: setup-64bit-domain
-      if: ${{ matrix.domain == '64bit' }}
-      run: ./bootstrap && ./configure --enable-64bit-domain
-      
-    - name: make
-      run: make -j6
-      
-    - name: check
-      run: TESTSUITEFLAGS=-j make check -j || (sh/after_failure.sh && false)
-
   Ubuntu-CMake:
     needs: Code-Style
     timeout-minutes: 150
@@ -84,7 +51,7 @@ jobs:
     - name: check
       run: cd build && ctest --output-on-failure --progress -j
 
-  OSX:
+  OSX-CMake:
     needs: Code-Style
     timeout-minutes: 150
 
@@ -98,13 +65,13 @@ jobs:
       run: sh/setup/install_macos_deps.sh
 
     - name: setup-32bit-domain
-      run: ./bootstrap && ./configure
+      run: cmake -S . -B build
 
     - name: make
-      run: make -j6
+      run: cmake --build build -j6
       
     - name: check
-      run: TESTSUITEFLAGS=-j make check -j || (sh/after_failure.sh && false)
+      run: cd build && ctest --output-on-failure --progress -j
 
   Memory-Check:
     needs: Code-Style
@@ -120,13 +87,11 @@ jobs:
       run: sudo sh/setup/install_ubuntu_deps.sh
 
     - name: setup-with-memory-sanitizer
-      run: ./bootstrap && ./configure --enable-sanitise-memory
+      run: cmake -S . -B build -DSOUFFLE_SANITISE_MEMORY=ON -DSOUFFLE_TEST_EVALUATION=OFF
 
     - name: make
-      run: make -j6
+      run: cmake --build build -j6
       
     - name: check
-      run: >
-        TESTSUITEFLAGS=-j 
-        SOUFFLE_CATEGORY=Syntactic,Semantic,FastEvaluation,Profile,Interface,Provenance 
-        make check -j || (sh/after_failure.sh && false)
+      run: cd build && ctest --output-on-failure --progress -j
+

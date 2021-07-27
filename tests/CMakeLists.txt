@@ -4,8 +4,9 @@
 # - https://opensource.org/licenses/UPL
 # - <souffle root>/licenses/SOUFFLE-UPL.txt
 
-add_subdirectory(evaluation)
-# Turns out these were not part of the usual souffle testing
+if (SOUFFLE_TEST_EVALUATION)
+    add_subdirectory(evaluation)
+endif()
 if (SOUFFLE_TEST_EXAMPLES)
     add_subdirectory(example)
 endif()
