@@ -306,7 +306,10 @@ public:
               baseName(souffle::baseName(getFileName(rwOperation))),
               fileHandle(getFileName(rwOperation), std::ios::in | std::ios::binary) {
         if (!fileHandle.is_open()) {
-            throw std::invalid_argument("Cannot open fact file " + baseName + "\n");
+            // suppress error message in case file cannot be open when flag -w is set
+            if (getOr(rwOperation, "no-warn", "false") != "true") {
+                throw std::invalid_argument("Cannot open fact file " + baseName + "\n");
+            }
         }
         // Strip headers if we're using them
         if (getOr(rwOperation, "headers", "false") == "true") {
