@@ -150,7 +150,7 @@ Engine::Engine(ram::TranslationUnit& tUnit)
         omp_set_num_threads(numOfThreads);
     } else {
         // Update threads to the system default
-        numOfThreads = omp_get_num_threads();
+        numOfThreads = omp_get_max_threads();
     }
 #endif
 }
