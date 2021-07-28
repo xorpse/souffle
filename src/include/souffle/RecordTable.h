@@ -18,7 +18,7 @@
 #pragma once
 
 #include "souffle/RamTypes.h"
-#include "souffle/datastructure/ConcurrentFlyweight.hpp"
+#include "souffle/datastructure/ConcurrentFlyweight.h"
 #include "souffle/utility/span.h"
 #include <cassert>
 #include <cstddef>

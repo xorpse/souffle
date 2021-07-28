@@ -17,7 +17,7 @@
 #pragma once
 
 #include "souffle/RamTypes.h"
-#include "souffle/datastructure/ConcurrentFlyweight.hpp"
+#include "souffle/datastructure/ConcurrentFlyweight.h"
 #include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/ParallelUtil.h"
 #include "souffle/utility/StreamUtil.h"
