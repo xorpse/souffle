@@ -55,10 +55,10 @@ int main(int argc, char** argv) {
                       << "\n";
 
             // Output the symbol table
-            auto st = people->getSymbolTable();
+            auto& st = people->getSymbolTable();
 
-            for (int i = 0; i < st.size(); i++) {
-                std::cout << st.decode(i) << "\t=> " << i << std::endl;
+            for (auto i = st.begin(); i != st.end(); ++i) {
+                std::cout << i->first << "\t=> " << i->second << std::endl;
             }
         } else {
             error("cannot find relation people");

@@ -805,7 +805,7 @@ public:
     /**
      * Set the number of threads to be used
      */
-    void setNumThreads(std::size_t numThreadsValue) {
+    virtual void setNumThreads(std::size_t numThreadsValue) {
         this->numThreads = numThreadsValue;
     }
 

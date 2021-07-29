@@ -171,7 +171,12 @@ void MainConfig::processArgs(int argc, char** argv, const std::string& header, c
             if (iter->second->takesMany) {
                 // set the value of the option in the global config to the concatenation of its previous
                 // value, a space and the current argument
-                set(iter->second->longName, get(iter->second->longName) + ' ' + arg);
+                auto previous = get(iter->second->longName);
+                if (previous.empty()) {
+                    set(iter->second->longName, arg);
+                } else {
+                    set(iter->second->longName, get(iter->second->longName) + ' ' + arg);
+                }
                 // otherwise, set the value of the option in the global config
             } else {
                 // but only if it isn't set already

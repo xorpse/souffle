@@ -102,7 +102,7 @@ souffle::RamDomain myappend(
         // Argument is a list element [x, l] where
         // x is a number and l is another list element
         const souffle::RamDomain* myTuple0 = recordTable->unpack(arg, 2);
-        souffle::RamDomain myTuple1[2] = {myTuple0[0] + 1, myTuple0[0]};
+        souffle::RamDomain myTuple1[2] = {myTuple0[0] + 1, arg};
         // Return [x+1, [x, l]]
         return recordTable->pack(myTuple1, 2);
     }

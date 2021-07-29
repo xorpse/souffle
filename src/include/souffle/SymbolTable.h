@@ -17,6 +17,7 @@
 #pragma once
 
 #include "souffle/RamTypes.h"
+#include "souffle/datastructure/ConcurrentFlyweight.h"
 #include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/ParallelUtil.h"
 #include "souffle/utility/StreamUtil.h"
@@ -37,93 +38,84 @@ namespace souffle {
  *
  * SymbolTable encodes symbols to numbers and decodes numbers to symbols.
  */
-class SymbolTable {
+class SymbolTable : protected FlyweightImpl<std::string> {
 private:
-    /** A lock to synchronize parallel accesses */
-    mutable Lock access;
-
-    /** Stores symbol indices to symbols information */
-    std::deque<std::string> numToStr;
-
-    /** Stores symbols to symbol indices information */
-    std::unordered_map<std::string, std::size_t> strToNum;
-
-    /** Convenience method to place a new symbol in the table, if it does not exist, and return the index of
-     * it; otherwise return the index. */
-    inline std::size_t newSymbolOfIndex(const std::string& symbol) {
-        std::size_t index;
-        auto it = strToNum.find(symbol);
-        if (it == strToNum.end()) {
-            index = numToStr.size();
-            strToNum[symbol] = index;
-            numToStr.push_back(symbol);
-        } else {
-            index = it->second;
-        }
-        return index;
-    }
+    using Base = FlyweightImpl<std::string>;
 
 public:
-    SymbolTable() = default;
-    SymbolTable(std::initializer_list<std::string> symbols) {
-        strToNum.reserve(symbols.size());
+    using iterator = typename Base::iterator;
+
+    /** @brief Construct a symbol table with the given number of concurrent access lanes. */
+    SymbolTable(const std::size_t LaneCount = 1) : Base(LaneCount) {}
+
+    /** @brief Construct a symbol table with the given initial symbols. */
+    SymbolTable(std::initializer_list<std::string> symbols) : Base(1, symbols.size()) {
         for (const auto& symbol : symbols) {
-            if (strToNum.find(symbol) == strToNum.end()) {
-                strToNum[symbol] = numToStr.size();
-                numToStr.push_back(symbol);
-            }
+            findOrInsert(symbol);
         }
     }
 
-    virtual ~SymbolTable() = default;
-
-    /* Obtain the size of the symbol table. */
-    std::size_t size() const {
-        return numToStr.size();
+    /** @brief Construct a symbol table with the given number of concurrent access lanes and initial symbols.
+     */
+    SymbolTable(const std::size_t LaneCount, std::initializer_list<std::string> symbols)
+            : Base(LaneCount, symbols.size()) {
+        for (const auto& symbol : symbols) {
+            findOrInsert(symbol);
+        }
     }
 
-    /** Encode a symbol to a symbol index; this method is thread-safe.  */
+    /**
+     * @brief Set the number of concurrent access lanes.
+     * This function is not thread-safe, do not call when other threads are using the datastructure.
+     */
+    void setNumLanes(const std::size_t NumLanes) {
+        Base::setNumLanes(NumLanes);
+    }
+
+    /** @brief Return an iterator on the first symbol. */
+    iterator begin() const {
+        return Base::begin();
+    }
+
+    /** @brief Return an iterator past the last symbol. */
+    iterator end() const {
+        return Base::end();
+    }
+
+    /** @brief Check if the given symbol exist. */
+    bool weakContains(const std::string& symbol) const {
+        return Base::weakContains(symbol);
+    }
+
+    /** @brief Encode a symbol to a symbol index. */
     RamDomain encode(const std::string& symbol) {
-        {
-            auto lease = access.acquire();
-            (void)lease;  // avoid warning;
-            return static_cast<RamDomain>(newSymbolOfIndex(symbol));
-        }
+        return Base::findOrInsert(symbol).first;
     }
 
-    /** Decode a symbol index to a symbol; this method is thread-safe.  */
+    /** @brief Decode a symbol index to a symbol. */
     const std::string& decode(const RamDomain index) const {
-        {
-            auto lease = access.acquire();
-            (void)lease;  // avoid warning;
-            auto pos = static_cast<std::size_t>(index);
-            if (pos >= size()) {
-                // TODO: use different error reporting here!!
-                fatal("Error index out of bounds in call to `SymbolTable::decode`. index = `%d`", index);
-            }
-            return numToStr[pos];
-        }
+        return Base::fetch(index);
     }
 
-    /** Acquire symbol table lock */
-    Lock::Lease acquireLock() const {
-        return access.acquire();
-    }
-
-    /**
-     * Encode a symbol to a symbol index; this method is not thread-safe.
-     * The lock must be acquired explicitly.
-     */
+    /** @brief Encode a symbol to a symbol index; aliases encode. */
     RamDomain unsafeEncode(const std::string& symbol) {
-        return static_cast<RamDomain>(newSymbolOfIndex(symbol));
+        return encode(symbol);
+    }
+
+    /** @brief Decode a symbol index to a symbol; aliases decode. */
+    const std::string& unsafeDecode(const RamDomain index) const {
+        return decode(index);
     }
 
     /**
-     * Decode an symbol index to symbol; this method is not thread-safe.
-     * The lock must be acquired explicitly.
+     * @brief Encode the symbol, it is inserted if it does not exist.
+     *
+     * @return the symbol index and a boolean indicating if an insertion
+     * happened.
      */
-    const std::string& unsafeDecode(const RamDomain index) const {
-        return numToStr[static_cast<std::size_t>(index)];
+    std::pair<RamDomain, bool> findOrInsert(const std::string& symbol) {
+        auto Res = Base::findOrInsert(symbol);
+        return std::make_pair(Res.first, Res.second);
     }
 };
 

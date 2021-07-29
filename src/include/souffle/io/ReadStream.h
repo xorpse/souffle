@@ -42,8 +42,6 @@ protected:
 public:
     template <typename T>
     void readAll(T& relation) {
-        auto lease = symbolTable.acquireLock();
-        (void)lease;
         while (const auto next = readNextTuple()) {
             const RamDomain* ramDomain = next.get();
             relation.insert(ramDomain);
@@ -96,7 +94,7 @@ protected:
             consumeWhiteSpace(source, pos);
             switch (recordType[0]) {
                 case 's': {
-                    recordValues[i] = symbolTable.unsafeEncode(readSymbol(source, ",]", pos, &consumed));
+                    recordValues[i] = symbolTable.encode(readSymbol(source, ",]", pos, &consumed));
                     break;
                 }
                 case 'i': {
@@ -178,8 +176,10 @@ protected:
                 return branchIdx;
             }
 
-            RamDomain emptyArgs = recordTable.pack(toVector<RamDomain>().data(), 0);
-            return recordTable.pack(toVector<RamDomain>(branchIdx, emptyArgs).data(), 2);
+            const RamDomain empty[] = {};
+            RamDomain emptyArgs = recordTable.pack(empty, 0);
+            const RamDomain record[] = {branchIdx, emptyArgs};
+            return recordTable.pack(record, 2);
         }
 
         consumeChar(source, '(', pos);
@@ -199,7 +199,7 @@ protected:
 
             switch (argType[0]) {
                 case 's': {
-                    branchArgs[i] = symbolTable.unsafeEncode(readSymbol(source, ",)", pos, &consumed));
+                    branchArgs[i] = symbolTable.encode(readSymbol(source, ",)", pos, &consumed));
                     break;
                 }
                 case 'i': {
@@ -242,7 +242,8 @@ protected:
             }
         }();
 
-        return recordTable.pack(toVector<RamDomain>(branchIdx, branchValue).data(), 2);
+        RamDomain rec[2] = {branchIdx, branchValue};
+        return recordTable.pack(rec, 2);
     }
 
     /**

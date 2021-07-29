@@ -659,7 +659,10 @@ int main(int argc, char** argv) {
             }
         } else {
             // ------- compiler -------------
-            auto synthesiser = mk<synthesiser::Synthesiser>(*ramTranslationUnit);
+            // int jobs = std::stoi(Global::config().get("jobs"));
+            // jobs = (jobs <= 0 ? MAX_THREADS : jobs);
+            auto synthesiser =
+                    mk<synthesiser::Synthesiser>(/*static_cast<std::size_t>(jobs),*/ *ramTranslationUnit);
 
             // Find the base filename for code generation and execution
             std::string baseFilename;

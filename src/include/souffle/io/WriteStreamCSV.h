@@ -15,6 +15,7 @@
 #pragma once
 
 #include "souffle/RamTypes.h"
+#include "souffle/RecordTable.h"
 #include "souffle/SymbolTable.h"
 #include "souffle/io/WriteStream.h"
 #include "souffle/utility/ContainerUtil.h"
@@ -34,8 +35,6 @@
 #include <vector>
 
 namespace souffle {
-
-class RecordTable;
 
 class WriteStreamCSV : public WriteStream {
 protected:
@@ -98,7 +97,7 @@ protected:
 
     void writeNextTupleElement(std::ostream& destination, const std::string& type, RamDomain value) {
         switch (type[0]) {
-            case 's': outputSymbol(destination, symbolTable.unsafeDecode(value), true); break;
+            case 's': outputSymbol(destination, symbolTable.decode(value), true); break;
             case 'i': destination << value; break;
             case 'u': destination << ramBitCast<RamUnsigned>(value); break;
             case 'f': destination << ramBitCast<RamFloat>(value); break;
@@ -239,7 +238,8 @@ protected:
 class WriteCoutPrintSize : public WriteStream {
 public:
     explicit WriteCoutPrintSize(const std::map<std::string, std::string>& rwOperation)
-            : WriteStream(rwOperation, {}, {}), lease(souffle::getOutputLock().acquire()) {
+            : WriteStream(rwOperation, *static_cast<SymbolTable*>(0), *static_cast<RecordTable*>(0)),
+              lease(souffle::getOutputLock().acquire()) {
         std::cout << rwOperation.at("name") << "\t";
     }
 
