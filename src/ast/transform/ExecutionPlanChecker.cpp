@@ -25,6 +25,7 @@
 #include "ast/analysis/RelationSchedule.h"
 #include "ast/utility/Utils.h"
 #include "reports/ErrorReport.h"
+#include "souffle/utility/ContainerUtil.h"
 #include <algorithm>
 #include <map>
 #include <set>
@@ -69,6 +70,18 @@ bool ExecutionPlanChecker::transform(TranslationUnit& translationUnit) {
                                             cur.second->getSrcLoc()),
                                     {DiagnosticMessage("only versions 0.." + std::to_string(version - 1) +
                                                        " permitted")}));
+                        }
+                        bool isComplete = true;
+                        auto order = cur.second->getOrder();
+                        for (unsigned i = 1; i <= order.size(); i++) {
+                            if (!contains(order, i)) {
+                                isComplete = false;
+                                break;
+                            }
+                        }
+                        auto numAtoms = getBodyLiterals<Atom>(*clause).size();
+                        if (order.size() != numAtoms || !isComplete) {
+                            report.addError("Invalid execution order in plan", cur.second->getSrcLoc());
                         }
                     }
                 }

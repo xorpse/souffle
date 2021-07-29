@@ -492,24 +492,6 @@ void SemanticCheckerImpl::checkClause(const Clause& clause) {
         }
     }
 
-    // check execution plan
-    if (clause.getExecutionPlan() != nullptr) {
-        auto numAtoms = getBodyLiterals<Atom>(clause).size();
-        for (const auto& cur : clause.getExecutionPlan()->getOrders()) {
-            bool isComplete = true;
-            auto order = cur.second->getOrder();
-            for (unsigned i = 1; i <= order.size(); i++) {
-                if (!contains(order, i)) {
-                    isComplete = false;
-                    break;
-                }
-            }
-            if (order.size() != numAtoms || !isComplete) {
-                report.addError("Invalid execution order in plan", cur.second->getSrcLoc());
-            }
-        }
-    }
-
     // check auto-increment
     if (recursiveClauses.recursive(&clause)) {
         visit(clause, [&](const Counter& ctr) {
