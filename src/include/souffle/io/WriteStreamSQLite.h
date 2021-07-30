@@ -41,10 +41,11 @@ public:
         openDB();
         createTables();
         prepareStatements();
-        //        executeSQL("BEGIN TRANSACTION", db);
+        executeSQL("BEGIN TRANSACTION", db);
     }
 
     ~WriteStreamSQLite() override {
+        executeSQL("COMMIT", db);
         sqlite3_finalize(insertStatement);
         sqlite3_finalize(symbolInsertStatement);
         sqlite3_finalize(symbolSelectStatement);
