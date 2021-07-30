@@ -59,6 +59,19 @@ bool ExecutionPlanChecker::transform(TranslationUnit& translationUnit) {
                 int maxVersion = -1;
                 for (auto const& cur : clause->getExecutionPlan()->getOrders()) {
                     maxVersion = std::max(cur.first, maxVersion);
+
+                    bool isComplete = true;
+                    auto order = cur.second->getOrder();
+                    for (unsigned i = 1; i <= order.size(); i++) {
+                        if (!contains(order, i)) {
+                            isComplete = false;
+                            break;
+                        }
+                    }
+                    auto numAtoms = getBodyLiterals<Atom>(*clause).size();
+                    if (order.size() != numAtoms || !isComplete) {
+                        report.addError("Invalid execution order in plan", cur.second->getSrcLoc());
+                    }
                 }
 
                 if (version <= maxVersion) {
@@ -70,18 +83,6 @@ bool ExecutionPlanChecker::transform(TranslationUnit& translationUnit) {
                                             cur.second->getSrcLoc()),
                                     {DiagnosticMessage("only versions 0.." + std::to_string(version - 1) +
                                                        " permitted")}));
-                        }
-                        bool isComplete = true;
-                        auto order = cur.second->getOrder();
-                        for (unsigned i = 1; i <= order.size(); i++) {
-                            if (!contains(order, i)) {
-                                isComplete = false;
-                                break;
-                            }
-                        }
-                        auto numAtoms = getBodyLiterals<Atom>(*clause).size();
-                        if (order.size() != numAtoms || !isComplete) {
-                            report.addError("Invalid execution order in plan", cur.second->getSrcLoc());
                         }
                     }
                 }
