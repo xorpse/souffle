@@ -118,7 +118,7 @@ jobs:
       run: cmake --build build -j6
 
     - name: check
-      run: cd build && ctest --output-on-failure --progress -j
+      run: cd build && ctest --output-on-failure --progress -j6
 
     - name: create-coverage-report
       run: lcov --capture --directory . --output-file coverage.info
