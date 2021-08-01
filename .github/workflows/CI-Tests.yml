@@ -1,103 +1,102 @@
 name: CI-Tests
-on: [push]
-# on:
-#   pull_request:
-#     types: [opened, synchronize]
-#   workflow_dispatch:
+on:
+  pull_request:
+    types: [opened, synchronize]
+  workflow_dispatch:
 
 jobs:
-#  Code-Style:
-#    runs-on: ubuntu-18.04
-#
-#    steps:
-#    - name: checkout
-#      uses: actions/checkout@v2
-#      with:
-#        fetch-depth: 2
-#
-#    - name: clang-format
-#      run: sh/run_test_format.sh
-#
-#  Ubuntu-CMake:
-#    needs: Code-Style
-#    timeout-minutes: 150
-#
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        os: [ubuntu-latest]
-#        domain: [32bit, 64bit]
-#
-#    runs-on: ${{ matrix.os }}
-#
-#    steps:
-#    - name: checkout
-#      uses: actions/checkout@v2
-#
-#    - name: install-deps
-#      run: sudo sh/setup/install_ubuntu_deps.sh
-#
-#    - name: setup-32bit-domain
-#      if: ${{ matrix.domain == '32bit' }}
-#      run: cmake -S . -B build
-#
-#    - name: setup-64bit-domain
-#      if: ${{ matrix.domain == '64bit' }}
-#      run: cmake -S . -B build -DSOUFFLE_DOMAIN_64BIT=ON
-#
-#    - name: make
-#      run: cmake --build build -j6
-#
-#    - name: check
-#      run: cd build && ctest --output-on-failure --progress -j
-#
-#  OSX-CMake:
-#    needs: Code-Style
-#    timeout-minutes: 150
-#
-#    runs-on: macos-latest
-#
-#    steps:
-#    - name: checkout
-#      uses: actions/checkout@v2
-#
-#    - name: install-deps
-#      run: sh/setup/install_macos_deps.sh
-#
-#    - name: setup-32bit-domain
-#      run: cmake -S . -B build
-#
-#    - name: make
-#      run: cmake --build build -j6
-#
-#    - name: check
-#      run: cd build && ctest --output-on-failure --progress -j
-#
-#  Memory-Check:
-#    needs: Code-Style
-#    timeout-minutes: 150
-#
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#    - name: checkout
-#      uses: actions/checkout@v2
-#
-#    - name: install-deps
-#      run: sudo sh/setup/install_ubuntu_deps.sh
-#
-#    - name: setup-with-memory-sanitizer
-#      run: cmake -S . -B build -DSOUFFLE_SANITISE_MEMORY=ON -DSOUFFLE_TEST_EVALUATION=OFF
-#
-#    - name: make
-#      run: cmake --build build -j6
-#
-#    - name: check
-#      run: cd build && ctest --output-on-failure --progress -j
+  Code-Style:
+    runs-on: ubuntu-18.04
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 2
+
+    - name: clang-format
+      run: sh/run_test_format.sh
+
+  Ubuntu-CMake:
+    needs: Code-Style
+    timeout-minutes: 150
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        domain: [32bit, 64bit]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+
+    - name: install-deps
+      run: sudo sh/setup/install_ubuntu_deps.sh
+
+    - name: setup-32bit-domain
+      if: ${{ matrix.domain == '32bit' }}
+      run: cmake -S . -B build
+
+    - name: setup-64bit-domain
+      if: ${{ matrix.domain == '64bit' }}
+      run: cmake -S . -B build -DSOUFFLE_DOMAIN_64BIT=ON
+
+    - name: make
+      run: cmake --build build -j6
+
+    - name: check
+      run: cd build && ctest --output-on-failure --progress -j
+
+  OSX-CMake:
+    needs: Code-Style
+    timeout-minutes: 150
+
+    runs-on: macos-latest
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+
+    - name: install-deps
+      run: sh/setup/install_macos_deps.sh
+
+    - name: setup-32bit-domain
+      run: cmake -S . -B build
+
+    - name: make
+      run: cmake --build build -j6
+
+    - name: check
+      run: cd build && ctest --output-on-failure --progress -j
+
+  Memory-Check:
+    needs: Code-Style
+    timeout-minutes: 150
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+
+    - name: install-deps
+      run: sudo sh/setup/install_ubuntu_deps.sh
+
+    - name: setup-with-memory-sanitizer
+      run: cmake -S . -B build -DSOUFFLE_SANITISE_MEMORY=ON -DSOUFFLE_TEST_EVALUATION=OFF
+
+    - name: make
+      run: cmake --build build -j6
+
+    - name: check
+      run: cd build && ctest --output-on-failure --progress -j
 
 
   Code-Coverage:
-#    needs: [Code-Style, Ubuntu-CMake, OSX-CMake, Memory-Check]
+    needs: [Code-Style, Ubuntu-CMake, OSX-CMake, Memory-Check]
     timeout-minutes: 150
 
     runs-on: ubuntu-latest
