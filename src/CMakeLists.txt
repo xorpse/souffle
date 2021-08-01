@@ -190,7 +190,9 @@ target_compile_options(libsouffle
 
 target_link_libraries(libsouffle PRIVATE Threads::Threads)
 
-target_link_libraries(libsouffle PUBLIC coverage_config)
+if(SOUFFLE_CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_link_libraries(libsouffle PUBLIC coverage_config)
+endif(SOUFFLE_CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 
 # FIXME: Better to have a library list
 if (OPENMP_FOUND)
