@@ -112,6 +112,7 @@ option(SOUFFLE_TEST_EXAMPLES "Enable/Disable testing of code examples in tests/e
 option(SOUFFLE_TEST_EVALUATION "Enable/Disable testing of evaluation examples in tests/examples" ON)
 option(SOUFFLE_ENABLE_TESTING "Enable/Disable testing" ${SOUFFLE_ENABLE_TESTING_DEFAULT})
 option(SOUFFLE_GENERATE_DOXYGEN "Generate Doxygen files (html;htmlhelp;man;rtf;xml;latex)" "")
+option(SOUFFLE_CODE_COVERAGE "Enable coverage reporting" OFF)
 
 # Add aditional modules to CMake
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
@@ -294,33 +295,24 @@ else()
 endif()
 
 # --------------------------------------------------
-# Adding code coverage to project
+# Code Coverage Mode
 # --------------------------------------------------
 
-# Use C++11
-set(CMAKE_CXX_STANDARD 11)
-# Require (at least) it
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-# Don't use e.g. GNU extension (like -std=gnu++11) for portability
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-# Code Coverage Configuration
-add_library(coverage_config INTERFACE)
-
-option(CODE_COVERAGE "Enable coverage reporting" OFF)
-if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  # Add required flags (GCC & LLVM/Clang)
-  target_compile_options(coverage_config INTERFACE
-    -O0        # no optimization
-    -g         # generate debug info
-    --coverage # sets all required flags
-  )
-  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
-    target_link_options(coverage_config INTERFACE --coverage)
-  else()
-    target_link_libraries(coverage_config INTERFACE --coverage)
-  endif()
-endif(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+if(SOUFFLE_CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    # Code Coverage Configuration
+    add_library(coverage_config INTERFACE)
+    # Add required flags (GCC & LLVM/Clang)
+    target_compile_options(coverage_config INTERFACE
+        -O0        # no optimization
+        -g         # generate debug info
+        --coverage # sets all required flags
+    )
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+        target_link_options(coverage_config INTERFACE --coverage)
+    else()
+        target_link_libraries(coverage_config INTERFACE --coverage)
+    endif()
+endif(SOUFFLE_CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 
 # There are a few tests in src, so add it *after*
 # including CTest
