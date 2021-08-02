@@ -114,7 +114,7 @@ jobs:
       run: sudo sh/setup/install_ubuntu_deps.sh
 
     - name: setup-with-code-coverage-on
-      run: cmake -DCODE_COVERAGE=ON -S . -B ./build
+      run: cmake -DSOUFFLE_CODE_COVERAGE=ON -S . -B ./build
 
     - name: make
       run: cmake --build build -j6
