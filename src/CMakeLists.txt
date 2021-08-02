@@ -176,8 +176,8 @@ target_include_directories(libsouffle
                                   "${CMAKE_CURRENT_BINARY_DIR}"
                            )
 
-# install souffle directory 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/souffle DESTINATION include) 
+# install souffle directory
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/souffle DESTINATION include)
 
 # Set C++ standard to C++17
 target_compile_features(libsouffle
@@ -190,7 +190,11 @@ target_compile_options(libsouffle
 
 target_link_libraries(libsouffle PRIVATE Threads::Threads)
 
-# FIXME: Better to have a library list 
+if(SOUFFLE_CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_link_libraries(libsouffle PUBLIC coverage_config)
+endif(SOUFFLE_CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+
+# FIXME: Better to have a library list
 if (OPENMP_FOUND)
     target_link_libraries(libsouffle
                       PUBLIC OpenMP::OpenMP_CXX
@@ -259,7 +263,7 @@ target_compile_features(souffleprof
                         PUBLIC cxx_std_17)
 
 # --------------------------------------------------
-# Substitutions for souffle-compile 
+# Substitutions for souffle-compile
 # --------------------------------------------------
 # FIXME: This is a bit fragile but there is actually no better way
 # to do this, AFAIK
@@ -293,7 +297,7 @@ function(AUTOMAKE_COMPATIBLE_SUBST F_IN F_OUT)
     # Libraries
     set(LIBS "-lpthread")
 
-    if (CMAKE_DL_LIBS) 
+    if (CMAKE_DL_LIBS)
        string(APPEND LIBS " -l${CMAKE_DL_LIBS}")
     endif()
 
