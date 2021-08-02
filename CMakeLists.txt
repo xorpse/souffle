@@ -99,13 +99,9 @@ option(SOUFFLE_USE_SQLITE "Enable/Disable use sqlite IO" ON)
 option(SOUFFLE_USE_OPENMP "Enable/Disable use of openmp if available" ON)
 option(SOUFFLE_SANITISE_MEMORY "Enable/Disable memory sanitiser" OFF)
 option(SOUFFLE_SANITISE_THREAD "Enable/Disable thread sanitiser" OFF)
-# This is how souffle is built by default in Debug
-option(SOUFFLE_FAST_DEBUG "Enable/Disable ON 'fast debug' mode" ON)
 # SOUFFLE_NDEBUG = ON means -DNDEBUG on the compiler command line = no cassert
 # Therefor SOUFFLE_NDEBUG = OFF means keep asserts
 option(SOUFFLE_NDEBUG "Enable/Disable runtime checks even in release mode" OFF)
-# Souffle, by default, uses -O3 for release builds
-option(SOUFFLE_FAST_RELEASE "Enable/Disable 'fast release' mode" ON)
 # By default, the "test/example" directory is not part of testing
 # this flag enables the tests to run
 option(SOUFFLE_TEST_EXAMPLES "Enable/Disable testing of code examples in tests/examples" OFF)
@@ -268,29 +264,14 @@ configure_file("${PROJECT_SOURCE_DIR}/cmake/config.h.in"
 # --------------------------------------------------
 # Change compile flags
 # --------------------------------------------------
-# FIXME:  We may need to rethink this when building
-# souffle as a subproject since this dirrently manipulates
-# CMAKE_CXX_*_FLAGS and that's considered bad in "modern cmake"
-if (CMAKE_BUILD_TYPE MATCHES "Debug")
-    if (SOUFFLE_FAST_DEBUG)
-        string(REGEX REPLACE "-g" "-O0 -g3" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
-    endif()
-else()
+if (NOT SOUFFLE_NDEBUG)
     foreach(FLAG_VAR
             CMAKE_CXX_FLAGS_RELEASE
             CMAKE_CXX_FLAGS_MINSIZEREL
             CMAKE_CXX_FLAGS_RELWITHDEBINFO)
 
             # Remove/keep NDEBUG in Release builds
-            if (NOT SOUFFLE_NDEBUG)
-                string(REGEX REPLACE "-DNDEBUG" "" ${FLAG_VAR} "${${FLAG_VAR}}")
-            endif()
-
-            # Change -O2 to -O3
-            if (SOUFFLE_FAST_RELEASE)
-                string(REGEX REPLACE "-O2" "-O3" ${FLAG_VAR} "${${FLAG_VAR}}")
-            endif()
-
+            string(REGEX REPLACE "-DNDEBUG" "" ${FLAG_VAR} "${${FLAG_VAR}}")
     endforeach()
 endif()
 
