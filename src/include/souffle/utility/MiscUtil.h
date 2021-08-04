@@ -23,7 +23,6 @@
 #include <chrono>
 #include <iostream>
 #include <memory>
-#include <set>
 #include <utility>
 
 #ifdef _WIN32
@@ -271,15 +270,3 @@ template <typename... Args>
 // HACK:  Workaround to suppress spurious reachability warnings.
 #define UNREACHABLE_BAD_CASE_ANALYSIS fatal("unhandled switch branch");
 }  // namespace souffle
-
-// -------------------------------------------------------------------------------
-//                               Set Utilities
-// -------------------------------------------------------------------------------
-
-template <typename A>
-std::set<A> operator-(const std::set<A>& lhs, const std::set<A>& rhs) {
-    std::set<A> result;
-    std::set_difference(
-            lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), std::inserter(result, result.begin()));
-    return result;
-}
