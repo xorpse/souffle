@@ -64,7 +64,7 @@ public:
     std::set<RelationTag> addTag(RelationTag tag, std::vector<RelationTag> incompatible, SrcLocation tagLoc,
             std::set<RelationTag> tags);
 
-    Own<ast::Counter> addDeprecatedCounter(SrcLocation tagLoc); 
+    Own<ast::Counter> addDeprecatedCounter(SrcLocation tagLoc);
 
     bool trace_scanning = false;
 

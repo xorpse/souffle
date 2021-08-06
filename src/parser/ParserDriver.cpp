@@ -213,7 +213,7 @@ Own<ast::Counter> ParserDriver::addDeprecatedCounter(SrcLocation tagLoc) {
     if (!Global::config().has("legacy")) {
         warning(tagLoc, "Deprecated $ symbol was used. Use functor 'autoinc()' instead.");
     }
-    return mk<ast::Counter>(); 
+    return mk<ast::Counter>();
 }
 
 std::set<RelationTag> ParserDriver::addReprTag(
