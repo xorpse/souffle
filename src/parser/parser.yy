@@ -124,6 +124,7 @@
 %token <std::string> NUMBER      "number"
 %token <std::string> UNSIGNED    "unsigned number"
 %token <std::string> FLOAT       "float"
+%token AUTOINC                   "auto-increment functor"
 %token PRAGMA                    "pragma directive"
 %token OUTPUT_QUALIFIER          "relation qualifier output"
 %token INPUT_QUALIFIER           "relation qualifier input"
@@ -855,6 +856,10 @@ arg
       $$ = mk<ast::UnnamedVariable>(@$);
     }
   | DOLLAR
+    {
+      $$ = driver.addDeprecatedCounter(@$);
+    }
+  | AUTOINC LPAREN RPAREN
     {
       $$ = mk<ast::Counter>(@$);
     }
