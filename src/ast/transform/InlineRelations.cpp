@@ -1054,9 +1054,8 @@ bool InlineRelationsTransformer::transform(TranslationUnit& translationUnit) {
         for (Relation* rel : program.getRelations()) {
             // Skip if the relation is going to be inlined or if no_inline or no_magic is present
             if (rel->hasQualifier(RelationQualifier::INLINE) ||
-                rel->hasQualifier(RelationQualifier::NO_INLINE) ||
-                rel->hasQualifier(RelationQualifier::NO_MAGIC)
-            ) {
+                    rel->hasQualifier(RelationQualifier::NO_INLINE) ||
+                    rel->hasQualifier(RelationQualifier::NO_MAGIC)) {
                 continue;
             }
 
