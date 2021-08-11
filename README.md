@@ -34,7 +34,7 @@ Alternatively, please add the following line to the start of your source-code:
 
 ## Issues and Discussions 
 
-Use the either the [issue list](https://github.com/souffle-lang/souffle/issues) for 
+Use either the [issue list](https://github.com/souffle-lang/souffle/issues) for 
  - bug reporting
  - enhancements
  - documentation
@@ -42,8 +42,7 @@ Use the either the [issue list](https://github.com/souffle-lang/souffle/issues) 
  - releases
  - compatibility issues
  - refactoring. 
-
-Use the [discussions](https://github.com/souffle-lang/souffle/discussions) bulletin board to engage with other community members and for asking  questions you’re wondering about.
+or use the [discussions](https://github.com/souffle-lang/souffle/discussions) bulletin board to engage with other community members and for asking questions you’re wondering about.
 
 ## How to contribute
 
