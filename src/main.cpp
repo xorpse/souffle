@@ -227,6 +227,8 @@ int main(int argc, char** argv) {
                 {"generate", 'g', "FILE", "", false,
                         "Generate C++ source code for the given Datalog program and write it to "
                         "<FILE>. If <FILE> is `-` then stdout is used."},
+                {"inline-exclude", '\x7', "RELATIONS", "", false,
+                        "Prevent the given relations from being inlined. Overrides any `inline` qualifiers."},
                 {"swig", 's', "LANG", "", false,
                         "Generate SWIG interface for given language. The values <LANG> accepts is java and "
                         "python. "},
@@ -236,6 +238,9 @@ int main(int argc, char** argv) {
                 {"magic-transform", 'm', "RELATIONS", "", false,
                         "Enable magic set transformation changes on the given relations, use '*' "
                         "for all."},
+                {"magic-transform-exclude", '\x8', "RELATIONS", "", false,
+                        "Disable magic set transformation changes on the given relations. Overrides "
+                        "`magic-transform`. Implies `inline-exclude` for the given relations."},
                 {"macro", 'M', "MACROS", "", false, "Set macro definitions for the pre-processor"},
                 {"disable-transformers", 'z', "TRANSFORMERS", "", false,
                         "Disable the given AST transformers."},
@@ -500,6 +505,7 @@ int main(int argc, char** argv) {
             mk<ast::transform::ResolveAliasesTransformer>(),
             mk<ast::transform::RemoveBooleanConstraintsTransformer>(),
             mk<ast::transform::ResolveAliasesTransformer>(), mk<ast::transform::MinimiseProgramTransformer>(),
+            mk<ast::transform::InlineUnmarkExcludedTransform>(),
             mk<ast::transform::InlineRelationsTransformer>(), mk<ast::transform::GroundedTermsChecker>(),
             mk<ast::transform::ResolveAliasesTransformer>(),
             mk<ast::transform::RemoveRedundantRelationsTransformer>(),
