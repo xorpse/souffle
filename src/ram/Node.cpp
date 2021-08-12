@@ -38,4 +38,12 @@ void Node::rewrite(const Node* oldNode, Own<Node> newNode) {
     apply(makeLambdaRamMapper(rewriter));
 }
 
+Node::ConstChildNodes Node::getChildNodes() const {
+    return ConstChildNodes(getChildNodesImpl(), detail::RefCaster());
+}
+
+Node::ChildNodes Node::getChildNodes() {
+    return ChildNodes(getChildNodesImpl(), detail::ConstCaster());
+}
+
 }  // namespace souffle::ram

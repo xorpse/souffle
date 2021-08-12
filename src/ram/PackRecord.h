@@ -45,14 +45,6 @@ public:
         return toPtrVector(arguments);
     }
 
-    std::vector<const Node*> getChildNodes() const override {
-        std::vector<const Node*> res;
-        for (const auto& cur : arguments) {
-            res.push_back(cur.get());
-        }
-        return res;
-    }
-
     PackRecord* cloning() const override {
         auto* res = new PackRecord({});
         for (auto& cur : arguments) {
@@ -76,6 +68,10 @@ protected:
     bool equal(const Node& node) const override {
         const auto& other = asAssert<PackRecord>(node);
         return equal_targets(arguments, other.arguments);
+    }
+
+    NodeVec getChildNodesImpl() const override {
+        return toPtrVector<Node const>(arguments);
     }
 
     /** Arguments */
