@@ -145,6 +145,7 @@ set(SOUFFLE_SOURCES
     ram/transform/ReorderFilterBreak.cpp
     ram/transform/Transformer.cpp
     ram/transform/TupleId.cpp
+    ram/utility/NodeMapper.cpp
     reports/DebugReport.cpp
     synthesiser/Synthesiser.cpp
     synthesiser/Relation.cpp

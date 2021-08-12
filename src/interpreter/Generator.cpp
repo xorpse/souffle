@@ -470,7 +470,8 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Query>, const ram::Query& query
         };
     });
 
-    visit(*next, [&](const ram::AbstractParallel&) { viewContext->isParallel = true; });
+    viewContext->isParallel =
+            visitExists(*next, [&](const Node& n) { return as<ram::AbstractParallel, AllowCrossCast>(n); });
 
     auto res = mk<Query>(I_Query, &query, dispatch(*next));
     res->setViewContext(parentQueryViewContext);

@@ -19,6 +19,7 @@
 #include "ram/Program.h"
 #include "ram/Statement.h"
 #include "ram/analysis/Complexity.h"
+#include "ram/utility/NodeMapper.h"
 #include "ram/utility/Utils.h"
 #include "ram/utility/Visitor.h"
 #include "souffle/utility/MiscUtil.h"
@@ -33,28 +34,26 @@ bool ReorderConditionsTransformer::transform(TranslationUnit& tu) {
     auto* rca = tu.getAnalysis<analysis::ComplexityAnalysis>();
 
     bool changed = false;
-    visit(tu.getProgram(), [&](const Query& query) {
-        std::function<Own<Node>(Own<Node>)> filterRewriter = [&](Own<Node> node) -> Own<Node> {
-            if (const Condition* condition = as<Condition>(node)) {
-                VecOwn<Condition> sortedConds;
-                VecOwn<Condition> condList = toConjunctionList(condition);
-                for (auto& cond : condList) {
-                    sortedConds.emplace_back(cond->cloning());
-                }
-                std::sort(sortedConds.begin(), sortedConds.end(), [&](Own<Condition>& a, Own<Condition>& b) {
-                    return rca->getComplexity(a.get()) < rca->getComplexity(b.get());
-                });
-                auto sorted_node = toCondition(sortedConds);
-
-                if (sorted_node != node) {
-                    changed = true;
-                    node = std::move(sorted_node);
-                }
+    forEachQueryMap(tu.getProgram(), [&](auto&& go, Own<Node> node) -> Own<Node> {
+        if (const Condition* condition = as<Condition>(node)) {
+            VecOwn<Condition> sortedConds;
+            VecOwn<Condition> condList = toConjunctionList(condition);
+            for (auto& cond : condList) {
+                sortedConds.emplace_back(cond->cloning());
             }
-            node->apply(makeLambdaRamMapper(filterRewriter));
-            return node;
-        };
-        const_cast<Query*>(&query)->apply(makeLambdaRamMapper(filterRewriter));
+            std::sort(sortedConds.begin(), sortedConds.end(), [&](Own<Condition>& a, Own<Condition>& b) {
+                return rca->getComplexity(a.get()) < rca->getComplexity(b.get());
+            });
+            auto sorted_node = toCondition(sortedConds);
+
+            if (sorted_node != node) {
+                changed = true;
+                node = std::move(sorted_node);
+            }
+        }
+
+        node->apply(go);
+        return node;
     });
     return changed;
 }
