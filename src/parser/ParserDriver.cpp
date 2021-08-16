@@ -209,6 +209,13 @@ std::set<RelationTag> ParserDriver::addDeprecatedTag(
     return addTag(tag, std::move(tagLoc), std::move(tags));
 }
 
+Own<ast::Counter> ParserDriver::addDeprecatedCounter(SrcLocation tagLoc) {
+    if (!Global::config().has("legacy")) {
+        warning(tagLoc, "Deprecated $ symbol was used. Use functor 'autoinc()' instead.");
+    }
+    return mk<ast::Counter>();
+}
+
 std::set<RelationTag> ParserDriver::addReprTag(
         RelationTag tag, SrcLocation tagLoc, std::set<RelationTag> tags) {
     return addTag(tag, {RelationTag::BTREE, RelationTag::BRIE, RelationTag::EQREL}, std::move(tagLoc),

@@ -20,6 +20,7 @@
 #include "ast/Clause.h"
 #include "ast/Component.h"
 #include "ast/ComponentInit.h"
+#include "ast/Counter.h"
 #include "ast/Directive.h"
 #include "ast/FunctorDeclaration.h"
 #include "ast/Pragma.h"
@@ -62,6 +63,8 @@ public:
     std::set<RelationTag> addTag(RelationTag tag, SrcLocation tagLoc, std::set<RelationTag> tags);
     std::set<RelationTag> addTag(RelationTag tag, std::vector<RelationTag> incompatible, SrcLocation tagLoc,
             std::set<RelationTag> tags);
+
+    Own<ast::Counter> addDeprecatedCounter(SrcLocation tagLoc);
 
     bool trace_scanning = false;
 

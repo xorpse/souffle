@@ -4,5 +4,5 @@
 .input F ()
 
 // not ok [variable]
-F($,"AA").
+F(autoinc(),"AA").
 

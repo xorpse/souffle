@@ -14,8 +14,8 @@
 B(X) :- E(X), X != 0.
 K(X) :- B(1), E(X), X != 0.
 
-// R should be strongly-ignored because it uses $
-R($) :- K($).
+// R should be strongly-ignored because it uses autoinc()
+R(autoinc()) :- K(autoinc()).
 
 // R is negated here, but cannot be neglabelled
 A(X) :- C(X), !R(X).

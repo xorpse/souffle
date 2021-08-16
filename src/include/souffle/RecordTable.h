@@ -409,7 +409,7 @@ public:
 
     virtual ~SpecializedRecordMap() {}
 
-    void setNumLanes(const std::size_t NumLanes) {
+    void setNumLanes(const std::size_t NumLanes) override {
         Base::setNumLanes(NumLanes);
     }
 
@@ -455,7 +455,7 @@ public:
 
     virtual ~SpecializedRecordMap() {}
 
-    void setNumLanes(const std::size_t) {}
+    void setNumLanes(const std::size_t) override {}
 
     /** @brief converts record to a record reference */
     RamDomain pack(const std::vector<RamDomain>& Vector) override {
@@ -537,7 +537,7 @@ public:
      * @brief set the number of concurrent access lanes.
      * Not thread-safe, use only when the datastructure is not being used.
      */
-    virtual void setNumLanes(const std::size_t NumLanes) {
+    virtual void setNumLanes(const std::size_t NumLanes) override {
         Lanes.setNumLanes(NumLanes);
         for (auto& Map : Maps) {
             Map->setNumLanes(NumLanes);

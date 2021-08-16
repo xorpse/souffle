@@ -5,7 +5,6 @@ The Soufflé language is similar to Datalog (but has terms known as records), an
 domain-specific language for analysis problems.
 
 [![License: UPL](https://img.shields.io/badge/License-UPL--1.0-blue.svg)](https://github.com/souffle-lang/souffle/blob/master/LICENSE)
-[![Zulip chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://souffle.zulipchat.com)
 [![Build Status](https://github.com/souffle-lang/souffle/actions/workflows/CI-Tests.yml/badge.svg)
 [![codecov](https://codecov.io/gh/souffle-lang/souffle/branch/master/graph/badge.svg)](https://codecov.io/gh/souffle-lang/souffle)
 
@@ -33,6 +32,18 @@ Alternatively, please add the following line to the start of your source-code:
 .pragma "legacy"
 ```
 
+## Issues and Discussions 
+
+Use either the [issue list](https://github.com/souffle-lang/souffle/issues) for 
+ - bug reporting
+ - enhancements
+ - documentation
+ - proposals
+ - releases
+ - compatibility issues
+ - refactoring. 
+or use the [discussions](https://github.com/souffle-lang/souffle/discussions) bulletin board to engage with other community members and for asking questions you’re wondering about.
+
 ## How to contribute
 
 Issues and bug reports for Souffle are found in the [issue list](https://github.com/souffle-lang/souffle/issues).
@@ -50,8 +61,6 @@ Our continuous integration framework enforces coding guidelines with the help of
 For more information on building and developing Souffle, please read the [developer tutorial](https://souffle-lang.github.io/development).
 
 ## [Home Page](https://souffle-lang.github.io)
-
-## [Zulip Chat](https://souffle.zulipchat.com)
 
 ## [Documentation](https://souffle-lang.github.io/docs.html)
 
