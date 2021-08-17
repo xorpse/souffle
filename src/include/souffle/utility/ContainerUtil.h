@@ -56,25 +56,17 @@ struct reverse {
  * A utility to check generically whether a given element is contained in a given
  * container.
  */
-template <typename C>
+template <typename C, typename = std::enable_if_t<!is_associative<C>>>
 bool contains(const C& container, const typename C::value_type& element) {
     return std::find(container.begin(), container.end(), element) != container.end();
 }
 
-// TODO: Detect and generalise to other set types?
-template <typename A>
-bool contains(const std::set<A>& container, const A& element) {
-    return container.find(element) != container.end();
-}
-
 /**
- * Version of contains specialised for maps.
- *
- * This workaround is needed because of set container, for which value_type == key_type,
- * which is ambiguous in this context.
+ * A utility to check generically whether a given key exists within a given
+ * associative container.
  */
-template <typename C>
-bool contains(const C& container, const typename C::value_type::first_type& element) {
+template <typename C, typename A, typename = std::enable_if_t<is_associative<C>>>
+bool contains(const C& container, A&& element) {
     return container.find(element) != container.end();
 }
 
