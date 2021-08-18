@@ -42,6 +42,7 @@ Use either the [issue list](https://github.com/souffle-lang/souffle/issues) for
  - releases
  - compatibility issues
  - refactoring. 
+
 or use the [discussions](https://github.com/souffle-lang/souffle/discussions) bulletin board to engage with other community members and for asking questions you’re wondering about.
 
 ## How to contribute
@@ -56,6 +57,7 @@ The general workflow is as follows.
 2. Fork the [souffle-lang/souffle](http://github.com/souffle-lang/souffle.git) repo.
 3. Push your changes to a branch in your forked repo.
 4. Submit a pull request to souffle-lang/souffle from your forked repo.
+
 Our continuous integration framework enforces coding guidelines with the help of clang-format and clang-tidy.
 
 For more information on building and developing Souffle, please read the [developer tutorial](https://souffle-lang.github.io/development).
