@@ -210,8 +210,13 @@ endif()
 # Memory Sanitiser
 # --------------------------------------------------
 if (SOUFFLE_SANITISE_MEMORY)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address,leak")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,leak")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address,leak,undefined")
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,leak,undefined")
+    else()
+        set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address,leak")
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,leak")
+    endif()
 endif()
 
 # --------------------------------------------------
