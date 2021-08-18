@@ -29,7 +29,8 @@ namespace detail {
 
 // This is a helper in the cases when the lambda is stateless
 template <typename F>
-F const& makeFun() {
+F makeFun() {
+    static_assert(std::is_empty_v<F>);
     // Even thought the lambda is stateless, it has no default ctor
     // Is this gross?  Yes, yes it is.
     // FIXME: Remove after C++20
