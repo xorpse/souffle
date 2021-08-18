@@ -1379,7 +1379,7 @@ private:
      */
     static Node* findFirst(Node* node, int level) {
         while (level > 0) {
-            bool found = false;
+            [[maybe_unused]] bool found = false;
             for (int i = 0; i < NUM_CELLS; i++) {
                 Node* cur = node->cell[i].ptr;
                 if (cur) {

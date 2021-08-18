@@ -48,10 +48,10 @@ public:
             : RelationOperation(rel, ident, std::move(nested), std::move(profileText)),
               queryPattern(std::move(queryPattern)) {
         assert(getRangePattern().first.size() == getRangePattern().second.size() && "Arity mismatch");
-        for (const auto& pattern : queryPattern.first) {
+        for ([[maybe_unused]] const auto& pattern : queryPattern.first) {
             assert(pattern != nullptr && "pattern is a null-pointer");
         }
-        for (const auto& pattern : queryPattern.second) {
+        for ([[maybe_unused]] const auto& pattern : queryPattern.second) {
             assert(pattern != nullptr && "pattern is a null-pointer");
         }
     }

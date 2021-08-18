@@ -42,7 +42,7 @@ class AbstractExistenceCheck : public Condition {
 public:
     AbstractExistenceCheck(std::string rel, VecOwn<Expression> vals)
             : relation(std::move(rel)), values(std::move(vals)) {
-        for (const auto& v : values) {
+        for ([[maybe_unused]] const auto& v : values) {
             assert(v != nullptr && "NULL value");
         }
     }

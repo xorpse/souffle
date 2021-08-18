@@ -47,7 +47,7 @@ class Insert : public Operation {
 public:
     Insert(std::string rel, VecOwn<Expression> expressions)
             : relation(std::move(rel)), expressions(std::move(expressions)) {
-        for (auto const& expr : expressions) {
+        for ([[maybe_unused]] auto const& expr : expressions) {
             assert(expr != nullptr && "Expression is a null-pointer");
         }
     }

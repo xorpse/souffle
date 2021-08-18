@@ -57,10 +57,10 @@ public:
     Program(VecOwn<Relation> rels, Own<Statement> main, std::map<std::string, Own<Statement>> subs)
             : relations(std::move(rels)), main(std::move(main)), subroutines(std::move(subs)) {
         assert(this->main != nullptr && "Main program is a null-pointer");
-        for (const auto& rel : relations) {
+        for ([[maybe_unused]] const auto& rel : relations) {
             assert(rel != nullptr && "Relation is a null-pointer");
         }
-        for (const auto& sub : subroutines) {
+        for ([[maybe_unused]] const auto& sub : subroutines) {
             assert(sub.second != nullptr && "Subroutine is a null-pointer");
         }
     }
