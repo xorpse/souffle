@@ -69,25 +69,6 @@ public:
             : iter(std::move(iter)), fun(detail::makeFun<F>()) {}
     TransformIterator(Iter iter, F f) : iter(std::move(iter)), fun(std::move(f)) {}
 
-    // defaulted copy and move constructors
-    TransformIterator(const TransformIterator& other) : iter(other.iter), fun(other.fun) {}
-    TransformIterator(TransformIterator&& other) : iter(std::move(other.iter)), fun(std::move(other.fun)) {}
-
-    // default assignment operators
-    TransformIterator& operator=(const TransformIterator& other) {
-        if (this != &other) {
-            iter = other.iter;
-        }
-        return *this;
-    }
-
-    TransformIterator& operator=(TransformIterator&& other) {
-        if (this != &other) {
-            iter = std::move(other.iter);
-        }
-        return *this;
-    }
-
     /* The equality operator as required by the iterator concept. */
     bool operator==(const TransformIterator& other) const {
         return iter == other.iter;
@@ -200,11 +181,18 @@ auto transformIter(Iter&& iter, F&& f) {
  * dereferencing values before forwarding them to the consumer.
  */
 namespace detail {
-inline auto iterDeref = [](auto& p) -> decltype(*p) { return *p; };
-}
+// HACK: Use explicit structure w/ `operator()` b/c pre-C++20 lambdas do not have copy-assign operators
+struct IterTransformDeref {
+    template <typename A>
+    auto operator()(A&& x) const -> decltype(*x) {
+        return *x;
+    }
+};
+
+}  // namespace detail
 
 template <typename Iter>
-using IterDerefWrapper = TransformIterator<Iter, decltype(detail::iterDeref)>;
+using IterDerefWrapper = TransformIterator<Iter, detail::IterTransformDeref>;
 
 /**
  * A factory function enabling the construction of a dereferencing
@@ -212,7 +200,7 @@ using IterDerefWrapper = TransformIterator<Iter, decltype(detail::iterDeref)>;
  */
 template <typename Iter>
 auto derefIter(Iter&& iter) {
-    return transformIter(std::forward<Iter>(iter), detail::iterDeref);
+    return transformIter(std::forward<Iter>(iter), detail::IterTransformDeref{});
 }
 
 // -------------------------------------------------------------
