@@ -64,9 +64,8 @@ public:
     static_assert(std::is_empty_v<F>, "Function object must be stateless");
 
     // some constructors
-    template <typename It>
-    TransformIterator(It iter, std::enable_if_t<std::is_empty_v<F>, void*> = nullptr)
-            : iter(std::move(iter)), fun(detail::makeFun<F>()) {}
+    template <typename = std::enable_if_t<std::is_empty_v<F>>>
+    TransformIterator(Iter iter) : TransformIterator(std::move(iter), detail::makeFun<F>()) {}
     TransformIterator(Iter iter, F f) : iter(std::move(iter)), fun(std::move(f)) {}
 
     /* The equality operator as required by the iterator concept. */
