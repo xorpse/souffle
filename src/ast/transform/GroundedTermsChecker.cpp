@@ -37,7 +37,7 @@ void GroundedTermsChecker::verify(TranslationUnit& translationUnit) {
     auto&& report = translationUnit.getErrorReport();
 
     // -- check grounded variables and records --
-    visit(program.getClauses(), [&](const Clause& clause) {
+    visit(program, [&](const Clause& clause) {
         if (isFact(clause)) return;  // only interested in rules
 
         auto isGrounded = analysis::getGroundedTerms(translationUnit, clause);

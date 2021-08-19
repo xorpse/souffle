@@ -26,17 +26,30 @@
 #include "ast/QualifiedName.h"
 #include "ast/Relation.h"
 #include "ast/Type.h"
+#include "souffle/utility/Visitor.h"
 #include <iosfwd>
 #include <vector>
 
 namespace souffle {
 class ParserDriver;
-}
-namespace souffle::ast {
+
+namespace ast {
+class Program;
 
 namespace transform {
 class ComponentInstantiationTransformer;
 }
+}  // namespace ast
+
+// very common case optimisation: visiting every `Clause`
+template <typename F, typename = detail::visitor_enable_if_arg0<F, ast::Clause>>
+void visit(ast::Program&, F&&);
+template <typename F, typename = detail::visitor_enable_if_arg0<F, ast::Clause>>
+void visit(ast::Program const&, F&&);
+}  // namespace souffle
+
+namespace souffle::ast {
+
 /**
  * @class Program
  * @brief The program class consists of relations, clauses and types.
@@ -144,6 +157,25 @@ private:
 
     /** Pragmas */
     VecOwn<Pragma> pragmas;
+
+    template <typename F, typename>
+    friend void souffle::visit(Program&, F&&);
+    template <typename F, typename>
+    friend void souffle::visit(Program const&, F&&);
 };
 
 }  // namespace souffle::ast
+
+namespace souffle {
+template <typename F, typename>
+void visit(ast::Program& program, F&& go) {
+    for (auto&& cl : program.clauses)
+        go(*cl);
+}
+
+template <typename F, typename>
+void visit(ast::Program const& program, F&& go) {
+    for (auto&& cl : program.clauses)
+        go(static_cast<ast::Clause const&>(*cl));
+}
+}  // namespace souffle

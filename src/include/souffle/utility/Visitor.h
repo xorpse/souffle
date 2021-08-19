@@ -165,6 +165,9 @@ using infer_visit_arg_type = std::remove_reference_t<typename lambda_traits<F>::
 template <typename F>
 using infer_visit_node_type = copy_const_visit_root<infer_visit_arg_type<F>>;
 
+template <typename F, typename A>
+using visitor_enable_if_arg0 = std::enable_if_t<std::is_same_v<A, remove_cvref_t<infer_visit_arg_type<F>>>>;
+
 // useful for implicitly-as-casting continuations
 template <typename CastType = void, typename F, typename A>
 SOUFFLE_ALWAYS_INLINE auto matchApply([[maybe_unused]] F&& f, [[maybe_unused]] A& x) {
