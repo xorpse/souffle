@@ -933,13 +933,14 @@ void SemanticCheckerImpl::checkInlining() {
 
     // This corner case prevents generalising aggregator inlining with the current set up.
 
-    visit(program, [&](const Aggregator& aggr) {
+    visitFrontier(program, [&](const Aggregator& aggr) {
         visit(aggr, [&](const Atom& subatom) {
             const Relation* rel = getRelation(program, subatom.getQualifiedName());
             if (rel != nullptr && isInline(rel)) {
                 report.addError("Cannot inline relations that appear in aggregator", subatom.getSrcLoc());
             }
         });
+        return true;
     });
 
     // Check 5:
