@@ -41,19 +41,19 @@ bool PragmaChecker::transform(TranslationUnit& translationUnit) {
     std::map<std::string, Pragma const*> previous_pragma;
 
     // Take in pragma options from the datalog file
-    visit(program, [&](const Pragma& pragma) {
-        auto&& [k, v] = pragma.getkvp();
+    for (auto&& pragma : program.getPragmaDirectives()) {
+        auto&& [k, v] = pragma->getkvp();
 
         // warn if subsequent pragmas override one another
         if (!config.allowsMultiple(k)) {
             auto it = previous_pragma.find(k);
             if (it != previous_pragma.end()) {
                 error.addDiagnostic({Diagnostic::Type::WARNING,
-                        {tfm::format("overriding previous pragma for key `%s`", k), pragma.getSrcLoc()},
+                        {tfm::format("overriding previous pragma for key `%s`", k), pragma->getSrcLoc()},
                         {{tfm::format("previous pragma for key `%s`", k), it->second->getSrcLoc()}}});
             }
 
-            previous_pragma[k] = &pragma;
+            previous_pragma[k] = pragma.get();
         }
 
         // Command line options take precedence, even if the param allows multiple
@@ -65,7 +65,7 @@ bool PragmaChecker::transform(TranslationUnit& translationUnit) {
             else
                 config.set(k, v);
         }
-    });
+    }
 
     return changed;
 }
