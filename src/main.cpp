@@ -255,7 +255,7 @@ int main(int argc, char** argv) {
                         "Use profile log-file <FILE> for profile-guided optimization."},
                 {"profile-frequency", '\2', "", "", false, "Enable the frequency counter in the profiler."},
                 {"debug-report", 'r', "FILE", "", false, "Write HTML debug report to <FILE>."},
-                {"pragma", 'P', "OPTIONS", "", false, "Set pragma options."},
+                {"pragma", 'P', "OPTIONS", "", true, "Set pragma options."},
                 {"provenance", 't', "[ none | explain | explore ]", "", false,
                         "Enable provenance instrumentation and interaction."},
                 {"verbose", 'v', "", "", false, "Verbose output."},
@@ -273,8 +273,10 @@ int main(int argc, char** argv) {
 
         // Take in pragma options from the command line
         if (Global::config().has("pragma")) {
-            std::vector<std::string> configOptions = splitString(Global::config().get("pragma"), ';');
-            for (const std::string& option : configOptions) {
+            ast::transform::PragmaChecker::Merger merger;
+
+            for (auto&& option : Global::config().getMany("pragma")) {
+                // TODO: escape sequences for `:` to allow `:` in a pragma key?
                 std::size_t splitPoint = option.find(':');
 
                 std::string optionName = option.substr(0, splitPoint);
@@ -282,9 +284,7 @@ int main(int argc, char** argv) {
                                                   ? ""
                                                   : option.substr(splitPoint + 1, option.length());
 
-                if (!Global::config().has(optionName)) {
-                    Global::config().set(optionName, optionValue);
-                }
+                merger(optionName, optionValue);
             }
         }
 

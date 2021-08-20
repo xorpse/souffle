@@ -25,15 +25,32 @@
 #include <vector>
 
 namespace souffle::ast::transform {
-bool PragmaChecker::transform(TranslationUnit& translationUnit) {
-    // Command line options take precedence
+
+PragmaChecker::Merger::Merger() {
     auto& config = Global::config();
-    std::set<std::string> cmdln_keys;
+
     for (auto&& [k, v] : config.data()) {
         if (config.state(k) == MainConfig::State::set) {
-            cmdln_keys.insert(k);
+            locked_keys.insert(k);
         }
     }
+}
+
+bool PragmaChecker::Merger::operator()(std::string_view k, std::string_view v) {
+    // Command line options take precedence, even if the param allows multiple
+    if (contains(locked_keys, k)) return false;
+
+    auto& config = Global::config();
+    if (config.allowsMultiple(k))
+        config.append(k, std::string(v));
+    else
+        config.set(std::string(k), std::string(v));
+
+    return true;
+}
+
+bool PragmaChecker::transform(TranslationUnit& translationUnit) {
+    Merger merger;
 
     auto& program = translationUnit.getProgram();
     auto& error = translationUnit.getErrorReport();
@@ -45,7 +62,7 @@ bool PragmaChecker::transform(TranslationUnit& translationUnit) {
         auto&& [k, v] = pragma->getkvp();
 
         // warn if subsequent pragmas override one another
-        if (!config.allowsMultiple(k)) {
+        if (!Global::config().allowsMultiple(k)) {
             auto it = previous_pragma.find(k);
             if (it != previous_pragma.end()) {
                 error.addDiagnostic({Diagnostic::Type::WARNING,
@@ -56,15 +73,7 @@ bool PragmaChecker::transform(TranslationUnit& translationUnit) {
             previous_pragma[k] = pragma.get();
         }
 
-        // Command line options take precedence, even if the param allows multiple
-        if (!contains(cmdln_keys, k)) {
-            changed = true;
-
-            if (config.allowsMultiple(k))
-                config.append(k, v);
-            else
-                config.set(k, v);
-        }
+        changed |= merger(k, v);
     }
 
     return changed;
