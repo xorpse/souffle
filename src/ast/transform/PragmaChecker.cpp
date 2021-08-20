@@ -43,15 +43,9 @@ bool PragmaChecker::transform(TranslationUnit& translationUnit) {
     // Take in pragma options from the datalog file
     visit(program, [&](const Pragma& pragma) {
         auto&& [k, v] = pragma.getkvp();
-        // Command line options take precedence
-        if (contains(cmdln_keys, k)) return;
 
-        changed = true;
-
-        if (config.allowsMultiple(k)) {
-            config.append(k, v);
-        } else {
-            // warn if subsequent pragmas override one another
+        // warn if subsequent pragmas override one another
+        if (!config.allowsMultiple(k)) {
             auto it = previous_pragma.find(k);
             if (it != previous_pragma.end()) {
                 error.addDiagnostic({Diagnostic::Type::WARNING,
@@ -60,8 +54,16 @@ bool PragmaChecker::transform(TranslationUnit& translationUnit) {
             }
 
             previous_pragma[k] = &pragma;
+        }
 
-            config.set(k, v);
+        // Command line options take precedence, even if the param allows multiple
+        if (!contains(cmdln_keys, k)) {
+            changed = true;
+
+            if (config.allowsMultiple(k))
+                config.append(k, v);
+            else
+                config.set(k, v);
         }
     });
 
