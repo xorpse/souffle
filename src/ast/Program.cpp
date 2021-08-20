@@ -63,16 +63,19 @@ bool Program::removeRelationDecl(const QualifiedName& name) {
 
 void Program::setClauses(VecOwn<Clause> newClauses) {
     assert(allValidPtrs(newClauses));
+    assert(clause_visit_in_progress == 0 && "Don't modify program clause collection mid-traversal");
     clauses = std::move(newClauses);
 }
 
 void Program::addClause(Own<Clause> clause) {
     assert(clause != nullptr && "Undefined clause");
     assert(clause->getHead() != nullptr && "Undefined head of the clause");
+    assert(clause_visit_in_progress == 0 && "Don't modify program clause collection mid-traversal");
     clauses.push_back(std::move(clause));
 }
 
 bool Program::removeClause(const Clause* clause) {
+    assert(clause_visit_in_progress == 0 && "Don't modify program clause collection mid-traversal");
     // FIXME: Refactor to std::remove/erase
     for (auto it = clauses.begin(); it != clauses.end(); it++) {
         if (**it == *clause) {

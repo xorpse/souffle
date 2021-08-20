@@ -270,7 +270,8 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
         return true;
     });
 
-    visit(program, [&](Clause& clause) {
+    for (auto&& cl : program.getClauses()) {
+        auto& clause = *cl;
         visit(clause, [&](Aggregator& agg) {
             if (!needsMaterializedRelation(agg)) {
                 return;
@@ -346,7 +347,7 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
             program.addRelation(std::move(aggRel));
             changed = true;
         });
-    });
+    }
     return changed;
 }
 

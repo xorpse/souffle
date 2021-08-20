@@ -158,6 +158,12 @@ private:
     /** Pragmas */
     VecOwn<Pragma> pragmas;
 
+#ifndef NDEBUG
+    // SANCHECK - used to assert that the set of clauses isn't mutated mid visit
+    // (easy extra check b/c `visit` is specialised for `Program` and `Clause`s)
+    mutable uint32_t clause_visit_in_progress = 0;
+#endif
+
     template <typename F, typename>
     friend void souffle::visit(Program&, F&&);
     template <typename F, typename>
@@ -169,13 +175,17 @@ private:
 namespace souffle {
 template <typename F, typename>
 void visit(ast::Program& program, F&& go) {
+    program.clause_visit_in_progress++;
     for (auto&& cl : program.clauses)
         go(*cl);
+    program.clause_visit_in_progress--;
 }
 
 template <typename F, typename>
 void visit(ast::Program const& program, F&& go) {
+    program.clause_visit_in_progress++;
     for (auto&& cl : program.clauses)
         go(static_cast<ast::Clause const&>(*cl));
+    program.clause_visit_in_progress--;
 }
 }  // namespace souffle
