@@ -1,3 +1,4 @@
+.pragma "disable-transformers" "ResolveAliasesTransformer"
 
 .type Word <: symbol
 
