@@ -37,9 +37,7 @@ namespace souffle::ram {
 class PackRecord : public Expression {
 public:
     PackRecord(VecOwn<Expression> args) : arguments(std::move(args)) {
-        for ([[maybe_unused]] const auto& arg : arguments) {
-            assert(arg != nullptr && "argument is a null-pointer");
-        }
+        assert(allValidPtrs(arguments));
     }
 
     /** @brief Get record arguments */

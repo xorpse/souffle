@@ -35,9 +35,7 @@ namespace souffle::ram {
 class AbstractOperator : public Expression {
 public:
     explicit AbstractOperator(VecOwn<Expression> args) : arguments(std::move(args)) {
-        for ([[maybe_unused]] auto const& arg : arguments) {
-            assert(arg != nullptr && "argument is null-pointer");
-        }
+        assert(allValidPtrs(arguments));
     }
 
     /** @brief Get argument values */
