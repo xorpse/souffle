@@ -43,9 +43,7 @@ namespace souffle::ram {
 class SubroutineReturn : public Operation {
 public:
     SubroutineReturn(VecOwn<Expression> vals) : expressions(std::move(vals)) {
-        for (const auto& expr : expressions) {
-            assert(expr != nullptr && "Expression is a null-pointer");
-        }
+        assert(allValidPtrs(expressions));
     }
 
     /** @brief Getter for expressions */

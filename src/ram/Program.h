@@ -57,12 +57,8 @@ public:
     Program(VecOwn<Relation> rels, Own<Statement> main, std::map<std::string, Own<Statement>> subs)
             : relations(std::move(rels)), main(std::move(main)), subroutines(std::move(subs)) {
         assert(this->main != nullptr && "Main program is a null-pointer");
-        for (const auto& rel : relations) {
-            assert(rel != nullptr && "Relation is a null-pointer");
-        }
-        for (const auto& sub : subroutines) {
-            assert(sub.second != nullptr && "Subroutine is a null-pointer");
-        }
+        assert(allValidPtrs(relations));
+        assert(allValidPtrs(makeTransformRange(subroutines, [](auto&& kv) { return kv.second.get(); })));
     }
 
     std::vector<const Node*> getChildNodes() const override {
