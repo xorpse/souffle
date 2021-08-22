@@ -22,6 +22,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <limits>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -449,6 +450,22 @@ inline std::string escape(const std::string& inputString) {
     escaped = escape(escaped, "\r", "\\r");
     escaped = escape(escaped, "\n", "\\n");
     return escaped;
+}
+
+template <typename C>
+auto escape(C&& os, std::string_view str, std::set<char> const& needs_escape, std::string_view esc) {
+    for (auto&& x : str) {
+        if (needs_escape.find(x) != needs_escape.end()) {
+            os << esc;
+        }
+        os << x;
+    }
+
+    return std::forward<C>(os);
+}
+
+inline std::string escape(std::string_view str, std::set<char> const& needs_escape, std::string_view esc) {
+    return escape(std::stringstream{}, str, needs_escape, esc).str();
 }
 
 }  // end namespace souffle

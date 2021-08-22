@@ -16,11 +16,18 @@
 
 #pragma once
 
+#include <iterator>
 #include <memory>
 #include <type_traits>
 #include <vector>
 
 namespace souffle {
+
+// TODO: replace with C++20 concepts
+template <typename CC, typename A>
+constexpr bool is_iterable_of = std::is_constructible_v<A&,
+        typename std::iterator_traits<decltype(std::begin(std::declval<CC>()))>::value_type&>;
+
 template <typename A>
 using Own = std::unique_ptr<A>;
 

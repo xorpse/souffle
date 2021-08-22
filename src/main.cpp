@@ -97,6 +97,7 @@
 #include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include "souffle/utility/StringUtil.h"
+#include "souffle/utility/SubProcess.h"
 #include "synthesiser/Synthesiser.h"
 #include <cassert>
 #include <chrono>
@@ -120,73 +121,57 @@ namespace souffle {
 /**
  * Executes a binary file.
  */
-void executeBinary(const std::string& binaryFilename) {
+[[noreturn]] void executeBinaryAndExit(const std::string& binaryFilename) {
     assert(!binaryFilename.empty() && "binary filename cannot be blank");
 
-    // check whether the executable exists
-    if (!isExecutable(binaryFilename)) {
-        throw std::invalid_argument("Generated executable <" + binaryFilename + "> could not be found");
-    }
-
-    std::string ldPath;
-    // run the executable
+    std::map<char const*, std::string> env;
     if (Global::config().has("library-dir")) {
-        for (auto&& library : Global::config().getMany("library-dir")) {
-            ldPath += library + ':';
-        }
-        ldPath.pop_back();
-        setenv("LD_LIBRARY_PATH", ldPath.c_str(), 1);
+        auto escapeLdPath = [](auto&& xs) { return escape(xs, {':', ' '}, "\\"); };
+        auto ld_path = toString(join(map(Global::config().getMany("library-dir"), escapeLdPath), ":"));
+
+        env["LD_LIBRARY_PATH"] = ld_path;
+#ifdef __APPLE__
+        env["DYLD_LIBRARY_PATH"] = ld_path;
+#endif
     }
 
-    std::string exePath;
-#ifdef __APPLE__
-    // OSX does not pass on the environment from setenv so add it to the command line
-    exePath = "DYLD_LIBRARY_PATH=\"" + ldPath + "\" ";
-#endif
-    exePath += binaryFilename;
+    auto exit = execute(binaryFilename, {}, env);
+    if (!exit) throw std::invalid_argument("failed to execute `" + binaryFilename + "`");
 
-    int exitCode = system(exePath.c_str());
-
-    if (Global::config().get("dl-program").empty()) {
+    if (!Global::config().has("dl-program")) {
         remove(binaryFilename.c_str());
         remove((binaryFilename + ".cpp").c_str());
     }
 
-    // exit with same code as executable
-    if (exitCode != EXIT_SUCCESS) {
-        exit(exitCode);
-    }
+    std::exit(exit ? *exit : EXIT_FAILURE);
 }
 
 /**
  * Compiles the given source file to a binary file.
  */
-void compileToBinary(std::string_view compileCmd, std::string_view sourceFilename) {
-    // add source code
-    std::vector<std::string> parts{std::string(compileCmd)};
+void compileToBinary(
+        const std::string& command, std::string_view sourceFilename, std::vector<std::string> argv) {
     for (auto&& path : Global::config().getMany("library-dir")) {
         // The first entry may be blank
         if (path.empty()) {
             continue;
         }
-        parts.push_back(tfm::format("-L%s", path));
+        argv.push_back(tfm::format("-L%s", path));
     }
     for (auto&& library : Global::config().getMany("libraries")) {
         // The first entry may be blank
         if (library.empty()) {
             continue;
         }
-        parts.push_back(tfm::format("-l%s", library));
+        argv.push_back(tfm::format("-l%s", library));
     }
 
-    parts.push_back(std::string(sourceFilename));
+    argv.push_back(std::string(sourceFilename));
 
-    auto cmd = toString(join(parts, " ", [&](auto&& os, auto&& part) { os << "'" << part << "'"; }));
-
-    // run executable
-    if (system(cmd.c_str()) != 0) {
+    auto exit = execute(command, argv);
+    if (!exit) throw std::invalid_argument(tfm::format("unable to execute tool <%s>", command));
+    if (exit != 0)
         throw std::invalid_argument(tfm::format("failed to compile C++ source <%s>", sourceFilename));
-    }
 }
 
 int main(int argc, char** argv) {
@@ -708,31 +693,27 @@ int main(int argc, char** argv) {
                 }
             }
 
-            auto findCompileCmd = [&] {
-                auto cmd = findTool("souffle-compile", souffleExecutable, ".");
-                /* Fail if a souffle-compile executable is not found */
-                if (!isExecutable(cmd)) {
-                    throw std::runtime_error("failed to locate souffle-compile");
-                }
-                return cmd;
-            };
+            /* Fail if a souffle-compile executable is not found */
+            auto souffle_compile = findTool("souffle-compile", souffleExecutable, ".");
+            if (!isExecutable(souffle_compile)) throw std::runtime_error("failed to locate souffle-compile");
 
-            auto compileStart = std::chrono::high_resolution_clock::now();
+            std::vector<std::string> argv;
             if (Global::config().has("swig")) {
-                auto compileCmd = findCompileCmd() + " -s " + Global::config().get("swig") + " ";
-                compileToBinary(compileCmd, sourceFilename);
-            } else if (Global::config().has("compile")) {
-                compileToBinary(findCompileCmd(), sourceFilename);
-                /* Report overall run-time in verbose mode */
-                // run compiled C++ program if requested.
-                if (!Global::config().has("dl-program") && !Global::config().has("swig")) {
-                    executeBinary(baseFilename);
-                }
+                argv.push_back("-s");
+                argv.push_back(Global::config().get("swig"));
             }
+
+            auto t_bgn = std::chrono::high_resolution_clock::now();
+            compileToBinary(souffle_compile, sourceFilename, argv);
+            auto t_end = std::chrono::high_resolution_clock::now();
             if (Global::config().has("verbose")) {
-                auto compileEnd = std::chrono::high_resolution_clock::now();
-                std::cout << "Compilation time: "
-                          << std::chrono::duration<double>(compileEnd - compileStart).count() << "sec\n";
+                std::cout << "Compilation time: " << std::chrono::duration<double>(t_end - t_bgn).count()
+                          << "sec\n";
+            }
+
+            // run compiled C++ program if requested.
+            if (Global::config().has("compile")) {
+                executeBinaryAndExit(baseFilename);
             }
         }
     } catch (std::exception& e) {
