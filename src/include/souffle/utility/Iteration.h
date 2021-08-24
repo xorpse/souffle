@@ -189,6 +189,14 @@ struct IterTransformDeref {
     }
 };
 
+// HACK: Use explicit structure w/ `operator()` b/c pre-C++20 lambdas do not have copy-assign operators
+struct IterTransformToPtr {
+    template <typename A>
+    A* operator()(Own<A> const& x) const {
+        return x.get();
+    }
+};
+
 }  // namespace detail
 
 template <typename Iter>
@@ -201,6 +209,14 @@ using IterDerefWrapper = TransformIterator<Iter, detail::IterTransformDeref>;
 template <typename Iter>
 auto derefIter(Iter&& iter) {
     return transformIter(std::forward<Iter>(iter), detail::IterTransformDeref{});
+}
+
+/**
+ * A factory function that transforms an smart-ptr iter to dumb-ptr iter.
+ */
+template <typename Iter>
+auto ptrIter(Iter&& iter) {
+    return transformIter(std::forward<Iter>(iter), detail::IterTransformToPtr{});
 }
 
 // -------------------------------------------------------------
@@ -310,6 +326,11 @@ auto makeDerefRange(Iter&& begin, Iter&& end) {
     return make_range(derefIter(std::forward<Iter>(begin)), derefIter(std::forward<Iter>(end)));
 }
 
+template <typename R>
+auto makePtrRange(R const& xs) {
+    return make_range(ptrIter(std::begin(xs)), ptrIter(std::end(xs)));
+}
+
 /**
  * This wraps the Range container, and const_casts in place.
  */
@@ -362,14 +383,5 @@ private:
     Range range;
     F f;
 };
-
-/**
- * Convert a range of any ptr-like to a range
- * of pointers
- */
-template <typename R>
-auto makePtrRange(R const& range) {
-    return makeTransformRange(range, [](auto const& ptrLike) { return &*ptrLike; });
-}
 
 }  // namespace souffle
