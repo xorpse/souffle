@@ -4,15 +4,11 @@
 // - https://opensource.org/licenses/UPL
 // - <souffle root>/licenses/SOUFFLE-UPL.txt
 
-.pragma "disable-transformers" "ResolveAliasesTransformer"
+// verify that cmd-ln-args override pragma-args
 
-.decl words (i:number, w:symbol)
-.decl bigram (w:symbol, w1:symbol)
+// should have no effect b/c test suit should specify `-F` on the cmd ln
+.pragma "fact-dir" "//never//gonna//give//you//up//"
 
-.input words
-
-bigram(w, w1) :-
-   words(i,w),
-   words(i+1,w1).
-
-.output bigram
+.decl a(i:number)
+.input a
+.output a

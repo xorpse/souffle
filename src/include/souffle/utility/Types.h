@@ -16,11 +16,18 @@
 
 #pragma once
 
+#include <iterator>
 #include <memory>
 #include <type_traits>
 #include <vector>
 
 namespace souffle {
+
+// TODO: replace with C++20 concepts
+template <typename CC, typename A>
+constexpr bool is_iterable_of = std::is_constructible_v<A&,
+        typename std::iterator_traits<decltype(std::begin(std::declval<CC>()))>::value_type&>;
+
 template <typename A>
 using Own = std::unique_ptr<A>;
 
@@ -47,6 +54,19 @@ struct is_range_impl : std::false_type {};
 
 template <typename T>
 struct is_range_impl<T, std::void_t<decltype(*std::begin(std::declval<T&>()))>> : std::true_type {};
+
+template <typename A, typename = void>
+struct is_associative : std::false_type {};
+
+template <typename A>
+struct is_associative<A, std::void_t<typename A::key_type>> : std::true_type {};
+
+template <typename A, typename = void, typename = void>
+struct is_set : std::false_type {};
+
+template <typename A>
+struct is_set<A, std::void_t<typename A::key_type>, std::void_t<typename A::value_type>>
+        : std::is_same<typename A::key_type, typename A::value_type> {};
 
 }  // namespace detail
 
@@ -84,5 +104,12 @@ struct is_pointer_like<Own<T>> : std::true_type {};
 
 template <typename T>
 inline constexpr bool is_pointer_like_v = is_pointer_like<T>::value;
+
+// TODO: complete these or move to C++20
+template <typename A>
+constexpr bool is_associative = detail::is_associative<A>::value;
+
+template <typename A>
+constexpr bool is_set = detail::is_set<A>::value;
 
 }  // namespace souffle
