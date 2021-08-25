@@ -27,7 +27,9 @@ FunctorDeclaration::FunctorDeclaration(
 }
 
 void FunctorDeclaration::print(std::ostream& out) const {
-    auto convert = [&](Own<Attribute> const& attr) { return attr->getName() + ": " + attr->getTypeName().toString(); };
+    auto convert = [&](Own<Attribute> const& attr) {
+        return attr->getName() + ": " + attr->getTypeName().toString();
+    };
 
     tfm::format(out, ".functor %s(%s): %s", name, join(map(params, convert), ","), returnType->getTypeName());
     if (stateful) {
