@@ -79,7 +79,7 @@ protected:
         return equal_ptr(lhs, other.lhs) && equal_ptr(rhs, other.rhs);
     }
 
-    NodeVec getChildNodesImpl() const override {
+    NodeVec getChildren() const override {
         return {lhs.get(), rhs.get()};
     }
 

@@ -61,7 +61,7 @@ protected:
         return equal_targets(statements, other.statements);
     }
 
-    NodeVec getChildNodesImpl() const override {
+    NodeVec getChildren() const override {
         return toPtrVector<Node const>(statements);
     }
 

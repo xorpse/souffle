@@ -40,11 +40,11 @@ public:
     }
 
     Node::ConstChildNodes getChildNodes() const {
-        return Node::ConstChildNodes(getChildNodesImpl(), detail::RefCaster());
+        return Node::ConstChildNodes(getChildren(), detail::RefCaster());
     }
 
     Node::ChildNodes getChildNodes() {
-        return Node::ChildNodes(getChildNodesImpl(), detail::ConstCaster());
+        return Node::ChildNodes(getChildren(), detail::ConstCaster());
     }
 
     /** @brief Get logging message */
@@ -67,7 +67,7 @@ protected:
         return equal_ptr(statement, other.statement) && message == other.message;
     }
 
-    std::vector<const Node*> getChildNodesImpl() const {
+    std::vector<const Node*> getChildren() const {
         return {statement.get()};
     }
 

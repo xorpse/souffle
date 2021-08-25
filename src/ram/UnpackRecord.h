@@ -84,8 +84,8 @@ protected:
                arity == other.arity;
     }
 
-    NodeVec getChildNodesImpl() const override {
-        auto res = TupleOperation::getChildNodesImpl();
+    NodeVec getChildren() const override {
+        auto res = TupleOperation::getChildren();
         res.push_back(expression.get());
         return res;
     }

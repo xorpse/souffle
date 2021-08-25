@@ -58,8 +58,8 @@ protected:
         return NestedOperation::equal(node) && equal_ptr(condition, other.condition);
     }
 
-    NodeVec getChildNodesImpl() const override {
-        auto res = NestedOperation::getChildNodesImpl();
+    NodeVec getChildren() const override {
+        auto res = NestedOperation::getChildren();
         res.push_back(condition.get());
         return res;
     }

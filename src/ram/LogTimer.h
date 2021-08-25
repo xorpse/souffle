@@ -67,8 +67,8 @@ protected:
         os << times(" ", tabpos) << "END TIMER" << std::endl;
     }
 
-    NodeVec getChildNodesImpl() const override {
-        return AbstractLog::getChildNodesImpl();
+    NodeVec getChildren() const override {
+        return AbstractLog::getChildren();
     }
 };
 

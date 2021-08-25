@@ -92,8 +92,8 @@ protected:
         return TupleOperation::equal(node) && op == other.op && equal_targets(args, other.args);
     }
 
-    NodeVec getChildNodesImpl() const override {
-        auto res = TupleOperation::getChildNodesImpl();
+    NodeVec getChildren() const override {
+        auto res = TupleOperation::getChildren();
         for (auto&& x : args) {
             res.push_back(x.get());
         }

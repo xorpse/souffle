@@ -138,8 +138,8 @@ protected:
                equal_targets(queryPattern.second, other.queryPattern.second);
     }
 
-    NodeVec getChildNodesImpl() const override {
-        auto res = RelationOperation::getChildNodesImpl();
+    NodeVec getChildren() const override {
+        auto res = RelationOperation::getChildren();
         for (auto& pattern : queryPattern.first) {
             res.push_back(pattern.get());
         }

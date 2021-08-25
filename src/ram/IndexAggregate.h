@@ -88,9 +88,9 @@ protected:
         return IndexOperation::equal(other) && AbstractAggregate::equal(other);
     }
 
-    NodeVec getChildNodesImpl() const override {
-        auto res = IndexOperation::getChildNodesImpl();
-        auto children = AbstractAggregate::getChildNodesImpl();
+    NodeVec getChildren() const override {
+        auto res = IndexOperation::getChildren();
+        auto children = AbstractAggregate::getChildren();
         res.insert(res.end(), children.begin(), children.end());
         return res;
     }

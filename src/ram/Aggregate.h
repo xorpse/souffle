@@ -82,9 +82,9 @@ protected:
         return RelationOperation::equal(other) && AbstractAggregate::equal(node);
     }
 
-    NodeVec getChildNodesImpl() const override {
-        auto res = RelationOperation::getChildNodesImpl();
-        auto children = AbstractAggregate::getChildNodesImpl();
+    NodeVec getChildren() const override {
+        auto res = RelationOperation::getChildren();
+        auto children = AbstractAggregate::getChildren();
         res.insert(res.end(), children.begin(), children.end());
         return res;
     }

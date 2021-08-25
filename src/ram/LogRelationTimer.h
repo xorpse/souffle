@@ -70,9 +70,9 @@ protected:
         os << times(" ", tabpos) << "END TIMER" << std::endl;
     }
 
-    NodeVec getChildNodesImpl() const override {
-        auto res = RelationStatement::getChildNodesImpl();
-        res.push_back(AbstractLog::getChildNodesImpl().at(0));
+    NodeVec getChildren() const override {
+        auto res = RelationStatement::getChildren();
+        res.push_back(AbstractLog::getChildren().at(0));
         return res;
     }
 };

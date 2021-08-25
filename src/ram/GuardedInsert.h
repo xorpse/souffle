@@ -84,8 +84,8 @@ protected:
                equal_ptr(condition, other.condition);
     }
 
-    NodeVec getChildNodesImpl() const override {
-        auto res = Insert::getChildNodesImpl();
+    NodeVec getChildren() const override {
+        auto res = Insert::getChildren();
         res.push_back(condition.get());
         return res;
     }

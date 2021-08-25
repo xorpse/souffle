@@ -82,8 +82,8 @@ protected:
         return RelationOperation::equal(other) && AbstractIfExists::equal(other);
     }
 
-    NodeVec getChildNodesImpl() const override {
-        return {nestedOperation.get(), AbstractIfExists::getChildNodesImpl().at(0)};
+    NodeVec getChildren() const override {
+        return {nestedOperation.get(), AbstractIfExists::getChildren().at(0)};
     }
 };
 

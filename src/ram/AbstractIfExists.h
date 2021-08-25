@@ -49,11 +49,11 @@ public:
     }
 
     Node::ConstChildNodes getChildNodes() const {
-        return Node::ConstChildNodes(getChildNodesImpl(), detail::RefCaster());
+        return Node::ConstChildNodes(getChildren(), detail::RefCaster());
     }
 
     Node::ChildNodes getChildNodes() {
-        return Node::ChildNodes(getChildNodesImpl(), detail::ConstCaster());
+        return Node::ChildNodes(getChildren(), detail::ConstCaster());
     }
 
 protected:
@@ -62,7 +62,7 @@ protected:
         return equal_ptr(condition, other.condition);
     }
 
-    std::vector<const Node*> getChildNodesImpl() const {
+    std::vector<const Node*> getChildren() const {
         return {condition.get()};
     }
 

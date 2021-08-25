@@ -75,7 +75,7 @@ protected:
         return equal_ptr(operation, other.operation);
     }
 
-    NodeVec getChildNodesImpl() const override {
+    NodeVec getChildren() const override {
         return {operation.get()};
     }
 

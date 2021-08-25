@@ -128,7 +128,7 @@ protected:
      */
     virtual Node* cloning() const = 0;
 
-    virtual NodeVec getChildNodesImpl() const {
+    virtual NodeVec getChildren() const {
         return {};
     }
 };

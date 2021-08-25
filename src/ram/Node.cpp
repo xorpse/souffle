@@ -39,11 +39,11 @@ void Node::rewrite(const Node* oldNode, Own<Node> newNode) {
 }
 
 Node::ConstChildNodes Node::getChildNodes() const {
-    return ConstChildNodes(getChildNodesImpl(), detail::RefCaster());
+    return ConstChildNodes(getChildren(), detail::RefCaster());
 }
 
 Node::ChildNodes Node::getChildNodes() {
-    return ChildNodes(getChildNodesImpl(), detail::ConstCaster());
+    return ChildNodes(getChildren(), detail::ConstCaster());
 }
 
 }  // namespace souffle::ram

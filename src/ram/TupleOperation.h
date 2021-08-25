@@ -52,8 +52,8 @@ protected:
         return NestedOperation::equal(other) && identifier == other.identifier;
     }
 
-    NodeVec getChildNodesImpl() const override {
-        return NestedOperation::getChildNodesImpl();
+    NodeVec getChildren() const override {
+        return NestedOperation::getChildren();
     }
 
     /**

@@ -83,7 +83,7 @@ protected:
         return equal_targets(expressions, other.expressions);
     }
 
-    NodeVec getChildNodesImpl() const override {
+    NodeVec getChildren() const override {
         return toPtrVector<Node const>(expressions);
     }
 

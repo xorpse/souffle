@@ -69,7 +69,7 @@ protected:
         return equal_ptr(condition, other.condition);
     }
 
-    NodeVec getChildNodesImpl() const override {
+    NodeVec getChildren() const override {
         return {condition.get()};
     }
 

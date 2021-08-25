@@ -75,7 +75,7 @@ protected:
         return relation == other.relation && equal_targets(values, other.values);
     }
 
-    NodeVec getChildNodesImpl() const override {
+    NodeVec getChildren() const override {
         return toPtrVector<Node const>(values);
     }
 

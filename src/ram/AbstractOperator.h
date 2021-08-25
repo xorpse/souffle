@@ -55,7 +55,7 @@ protected:
         return equal_targets(arguments, other.arguments);
     }
 
-    NodeVec getChildNodesImpl() const override {
+    NodeVec getChildren() const override {
         return toPtrVector<Node const>(arguments);
     }
 

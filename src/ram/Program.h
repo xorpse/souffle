@@ -132,8 +132,8 @@ protected:
                equal_targets(subroutines, other.subroutines);
     }
 
-    NodeVec getChildNodesImpl() const override {
-        auto children = main->getChildNodesImpl();
+    NodeVec getChildren() const override {
+        auto children = main->getChildren();
         for (auto& rel : relations) {
             children.push_back(rel.get());
         }

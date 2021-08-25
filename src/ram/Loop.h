@@ -72,7 +72,7 @@ protected:
         return equal_ptr(body, other.body);
     }
 
-    NodeVec getChildNodesImpl() const override {
+    NodeVec getChildren() const override {
         return {body.get()};
     }
 

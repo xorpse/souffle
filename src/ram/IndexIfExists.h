@@ -100,9 +100,9 @@ protected:
         return IndexOperation::equal(other) && AbstractIfExists::equal(other);
     }
 
-    NodeVec getChildNodesImpl() const override {
-        auto res = IndexOperation::getChildNodesImpl();
-        res.push_back(AbstractIfExists::getChildNodesImpl().at(0));
+    NodeVec getChildren() const override {
+        auto res = IndexOperation::getChildren();
+        res.push_back(AbstractIfExists::getChildren().at(0));
         return res;
     }
 };

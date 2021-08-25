@@ -78,7 +78,7 @@ protected:
         return equal_ptr(nestedOperation, other.nestedOperation) && profileText == other.profileText;
     }
 
-    NodeVec getChildNodesImpl() const override {
+    NodeVec getChildren() const override {
         return {nestedOperation.get()};
     }
 
