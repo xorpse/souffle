@@ -268,8 +268,7 @@ template <typename It>
 constexpr bool IsLegacyIteratorOutput_v = std::is_reference_v<decltype(*std::declval<It>())>&&
         std::is_move_assignable_v<std::remove_reference_t<decltype(*std::declval<It>())>>;
 
-// Workaround r-ref collapsing w/ templates.
-// This bloody sucks. Why are the template ref rules such a shitshow?
+// HACK: Workaround r-ref collapsing w/ template parameters.
 template <typename C>
 struct filter {
     static_assert(!std::is_reference_v<C>);
