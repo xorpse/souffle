@@ -40,7 +40,7 @@ execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --always
 if (NOT GIT_RESULT EQUAL 0)
     # Not building from a git clone
     message(WARNING "Unable to find git repository: version number will be incomplete")
-    set(PACKAGE_VERSION "UNKOWN")
+    set(PACKAGE_VERSION "UNKNOWN")
     set(SOUFFLE_VERSION "")
 else()
     string(REGEX REPLACE "\n$" "" PACKAGE_VERSION "${GIT_PACKAGE_VERSION}")
