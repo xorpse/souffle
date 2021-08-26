@@ -186,8 +186,7 @@ ram::TranslationUnit& Engine::getTranslationUnit() {
 }
 
 void* Engine::getMethodHandle(const std::string& method) {
-    // load DLLs (if not done yet)
-    for (void* libHandle : loadDLL()) {
+    for (void* libHandle : dll) {
         auto* methodHandle = dlsym(libHandle, method.c_str());
         if (methodHandle != nullptr) {
             return methodHandle;
@@ -282,6 +281,8 @@ void Engine::executeMain() {
 
     generateIR();
     assert(main != nullptr && "Executing an empty program");
+
+    loadDLL();
 
     Context ctxt;
 
