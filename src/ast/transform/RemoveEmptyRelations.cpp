@@ -76,13 +76,9 @@ bool RemoveEmptyRelationsTransformer::removeEmptyRelationUses(
     //
     // (1) drop rules from the program that have empty relations in their bodies.
     // (2) drop negations of empty relations
-    //
-    // get all clauses
-    std::vector<const Clause*> clauses;
-    visit(program, [&](const Clause& cur) { clauses.push_back(&cur); });
 
     // clean all clauses
-    for (const Clause* cl : clauses) {
+    for (const Clause* cl : program.getClauses()) {
         // check for an atom whose relation is the empty relation
 
         bool removed = false;

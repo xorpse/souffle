@@ -31,11 +31,11 @@
 #include "ast/analysis/Ground.h"
 #include "ast/analysis/Type.h"
 #include "ast/analysis/TypeSystem.h"
-#include "ast/utility/LambdaNodeMapper.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
 #include "souffle/TypeAttribute.h"
 #include "souffle/utility/MiscUtil.h"
+#include "souffle/utility/NodeMapper.h"
 #include "souffle/utility/StringUtil.h"
 #include <algorithm>
 #include <cassert>
@@ -261,15 +261,17 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
      *
      **/
     std::set<const Aggregator*> innerAggregates;
-    visit(program, [&](const Aggregator& agg) {
+    visitFrontier(program, [&](const Aggregator& agg) {
         visit(agg, [&](const Aggregator& innerAgg) {
             if (agg != innerAgg) {
                 innerAggregates.insert(&innerAgg);
             }
         });
+        return true;
     });
 
-    visit(program, [&](Clause& clause) {
+    for (auto&& cl : program.getClauses()) {
+        auto& clause = *cl;
         visit(clause, [&](Aggregator& agg) {
             if (!needsMaterializedRelation(agg)) {
                 return;
@@ -345,7 +347,7 @@ bool MaterializeAggregationQueriesTransformer::materializeAggregationQueries(
             program.addRelation(std::move(aggRel));
             changed = true;
         });
-    });
+    }
     return changed;
 }
 
