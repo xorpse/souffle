@@ -51,8 +51,11 @@ jobs:
     - name: make
       run: cmake --build build -j6
 
-    - name: check
-      run: cd build && ctest --output-on-failure --progress -j
+    - name: check-interpreter
+      run: cd build && ctest -L "interpreted" --output-on-failure --progress -j
+      
+    - name: check-others
+      run: cd build && ctest -LE "interpreted" --output-on-failure --progress -j
 
   OSX-CMake:
     needs: Code-Style
@@ -73,9 +76,12 @@ jobs:
     - name: make
       run: cmake --build build -j6
 
-    - name: check
-      run: cd build && ctest --output-on-failure --progress -j
-
+    - name: check-interpreter
+      run: cd build && ctest -L "interpreted" --output-on-failure --progress -j
+      
+    - name: check-others
+      run: cd build && ctest -LE "interpreted" --output-on-failure --progress -j
+          
   Memory-Check:
     needs: Code-Style
     timeout-minutes: 150
