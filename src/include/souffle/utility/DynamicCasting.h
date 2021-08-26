@@ -29,11 +29,17 @@ namespace souffle {
  */
 class AllowCrossCast {};
 
+namespace detail {
+template <typename A>
+constexpr bool is_valid_cross_cast_option = std::is_same_v<A, void> || std::is_same_v<A, AllowCrossCast>;
+}
+
 /**
  * Helpers for `dynamic_cast`ing without having to specify redundant type qualifiers.
  * e.g. `as<AstLiteral>(p)` instead of `as<AstLiteral>(p)`.
  */
-template <typename B, typename CastType = void, typename A>
+template <typename B, typename CastType = void, typename A,
+        typename = std::enable_if_t<detail::is_valid_cross_cast_option<CastType>>>
 auto as(A* x) {
     if constexpr (!std::is_same_v<CastType, AllowCrossCast> &&
                   !std::is_base_of_v<std::remove_const_t<B>, std::remove_const_t<A>>) {

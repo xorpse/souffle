@@ -26,17 +26,30 @@
 #include "ast/QualifiedName.h"
 #include "ast/Relation.h"
 #include "ast/Type.h"
+#include "souffle/utility/Visitor.h"
 #include <iosfwd>
 #include <vector>
 
 namespace souffle {
 class ParserDriver;
-}
-namespace souffle::ast {
+
+namespace ast {
+class Program;
 
 namespace transform {
 class ComponentInstantiationTransformer;
 }
+}  // namespace ast
+
+// very common case optimisation: visiting every `Clause`
+template <typename F, typename = detail::visitor_enable_if_arg0<F, ast::Clause>>
+void visit(ast::Program&, F&&);
+template <typename F, typename = detail::visitor_enable_if_arg0<F, ast::Clause>>
+void visit(ast::Program const&, F&&);
+}  // namespace souffle
+
+namespace souffle::ast {
+
 /**
  * @class Program
  * @brief The program class consists of relations, clauses and types.
@@ -144,6 +157,35 @@ private:
 
     /** Pragmas */
     VecOwn<Pragma> pragmas;
+
+#ifndef NDEBUG
+    // SANCHECK - used to assert that the set of clauses isn't mutated mid visit
+    // (easy extra check b/c `visit` is specialised for `Program` and `Clause`s)
+    mutable uint32_t clause_visit_in_progress = 0;
+#endif
+
+    template <typename F, typename>
+    friend void souffle::visit(Program&, F&&);
+    template <typename F, typename>
+    friend void souffle::visit(Program const&, F&&);
 };
 
 }  // namespace souffle::ast
+
+namespace souffle {
+template <typename F, typename>
+void visit(ast::Program& program, F&& go) {
+    program.clause_visit_in_progress++;
+    for (auto&& cl : program.clauses)
+        go(*cl);
+    program.clause_visit_in_progress--;
+}
+
+template <typename F, typename>
+void visit(ast::Program const& program, F&& go) {
+    program.clause_visit_in_progress++;
+    for (auto&& cl : program.clauses)
+        go(static_cast<ast::Clause const&>(*cl));
+    program.clause_visit_in_progress--;
+}
+}  // namespace souffle
