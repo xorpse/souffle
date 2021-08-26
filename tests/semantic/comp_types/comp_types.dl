@@ -1,7 +1,11 @@
+// Souffle - A Datalog Compiler
+// Copyright (c) 2021, The Souffle Developers. All rights reserved
+// Licensed under the Universal Permissive License v 1.0 as shown at:
+// - https://opensource.org/licenses/UPL
+// - <souffle root>/licenses/SOUFFLE-UPL.txt
 
-//////////
-// Test 1
-//////////
+// Tests parameter instantiations of components 
+// for user-defined types.
 
 // declare a component with an inner type
 .comp A<Param> {
@@ -18,12 +22,10 @@
 .init y = A<type2>
 .init z = A<type1>
 
-
 // this should be fine
 .decl relX( a : x.inner )
 .decl relY( a : y.inner )
 .decl relZ( a : z.inner )
-
 
 // all relations should have different types
 relX(x) :- relX(x).
@@ -37,54 +39,3 @@ relY(x) :- relZ(x).
 relZ(x) :- relX(x).
 relZ(x) :- relY(x).
 relZ(x) :- relZ(x).
-
-//////////
-// Test 2
-//////////
-
-.comp B<P> {
-  .type T = branch {x:P}
-  .decl R(x:T)
-}
-.init myB = B<number>
-myB.R($branch(1)).
-.printsize myB.R
-
-//////////
-// Test 3
-//////////
-
-.comp C<P> {
-  .type P <: number
-  .decl R(x:P)
-}
-.init myC = C<myType>
-myC.R(1).
-.printsize myC.R
-
-//////////
-// Test 4
-//////////
-
-.comp D<P> {
-  .type X <: P
-  .decl R(x:X)
-}
-.init myD = D<number>
-myD.R(1).
-.printsize myD.R
-
-//////////
-// Test 5
-//////////
-
-.type myT2 <: number
-.comp E<P> {
-  .type myT <: number
-  .type X = P | myT
-  .decl R(x:X)
-}
-.init myE = E<myT2>
-myE.R(1).
-.printsize myE.R
-
