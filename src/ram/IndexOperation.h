@@ -63,17 +63,6 @@ public:
         return std::make_pair(toPtrVector(queryPattern.first), toPtrVector(queryPattern.second));
     }
 
-    std::vector<const Node*> getChildNodes() const override {
-        auto res = RelationOperation::getChildNodes();
-        for (auto& pattern : queryPattern.first) {
-            res.push_back(pattern.get());
-        }
-        for (auto& pattern : queryPattern.second) {
-            res.push_back(pattern.get());
-        }
-        return res;
-    }
-
     void apply(const NodeMapper& map) override {
         RelationOperation::apply(map);
         for (auto& pattern : queryPattern.first) {
@@ -147,6 +136,17 @@ protected:
         return RelationOperation::equal(other) &&
                equal_targets(queryPattern.first, other.queryPattern.first) &&
                equal_targets(queryPattern.second, other.queryPattern.second);
+    }
+
+    NodeVec getChildren() const override {
+        auto res = RelationOperation::getChildren();
+        for (auto& pattern : queryPattern.first) {
+            res.push_back(pattern.get());
+        }
+        for (auto& pattern : queryPattern.second) {
+            res.push_back(pattern.get());
+        }
+        return res;
     }
 
     /** Values of index per column of table (if indexable) */

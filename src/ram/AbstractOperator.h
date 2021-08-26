@@ -43,14 +43,6 @@ public:
         return toPtrVector(arguments);
     }
 
-    std::vector<const Node*> getChildNodes() const override {
-        std::vector<const Node*> res;
-        for (const auto& cur : arguments) {
-            res.push_back(cur.get());
-        }
-        return res;
-    }
-
     void apply(const NodeMapper& map) override {
         for (auto& arg : arguments) {
             arg = map(std::move(arg));
@@ -61,6 +53,10 @@ protected:
     bool equal(const Node& node) const override {
         const auto& other = asAssert<AbstractOperator>(node);
         return equal_targets(arguments, other.arguments);
+    }
+
+    NodeVec getChildren() const override {
+        return toPtrVector<Node const>(arguments);
     }
 
     /** Arguments of user defined operator */

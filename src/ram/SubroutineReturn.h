@@ -51,14 +51,6 @@ public:
         return toPtrVector(expressions);
     }
 
-    std::vector<const Node*> getChildNodes() const override {
-        std::vector<const Node*> res;
-        for (const auto& expr : expressions) {
-            res.push_back(expr.get());
-        }
-        return res;
-    }
-
     SubroutineReturn* cloning() const override {
         VecOwn<Expression> newValues;
         for (auto& expr : expressions) {
@@ -89,6 +81,10 @@ protected:
     bool equal(const Node& node) const override {
         const auto& other = asAssert<SubroutineReturn>(node);
         return equal_targets(expressions, other.expressions);
+    }
+
+    NodeVec getChildren() const override {
+        return toPtrVector<Node const>(expressions);
     }
 
     /** Return expressions */
