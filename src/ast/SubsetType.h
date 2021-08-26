@@ -39,6 +39,11 @@ public:
         return baseType;
     }
 
+    /** Set base type */ 
+    void setBaseType(const QualifiedName& type) {
+        baseType = type; 
+    }
+
 protected:
     void print(std::ostream& os) const override;
 
@@ -49,7 +54,7 @@ private:
 
 private:
     /** Base type */
-    const QualifiedName baseType;
+    QualifiedName baseType;
 };
 
 }  // namespace souffle::ast

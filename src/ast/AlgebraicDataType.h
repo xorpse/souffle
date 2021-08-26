@@ -47,6 +47,8 @@ public:
 protected:
     void print(std::ostream& os) const override;
 
+    NodeVec getChildNodesImpl() const override;
+
 private:
     bool equal(const Node& node) const override;
 
