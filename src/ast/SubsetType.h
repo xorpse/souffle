@@ -39,9 +39,9 @@ public:
         return baseType;
     }
 
-    /** Set base type */ 
+    /** Set base type */
     void setBaseType(const QualifiedName& type) {
-        baseType = type; 
+        baseType = type;
     }
 
 protected:
