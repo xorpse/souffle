@@ -25,6 +25,11 @@ std::vector<BranchDeclaration*> AlgebraicDataType::getBranches() const {
     return toPtrVector(branches);
 }
 
+Node::NodeVec AlgebraicDataType::getChildNodesImpl() const {
+    auto cn = makePtrRange(branches);
+    return {cn.begin(), cn.end()};
+}
+
 void AlgebraicDataType::print(std::ostream& os) const {
     os << tfm::format(".type %s = %s", getQualifiedName(), join(branches, " | "));
 }

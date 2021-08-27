@@ -23,6 +23,7 @@
 #include "ast/Attribute.h"
 #include "ast/BinaryConstraint.h"
 #include "ast/BooleanConstraint.h"
+#include "ast/BranchDeclaration.h"
 #include "ast/BranchInit.h"
 #include "ast/Clause.h"
 #include "ast/Component.h"
@@ -76,6 +77,7 @@ struct Visitor : souffle::detail::VisitorBase<R, NodeType, Params...> {
         SOUFFLE_VISITOR_FORWARD(UnionType);
         SOUFFLE_VISITOR_FORWARD(RecordType);
         SOUFFLE_VISITOR_FORWARD(AlgebraicDataType);
+        SOUFFLE_VISITOR_FORWARD(BranchDeclaration)
 
         // arguments
         SOUFFLE_VISITOR_FORWARD(Variable)
@@ -121,6 +123,7 @@ struct Visitor : souffle::detail::VisitorBase<R, NodeType, Params...> {
     SOUFFLE_VISITOR_LINK(AlgebraicDataType, Type);
     SOUFFLE_VISITOR_LINK(UnionType, Type);
     SOUFFLE_VISITOR_LINK(Type, Node);
+    SOUFFLE_VISITOR_LINK(BranchDeclaration, Node);
 
     // -- arguments --
     SOUFFLE_VISITOR_LINK(Variable, Argument)

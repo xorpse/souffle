@@ -184,6 +184,22 @@ void collectContent(Program& program, const Component& component, const TypeBind
         // create a clone
         Own<ast::Type> type(clone(cur));
 
+        // instantiate user-defined type names
+        visit(*type, [&](ast::Type& type) {
+            auto&& newName = binding.find(type.getQualifiedName());
+            if (!newName.empty()) {
+                type.setQualifiedName(newName);
+            }
+        });
+
+        // instantiate sub-type declarations
+        visit(*type, [&](ast::SubsetType& type) {
+            auto&& newName = binding.find(type.getBaseType());
+            if (!newName.empty()) {
+                type.setBaseType(newName);
+            }
+        });
+
         // instantiate elements of union types
         visit(*type, [&](ast::UnionType& type) {
             for (auto& name : type.getTypes()) {
@@ -195,7 +211,19 @@ void collectContent(Program& program, const Component& component, const TypeBind
         });
 
         // instantiate elements of record types
-        visit(*type, [&](const ast::RecordType& type) {
+        visit(*type, [&](ast::RecordType& type) {
+            for (auto& field : type.getFields()) {
+                auto&& newName = binding.find(field->getTypeName());
+                if (!newName.empty()) {
+                    field->setTypeName(newName);
+                }
+            }
+        });
+
+        // instantiate elements of ADT branch types
+        visit(*type, [&](ast::BranchDeclaration& type) {
+            // TODO(b-scholz): instiantiate branch identifier as well
+            //                 (needs to be re-defined as QualifiedName)
             for (auto& field : type.getFields()) {
                 auto&& newName = binding.find(field->getTypeName());
                 if (!newName.empty()) {
