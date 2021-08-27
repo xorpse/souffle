@@ -4,55 +4,41 @@
 # - https://opensource.org/licenses/UPL
 # - <souffle root>/licenses/SOUFFLE-UPL.txt
 
-# TODO
-# Add option to run tests from install directory
-# Update README with cmake instructions
-# bash completion
-# clang-format, clang-tidy etc
-# Packaging
-# substitute changelog
-
-# Future TODO/improvements:
-# - Replace all the shell scripts (e.g. souffle-compile and all the testing helpers)
-#   with Python so it's cross-platform.  @b-scholz has agreed it's ok to have Python
-#   as a dependency
-# - See if we can call back into cmake so that we have a better mechanism for building
-#   consistenly rather than trying to thread compile flags etc into e.g. souffle-compile
-# - Make it easier to include Souffle as a subproject using add_subdirectory
-# - Currently, there a few unit tests in the src directory, we should
-#   migrate them to test to that they can be excluded if needed
-
 cmake_minimum_required(VERSION 3.15)
 
 include(CMakeDependentOption)
 
-find_package(Git REQUIRED)
+option(SOUFFLE_GIT "Enable/Disable git completion" ON)
 
-# PACKAGE_VERSION is the full tag with git hash
-execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --always
-                WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-                RESULT_VARIABLE GIT_RESULT
-                OUTPUT_VARIABLE GIT_PACKAGE_VERSION)
-                # FIXME: Use in cmake 3.19 or later
-                # COMMAND_ERROR_IS_FATAL ANY)
+if (SOUFFLE_GIT) 
+    find_package(Git REQUIRED)
 
-# Figure out the version number, depends on whether building from the git repo
-if (NOT GIT_RESULT EQUAL 0)
-    # Not building from a git clone
-    message(WARNING "Unable to find git repository: version number will be incomplete")
-    set(PACKAGE_VERSION "UNKNOWN")
-    set(SOUFFLE_VERSION "")
-else()
-    string(REGEX REPLACE "\n$" "" PACKAGE_VERSION "${GIT_PACKAGE_VERSION}")
-    message(STATUS "Building souffle version ${PACKAGE_VERSION}")
+    # PACKAGE_VERSION is the full tag with git hash
+    execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --always
+                    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+                    RESULT_VARIABLE GIT_RESULT
+                    OUTPUT_VARIABLE GIT_PACKAGE_VERSION)
+                    # FIXME: Use in cmake 3.19 or later
+                    # COMMAND_ERROR_IS_FATAL ANY)
 
-    # SOUFFLE_VERSION only includes the major/minor triplet
-    string(REGEX REPLACE "-.*$" "" SOUFFLE_VERSION "${PACKAGE_VERSION}")
+    # Figure out the version number, depends on whether building from the git repo
+    if (NOT GIT_RESULT EQUAL 0)
+        # Not building from a git clone
+        message(WARNING "Unable to find git repository: version number will be incomplete")
+        set(PACKAGE_VERSION "UNKNOWN")
+        set(SOUFFLE_VERSION "")
+    else()
+        string(REGEX REPLACE "\n$" "" PACKAGE_VERSION "${GIT_PACKAGE_VERSION}")
+        message(STATUS "Building souffle version ${PACKAGE_VERSION}")
+    
+        # SOUFFLE_VERSION only includes the major/minor triplet
+        string(REGEX REPLACE "-.*$" "" SOUFFLE_VERSION "${PACKAGE_VERSION}")
 
-    # If building from a shallow clone where tag is not available.
-    if (NOT ${SOUFFLE_VERSION} MATCHES "^[0-9.]+$")
-        message(WARNING "Cannot find a valid tag: cmake project version will be incomplete")
-        set (SOUFFLE_VERSION "")
+        # If building from a shallow clone where tag is not available.
+        if (NOT ${SOUFFLE_VERSION} MATCHES "^[0-9.]+$")
+            message(WARNING "Cannot find a valid tag: cmake project version will be incomplete")
+            set (SOUFFLE_VERSION "")
+        endif()
     endif()
 endif()
 
@@ -111,6 +97,7 @@ option(SOUFFLE_TEST_EVALUATION "Enable/Disable testing of evaluation examples in
 option(SOUFFLE_ENABLE_TESTING "Enable/Disable testing" ${SOUFFLE_ENABLE_TESTING_DEFAULT})
 option(SOUFFLE_GENERATE_DOXYGEN "Generate Doxygen files (html;htmlhelp;man;rtf;xml;latex)" "")
 option(SOUFFLE_CODE_COVERAGE "Enable coverage reporting" OFF)
+option(SOUFFLE_BASH_COMPLETION "Enable/Disable bash completion" ON)
 
 cmake_dependent_option(SOUFFLE_USE_LIBCPP "Link to libc++ instead of libstdc++" ON
     "CMAKE_CXX_COMPILER_ID STREQUAL Clang" OFF)
@@ -332,19 +319,22 @@ endif()
 # --------------------------------------------------
 # Installing bash completion file
 # --------------------------------------------------
-find_package (bash-completion)
-if (BASH_COMPLETION_FOUND)
-    message(STATUS "Using bash completion dir ${BASH_COMPLETION_COMPLETIONSDIR}")
-else()
-    set (BASH_COMPLETION_COMPLETIONSDIR "/etc/bash_completion.d")
-    message (STATUS "Using fallback bash completion dir ${BASH_COMPLETION_COMPLETIONSDIR}")
-endif()
+IF (SOUFFLE_BASH_COMPLETION) 
+    find_package (bash-completion)
+    if (BASH_COMPLETION_FOUND)
+        message(STATUS "Using bash completion dir ${BASH_COMPLETION_COMPLETIONSDIR}")
+    else()
+        set (BASH_COMPLETION_COMPLETIONSDIR "/etc/bash_completion.d")
+        message (STATUS "Using fallback bash completion dir ${BASH_COMPLETION_COMPLETIONSDIR}")
+    endif()
 
-install(
-    FILES "${CMAKE_SOURCE_DIR}/debian/souffle.bash-completion"
-    DESTINATION ${BASH_COMPLETION_COMPLETIONSDIR}
-    RENAME "souffle"
-)
+    install(
+        FILES "${CMAKE_SOURCE_DIR}/debian/souffle.bash-completion"
+        DESTINATION ${BASH_COMPLETION_COMPLETIONSDIR}
+        RENAME "souffle"
+    )
+endif()
+ 
 
 # --------------------------------------------------
 # Utility function to help us distinguish between Linux distros when packaging
