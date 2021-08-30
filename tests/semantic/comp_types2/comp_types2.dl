@@ -16,7 +16,7 @@
   .decl R(x:T)
 }
 .init myB = B<number>
-myB.R($branch(1)).
+myB.R($myB.branch(1)).
 .printsize myB.R
 
 //////////
