@@ -57,3 +57,17 @@ myD.R(1).
 myE.R(1).
 .printsize myE.R
 
+//////////
+// Test 5
+//////////
+
+.comp A {
+  .type T = b {a:number}
+  .decl R(x:T)
+}
+.init myA1 = A
+.init myA2 = A
+myA1.R($myA1.b(1)). 
+myA2.R($myA2.b(1)). 
+.printsize myA1.R
+.printsize myA2.R
