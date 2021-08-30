@@ -67,7 +67,7 @@ myE.R(1).
 }
 .init myA1 = A
 .init myA2 = A
-myA1.R($myA1.b(1)). 
-myA2.R($myA2.b(1)). 
+myA1.R($myA1.b(1)).
+myA2.R($myA2.b(1)).
 .printsize myA1.R
 .printsize myA2.R
