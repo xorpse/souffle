@@ -432,6 +432,14 @@ ComponentContent getInstantiatedContent(Program& program, const ComponentInit& c
             }
         });
 
+        // rename branch name in an ADT Branch Constructor
+        visit(node, [&](ast::BranchInit& branchInit) {
+            auto pos = typeNameMapping.find(branchInit.getBranchName());
+            if (pos != typeNameMapping.end()) {
+                branchInit.setBranchName(pos->second);
+            }
+        });
+
         // rename variant types in unions
         visit(node, [&](ast::UnionType& unionType) {
             auto& variants = unionType.getTypes();
