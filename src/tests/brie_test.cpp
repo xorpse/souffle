@@ -113,11 +113,16 @@ TEST(SparseArray, Iterator) {
 TEST(SparseArray, IteratorStress) {
     const static int N = 10000;
 
+    std::default_random_engine randomGenerator(3);
+    std::uniform_int_distribution<RamDomain> distribution(0, 10 * N - 1);
+    auto random = std::bind(distribution, randomGenerator);
+    auto rnd = [&]() { return random(); };
+
     SparseArray<int> map;
 
     std::vector<int> pos;
     while (pos.size() < N) {
-        int n = random() % (N * 10);
+        int n = rnd();
         if (!contains(pos, n)) {
             pos.push_back(n);
         }
@@ -144,6 +149,11 @@ TEST(SparseArray, IteratorStress) {
 TEST(SparseArray, IteratorStress2) {
     const static int N = 1000;
 
+    std::default_random_engine randomGenerator(3);
+    std::uniform_int_distribution<RamDomain> distribution(0, 10 * N - 1);
+    auto random = std::bind(distribution, randomGenerator);
+    auto rnd = [&]() { return random(); };
+
     bool log = false;
 
     for (unsigned j = 0; j < N; j++) {
@@ -152,7 +162,7 @@ TEST(SparseArray, IteratorStress2) {
         if (log) std::cout << "Creating " << j << " random numbers ..\n";
         std::vector<int> pos;
         while (pos.size() < j) {
-            int n = random() % (N * 10);
+            int n = rnd();
             if (!contains(pos, n)) {
                 pos.push_back(n);
             }
@@ -510,11 +520,16 @@ TEST(SparseBitMap, Basic) {
 TEST(SparseBitMap, Stress) {
     const static int N = 10000;
 
+    std::default_random_engine randomGenerator(3);
+    std::uniform_int_distribution<RamDomain> distribution(0, 10 * N - 1);
+    auto random = std::bind(distribution, randomGenerator);
+    auto rnd = [&]() { return random(); };
+
     SparseBitMap<> map;
 
     std::vector<int> should;
     while (should.size() < N) {
-        int n = random() % (N * 10);
+        int n = rnd();
         if (!contains(should, n)) {
             should.push_back(n);
         }
@@ -573,6 +588,11 @@ TEST(SparseBitMap, Iterator) {
 TEST(SparseBitMap, IteratorStress2) {
     const static int N = 1000;
 
+    std::default_random_engine randomGenerator(3);
+    std::uniform_int_distribution<RamDomain> distribution(0, 10 * N - 1);
+    auto random = std::bind(distribution, randomGenerator);
+    auto rnd = [&]() { return random(); };
+
     bool log = false;
 
     for (unsigned j = 0; j < N; j++) {
@@ -581,7 +601,7 @@ TEST(SparseBitMap, IteratorStress2) {
         if (log) std::cout << "Creating " << j << " random numbers ..\n";
         std::set<int> should;
         while (should.size() < j) {
-            int n = random() % (N * 10);
+            int n = rnd();
             if (!contains(should, n)) {
                 should.insert(n);
             }
@@ -760,23 +780,21 @@ TEST(Trie, Iterator) {
     EXPECT_EQ(3, card(set));
 }
 
-namespace {
-
-RamDomain rand(RamDomain max) {
-    return random() % max;
-}
-}  // namespace
-
 TEST(Trie, IteratorStress_1D) {
     using tuple = std::array<RamDomain, 1>;
 
     const int N = 10000;
 
+    std::default_random_engine randomGenerator(3);
+    std::uniform_int_distribution<RamDomain> distribution(0, 10 * N - 1);
+    auto random = std::bind(distribution, randomGenerator);
+    auto rnd = [&]() { return random(); };
+
     Trie<1> set;
 
     std::set<tuple> data;
     while (data.size() < N) {
-        tuple cur{(RamDomain)(rand(N * 10))};
+        tuple cur{(RamDomain)(rnd())};
         if (data.insert(cur).second) {
             EXPECT_FALSE(set.contains(cur));
             set.insert(cur);
@@ -798,13 +816,18 @@ TEST(Trie, IteratorStress_2D) {
 
     const int N = 10000;
 
+    std::default_random_engine randomGenerator(3);
+    std::uniform_int_distribution<RamDomain> distribution(0, 10 * N - 1);
+    auto random = std::bind(distribution, randomGenerator);
+    auto rnd = [&]() { return random(); };
+
     Trie<2> set;
 
     std::set<tuple> data;
     while (data.size() < N) {
         tuple cur;
-        cur[0] = (RamDomain)(rand(N * 10));
-        cur[1] = (RamDomain)(rand(N * 10));
+        cur[0] = (RamDomain)(rnd());
+        cur[1] = (RamDomain)(rnd());
         if (data.insert(cur).second) {
             EXPECT_FALSE(set.contains(cur));
             set.insert(cur);
@@ -826,14 +849,19 @@ TEST(Trie, IteratorStress_3D) {
 
     const int N = 10000;
 
+    std::default_random_engine randomGenerator(3);
+    std::uniform_int_distribution<RamDomain> distribution(0, 10 * N - 1);
+    auto random = std::bind(distribution, randomGenerator);
+    auto rnd = [&]() { return random(); };
+
     Trie<3> set;
 
     std::set<tuple> data;
     while (data.size() < N) {
         tuple cur;
-        cur[0] = (RamDomain)(rand(N * 10));
-        cur[1] = (RamDomain)(rand(N * 10));
-        cur[2] = (RamDomain)(rand(N * 10));
+        cur[0] = (RamDomain)(rnd());
+        cur[1] = (RamDomain)(rnd());
+        cur[2] = (RamDomain)(rnd());
         if (data.insert(cur).second) {
             EXPECT_FALSE(set.contains(cur));
             set.insert(cur);
@@ -855,15 +883,20 @@ TEST(Trie, IteratorStress_4D) {
 
     const int N = 10000;
 
+    std::default_random_engine randomGenerator(3);
+    std::uniform_int_distribution<RamDomain> distribution(0, 10 * N - 1);
+    auto random = std::bind(distribution, randomGenerator);
+    auto rnd = [&]() { return random(); };
+
     Trie<4> set;
 
     std::set<tuple> data;
     while (data.size() < N) {
         tuple cur;
-        cur[0] = (RamDomain)(rand(N * 10));
-        cur[1] = (RamDomain)(rand(N * 10));
-        cur[2] = (RamDomain)(rand(N * 10));
-        cur[3] = (RamDomain)(rand(N * 10));
+        cur[0] = (RamDomain)(rnd());
+        cur[1] = (RamDomain)(rnd());
+        cur[2] = (RamDomain)(rnd());
+        cur[3] = (RamDomain)(rnd());
         if (data.insert(cur).second) {
             EXPECT_FALSE(set.contains(cur));
             set.insert(cur);
@@ -1554,14 +1587,19 @@ TEST(Trie, Merge_Stress) {
     const int N = 1000;
     const int M = 100;
 
+    std::default_random_engine randomGenerator(3);
+    std::uniform_int_distribution<RamDomain> distribution(0, N / 2 - 1);
+    auto random = std::bind(distribution, randomGenerator);
+    auto rnd = [&]() { return random(); };
+
     std::set<entry_t> ref;
     Trie<2> a;
 
     for (int i = 0; i < M; i++) {
         Trie<2> b;
         for (int i = 0; i < N; i++) {
-            RamDomain x = rand(N / 2);
-            RamDomain y = rand(N / 2);
+            RamDomain x = rnd();
+            RamDomain y = rnd();
             if (!a.contains({x, y})) {
                 b.insert({x, y});
                 ref.insert(entry_t{x, y});

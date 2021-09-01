@@ -29,7 +29,9 @@ function(SOUFFLE_TEST_SEMANTIC_PRAGMA2_SETUP FILE SO_NAME)
             CXX_EXTENSIONS OFF
     )
 
-    target_compile_options(${FILE} PUBLIC "-Wall;-Wextra;-fwrapv")
+    if (NOT MSVC)
+        target_compile_options(${FILE} PUBLIC "-Wall;-Wextra;-fwrapv")
+    endif()
 
     if (SOUFFLE_DOMAIN_64BIT)
         target_compile_definitions(${FILE} PUBLIC RAM_DOMAIN_SIZE=64)
