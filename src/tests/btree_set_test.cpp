@@ -766,8 +766,8 @@ TEST(BTreeSet, Parallel) {
 #ifdef _OPENMP
 #pragma omp parallel for  //  schedule(static,1)
 #endif
-        for (auto it = full.begin(); it < full.end(); ++it) {
-            res.insert(*it);
+        for (int idx = 0; idx < static_cast<int>(full.size()); ++idx) {
+            res.insert(full[idx]);
         }
 
         EXPECT_TRUE(res.check());

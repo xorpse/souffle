@@ -1712,13 +1712,18 @@ TEST(Trie, Limits) {
 TEST(Trie, Parallel) {
     const int N = 10000;
 
+    std::default_random_engine randomGenerator(3);
+    std::uniform_int_distribution<RamDomain> distribution(0, N - 1);
+    auto random = std::bind(distribution, randomGenerator);
+    auto rnd = [&]() { return random(); };
+
     // get a unordered list of test data
     using entry_t = typename Trie<2>::entry_type;
     std::vector<entry_t> list;
     Trie<2> filter;
 
     while (filter.size() < N) {
-        entry_t entry{(RamDomain)(random() % N), (RamDomain)(random() % N)};
+        entry_t entry{(RamDomain)(rnd()), (RamDomain)(rnd())};
         if (filter.insert(entry)) {
             list.push_back(entry);
         }
@@ -1745,8 +1750,8 @@ TEST(Trie, Parallel) {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for (auto it = full.begin(); it < full.end(); ++it) {
-            res.insert(*it);
+        for (int idx = 0; idx < static_cast<int>(full.size()); ++idx) {
+            res.insert(full[idx]);
         }
 
         // check resulting values
