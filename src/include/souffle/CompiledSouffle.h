@@ -26,34 +26,10 @@
 #include "souffle/datastructure/Table.h"
 #include "souffle/io/IOSystem.h"
 #include "souffle/io/WriteStream.h"
-#include "souffle/utility/CacheUtil.h"
-#include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/EvaluatorUtil.h"
-#include "souffle/utility/FileUtil.h"
-#include "souffle/utility/FunctionalUtil.h"
-#include "souffle/utility/MiscUtil.h"
-#include "souffle/utility/ParallelUtil.h"
-#include "souffle/utility/StreamUtil.h"
-#include "souffle/utility/StringUtil.h"
 #ifndef __EMBEDDED_SOUFFLE__
 #include "souffle/CompiledOptions.h"
-#include "souffle/profile/Logger.h"
-#include "souffle/profile/ProfileEvent.h"
 #endif
-#include <array>
-#include <atomic>
-#include <cassert>
-#include <cmath>
-#include <cstdint>
-#include <cstdlib>
-#include <exception>
-#include <iostream>
-#include <iterator>
-#include <memory>
-#include <regex>
-#include <string>
-#include <utility>
-#include <vector>
 
 #if defined(_OPENMP)
 #include <omp.h>

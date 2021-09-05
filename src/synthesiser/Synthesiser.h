@@ -39,7 +39,6 @@ namespace souffle::synthesiser {
 class Synthesiser {
 private:
     /** Record Table */
-    // RecordTable recordTable;
 
     /** RAM translation unit */
     ram::TranslationUnit& translationUnit;
@@ -65,10 +64,13 @@ private:
     /** Symbol map */
     mutable std::vector<std::string> symbolIndex;
 
-protected:
-    /** Get record table */
-    // const RecordTable& getRecordTable();
+    /** Is set to true if there is a need to include std::regex */
+    bool UsingStdRegex = false;
 
+    /** Set of packed and unpacked records arities */
+    std::set<std::size_t> arities;
+
+protected:
     /** Convert RAM identifier */
     const std::string convertRamIdent(const std::string& name);
 
