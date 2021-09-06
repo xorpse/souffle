@@ -60,6 +60,12 @@ protected:
         std::string parseErrors;
         types = Json::parse(rwOperation.at("types"), parseErrors);
         assert(parseErrors.size() == 0 && "Internal JSON parsing failed.");
+        if (rwOperation.count("params") > 0) {
+            params = Json::parse(rwOperation.at("params"), parseErrors);
+            assert(parseErrors.size() == 0 && "Internal JSON parsing failed.");
+        } else {
+            params = Json::object();
+        }
 
         auxiliaryArity = RamSignedFromString(getOr(rwOperation, "auxArity", "0"));
 
@@ -69,6 +75,7 @@ protected:
     RO<SymbolTable>& symbolTable;
     RO<RecordTableInterface>& recordTable;
     Json types;
+    Json params;
     std::vector<std::string> typeAttributes;
 
     std::size_t arity = 0;
