@@ -2563,10 +2563,10 @@ SignalHandler*          signalHandler {SignalHandler::instance()};
 std::atomic<RamDomain>  ctr {};
 std::atomic<std::size_t>     iter {};
 
-void runFunction(std::string  inputDirectoryArg   = "",
-                 std::string  outputDirectoryArg  = "",
-                 bool         performIOArg        = false,
-                 bool         pruneImdtRelsArg    = true) {
+void runFunction(std::string  inputDirectoryArg,
+                 std::string  outputDirectoryArg,
+                 bool         performIOArg,
+                 bool         pruneImdtRelsArg) {
     this->inputDirectory  = std::move(inputDirectoryArg);
     this->outputDirectory = std::move(outputDirectoryArg);
     this->performIO       = performIOArg;
@@ -2630,7 +2630,7 @@ void runFunction(std::string  inputDirectoryArg   = "",
 
     // add methods to run with and without performing IO (mainly for the interface)
     os << "public:\nvoid run() override { runFunction(\"\", \"\", "
-          "false); }\n";
+          "false, false); }\n";
     os << "public:\nvoid runAll(std::string inputDirectoryArg = \"\", std::string outputDirectoryArg = \"\", "
           "bool performIOArg=true, bool pruneImdtRelsArg=true) override { ";
     if (Global::config().has("live-profile")) {
