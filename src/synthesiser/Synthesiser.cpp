@@ -477,7 +477,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_BEGIN_COMMENT(out);
 
             if (!synthesiser.lookup(clear.getRelation())->isTemp()) {
-                out << "if (performIO) ";
+                out << "if (pruneImdtRels) ";
             }
             out << synthesiser.getRelationName(synthesiser.lookup(clear.getRelation())) << "->"
                 << "purge();\n";
@@ -2562,14 +2562,15 @@ std::string             outputDirectory;
 SignalHandler*          signalHandler {SignalHandler::instance()};
 std::atomic<RamDomain>  ctr {};
 std::atomic<std::size_t>     iter {};
-bool                    performIO = false;
 
 void runFunction(std::string  inputDirectoryArg   = "",
                  std::string  outputDirectoryArg  = "",
-                 bool         performIOArg        = false) {
+                 bool         performIOArg        = false,
+                 bool         pruneImdtRelsArg    = true) {
     this->inputDirectory  = std::move(inputDirectoryArg);
     this->outputDirectory = std::move(outputDirectoryArg);
     this->performIO       = performIOArg;
+    this->pruneImdtRels   = pruneImdtRelsArg; 
 
     // set default threads (in embedded mode)
     // if this is not set, and omp is used, the default omp setting of number of cores is used.
@@ -2630,12 +2631,12 @@ void runFunction(std::string  inputDirectoryArg   = "",
     // add methods to run with and without performing IO (mainly for the interface)
     os << "public:\nvoid run() override { runFunction(\"\", \"\", "
           "false); }\n";
-    os << "public:\nvoid runAll(std::string inputDirectoryArg = \"\", std::string outputDirectoryArg = \"\") "
-          "override { ";
+    os << "public:\nvoid runAll(std::string inputDirectoryArg = \"\", std::string outputDirectoryArg = \"\", "
+          "bool performIOArg=true, bool pruneImdtRelsArg=true) override { ";
     if (Global::config().has("live-profile")) {
         os << "std::thread profiler([]() { profile::Tui().runProf(); });\n";
     }
-    os << "runFunction(inputDirectoryArg, outputDirectoryArg, true);\n";
+    os << "runFunction(inputDirectoryArg, outputDirectoryArg, performIOArg, pruneImdtRelsArg);\n";
     if (Global::config().has("live-profile")) {
         os << "if (profiler.joinable()) { profiler.join(); }\n";
     }
