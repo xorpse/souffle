@@ -482,9 +482,9 @@ public:
 };
 
 /** The interface of any Record Table. */
-class RecordTableInterface {
+class RecordTable {
 public:
-    virtual ~RecordTableInterface() {}
+    virtual ~RecordTable() {}
 
     virtual void setNumLanes(const std::size_t NumLanes) = 0;
 
@@ -495,7 +495,7 @@ public:
 
 /** A concurrent Record Table with some specialized record maps. */
 template <std::size_t... SpecializedArities>
-class SpecializedRecordTable : public RecordTableInterface {
+class SpecializedRecordTable : public RecordTable {
 private:
     // The current size of the Maps vector.
     std::size_t Size;
@@ -540,7 +540,9 @@ public:
     virtual void setNumLanes(const std::size_t NumLanes) override {
         Lanes.setNumLanes(NumLanes);
         for (auto& Map : Maps) {
-            Map->setNumLanes(NumLanes);
+            if (Map) {
+                Map->setNumLanes(NumLanes);
+            }
         }
     }
 
@@ -599,9 +601,6 @@ private:
         Lanes.unlockAllBut();
     }
 };
-
-/** Default record table uses specialized record maps for arities 0 to 12. */
-using RecordTable = SpecializedRecordTable<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12>;
 
 /** @brief helper to convert tuple to record reference for the synthesiser */
 template <class RecordTableT, std::size_t Arity>
