@@ -207,12 +207,12 @@ void Engine::createRelation(const ram::Relation& id, const std::size_t idx) {
     RelationHandle res;
 
     if (id.getRepresentation() == RelationRepresentation::EQREL) {
-        res = createEqrelRelation(id, isa->getIndexSelection(id.getName()));
+        res = createEqrelRelation(id, isa.getIndexSelection(id.getName()));
     } else {
         if (isProvenance) {
-            res = createProvenanceRelation(id, isa->getIndexSelection(id.getName()));
+            res = createProvenanceRelation(id, isa.getIndexSelection(id.getName()));
         } else {
-            res = createBTreeRelation(id, isa->getIndexSelection(id.getName()));
+            res = createBTreeRelation(id, isa.getIndexSelection(id.getName()));
         }
     }
     relations[idx] = mk<RelationHandle>(std::move(res));

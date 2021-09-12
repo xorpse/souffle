@@ -378,7 +378,7 @@ const ChainOrderMap MinIndexSelectionStrategy::getChainsFromMatching(const MaxMa
 }
 
 void IndexAnalysis::run(const TranslationUnit& translationUnit) {
-    relAnalysis = translationUnit.getAnalysis<RelationAnalysis>();
+    relAnalysis = &translationUnit.getAnalysis<RelationAnalysis>();
 
     // After complete:
     // 1. All relations should have at least one index (for full-order search).

@@ -487,7 +487,7 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
         debugStream = &analysisLogs;
     }
 
-    typeEnv = &translationUnit.getAnalysis<TypeEnvironmentAnalysis>()->getTypeEnvironment();
+    typeEnv = &translationUnit.getAnalysis<TypeEnvironmentAnalysis>().getTypeEnvironment();
 
     // Analyse user-defined functor types
     const Program& program = translationUnit.getProgram();

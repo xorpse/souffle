@@ -40,7 +40,7 @@ using namespace analysis;
 
 bool ComponentChecker::transform(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
-    ComponentLookupAnalysis& componentLookup = *translationUnit.getAnalysis<ComponentLookupAnalysis>();
+    auto& componentLookup = translationUnit.getAnalysis<ComponentLookupAnalysis>();
     ErrorReport& report = translationUnit.getErrorReport();
     checkComponents(report, program, componentLookup);
     checkComponentNamespaces(report, program);

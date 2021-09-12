@@ -102,12 +102,12 @@ struct SemanticCheckerImpl {
     SemanticCheckerImpl(TranslationUnit& tu);
 
 private:
-    const IOTypeAnalysis& ioTypes = *tu.getAnalysis<IOTypeAnalysis>();
-    const PrecedenceGraphAnalysis& precedenceGraph = *tu.getAnalysis<PrecedenceGraphAnalysis>();
-    const RecursiveClausesAnalysis& recursiveClauses = *tu.getAnalysis<RecursiveClausesAnalysis>();
-    const SCCGraphAnalysis& sccGraph = *tu.getAnalysis<SCCGraphAnalysis>();
+    const IOTypeAnalysis& ioTypes = tu.getAnalysis<IOTypeAnalysis>();
+    const PrecedenceGraphAnalysis& precedenceGraph = tu.getAnalysis<PrecedenceGraphAnalysis>();
+    const RecursiveClausesAnalysis& recursiveClauses = tu.getAnalysis<RecursiveClausesAnalysis>();
+    const SCCGraphAnalysis& sccGraph = tu.getAnalysis<SCCGraphAnalysis>();
 
-    const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>()->getTypeEnvironment();
+    const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>().getTypeEnvironment();
     const Program& program = tu.getProgram();
     ErrorReport& report = tu.getErrorReport();
 

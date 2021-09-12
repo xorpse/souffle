@@ -63,7 +63,7 @@ using PositiveLabellingTransformer =
 
 std::set<QualifiedName> MagicSetTransformer::getTriviallyIgnoredRelations(const TranslationUnit& tu) {
     const auto& program = tu.getProgram();
-    const auto& ioTypes = *tu.getAnalysis<analysis::IOTypeAnalysis>();
+    const auto& ioTypes = tu.getAnalysis<analysis::IOTypeAnalysis>();
     std::set<QualifiedName> triviallyIgnoredRelations;
 
     // - Any relations known in constant time (IDB relations)
@@ -89,8 +89,8 @@ std::set<QualifiedName> MagicSetTransformer::getTriviallyIgnoredRelations(const 
 
 std::set<QualifiedName> MagicSetTransformer::getWeaklyIgnoredRelations(const TranslationUnit& tu) {
     const auto& program = tu.getProgram();
-    const auto& precedenceGraph = tu.getAnalysis<analysis::PrecedenceGraphAnalysis>()->graph();
-    const auto& polyAnalysis = *tu.getAnalysis<analysis::PolymorphicObjectsAnalysis>();
+    const auto& precedenceGraph = tu.getAnalysis<analysis::PrecedenceGraphAnalysis>().graph();
+    const auto& polyAnalysis = tu.getAnalysis<analysis::PolymorphicObjectsAnalysis>();
     std::set<QualifiedName> weaklyIgnoredRelations;
 
     // Add magic-transform-exclude relations to the weakly ignored set
@@ -224,8 +224,8 @@ std::set<QualifiedName> MagicSetTransformer::getWeaklyIgnoredRelations(const Tra
 
 std::set<QualifiedName> MagicSetTransformer::getStronglyIgnoredRelations(const TranslationUnit& tu) {
     const auto& program = tu.getProgram();
-    const auto& relDetail = *tu.getAnalysis<analysis::RelationDetailCacheAnalysis>();
-    const auto& precedenceGraph = tu.getAnalysis<analysis::PrecedenceGraphAnalysis>()->graph();
+    const auto& relDetail = tu.getAnalysis<analysis::RelationDetailCacheAnalysis>();
+    const auto& precedenceGraph = tu.getAnalysis<analysis::PrecedenceGraphAnalysis>().graph();
     std::set<QualifiedName> stronglyIgnoredRelations;
 
     // - Any atom appearing at the head of a clause containing a counter
@@ -316,7 +316,7 @@ bool NormaliseDatabaseTransformer::transform(TranslationUnit& translationUnit) {
 
 bool NormaliseDatabaseTransformer::partitionIO(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
-    const auto& ioTypes = *translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
+    const auto& ioTypes = translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
 
     // Get all relations that are both input and output
     std::set<QualifiedName> relationsToSplit;
@@ -383,7 +383,7 @@ bool NormaliseDatabaseTransformer::partitionIO(TranslationUnit& translationUnit)
 
 bool NormaliseDatabaseTransformer::extractIDB(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
-    const auto& ioTypes = *translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
+    const auto& ioTypes = translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
 
     // Helper method to check if an input relation has no associated rules
     auto isStrictlyEDB = [&](const Relation* rel) {
@@ -470,7 +470,7 @@ bool NormaliseDatabaseTransformer::querifyOutputRelations(TranslationUnit& trans
     };
 
     // Get all output relations that need to be normalised
-    const auto& ioTypes = *translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
+    const auto& ioTypes = translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
     std::set<QualifiedName> outputRelationNames;
     for (auto* rel : program.getRelations()) {
         if ((ioTypes.isOutput(rel) || ioTypes.isPrintSize(rel)) && !isStrictlyOutput(rel)) {
@@ -723,7 +723,7 @@ Own<Clause> AdornDatabaseTransformer::adornClause(const Clause* clause, const st
 
 bool AdornDatabaseTransformer::transform(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
-    const auto& ioTypes = *translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
+    const auto& ioTypes = translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
     weaklyIgnoredRelations = getWeaklyIgnoredRelations(translationUnit);
 
     // Output relations trigger the adornment process
@@ -793,7 +793,7 @@ bool LabelDatabaseTransformer::isNegativelyLabelled(const QualifiedName& name) {
 }
 
 bool NegativeLabellingTransformer::transform(TranslationUnit& translationUnit) {
-    const auto& sccGraph = *translationUnit.getAnalysis<analysis::SCCGraphAnalysis>();
+    const auto& sccGraph = translationUnit.getAnalysis<analysis::SCCGraphAnalysis>();
     Program& program = translationUnit.getProgram();
 
     std::set<QualifiedName> relationsToLabel;
@@ -861,8 +861,8 @@ bool NegativeLabellingTransformer::transform(TranslationUnit& translationUnit) {
 
 bool PositiveLabellingTransformer::transform(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
-    const auto& sccGraph = *translationUnit.getAnalysis<analysis::SCCGraphAnalysis>();
-    const auto& precedenceGraph = translationUnit.getAnalysis<analysis::PrecedenceGraphAnalysis>()->graph();
+    const auto& sccGraph = translationUnit.getAnalysis<analysis::SCCGraphAnalysis>();
+    const auto& precedenceGraph = translationUnit.getAnalysis<analysis::PrecedenceGraphAnalysis>().graph();
     const auto& relationsToNotLabel = getRelationsToNotLabel(translationUnit);
 
     // Partition the strata into neglabelled and regular

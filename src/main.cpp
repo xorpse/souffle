@@ -570,19 +570,19 @@ int main(int argc, char** argv) {
 
     // Output the precedence graph in graphviz dot format
     if (hasShowOpt("precedence-graph")) {
-        astTranslationUnit->getAnalysis<ast::analysis::PrecedenceGraphAnalysis>()->print(std::cout);
+        astTranslationUnit->getAnalysis<ast::analysis::PrecedenceGraphAnalysis>().print(std::cout);
         std::cout << std::endl;
     }
 
     // Output the scc graph in graphviz dot format
     if (hasShowOpt("scc-graph")) {
-        astTranslationUnit->getAnalysis<ast::analysis::SCCGraphAnalysis>()->print(std::cout);
+        astTranslationUnit->getAnalysis<ast::analysis::SCCGraphAnalysis>().print(std::cout);
         std::cout << std::endl;
     }
 
     // Output the type analysis
     if (hasShowOpt("type-analysis")) {
-        astTranslationUnit->getAnalysis<ast::analysis::TypeAnalysis>()->print(std::cout);
+        astTranslationUnit->getAnalysis<ast::analysis::TypeAnalysis>().print(std::cout);
         std::cout << std::endl;
     }
 

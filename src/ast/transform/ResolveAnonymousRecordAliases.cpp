@@ -43,7 +43,7 @@ std::map<std::string, const RecordInit*> ResolveAnonymousRecordAliasesTransforme
     auto isVariable = [](Node* node) -> bool { return isA<ast::Variable>(node); };
     auto isRecord = [](Node* node) -> bool { return isA<RecordInit>(node); };
 
-    auto& typeAnalysis = *tu.getAnalysis<analysis::TypeAnalysis>();
+    auto& typeAnalysis = tu.getAnalysis<analysis::TypeAnalysis>();
     auto groundedTerms = analysis::getGroundedTerms(tu, clause);
 
     for (auto* literal : clause.getBodyLiterals()) {

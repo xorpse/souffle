@@ -25,7 +25,7 @@
 namespace souffle::ast::analysis {
 
 void PolymorphicObjectsAnalysis::run(const TranslationUnit& translationUnit) {
-    typeAnalysis = translationUnit.getAnalysis<analysis::TypeAnalysis>();
+    typeAnalysis = &translationUnit.getAnalysis<analysis::TypeAnalysis>();
 }
 
 void PolymorphicObjectsAnalysis::print(std::ostream& /* os */) const {}

@@ -51,10 +51,10 @@ void RelationScheduleAnalysisStep::print(std::ostream& os) const {
 }
 
 void RelationScheduleAnalysis::run(const TranslationUnit& translationUnit) {
-    topsortSCCGraphAnalysis = translationUnit.getAnalysis<TopologicallySortedSCCGraphAnalysis>();
-    precedenceGraph = translationUnit.getAnalysis<PrecedenceGraphAnalysis>();
+    topsortSCCGraphAnalysis = &translationUnit.getAnalysis<TopologicallySortedSCCGraphAnalysis>();
+    precedenceGraph = &translationUnit.getAnalysis<PrecedenceGraphAnalysis>();
 
-    std::size_t numSCCs = translationUnit.getAnalysis<SCCGraphAnalysis>()->getNumberOfSCCs();
+    std::size_t numSCCs = translationUnit.getAnalysis<SCCGraphAnalysis>().getNumberOfSCCs();
     std::vector<std::set<const Relation*>> relationExpirySchedule =
             computeRelationExpirySchedule(translationUnit);
 
@@ -62,9 +62,9 @@ void RelationScheduleAnalysis::run(const TranslationUnit& translationUnit) {
     for (std::size_t i = 0; i < numSCCs; i++) {
         auto scc = topsortSCCGraphAnalysis->order()[i];
         const std::set<const Relation*> computedRelations =
-                translationUnit.getAnalysis<SCCGraphAnalysis>()->getInternalRelations(scc);
+                translationUnit.getAnalysis<SCCGraphAnalysis>().getInternalRelations(scc);
         relationSchedule.emplace_back(computedRelations, relationExpirySchedule[i],
-                translationUnit.getAnalysis<SCCGraphAnalysis>()->isRecursive(scc));
+                translationUnit.getAnalysis<SCCGraphAnalysis>().isRecursive(scc));
     }
 }
 
@@ -89,7 +89,7 @@ std::vector<std::set<const Relation*>> RelationScheduleAnalysis::computeRelation
 
         /* Add predecessors of relations computed in this step */
         auto scc = topsortSCCGraphAnalysis->order()[numSCCs - orderedSCC];
-        for (const Relation* r : sccGraph->getInternalRelations(scc)) {
+        for (const Relation* r : sccGraph.getInternalRelations(scc)) {
             for (const Relation* predecessor : precedenceGraph->graph().predecessors(r)) {
                 alive[orderedSCC].insert(predecessor);
             }

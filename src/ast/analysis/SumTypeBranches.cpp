@@ -28,7 +28,7 @@
 namespace souffle::ast::analysis {
 
 void SumTypeBranchesAnalysis::run(const TranslationUnit& tu) {
-    const TypeEnvironment& env = tu.getAnalysis<TypeEnvironmentAnalysis>()->getTypeEnvironment();
+    const TypeEnvironment& env = tu.getAnalysis<TypeEnvironmentAnalysis>().getTypeEnvironment();
 
     Program& program = tu.getProgram();
     visit(program.getTypes(), [&](const ast::AlgebraicDataType& adt) {

@@ -226,7 +226,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
     private:
         Synthesiser& synthesiser;
-        IndexAnalysis* const isa = synthesiser.getTranslationUnit().getAnalysis<IndexAnalysis>();
+        IndexAnalysis* const isa = &synthesiser.getTranslationUnit().getAnalysis<IndexAnalysis>();
 
 // macros to add comments to generated code for debugging
 #ifndef PRINT_BEGIN_COMMENT
@@ -2374,7 +2374,7 @@ void Synthesiser::generateCode(std::ostream& sos, const std::string& id, bool& w
     //                      Auto-Index Generation
     // ---------------------------------------------------------------
     const Program& prog = translationUnit.getProgram();
-    auto* idxAnalysis = translationUnit.getAnalysis<IndexAnalysis>();
+    auto& idxAnalysis = translationUnit.getAnalysis<IndexAnalysis>();
     // ---------------------------------------------------------------
     //                      Code Generation
     // ---------------------------------------------------------------
@@ -2463,7 +2463,7 @@ void Synthesiser::generateCode(std::ostream& sos, const std::string& id, bool& w
     for (auto rel : prog.getRelations()) {
         bool isProvInfo = rel->getRepresentation() == RelationRepresentation::INFO;
         auto relationType =
-                Relation::getSynthesiserRelation(*rel, idxAnalysis->getIndexSelection(rel->getName()),
+                Relation::getSynthesiserRelation(*rel, idxAnalysis.getIndexSelection(rel->getName()),
                         Global::config().has("provenance") && !isProvInfo);
 
         generateRelationTypeStruct(os, std::move(relationType));
@@ -2580,9 +2580,8 @@ void Synthesiser::generateCode(std::ostream& sos, const std::string& id, bool& w
         const std::string& cppName = getRelationName(*rel);
 
         bool isProvInfo = rel->getRepresentation() == RelationRepresentation::INFO;
-        auto relationType =
-                Relation::getSynthesiserRelation(*rel, idxAnalysis->getIndexSelection(datalogName),
-                        Global::config().has("provenance") && !isProvInfo);
+        auto relationType = Relation::getSynthesiserRelation(*rel, idxAnalysis.getIndexSelection(datalogName),
+                Global::config().has("provenance") && !isProvInfo);
         const std::string& type = relationType->getTypeName();
 
         // defining table

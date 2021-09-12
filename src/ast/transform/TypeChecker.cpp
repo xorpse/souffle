@@ -60,7 +60,7 @@ private:
     TranslationUnit& tu;
     ErrorReport& report = tu.getErrorReport();
     const Program& program = tu.getProgram();
-    const TypeEnvironmentAnalysis& typeEnvAnalysis = *tu.getAnalysis<TypeEnvironmentAnalysis>();
+    const TypeEnvironmentAnalysis& typeEnvAnalysis = tu.getAnalysis<TypeEnvironmentAnalysis>();
     const TypeEnvironment& typeEnv = typeEnvAnalysis.getTypeEnvironment();
 
     void checkRecordType(const ast::RecordType& type);
@@ -109,11 +109,11 @@ public:
 private:
     TranslationUnit& tu;
     ErrorReport& report = tu.getErrorReport();
-    const TypeAnalysis& typeAnalysis = *tu.getAnalysis<TypeAnalysis>();
-    const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>()->getTypeEnvironment();
-    const FunctorAnalysis& functorAnalysis = *tu.getAnalysis<FunctorAnalysis>();
-    const PolymorphicObjectsAnalysis& polyAnalysis = *tu.getAnalysis<PolymorphicObjectsAnalysis>();
-    const SumTypeBranchesAnalysis& sumTypesBranches = *tu.getAnalysis<SumTypeBranchesAnalysis>();
+    const TypeAnalysis& typeAnalysis = tu.getAnalysis<TypeAnalysis>();
+    const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>().getTypeEnvironment();
+    const FunctorAnalysis& functorAnalysis = tu.getAnalysis<FunctorAnalysis>();
+    const PolymorphicObjectsAnalysis& polyAnalysis = tu.getAnalysis<PolymorphicObjectsAnalysis>();
+    const SumTypeBranchesAnalysis& sumTypesBranches = tu.getAnalysis<SumTypeBranchesAnalysis>();
 
     const Program& program = tu.getProgram();
 

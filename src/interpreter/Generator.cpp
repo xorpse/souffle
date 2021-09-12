@@ -514,12 +514,12 @@ std::size_t NodeGenerator::getNextViewId() {
 template <class RamNode>
 std::size_t NodeGenerator::encodeIndexPos(RamNode& node) {
     const std::string& name = node.getRelation();
-    ram::analysis::SearchSignature signature = engine.isa->getSearchSignature(&node);
+    ram::analysis::SearchSignature signature = engine.isa.getSearchSignature(&node);
     // A zero signature is equivalent as a full order signature.
     if (signature.empty()) {
         signature = ram::analysis::SearchSignature::getFullSearchSignature(signature.arity());
     }
-    auto i = engine.isa->getIndexSelection(name).getLexOrderNum(signature);
+    auto i = engine.isa.getIndexSelection(name).getLexOrderNum(signature);
     indexTable[&node] = i;
     return i;
 };

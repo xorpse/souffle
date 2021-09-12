@@ -41,7 +41,7 @@ bool RemoveRelationCopiesTransformer::removeRelationCopies(TranslationUnit& tran
     // collect aliases
     alias_map isDirectAliasOf;
 
-    auto* ioType = translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
+    auto& ioType = translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
 
     Program& program = translationUnit.getProgram();
 
@@ -52,7 +52,7 @@ bool RemoveRelationCopiesTransformer::removeRelationCopies(TranslationUnit& tran
             continue;
         }
         const auto& clauses = getClauses(program, *rel);
-        if (!ioType->isIO(rel) && clauses.size() == 1u) {
+        if (!ioType.isIO(rel) && clauses.size() == 1u) {
             // .. of shape r(x,y,..) :- s(x,y,..)
             Clause* cl = clauses[0];
             std::vector<Atom*> bodyAtoms = getBodyLiterals<Atom>(*cl);

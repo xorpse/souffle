@@ -35,16 +35,16 @@
 namespace souffle::ast::transform {
 
 bool ExecutionPlanChecker::transform(TranslationUnit& translationUnit) {
-    auto* relationSchedule = translationUnit.getAnalysis<analysis::RelationScheduleAnalysis>();
-    auto* recursiveClauses = translationUnit.getAnalysis<analysis::RecursiveClausesAnalysis>();
+    auto& relationSchedule = translationUnit.getAnalysis<analysis::RelationScheduleAnalysis>();
+    auto& recursiveClauses = translationUnit.getAnalysis<analysis::RecursiveClausesAnalysis>();
     auto&& report = translationUnit.getErrorReport();
 
     Program& program = translationUnit.getProgram();
-    for (const analysis::RelationScheduleAnalysisStep& step : relationSchedule->schedule()) {
+    for (const analysis::RelationScheduleAnalysisStep& step : relationSchedule.schedule()) {
         const std::set<const Relation*>& scc = step.computed();
         for (const Relation* rel : scc) {
             for (const Clause* clause : getClauses(program, *rel)) {
-                if (!recursiveClauses->recursive(clause)) {
+                if (!recursiveClauses.recursive(clause)) {
                     continue;
                 }
                 if (clause->getExecutionPlan() == nullptr) {

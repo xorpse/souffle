@@ -58,7 +58,7 @@ public:
 
 protected:
     bool transform(TranslationUnit& translationUnit) override {
-        relAnalysis = translationUnit.getAnalysis<analysis::RelationAnalysis>();
+        relAnalysis = &translationUnit.getAnalysis<analysis::RelationAnalysis>();
         return parallelizeOperations(translationUnit.getProgram());
     }
     analysis::RelationAnalysis* relAnalysis{nullptr};
