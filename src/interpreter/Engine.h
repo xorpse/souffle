@@ -178,8 +178,8 @@ private:
     ram::TranslationUnit& tUnit;
     /** IndexAnalysis */
     ram::analysis::IndexAnalysis* isa;
-    /** Record Table*/
-    RecordTable recordTable;
+    /** Record Table Implementation*/
+    SpecializedRecordTable<0, 1, 2, 3, 4, 5, 6, 7, 8, 9> recordTable;
     /** Symbol table for relations */
     VecOwn<RelationHandle> relations;
     /** Symbol table */

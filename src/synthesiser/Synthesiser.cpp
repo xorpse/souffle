@@ -911,6 +911,8 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_BEGIN_COMMENT(out);
             auto arity = unpack.getArity();
 
+            synthesiser.arities.emplace(arity);
+
             // look up reference
             out << "RamDomain const ref = ";
             dispatch(unpack.getExpression(), out);
@@ -1748,6 +1750,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
                 // strings
                 case BinaryConstraintOp::MATCH: {
+                    synthesiser.UsingStdRegex = true;
                     out << "regex_wrapper(symTable.decode(";
                     dispatch(rel.getLHS(), out);
                     out << "),symTable.decode(";
@@ -1756,6 +1759,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                     break;
                 }
                 case BinaryConstraintOp::NOT_MATCH: {
+                    synthesiser.UsingStdRegex = true;
                     out << "!regex_wrapper(symTable.decode(";
                     dispatch(rel.getLHS(), out);
                     out << "),symTable.decode(";
@@ -2259,8 +2263,12 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         void visit_(type_identity<PackRecord>, const PackRecord& pack, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
 
+            const auto arity = pack.getArguments().size();
+
+            synthesiser.arities.emplace(arity);
+
             out << "pack(recordTable,"
-                << "Tuple<RamDomain," << pack.getArguments().size() << ">";
+                << "Tuple<RamDomain," << arity << ">";
             if (pack.getArguments().size() == 0) {
                 out << "{{}}";
             } else {
@@ -2310,7 +2318,58 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
     CodeEmitter(*this).dispatch(stmt, out);
 }
 
-void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& withSharedLibrary) {
+/** An output stream where some pieces may be filled later or conditionnaly. */
+class DelayableOutputStream : public std::streambuf, public std::ostream {
+public:
+    DelayableOutputStream() : std::ostream(this) {}
+
+    ~DelayableOutputStream() {}
+
+    std::streambuf::int_type overflow(std::streambuf::int_type ch) override {
+        if (!current_stream) {
+            pieces.emplace_back(std::nullopt, std::make_shared<std::stringstream>());
+            current_stream = pieces.back().second;
+        }
+        current_stream->put(ch);
+        return ch;
+    }
+
+    /** Return a piece of stream that will be included in the output only if the given condition is true when
+     * this stream is flushed. */
+    std::shared_ptr<std::ostream> delayed_if(const bool& cond) {
+        current_stream.reset();
+        pieces.emplace_back(&cond, std::make_shared<std::stringstream>());
+        return pieces.back().second;
+    }
+
+    /** Return a piece of stream that will be included in the output when this stream is flushed. */
+    std::shared_ptr<std::ostream> delayed() {
+        current_stream.reset();
+        pieces.emplace_back(std::nullopt, std::make_shared<std::stringstream>());
+        return pieces.back().second;
+    }
+
+    /** */
+    void flushAll(std::ostream& os) {
+        current_stream.reset();
+        while (!pieces.empty()) {
+            auto& piece = pieces.front();
+            if ((!piece.first) || **piece.first) {
+                os << piece.second->str();
+            }
+            pieces.pop_front();
+        }
+    }
+
+private:
+    /* the sequence of pieces that compose the output stream. */
+    std::list<std::pair<std::optional<const bool*>, std::shared_ptr<std::stringstream>>> pieces;
+
+    /* points to the current piece's stream. */
+    std::shared_ptr<std::ostream> current_stream;
+};
+
+void Synthesiser::generateCode(std::ostream& sos, const std::string& id, bool& withSharedLibrary) {
     // ---------------------------------------------------------------
     //                      Auto-Index Generation
     // ---------------------------------------------------------------
@@ -2320,6 +2379,8 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     //                      Code Generation
     // ---------------------------------------------------------------
 
+    DelayableOutputStream os;
+
     withSharedLibrary = false;
 
     std::string classname = "Sf_" + id;
@@ -2328,6 +2389,7 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
 
     if (Global::config().has("verbose")) {
         os << "#define _SOUFFLE_STATS\n";
+        os << "#include \"souffle/profile/ProfileEvent.h\"";
     }
     os << "\n#include \"souffle/CompiledSouffle.h\"\n";
     if (Global::config().has("provenance")) {
@@ -2339,6 +2401,16 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
         os << "#include <thread>\n";
         os << "#include \"souffle/profile/Tui.h\"\n";
     }
+
+    {
+        auto _os = os.delayed_if(UsingStdRegex);
+        *_os << "#include <regex>\n";
+    }
+
+    if (Global::config().has("profile") || Global::config().has("live-profile")) {
+        os << "#include \"souffle/profile/ProfileEvent.h\"";
+    }
+
     os << "\n";
     // produce external definitions for user-defined functors
     std::map<std::string, std::tuple<TypeAttribute, std::vector<TypeAttribute>, bool>> functors;
@@ -2400,19 +2472,25 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
 
     os << "class " << classname << " : public SouffleProgram {\n";
 
-    // regex wrapper
-    os << "private:\n";
-    os << "static inline bool regex_wrapper(const std::string& pattern, const std::string& text) {\n";
-    os << "   bool result = false; \n";
-    os << "   try { result = std::regex_match(text, std::regex(pattern)); } catch(...) { \n";
-    os << "     std::cerr << \"warning: wrong pattern provided for match(\\\"\" << pattern << \"\\\",\\\"\" "
-          "<< text << \"\\\").\\n\";\n}\n";
-    os << "   return result;\n";
-    os << "}\n";
+    {
+        // regex wrapper
+        auto osp = os.delayed_if(UsingStdRegex);
+        auto& _os = *osp;
+        _os << "private:\n";
+        _os << "static inline bool regex_wrapper(const std::string& pattern, const std::string& text) {\n";
+        _os << "   bool result = false; \n";
+        _os << "   try { result = std::regex_match(text, std::regex(pattern)); } catch(...) { \n";
+        _os << "     std::cerr << \"warning: wrong pattern provided for match(\\\"\" << pattern << "
+               "\"\\\",\\\"\" "
+               "<< text << \"\\\").\\n\";\n}\n";
+        _os << "   return result;\n";
+        _os << "}\n";
+    }
 
     // substring wrapper
     os << "private:\n";
-    os << "static inline std::string substr_wrapper(const std::string& str, std::size_t idx, std::size_t "
+    os << "static inline std::string substr_wrapper(const std::string& str, std::size_t idx, "
+          "std::size_t "
           "len) {\n";
     os << "   std::string result; \n";
     os << "   try { result = str.substr(idx,len); } catch(...) { \n";
@@ -2446,9 +2524,7 @@ void Synthesiser::generateCode(std::ostream& os, const std::string& id, bool& wi
     // declare record table
     os << "// -- initialize record table --\n";
 
-    // TODO use SpecializedRecordTable<some arities>
-    os << "RecordTable recordTable;"
-       << "\n";
+    auto recordTable_os = os.delayed();
 
     if (Global::config().has("profile")) {
         os << "private:\n";
@@ -2894,6 +2970,16 @@ void runFunction(std::string  inputDirectoryArg   = "",
     os << "} catch(std::exception &e) { souffle::SignalHandler::instance()->error(e.what());}\n";
     os << "}\n";
     os << "\n#endif\n";
+
+    *recordTable_os << "SpecializedRecordTable<0";
+    for (std::size_t arity : arities) {
+        if (arity > 0) {
+            *recordTable_os << "," << arity;
+        }
+    }
+    *recordTable_os << "> recordTable{};\n";
+
+    os.flushAll(sos);
 }
 
 }  // namespace souffle::synthesiser
