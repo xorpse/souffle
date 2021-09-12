@@ -555,6 +555,10 @@ void TypeAnnotationPrinter::branchOnArgument(const Argument* cur, const Type& ty
         print_(type_identity<IntrinsicFunctor>(), *as<IntrinsicFunctor>(cur));
     } else if (isA<TypeCast>(*cur)) {
         print_(type_identity<TypeCast>(), *as<TypeCast>(cur));
+    } else if (isA<UserDefinedFunctor>(*cur)) {
+        print_(type_identity<UserDefinedFunctor>(), *as<UserDefinedFunctor>(cur));
+    } else if (isA<Counter>(*cur)) {
+        print_(type_identity<Counter>(), *as<Counter>(cur));
     } else {
         os << "<(branchOnArgument) not supported yet>";
     }
@@ -573,7 +577,7 @@ void TypeAnnotationPrinter::print_(type_identity<Atom>, const Atom& atom) {
         const auto& declaredType = typeEnv.getType(declaredTypeName);
         assert(typeEnv.isType(declaredTypeName));
         branchOnArgument(cur, declaredType);
-        if (isA<RecordInit>(cur) || isA<UnnamedVariable>(cur)) {
+        if (isA<RecordInit>(cur) || isA<UnnamedVariable>(cur) || isA<TypeCast>(cur)) {
             os << "∈{" << declaredTypeName << "}";
         }
         if (i + 1 < args.size()) {
@@ -672,26 +676,29 @@ void TypeAnnotationPrinter::print_(type_identity<IntrinsicFunctor>, const Intrin
     }
 }
 
-void TypeAnnotationPrinter::print_(
-        type_identity<UserDefinedFunctor>, [[maybe_unused]] const UserDefinedFunctor& fun) {
-    // TODO
+void TypeAnnotationPrinter::print_(type_identity<UserDefinedFunctor>, const UserDefinedFunctor& fun) {
+    auto arguments = fun.getArguments();
+    os << "@" << fun.getName() << "(";
+    for (std::size_t i = 0; i < arguments.size(); ++i) {
+        TypeAttribute argType = typeAnalysis.getFunctorParamTypeAttribute(fun, i);
+        auto& ty = typeEnv.getConstantType(argType);
+        branchOnArgument(arguments[i], ty);
+        if (i + 1 < arguments.size()) {
+            os << ",";
+        }
+    }
+    os << ")";
 }
 
 void TypeAnnotationPrinter::print_(type_identity<Counter>, [[maybe_unused]] const Counter& counter) {
-    // TODO
+    os << "$∈{number}";
 }
 
 void TypeAnnotationPrinter::print_(type_identity<TypeCast>, const ast::TypeCast& typeCast) {
-    os << "{";
+    os << "as(";
     auto& ty = typeEnv.getType(typeCast.getType());
     branchOnArgument(typeCast.getValue(), ty);
-    auto tySetOrg = argumentTypes.find(typeCast.getValue())->second;
-    assert(tySetOrg.size() == 1);
-    auto tyOrg = tySetOrg.begin();
-    os << "∈{";
-    os << (*tyOrg).getName();
-    os << "} as {" << ty.getName() << "}";
-    os << "}";
+    os << "," << ty.getName() << ")";
 }
 
 void TypeAnnotationPrinter::print_(
