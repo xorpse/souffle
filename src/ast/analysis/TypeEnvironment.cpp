@@ -17,6 +17,7 @@
 #include "ast/analysis/TypeEnvironment.h"
 #include "GraphUtils.h"
 #include "ast/AlgebraicDataType.h"
+#include "ast/AliasType.h"
 #include "ast/Attribute.h"
 #include "ast/BranchType.h"
 #include "ast/Program.h"
@@ -44,14 +45,28 @@ Graph<QualifiedName> createTypeDependencyGraph(const std::vector<ast::Type*>& pr
     for (const auto* astType : programTypes) {
         if (auto type = as<ast::SubsetType>(astType)) {
             typeDependencyGraph.insert(type->getQualifiedName(), type->getBaseType());
-        } else if (isA<ast::RecordType>(astType)) {
-            // do nothing
+        } else if (auto type = as<ast::AliasType>(astType)) {
+            typeDependencyGraph.insert(type->getQualifiedName(), type->getAliasType());
         } else if (auto type = as<ast::UnionType>(astType)) {
             for (const auto& subtype : type->getTypes()) {
                 typeDependencyGraph.insert(type->getQualifiedName(), subtype);
             }
+        } else if (isA<ast::RecordType>(astType)) {
+#if 0
+            // we should add that so that we have the complete type dependency graph
+            for (const auto& field : type->getFields() ) {
+                typeDependencyGraph.insert(type->getQualifiedName(), field->getAttributeType());
+            }
+#endif
         } else if (isA<ast::AlgebraicDataType>(astType)) {
-            // do nothing
+#if 0
+            // we should add that so that we have the complete type dependency graph
+            for (const auto& branch: type->getBranches()) { 
+              for (const auto& field : branch->getFields() ) {
+                typeDependencyGraph.insert(type->getQualifiedName(), field->getAttributeType());
+              }
+            }
+#endif
         } else {
             fatal("unsupported type construct: %s", typeid(astType).name());
         }
@@ -60,14 +75,13 @@ Graph<QualifiedName> createTypeDependencyGraph(const std::vector<ast::Type*>& pr
 }
 
 /**
- * Find all the type with a cyclic definition (in terms of being a subtype)
+ * Find all the type with a cyclic definition (in terms of being a subtype/alias)
  */
 std::set<QualifiedName> analyseCyclicTypes(
         const Graph<QualifiedName>& dependencyGraph, const std::vector<ast::Type*>& programTypes) {
     std::set<QualifiedName> cyclicTypes;
     for (const auto& astType : programTypes) {
         QualifiedName typeName = astType->getQualifiedName();
-
         if (dependencyGraph.reaches(typeName, typeName)) {
             cyclicTypes.insert(std::move(typeName));
         }
@@ -118,6 +132,7 @@ void TypeEnvironmentAnalysis::run(const TranslationUnit& translationUnit) {
     Graph<QualifiedName> typeDependencyGraph{createTypeDependencyGraph(rawProgramTypes)};
 
     cyclicTypes = analyseCyclicTypes(typeDependencyGraph, rawProgramTypes);
+
     primitiveTypesInUnions = analysePrimitiveTypesInUnion(typeDependencyGraph, rawProgramTypes, env);
 
     std::map<QualifiedName, const ast::Type*> nameToType;
@@ -137,7 +152,6 @@ void TypeEnvironmentAnalysis::run(const TranslationUnit& translationUnit) {
     }
 }
 
-// TODO (darth_tytus): This procedure does too much.
 const Type* TypeEnvironmentAnalysis::createType(
         const QualifiedName& typeName, const std::map<QualifiedName, const ast::Type*>& nameToType) {
     // base case
@@ -153,7 +167,7 @@ const Type* TypeEnvironmentAnalysis::createType(
     const auto& astType = iterToType->second;
 
     if (isA<ast::SubsetType>(astType)) {
-        // First create a base type.
+        // First create a base type
         auto* baseType = createType(as<ast::SubsetType>(astType)->getBaseType(), nameToType);
 
         if (baseType == nullptr) {
@@ -161,6 +175,16 @@ const Type* TypeEnvironmentAnalysis::createType(
         }
 
         return &env.createType<SubsetType>(typeName, *baseType);
+
+    } else if (isA<ast::AliasType>(astType)) {
+        // First create an alias type
+        auto* aliasType = createType(as<ast::AliasType>(astType)->getAliasType(), nameToType);
+
+        if (aliasType == nullptr) {
+            return nullptr;
+        }
+
+        return &env.createType<AliasType>(typeName, *aliasType);
 
     } else if (isA<ast::UnionType>(astType)) {
         // Create all elements and then the type itself

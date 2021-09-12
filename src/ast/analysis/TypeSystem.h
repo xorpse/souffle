@@ -46,7 +46,7 @@ class TypeEnvironment;
  * a constant type, a subset type, a union type, a
  * record type, an algebraic data-type.
  *
- * Type = PrimitiveType | ConstantType | SubsetType |
+ * Type = PrimitiveType | ConstantType | SubsetType | AliasType |
  *        UnionType | RecordType | AlgebraicDataType
  */
 class Type {
@@ -137,6 +137,35 @@ private:
 
     /** Base type */
     const Type& baseType;
+};
+
+/*
+ * Alias Type Class
+ *
+ * A alias-type of a type supports type equivalence
+ * (also written as AliasType = Type).
+ *
+ * AliasType = alias(T)
+ *
+ * where T is a type.
+ */
+class AliasType : virtual public Type {
+public:
+    void print(std::ostream& out) const override;
+
+    const Type& getAliasType() const {
+        return aliasType;
+    }
+
+protected:
+    AliasType(const TypeEnvironment& environment, const QualifiedName& name, const Type& alias)
+            : Type(environment, name), aliasType(alias){};
+
+private:
+    friend class TypeEnvironment;
+
+    /** Base type */
+    const Type& aliasType;
 };
 
 /**

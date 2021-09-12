@@ -18,6 +18,7 @@
 
 #include "ast/Aggregator.h"
 #include "ast/AlgebraicDataType.h"
+#include "ast/AliasType.h"
 #include "ast/Argument.h"
 #include "ast/Atom.h"
 #include "ast/Attribute.h"
@@ -73,6 +74,7 @@ struct Visitor : souffle::detail::VisitorBase<R, NodeType, Params...> {
         // dispatch node processing based on dynamic type
 
         // types
+        SOUFFLE_VISITOR_FORWARD(AliasType);
         SOUFFLE_VISITOR_FORWARD(SubsetType);
         SOUFFLE_VISITOR_FORWARD(UnionType);
         SOUFFLE_VISITOR_FORWARD(RecordType);
@@ -119,6 +121,7 @@ struct Visitor : souffle::detail::VisitorBase<R, NodeType, Params...> {
 
     // -- types --
     SOUFFLE_VISITOR_LINK(SubsetType, Type);
+    SOUFFLE_VISITOR_LINK(AliasType, Type);
     SOUFFLE_VISITOR_LINK(RecordType, Type);
     SOUFFLE_VISITOR_LINK(AlgebraicDataType, Type);
     SOUFFLE_VISITOR_LINK(UnionType, Type);

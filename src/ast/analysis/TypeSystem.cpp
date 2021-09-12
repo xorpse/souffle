@@ -25,6 +25,10 @@
 
 namespace souffle::ast::analysis {
 
+void AliasType::print(std::ostream& out) const {
+    out << tfm::format("%s = %s", getName(), aliasType.getName());
+}
+
 void SubsetType::print(std::ostream& out) const {
     out << tfm::format("%s <: %s", getName(), baseType.getName());
 }
@@ -97,6 +101,7 @@ struct TypeVisitor {
     virtual R visit(const Type& type) const {
         FORWARD(Constant);
         FORWARD(Subset);
+        FORWARD(Alias);
         FORWARD(Union);
         FORWARD(Record);
         FORWARD(AlgebraicData);
@@ -112,6 +117,7 @@ struct TypeVisitor {
 
     VISIT(Constant)
     VISIT(Subset)
+    VISIT(Alias)
     VISIT(Union)
     VISIT(Record)
     VISIT(AlgebraicData)
@@ -157,6 +163,10 @@ bool isOfRootType(const Type& type, const Type& root) {
         }
         bool visitSubsetType(const SubsetType& type) const override {
             return type == root || isOfRootType(type.getBaseType(), root);
+        }
+
+        bool visitAliasType(const AliasType& type) const override {
+            return type == root || isOfRootType(type.getAliasType(), root);
         }
 
         bool visitAlgebraicDataType(const AlgebraicDataType& type) const override {
