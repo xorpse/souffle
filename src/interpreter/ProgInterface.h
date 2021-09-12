@@ -258,7 +258,7 @@ public:
     void run() override {}
 
     /** Load data, run program instance, store data: not implemented */
-    void runAll(std::string, std::string) override {}
+    void runAll(std::string, std::string, bool, bool) override {}
 
     /** Load input data: not implemented */
     void loadAll(std::string) override {}
