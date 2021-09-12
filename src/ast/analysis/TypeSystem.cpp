@@ -166,7 +166,7 @@ bool isOfRootType(const Type& type, const Type& root) {
         }
 
         bool visitAliasType(const AliasType& type) const override {
-            return type == root || isOfRootType(type.getAliasType(), root);
+            return type == root || this->visit(type.getAliasType());
         }
 
         bool visitAlgebraicDataType(const AlgebraicDataType& type) const override {
@@ -233,6 +233,14 @@ bool isSubtypeOf(const Type& a, const Type& b) {
 
     if (isOfRootType(a, b)) {
         return true;
+    }
+
+    if (isA<AliasType>(a)) {
+        return isSubtypeOf(static_cast<const AliasType&>(a).getAliasType(), b);
+    }
+
+    if (isA<AliasType>(b)) {
+        return isSubtypeOf(a, static_cast<const AliasType&>(b).getAliasType());
     }
 
     if (isA<UnionType>(a)) {

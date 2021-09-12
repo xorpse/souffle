@@ -149,7 +149,7 @@ private:
  *
  * where T is a type.
  */
-class AliasType : virtual public Type {
+class AliasType : public Type {
 public:
     void print(std::ostream& out) const override;
 
