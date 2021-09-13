@@ -163,7 +163,8 @@ void TypeDeclarationChecker::checkUnionType(const ast::UnionType& type) {
             report.addError(tfm::format("Undefined type %s in definition of union type %s", sub,
                                     type.getQualifiedName()),
                     type.getSrcLoc());
-        } else if (!isA<ast::UnionType>(subtype) && !isA<ast::SubsetType>(subtype) && !isA<ast::AliasType>(subtype)) {
+        } else if (!isA<ast::UnionType>(subtype) && !isA<ast::SubsetType>(subtype) &&
+                   !isA<ast::AliasType>(subtype)) {
             report.addError(tfm::format("Union type %s contains the non-primitive type %s",
                                     type.getQualifiedName(), sub),
                     type.getSrcLoc());
