@@ -31,6 +31,7 @@
 #include "ast/Type.h"
 #include "ast/TypeCast.h"
 #include "ast/UnionType.h"
+#include "ast/AliasType.h"
 #include "ast/analysis/ComponentLookup.h"
 #include "ast/utility/Visitor.h"
 #include "reports/ErrorReport.h"
@@ -198,6 +199,14 @@ void collectContent(Program& program, const Component& component, const TypeBind
             auto&& newName = binding.find(type.getBaseType());
             if (!newName.empty()) {
                 type.setBaseType(newName);
+            }
+        });
+
+        // instantiate alias declarations
+        visit(*type, [&](ast::AliasType& type) {
+            auto&& newName = binding.find(type.getAliasType());
+            if (!newName.empty()) {
+                type.setAliasType(newName);
             }
         });
 
@@ -448,6 +457,24 @@ ComponentContent getInstantiatedContent(Program& program, const ComponentInit& c
                 if (pos != typeNameMapping.end()) {
                     unionType.setType(i, pos->second);
                 }
+            }
+        });
+
+        // rename subset type
+        visit(node, [&](ast::SubsetType& subsetType) {
+            auto& baseType = subsetType.getBaseType();
+            auto pos = typeNameMapping.find(baseType);
+            if (pos != typeNameMapping.end()) {
+                subsetType.setBaseType(pos->second);
+            }
+        });
+
+        // rename alias type
+        visit(node, [&](ast::AliasType& aliasType) {
+            auto& alias = aliasType.getAliasType();
+            auto pos = typeNameMapping.find(alias);
+            if (pos != typeNameMapping.end()) {
+                aliasType.setAliasType(pos->second);
             }
         });
 

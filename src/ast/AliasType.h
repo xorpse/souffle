@@ -40,7 +40,7 @@ public:
     }
 
     /** Set alias type */
-    void setBaseType(const QualifiedName& type) {
+    void setAliasType(const QualifiedName& type) {
         aliasType = type;
     }
 
