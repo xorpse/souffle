@@ -129,8 +129,7 @@ private:
     bool setAttributeTypes(TranslationUnit& translationUnit) {
         bool changed = false;
         Program& program = translationUnit.getProgram();
-        auto typeEnv =
-                &translationUnit.getAnalysis<analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
+        auto& typeEnv = translationUnit.getAnalysis<analysis::TypeEnvironmentAnalysis>().getTypeEnvironment();
 
         for (Directive* io : program.getDirectives()) {
             Relation* rel = getRelation(program, io->getQualifiedName());
@@ -139,7 +138,7 @@ private:
 
             for (const auto* attribute : rel->getAttributes()) {
                 auto typeName = attribute->getTypeName();
-                auto type = getTypeQualifier(typeEnv->getType(typeName));
+                auto type = getTypeQualifier(typeEnv.getType(typeName));
                 attributesTypes.push_back(type);
             }
 
@@ -180,8 +179,7 @@ private:
         }
 
         Program& program = translationUnit.getProgram();
-        auto& typeEnv =
-                translationUnit.getAnalysis<analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
+        auto& typeEnv = translationUnit.getAnalysis<analysis::TypeEnvironmentAnalysis>().getTypeEnvironment();
 
         std::map<std::string, json11::Json> sumTypes;
 
@@ -220,14 +218,13 @@ private:
         }
 
         Program& program = translationUnit.getProgram();
-        auto typeEnv =
-                &translationUnit.getAnalysis<analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
+        auto& typeEnv = translationUnit.getAnalysis<analysis::TypeEnvironmentAnalysis>().getTypeEnvironment();
         std::vector<std::string> elementTypes;
         std::map<std::string, json11::Json> records;
 
         // Iterate over all record types in the program populating the records map.
         for (auto* astType : program.getTypes()) {
-            const auto& type = typeEnv->getType(*astType);
+            const auto& type = typeEnv.getType(*astType);
             if (isA<analysis::RecordType>(type)) {
                 elementTypes.clear();
 

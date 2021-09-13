@@ -470,7 +470,7 @@ Own<ram::Sequence> UnitTranslator::generateProgram(const ast::TranslationUnit& t
         return mk<ram::Sequence>();
     }
     const auto& sccOrdering =
-            translationUnit.getAnalysis<ast::analysis::TopologicallySortedSCCGraphAnalysis>()->order();
+            translationUnit.getAnalysis<ast::analysis::TopologicallySortedSCCGraphAnalysis>().order();
 
     // Create subroutines for each SCC according to topological order
     for (std::size_t i = 0; i < sccOrdering.size(); i++) {
@@ -513,7 +513,7 @@ Own<ram::TranslationUnit> UnitTranslator::translateUnit(ast::TranslationUnit& tu
     auto ramMain = generateProgram(tu);
 
     // Create the relevant RAM relations
-    const auto& sccOrdering = tu.getAnalysis<ast::analysis::TopologicallySortedSCCGraphAnalysis>()->order();
+    const auto& sccOrdering = tu.getAnalysis<ast::analysis::TopologicallySortedSCCGraphAnalysis>().order();
     auto ramRelations = createRamRelations(sccOrdering);
 
     // Combine all parts into the final RAM program

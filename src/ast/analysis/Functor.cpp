@@ -21,7 +21,7 @@
 namespace souffle::ast::analysis {
 
 void FunctorAnalysis::run(const TranslationUnit& translationUnit) {
-    typeAnalysis = translationUnit.getAnalysis<TypeAnalysis>();
+    typeAnalysis = &translationUnit.getAnalysis<TypeAnalysis>();
 }
 
 bool FunctorAnalysis::isStateful(const UserDefinedFunctor& udf) const {

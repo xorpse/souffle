@@ -520,12 +520,12 @@ bool ComponentInstantiationTransformer::transform(TranslationUnit& translationUn
     Program& program = translationUnit.getProgram();
     auto& report = translationUnit.getErrorReport();
 
-    auto* componentLookup = translationUnit.getAnalysis<ComponentLookupAnalysis>();
+    auto& componentLookup = translationUnit.getAnalysis<ComponentLookupAnalysis>();
 
     for (const auto* cur : program.getComponentInstantiations()) {
         VecOwn<Clause> orphans;
 
-        auto content = getInstantiatedContent(program, *cur, nullptr, *componentLookup, orphans, report);
+        auto content = getInstantiatedContent(program, *cur, nullptr, componentLookup, orphans, report);
         if (report.getNumErrors() != 0) continue;
 
         for (auto& type : content.types) {

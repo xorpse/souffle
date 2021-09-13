@@ -38,8 +38,8 @@ bool RemoveEmptyRelationsTransformer::removeEmptyRelations(TranslationUnit& tran
     std::set<QualifiedName> emptyRelations;
     bool changed = false;
     for (auto rel : program.getRelations()) {
-        auto* ioTypes = translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
-        if (!getClauses(program, *rel).empty() || ioTypes->isInput(rel)) {
+        auto& ioTypes = translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
+        if (!getClauses(program, *rel).empty() || ioTypes.isInput(rel)) {
             continue;
         }
         emptyRelations.insert(rel->getQualifiedName());
@@ -55,7 +55,7 @@ bool RemoveEmptyRelationsTransformer::removeEmptyRelations(TranslationUnit& tran
             }
         });
 
-        if (!usedInAggregate && !ioTypes->isOutput(rel)) {
+        if (!usedInAggregate && !ioTypes.isOutput(rel)) {
             removeRelation(translationUnit, rel->getQualifiedName());
             changed = true;
         }

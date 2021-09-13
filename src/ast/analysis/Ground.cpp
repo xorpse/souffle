@@ -157,7 +157,7 @@ struct GroundednessAnalysis : public ConstraintAnalysis<BoolDisjunctVar> {
     std::set<const Atom*> ignore;
 
     GroundednessAnalysis(const TranslationUnit& tu)
-            : relCache(*tu.getAnalysis<RelationDetailCacheAnalysis>()) {}
+            : relCache(tu.getAnalysis<RelationDetailCacheAnalysis>()) {}
 
     // atoms are producing grounded variables
     void visit_(type_identity<Atom>, const Atom& cur) override {

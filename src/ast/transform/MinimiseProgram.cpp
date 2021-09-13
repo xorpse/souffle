@@ -254,7 +254,7 @@ bool MinimiseProgramTransformer::areBijectivelyEquivalent(
 
 bool MinimiseProgramTransformer::reduceLocallyEquivalentClauses(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
-    const auto& normalisations = *translationUnit.getAnalysis<analysis::ClauseNormalisationAnalysis>();
+    const auto& normalisations = translationUnit.getAnalysis<analysis::ClauseNormalisationAnalysis>();
 
     std::vector<Clause*> clausesToDelete;
 
@@ -299,8 +299,8 @@ bool MinimiseProgramTransformer::reduceSingletonRelations(TranslationUnit& trans
     // Note: This reduction is particularly useful in conjunction with the
     // body-partitioning transformation
     Program& program = translationUnit.getProgram();
-    const auto& ioTypes = *translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
-    const auto& normalisations = *translationUnit.getAnalysis<analysis::ClauseNormalisationAnalysis>();
+    const auto& ioTypes = translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
+    const auto& normalisations = translationUnit.getAnalysis<analysis::ClauseNormalisationAnalysis>();
 
     // Find all singleton relations to consider
     std::vector<Clause*> singletonRelationClauses;

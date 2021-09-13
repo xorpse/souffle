@@ -46,7 +46,7 @@ public:
     static constexpr const char* name = "level-analysis";
 
     void run(const TranslationUnit& tUnit) override {
-        ra = tUnit.getAnalysis<RelationAnalysis>();
+        ra = &tUnit.getAnalysis<RelationAnalysis>();
     }
 
     /**

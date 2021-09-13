@@ -68,11 +68,11 @@ bool ReduceExistentialsTransformer::transform(TranslationUnit& translationUnit) 
     // Keep track of all relations that cannot be transformed
     std::set<QualifiedName> minimalIrreducibleRelations;
 
-    auto* ioType = translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
+    auto& ioType = translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
 
     for (Relation* relation : program.getRelations()) {
         // No I/O relations can be transformed
-        if (ioType->isIO(relation)) {
+        if (ioType.isIO(relation)) {
             minimalIrreducibleRelations.insert(relation->getQualifiedName());
         }
         for (Clause* clause : getClauses(program, *relation)) {

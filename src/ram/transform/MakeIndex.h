@@ -130,8 +130,8 @@ protected:
     analysis::LevelAnalysis* rla{nullptr};
 
     bool transform(TranslationUnit& translationUnit) override {
-        rla = translationUnit.getAnalysis<analysis::LevelAnalysis>();
-        relAnalysis = translationUnit.getAnalysis<analysis::RelationAnalysis>();
+        rla = &translationUnit.getAnalysis<analysis::LevelAnalysis>();
+        relAnalysis = &translationUnit.getAnalysis<analysis::RelationAnalysis>();
         return makeIndex(translationUnit.getProgram());
     }
 

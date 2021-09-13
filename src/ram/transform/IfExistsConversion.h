@@ -96,7 +96,7 @@ public:
 protected:
     analysis::LevelAnalysis* rla{nullptr};
     bool transform(TranslationUnit& translationUnit) override {
-        rla = translationUnit.getAnalysis<analysis::LevelAnalysis>();
+        rla = &translationUnit.getAnalysis<analysis::LevelAnalysis>();
         return convertScans(translationUnit.getProgram());
     }
 };

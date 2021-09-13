@@ -49,7 +49,7 @@ void RecursiveClausesAnalysis::print(std::ostream& os) const {
 
 bool RecursiveClausesAnalysis::computeIsRecursive(
         const Clause& clause, const TranslationUnit& translationUnit) const {
-    const auto& relationDetail = *translationUnit.getAnalysis<RelationDetailCacheAnalysis>();
+    const auto& relationDetail = translationUnit.getAnalysis<RelationDetailCacheAnalysis>();
     const Program& program = translationUnit.getProgram();
 
     // we want to reach the atom of the head through the body

@@ -78,9 +78,8 @@ struct TranslationUnitBase {
     }
 
     /** get analysis: analysis is generated on the fly if not present */
-    // TODO: change to return a reference. this function cannot fail.
     template <class A, typename = std::enable_if_t<std::is_base_of_v<AnalysisBase, A>>>
-    A* getAnalysis() const {
+    A& getAnalysis() const {
         static_assert(std::is_same_v<char const* const, decltype(A::name)>,
                 "`name` member must be a static literal");
         auto it = analyses.find(A::name);
@@ -93,7 +92,7 @@ struct TranslationUnitBase {
             logAnalysis(analysis);
         }
 
-        return &asAssert<A>(it->second.get());
+        return asAssert<A>(it->second.get());
     }
 
     /** @brief Get all alive analyses */

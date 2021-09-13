@@ -87,10 +87,10 @@ public:
 
 private:
     const TranslationUnit& tu;
-    const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>()->getTypeEnvironment();
+    const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>().getTypeEnvironment();
     const Program& program = tu.getProgram();
-    const SumTypeBranchesAnalysis& sumTypesBranches = *tu.getAnalysis<SumTypeBranchesAnalysis>();
-    const TypeAnalysis& typeAnalysis = *tu.getAnalysis<TypeAnalysis>();
+    const SumTypeBranchesAnalysis& sumTypesBranches = tu.getAnalysis<SumTypeBranchesAnalysis>();
+    const TypeAnalysis& typeAnalysis = tu.getAnalysis<TypeAnalysis>();
 
     // Sinks = {head} ∪ {negated atoms}
     std::set<const Atom*> sinks;

@@ -31,7 +31,7 @@
 namespace souffle::ram::transform {
 
 bool ReorderConditionsTransformer::transform(TranslationUnit& tu) {
-    auto* rca = tu.getAnalysis<analysis::ComplexityAnalysis>();
+    auto& rca = tu.getAnalysis<analysis::ComplexityAnalysis>();
 
     bool changed = false;
     forEachQueryMap(tu.getProgram(), [&](auto&& go, Own<Node> node) -> Own<Node> {
@@ -42,7 +42,7 @@ bool ReorderConditionsTransformer::transform(TranslationUnit& tu) {
                 sortedConds.emplace_back(cond->cloning());
             }
             std::sort(sortedConds.begin(), sortedConds.end(), [&](Own<Condition>& a, Own<Condition>& b) {
-                return rca->getComplexity(a.get()) < rca->getComplexity(b.get());
+                return rca.getComplexity(a.get()) < rca.getComplexity(b.get());
             });
             auto sorted_node = toCondition(sortedConds);
 
