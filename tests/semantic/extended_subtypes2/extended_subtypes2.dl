@@ -35,7 +35,7 @@ relY(1).
 .type RecY = [x : RecX]
 
 
-// Subtypes of unions are not allowed
+// Alias types
 .type U = number
-
 .type W <: U
+.type WW = W
