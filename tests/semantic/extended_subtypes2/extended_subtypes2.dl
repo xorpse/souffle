@@ -35,7 +35,7 @@ relY(1).
 .type RecY = [x : RecX]
 
 
-// Alias types 
+// Alias types
 .type U = number
 .type W <: U
 .type WW = W
