@@ -15,6 +15,7 @@
  ***********************************************************************/
 
 #include "ast/transform/ComponentInstantiation.h"
+#include "ast/AliasType.h"
 #include "ast/Atom.h"
 #include "ast/Attribute.h"
 #include "ast/Clause.h"
@@ -31,7 +32,6 @@
 #include "ast/Type.h"
 #include "ast/TypeCast.h"
 #include "ast/UnionType.h"
-#include "ast/AliasType.h"
 #include "ast/analysis/ComponentLookup.h"
 #include "ast/utility/Visitor.h"
 #include "reports/ErrorReport.h"
