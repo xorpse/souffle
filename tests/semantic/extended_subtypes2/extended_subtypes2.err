@@ -13,7 +13,4 @@ Error: Undefined base type Z in definition of type Y in file extended_subtypes2.
 Error: Undefined type Z in definition of field b in file extended_subtypes2.dl at line 30
 .type RecA = [a: RecA, b:Z]
 -------------------------^--
-Error: Subset type W can't be derived from union U in file extended_subtypes2.dl at line 41
-.type W <: U
-^------------
-6 errors generated, evaluation aborted
+5 errors generated, evaluation aborted
