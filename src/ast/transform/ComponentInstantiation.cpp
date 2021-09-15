@@ -15,6 +15,7 @@
  ***********************************************************************/
 
 #include "ast/transform/ComponentInstantiation.h"
+#include "ast/AliasType.h"
 #include "ast/Atom.h"
 #include "ast/Attribute.h"
 #include "ast/Clause.h"
@@ -198,6 +199,14 @@ void collectContent(Program& program, const Component& component, const TypeBind
             auto&& newName = binding.find(type.getBaseType());
             if (!newName.empty()) {
                 type.setBaseType(newName);
+            }
+        });
+
+        // instantiate alias declarations
+        visit(*type, [&](ast::AliasType& type) {
+            auto&& newName = binding.find(type.getAliasType());
+            if (!newName.empty()) {
+                type.setAliasType(newName);
             }
         });
 
@@ -451,6 +460,24 @@ ComponentContent getInstantiatedContent(Program& program, const ComponentInit& c
             }
         });
 
+        // rename subset type
+        visit(node, [&](ast::SubsetType& subsetType) {
+            auto& baseType = subsetType.getBaseType();
+            auto pos = typeNameMapping.find(baseType);
+            if (pos != typeNameMapping.end()) {
+                subsetType.setBaseType(pos->second);
+            }
+        });
+
+        // rename alias type
+        visit(node, [&](ast::AliasType& aliasType) {
+            auto& alias = aliasType.getAliasType();
+            auto pos = typeNameMapping.find(alias);
+            if (pos != typeNameMapping.end()) {
+                aliasType.setAliasType(pos->second);
+            }
+        });
+
         // rename type information in typecast
         visit(node, [&](ast::TypeCast& cast) {
             auto pos = typeNameMapping.find(cast.getType());
@@ -493,12 +520,12 @@ bool ComponentInstantiationTransformer::transform(TranslationUnit& translationUn
     Program& program = translationUnit.getProgram();
     auto& report = translationUnit.getErrorReport();
 
-    auto* componentLookup = translationUnit.getAnalysis<ComponentLookupAnalysis>();
+    auto& componentLookup = translationUnit.getAnalysis<ComponentLookupAnalysis>();
 
     for (const auto* cur : program.getComponentInstantiations()) {
         VecOwn<Clause> orphans;
 
-        auto content = getInstantiatedContent(program, *cur, nullptr, *componentLookup, orphans, report);
+        auto content = getInstantiatedContent(program, *cur, nullptr, componentLookup, orphans, report);
         if (report.getNumErrors() != 0) continue;
 
         for (auto& type : content.types) {

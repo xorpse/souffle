@@ -77,15 +77,15 @@ std::unique_ptr<SipsMetric> SipsMetric::create(const std::string& heuristic, con
     else if (heuristic == "least-free-vars")
         return mk<LeastFreeVarsSips>();
     else if (heuristic == "profile-use")
-        return mk<ProfileUseSips>(*tu.getAnalysis<analysis::ProfileUseAnalysis>());
+        return mk<ProfileUseSips>(tu.getAnalysis<analysis::ProfileUseAnalysis>());
     else if (heuristic == "delta")
         return mk<DeltaSips>();
     else if (heuristic == "input")
-        return mk<InputSips>(*tu.getAnalysis<analysis::RelationDetailCacheAnalysis>(),
-                *tu.getAnalysis<analysis::IOTypeAnalysis>());
+        return mk<InputSips>(tu.getAnalysis<analysis::RelationDetailCacheAnalysis>(),
+                tu.getAnalysis<analysis::IOTypeAnalysis>());
     else if (heuristic == "delta-input")
-        return mk<DeltaInputSips>(*tu.getAnalysis<analysis::RelationDetailCacheAnalysis>(),
-                *tu.getAnalysis<analysis::IOTypeAnalysis>());
+        return mk<DeltaInputSips>(tu.getAnalysis<analysis::RelationDetailCacheAnalysis>(),
+                tu.getAnalysis<analysis::IOTypeAnalysis>());
 
     // default is all-bound
     return create("all-bound", tu);

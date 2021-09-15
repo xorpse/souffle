@@ -127,7 +127,7 @@ void TopologicallySortedSCCGraphAnalysis::computeTopologicalOrdering(
 
 void TopologicallySortedSCCGraphAnalysis::run(const TranslationUnit& translationUnit) {
     // obtain the scc graph
-    sccGraph = translationUnit.getAnalysis<SCCGraphAnalysis>();
+    sccGraph = &translationUnit.getAnalysis<SCCGraphAnalysis>();
     // clear the list of ordered sccs
     sccOrder.clear();
     std::vector<bool> visited;

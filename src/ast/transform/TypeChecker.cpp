@@ -60,11 +60,12 @@ private:
     TranslationUnit& tu;
     ErrorReport& report = tu.getErrorReport();
     const Program& program = tu.getProgram();
-    const TypeEnvironmentAnalysis& typeEnvAnalysis = *tu.getAnalysis<TypeEnvironmentAnalysis>();
+    const TypeEnvironmentAnalysis& typeEnvAnalysis = tu.getAnalysis<TypeEnvironmentAnalysis>();
     const TypeEnvironment& typeEnv = typeEnvAnalysis.getTypeEnvironment();
 
     void checkRecordType(const ast::RecordType& type);
     void checkSubsetType(const ast::SubsetType& type);
+    void checkAliasType(const ast::AliasType& type);
     void checkUnionType(const ast::UnionType& type);
     void checkADT(const ast::AlgebraicDataType& type);
 };
@@ -109,11 +110,11 @@ public:
 private:
     TranslationUnit& tu;
     ErrorReport& report = tu.getErrorReport();
-    const TypeAnalysis& typeAnalysis = *tu.getAnalysis<TypeAnalysis>();
-    const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>()->getTypeEnvironment();
-    const FunctorAnalysis& functorAnalysis = *tu.getAnalysis<FunctorAnalysis>();
-    const PolymorphicObjectsAnalysis& polyAnalysis = *tu.getAnalysis<PolymorphicObjectsAnalysis>();
-    const SumTypeBranchesAnalysis& sumTypesBranches = *tu.getAnalysis<SumTypeBranchesAnalysis>();
+    const TypeAnalysis& typeAnalysis = tu.getAnalysis<TypeAnalysis>();
+    const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>().getTypeEnvironment();
+    const FunctorAnalysis& functorAnalysis = tu.getAnalysis<FunctorAnalysis>();
+    const PolymorphicObjectsAnalysis& polyAnalysis = tu.getAnalysis<PolymorphicObjectsAnalysis>();
+    const SumTypeBranchesAnalysis& sumTypesBranches = tu.getAnalysis<SumTypeBranchesAnalysis>();
 
     const Program& program = tu.getProgram();
 
@@ -162,7 +163,8 @@ void TypeDeclarationChecker::checkUnionType(const ast::UnionType& type) {
             report.addError(tfm::format("Undefined type %s in definition of union type %s", sub,
                                     type.getQualifiedName()),
                     type.getSrcLoc());
-        } else if (!isA<ast::UnionType>(subtype) && !isA<ast::SubsetType>(subtype)) {
+        } else if (!isA<ast::UnionType>(subtype) && !isA<ast::SubsetType>(subtype) &&
+                   !isA<ast::AliasType>(subtype)) {
             report.addError(tfm::format("Union type %s contains the non-primitive type %s",
                                     type.getQualifiedName(), sub),
                     type.getSrcLoc());
@@ -233,6 +235,21 @@ void TypeDeclarationChecker::checkADT(const ast::AlgebraicDataType& type) {
     }
 }
 
+void TypeDeclarationChecker::checkAliasType(const ast::AliasType& astType) {
+    if (typeEnvAnalysis.isCyclic(astType.getQualifiedName())) {
+        report.addError(
+                tfm::format("Infinite descent in the definition of type %s", astType.getQualifiedName()),
+                astType.getSrcLoc());
+        return;
+    }
+    if (!typeEnv.isType(astType.getAliasType())) {
+        report.addError(tfm::format("Undefined alias type %s in definition of type %s",
+                                astType.getAliasType(), astType.getQualifiedName()),
+                astType.getSrcLoc());
+        return;
+    }
+}
+
 void TypeDeclarationChecker::checkSubsetType(const ast::SubsetType& astType) {
     if (typeEnvAnalysis.isCyclic(astType.getQualifiedName())) {
         report.addError(
@@ -277,6 +294,8 @@ void TypeDeclarationChecker::run() {
             checkRecordType(*as<ast::RecordType>(type));
         } else if (isA<ast::SubsetType>(type)) {
             checkSubsetType(*as<ast::SubsetType>(type));
+        } else if (isA<ast::AliasType>(type)) {
+            checkAliasType(*as<ast::AliasType>(type));
         } else if (isA<ast::AlgebraicDataType>(type)) {
             checkADT(*as<ast::AlgebraicDataType>(type));
         } else {

@@ -9,6 +9,7 @@ set(SOUFFLE_SOURCES
     Global.cpp
     ast/Aggregator.cpp
     ast/AlgebraicDataType.cpp
+    ast/AliasType.cpp
     ast/Atom.cpp
     ast/Attribute.cpp
     ast/BinaryConstraint.cpp

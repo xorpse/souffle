@@ -66,6 +66,7 @@
     #include "ast/Relation.h"
     #include "ast/StringConstant.h"
     #include "ast/SubsetType.h"
+    #include "ast/AliasType.h"
     #include "ast/AlgebraicDataType.h"
     #include "ast/BranchType.h"
     #include "ast/Type.h"
@@ -270,7 +271,7 @@
 %type <Mov<VecOwn<ast::Clause>>>               rule
 %type <Mov<VecOwn<ast::Clause>>>               rule_def
 %type <Mov<RuleBody>>                          term
-%type <Mov<Own<ast::Type>>>                    type
+%type <Mov<Own<ast::Type>>>                    type_decl
 %type <Mov<std::vector<ast::QualifiedName>>>   component_type_params
 %type <Mov<std::vector<ast::QualifiedName>>>   component_param_list
 %type <Mov<std::vector<ast::QualifiedName>>>   union_type_list
@@ -334,9 +335,9 @@ unit
     {
       driver.addPragma($pragma);
     }
-  | unit type
+  | unit type_decl
     {
-      driver.addType($type);
+      driver.addType($type_decl);
     }
   | unit functor_decl
     {
@@ -367,30 +368,31 @@ qualified_name
   ;
 
 /**
- * Types
- */
-
-/**
  * Type Declarations
  */
-type
+type_decl
   : TYPE IDENT SUBTYPE qualified_name
     {
-      $$ = mk<ast::SubsetType>($2, $4, @$);
+      $$ = mk<ast::SubsetType>($IDENT, $qualified_name, @$);
     }
   | TYPE IDENT EQUALS union_type_list
     {
-      $$ = mk<ast::UnionType>($2, $4, @$);
+      if ($union_type_list.size() > 1) { 
+         $$ = mk<ast::UnionType>($IDENT, $union_type_list, @$);
+      } else { 
+         assert($union_type_list.size() == 1 && "qualified name missing for alias type");
+         $$ = mk<ast::AliasType>($IDENT, $union_type_list[0], @$);
+      } 
     }
   | TYPE IDENT EQUALS record_type_list
     {
-      $$ = mk<ast::RecordType>($2, $4, @$);
+      $$ = mk<ast::RecordType>($IDENT, $record_type_list, @$);
     }
   | TYPE IDENT EQUALS adt_branch_list
     {
-      $$ = mk<ast::AlgebraicDataType>($2, $4, @$);
+      $$ = mk<ast::AlgebraicDataType>($IDENT, $adt_branch_list, @$);
     }
-    /* Deprecated Types */
+    /* Deprecated Type Declarations */
   | NUMBER_TYPE IDENT
     {
       $$ = driver.mkDeprecatedSubType($IDENT, "number", @$);
@@ -1270,7 +1272,7 @@ component_body
       $$ = $1;
       $$->addComponent($2);
     }
-  | component_body type
+  | component_body type_decl
     {
       $$ = $1;
       $$->addType($2);

@@ -44,15 +44,12 @@
 #include "ast/Program.h"
 #include "ast/QualifiedName.h"
 #include "ast/RecordInit.h"
-#include "ast/RecordType.h"
 #include "ast/Relation.h"
 #include "ast/StringConstant.h"
-#include "ast/SubsetType.h"
 #include "ast/Term.h"
 #include "ast/TranslationUnit.h"
 #include "ast/Type.h"
 #include "ast/TypeCast.h"
-#include "ast/UnionType.h"
 #include "ast/UnnamedVariable.h"
 #include "ast/UserDefinedFunctor.h"
 #include "ast/Variable.h"
@@ -102,12 +99,12 @@ struct SemanticCheckerImpl {
     SemanticCheckerImpl(TranslationUnit& tu);
 
 private:
-    const IOTypeAnalysis& ioTypes = *tu.getAnalysis<IOTypeAnalysis>();
-    const PrecedenceGraphAnalysis& precedenceGraph = *tu.getAnalysis<PrecedenceGraphAnalysis>();
-    const RecursiveClausesAnalysis& recursiveClauses = *tu.getAnalysis<RecursiveClausesAnalysis>();
-    const SCCGraphAnalysis& sccGraph = *tu.getAnalysis<SCCGraphAnalysis>();
+    const IOTypeAnalysis& ioTypes = tu.getAnalysis<IOTypeAnalysis>();
+    const PrecedenceGraphAnalysis& precedenceGraph = tu.getAnalysis<PrecedenceGraphAnalysis>();
+    const RecursiveClausesAnalysis& recursiveClauses = tu.getAnalysis<RecursiveClausesAnalysis>();
+    const SCCGraphAnalysis& sccGraph = tu.getAnalysis<SCCGraphAnalysis>();
 
-    const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>()->getTypeEnvironment();
+    const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>().getTypeEnvironment();
     const Program& program = tu.getProgram();
     ErrorReport& report = tu.getErrorReport();
 

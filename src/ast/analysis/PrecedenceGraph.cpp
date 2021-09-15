@@ -37,7 +37,7 @@ namespace souffle::ast::analysis {
 void PrecedenceGraphAnalysis::run(const TranslationUnit& translationUnit) {
     /* Get relations */
     Program& program = translationUnit.getProgram();
-    const auto& relationDetail = *translationUnit.getAnalysis<RelationDetailCacheAnalysis>();
+    const auto& relationDetail = translationUnit.getAnalysis<RelationDetailCacheAnalysis>();
 
     for (const auto* r : program.getRelations()) {
         backingGraph.insert(r);

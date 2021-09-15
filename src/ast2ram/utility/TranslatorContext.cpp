@@ -49,15 +49,15 @@ TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
     program = &tu.getProgram();
 
     // Set up analyses
-    functorAnalysis = tu.getAnalysis<ast::analysis::FunctorAnalysis>();
-    recursiveClauses = tu.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
-    sccGraph = tu.getAnalysis<ast::analysis::SCCGraphAnalysis>();
-    relationSchedule = tu.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
-    relationDetail = tu.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
-    ioType = tu.getAnalysis<ast::analysis::IOTypeAnalysis>();
-    typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>()->getTypeEnvironment();
-    sumTypeBranches = tu.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>();
-    polyAnalysis = tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
+    functorAnalysis = &tu.getAnalysis<ast::analysis::FunctorAnalysis>();
+    recursiveClauses = &tu.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
+    sccGraph = &tu.getAnalysis<ast::analysis::SCCGraphAnalysis>();
+    relationSchedule = &tu.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
+    relationDetail = &tu.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
+    ioType = &tu.getAnalysis<ast::analysis::IOTypeAnalysis>();
+    typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>().getTypeEnvironment();
+    sumTypeBranches = &tu.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>();
+    polyAnalysis = &tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
 
     // Set up clause nums
     for (const ast::Relation* rel : program->getRelations()) {
