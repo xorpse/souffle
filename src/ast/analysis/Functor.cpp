@@ -10,7 +10,7 @@
  *
  * @file Functor.cpp
  *
- * Analysis that provides type information for functors
+ * Analysis that provides information about functors
  *
  ***********************************************************************/
 
@@ -32,17 +32,9 @@ TypeAttribute FunctorAnalysis::getReturnTypeAttribute(const Functor& functor) co
     return typeAnalysis->getFunctorReturnTypeAttribute(functor);
 }
 
-Type const& FunctorAnalysis::getReturnType(const UserDefinedFunctor& functor) const {
-    return typeAnalysis->getFunctorReturnType(functor);
-}
-
 /** Return parameter type of functor */
 TypeAttribute FunctorAnalysis::getParamTypeAttribute(const Functor& functor, const std::size_t idx) const {
     return typeAnalysis->getFunctorParamTypeAttribute(functor, idx);
-}
-
-Type const& FunctorAnalysis::getParamType(const UserDefinedFunctor& functor, const std::size_t idx) const {
-    return typeAnalysis->getFunctorParamType(functor, idx);
 }
 
 std::vector<TypeAttribute> FunctorAnalysis::getParamTypeAttributes(const UserDefinedFunctor& functor) const {

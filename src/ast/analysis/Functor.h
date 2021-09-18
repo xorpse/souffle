@@ -45,11 +45,9 @@ public:
 
     /** Return return type of functor */
     TypeAttribute getReturnTypeAttribute(const Functor& functor) const;
-    Type const& getReturnType(const UserDefinedFunctor& functor) const;
 
-    /** Return paramument type of functor */
+    /** Return parameter type of functor */
     TypeAttribute getParamTypeAttribute(const Functor& functor, const std::size_t idx) const;
-    Type const& getParamType(const UserDefinedFunctor& functor, const std::size_t idx) const;
 
     static bool isMultiResult(const Functor& functor);
 
