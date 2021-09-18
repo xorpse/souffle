@@ -154,17 +154,12 @@ TypeAttribute TypeAnalysis::getFunctorReturnTypeAttribute(const Functor& functor
     fatal("Missing functor type.");
 }
 
-std::size_t TypeAnalysis::getFunctorArity(UserDefinedFunctor const& functor) const {
-    assert(hasValidTypeInfo(functor) && "type of functor not processed");
-    return udfDeclaration.at(functor.getName())->getArity();
-}
-
 Type const& TypeAnalysis::getFunctorReturnType(const UserDefinedFunctor& functor) const {
-    return nameToType(udfDeclaration.at(functor.getName())->getReturnType().getTypeName());
+    return nameToType(functorAnalysis->getFunctorReturnType(functor));
 }
 
 Type const& TypeAnalysis::getFunctorParamType(const UserDefinedFunctor& functor, std::size_t idx) const {
-    return nameToType(udfDeclaration.at(functor.getName())->getParams().at(idx)->getTypeName());
+    return nameToType(functorAnalysis->getFunctorDeclaration(functor).getParams().at(idx)->getTypeName());
 }
 
 TypeAttribute TypeAnalysis::getFunctorParamTypeAttribute(const Functor& functor, std::size_t idx) const {
@@ -181,32 +176,17 @@ TypeAttribute TypeAnalysis::getFunctorParamTypeAttribute(const Functor& functor,
 std::vector<TypeAttribute> TypeAnalysis::getFunctorParamTypeAttributes(
         const UserDefinedFunctor& functor) const {
     assert(hasValidTypeInfo(functor) && "type of functor not processed");
-    auto const& decl = udfDeclaration.at(functor.getName());
+    auto const& decl = functorAnalysis->getFunctorDeclaration(functor);
     std::vector<TypeAttribute> res;
-    res.reserve(decl->getArity());
-    auto const& params = decl->getParams();
+    res.reserve(decl.getArity());
+    auto const& params = decl.getParams();
     std::transform(params.begin(), params.end(), std::back_inserter(res),
             [this](auto const& attr) { return nameToTypeAttribute(attr->getTypeName()); });
     return res;
 }
 
-bool TypeAnalysis::isStatefulFunctor(const UserDefinedFunctor& udf) const {
-    return udfDeclaration.at(udf.getName())->isStateful();
-}
-
 const std::map<const NumericConstant*, NumericConstant::Type>& TypeAnalysis::getNumericConstantTypes() const {
     return numericConstantType;
-}
-
-bool TypeAnalysis::isMultiResultFunctor(const Functor& functor) {
-    if (isA<UserDefinedFunctor>(functor)) {
-        return false;
-    } else if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
-        auto candidates = functorBuiltIn(intrinsic->getBaseFunctionOp());
-        assert(!candidates.empty() && "at least one op should match");
-        return candidates[0].get().multipleResults;
-    }
-    fatal("Missing functor type.");
 }
 
 std::set<TypeAttribute> TypeAnalysis::getTypeAttributes(const Argument* arg) const {
@@ -279,11 +259,12 @@ bool TypeAnalysis::hasValidTypeInfo(const Argument& argument) const {
     if (auto* inf = as<IntrinsicFunctor>(argument)) {
         return contains(functorInfo, inf);
     } else if (auto* udf = as<UserDefinedFunctor>(argument)) {
-        auto const declIt = udfDeclaration.find(udf->getName());
-        if (declIt == udfDeclaration.end()) {
+        try {
+            auto const& declaration = functorAnalysis->getFunctorDeclaration(*udf);
+            return hasValidTypeInfo(declaration);
+        } catch (...) {  // functor hasn't been declared
             return false;
         }
-        return hasValidTypeInfo(*declIt->second);
     } else if (auto* nc = as<NumericConstant>(argument)) {
         return contains(numericConstantType, nc);
     } else if (auto* agg = as<Aggregator>(argument)) {
@@ -488,10 +469,10 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
     }
 
     typeEnv = &translationUnit.getAnalysis<TypeEnvironmentAnalysis>().getTypeEnvironment();
+    functorAnalysis = &translationUnit.getAnalysis<FunctorAnalysis>();
 
     // Analyse user-defined functor types
     const Program& program = translationUnit.getProgram();
-    visit(program, [&](const FunctorDeclaration& fdecl) { udfDeclaration[fdecl.getName()] = &fdecl; });
 
     // Rest of the analysis done until fixpoint reached
     bool changed = true;

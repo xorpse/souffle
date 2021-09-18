@@ -16,9 +16,11 @@
 
 #pragma once
 
+#include "ast/FunctorDeclaration.h"
 #include "ast/TranslationUnit.h"
 #include "souffle/TypeAttribute.h"
 #include <iosfwd>
+#include <unordered_map>
 #include <vector>
 
 namespace souffle::ast {
@@ -43,21 +45,18 @@ public:
 
     void print(std::ostream& /* os */) const override {}
 
-    /** Return return type of functor */
-    TypeAttribute getReturnTypeAttribute(const Functor& functor) const;
-
-    /** Return parameter type of functor */
-    TypeAttribute getParamTypeAttribute(const Functor& functor, const std::size_t idx) const;
-
     static bool isMultiResult(const Functor& functor);
 
-    std::vector<TypeAttribute> getParamTypeAttributes(const UserDefinedFunctor& functor) const;
+    std::size_t getFunctorArity(UserDefinedFunctor const& functor) const;
+    QualifiedName const& getFunctorReturnType(const UserDefinedFunctor& functor) const;
+    bool isStatefulFunctor(const UserDefinedFunctor& functor) const;
+    const FunctorDeclaration& getFunctorDeclaration(const UserDefinedFunctor& functor) const;
 
     /** Return whether a UDF is stateful */
     bool isStateful(const UserDefinedFunctor& udf) const;
 
 private:
-    const TypeAnalysis* typeAnalysis = nullptr;
+    std::unordered_map<std::string, const FunctorDeclaration*> functorNameToDeclaration;
 };
 
 }  // namespace souffle::ast::analysis
