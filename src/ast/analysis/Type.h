@@ -154,10 +154,11 @@ public:
 
 private:
     const TranslationUnit* tu;
-    const TypeEnvironment& typeEnv = tu->getAnalysis<TypeEnvironmentAnalysis>()->getTypeEnvironment();
+    const TypeEnvironmentAnalysis& tea = tu->getAnalysis<TypeEnvironmentAnalysis>();
+    const TypeEnvironment& typeEnv = tea.getTypeEnvironment();
     const Program& program = tu->getProgram();
-    const SumTypeBranchesAnalysis& sumTypesBranches = *tu->getAnalysis<SumTypeBranchesAnalysis>();
-    const TypeAnalysis& typeAnalysis = *tu->getAnalysis<TypeAnalysis>();
+    const SumTypeBranchesAnalysis& sumTypesBranches = tu->getAnalysis<SumTypeBranchesAnalysis>();
+    const TypeAnalysis& typeAnalysis = tu->getAnalysis<TypeAnalysis>();
 
     std::map<const Argument*, TypeSet> argumentTypes;
     std::ostream& os;
