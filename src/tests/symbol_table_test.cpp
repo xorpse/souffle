@@ -71,11 +71,20 @@ TEST(SymbolTable, Basics) {
 #pragma omp parallel for
 #endif
         for (int j = 0; j < RANDOM_TEST_SIZE; ++j) {
+            // encode/decode
             EXPECT_STREQ(s, table.decode(table.encode(table.decode(table.encode(s)))));
             EXPECT_EQ(table.encode(s), table.encode(table.decode(table.encode(s))));
             EXPECT_STREQ(s, table.decode(table.encode(table.decode(table.encode(s)))));
             EXPECT_EQ(
                     table.encode(s), table.encode(table.decode(table.encode(table.decode(table.encode(s))))));
+
+            // weakContains
+            EXPECT_TRUE(table.weakContains(s));
+
+            // findOrInsert
+            bool was_new;
+            std::tie(std::ignore, was_new) = table.findOrInsert(s);
+            EXPECT_TRUE(!was_new);
         }
     }
 }
@@ -94,6 +103,7 @@ TEST(SymbolTable, Inserts) {
         }
         std::vector<std::string> V;
         for (const auto& It : X) {
+            EXPECT_TRUE(X.weakContains(It.first));
             V.push_back(It.first);
         }
         EXPECT_EQ(V.size(), size);
