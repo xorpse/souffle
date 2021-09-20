@@ -157,7 +157,7 @@ public:
         }
 
         bool operator==(const Iterator& That) const {
-            return (&This == &That.This) && (Slot == That.Slot);
+            return (This == That.This) && (Slot == That.Slot);
         }
 
         bool operator!=(const Iterator& That) const {
@@ -287,6 +287,7 @@ public:
     /// Assumption: the index is mapped in the datastructure.
     const Key& fetch(const lane_id H, const index_type Idx) const {
         const auto Lane = Lanes.guard(H);
+        assert(Idx <= MaxSlotBeforeGrow);
         return Slots[Idx]->first;
     }
 
