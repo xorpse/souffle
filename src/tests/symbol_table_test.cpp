@@ -21,31 +21,70 @@
 #include <algorithm>
 #include <cstddef>
 #include <iostream>
+#include <random>
 #include <string>
 #include <vector>
 
+// How many times to repeat each randomized test
+#define RANDOM_TESTS 32
+#define RANDOM_TEST_SIZE 32
+
 namespace souffle::test {
+
+static char random_char() {
+    static constexpr char charset[] =
+            "0123456789"
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            "abcdefghijklmnopqrstuvwxyz";
+    static constexpr size_t max_index = sizeof(charset) - 1;
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_int_distribution<std::size_t> dist(0, max_index);
+    return charset[dist(mt)];
+}
+
+static std::string random_string_with_length(std::size_t length) {
+    std::string str(length, 0);
+    std::generate_n(str.begin(), length, random_char);
+    return str;
+}
+
+static std::string random_string() {
+    // The number 16 was chosen so that the strings are relatively short - both
+    // to be light on CPU/memory, and to make collisions possible.
+    static constexpr std::size_t max_size = 16;
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_int_distribution<std::size_t> dist(0, max_size);
+    return random_string_with_length(dist(mt));
+}
 
 TEST(SymbolTable, Basics) {
     SymbolTable table;
-
-    EXPECT_STREQ("Hello", table.decode(table.encode(table.decode(table.encode("Hello")))));
-
-    EXPECT_EQ(table.encode("Hello"), table.encode(table.decode(table.encode("Hello"))));
-
-    EXPECT_STREQ("Hello", table.decode(table.encode(table.decode(table.encode("Hello")))));
-
-    EXPECT_EQ(table.encode("Hello"),
-            table.encode(table.decode(table.encode(table.decode(table.encode("Hello"))))));
+    for (int i = 0; i < RANDOM_TESTS; ++i) {
+        std::string s = random_string();
+        EXPECT_STREQ(s, table.decode(table.encode(table.decode(table.encode(s)))));
+        EXPECT_EQ(table.encode(s), table.encode(table.decode(table.encode(s))));
+        EXPECT_STREQ(s, table.decode(table.encode(table.decode(table.encode(s)))));
+        EXPECT_EQ(table.encode(s), table.encode(table.decode(table.encode(table.decode(table.encode(s))))));
+    }
 }
 
 TEST(SymbolTable, Inserts) {
-    SymbolTable X({"A", "B", "C", "D"});
-    std::vector<std::string> V;
-    for (const auto& It : X) {
-        V.push_back(It.first);
+    for (int i = 0; i < RANDOM_TESTS; ++i) {
+        SymbolTable X;
+        std::size_t size = random() % RANDOM_TEST_SIZE;
+        for (std::size_t j = 0; j < size; ++j) {
+            // Guarantee uniqueness by appending something not in the character set
+            // and then the index.
+            X.encode(random_string() + "~" + std::to_string(j));
+        }
+        std::vector<std::string> V;
+        for (const auto& It : X) {
+            V.push_back(It.first);
+        }
+        EXPECT_EQ(V.size(), size);
     }
-    EXPECT_EQ(V.size(), 4);
 }
 
 }  // namespace souffle::test
