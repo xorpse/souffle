@@ -17,6 +17,7 @@
 #pragma once
 
 #include "AggregateOp.h"
+#include "Functor.h"
 #include "FunctorOps.h"
 #include "ast/Clause.h"
 #include "ast/NumericConstant.h"
@@ -86,10 +87,6 @@ public:
     TypeAttribute getFunctorParamTypeAttribute(const Functor& functor, std::size_t idx) const;
     std::vector<TypeAttribute> getFunctorParamTypeAttributes(const UserDefinedFunctor& functor) const;
 
-    std::size_t getFunctorArity(UserDefinedFunctor const& functor) const;
-    bool isStatefulFunctor(const UserDefinedFunctor& udf) const;
-    static bool isMultiResultFunctor(const Functor& functor);
-
     /** -- Polymorphism-related methods -- */
     NumericConstant::Type getPolymorphicNumericConstantType(const NumericConstant& nc) const;
     const std::map<const NumericConstant*, NumericConstant::Type>& getNumericConstantTypes() const;
@@ -100,6 +97,7 @@ public:
 private:
     // General type analysis
     TypeEnvironment const* typeEnv = nullptr;
+    FunctorAnalysis const* functorAnalysis = nullptr;
     std::map<const Argument*, TypeSet> argumentTypes;
     VecOwn<Clause> annotatedClauses;
     std::stringstream analysisLogs;
@@ -110,7 +108,6 @@ private:
 
     // Polymorphic objects analysis
     std::map<const IntrinsicFunctor*, const IntrinsicFunctorInfo*> functorInfo;
-    std::map<std::string, const FunctorDeclaration*> udfDeclaration;
     std::map<const NumericConstant*, NumericConstant::Type> numericConstantType;
     std::map<const Aggregator*, AggregateOp> aggregatorType;
     std::map<const BinaryConstraint*, BinaryConstraintOp> constraintType;

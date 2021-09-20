@@ -27,6 +27,7 @@
 #include "ast/analysis/RelationSchedule.h"
 #include "ast/analysis/SCCGraph.h"
 #include "ast/analysis/SumTypeBranches.h"
+#include "ast/analysis/Type.h"
 #include "ast/analysis/TypeEnvironment.h"
 #include "ast/analysis/TypeSystem.h"
 #include "ast/utility/SipsMetric.h"
@@ -55,6 +56,7 @@ TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
     relationSchedule = &tu.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
     relationDetail = &tu.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
     ioType = &tu.getAnalysis<ast::analysis::IOTypeAnalysis>();
+    typeAnalysis = &tu.getAnalysis<ast::analysis::TypeAnalysis>();
     typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>().getTypeEnvironment();
     sumTypeBranches = &tu.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>();
     polyAnalysis = &tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
@@ -158,21 +160,21 @@ ast::Relation* TranslatorContext::getRelation(const ast::QualifiedName& name) co
 }
 
 TypeAttribute TranslatorContext::getFunctorReturnTypeAttribute(const ast::Functor& functor) const {
-    return functorAnalysis->getReturnTypeAttribute(functor);
+    return typeAnalysis->getFunctorReturnTypeAttribute(functor);
 }
 
 TypeAttribute TranslatorContext::getFunctorParamTypeAtribute(
         const ast::Functor& functor, std::size_t idx) const {
-    return functorAnalysis->getParamTypeAttribute(functor, idx);
+    return typeAnalysis->getFunctorParamTypeAttribute(functor, idx);
 }
 
 std::vector<TypeAttribute> TranslatorContext::getFunctorParamTypeAtributes(
         const ast::UserDefinedFunctor& udf) const {
-    return functorAnalysis->getParamTypeAttributes(udf);
+    return typeAnalysis->getFunctorParamTypeAttributes(udf);
 }
 
 bool TranslatorContext::isStatefulFunctor(const ast::UserDefinedFunctor& udf) const {
-    return functorAnalysis->isStateful(udf);
+    return functorAnalysis->isStatefulFunctor(udf);
 }
 
 ast::NumericConstant::Type TranslatorContext::getInferredNumericConstantType(

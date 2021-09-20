@@ -15,34 +15,48 @@
  ***********************************************************************/
 
 #include "ast/analysis/Functor.h"
+#include "ast/Functor.h"
+#include "ast/FunctorDeclaration.h"
+#include "ast/IntrinsicFunctor.h"
 #include "ast/TranslationUnit.h"
-#include "ast/analysis/Type.h"
+#include "ast/UserDefinedFunctor.h"
+#include "ast/utility/Visitor.h"
 
 namespace souffle::ast::analysis {
 
 void FunctorAnalysis::run(const TranslationUnit& translationUnit) {
-    typeAnalysis = &translationUnit.getAnalysis<TypeAnalysis>();
+    const Program& program = translationUnit.getProgram();
+
+    visit(program, [&](const FunctorDeclaration& functorDeclaration) {
+        functorNameToDeclaration[functorDeclaration.getName()] = &functorDeclaration;
+    });
 }
 
-bool FunctorAnalysis::isStateful(const UserDefinedFunctor& udf) const {
-    return typeAnalysis->isStatefulFunctor(udf);
+bool FunctorAnalysis::isStatefulFunctor(const UserDefinedFunctor& functor) const {
+    return getFunctorDeclaration(functor).isStateful();
 }
 
-TypeAttribute FunctorAnalysis::getReturnTypeAttribute(const Functor& functor) const {
-    return typeAnalysis->getFunctorReturnTypeAttribute(functor);
+QualifiedName const& FunctorAnalysis::getFunctorReturnType(const UserDefinedFunctor& functor) const {
+    return getFunctorDeclaration(functor).getReturnType().getTypeName();
 }
 
-/** Return parameter type of functor */
-TypeAttribute FunctorAnalysis::getParamTypeAttribute(const Functor& functor, const std::size_t idx) const {
-    return typeAnalysis->getFunctorParamTypeAttribute(functor, idx);
+std::size_t FunctorAnalysis::getFunctorArity(const UserDefinedFunctor& functor) const {
+    return getFunctorDeclaration(functor).getArity();
 }
 
-std::vector<TypeAttribute> FunctorAnalysis::getParamTypeAttributes(const UserDefinedFunctor& functor) const {
-    return typeAnalysis->getFunctorParamTypeAttributes(functor);
+FunctorDeclaration const& FunctorAnalysis::getFunctorDeclaration(const UserDefinedFunctor& functor) const {
+    return *functorNameToDeclaration.at(functor.getName());
 }
 
 bool FunctorAnalysis::isMultiResult(const Functor& functor) {
-    return TypeAnalysis::isMultiResultFunctor(functor);
+    if (isA<UserDefinedFunctor>(functor)) {
+        return false;
+    } else if (auto* intrinsic = as<IntrinsicFunctor>(functor)) {
+        auto candidates = functorBuiltIn(intrinsic->getBaseFunctionOp());
+        assert(!candidates.empty() && "at least one op should match");
+        return candidates[0].get().multipleResults;
+    }
+    fatal("Missing functor type.");
 }
 
 }  // namespace souffle::ast::analysis
