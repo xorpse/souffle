@@ -25,6 +25,10 @@
 #include <string>
 #include <vector>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 // How many times to repeat each randomized test
 #define RANDOM_TESTS 32
 #define RANDOM_TEST_SIZE 32
@@ -63,10 +67,16 @@ TEST(SymbolTable, Basics) {
     SymbolTable table;
     for (int i = 0; i < RANDOM_TESTS; ++i) {
         std::string s = random_string();
-        EXPECT_STREQ(s, table.decode(table.encode(table.decode(table.encode(s)))));
-        EXPECT_EQ(table.encode(s), table.encode(table.decode(table.encode(s))));
-        EXPECT_STREQ(s, table.decode(table.encode(table.decode(table.encode(s)))));
-        EXPECT_EQ(table.encode(s), table.encode(table.decode(table.encode(table.decode(table.encode(s))))));
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+        for (int j = 0; j < RANDOM_TEST_SIZE; ++j) {
+            EXPECT_STREQ(s, table.decode(table.encode(table.decode(table.encode(s)))));
+            EXPECT_EQ(table.encode(s), table.encode(table.decode(table.encode(s))));
+            EXPECT_STREQ(s, table.decode(table.encode(table.decode(table.encode(s)))));
+            EXPECT_EQ(
+                    table.encode(s), table.encode(table.decode(table.encode(table.decode(table.encode(s))))));
+        }
     }
 }
 
@@ -74,6 +84,9 @@ TEST(SymbolTable, Inserts) {
     for (int i = 0; i < RANDOM_TESTS; ++i) {
         SymbolTable X;
         std::size_t size = random() % RANDOM_TEST_SIZE;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
         for (std::size_t j = 0; j < size; ++j) {
             // Guarantee uniqueness by appending something not in the character set
             // and then the index.
