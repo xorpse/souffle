@@ -76,7 +76,6 @@ public:
 
     /** Analyse types, clause by clause */
     void run() {
-        const Program& program = tu.getProgram();
         for (auto const* clause : program.getClauses()) {
             visit(*clause, *this);
         }
@@ -112,7 +111,6 @@ private:
     ErrorReport& report = tu.getErrorReport();
     const TypeAnalysis& typeAnalysis = tu.getAnalysis<TypeAnalysis>();
     const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>().getTypeEnvironment();
-    const FunctorAnalysis& functorAnalysis = tu.getAnalysis<FunctorAnalysis>();
     const PolymorphicObjectsAnalysis& polyAnalysis = tu.getAnalysis<PolymorphicObjectsAnalysis>();
     const SumTypeBranchesAnalysis& sumTypesBranches = tu.getAnalysis<SumTypeBranchesAnalysis>();
 
@@ -561,7 +559,7 @@ void TypeCheckerImpl::visit_(type_identity<UserDefinedFunctor>, const UserDefine
         return;
     }
 
-    Type const& returnType = functorAnalysis.getReturnType(fun);
+    Type const& returnType = typeAnalysis.getFunctorReturnType(fun);
 
     if (resultTypes.isAll() || resultTypes.size() != 1) {
         std::ostringstream out;
@@ -600,7 +598,7 @@ void TypeCheckerImpl::visit_(type_identity<UserDefinedFunctor>, const UserDefine
 
     for (std::size_t ii = 0; ii < toCheck; ++ii) {
         auto const& arg = args[ii];
-        Type const& paramType = functorAnalysis.getParamType(fun, ii);
+        Type const& paramType = typeAnalysis.getFunctorParamType(fun, ii);
         TypeSet const& argTypes = typeAnalysis.getTypes(arg);
 
         if (argTypes.isAll() || argTypes.size() != 1) {
