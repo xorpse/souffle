@@ -25,7 +25,13 @@
 #include <iostream>
 #include <mutex>
 #include <string>
+
+#ifdef _WIN32
+#include <io.h>
+#define STDERR_FILENO 2 /* Standard error output.  */
+#else
 #include <unistd.h>
+#endif  //_WIN32
 
 namespace souffle {
 

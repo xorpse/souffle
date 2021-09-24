@@ -540,7 +540,7 @@ void TypeConstraintsAnalysis::visit_(type_identity<UserDefinedFunctor>, const Us
     // order of the passes/transformers.  So, for now, here's a comment for the next
     // person going doing this rabbit hole.
     auto const& arguments = fun.getArguments();
-    if (!typeAnalysis.hasValidTypeInfo(fun) || typeAnalysis.getFunctorArity(fun) != arguments.size()) {
+    if (!typeAnalysis.hasValidTypeInfo(fun) || functorAnalysis.getFunctorArity(fun) != arguments.size()) {
         return;
     }
 

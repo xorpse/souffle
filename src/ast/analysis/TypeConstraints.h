@@ -91,6 +91,7 @@ private:
     const Program& program = tu.getProgram();
     const SumTypeBranchesAnalysis& sumTypesBranches = tu.getAnalysis<SumTypeBranchesAnalysis>();
     const TypeAnalysis& typeAnalysis = tu.getAnalysis<TypeAnalysis>();
+    const FunctorAnalysis& functorAnalysis = tu.getAnalysis<FunctorAnalysis>();
 
     // Sinks = {head} ∪ {negated atoms}
     std::set<const Atom*> sinks;
