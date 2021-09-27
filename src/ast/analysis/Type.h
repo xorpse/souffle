@@ -174,6 +174,7 @@ private:
     void print_(type_identity<RecordInit>, const RecordInit& record, const RecordType&);
     void print_(type_identity<BranchInit>, const BranchInit& adt);
     void print_(type_identity<Aggregator>, const Aggregator& agg);
+    void printBodyLiterals(std::vector<Literal*> literals, const std::string& spc);
 };
 
 }  // namespace souffle::ast::analysis

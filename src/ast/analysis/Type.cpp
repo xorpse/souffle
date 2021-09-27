@@ -540,6 +540,8 @@ void TypeAnnotationPrinter::branchOnArgument(const Argument* cur, const Type& ty
         print_(type_identity<UserDefinedFunctor>(), *as<UserDefinedFunctor>(cur));
     } else if (isA<Counter>(*cur)) {
         print_(type_identity<Counter>(), *as<Counter>(cur));
+    } else if (isA<Aggregator>(*cur)) {
+        print_(type_identity<Aggregator>(), *as<Aggregator>(cur));
     } else {
         os << "<(branchOnArgument) not supported yet>";
     }
@@ -725,39 +727,49 @@ void TypeAnnotationPrinter::print_(type_identity<BranchInit>, const BranchInit& 
     os << ")";
 }
 
-void TypeAnnotationPrinter::print_(type_identity<Aggregator>, [[maybe_unused]] const Aggregator& agg) {
-    // TODO
+void TypeAnnotationPrinter::print_(type_identity<Aggregator>, const Aggregator& agg) {
+    auto baseOperator = agg.getBaseOperator();
+    auto bodyLiterals = agg.getBodyLiterals();
+    os << baseOperator << " ";
+    auto targetExpr = agg.getTargetExpression();
+    auto tySet = argumentTypes.find(targetExpr)->second;
+    assert(tySet.size() == 1);
+    auto ty = tySet.begin();
+    branchOnArgument(targetExpr, *ty);
+    os << " : { ";
+    printBodyLiterals(bodyLiterals, "        ");
+    os << " }";
 }
 
-// Note: branchOnArgument do the better job.
-// void TypeAnnotationPrinter::print_(type_identity<Argument>, [[maybe_unused]] const Argument& arg) {
-// do nothing
-// }
+void TypeAnnotationPrinter::printBodyLiterals(std::vector<Literal*> bodyLiterals, const std::string& spc) {
+    std::size_t i = 0;
+    for (Literal* cur : bodyLiterals) {
+        if (isA<Atom>(*cur)) {
+            print_(type_identity<Atom>(), *as<Atom>(cur));
+        } else if (isA<Negation>(*cur)) {
+            print_(type_identity<Negation>(), *as<Negation>(*cur));
+        } else if (isA<BinaryConstraint>(*cur)) {
+            print_(type_identity<BinaryConstraint>(), *as<BinaryConstraint>(*cur));
+        } else {
+            os << "(?)";
+        }
+
+        if (i + 1 < bodyLiterals.size()) {
+            os << "," << std::endl;
+            // os << "    ";
+            os << spc;
+        }
+        i++;
+    }
+}
 
 void TypeAnnotationPrinter::printAnnotatedClause(const Clause& clause) {
     Atom* head = clause.getHead();
     print_(type_identity<Atom>(), *head);
     auto bodyLiterals = clause.getBodyLiterals();
     if (bodyLiterals.size() > 0) {
-        std::size_t i = 0;
         os << " :- " << std::endl << "    ";
-        for (Literal* cur : bodyLiterals) {
-            if (isA<Atom>(*cur)) {
-                print_(type_identity<Atom>(), *as<Atom>(cur));
-            } else if (isA<Negation>(*cur)) {
-                print_(type_identity<Negation>(), *as<Negation>(*cur));
-            } else if (isA<BinaryConstraint>(*cur)) {
-                print_(type_identity<BinaryConstraint>(), *as<BinaryConstraint>(*cur));
-            } else {
-                os << "(?)";
-            }
-
-            if (i + 1 < bodyLiterals.size()) {
-                os << "," << std::endl;
-                os << "    ";
-            }
-            i++;
-        }
+        printBodyLiterals(bodyLiterals, "    ");
     }
     os << "." << std::endl;
 }
