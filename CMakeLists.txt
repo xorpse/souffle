@@ -391,7 +391,11 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux")
 		# SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386")
 	endif()
 
-    if (LSB_RELEASE_ID_SHORT MATCHES "Fedora")
+    if (LSB_RELEASE_ID_SHORT MATCHES "Fedora" OR LSB_RELEASE_ID_SHORT MATCHES "CentOS")
+        SET(CPACK_RPM_PACKAGE_GROUP "Unspecified")
+        SET(CPACK_RPM_PACKAGE_LICENSE "UPL-1.0 License")
+        SET(CPACK_RPM_PACKAGE_VENDOR "Souffle-lang")
+
 		# Generate both DEB and RPM packages
 		SET(CPACK_GENERATOR "RPM")
 
@@ -400,10 +404,10 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux")
 		# --------------------------------------------------
 
 		# Specifying runtime dependencies
-		set(CPACK_RPM_PACKAGE_REQUIRES "g++ >= 7, libffi, libffi-devel, ncurses-devel, libsqlite3x, mcpp, zlib-devel")
+		set(CPACK_RPM_PACKAGE_REQUIRES "gcc-c++ >= 7, libffi, libffi-devel, ncurses-devel, sqlite-devel, mcpp, zlib-devel")
 
-		# Don't auto-detect dependencies and provides
-		SET(CPACK_RPM_PACKAGE_AUTOREQPROV "no")
+        # Note: By default automatic dependency detection is enabled by rpm generator.
+        # SET(CPACK_RPM_PACKAGE_AUTOREQPROV "no")
 	endif()
 endif()
 
