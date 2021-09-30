@@ -46,7 +46,50 @@ jobs:
         run: docker run -e DOMAIN_SIZE="64bit" --name container -t package_builder 
 
       - name: Extract
-        run: docker cp container:/souffle/build/ .
+        id: extract_pkg
+        run: |-
+          docker cp container:/souffle/build/ . &&
+          cd build &&
+          echo "::set-output name=pkg_name::$(ls *${{ matrix.extension }} | head -n1)"
+          echo "::set-output name=artifact_name::x86_64-${{ matrix.release }}-$(ls *${{ matrix.extension }} | head -n1)"
+
+      - name: Naming Artifact
+        run: cp build/${{ steps.extract_pkg.outputs.pkg_name }} build/${{ steps.extract_pkg.outputs.artifact_name }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ steps.extract_pkg.outputs.artifact_name }}
+          path: build/${{ steps.extract_pkg.outputs.artifact_name }}
+      
+      - name: Packaging
+        run: |-
+          cd build && 
+          PACKAGECLOUD_TOKEN=${{ secrets.PACKAGECLOUD_TOKEN }} 
+          package_cloud push souffle-lang/souffle/${{ matrix.OS-name }} 
+          ${{ steps.extract_pkg.outputs.pkg_name }}
 
       - name: Upload
         run: cd build && PACKAGECLOUD_TOKEN=${{ secrets.PACKAGECLOUD_TOKEN }} package_cloud push souffle-lang/souffle/${{ matrix.OS-name }} "$(ls *${{ matrix.extension }} | head -n1)"
+  Upload-Release-Assests:
+    needs: CPack-Package-Build
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: ./downloads
+
+      - name: Create Checksum
+        run: |-
+          mkdir result && 
+          mv downloads/*/* result/ &&
+          cd result && 
+          sha512sum * > sha512sum.txt
+
+      - name: Upload Release Assests
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            result/*
