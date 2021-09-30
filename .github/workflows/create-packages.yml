@@ -68,9 +68,46 @@ jobs:
           PACKAGECLOUD_TOKEN=${{ secrets.PACKAGECLOUD_TOKEN }} 
           package_cloud push souffle-lang/souffle/${{ matrix.OS-name }} 
           ${{ steps.extract_pkg.outputs.pkg_name }}
+      
+  Arch-Package-Build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Prepare
+        id: prepare
+        run: |-
+          echo "::set-output name=release_tag::$(git describe --tags --always | sed "s/-.*$//")"
+
+      - name: Build Container
+        run: docker build ./.github/images/arch-linux/ -t package_builder
+
+      - name: Packaging
+        run: >
+          docker run 
+          -e RELEASE_TAG=${{ steps.prepare.outputs.release_tag }} 
+          --name container
+          -t package_builder
+
+      - name: Setup Credentials
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+           ssh-private-key: ${{ secrets.AUR_PRIVATE_KEY }}
 
       - name: Upload
-        run: cd build && PACKAGECLOUD_TOKEN=${{ secrets.PACKAGECLOUD_TOKEN }} package_cloud push souffle-lang/souffle/${{ matrix.OS-name }} "$(ls *${{ matrix.extension }} | head -n1)"
+        run: |-
+          git clone ssh://aur@aur.archlinux.org/souffle.git && 
+          cd souffle && 
+          docker cp container:/home/builduser/PKGBUILD . && 
+          docker cp container:/home/builduser/.SRCINFO . && 
+          git add PKGBUILD .SRCINFO &&
+          git commit -m "release version ${{ steps.prepare.outputs.release_tag }}" &&
+          git push
+
+
   Upload-Release-Assests:
     needs: CPack-Package-Build
 
