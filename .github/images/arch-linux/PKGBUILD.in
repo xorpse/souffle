@@ -5,7 +5,7 @@
 #
 # This PKGBUILD is automatically generated and always points to the 
 # latest release from the souffle official repository.
-# Source: .github/images/arch-linx/PKGBUILD.in
+# Source: .github/images/arch-linux/PKGBUILD.in
 #
 
 pkgname=souffle
@@ -16,7 +16,7 @@ arch=('any')
 url="https://github.com/souffle-lang/souffle"
 license=('UPL')
 groups=()
-depends=('mcpp' 'gcc>=7' 'openmp' 'sqlite')
+depends=('mcpp' 'gcc>=8' 'openmp' 'sqlite')
 makedepends=('git' 'cmake>=3.15' 'bison>=3.0.4' 'flex' 'libffi' 'ncurses' 'zlib' 'lsb-release')
 optdepends=('bash-completion')
 provides=('souffle')
