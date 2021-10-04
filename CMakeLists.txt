@@ -382,7 +382,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux")
 		# --------------------------------------------------
 
 		# Specifying runtime dependencies
-		set(CPACK_DEBIAN_PACKAGE_DEPENDS "g++ (>= 7), libffi-dev, libncurses5-dev, libsqlite3-dev, mcpp, zlib1g-dev")
+		set(CPACK_DEBIAN_PACKAGE_DEPENDS "g++ (>= 8), libffi-dev, libncurses5-dev, libsqlite3-dev, mcpp, zlib1g-dev")
 
 		# Auto-generate any runtime dependencies that are required
 		SET(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
@@ -404,7 +404,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux")
 		# --------------------------------------------------
 
 		# Specifying runtime dependencies
-		set(CPACK_RPM_PACKAGE_REQUIRES "gcc-c++ >= 7, libffi, libffi-devel, ncurses-devel, sqlite-devel, mcpp, zlib-devel")
+		set(CPACK_RPM_PACKAGE_REQUIRES "gcc-c++ >= 8, libffi, libffi-devel, ncurses-devel, sqlite-devel, mcpp, zlib-devel")
 
         # Note: By default automatic dependency detection is enabled by rpm generator.
         # SET(CPACK_RPM_PACKAGE_AUTOREQPROV "no")
