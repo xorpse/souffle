@@ -92,7 +92,9 @@ void Clause::print(std::ostream& os) const {
     if (plan != nullptr) {
         os << *plan;
     }
-    os << " leq=" << leq << "\n";
+    if (leq) {
+        os << " leq=" << leq << "\n";
+    }
 }
 
 bool Clause::equal(const Node& node) const {
