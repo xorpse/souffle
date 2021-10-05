@@ -99,7 +99,8 @@ bool normaliseInlinedHeads(Program& program) {
 
         for (Clause* clause : getClauses(program, *rel)) {
             // Set up the new clause with an empty body and no arguments in the head
-            auto newClause = mk<Clause>(clause->getHead()->getQualifiedName(),clause->isLeq(), clause->getSrcLoc());
+            auto newClause =
+                    mk<Clause>(clause->getHead()->getQualifiedName(), clause->isLeq(), clause->getSrcLoc());
             newClause->setBodyLiterals(clone(clause->getBodyLiterals()));
             auto clauseHead = newClause->getHead();
 

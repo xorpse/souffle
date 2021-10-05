@@ -17,7 +17,8 @@
 
 namespace souffle::ast {
 
-Clause::Clause(Own<Atom> head, VecOwn<Literal> bodyLiterals, bool isLeq, Own<ExecutionPlan> plan, SrcLocation loc)
+Clause::Clause(
+        Own<Atom> head, VecOwn<Literal> bodyLiterals, bool isLeq, Own<ExecutionPlan> plan, SrcLocation loc)
         : Node(std::move(loc)), head(std::move(head)), bodyLiterals(std::move(bodyLiterals)),
           plan(std::move(plan)), leq(isLeq) {
     assert(this->head != nullptr);
@@ -25,9 +26,11 @@ Clause::Clause(Own<Atom> head, VecOwn<Literal> bodyLiterals, bool isLeq, Own<Exe
     // Execution plan can be null
 }
 
-Clause::Clause(Own<Atom> head, bool isLeq, SrcLocation loc) : Clause(std::move(head), {}, isLeq, {}, std::move(loc)) {}
+Clause::Clause(Own<Atom> head, bool isLeq, SrcLocation loc)
+        : Clause(std::move(head), {}, isLeq, {}, std::move(loc)) {}
 
-Clause::Clause(QualifiedName name, bool isLeq, SrcLocation loc) : Clause(mk<Atom>(name), isLeq, std::move(loc)) {}
+Clause::Clause(QualifiedName name, bool isLeq, SrcLocation loc)
+        : Clause(mk<Atom>(name), isLeq, std::move(loc)) {}
 
 void Clause::addToBody(Own<Literal> literal) {
     assert(literal != nullptr);

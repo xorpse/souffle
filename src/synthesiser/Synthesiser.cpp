@@ -1685,8 +1685,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             auto arity = rel->getArity();
             auto relName = synthesiser.getRelationName(rel);
             // create inserted tuple
-            out << "Tuple<RamDomain," << arity << "> tuple{{" << join(erase.getValues(), ",", rec)
-                << "}};\n";
+            out << "Tuple<RamDomain," << arity << "> tuple{{" << join(erase.getValues(), ",", rec) << "}};\n";
 
             // insert tuple
             out << relName << "->erase(tuple);\n";

@@ -137,7 +137,8 @@ bool ReduceExistentialsTransformer::transform(TranslationUnit& translationUnit) 
         // Keep all non-recursive clauses
         for (Clause* clause : getClauses(program, *originalRelation)) {
             if (!isRecursiveClause(*clause)) {
-                auto newClause = mk<Clause>(mk<Atom>(newRelationName.str()), clone(clause->getBodyLiterals()), clause->isLeq(),
+                auto newClause = mk<Clause>(mk<Atom>(newRelationName.str()), clone(clause->getBodyLiterals()),
+                        clause->isLeq(),
                         // clone handles nullptr gracefully
                         clone(clause->getExecutionPlan()), clause->getSrcLoc());
                 program.addClause(std::move(newClause));

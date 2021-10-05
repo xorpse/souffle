@@ -17,11 +17,11 @@
 
 #pragma once
 
+#include "souffle/datastructure/BTreeUtil.h"
 #include "souffle/utility/CacheUtil.h"
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/ParallelUtil.h"
-#include "souffle/datastructure/BTreeUtil.h"
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
@@ -905,7 +905,7 @@ public:
      */
     struct iterator : public std::iterator<std::bidirectional_iterator_tag, Key> {
         // a pointer to the node currently referred to
-        //node const* cur;
+        // node const* cur;
         node* cur;
 
         // the index of the element currently addressed within the referenced node
@@ -922,8 +922,8 @@ public:
         iterator() : cur(nullptr) {}
 
         // creates an iterator referencing a specific element within a given node
-        //iterator(node const* cur, field_index_type pos) : cur(cur), pos(pos) {}
-        //iterator(node* cur, field_index_type pos) : cur(cur), pos(pos) {}
+        // iterator(node const* cur, field_index_type pos) : cur(cur), pos(pos) {}
+        // iterator(node* cur, field_index_type pos) : cur(cur), pos(pos) {}
         iterator(node const* cur, field_index_type pos) : cur(const_cast<node*>(cur)), pos(pos) {}
 
         // a copy constructor
@@ -1130,7 +1130,8 @@ public:
     }
 
     // a copy constructor
-    btree_delete(const btree_delete& set) : comp(set.comp), weak_comp(set.weak_comp), root(nullptr), leftmost(nullptr) {
+    btree_delete(const btree_delete& set)
+            : comp(set.comp), weak_comp(set.weak_comp), root(nullptr), leftmost(nullptr) {
         // use assignment operator for a deep copy
         *this = set;
     }
@@ -1388,7 +1389,8 @@ public:
 
                 // split this node
                 auto old_root = root;
-                idx -= cur->rebalance_or_split(const_cast<node**>(&root), root_lock, static_cast<int>(idx), parents);
+                idx -= cur->rebalance_or_split(
+                        const_cast<node**>(&root), root_lock, static_cast<int>(idx), parents);
 
                 // release parent lock
                 for (auto it = parents.rbegin(); it != parents.rend(); ++it) {
@@ -1619,8 +1621,8 @@ public:
      */
     void erase(iterator& iter) {
         bool internal_delete = false;
-        // JULIEN
-        //iter.cur->lock.start_write();
+        // @julienhenry
+        // iter.cur->lock.start_write();
         if (iter.cur->isInner()) {
             // In an inner node so swap key with previous key
             iterator temp_iter(iter);
@@ -1690,7 +1692,7 @@ public:
                 ++iter;
             }
         }
-        //iter.cur->lock.end_write(); //JULIEN
+        // iter.cur->lock.end_write(); //@julienhenry
     }
 
 private:
@@ -2561,8 +2563,8 @@ private:
 // Instantiation of static member search.
 template <typename Key, typename Comparator, typename Allocator, unsigned blockSize, typename SearchStrategy,
         bool isSet, typename WeakComparator, typename Updater>
-const SearchStrategy
-        btree_delete<Key, Comparator, Allocator, blockSize, SearchStrategy, isSet, WeakComparator, Updater>::search;
+const SearchStrategy btree_delete<Key, Comparator, Allocator, blockSize, SearchStrategy, isSet,
+        WeakComparator, Updater>::search;
 
 }  // end namespace detail
 
@@ -2580,8 +2582,8 @@ template <typename Key, typename Comparator = detail::comparator<Key>,
         unsigned blockSize = 256,
         typename SearchStrategy = typename souffle::detail::default_strategy<Key>::type,
         typename WeakComparator = Comparator, typename Updater = souffle::detail::updater<Key>>
-class btree_delete_set : public souffle::detail::btree_delete<Key, Comparator, Allocator, blockSize, SearchStrategy, true,
-                          WeakComparator, Updater> {
+class btree_delete_set : public souffle::detail::btree_delete<Key, Comparator, Allocator, blockSize,
+                                 SearchStrategy, true, WeakComparator, Updater> {
     using super = souffle::detail::btree_delete<Key, Comparator, Allocator, blockSize, SearchStrategy, true,
             WeakComparator, Updater>;
 
@@ -2592,7 +2594,8 @@ public:
     /**
      * A default constructor creating an empty set.
      */
-    btree_delete_set(const Comparator& comp = Comparator(), const WeakComparator& weak_comp = WeakComparator())
+    btree_delete_set(
+            const Comparator& comp = Comparator(), const WeakComparator& weak_comp = WeakComparator())
             : super(comp, weak_comp) {}
 
     /**
@@ -2642,8 +2645,8 @@ template <typename Key, typename Comparator = detail::comparator<Key>,
         unsigned blockSize = 256,
         typename SearchStrategy = typename souffle::detail::default_strategy<Key>::type,
         typename WeakComparator = Comparator, typename Updater = souffle::detail::updater<Key>>
-class btree_delete_multiset : public souffle::detail::btree_delete<Key, Comparator, Allocator, blockSize, SearchStrategy,
-                               false, WeakComparator, Updater> {
+class btree_delete_multiset : public souffle::detail::btree_delete<Key, Comparator, Allocator, blockSize,
+                                      SearchStrategy, false, WeakComparator, Updater> {
     using super = souffle::detail::btree_delete<Key, Comparator, Allocator, blockSize, SearchStrategy, false,
             WeakComparator, Updater>;
 
@@ -2654,7 +2657,8 @@ public:
     /**
      * A default constructor creating an empty set.
      */
-    btree_delete_multiset(const Comparator& comp = Comparator(), const WeakComparator& weak_comp = WeakComparator())
+    btree_delete_multiset(
+            const Comparator& comp = Comparator(), const WeakComparator& weak_comp = WeakComparator())
             : super(comp, weak_comp) {}
 
     /**

@@ -36,7 +36,8 @@ namespace souffle::ast {
  */
 class Clause : public Node {
 public:
-    Clause(Own<Atom> head, VecOwn<Literal> bodyLiterals, bool isLeq = false, Own<ExecutionPlan> plan = {}, SrcLocation loc = {});
+    Clause(Own<Atom> head, VecOwn<Literal> bodyLiterals, bool isLeq = false, Own<ExecutionPlan> plan = {},
+            SrcLocation loc = {});
 
     Clause(Own<Atom> head, bool isLeq = false, SrcLocation loc = {});
 

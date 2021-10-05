@@ -119,8 +119,8 @@ public:
 
 class DirectRelation : public Relation {
 public:
-    DirectRelation(
-            const ram::Relation& ramRel, const ram::analysis::IndexCluster& indexSelection, bool isProvenance, bool hasErase)
+    DirectRelation(const ram::Relation& ramRel, const ram::analysis::IndexCluster& indexSelection,
+            bool isProvenance, bool hasErase)
             : Relation(ramRel, indexSelection, isProvenance), hasErase(hasErase) {}
 
     void computeIndices() override;

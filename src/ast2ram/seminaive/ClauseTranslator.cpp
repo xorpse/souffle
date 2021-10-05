@@ -212,7 +212,6 @@ Own<ram::Operation> ClauseTranslator::addVariableBindingConstraints(Own<ram::Ope
     return op;
 }
 
-
 Own<ram::Operation> ClauseTranslator::createInsertion(const ast::Clause& clause) const {
     const auto head = clause.getHead();
     auto headRelationName = getClauseAtomName(clause, head);
@@ -459,9 +458,7 @@ Own<ram::Operation> ClauseTranslator::addDistinct(
         Own<ram::Expression> a1 = context.translateValue(*valueIndex, args1[i]);
         Own<ram::Expression> a2 = context.translateValue(*valueIndex, args2[i]);
         if (*a1 != *a2) {
-            conditions.push_back(mk<ram::Constraint>(
-                BinaryConstraintOp::EQ, std::move(a1), std::move(a2)
-                ));
+            conditions.push_back(mk<ram::Constraint>(BinaryConstraintOp::EQ, std::move(a1), std::move(a2)));
         }
     }
     return mk<ram::Filter>(mk<ram::Negation>(toCondition(conditions)), std::move(op));
@@ -488,8 +485,7 @@ Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
             mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
 }
 
-Own<ram::Operation> ClauseTranslator::addNegatedLeqAtom(
-        Own<ram::Operation> op, const ast::Atom* atom) const {
+Own<ram::Operation> ClauseTranslator::addNegatedLeqAtom(Own<ram::Operation> op, const ast::Atom* atom) const {
     std::size_t arity = atom->getArity();
     std::string name = getLeqRelationName(atom->getQualifiedName());
     if (version == 2) {

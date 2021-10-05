@@ -17,11 +17,11 @@
 
 #pragma once
 
+#include "souffle/datastructure/BTreeUtil.h"
 #include "souffle/utility/CacheUtil.h"
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/ParallelUtil.h"
-#include "souffle/datastructure/BTreeUtil.h"
 #include <algorithm>
 #include <cassert>
 #include <cstddef>

@@ -82,8 +82,9 @@ protected:
     Own<ram::Statement> generateClearRelation(const ast::Relation* relation) const;
     virtual Own<ram::Statement> generateMergeRelations(
             const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const;
-    virtual Own<ram::Statement> generateMergeRelationsWithFilter(
-            const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation, const std::string& filterRelation) const;
+    virtual Own<ram::Statement> generateMergeRelationsWithFilter(const ast::Relation* rel,
+            const std::string& destRelation, const std::string& srcRelation,
+            const std::string& filterRelation) const;
     virtual Own<ram::Statement> generateEraseRelations(
             const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const;
 

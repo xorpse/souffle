@@ -203,5 +203,5 @@ struct updater {
     void update(T& /* old_t */, const T& /* new_t */) {}
 };
 
-} // end of namespace detail
-} // end of namespace souffle
+}  // end of namespace detail
+}  // end of namespace souffle

@@ -322,7 +322,8 @@ void DirectRelation::generateTypeStruct(std::ostream& out) {
                 out << "using t_ind_" << i << " = " << btree_name << "_set<t_tuple," << comparator << ">;\n";
             } else {
                 // without provenance, some indices may be not full, so we use btree_multiset for those
-                out << "using t_ind_" << i << " = " << btree_name << "_multiset<t_tuple," << comparator << ">;\n";
+                out << "using t_ind_" << i << " = " << btree_name << "_multiset<t_tuple," << comparator
+                    << ">;\n";
             }
         }
         out << "t_ind_" << i << " ind_" << i << ";\n";

@@ -198,8 +198,9 @@ Own<ram::Statement> UnitTranslator::generateEraseRelations(
     return mk<ram::Query>(mk<ram::Scan>(srcRelation, 0, std::move(insertion)));
 }
 
-Own<ram::Statement> UnitTranslator::generateMergeRelationsWithFilter(
-        const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation, const std::string& filterRelation) const {
+Own<ram::Statement> UnitTranslator::generateMergeRelationsWithFilter(const ast::Relation* rel,
+        const std::string& destRelation, const std::string& srcRelation,
+        const std::string& filterRelation) const {
     VecOwn<ram::Expression> values;
     VecOwn<ram::Expression> values2;
 
@@ -216,8 +217,9 @@ Own<ram::Statement> UnitTranslator::generateMergeRelationsWithFilter(
         values2.push_back(mk<ram::TupleElement>(0, i));
     }
     auto insertion = mk<ram::Insert>(destRelation, std::move(values));
-    auto filtered = mk<ram::Filter>(
-            mk<ram::Negation>(mk<ram::ExistenceCheck>(filterRelation, std::move(values2))), std::move(insertion));
+    auto filtered =
+            mk<ram::Filter>(mk<ram::Negation>(mk<ram::ExistenceCheck>(filterRelation, std::move(values2))),
+                    std::move(insertion));
     auto stmt = mk<ram::Query>(mk<ram::Scan>(srcRelation, 0, std::move(filtered)));
 
     if (rel->getRepresentation() == RelationRepresentation::EQREL) {
@@ -339,24 +341,18 @@ Own<ram::Statement> UnitTranslator::generateStratumTableDeletes(
         std::string mainRelation = getConcreteRelationName(rel->getQualifiedName());
         std::string eraseRelation = getToEraseRelationName(rel->getQualifiedName());
         Own<ram::Statement> d = mk<ram::Sequence>(
-            generateEraseRelations(rel, mainRelation, eraseRelation),
-            mk<ram::Clear>(eraseRelation)
-        );
+                generateEraseRelations(rel, mainRelation, eraseRelation), mk<ram::Clear>(eraseRelation));
         if (Global::config().has("profile")) {
-            d = mk<ram::LogRelationTimer>(
-                std::move(d),
-                LogStatement::tRecursiveRule(toString(rel->getQualifiedName()), 0, rel->getSrcLoc(),
-                toString(rel->getQualifiedName()) + " erase"),
-                eraseRelation
-            );
+            d = mk<ram::LogRelationTimer>(std::move(d),
+                    LogStatement::tRecursiveRule(toString(rel->getQualifiedName()), 0, rel->getSrcLoc(),
+                            toString(rel->getQualifiedName()) + " erase"),
+                    eraseRelation);
         }
         d = mk<ram::DebugInfo>(std::move(d), toString(rel->getQualifiedName()) + " erase");
         if (Global::config().has("profile")) {
-            d = mk<ram::LogRelationTimer>(
-                std::move(d),
-                LogStatement::tRecursiveRelation(toString(rel->getQualifiedName()), rel->getSrcLoc()),
-                eraseRelation 
-            );
+            d = mk<ram::LogRelationTimer>(std::move(d),
+                    LogStatement::tRecursiveRelation(toString(rel->getQualifiedName()), rel->getSrcLoc()),
+                    eraseRelation);
         }
         appendStmt(updateTable, std::move(d));
     }
@@ -373,14 +369,10 @@ Own<ram::Statement> UnitTranslator::generateStratumTableUpdates(
             std::string deltaRelation = getDeltaRelationName(rel->getQualifiedName());
             std::string leqRelation = getLeqRelationName(rel->getQualifiedName());
 
-            Own<ram::Statement> updateRelTable =
-                    mk<ram::Sequence>(
-                        mk<ram::Clear>(deltaRelation),
-                        generateMergeRelationsWithFilter(rel, deltaRelation, newRelation, leqRelation),
-                        generateMergeRelations(rel, mainRelation, deltaRelation),
-                        mk<ram::Clear>(newRelation),
-                        mk<ram::Clear>(leqRelation)
-                    );
+            Own<ram::Statement> updateRelTable = mk<ram::Sequence>(mk<ram::Clear>(deltaRelation),
+                    generateMergeRelationsWithFilter(rel, deltaRelation, newRelation, leqRelation),
+                    generateMergeRelations(rel, mainRelation, deltaRelation), mk<ram::Clear>(newRelation),
+                    mk<ram::Clear>(leqRelation));
 
             // Measure update time
             if (Global::config().has("profile")) {
@@ -396,8 +388,7 @@ Own<ram::Statement> UnitTranslator::generateStratumTableUpdates(
         std::string newRelation = getNewRelationName(rel->getQualifiedName());
         std::string deltaRelation = getDeltaRelationName(rel->getQualifiedName());
         Own<ram::Statement> updateRelTable =
-                mk<ram::Sequence>(
-                    generateMergeRelations(rel, mainRelation, newRelation),
+                mk<ram::Sequence>(generateMergeRelations(rel, mainRelation, newRelation),
                         mk<ram::Swap>(deltaRelation, newRelation), mk<ram::Clear>(newRelation));
 
         // Measure update time
@@ -474,8 +465,8 @@ Own<ram::Statement> UnitTranslator::generateRecursiveStratum(
     auto deleteSequence = generateStratumTableDeletes(scc);
     auto exitSequence = generateStratumExitSequence(scc);
     auto updateSequence = generateStratumTableUpdates(scc);
-    auto fixpointLoop = mk<ram::Loop>(
-            mk<ram::Sequence>(std::move(loopBody), std::move(deleteSequence), std::move(exitSequence), std::move(updateSequence)));
+    auto fixpointLoop = mk<ram::Loop>(mk<ram::Sequence>(std::move(loopBody), std::move(deleteSequence),
+            std::move(exitSequence), std::move(updateSequence)));
     appendStmt(result, std::move(fixpointLoop));
 
     // Add in the postamble
