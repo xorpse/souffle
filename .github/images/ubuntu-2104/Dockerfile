@@ -1,8 +1,6 @@
-FROM ubuntu:20.10
+FROM ubuntu:21.04
 
 ARG DEBIAN_FRONTEND=noninteractive
-
-# Create a souffle directory
 WORKDIR /souffle
 
 # Install souffle build dependencies
@@ -33,15 +31,7 @@ RUN apt-get update && \
 # For CMakeLists.txt to figure out the specific version of Ubuntu
 RUN apt-get -y install lsb-release
 
-# Install dependencies for packagecloud CLI
-RUN apt-get -y install ruby-full
-RUN sudo gem install package_cloud
-
 # Copy everything into souffle directory
 COPY . .
 
-ENV DOMAIN_SIZE "64bit"
-ENV PKG_EXTENSION ".deb"
-ENV PKG_CLOUD_OS_NAME "ubuntu/groovy"
-
-ENTRYPOINT [".github/actions/create-package/entrypoint.sh"]
+ENTRYPOINT [".github/images/entrypoint.sh"]

@@ -1,0 +1,31 @@
+FROM fedora:34
+
+WORKDIR /souffle
+
+# Install souffle build dependencies
+RUN dnf -y install \
+    autoconf \
+    automake \
+    bash-completion \
+    bison \
+    cmake \
+    doxygen \
+    flex \
+    gcc-c++ \
+    git \
+    libffi-devel \
+    libtool \
+    make \
+    mcpp \
+    ncurses-devel \
+    pkg-config \
+    python39 \
+    redhat-lsb-core \
+    rpm-build \
+    sqlite-devel \
+    zlib-devel
+
+# Copy everything into souffle directory
+COPY . .
+
+ENTRYPOINT ["/bin/bash", "-l", "-c", ".github/images/entrypoint.sh"]
