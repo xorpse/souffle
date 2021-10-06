@@ -133,6 +133,13 @@ void TypeAnalysis::print(std::ostream& os) const {
     for (auto& cur : annotatedClauses) {
         os << *cur << std::endl;
     }
+
+    TypeAnnotationPrinter printer = TypeAnnotationPrinter(translationUnit, argumentTypes, os);
+    os << std::endl << "-- Result (2) --" << std::endl;
+    auto& program = translationUnit->getProgram();
+    for (auto& cur : program.getClauses()) {
+        printer.printAnnotatedClause(*cur);
+    }
 }
 
 Type const& TypeAnalysis::nameToType(QualifiedName const& name) const {
@@ -503,6 +510,268 @@ void TypeAnalysis::run(const TranslationUnit& translationUnit) {
         // Deduce binary-constraint polymorphism
         changed |= analyseBinaryConstraints(translationUnit);
     }
+
+    // For refined type annotation printing
+    this->translationUnit = &translationUnit;
+}
+
+void TypeAnnotationPrinter::branchOnArgument(const Argument* cur, const Type& type) {
+    if (isA<ast::Variable>(*cur)) {
+        auto var = as<ast::Variable>(cur);
+        auto inferedTypeName = argumentTypes.find(var)->second;
+        os << *as<ast::Variable>(cur) << "∈" << inferedTypeName;
+    } else if (isA<UnnamedVariable>(*cur)) {
+        os << "_";
+    } else if (isA<NumericConstant>(*cur)) {
+        print_(type_identity<NumericConstant>(), *as<NumericConstant>(cur));
+    } else if (isA<StringConstant>(*cur)) {
+        print_(type_identity<StringConstant>(), *as<StringConstant>(cur));
+    } else if (isA<NilConstant>(*cur)) {
+        print_(type_identity<NilConstant>(), *as<NilConstant>(cur));
+    } else if (isA<RecordInit>(*cur)) {
+        print_(type_identity<RecordInit>(), *as<RecordInit>(cur), *as<RecordType>(type));
+    } else if (isA<BranchInit>(*cur)) {
+        print_(type_identity<BranchInit>(), *as<BranchInit>(cur));
+    } else if (isA<IntrinsicFunctor>(*cur)) {
+        print_(type_identity<IntrinsicFunctor>(), *as<IntrinsicFunctor>(cur));
+    } else if (isA<TypeCast>(*cur)) {
+        print_(type_identity<TypeCast>(), *as<TypeCast>(cur));
+    } else if (isA<UserDefinedFunctor>(*cur)) {
+        print_(type_identity<UserDefinedFunctor>(), *as<UserDefinedFunctor>(cur));
+    } else if (isA<Counter>(*cur)) {
+        print_(type_identity<Counter>(), *as<Counter>(cur));
+    } else if (isA<Aggregator>(*cur)) {
+        print_(type_identity<Aggregator>(), *as<Aggregator>(cur));
+    } else {
+        os << "<(branchOnArgument) not supported yet>";
+    }
+}
+
+void TypeAnnotationPrinter::print_(type_identity<Atom>, const Atom& atom) {
+    auto name = atom.getQualifiedName();
+    os << name << "(";
+    auto args = atom.getArguments();
+    auto rel = getAtomRelation(&atom, &program);
+    auto atts = rel->getAttributes();
+
+    std::size_t i = 0;
+    for (auto cur : args) {
+        const auto& declaredTypeName = atts[i]->getTypeName();
+        const auto& declaredType = typeEnv.getType(declaredTypeName);
+        assert(typeEnv.isType(declaredTypeName));
+        branchOnArgument(cur, declaredType);
+        if (isA<RecordInit>(cur) || isA<UnnamedVariable>(cur) || isA<TypeCast>(cur)) {
+            os << "∈{" << declaredTypeName << "}";
+        }
+        if (i + 1 < args.size()) {
+            os << ",";
+        }
+        i++;
+    }
+
+    os << ")";
+}
+
+void TypeAnnotationPrinter::print_(type_identity<Negation>, const Negation& cur) {
+    os << "!";
+    print_(type_identity<Atom>(), *cur.getAtom());
+}
+
+void TypeAnnotationPrinter::print_(type_identity<NilConstant>, const NilConstant& nilCnst) {
+    os << nilCnst << "∈{any_record}";
+}
+
+void TypeAnnotationPrinter::print_(type_identity<StringConstant>, const StringConstant& cnst) {
+    os << cnst << "∈{string}";
+}
+
+void TypeAnnotationPrinter::print_(type_identity<NumericConstant>, const NumericConstant& constant) {
+    os << constant;
+    auto numericConstantTypes = typeAnalysis.getNumericConstantTypes();
+    auto numType = numericConstantTypes.find(&constant)->second;
+    if (numType == NumericConstant::Type::Int) {
+        os << "∈{Int}";
+    } else if (numType == NumericConstant::Type::Uint) {
+        os << "∈{Uint}";
+    } else if (numType == NumericConstant::Type::Float) {
+        os << "∈{Float}";
+    } else {
+        os << "∈{???}";
+    }
+}
+
+void TypeAnnotationPrinter::print_(type_identity<BinaryConstraint>, const BinaryConstraint& rel) {
+    auto lhs = rel.getLHS();
+    auto lTySet = argumentTypes.find(lhs)->second;
+    assert(lTySet.size() == 1);
+    auto lTy = lTySet.begin();
+    branchOnArgument(lhs, *lTy);
+    if (isA<RecordInit>(lhs) || isA<UnnamedVariable>(lhs)) {
+        os << "∈{" << lTy->getName() << "}";
+    }
+
+    os << " " << rel.getBaseOperator() << " ";
+
+    auto rhs = rel.getRHS();
+    auto rTySet = argumentTypes.find(rhs)->second;
+    assert(rTySet.size() == 1);
+    auto rTy = rTySet.begin();
+    branchOnArgument(rhs, *rTy);
+    if (isA<RecordInit>(rhs) || isA<UnnamedVariable>(rhs)) {
+        os << "∈{" << rTy->getName() << "}";
+    }
+}
+
+void TypeAnnotationPrinter::print_(type_identity<IntrinsicFunctor>, const IntrinsicFunctor& fun) {
+    auto arguments = fun.getArguments();
+    if (arguments.size() == 2) {  // binary
+        auto tySet = argumentTypes.find(arguments[0])->second;
+        assert(tySet.size() == 1);
+        auto ty = tySet.begin();
+        os << "(";
+        branchOnArgument(arguments[0], *ty);
+        if (isA<RecordInit>(arguments[0]) || isA<UnnamedVariable>(arguments[0])) {
+            os << "∈{" << ty->getName() << "}";
+        }
+
+        os << " " << fun.getBaseFunctionOp() << " ";
+
+        auto tySet2 = argumentTypes.find(arguments[1])->second;
+        assert(tySet2.size() == 1);
+        auto ty2 = tySet2.begin();
+        branchOnArgument(arguments[1], *ty2);
+        if (isA<RecordInit>(arguments[1]) || isA<UnnamedVariable>(arguments[1])) {
+            os << "∈{" << ty2->getName() << "}";
+        }
+
+        os << ")";
+    } else {
+        os << fun.getBaseFunctionOp() << "(";
+        for (std::size_t i = 0; i < arguments.size(); ++i) {
+            TypeAttribute argType = typeAnalysis.getFunctorParamTypeAttribute(fun, i);
+            auto& ty = typeEnv.getConstantType(argType);
+            branchOnArgument(arguments[i], ty);
+            if (i + 1 < arguments.size()) {
+                os << ",";
+            }
+        }
+        os << ")";
+    }
+}
+
+void TypeAnnotationPrinter::print_(type_identity<UserDefinedFunctor>, const UserDefinedFunctor& fun) {
+    auto arguments = fun.getArguments();
+    os << "@" << fun.getName() << "(";
+    for (std::size_t i = 0; i < arguments.size(); ++i) {
+        TypeAttribute argType = typeAnalysis.getFunctorParamTypeAttribute(fun, i);
+        auto& ty = typeEnv.getConstantType(argType);
+        branchOnArgument(arguments[i], ty);
+        if (i + 1 < arguments.size()) {
+            os << ",";
+        }
+    }
+    os << ")";
+}
+
+void TypeAnnotationPrinter::print_(type_identity<Counter>, [[maybe_unused]] const Counter& counter) {
+    os << "$∈{number}";
+}
+
+void TypeAnnotationPrinter::print_(type_identity<TypeCast>, const ast::TypeCast& typeCast) {
+    os << "as(";
+    auto& ty = typeEnv.getType(typeCast.getType());
+    branchOnArgument(typeCast.getValue(), ty);
+    os << "," << ty.getName() << ")";
+}
+
+void TypeAnnotationPrinter::print_(
+        type_identity<RecordInit>, const RecordInit& record, const RecordType& type) {
+    auto arguments = record.getArguments();
+    auto& ftypes = type.getFields();
+    os << "[";
+    for (std::size_t i = 0; i < arguments.size(); ++i) {
+        branchOnArgument(arguments[i], *ftypes[i]);
+        if (isA<RecordInit>(arguments[i]) || isA<UnnamedVariable>(arguments[i])) {
+            os << "∈{" << (*ftypes[i]).getName() << "}";
+        }
+        if (i + 1 < arguments.size()) {
+            os << ",";
+        }
+    }
+    os << "]";
+}
+
+void TypeAnnotationPrinter::print_(type_identity<BranchInit>, const BranchInit& adt) {
+    auto* correspondingType = sumTypesBranches.getType(adt.getBranchName());
+
+    assert(correspondingType != nullptr);
+    assert(isA<AlgebraicDataType>(correspondingType));
+
+    auto branchTypes = as<AlgebraicDataType>(correspondingType)->getBranchTypes(adt.getBranchName());
+    auto branchArgs = adt.getArguments();
+
+    assert(branchTypes.size() == branchArgs.size());
+
+    os << "$" << adt.getBranchName() << "(";
+    for (std::size_t i = 0; i < branchArgs.size(); i++) {
+        auto arg = branchArgs[i];
+        auto argTy = branchTypes[i];
+        branchOnArgument(arg, *argTy);
+        if (isA<RecordInit>(arg) || isA<UnnamedVariable>(arg)) {
+            os << "∈{" << argTy->getName() << "}";
+        }
+        if (i + 1 < branchArgs.size()) {
+            os << ", ";
+        }
+    }
+    os << ")";
+}
+
+void TypeAnnotationPrinter::print_(type_identity<Aggregator>, const Aggregator& agg) {
+    auto baseOperator = agg.getBaseOperator();
+    auto bodyLiterals = agg.getBodyLiterals();
+    os << baseOperator << " ";
+    auto targetExpr = agg.getTargetExpression();
+    auto tySet = argumentTypes.find(targetExpr)->second;
+    assert(tySet.size() == 1);
+    auto ty = tySet.begin();
+    branchOnArgument(targetExpr, *ty);
+    os << " : { ";
+    printBodyLiterals(bodyLiterals, "        ");
+    os << " }";
+}
+
+void TypeAnnotationPrinter::printBodyLiterals(std::vector<Literal*> bodyLiterals, const std::string& spc) {
+    std::size_t i = 0;
+    for (Literal* cur : bodyLiterals) {
+        if (isA<Atom>(*cur)) {
+            print_(type_identity<Atom>(), *as<Atom>(cur));
+        } else if (isA<Negation>(*cur)) {
+            print_(type_identity<Negation>(), *as<Negation>(*cur));
+        } else if (isA<BinaryConstraint>(*cur)) {
+            print_(type_identity<BinaryConstraint>(), *as<BinaryConstraint>(*cur));
+        } else {
+            os << "(?)";
+        }
+
+        if (i + 1 < bodyLiterals.size()) {
+            os << "," << std::endl;
+            // os << "    ";
+            os << spc;
+        }
+        i++;
+    }
+}
+
+void TypeAnnotationPrinter::printAnnotatedClause(const Clause& clause) {
+    Atom* head = clause.getHead();
+    print_(type_identity<Atom>(), *head);
+    auto bodyLiterals = clause.getBodyLiterals();
+    if (bodyLiterals.size() > 0) {
+        os << " :- " << std::endl << "    ";
+        printBodyLiterals(bodyLiterals, "    ");
+    }
+    os << "." << std::endl;
 }
 
 }  // namespace souffle::ast::analysis
