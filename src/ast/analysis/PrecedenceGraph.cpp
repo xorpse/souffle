@@ -52,9 +52,8 @@ void PrecedenceGraphAnalysis::run(const TranslationUnit& translationUnit) {
     }
 }
 
-void PrecedenceGraphAnalysis::print(std::ostream& os) const {
+void PrecedenceGraphAnalysis::printRaw(std::stringstream& ss) const {
     /* Print dependency graph */
-    std::stringstream ss;
     ss << "digraph {\n";
     /* Print node of dependence graph */
     for (const Relation* rel : backingGraph.vertices()) {
@@ -74,6 +73,17 @@ void PrecedenceGraphAnalysis::print(std::ostream& os) const {
         }
     }
     ss << "}\n";
+}
+
+void PrecedenceGraphAnalysis::print(std::ostream& os) const {
+    std::stringstream ss;
+    printRaw(ss);
+    os << ss.str();
+}
+
+void PrecedenceGraphAnalysis::printHTML(std::ostream& os) const {
+    std::stringstream ss;
+    printRaw(ss);
     printHTMLGraph(os, ss.str(), getName());
 }
 
