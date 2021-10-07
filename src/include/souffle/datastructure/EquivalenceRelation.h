@@ -137,9 +137,6 @@ public:
         // nothing to extend if there's no new/original knowledge
         if (other.size() == 0 || this->size() == 0) return;
 
-        this->genAllDisjointSetLists();
-        other.genAllDisjointSetLists();
-
         std::set<value_type> repsCovered;
 
         // find all the disjoint sets that need to be added to this relation
