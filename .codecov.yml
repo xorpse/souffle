@@ -20,7 +20,7 @@ comment:
   require_changes: no
 
 fixes:
-  - "/souffle/include/souffle::"
+  - "/souffle/::"
 
 ignore:
   - "tests/interface"
