@@ -18,7 +18,7 @@
 
 #include "ast/QualifiedName.h"
 #include "ast/TranslationUnit.h"
-#include "ast/analysis/TypeSystem.h"
+#include "ast/analysis/typesystem/TypeSystem.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <map>
 #include <string>

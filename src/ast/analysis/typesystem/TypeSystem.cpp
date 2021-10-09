@@ -14,7 +14,7 @@
  *
  ***********************************************************************/
 
-#include "ast/analysis/TypeSystem.h"
+#include "ast/analysis/typesystem/TypeSystem.h"
 #include "ast/Type.h"
 #include "souffle/utility/FunctionalUtil.h"
 #include "souffle/utility/StreamUtil.h"
@@ -388,6 +388,15 @@ bool areEquivalentTypes(const Type& a, const Type& b) {
 
 bool isADTEnum(const AlgebraicDataType& type) {
     return all_of(type.getBranches(), [](auto& branch) { return branch.types.empty(); });
+}
+
+const Type& getBaseType(const Type* type) {
+    while (auto subset = as<SubsetType>(type)) {
+        type = &subset->getBaseType();
+    };
+    assert((isA<ConstantType>(type) || isA<RecordType>(type)) &&
+            "Root must be a constant type or a record type");
+    return *type;
 }
 
 }  // namespace souffle::ast::analysis

@@ -12,13 +12,13 @@
  *
  ***********************************************************************/
 
-#include "ast/analysis/PolymorphicObjects.h"
+#include "ast/analysis/typesystem/PolymorphicObjects.h"
 #include "ast/Aggregator.h"
 #include "ast/BinaryConstraint.h"
 #include "ast/IntrinsicFunctor.h"
 #include "ast/NumericConstant.h"
 #include "ast/TranslationUnit.h"
-#include "ast/analysis/Type.h"
+#include "ast/analysis/typesystem/Type.h"
 #include "ast/utility/Visitor.h"
 #include "souffle/utility/ContainerUtil.h"
 

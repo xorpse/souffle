@@ -17,7 +17,7 @@
 #include "AggregateOp.h"
 #include "FunctorOps.h"
 #include "ast/NumericConstant.h"
-#include "ast/analysis/Type.h"
+#include "ast/analysis/typesystem/Type.h"
 #include "souffle/BinaryConstraintOps.h"
 #include "souffle/TypeAttribute.h"
 #include "souffle/utility/ContainerUtil.h"

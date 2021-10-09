@@ -637,6 +637,8 @@ TypeSet getGreatestCommonSubtypes(const Types&... types) {
  */
 bool haveCommonSupertype(const Type& a, const Type& b);
 
+const Type& getBaseType(const Type* type);
+
 /**
  * Determine if two types are equivalent.
  * That is, check if a <: b and b <: a

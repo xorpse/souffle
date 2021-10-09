@@ -17,14 +17,14 @@
 #pragma once
 
 #include "AggregateOp.h"
-#include "Functor.h"
 #include "FunctorOps.h"
 #include "ast/Clause.h"
 #include "ast/NumericConstant.h"
 #include "ast/TranslationUnit.h"
-#include "ast/analysis/SumTypeBranches.h"
-#include "ast/analysis/TypeEnvironment.h"
-#include "ast/analysis/TypeSystem.h"
+#include "ast/analysis/Functor.h"
+#include "ast/analysis/typesystem/SumTypeBranches.h"
+#include "ast/analysis/typesystem/TypeEnvironment.h"
+#include "ast/analysis/typesystem/TypeSystem.h"
 #include "souffle/BinaryConstraintOps.h"
 #include <cstddef>
 #include <memory>
