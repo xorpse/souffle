@@ -426,17 +426,18 @@ void TypeCheckerImpl::visit_(type_identity<NumericConstant>, const NumericConsta
 
     switch (polyAnalysis.getInferredType(constant)) {
         case NumericConstant::Type::Int:
-            if (!isOfKind(types, TypeAttribute::Signed)) {
+            if (!isOfKind(types, TypeAttribute::Signed) || !canBeParsedAsRamSigned(constant.getConstant())) {
                 report.addError("Number constant (type mismatch)", constant.getSrcLoc());
             }
             break;
         case NumericConstant::Type::Uint:
-            if (!isOfKind(types, TypeAttribute::Unsigned)) {
+            if (!isOfKind(types, TypeAttribute::Unsigned) ||
+                    !canBeParsedAsRamUnsigned(constant.getConstant())) {
                 report.addError("Unsigned constant (type mismatch)", constant.getSrcLoc());
             }
             break;
         case NumericConstant::Type::Float:
-            if (!isOfKind(types, TypeAttribute::Float)) {
+            if (!isOfKind(types, TypeAttribute::Float) || !canBeParsedAsRamFloat(constant.getConstant())) {
                 report.addError("Float constant (type mismatch)", constant.getSrcLoc());
             }
             break;

@@ -58,53 +58,32 @@ void TypeConstraintsAnalysis::visit_(type_identity<NumericConstant>, const Numer
         switch (constant.getFixedType().value()) {
             // Insert a type, but only after checking that parsing is possible.
             case NumericConstant::Type::Int:
-                if (canBeParsedAsRamSigned(constant.getConstant())) {
-                    possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Signed));
-                }
+                possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Signed));
                 break;
             case NumericConstant::Type::Uint:
-                if (canBeParsedAsRamUnsigned(constant.getConstant())) {
-                    possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Unsigned));
-                }
+                possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Unsigned));
                 break;
             case NumericConstant::Type::Float:
-                if (canBeParsedAsRamFloat(constant.getConstant())) {
-                    possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Float));
-                }
+                possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Float));
                 break;
         }
     } else if (contains(typeAnalysis.getNumericConstantTypes(), &constant)) {
         switch (typeAnalysis.getNumericConstantTypes().at(&constant)) {
             // Insert a type, but only after checking that parsing is possible.
             case NumericConstant::Type::Int:
-                if (canBeParsedAsRamSigned(constant.getConstant())) {
-                    possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Signed));
-                }
+                possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Signed));
                 break;
             case NumericConstant::Type::Uint:
-                if (canBeParsedAsRamUnsigned(constant.getConstant())) {
-                    possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Unsigned));
-                }
+                possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Unsigned));
                 break;
             case NumericConstant::Type::Float:
-                if (canBeParsedAsRamFloat(constant.getConstant())) {
-                    possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Float));
-                }
+                possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Float));
                 break;
         }
     } else {
-        // Else: all numeric types that can be parsed are valid.
-        if (canBeParsedAsRamSigned(constant.getConstant())) {
-            possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Signed));
-        }
-
-        if (canBeParsedAsRamUnsigned(constant.getConstant())) {
-            possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Unsigned));
-        }
-
-        if (canBeParsedAsRamFloat(constant.getConstant())) {
-            possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Float));
-        }
+        possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Signed));
+        possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Unsigned));
+        possibleTypes.insert(typeEnv.getConstantType(TypeAttribute::Float));
     }
 
     addConstraint(hasSuperTypeInSet(getVar(constant), possibleTypes));
