@@ -16,7 +16,7 @@
 
 #include "tests/test.h"
 
-#include "ast/analysis/TypeSystem.h"
+#include "ast/analysis/typesystem/TypeSystem.h"
 #include "souffle/TypeAttribute.h"
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/StringUtil.h"

@@ -14,7 +14,7 @@
  *
  ***********************************************************************/
 
-#include "ast/analysis/Type.h"
+#include "ast/analysis/typesystem/Type.h"
 #include "AggregateOp.h"
 #include "FunctorOps.h"
 #include "Global.h"
@@ -34,10 +34,11 @@
 #include "ast/Variable.h"
 #include "ast/analysis/Constraint.h"
 #include "ast/analysis/ConstraintSystem.h"
-#include "ast/analysis/SumTypeBranches.h"
-#include "ast/analysis/TypeConstraints.h"
-#include "ast/analysis/TypeEnvironment.h"
-#include "ast/analysis/TypeSystem.h"
+#include "ast/analysis/typesystem/SumTypeBranches.h"
+#include "ast/analysis/typesystem/TypeConstrainsAnalysis.h"
+#include "ast/analysis/typesystem/TypeConstraints.h"
+#include "ast/analysis/typesystem/TypeEnvironment.h"
+#include "ast/analysis/typesystem/TypeSystem.h"
 #include "ast/utility/Utils.h"
 #include "souffle/TypeAttribute.h"
 #include "souffle/utility/ContainerUtil.h"

@@ -19,7 +19,7 @@
 #include "ast/QualifiedName.h"
 #include "ast/TranslationUnit.h"
 #include "ast/Type.h"
-#include "ast/analysis/TypeSystem.h"
+#include "ast/analysis/typesystem/TypeSystem.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <iosfwd>
 #include <map>

@@ -14,7 +14,7 @@
  *
  ***********************************************************************/
 
-#include "ast/analysis/TypeEnvironment.h"
+#include "ast/analysis/typesystem/TypeEnvironment.h"
 #include "GraphUtils.h"
 #include "ast/AlgebraicDataType.h"
 #include "ast/AliasType.h"
@@ -26,7 +26,7 @@
 #include "ast/TranslationUnit.h"
 #include "ast/Type.h"
 #include "ast/UnionType.h"
-#include "ast/analysis/TypeSystem.h"
+#include "ast/analysis/typesystem/TypeSystem.h"
 #include "souffle/utility/MiscUtil.h"
 #include "souffle/utility/tinyformat.h"
 #include <algorithm>
