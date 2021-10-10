@@ -27,11 +27,9 @@
 #include <string>
 
 #ifndef _MSC_VER
-#include <io.h>
-#define STDERR_FILENO 2 /* Standard error output.  */
-#else
 #include <unistd.h>
 #else
+#include <io.h>
 #define STDERR_FILENO 2
 #endif
 
