@@ -167,8 +167,10 @@ bison_target(parser parser/parser.yy ${CMAKE_CURRENT_BINARY_DIR}/parser/parser.c
 add_flex_bison_dependency(scanner parser)
 
 # OSX compiler doesn't recognise `(void)var;` ideom
+if (NOT MSVC)
 set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/parser/scanner.cc PROPERTIES
              COMPILE_FLAGS "-Wno-error=unused-parameter")
+endif ()
 
 # --------------------------------------------------
 # Souffle library
@@ -199,6 +201,9 @@ set_target_properties(libsouffle PROPERTIES CXX_EXTENSIONS OFF)
 if (NOT MSVC)
 target_compile_options(libsouffle
                        PUBLIC "-Wall;-Wextra;-Werror;-fwrapv")
+else ()
+target_compile_options(libsouffle
+                       PUBLIC "")
 endif ()
 
 target_link_libraries(libsouffle PRIVATE Threads::Threads)

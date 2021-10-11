@@ -96,7 +96,7 @@ TEST(SymbolTable, Inserts) {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for (std::size_t j = 0; j < size; ++j) {
+        for (int j = 0; j < static_cast<int>(size); ++j) {
             // Guarantee uniqueness by appending something not in the character set
             // and then the index.
             X.encode(random_string() + "~" + std::to_string(j));
