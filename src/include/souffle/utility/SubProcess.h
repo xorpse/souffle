@@ -23,7 +23,10 @@
 #include <cstdlib>
 #include <optional>
 #include <type_traits>
-#ifndef _MSC_VER
+
+#ifdef _MSC_VER
+#include <windows.h>
+#else
 #include <sys/wait.h>
 #include <unistd.h>
 #endif
@@ -61,6 +64,7 @@ template <typename Envp = span<std::pair<char const*, char const*>>,
         typename = std::enable_if_t<is_iterable_of<Envp, std::pair<char const*, char const*> const>>>
 std::optional<detail::LinuxWaitStatus> execute(
         std::string const& program, span<char const* const> argv = {}, Envp&& envp = {}) {
+#ifndef _MSC_VER
     using EC = detail::LinuxExitCode;
 
     auto pid = ::fork();
@@ -105,6 +109,50 @@ std::optional<detail::LinuxWaitStatus> execute(
             return status;
         }
     }
+#else
+    STARTUPINFOW si;
+    PROCESS_INFORMATION pi;
+    DWORD exit_code = 0;
+
+    memset(&si, 0, sizeof(si));
+    si.cb = sizeof(si);
+    memset(&pi, 0, sizeof(pi));
+
+    std::size_t l;
+    std::wstring program_w(program.length(), L' ');
+    program_w.resize(::mbstowcs_s(&l, program_w.data(), program_w.size(), program.data(), program.size()));
+
+    std::wstring args_w;
+    args_w += program_w;
+    for (const auto& arg : argv) {
+        std::wstring arg_w(arg.size(), L' ');
+        arg_w.resize(::mbstowcs_s(&l, arg_w.data(), arg_w.size(), arg.data(), arg.size()));
+        args_w += (L' ' + std::wstring(arg));
+    }
+
+    std::string envir;
+    for (const auto& couple : envp) {
+        envir += couple.first + '=' + couple.second + '\0';
+    }
+    envir += '\0';
+
+    if (!CreateProcessW(
+                program_w.c_str(), args_w.data(), NULL, NULL, FALSE, 0, envir.data(), NULL, &si, &pi)) {
+        return {};
+    }
+
+    WaitForSingleObject(pi.hProcess, INFINITE);
+
+    if (!GetExitCodeProcess(pi.hProcess, &exit_code)) {
+        return {};
+    }
+
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+
+    return static_cast<int>(exit_code);
+
+#endif
 }
 
 /**

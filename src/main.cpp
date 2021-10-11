@@ -133,7 +133,7 @@ namespace souffle {
         auto escapeLdPath = [](auto&& xs) { return escape(xs, {':', ' '}, "\\"); };
         auto ld_path = toString(join(map(Global::config().getMany("library-dir"), escapeLdPath), ":"));
 #if defined(_MSC_VER)
-        SetEnvironmentVariable("TODO", ldPath.c_str());
+        SetEnvironmentVariable("TODO", ld_path.c_str());
 #elif defined(__APPLE__)
         env["DYLD_LIBRARY_PATH"] = ld_path;
 #else
