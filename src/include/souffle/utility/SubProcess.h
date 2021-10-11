@@ -23,8 +23,10 @@
 #include <cstdlib>
 #include <optional>
 #include <type_traits>
+#ifndef _MSC_VER
 #include <sys/wait.h>
 #include <unistd.h>
+#endif
 
 namespace souffle {
 

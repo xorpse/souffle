@@ -242,6 +242,7 @@ function(SOUFFLE_ADD_BINARY_TEST TEST_NAME CATEGORY)
     set(TARGET_NAME "test_${SHORT_TEST_NAME}")
 
     add_executable(${TARGET_NAME} ${TEST_NAME}.cpp)
+    set(CMAKE_CXX_STANDARD 17)
 
     if (PARAM_SOUFFLE_HEADERS_ONLY)
         get_target_property(SOUFFLE_COMPILE_EXTS libsouffle CXX_EXTENSIONS)
