@@ -562,7 +562,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
         void visit_(type_identity<Extend>, const Extend& extend, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << synthesiser.getRelationName(synthesiser.lookup(extend.getSourceRelation())) << "->"
-                << "extend("
+                << "extendAndInsert("
                 << "*" << synthesiser.getRelationName(synthesiser.lookup(extend.getTargetRelation()))
                 << ");\n";
             PRINT_END_COMMENT(out);

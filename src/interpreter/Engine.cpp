@@ -1253,8 +1253,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
         CASE(Extend)
             auto& src = *static_cast<EqrelRelation*>(getRelationHandle(shadow.getSourceId()).get());
             auto& trg = *static_cast<EqrelRelation*>(getRelationHandle(shadow.getTargetId()).get());
-            src.extend(trg);
-            trg.insert(src);
+            src.extendAndInsert(trg);
             return true;
         ESAC(Extend)
 

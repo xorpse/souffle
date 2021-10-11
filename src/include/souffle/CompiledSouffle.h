@@ -406,8 +406,8 @@ struct t_eqrel {
         RamDomain data[2] = {a1, a2};
         return insert(data);
     }
-    void extend(const t_eqrel& other) {
-        ind.extend(other.ind);
+    void extendAndInsert(t_eqrel& other) {
+        ind.extendAndInsert(other.ind);
     }
     bool contains(const t_tuple& t) const {
         return ind.contains(t[0], t[1]);

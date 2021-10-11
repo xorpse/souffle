@@ -449,15 +449,18 @@ public:
     using Index<2, Eqrel>::Index;
 
     /**
-     * Extend another index.
+     * Extend this relation with another index, expanding this index and
+     * inserting it into the other index.
      *
-     * Extend this index with another index, expanding this equivalence relation.
-     * The supplied relation is the old knowledge, whilst this relation only contains
-     * explicitly new knowledge. After this operation the "implicitly new tuples" are now
-     * explicitly inserted this relation.
+     * Merge and extend this index with another index, expanding this
+     * equivalence relation. The supplied relation is the old knowledge, whilst
+     * this relation only contains explicitly new knowledge. After this
+     * operation the "implicitly new tuples" are now explicitly inserted this
+     * relation, and all of the new tuples in this relation are inserted into
+     * the old relation.
      */
-    void extend(EqrelIndex* otherIndex) {
-        this->data.extend(otherIndex->data);
+    void extendAndInsert(EqrelIndex* otherIndex) {
+        this->data.extendAndInsert(otherIndex->data);
     }
 };
 

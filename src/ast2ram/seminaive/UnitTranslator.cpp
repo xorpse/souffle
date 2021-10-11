@@ -195,14 +195,14 @@ Own<ram::Statement> UnitTranslator::generateMergeRelations(
     }
 
     // Predicate - insert all values
+    if (rel->getRepresentation() == RelationRepresentation::EQREL) {
+        return mk<ram::Extend>(destRelation, srcRelation);
+    }
     for (std::size_t i = 0; i < rel->getArity(); i++) {
         values.push_back(mk<ram::TupleElement>(0, i));
     }
     auto insertion = mk<ram::Insert>(destRelation, std::move(values));
     auto stmt = mk<ram::Query>(mk<ram::Scan>(srcRelation, 0, std::move(insertion)));
-    if (rel->getRepresentation() == RelationRepresentation::EQREL) {
-        return mk<ram::Sequence>(mk<ram::Extend>(destRelation, srcRelation), std::move(stmt));
-    }
     return stmt;
 }
 

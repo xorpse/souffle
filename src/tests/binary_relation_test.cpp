@@ -253,7 +253,7 @@ TEST(EqRelTest, Extend) {
 
     // let's say br2 the new knowledge, so we must extend it to actually contain the implied knowledge from
     // new
-    br2.extend(br);
+    br2.extendAndInsert(br);
 
     // it should contain {0,1,2,3,4,5,6,8,9,33,99}, {44, 68, 69, 70}, {101, 102}
     // shouldn't contain {11}.
@@ -272,8 +272,9 @@ TEST(EqRelTest, Extend) {
     EXPECT_FALSE(br2.contains(0, 69));
     EXPECT_TRUE(br2.contains(101, 102));
 
-    // check this hasn't changed size
-    EXPECT_EQ(br.size(), (7 * 7) + (2 * 2) + (2 * 2) + (1 * 1));
+    // check that the new knowledge was inserted in the old relation
+    // br is {{0,1,2,3,4,5,6,8,9,33,99},{44,68,69,70},{101,102},{11}}
+    EXPECT_EQ(br.size(), (12 * 12) + (4 * 4) + (2 * 2) + (1 * 1));
     // check that it was properly extended
     EXPECT_EQ(br2.size(), (11 * 11) + (4 * 4) + (2 * 2));
 }
