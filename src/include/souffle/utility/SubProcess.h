@@ -125,14 +125,18 @@ std::optional<detail::LinuxWaitStatus> execute(
     std::wstring args_w;
     args_w += program_w;
     for (const auto& arg : argv) {
-        std::wstring arg_w(arg.size(), L' ');
-        arg_w.resize(::mbstowcs_s(&l, arg_w.data(), arg_w.size(), arg.data(), arg.size()));
-        args_w += (L' ' + std::wstring(arg));
+        std::string arg_s(arg);
+        std::wstring arg_w(arg_s.size(), L' ');
+        arg_w.resize(::mbstowcs_s(&l, arg_w.data(), arg_w.size(), arg_s.data(), arg_s.size()));
+        args_w += (L' ' + arg_w);
     }
 
     std::string envir;
     for (const auto& couple : envp) {
-        envir += couple.first + '=' + couple.second + '\0';
+        envir += couple.first;
+        envir += '=';
+        envir += couple.second;
+        envir += '\0';
     }
     envir += '\0';
 
@@ -177,10 +181,13 @@ std::optional<detail::LinuxWaitStatus> execute(
         return span<std::remove_pointer_t<decltype(dst)>>{dst, dst + src.size()};
     };
 
-    char const* argv_temp[argv.size()];
-    std::pair<char const*, char const*> envp_temp[envp.size()];
-    auto argv_ptr = go(argv_temp, argv, [](auto&& x) { return x.c_str(); });
-    auto envp_ptr = go(envp_temp, envp, [](auto&& kv) { return std::pair{kv.first, kv.second.c_str()}; });
+    std::unique_ptr<char const*[]> argv_temp = std::make_unique<char const*[]>(argv.size());
+    std::unique_ptr<std::pair<char const*, char const*>[]> envp_temp =
+            std::make_unique<std::pair<char const*, char const*>[]>(envp.size());
+    auto argv_ptr = go(argv_temp.get(), argv, [](auto&& x) { return x.c_str(); });
+    auto envp_ptr = go(envp_temp.get(), envp, [](auto&& kv) {
+        return std::pair{kv.first, kv.second.c_str()};
+    });
     return souffle::execute(program, argv_ptr, envp_ptr);
 }
 
