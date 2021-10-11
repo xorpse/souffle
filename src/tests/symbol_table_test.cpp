@@ -92,7 +92,7 @@ TEST(SymbolTable, Basics) {
 TEST(SymbolTable, Inserts) {
     for (int i = 0; i < RANDOM_TESTS; ++i) {
         SymbolTable X;
-        std::size_t size = random() % RANDOM_TEST_SIZE;
+        std::size_t size = rand() % RANDOM_TEST_SIZE;
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif

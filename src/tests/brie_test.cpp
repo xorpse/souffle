@@ -73,13 +73,14 @@ TEST(SparseArray, Basic) {
 
 TEST(SparseArray, Limits) {
     SparseArray<int> map;
+    using index_type = SparseArray<int>::index_type;
 
     map.update(std::numeric_limits<typename SparseArray<int>::index_type>::min(), 10);
     map.update(std::numeric_limits<typename SparseArray<int>::index_type>::max(), 20);
 
     map.dump();
 
-    std::vector<std::pair<uint32_t, int>> present;
+    std::vector<std::pair<index_type, int>> present;
     for (const auto& cur : map) {
         present.push_back(cur);
     }
@@ -89,8 +90,9 @@ TEST(SparseArray, Limits) {
 
 TEST(SparseArray, Iterator) {
     SparseArray<int> map;
+    using index_type = SparseArray<int>::index_type;
 
-    std::set<std::pair<int, int>> should;
+    std::set<std::pair<index_type, int>> should;
     should.insert(std::make_pair(14, 4));
     should.insert(std::make_pair(0, 1));
     should.insert(std::make_pair(4, 2));
@@ -102,7 +104,7 @@ TEST(SparseArray, Iterator) {
         map.update(cur.first, cur.second);
     }
 
-    std::set<std::pair<int, int>> is;
+    std::set<std::pair<index_type, int>> is;
     for (const auto& cur : map) {
         is.insert(cur);
     }
@@ -119,6 +121,7 @@ TEST(SparseArray, IteratorStress) {
     auto rnd = [&]() { return random(); };
 
     SparseArray<int> map;
+    using index_type = SparseArray<int>::index_type;
 
     std::vector<int> pos;
     while (pos.size() < N) {
@@ -128,7 +131,7 @@ TEST(SparseArray, IteratorStress) {
         }
     }
 
-    std::set<std::pair<int, int>> should;
+    std::set<std::pair<index_type, int>> should;
     for (int i = 0; i < N; i++) {
         should.insert(std::make_pair(pos[i], i + 1));
     }
@@ -138,7 +141,7 @@ TEST(SparseArray, IteratorStress) {
         ASSERT_TRUE(map[cur.first] == cur.second);
     }
 
-    std::set<std::pair<int, int>> is;
+    std::set<std::pair<index_type, int>> is;
     for (const auto& cur : map) {
         is.insert(cur);
     }
@@ -158,6 +161,7 @@ TEST(SparseArray, IteratorStress2) {
 
     for (unsigned j = 0; j < N; j++) {
         SparseArray<int> map;
+        using index_type = SparseArray<int>::index_type;
 
         if (log) std::cout << "Creating " << j << " random numbers ..\n";
         std::vector<int> pos;
@@ -169,7 +173,7 @@ TEST(SparseArray, IteratorStress2) {
         }
 
         if (log) std::cout << "Creating input list ..\n";
-        std::set<std::pair<int, int>> should;
+        std::set<std::pair<index_type, int>> should;
         for (unsigned i = 0; i < j; i++) {
             should.insert(std::make_pair(pos[i], i + 1));
         }
@@ -183,7 +187,7 @@ TEST(SparseArray, IteratorStress2) {
         if (log) std::cout << "Sort should list ..\n";
 
         if (log) std::cout << "Collect is list ..\n";
-        std::set<std::pair<int, int>> is;
+        std::set<std::pair<index_type, int>> is;
         unsigned i = 0;
         for (const auto& cur : map) {
             is.insert(cur);
@@ -280,13 +284,14 @@ TEST(SparseArray, Merge) {
 
     SparseArray<int> m1;
     SparseArray<int> m2;
+    using index_type = SparseArray<int>::index_type;
 
     m1.update(500, 2);
     m2.update(100, 1);
 
     m1.addAll(m2);
 
-    std::vector<std::pair<int, int>> data;
+    std::vector<std::pair<index_type, int>> data;
     for (const auto& it : m1) {
         data.push_back(it);
     }

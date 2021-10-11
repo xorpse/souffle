@@ -247,7 +247,7 @@ function(SOUFFLE_ADD_BINARY_TEST TEST_NAME CATEGORY)
         get_target_property(SOUFFLE_COMPILE_EXTS libsouffle CXX_EXTENSIONS)
         get_target_property(SOUFFLE_COMPILE_DEFS libsouffle INTERFACE_COMPILE_DEFINITIONS)
         get_target_property(SOUFFLE_COMPILE_FEAT libsouffle INTERFACE_COMPILE_FEATURES)
-        get_target_property(SOUFFLE_COMPILE_OPTS libsouffle INTERFACE_COMPILE_OPTIONS)
+        get_target_property(SOUFFLE_COMPILE_OPTS libsouffle COMPILE_OPTIONS)
         get_target_property(SOUFFLE_INCLUDE_DIRS libsouffle INTERFACE_INCLUDE_DIRECTORIES)
 
         set_target_properties(${TARGET_NAME} PROPERTIES CXX_EXTENSIONS SOUFFLE_COMPILE_EXTS)

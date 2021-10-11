@@ -118,6 +118,7 @@ public:
     std::vector<std::pair<FlyweightImpl<std::string>::index_type, std::string>> random_flyweight(
             FlyweightImpl<std::string>& flyweight, std::size_t min_size, std::size_t max_size) {
         assert(min_size < max_size);
+    assert(static_cast<std::size_t>(std::numeric_limits<int>::max()) >= max_size);
         std::vector<std::pair<FlyweightImpl<std::string>::index_type, std::string>> values;
         values.reserve(max_size);
 
@@ -139,7 +140,7 @@ public:
             srand(omp_get_thread_num());
 #pragma omp for
 #endif
-            for (std::size_t i = 0; i < max_size; ++i) {
+            for (int i = 0; i < static_cast<int>(max_size); ++i) {
                 const auto sel = rand() % 3;
                 if (sel == 0) {
                     add_new();
