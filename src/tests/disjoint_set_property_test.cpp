@@ -156,7 +156,7 @@ TEST(DjTest, MakeNode) {
         // parent should be itself
         EXPECT_EQ(n, ds.get(DisjointSet::b2p(n)));
 #ifndef _OPENMP
-        EXPECT_EQ(ds.size(), i + 1);
+        EXPECT_EQ(ds.size(), static_cast<std::size_t>(i + 1));
 #endif  // ifndef _OPENMP
     }
     EXPECT_EQ(ds.size(), RANDOM_TEST_SIZE);
