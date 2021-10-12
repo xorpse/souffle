@@ -85,7 +85,10 @@ TEST(SparseArray, Limits) {
         present.push_back(cur);
     }
 
-    EXPECT_EQ("[(0,10),(4294967295,20)]", toString(present));
+    std::vector<std::pair<index_type, int>> expected;
+    expected.emplace_back(std::numeric_limits<typename SparseArray<int>::index_type>::min(), 10);
+    expected.emplace_back(std::numeric_limits<typename SparseArray<int>::index_type>::max(), 20);
+    EXPECT_EQ(toString(expected), toString(present));
 }
 
 TEST(SparseArray, Iterator) {
