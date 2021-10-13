@@ -98,6 +98,7 @@ option(SOUFFLE_ENABLE_TESTING "Enable/Disable testing" ${SOUFFLE_ENABLE_TESTING_
 option(SOUFFLE_GENERATE_DOXYGEN "Generate Doxygen files (html;htmlhelp;man;rtf;xml;latex)" "")
 option(SOUFFLE_CODE_COVERAGE "Enable coverage reporting" OFF)
 option(SOUFFLE_BASH_COMPLETION "Enable/Disable bash completion" ON)
+option(SOUFFLE_ENABLE_PACKAGE "Enable/Disable package" ON)
 
 cmake_dependent_option(SOUFFLE_USE_LIBCPP "Link to libc++ instead of libstdc++" ON
     "CMAKE_CXX_COMPILER_ID STREQUAL Clang" OFF)
@@ -334,7 +335,9 @@ IF (SOUFFLE_BASH_COMPLETION)
         RENAME "souffle"
     )
 endif()
- 
+
+
+IF (SOUFFLE_ENABLE_PACKAGE)
 
 # --------------------------------------------------
 # Utility function to help us distinguish between Linux distros when packaging
@@ -413,3 +416,5 @@ endif()
 
 
 INCLUDE(CPack)
+
+endif()
