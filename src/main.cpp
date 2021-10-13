@@ -20,7 +20,7 @@
 #include "ast/TranslationUnit.h"
 #include "ast/analysis/PrecedenceGraph.h"
 #include "ast/analysis/SCCGraph.h"
-#include "ast/analysis/Type.h"
+#include "ast/analysis/typesystem/Type.h"
 #include "ast/transform/AddNullariesToAtomlessAggregates.h"
 #include "ast/transform/ComponentChecker.h"
 #include "ast/transform/ComponentInstantiation.h"

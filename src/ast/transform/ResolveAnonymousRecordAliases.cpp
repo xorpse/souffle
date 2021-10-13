@@ -25,8 +25,8 @@
 #include "ast/UnnamedVariable.h"
 #include "ast/Variable.h"
 #include "ast/analysis/Ground.h"
-#include "ast/analysis/Type.h"
-#include "ast/analysis/TypeSystem.h"
+#include "ast/analysis/typesystem/Type.h"
+#include "ast/analysis/typesystem/TypeSystem.h"
 #include "souffle/BinaryConstraintOps.h"
 #include "souffle/utility/MiscUtil.h"
 #include <map>

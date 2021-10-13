@@ -31,11 +31,11 @@
 #include "ast/IntrinsicFunctor.h"
 #include "ast/QualifiedName.h"
 #include "ast/analysis/Functor.h"
-#include "ast/analysis/PolymorphicObjects.h"
-#include "ast/analysis/SumTypeBranches.h"
-#include "ast/analysis/Type.h"
-#include "ast/analysis/TypeEnvironment.h"
-#include "ast/analysis/TypeSystem.h"
+#include "ast/analysis/typesystem/PolymorphicObjects.h"
+#include "ast/analysis/typesystem/SumTypeBranches.h"
+#include "ast/analysis/typesystem/Type.h"
+#include "ast/analysis/typesystem/TypeEnvironment.h"
+#include "ast/analysis/typesystem/TypeSystem.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
 #include "reports/ErrorReport.h"
@@ -426,17 +426,18 @@ void TypeCheckerImpl::visit_(type_identity<NumericConstant>, const NumericConsta
 
     switch (polyAnalysis.getInferredType(constant)) {
         case NumericConstant::Type::Int:
-            if (!isOfKind(types, TypeAttribute::Signed)) {
+            if (!isOfKind(types, TypeAttribute::Signed) || !canBeParsedAsRamSigned(constant.getConstant())) {
                 report.addError("Number constant (type mismatch)", constant.getSrcLoc());
             }
             break;
         case NumericConstant::Type::Uint:
-            if (!isOfKind(types, TypeAttribute::Unsigned)) {
+            if (!isOfKind(types, TypeAttribute::Unsigned) ||
+                    !canBeParsedAsRamUnsigned(constant.getConstant())) {
                 report.addError("Unsigned constant (type mismatch)", constant.getSrcLoc());
             }
             break;
         case NumericConstant::Type::Float:
-            if (!isOfKind(types, TypeAttribute::Float)) {
+            if (!isOfKind(types, TypeAttribute::Float) || !canBeParsedAsRamFloat(constant.getConstant())) {
                 report.addError("Float constant (type mismatch)", constant.getSrcLoc());
             }
             break;
