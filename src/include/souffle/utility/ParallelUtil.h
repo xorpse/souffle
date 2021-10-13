@@ -44,6 +44,10 @@ constexpr std::size_t hardware_destructive_interference_size = 2 * sizeof(max_al
 
 #ifdef __APPLE__
 #define pthread_yield pthread_yield_np
+#elif !defined(_MSC_VER)
+#include <sched.h>
+// pthread_yield is deprecated and should be replaced by sched_yield
+#define pthread_yield sched_yield
 #endif
 
 // support for a parallel region
