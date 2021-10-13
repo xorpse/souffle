@@ -169,7 +169,7 @@ TEST(Flyweight, IteratorEmptyBeginEnd) {
     EXPECT_EQ(flyweight.begin(), flyweight.begin());
     EXPECT_EQ(flyweight.end(), flyweight.end());
     EXPECT_EQ(flyweight.begin()++, flyweight.end());
-    for (const auto val : flyweight) {
+    for (const auto& val : flyweight) {
         testutil::ignore(val);
         EXPECT_TRUE(false);
     }
