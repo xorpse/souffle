@@ -40,8 +40,11 @@ public:
 
     void run(const TranslationUnit& translationUnit) override;
 
-    /** Output precedence graph in graphviz format to a given stream */
+    /** Output precedence graph in text format to a given stream */
     void print(std::ostream& os) const override;
+
+    /** Output precedence graph in graphviz format to a given stream */
+    void printHTML(std::ostream& os) const;
 
     const Graph<const Relation*, NameComparison>& graph() const {
         return backingGraph;
@@ -50,6 +53,9 @@ public:
 private:
     /** Adjacency list of precedence graph (determined by the dependencies of the relations) */
     Graph<const Relation*, NameComparison> backingGraph;
+
+    /** Output precedence graph in text format to a given stringstream */
+    void printRaw(std::stringstream& ss) const;
 };
 
 }  // namespace analysis

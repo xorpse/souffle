@@ -34,8 +34,8 @@
 #include "ast/TranslationUnit.h"
 #include "ast/analysis/Functor.h"
 #include "ast/analysis/RelationDetailCache.h"
-#include "ast/analysis/Type.h"
-#include "ast/analysis/TypeSystem.h"
+#include "ast/analysis/typesystem/Type.h"
+#include "ast/analysis/typesystem/TypeSystem.h"
 
 #include "ast/utility/Visitor.h"
 #include "souffle/BinaryConstraintOps.h"

@@ -31,11 +31,11 @@
 #include "ast/IntrinsicFunctor.h"
 #include "ast/QualifiedName.h"
 #include "ast/analysis/Functor.h"
-#include "ast/analysis/PolymorphicObjects.h"
-#include "ast/analysis/SumTypeBranches.h"
-#include "ast/analysis/Type.h"
-#include "ast/analysis/TypeEnvironment.h"
-#include "ast/analysis/TypeSystem.h"
+#include "ast/analysis/typesystem/PolymorphicObjects.h"
+#include "ast/analysis/typesystem/SumTypeBranches.h"
+#include "ast/analysis/typesystem/Type.h"
+#include "ast/analysis/typesystem/TypeEnvironment.h"
+#include "ast/analysis/typesystem/TypeSystem.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
 #include "reports/ErrorReport.h"
@@ -76,7 +76,6 @@ public:
 
     /** Analyse types, clause by clause */
     void run() {
-        const Program& program = tu.getProgram();
         for (auto const* clause : program.getClauses()) {
             visit(*clause, *this);
         }
@@ -112,7 +111,6 @@ private:
     ErrorReport& report = tu.getErrorReport();
     const TypeAnalysis& typeAnalysis = tu.getAnalysis<TypeAnalysis>();
     const TypeEnvironment& typeEnv = tu.getAnalysis<TypeEnvironmentAnalysis>().getTypeEnvironment();
-    const FunctorAnalysis& functorAnalysis = tu.getAnalysis<FunctorAnalysis>();
     const PolymorphicObjectsAnalysis& polyAnalysis = tu.getAnalysis<PolymorphicObjectsAnalysis>();
     const SumTypeBranchesAnalysis& sumTypesBranches = tu.getAnalysis<SumTypeBranchesAnalysis>();
 
@@ -428,17 +426,18 @@ void TypeCheckerImpl::visit_(type_identity<NumericConstant>, const NumericConsta
 
     switch (polyAnalysis.getInferredType(constant)) {
         case NumericConstant::Type::Int:
-            if (!isOfKind(types, TypeAttribute::Signed)) {
+            if (!isOfKind(types, TypeAttribute::Signed) || !canBeParsedAsRamSigned(constant.getConstant())) {
                 report.addError("Number constant (type mismatch)", constant.getSrcLoc());
             }
             break;
         case NumericConstant::Type::Uint:
-            if (!isOfKind(types, TypeAttribute::Unsigned)) {
+            if (!isOfKind(types, TypeAttribute::Unsigned) ||
+                    !canBeParsedAsRamUnsigned(constant.getConstant())) {
                 report.addError("Unsigned constant (type mismatch)", constant.getSrcLoc());
             }
             break;
         case NumericConstant::Type::Float:
-            if (!isOfKind(types, TypeAttribute::Float)) {
+            if (!isOfKind(types, TypeAttribute::Float) || !canBeParsedAsRamFloat(constant.getConstant())) {
                 report.addError("Float constant (type mismatch)", constant.getSrcLoc());
             }
             break;
@@ -561,7 +560,7 @@ void TypeCheckerImpl::visit_(type_identity<UserDefinedFunctor>, const UserDefine
         return;
     }
 
-    Type const& returnType = functorAnalysis.getReturnType(fun);
+    Type const& returnType = typeAnalysis.getFunctorReturnType(fun);
 
     if (resultTypes.isAll() || resultTypes.size() != 1) {
         std::ostringstream out;
@@ -600,7 +599,7 @@ void TypeCheckerImpl::visit_(type_identity<UserDefinedFunctor>, const UserDefine
 
     for (std::size_t ii = 0; ii < toCheck; ++ii) {
         auto const& arg = args[ii];
-        Type const& paramType = functorAnalysis.getParamType(fun, ii);
+        Type const& paramType = typeAnalysis.getFunctorParamType(fun, ii);
         TypeSet const& argTypes = typeAnalysis.getTypes(arg);
 
         if (argTypes.isAll() || argTypes.size() != 1) {

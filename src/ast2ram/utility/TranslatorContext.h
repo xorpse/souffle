@@ -17,6 +17,7 @@
 #include "AggregateOp.h"
 #include "FunctorOps.h"
 #include "ast/NumericConstant.h"
+#include "ast/analysis/typesystem/Type.h"
 #include "souffle/BinaryConstraintOps.h"
 #include "souffle/TypeAttribute.h"
 #include "souffle/utility/ContainerUtil.h"
@@ -135,6 +136,7 @@ private:
     const ast::analysis::RelationDetailCacheAnalysis* relationDetail;
     const ast::analysis::FunctorAnalysis* functorAnalysis;
     const ast::analysis::IOTypeAnalysis* ioType;
+    const ast::analysis::TypeAnalysis* typeAnalysis;
     const ast::analysis::TypeEnvironment* typeEnv;
     const ast::analysis::SumTypeBranchesAnalysis* sumTypeBranches;
     const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis;

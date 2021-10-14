@@ -260,22 +260,10 @@ TEST(DjTest, Scoping) {
     souffle::DisjointSet ds;
 }
 
-TEST(DjTest, MakeNode) {
+// A newly-created disjoint set has size 0.
+TEST(DjTest, SizeZero) {
     souffle::DisjointSet ds;
     EXPECT_EQ(ds.size(), 0);
-    souffle::block_t n = ds.makeNode();
-    // parent should be itself
-    EXPECT_EQ(DisjointSet::b2p(n), 0);
-    // rank should be 0
-    EXPECT_EQ(DisjointSet::b2r(n), 0);
-    EXPECT_EQ(ds.size(), 1);
-
-    souffle::block_t n2 = ds.makeNode();
-    // parent should be itself
-    EXPECT_EQ(DisjointSet::b2p(n2), 1);
-    // rank should be 0
-    EXPECT_EQ(DisjointSet::b2r(n2), 0);
-    EXPECT_EQ(ds.size(), 2);
 }
 
 TEST(DjTest, TestUnion) {
@@ -310,21 +298,6 @@ TEST(DjTest, TestUnion) {
 
     // size shouldn't change
     EXPECT_EQ(ds.size(), 5);
-}
-
-TEST(DjTest, Clear) {
-    souffle::DisjointSet ds;
-
-    ds.clear();
-    EXPECT_EQ(ds.size(), 0);
-
-    // get ready 2 double free y'all
-    for (std::size_t i = 0; i < 10000; ++i) {
-        ds.makeNode();
-    }
-    ds.unionNodes(1, 2);
-    ds.clear();
-    ds.clear();
 }
 
 #ifdef _OPENMP

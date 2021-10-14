@@ -202,8 +202,11 @@ public:
         return true;
     }
 
-    /** Print the SCC graph. */
+    /** Print the SCC graph in text format. */
     void print(std::ostream& os) const override;
+
+    /** Print the SCC graph in HTML format. */
+    void printHTML(std::ostream& os) const;
 
 private:
     PrecedenceGraphAnalysis* precedenceGraph = nullptr;
@@ -225,6 +228,9 @@ private:
             std::stack<const Relation*>& S, std::stack<const Relation*>& P, std::size_t& numSCCs);
 
     IOTypeAnalysis* ioType = nullptr;
+
+    /** Print the SCC graph to a string. */
+    void printRaw(std::stringstream& ss) const;
 };
 
 }  // namespace analysis

@@ -20,7 +20,7 @@
 #include "ast/TranslationUnit.h"
 #include "ast/analysis/PrecedenceGraph.h"
 #include "ast/analysis/SCCGraph.h"
-#include "ast/analysis/Type.h"
+#include "ast/analysis/typesystem/Type.h"
 #include "ast/transform/AddNullariesToAtomlessAggregates.h"
 #include "ast/transform/ComponentChecker.h"
 #include "ast/transform/ComponentInstantiation.h"
@@ -257,7 +257,9 @@ int main(int argc, char** argv) {
                         "\tinitial-ram\n"
                         "\tparse-errors\n"
                         "\tprecedence-graph\n"
+                        "\tprecedence-graph-text\n"
                         "\tscc-graph\n"
+                        "\tscc-graph-text\n"
                         "\ttransformed-ast\n"
                         "\ttransformed-ram\n"
                         "\ttype-analysis"},
@@ -570,12 +572,24 @@ int main(int argc, char** argv) {
 
     // Output the precedence graph in graphviz dot format
     if (hasShowOpt("precedence-graph")) {
+        astTranslationUnit->getAnalysis<ast::analysis::PrecedenceGraphAnalysis>().printHTML(std::cout);
+        std::cout << std::endl;
+    }
+
+    // Output the precedence graph in text format
+    if (hasShowOpt("precedence-graph-text")) {
         astTranslationUnit->getAnalysis<ast::analysis::PrecedenceGraphAnalysis>().print(std::cout);
         std::cout << std::endl;
     }
 
     // Output the scc graph in graphviz dot format
     if (hasShowOpt("scc-graph")) {
+        astTranslationUnit->getAnalysis<ast::analysis::SCCGraphAnalysis>().printHTML(std::cout);
+        std::cout << std::endl;
+    }
+
+    // Output the scc graph in text format
+    if (hasShowOpt("scc-graph-text")) {
         astTranslationUnit->getAnalysis<ast::analysis::SCCGraphAnalysis>().print(std::cout);
         std::cout << std::endl;
     }

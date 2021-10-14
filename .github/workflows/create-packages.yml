@@ -4,105 +4,129 @@ on:
     types: [published]
 
 jobs:
-  Package-Ubuntu-2104-64bit:
+  CPack-Package-Build:
     strategy:
       fail-fast: false
+      matrix:
+        include:
+          - release: ubuntu-2004
+            extension: ".deb"
+            OS-name: "ubuntu/focal"
+          - release: ubuntu-2010
+            extension: ".deb"
+            OS-name: "ubuntu/groovy"
+          - release: ubuntu-2104
+            extension: ".deb"
+            OS-name: "ubuntu/hirsute"
+          - release: centos-8
+            extension: ".rpm"
+            OS-name: "el/8"
+          - release: fedora-34
+            extension: ".rpm"
+            OS-name: "fedora/34"
+          # build issue on fedora 35
+          # - release: fedora-35
+          #   extension: ".rpm"
+          #   OS-name: "fedora/35"
 
     runs-on: ubuntu-latest
     steps:
-      # To use this repository's private action, check out the repository
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Package souffle
-        # Private action is stored in the following directory
-        uses: ./.github/actions/create-package/ubuntu/21.04/64bit/
+
+      - name: Packagecloud CLI
+        run: sudo apt-get -y install ruby-full && sudo gem install package_cloud
+
+      - name: Build Container
+        run: docker build . -f ./.github/images/${{ matrix.release }}/Dockerfile  -t package_builder
+
+      - name: Packaging
+        run: docker run -e DOMAIN_SIZE="64bit" --name container -t package_builder 
+
+      - name: Extract
+        id: extract_pkg
+        run: |-
+          docker cp container:/souffle/build/ . &&
+          cd build &&
+          echo "::set-output name=pkg_name::$(ls *${{ matrix.extension }} | head -n1)"
+          echo "::set-output name=artifact_name::x86_64-${{ matrix.release }}-$(ls *${{ matrix.extension }} | head -n1)"
+
+      - name: Naming Artifact
+        run: cp build/${{ steps.extract_pkg.outputs.pkg_name }} build/${{ steps.extract_pkg.outputs.artifact_name }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
         with:
-          package_cloud_api_key: ${{ secrets.PACKAGECLOUD_TOKEN }}
-
-  Package-Ubuntu-2004-64bit:
-    strategy:
-      fail-fast: false
-
+          name: ${{ steps.extract_pkg.outputs.artifact_name }}
+          path: build/${{ steps.extract_pkg.outputs.artifact_name }}
+      
+      - name: Packaging
+        run: |-
+          cd build && 
+          PACKAGECLOUD_TOKEN=${{ secrets.PACKAGECLOUD_TOKEN }} 
+          package_cloud push souffle-lang/souffle/${{ matrix.OS-name }} 
+          ${{ steps.extract_pkg.outputs.pkg_name }}
+      
+  Arch-Package-Build:
     runs-on: ubuntu-latest
     steps:
-      # To use this repository's private action, check out the repository
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Package souffle
-        # Private action is stored in the following directory
-        uses: ./.github/actions/create-package/ubuntu/20.04/64bit/
-        with:
-          package_cloud_api_key: ${{ secrets.PACKAGECLOUD_TOKEN }}
 
-  Package-Ubuntu-2010-64bit:
-    strategy:
-      fail-fast: false
+      - name: Prepare
+        id: prepare
+        run: |-
+          echo "::set-output name=release_tag::$(git describe --tags --always | sed "s/-.*$//")"
+
+      - name: Build Container
+        run: docker build ./.github/images/arch-linux/ -t package_builder
+
+      - name: Packaging
+        run: >
+          docker run 
+          -e RELEASE_TAG=${{ steps.prepare.outputs.release_tag }} 
+          --name container
+          -t package_builder
+
+      - name: Setup Credentials
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+           ssh-private-key: ${{ secrets.AUR_PRIVATE_KEY }}
+
+      - name: Upload
+        run: |-
+          git clone ssh://aur@aur.archlinux.org/souffle.git && 
+          cd souffle && 
+          docker cp container:/home/builduser/PKGBUILD . && 
+          docker cp container:/home/builduser/.SRCINFO . && 
+          git add PKGBUILD .SRCINFO &&
+          git commit -m "release version ${{ steps.prepare.outputs.release_tag }}" &&
+          git push
+
+
+  Upload-Release-Assests:
+    needs: CPack-Package-Build
 
     runs-on: ubuntu-latest
     steps:
-      # To use this repository's private action, check out the repository
-      - name: Checkout
-        uses: actions/checkout@v2
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v2
         with:
-          fetch-depth: 0
-      - name: Package souffle
-        # Private action is stored in the following directory
-        uses: ./.github/actions/create-package/ubuntu/20.10/64bit/
+          path: ./downloads
+
+      - name: Create Checksum
+        run: |-
+          mkdir result && 
+          mv downloads/*/* result/ &&
+          cd result && 
+          sha512sum * > sha512sum.txt
+
+      - name: Upload Release Assests
+        uses: softprops/action-gh-release@v1
         with:
-          package_cloud_api_key: ${{ secrets.PACKAGECLOUD_TOKEN }}
-
-
-#  Package-Fedora-34-64bit:
-#    strategy:
-#      fail-fast: false
-#
-#    runs-on: ubuntu-latest
-#    steps:
-#      # To use this repository's private action, check out the repository
-#      - name: Checkout
-#        uses: actions/checkout@v2
-#        with:
-#          fetch-depth: 0
-#      - name: Package souffle
-#        # Private action is stored in the following directory
-#        uses: ./.github/actions/create-package/fedora/34/64bit/
-#        with:
-#          package_cloud_api_key: ${{ secrets.PACKAGECLOUD_TOKEN }}
-
-#   Package-Ubuntu-1804-64bit:
-#     strategy:
-#       fail-fast: false
-#
-#     runs-on: ubuntu-latest
-#     steps:
-#       # to use this repository's private action, check out the repository
-#       - name: checkout
-#         uses: actions/checkout@v2
-#
-#       - name: package souffle
-#         # private action is stored in the following directory
-#         uses: ./.github/actions/create-package/ubuntu/18.04/64bit/
-#         with:
-#           package_cloud_api_key: ${{ secrets.packagecloud_token }}
-#
-#   Package-Ubuntu-1804-32bit:
-#     strategy:
-#       fail-fast: false
-#
-#     runs-on: ubuntu-latest
-#     steps:
-#       # to use this repository's private action, check out the repository
-#       - name: checkout
-#         uses: actions/checkout@v2
-#
-#       - name: package souffle
-#         # private action is stored in the following directory
-#         uses: ./.github/actions/create-package/ubuntu/18.04/32bit/
-#         with:
-#           package_cloud_api_key: ${{ secrets.packagecloud_token }}
-#
-#
+          files: |
+            result/*

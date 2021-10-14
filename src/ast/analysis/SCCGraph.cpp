@@ -114,9 +114,8 @@ void SCCGraphAnalysis::scR(const Relation* w, std::map<const Relation*, std::siz
     numSCCs++;
 }
 
-void SCCGraphAnalysis::print(std::ostream& os) const {
+void SCCGraphAnalysis::printRaw(std::stringstream& ss) const {
     const std::string& name = Global::config().get("name");
-    std::stringstream ss;
     /* Print SCC graph */
     ss << "digraph {" << std::endl;
     /* Print nodes of SCC graph */
@@ -132,6 +131,17 @@ void SCCGraphAnalysis::print(std::ostream& os) const {
         }
     }
     ss << "}";
+}
+
+void SCCGraphAnalysis::print(std::ostream& os) const {
+    std::stringstream ss;
+    printRaw(ss);
+    os << ss.str();
+}
+
+void SCCGraphAnalysis::printHTML(std::ostream& os) const {
+    std::stringstream ss;
+    printRaw(ss);
     printHTMLGraph(os, ss.str(), getName());
 }
 
