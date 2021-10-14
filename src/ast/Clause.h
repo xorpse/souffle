@@ -20,6 +20,7 @@
 #include "ast/ExecutionPlan.h"
 #include "ast/Literal.h"
 #include "ast/Node.h"
+#include "ast/QualifiedName.h"
 #include "parser/SrcLocation.h"
 #include <iosfwd>
 #include <vector>
@@ -36,17 +37,14 @@ namespace souffle::ast {
  */
 class Clause : public Node {
 public:
-    Clause(Own<Atom> head, VecOwn<Literal> bodyLiterals, bool isLeq = false, Own<ExecutionPlan> plan = {},
-            SrcLocation loc = {});
+    Clause(Own<Atom> head, VecOwn<Literal> bodyLiterals, Own<ExecutionPlan> plan = {}, SrcLocation loc = {});
 
-    Clause(Own<Atom> head, bool isLeq = false, SrcLocation loc = {});
+    Clause(Own<Atom> head, SrcLocation loc = {});
 
-    Clause(QualifiedName name, bool isLeq = false, SrcLocation loc = {});
+    Clause(QualifiedName name, SrcLocation loc = {});
 
     /** Add a literal to the body of the clause */
     void addToBody(Own<Literal> literal);
-
-    void addToBodyFront(Own<Literal> literal);
 
     /** Add a collection of literals to the body of the clause */
     void addToBody(VecOwn<Literal>&& literals);
@@ -56,12 +54,6 @@ public:
 
     /** Set the bodyLiterals of clause to @p body */
     void setBodyLiterals(VecOwn<Literal> body);
-
-    void setIsLeq(bool b);
-
-    bool isLeq() const {
-        return leq;
-    }
 
     /** Return the atom that represents the head of the clause */
     Atom* getHead() const {
@@ -91,12 +83,11 @@ protected:
 
     NodeVec getChildren() const override;
 
-private:
     bool equal(const Node& node) const override;
 
     Clause* cloning() const override;
 
-private:
+protected:
     /** Head of the clause */
     Own<Atom> head;
 
@@ -105,8 +96,6 @@ private:
 
     /** User defined execution plan (if not defined, plan is null) */
     Own<ExecutionPlan> plan;
-
-    bool leq;
 };
 
 }  // namespace souffle::ast

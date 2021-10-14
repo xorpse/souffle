@@ -19,6 +19,7 @@
 #include "ast/Directive.h"
 #include "ast/QualifiedName.h"
 #include "ast/TranslationUnit.h"
+#include "ast/SubsumptiveClause.h"
 #include "ast/analysis/Functor.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/RecursiveClauses.h"
@@ -157,7 +158,7 @@ std::vector<ast::Clause*> TranslatorContext::getClauses(const ast::QualifiedName
 
 bool TranslatorContext::hasLeq(const ast::QualifiedName& name) const {
     for (const auto* clause : getClauses(name)) {
-        if (clause->isLeq()) {
+        if (isA<ast::SubsumptiveClause>(clause)) {
             return true;
         }
     }

@@ -16,6 +16,7 @@
 #include "Global.h"
 #include "LogStatement.h"
 #include "ast/Clause.h"
+#include "ast/SubsumptiveClause.h"
 #include "ast/Directive.h"
 #include "ast/Relation.h"
 #include "ast/TranslationUnit.h"
@@ -263,7 +264,7 @@ Own<ram::Statement> UnitTranslator::translateRecursiveClauses(
         if (!context->isRecursiveClause(clause)) {
             continue;
         }
-        if (clause->isLeq()) {
+        if (isA<ast::SubsumptiveClause>(clause)) {
             appendStmt(leq_result, context->translateRecursiveClause(*clause, scc, 0));
             appendStmt(leq_result, context->translateRecursiveClause(*clause, scc, 1));
             if (rel->getRepresentation() == RelationRepresentation::BTREE_DELETE) {

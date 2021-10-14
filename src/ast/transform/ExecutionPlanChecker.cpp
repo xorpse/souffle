@@ -17,6 +17,7 @@
 #include "ast/transform/ExecutionPlanChecker.h"
 #include "ast/Atom.h"
 #include "ast/Clause.h"
+#include "ast/SubsumptiveClause.h"
 #include "ast/ExecutionOrder.h"
 #include "ast/ExecutionPlan.h"
 #include "ast/Relation.h"
@@ -50,7 +51,7 @@ bool ExecutionPlanChecker::transform(TranslationUnit& translationUnit) {
                 if (clause->getExecutionPlan() == nullptr) {
                     continue;
                 }
-                if (clause->isLeq()) {
+                if (isA<SubsumptiveClause>(clause)) {
                     continue;
                 }
                 int version = 0;

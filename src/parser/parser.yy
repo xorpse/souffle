@@ -65,6 +65,7 @@
     #include "ast/Relation.h"
     #include "ast/StringConstant.h"
     #include "ast/SubsetType.h"
+    #include "ast/SubsumptiveClause.h"
     #include "ast/AliasType.h"
     #include "ast/AlgebraicDataType.h"
     #include "ast/BranchType.h"
@@ -661,7 +662,7 @@ dependency_list
 fact
   : atom DOT
     {
-      $$ = mk<ast::Clause>($atom, Mov<VecOwn<ast::Literal>> {}, false, nullptr, @$);
+      $$ = mk<ast::Clause>($atom, Mov<VecOwn<ast::Literal>> {}, nullptr, @$);
     }
   ;
 
@@ -705,28 +706,29 @@ rule_def
  * LEQ Rule Definition
  */
 leq_rule
-  : LEQ atom[less] LE atom[greater] IF body DOT {
-        auto bodies = $body->toClauseBodies();
-        Own<ast::Atom> gt = std::move($greater);
-        Own<ast::Atom> lt = std::move($less);
-        for (auto&& body : bodies) {
-            auto cur = clone(body);
-            auto literals = cur->getBodyLiterals();
-            cur->setHead(clone(lt));
-            cur->addToBodyFront(clone(gt));
-            cur->addToBodyFront(clone(lt));
-            cur->setIsLeq(true);
-            cur->setSrcLoc(@$);
-            std::vector<unsigned int> o;
-            o.push_back(2);
-            o.push_back(1);
-            auto order = mk<ast::ExecutionOrder>(o);
-            auto plan = mk<ast::ExecutionPlan>();
-            plan->setOrderFor(2, std::move(order));
-            cur->setExecutionPlan(std::move(plan));
+  : LEQ atom[less] LE atom[greater] IF body DOT 
+    {
+      auto bodies = $body->toClauseBodies();
+      Own<ast::Atom> gt = std::move($greater);
+      Own<ast::Atom> lt = std::move($less);
+      for (auto&& body : bodies) {
+        auto cur = mk<ast::SubsumptiveClause>(clone(lt)); 
+        cur->setBodyLiterals(clone(body->getBodyLiterals()));
+        auto literals = cur->getBodyLiterals();
+        cur->setHead(clone(lt));
+        cur->addToBodyFront(clone(gt));
+        cur->addToBodyFront(clone(lt));
+        cur->setSrcLoc(@$);
+        std::vector<unsigned int> o;
+        o.push_back(2);
+        o.push_back(1);
+        auto order = mk<ast::ExecutionOrder>(o);
+        auto plan = mk<ast::ExecutionPlan>();
+        plan->setOrderFor(2, std::move(order));
+        cur->setExecutionPlan(std::move(plan));
 
-            $$.push_back(std::move(cur));
-        }
+        $$.push_back(std::move(cur));
+      }
     }
 
 

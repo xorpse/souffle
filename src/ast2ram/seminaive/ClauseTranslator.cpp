@@ -20,6 +20,7 @@
 #include "ast/Aggregator.h"
 #include "ast/BranchInit.h"
 #include "ast/Clause.h"
+#include "ast/SubsumptiveClause.h"
 #include "ast/Constant.h"
 #include "ast/IntrinsicFunctor.h"
 #include "ast/NilConstant.h"
@@ -137,7 +138,7 @@ std::string ClauseTranslator::getClauseAtomName(const ast::Clause& clause, const
     if (!isRecursive()) {
         return getConcreteRelationName(atom->getQualifiedName());
     }
-    if (clause.isLeq()) {
+    if (isA<ast::SubsumptiveClause>(clause)) {
         if (clause.getHead() == atom) {
             if (version == 2) {
                 return getToEraseRelationName(atom->getQualifiedName());
@@ -536,7 +537,7 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
         }
     }
 
-    if (clause.isLeq()) {
+    if (isA<ast::SubsumptiveClause>(clause)) {
         if (version == 1) {
             op = addDistinct(std::move(op), sccAtoms.at(0), sccAtoms.at(1));
         }
