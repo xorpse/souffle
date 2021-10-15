@@ -101,7 +101,7 @@ public:
     }
 
     /* Support for the pointer operator. */
-    auto operator-> () const {
+    auto operator->() const {
         return &**this;
     }
 

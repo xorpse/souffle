@@ -76,8 +76,8 @@ public:
         plan = nullptr;
     }
 
-    /** Clones the head/source location/plan of a clause without the body */ 
-    virtual Clause* cloneHead() const; 
+    /** Clones the head/source location/plan of a clause without the body */
+    virtual Clause* cloneHead() const;
 
     void apply(const NodeMapper& map) override;
 
