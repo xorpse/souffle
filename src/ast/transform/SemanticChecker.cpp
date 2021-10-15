@@ -46,6 +46,7 @@
 #include "ast/RecordInit.h"
 #include "ast/Relation.h"
 #include "ast/StringConstant.h"
+#include "ast/SubsumptiveClause.h"
 #include "ast/Term.h"
 #include "ast/TranslationUnit.h"
 #include "ast/Type.h"
@@ -594,6 +595,7 @@ void SemanticCheckerImpl::checkRelationFunctionalDependencies(const Relation& re
 }
 
 void SemanticCheckerImpl::checkRelation(const Relation& relation) {
+    // Check signature of equivalence relations
     if (relation.getRepresentation() == RelationRepresentation::EQREL) {
         if (relation.getArity() == 2) {
             const auto& attributes = relation.getAttributes();
@@ -608,6 +610,24 @@ void SemanticCheckerImpl::checkRelation(const Relation& relation) {
                     "Equivalence relation " + toString(relation.getQualifiedName()) + " is not binary",
                     relation.getSrcLoc());
         }
+    }
+
+    // check subsumption relations
+    bool hasSubsumptiveRule = false;
+    visit(program, [&](const Clause& clause) {
+        if (isA<SubsumptiveClause>(clause) &&
+                clause.getHead()->getQualifiedName() == relation.getQualifiedName()) {
+            hasSubsumptiveRule = true;
+        }
+    });
+    if (relation.getRepresentation() == RelationRepresentation::BTREE_DELETE && !hasSubsumptiveRule) {
+        report.addWarning("No subsumptive rule for relation " + toString(relation.getQualifiedName()),
+                relation.getSrcLoc());
+    } else if (relation.getRepresentation() != RelationRepresentation::BTREE_DELETE && hasSubsumptiveRule) {
+        report.addError("Relation \"" + toString(relation.getQualifiedName()) +
+                                "\" has one or more subsumptive rules and relational representation "
+                                "\"btree_delete\" is missing",
+                relation.getSrcLoc());
     }
 
     // start with declaration
