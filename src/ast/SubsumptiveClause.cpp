@@ -19,11 +19,9 @@ namespace souffle::ast {
 
 SubsumptiveClause::SubsumptiveClause(
         Own<Atom> head, VecOwn<Literal> bodyLiterals, Own<ExecutionPlan> plan, SrcLocation loc)
-        : Clause(std::move(head), std::move(bodyLiterals),
-          std::move(plan), std::move(loc)) {
-}
+        : Clause(std::move(head), std::move(bodyLiterals), std::move(plan), std::move(loc)) {}
 
-SubsumptiveClause::SubsumptiveClause(Own<Atom> head,  SrcLocation loc)
+SubsumptiveClause::SubsumptiveClause(Own<Atom> head, SrcLocation loc)
         : SubsumptiveClause(std::move(head), {}, {}, std::move(loc)) {}
 
 SubsumptiveClause::SubsumptiveClause(QualifiedName name, SrcLocation loc)
@@ -35,24 +33,33 @@ void SubsumptiveClause::addToBodyFront(Own<Literal> literal) {
 }
 
 void SubsumptiveClause::print(std::ostream& os) const {
-    if (head != nullptr) {
-        os << *head;
+    os << *bodyLiterals[0];
+    os << " <= ";
+    os << *bodyLiterals[1];
+    // TODO: print from second onwards
+    os << " :- \n";
+    std::size_t i = 2;
+    while (i < bodyLiterals.size() - 1) {
+        os << "   " << *bodyLiterals[i++] << ",\n";
     }
-    if (!bodyLiterals.empty()) {
-        os << " <= "; 
-        os << *bodyLiterals[0]; 
-        // TODO: print from second onwards 
-        os << " :- \n   " << join(bodyLiterals, ",\n   ");
+    if (i < bodyLiterals.size()) {
+        os << "   " << *bodyLiterals[i] << ".";
     }
-    os << ".";
     if (plan != nullptr) {
         os << *plan;
     }
 }
 
-
 SubsumptiveClause* SubsumptiveClause::cloning() const {
     return new SubsumptiveClause(clone(head), clone(bodyLiterals), clone(plan), getSrcLoc());
+}
+
+Clause* SubsumptiveClause::cloneHead() const { 
+     SubsumptiveClause *myClone = new SubsumptiveClause(clone(head), getSrcLoc()); 
+     if (getExecutionPlan() != nullptr) {
+        myClone->setExecutionPlan(clone(getExecutionPlan()));
+    }
+    return myClone;
 }
 
 }  // namespace souffle::ast

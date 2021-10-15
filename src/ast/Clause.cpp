@@ -91,4 +91,12 @@ Clause* Clause::cloning() const {
     return new Clause(clone(head), clone(bodyLiterals), clone(plan), getSrcLoc());
 }
 
+Clause* Clause::cloneHead() const { 
+     Clause *myClone = new Clause(clone(head), getSrcLoc()); 
+     if (getExecutionPlan() != nullptr) {
+        myClone->setExecutionPlan(clone(getExecutionPlan()));
+    }
+    return myClone;
+}
+
 }  // namespace souffle::ast

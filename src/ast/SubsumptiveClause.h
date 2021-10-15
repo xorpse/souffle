@@ -47,6 +47,8 @@ public:
     /** Add a literal to the body of the clause as a first literal */
     void addToBodyFront(Own<Literal> literal);
 
+    Clause* cloneHead() const override;  
+
 protected:
     void print(std::ostream& os) const override;
 

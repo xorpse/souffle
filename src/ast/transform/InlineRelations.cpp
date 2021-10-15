@@ -966,7 +966,7 @@ std::vector<Clause*> getInlinedClause(Program& program, const Clause& clause) {
                 std::vector<std::vector<Literal*>> bodyVersions = litVersions.getVector();
 
                 // Create the base clause with the current literal removed
-                auto baseClause = cloneHead(clause);
+                auto baseClause = clause.cloneHead();
 
                 for (std::vector<Literal*> const& body : bodyVersions) {
                     auto replacementClause = clone(baseClause);
