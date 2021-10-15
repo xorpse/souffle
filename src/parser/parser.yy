@@ -157,7 +157,6 @@
 %token PLAN                      "plan keyword"
 %token CHOICEDOMAIN              "choice-domain"
 %token IF                        ":-"
-%token LEQ                       "leq keyword"
 %token DECL                      "relation declaration"
 %token FUNCTOR                   "functor declaration"
 %token INPUT_DECL                "input directives declaration"
@@ -706,7 +705,7 @@ rule_def
  * LEQ Rule Definition
  */
 leq_rule
-  : LEQ atom[less] LE atom[greater] IF body DOT 
+  : atom[less] LE atom[greater] IF body DOT 
     {
       auto bodies = $body->toClauseBodies();
       Own<ast::Atom> gt = std::move($greater);
