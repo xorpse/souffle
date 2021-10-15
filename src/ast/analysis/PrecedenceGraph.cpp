@@ -42,12 +42,21 @@ void PrecedenceGraphAnalysis::run(const TranslationUnit& translationUnit) {
     for (const auto* r : program.getRelations()) {
         backingGraph.insert(r);
         for (const auto& c : relationDetail.getClauses(r)) {
-            souffle::visit(c->getBodyLiterals(), [&](const Atom& atom) {
-                backingGraph.insert(relationDetail.getRelation(atom.getQualifiedName()), r);
-            });
             souffle::visit(c->getHead()->getArguments(), [&](const Atom& atom) {
                 backingGraph.insert(relationDetail.getRelation(atom.getQualifiedName()), r);
             });
+            if (isA<SubsumptiveClause>(c)) {
+                auto literals = c->getBodyLiterals();
+                for (std::size_t i = 2; i < literals.size(); i++) {
+                    souffle::visit(literals[i], [&](const Atom& atom) {
+                        backingGraph.insert(relationDetail.getRelation(atom.getQualifiedName()), r);
+                    });
+                }
+            } else {
+                souffle::visit(c->getBodyLiterals(), [&](const Atom& atom) {
+                    backingGraph.insert(relationDetail.getRelation(atom.getQualifiedName()), r);
+                });
+            }
         }
     }
 }
