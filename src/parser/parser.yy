@@ -37,11 +37,14 @@
     #include "AggregateOp.h"
     #include "FunctorOps.h"
     #include "ast/Aggregator.h"
+    #include "ast/AliasType.h"
+    #include "ast/AlgebraicDataType.h"
     #include "ast/Argument.h"
     #include "ast/Atom.h"
     #include "ast/Attribute.h"
     #include "ast/BinaryConstraint.h"
     #include "ast/BooleanConstraint.h"
+    #include "ast/BranchType.h"
     #include "ast/BranchInit.h"
     #include "ast/Clause.h"
     #include "ast/Component.h"
@@ -49,11 +52,11 @@
     #include "ast/ComponentType.h"
     #include "ast/Constraint.h"
     #include "ast/Counter.h"
+    #include "ast/Directive.h"
     #include "ast/ExecutionOrder.h"
     #include "ast/ExecutionPlan.h"
     #include "ast/FunctionalConstraint.h"
     #include "ast/FunctorDeclaration.h"
-    #include "ast/Directive.h"
     #include "ast/IntrinsicFunctor.h"
     #include "ast/Literal.h"
     #include "ast/NilConstant.h"
@@ -66,9 +69,6 @@
     #include "ast/StringConstant.h"
     #include "ast/SubsetType.h"
     #include "ast/SubsumptiveClause.h"
-    #include "ast/AliasType.h"
-    #include "ast/AlgebraicDataType.h"
-    #include "ast/BranchType.h"
     #include "ast/Type.h"
     #include "ast/TypeCast.h"
     #include "ast/UnionType.h"
@@ -270,7 +270,6 @@
 %type <Mov<VecOwn<ast::Relation>>>             relation_decl
 %type <std::set<RelationTag>>                  relation_tags
 %type <Mov<VecOwn<ast::Clause>>>               rule
-%type <Mov<VecOwn<ast::Clause>>>               leq_rule
 %type <Mov<VecOwn<ast::Clause>>>               rule_def
 %type <Mov<RuleBody>>                          term
 %type <Mov<Own<ast::Type>>>                    type_decl
@@ -306,7 +305,7 @@ program
   ;
 
 /**
- * Top-level Program Elements 
+ * Top-level Program Elements
  */
 unit
   : %empty
@@ -319,11 +318,6 @@ unit
   | unit rule
     {
       for (auto&& cur : $rule   )
-        driver.addClause(std::move(cur));
-    }
-  | unit leq_rule
-    {
-      for (auto&& cur : $leq_rule   )
         driver.addClause(std::move(cur));
     }
   | unit fact
@@ -384,12 +378,12 @@ type_decl
     }
   | TYPE IDENT EQUALS union_type_list
     {
-      if ($union_type_list.size() > 1) { 
+      if ($union_type_list.size() > 1) {
          $$ = mk<ast::UnionType>($IDENT, $union_type_list, @$);
-      } else { 
+      } else {
          assert($union_type_list.size() == 1 && "qualified name missing for alias type");
          $$ = mk<ast::AliasType>($IDENT, $union_type_list[0], @$);
-      } 
+      }
     }
   | TYPE IDENT EQUALS record_type_list
     {
@@ -512,7 +506,7 @@ relation_names
  */
 attributes_list
   : LPAREN RPAREN
-    { 
+    {
     }
   | LPAREN non_empty_attributes RPAREN
     {
@@ -681,31 +675,7 @@ rule
         rule->setExecutionPlan(clone(query_plan));
       }
     }
-  ;
-
-/**
- * Rule Definition
- */
-rule_def
-  : head[heads] IF body DOT
-    {
-      auto bodies = $body->toClauseBodies();
-      for (auto&& head : $heads) {
-        for (auto&& body : bodies) {
-          auto cur = clone(body);
-          cur->setHead(clone(head));
-          cur->setSrcLoc(@$);
-          $$.push_back(std::move(cur));
-        }
-      }
-    }
-  ;
-
-/**
- * LEQ Rule Definition
- */
-leq_rule
-  : atom[less] LE atom[greater] IF body DOT 
+   | atom[less] LE atom[greater] IF body DOT 
     {
       auto bodies = $body->toClauseBodies();
       Own<ast::Atom> gt = std::move($greater);
@@ -729,7 +699,25 @@ leq_rule
         $$.push_back(std::move(cur));
       }
     }
+  ;
 
+/**
+ * Rule Definition
+ */
+rule_def
+  : head[heads] IF body DOT
+    {
+      auto bodies = $body->toClauseBodies();
+      for (auto&& head : $heads) {
+        for (auto&& body : bodies) {
+          auto cur = clone(body);
+          cur->setHead(clone(head));
+          cur->setSrcLoc(@$);
+          $$.push_back(std::move(cur));
+        }
+      }
+    }
+  ;
 
 /**
  * Rule Head
@@ -867,7 +855,7 @@ constraint
  */
 arg_list
   : %empty
-    { 
+    {
     }
   | non_empty_arg_list
     {
@@ -1272,7 +1260,7 @@ component_param_list
   ;
 
 /**
- * Component body 
+ * Component body
  */
 component_body
   : %empty
@@ -1287,13 +1275,6 @@ component_body
       }
     }
   | component_body rule
-    {
-      $$ = $1;
-      for (auto&& x : $2) {
-        $$->addClause(std::move(x));
-      }
-    }
-  | component_body leq_rule
     {
       $$ = $1;
       for (auto&& x : $2) {
