@@ -8,4 +8,4 @@ else
     exit 1
 fi
 
-grep -G "^ID=" $file
+grep -G "^ID=" $file | tr a-z A-Z

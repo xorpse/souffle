@@ -357,7 +357,7 @@ SET(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/debian/changelog.in"
 # CPack configuration 
 # --------------------------------------------------
 if (CHECK_OS_RESULT EQUAL 0)
-    if (CHECK_OS_OUTPUT MATCHES "Ubuntu")
+    if (CHECK_OS_OUTPUT MATCHES "UBUNTU")
         # Generate just DEB
         SET(CPACK_GENERATOR "DEB")
         # --------------------------------------------------
@@ -375,7 +375,7 @@ if (CHECK_OS_RESULT EQUAL 0)
         INCLUDE(CPack)
     endif()
 
-    if (CHECK_OS_OUTPUT MATCHES "Fedora" OR CHECK_OS_OUTPUT MATCHES "CentOS")
+    if (CHECK_OS_OUTPUT MATCHES "FEDORA" OR CHECK_OS_OUTPUT MATCHES "CENTOS")
         SET(CPACK_RPM_PACKAGE_GROUP "Unspecified")
         SET(CPACK_RPM_PACKAGE_LICENSE "UPL-1.0 License")
         SET(CPACK_RPM_PACKAGE_VENDOR "Souffle-lang")
