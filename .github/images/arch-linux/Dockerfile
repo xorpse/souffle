@@ -27,8 +27,6 @@ RUN git clone https://aur.archlinux.org/yay.git \
   && cd yay \
   && makepkg -sri --needed --noconfirm
 
-RUN yay -S --noconfirm lsb-release
-
 COPY PKGBUILD.in /home/builduser/PKGBUILD.in
 COPY entrypoint.sh /home/builduser/entrypoint.sh
 
