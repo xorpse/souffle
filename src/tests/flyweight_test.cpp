@@ -27,7 +27,7 @@
 
 // How many times to repeat each randomized test
 #define RANDOM_TESTS 32
-#define RANDOM_TEST_SIZE 32
+#define RANDOM_TEST_SIZE 64
 
 // For some reason, just using `assert` doesn't work, even if cassert is
 // included.
@@ -53,7 +53,7 @@ static char random_char() {
             "0123456789"
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
             "abcdefghijklmnopqrstuvwxyz";
-    static constexpr size_t max_index = sizeof(charset) - 1;
+    static constexpr size_t max_index = sizeof(charset) - 2;
     std::random_device rd;
     std::mt19937 mt(rd());
     std::uniform_int_distribution<std::size_t> dist(0, max_index);
@@ -111,30 +111,37 @@ static std::vector<std::pair<FlyweightImpl<std::string>::index_type, std::string
         values.emplace_back(key, s);
     };
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel
+    {
+        srand(omp_get_thread_num());
+#pragma omp for
 #endif
-    for (std::size_t i = 0; i < max_size; ++i) {
-        if (random() % 2) {
-            add_new();
-        } else {
-            if (random() % 2 && values.size() > 0) {
-                FlyweightImpl<std::string>::index_type key;
-                std::string val;
-                {
-                    const std::lock_guard<std::mutex> lock(mu);
-                    std::tie(key, val) = values[random() % values.size()];
+        for (std::size_t i = 0; i < max_size; ++i) {
+            if (rand() % 2) {
+                add_new();
+            } else {
+                if (rand() % 2 && values.size() > 0) {
+                    FlyweightImpl<std::string>::index_type key;
+                    std::string val;
+                    {
+                        const std::lock_guard<std::mutex> lock(mu);
+                        std::tie(key, val) = values[rand() % values.size()];
+                    }
+                    LOCAL_ASSERT_EQ(val, flyweight.fetch(key));
+                } else if (values.size() > 0) {
+                    std::string val;
+                    {
+                        const std::lock_guard<std::mutex> lock(mu);
+                        val = values[rand() % values.size()].second;
+                    }
+                    LOCAL_ASSERT_TRUE(flyweight.weakContains(val));
                 }
-                LOCAL_ASSERT_EQ(val, flyweight.fetch(key));
-            } else if (values.size() > 0) {
-                std::string val;
-                {
-                    const std::lock_guard<std::mutex> lock(mu);
-                    val = values[random() % values.size()].second;
-                }
-                LOCAL_ASSERT_TRUE(flyweight.weakContains(val));
             }
         }
+#ifdef _OPENMP
     }
+#endif
+
     while (values.size() < min_size) {
         add_new();
     }
@@ -144,23 +151,29 @@ static std::vector<std::pair<FlyweightImpl<std::string>::index_type, std::string
 
 TEST(Flyweight, FindOrInsertCopy) {
     for (int i = 0; i < RANDOM_TESTS; ++i) {
-        FlyweightImpl<std::string> flyweight{1};
+        FlyweightImpl<std::string> flyweight{8};
         random_flyweight(flyweight, 0, RANDOM_TEST_SIZE);
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel
+        {
+            srand(omp_get_thread_num());
+#pragma omp for
 #endif
-        for (int j = 0; j < RANDOM_TEST_SIZE; ++j) {
-            // Guarantee uniqueness by appending something not in the character set
-            // and then the index.
-            std::string s = random_string() + "~" + std::to_string(j);
-            FlyweightImpl<std::string>::index_type data1, data2;
-            bool was_new1, was_new2;
-            std::tie(data1, was_new1) = flyweight.findOrInsert(s);
-            std::tie(data2, was_new2) = flyweight.findOrInsert(std::string(s));
-            EXPECT_EQ(data1, data2);
-            EXPECT_TRUE(was_new1);
-            EXPECT_FALSE(was_new2);
+            for (int j = 0; j < RANDOM_TEST_SIZE; ++j) {
+                // Guarantee uniqueness by appending something not in the character set
+                // and then the index.
+                std::string s = random_string() + "~" + std::to_string(j);
+                FlyweightImpl<std::string>::index_type data1, data2;
+                bool was_new1, was_new2;
+                std::tie(data1, was_new1) = flyweight.findOrInsert(s);
+                std::tie(data2, was_new2) = flyweight.findOrInsert(std::string(s));
+                EXPECT_EQ(data1, data2);
+                EXPECT_TRUE(was_new1);
+                EXPECT_FALSE(was_new2);
+            }
+#ifdef _OPENMP
         }
+#endif
     }
 }
 
