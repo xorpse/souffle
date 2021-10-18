@@ -486,28 +486,6 @@ Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
             mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
 }
 
-Own<ram::Operation> ClauseTranslator::addNegatedLeqAtom(Own<ram::Operation> op, const ast::Atom* atom) const {
-    std::size_t arity = atom->getArity();
-    std::string name = getRejectRelationName(atom->getQualifiedName());
-    if (version == 2) {
-        name = getToEraseRelationName(atom->getQualifiedName());
-    }
-
-    if (arity == 0) {
-        // for a nullary, negation is a simple emptiness check
-        return mk<ram::Filter>(mk<ram::EmptinessCheck>(name), std::move(op));
-    }
-
-    // else, we construct the atom and create a negation
-    VecOwn<ram::Expression> values;
-    auto args = atom->getArguments();
-    for (std::size_t i = 0; i < arity; i++) {
-        values.push_back(context.translateValue(*valueIndex, args[i]));
-    }
-    return mk<ram::Filter>(
-            mk<ram::Negation>(mk<ram::ExistenceCheck>(name, std::move(values))), std::move(op));
-}
-
 Own<ram::Operation> ClauseTranslator::addNegatedAtom(
         Own<ram::Operation> op, const ast::Clause& /* clause */, const ast::Atom* atom) const {
     std::size_t arity = atom->getArity();
@@ -541,7 +519,6 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
         if (version == 1) {
             op = addDistinct(std::move(op), sccAtoms.at(0), sccAtoms.at(1));
         }
-        op = addNegatedLeqAtom(std::move(op), clause.getHead());
         return op;
     }
 
