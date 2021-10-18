@@ -98,7 +98,6 @@ option(SOUFFLE_ENABLE_TESTING "Enable/Disable testing" ${SOUFFLE_ENABLE_TESTING_
 option(SOUFFLE_GENERATE_DOXYGEN "Generate Doxygen files (html;htmlhelp;man;rtf;xml;latex)" "")
 option(SOUFFLE_CODE_COVERAGE "Enable coverage reporting" OFF)
 option(SOUFFLE_BASH_COMPLETION "Enable/Disable bash completion" ON)
-option(SOUFFLE_ENABLE_PACKAGE "Enable/Disable package" ON)
 
 cmake_dependent_option(SOUFFLE_USE_LIBCPP "Link to libc++ instead of libstdc++" ON
     "CMAKE_CXX_COMPILER_ID STREQUAL Clang" OFF)
@@ -337,30 +336,12 @@ IF (SOUFFLE_BASH_COMPLETION)
 endif()
 
 
-IF (SOUFFLE_ENABLE_PACKAGE)
-
-# --------------------------------------------------
-# Utility function to help us distinguish between Linux distros when packaging
-# --------------------------------------------------
-
-function(get_linux_lsb_release_information)
-    find_program(LSB_RELEASE_EXEC lsb_release)
-    if(NOT LSB_RELEASE_EXEC)
-        message(FATAL_ERROR "Could not detect lsb_release executable, can not gather required information")
-    endif()
-
-    execute_process(COMMAND "${LSB_RELEASE_EXEC}" --short --id OUTPUT_VARIABLE LSB_RELEASE_ID_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
-    execute_process(COMMAND "${LSB_RELEASE_EXEC}" --short --release OUTPUT_VARIABLE LSB_RELEASE_VERSION_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
-    execute_process(COMMAND "${LSB_RELEASE_EXEC}" --short --codename OUTPUT_VARIABLE LSB_RELEASE_CODENAME_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-    set(LSB_RELEASE_ID_SHORT "${LSB_RELEASE_ID_SHORT}" PARENT_SCOPE)
-    set(LSB_RELEASE_VERSION_SHORT "${LSB_RELEASE_VERSION_SHORT}" PARENT_SCOPE)
-    set(LSB_RELEASE_CODENAME_SHORT "${LSB_RELEASE_CODENAME_SHORT}" PARENT_SCOPE)
-endfunction()
-
 # --------------------------------------------------
 # CPack configuration
 # --------------------------------------------------
+execute_process(COMMAND bash "sh/check_os.sh"
+                RESULT_VARIABLE CHECK_OS_RESULT
+                OUTPUT_VARIABLE CHECK_OS_OUTPUT)
 
 SET(CPACK_PACKAGE_CONTACT "Patrick H.")
 SET(CPACK_PACKAGE_DESCRIPTION "Souffle - A Datalog Compiler")
@@ -373,28 +354,28 @@ SET(CPACK_THREADS 0)
 SET(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/debian/changelog.in" "${CMAKE_SOURCE_DIR}/debian/souffle.bash-completion" "${CMAKE_SOURCE_DIR}/debian/copyright")
 
 # --------------------------------------------------
-# CPack configuration for Linux
+# CPack configuration 
 # --------------------------------------------------
-if (CMAKE_SYSTEM_NAME MATCHES "Linux")
-	get_linux_lsb_release_information()
-    if (LSB_RELEASE_ID_SHORT MATCHES "Ubuntu")
-		# Generate just DEB
-		SET(CPACK_GENERATOR "DEB")
-		# --------------------------------------------------
-		# Variables relevent to DEB packages
-		# --------------------------------------------------
+if (CHECK_OS_RESULT EQUAL 0)
+    if (CHECK_OS_OUTPUT MATCHES "UBUNTU")
+        # Generate just DEB
+        SET(CPACK_GENERATOR "DEB")
+        # --------------------------------------------------
+        # Variables relevent to DEB packages
+        # --------------------------------------------------
 
-		# Specifying runtime dependencies
-		set(CPACK_DEBIAN_PACKAGE_DEPENDS "g++ (>= 8), libffi-dev, libncurses5-dev, libsqlite3-dev, mcpp, zlib1g-dev")
+        # Specifying runtime dependencies
+        set(CPACK_DEBIAN_PACKAGE_DEPENDS "g++ (>= 8), libffi-dev, libncurses5-dev, libsqlite3-dev, mcpp, zlib1g-dev")
 
-		# Auto-generate any runtime dependencies that are required
-		SET(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+        # Auto-generate any runtime dependencies that are required
+        SET(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 
-		# Architectures are actually auto-detected so no need to set this variable
-		# SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386")
-	endif()
+        # Architectures are actually auto-detected so no need to set this variable
+        # SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386")
+        INCLUDE(CPack)
+    endif()
 
-    if (LSB_RELEASE_ID_SHORT MATCHES "Fedora" OR LSB_RELEASE_ID_SHORT MATCHES "CentOS")
+    if (CHECK_OS_OUTPUT MATCHES "FEDORA" OR CHECK_OS_OUTPUT MATCHES "CENTOS")
         SET(CPACK_RPM_PACKAGE_GROUP "Unspecified")
         SET(CPACK_RPM_PACKAGE_LICENSE "UPL-1.0 License")
         SET(CPACK_RPM_PACKAGE_VENDOR "Souffle-lang")
@@ -411,10 +392,6 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux")
 
         # Note: By default automatic dependency detection is enabled by rpm generator.
         # SET(CPACK_RPM_PACKAGE_AUTOREQPROV "no")
+        INCLUDE(CPack)
 	endif()
-endif()
-
-
-INCLUDE(CPack)
-
 endif()
