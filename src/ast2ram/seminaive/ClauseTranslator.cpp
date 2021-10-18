@@ -143,7 +143,7 @@ std::string ClauseTranslator::getClauseAtomName(const ast::Clause& clause, const
             if (version == 2) {
                 return getToEraseRelationName(atom->getQualifiedName());
             }
-            return getLeqRelationName(atom->getQualifiedName());
+            return getRejectRelationName(atom->getQualifiedName());
         }
         if (sccAtoms.at(0) == atom) {
             if (version == 2) {
@@ -488,7 +488,7 @@ Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
 
 Own<ram::Operation> ClauseTranslator::addNegatedLeqAtom(Own<ram::Operation> op, const ast::Atom* atom) const {
     std::size_t arity = atom->getArity();
-    std::string name = getLeqRelationName(atom->getQualifiedName());
+    std::string name = getRejectRelationName(atom->getQualifiedName());
     if (version == 2) {
         name = getToEraseRelationName(atom->getQualifiedName());
     }

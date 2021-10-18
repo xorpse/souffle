@@ -50,7 +50,7 @@ std::string getDeltaRelationName(const ast::QualifiedName& name);
 std::string getNewRelationName(const ast::QualifiedName& name);
 
 /** Get the corresponding RAM 'leq' relation name for the relation */
-std::string getLeqRelationName(const ast::QualifiedName& name);
+std::string getRejectRelationName(const ast::QualifiedName& name);
 
 /** Get base relation name, strip off any possible prefix */
 std::string getBaseRelationName(const ast::QualifiedName& name);

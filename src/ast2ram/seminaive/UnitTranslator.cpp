@@ -256,29 +256,30 @@ Own<ram::Statement> UnitTranslator::translateRecursiveClauses(
         const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const {
     assert(contains(scc, rel) && "relation should belong to scc");
     VecOwn<ram::Statement> result;
-    VecOwn<ram::Statement> leq_result;
+    VecOwn<ram::Statement> deletions;
 
-    // Translate each recursive clasue
+    // Translate each recursive clause
     for (const auto* clause : context->getClauses(rel->getQualifiedName())) {
         // Skip non-recursive clauses
         if (!context->isRecursiveClause(clause)) {
             continue;
         }
+        // Process subsumptive clauses 
         if (isA<ast::SubsumptiveClause>(clause)) {
-            appendStmt(leq_result, context->translateRecursiveClause(*clause, scc, 0));
-            appendStmt(leq_result, context->translateRecursiveClause(*clause, scc, 1));
-            if (rel->getRepresentation() == RelationRepresentation::BTREE_DELETE) {
-                appendStmt(leq_result, context->translateRecursiveClause(*clause, scc, 2));
-            }
-            continue;
-        }
+            appendStmt(deletions, context->translateRecursiveClause(*clause, scc, 0));
+            appendStmt(deletions, context->translateRecursiveClause(*clause, scc, 1));
+            appendStmt(deletions, context->translateRecursiveClause(*clause, scc, 2));
+            continue; 
+        } 
+
+        // Process any other clause 
         auto clauseVersions = generateClauseVersions(clause, scc);
         for (auto& clauseVersion : clauseVersions) {
-            appendStmt(result, std::move(clauseVersion));
+           appendStmt(result, std::move(clauseVersion));
         }
     }
 
-    return mk<ram::Sequence>(mk<ram::Sequence>(std::move(result)), mk<ram::Sequence>(std::move(leq_result)));
+    return mk<ram::Sequence>(mk<ram::Sequence>(std::move(result)), mk<ram::Sequence>(std::move(deletions)));
 }
 
 VecOwn<ram::Statement> UnitTranslator::generateClauseVersions(
@@ -327,6 +328,7 @@ Own<ram::Statement> UnitTranslator::generateStratumPostamble(
         appendStmt(postamble, mk<ram::Clear>(getNewRelationName(rel->getQualifiedName())));
         if (rel->getRepresentation() == RelationRepresentation::BTREE_DELETE) {
             appendStmt(postamble, mk<ram::Clear>(getToEraseRelationName(rel->getQualifiedName())));
+            appendStmt(postamble, mk<ram::Clear>(getRejectRelationName(rel->getQualifiedName())));
         }
     }
     return mk<ram::Sequence>(std::move(postamble));
@@ -368,12 +370,12 @@ Own<ram::Statement> UnitTranslator::generateStratumTableUpdates(
             std::string mainRelation = getConcreteRelationName(rel->getQualifiedName());
             std::string newRelation = getNewRelationName(rel->getQualifiedName());
             std::string deltaRelation = getDeltaRelationName(rel->getQualifiedName());
-            std::string leqRelation = getLeqRelationName(rel->getQualifiedName());
+            std::string rejectRelation = getRejectRelationName(rel->getQualifiedName());
 
             Own<ram::Statement> updateRelTable = mk<ram::Sequence>(mk<ram::Clear>(deltaRelation),
-                    generateMergeRelationsWithFilter(rel, deltaRelation, newRelation, leqRelation),
+                    generateMergeRelationsWithFilter(rel, deltaRelation, newRelation, rejectRelation),
                     generateMergeRelations(rel, mainRelation, deltaRelation), mk<ram::Clear>(newRelation),
-                    mk<ram::Clear>(leqRelation));
+                    mk<ram::Clear>(rejectRelation));
 
             // Measure update time
             if (Global::config().has("profile")) {
@@ -575,9 +577,9 @@ VecOwn<ram::Relation> UnitTranslator::createRamRelations(const std::vector<std::
             }
 
             if (context->hasLeq(rel->getQualifiedName())) {
-                // Add leq relation
-                std::string leqName = getLeqRelationName(rel->getQualifiedName());
-                ramRelations.push_back(createRamRelation(rel, leqName));
+                // Add reject relation
+                std::string rejectName = getRejectRelationName(rel->getQualifiedName());
+                ramRelations.push_back(createRamRelation(rel, rejectName));
             }
         }
     }
