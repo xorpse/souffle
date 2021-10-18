@@ -189,9 +189,6 @@ Own<ram::Statement> UnitTranslator::generateClearExpiredRelations(
 Own<ram::Statement> UnitTranslator::generateEraseRelations(
         const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const {
     VecOwn<ram::Expression> values;
-    if (rel->getArity() == 0) {
-        // TODO
-    }
     for (std::size_t i = 0; i < rel->getArity(); i++) {
         values.push_back(mk<ram::TupleElement>(0, i));
     }
