@@ -368,7 +368,7 @@ Own<ram::Statement> UnitTranslator::generateStratumTableUpdates(
             std::string mainRelation = getConcreteRelationName(rel->getQualifiedName());
             std::string newRelation = getNewRelationName(rel->getQualifiedName());
             std::string deltaRelation = getDeltaRelationName(rel->getQualifiedName());
-            std::string leqRelation = getLeqRelationName(rel->getQualifiedName());
+            std::string leqRelation = getRejectRelationName(rel->getQualifiedName());
 
             Own<ram::Statement> updateRelTable = mk<ram::Sequence>(mk<ram::Clear>(deltaRelation),
                     generateMergeRelationsWithFilter(rel, deltaRelation, newRelation, leqRelation),
@@ -576,7 +576,7 @@ VecOwn<ram::Relation> UnitTranslator::createRamRelations(const std::vector<std::
 
             if (context->hasLeq(rel->getQualifiedName())) {
                 // Add leq relation
-                std::string leqName = getLeqRelationName(rel->getQualifiedName());
+                std::string leqName = getRejectRelationName(rel->getQualifiedName());
                 ramRelations.push_back(createRamRelation(rel, leqName));
             }
         }
