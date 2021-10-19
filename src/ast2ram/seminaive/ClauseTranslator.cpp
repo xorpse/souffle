@@ -516,7 +516,7 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
     }
 
     if (isA<ast::SubsumptiveClause>(clause)) {
-        if (version == 1) {
+        if (version == 1 || version == 3) {
             op = addDistinct(std::move(op), sccAtoms.at(0), sccAtoms.at(1));
         }
         return op;
