@@ -135,28 +135,28 @@ Own<ram::Statement> ClauseTranslator::translateNonRecursiveClause(const ast::Cla
 }
 
 std::string ClauseTranslator::getClauseAtomName(const ast::Clause& clause, const ast::Atom* atom) const {
-    if (!isRecursive()) {
-        return getConcreteRelationName(atom->getQualifiedName());
-    }
     if (isA<ast::SubsumptiveClause>(clause)) {
         if (clause.getHead() == atom) {
-            if (version == 2) {
+            if (version == 2 || version == 3) {
                 return getToEraseRelationName(atom->getQualifiedName());
             }
             return getRejectRelationName(atom->getQualifiedName());
         }
         if (sccAtoms.at(0) == atom) {
-            if (version == 2) {
+            if (version == 2 || version == 3) {
                 return getConcreteRelationName(atom->getQualifiedName());
             }
             return getNewRelationName(atom->getQualifiedName());
         }
         if (sccAtoms.at(1) == atom) {
-            if (version == 0) {
+            if (version == 0 || version == 3) {
                 return getConcreteRelationName(atom->getQualifiedName());
             }
             return getNewRelationName(atom->getQualifiedName());
         }
+    }
+    if (!isRecursive()) {
+        return getConcreteRelationName(atom->getQualifiedName());
     }
     if (clause.getHead() == atom) {
         return getNewRelationName(atom->getQualifiedName());
