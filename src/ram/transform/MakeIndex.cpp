@@ -93,7 +93,8 @@ ExpressionPair MakeIndexTransformer::getLowerUpperExpression(
         bool interpreter = !Global::config().has("compile") && !Global::config().has("dl-program") &&
                            !Global::config().has("generate") && !Global::config().has("swig");
         bool provenance = Global::config().has("provenance");
-        bool btree = (rep == RelationRepresentation::BTREE || rep == RelationRepresentation::DEFAULT);
+        bool btree = (rep == RelationRepresentation::BTREE || rep == RelationRepresentation::DEFAULT ||
+        rep == RelationRepresentation::BTREE_DELETE);
         auto op = binRelOp->getOperator();
 
         // don't index FEQ in interpreter mode
