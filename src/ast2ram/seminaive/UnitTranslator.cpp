@@ -102,7 +102,7 @@ Own<ram::Statement> UnitTranslator::generateNonRecursiveRelation(const ast::Rela
     // Iterate over all non-recursive clauses that belong to the relation
     for (const auto* clause : context->getClauses(rel.getQualifiedName())) {
         // Skip recursive rules
-        if (context->isRecursiveClause(clause) && isA<ast::SubsumptiveClause>(clause)) {
+        if (context->isRecursiveClause(clause) || isA<ast::SubsumptiveClause>(clause)) {
             continue;
         }
 
