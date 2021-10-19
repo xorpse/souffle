@@ -317,7 +317,7 @@ Own<ram::Statement> UnitTranslator::generateStratumPreamble(const std::set<const
         if (rel->getRepresentation() == RelationRepresentation::BTREE_DELETE) {
             for (auto clause : context->getClauses(rel->getQualifiedName())) {
                 if (isA<ast::SubsumptiveClause>(clause)) {
-                    appendStmt(preamble, context->translateRecursiveClause(*clause, scc, 2));
+                    appendStmt(preamble, context->translateRecursiveClause(*clause, scc, 3));
                 }
             }
             appendStmt(preamble, mk<ram::Sequence>(generateEraseTuples(rel, mainRelation, eraseRelation),
