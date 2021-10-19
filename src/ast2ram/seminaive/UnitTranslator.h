@@ -60,7 +60,7 @@ protected:
 
     /** High-level relation translation */
     virtual Own<ram::Sequence> generateProgram(const ast::TranslationUnit& translationUnit);
-    Own<ram::Statement> generateNonRecursiveRelation(const ast::Relation& rel) const;
+    Own<ram::Statement> generateNonRecursiveRelation(const ast::Relation& rel, const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateRecursiveStratum(const std::set<const ast::Relation*>& scc) const;
 
     /** IO translation */
