@@ -688,14 +688,23 @@ rule
         cur->addToBodyFront(clone(gt));
         cur->addToBodyFront(clone(lt));
         cur->setSrcLoc(@$);
-        std::vector<unsigned int> o;
-        o.push_back(2);
-        o.push_back(1);
-        auto order = mk<ast::ExecutionOrder>(o);
-        auto plan = mk<ast::ExecutionPlan>();
-        plan->setOrderFor(2, std::move(order));
-        cur->setExecutionPlan(std::move(plan));
-
+        $$.push_back(std::move(cur));
+      }
+    }
+   | atom[less] LE atom[greater] IF body DOT query_plan
+    {
+      auto bodies = $body->toClauseBodies();
+      Own<ast::Atom> gt = std::move($greater);
+      Own<ast::Atom> lt = std::move($less);
+      for (auto&& body : bodies) {
+        auto cur = mk<ast::SubsumptiveClause>(clone(lt)); 
+        cur->setBodyLiterals(clone(body->getBodyLiterals()));
+        auto literals = cur->getBodyLiterals();
+        cur->setHead(clone(lt));
+        cur->addToBodyFront(clone(gt));
+        cur->addToBodyFront(clone(lt));
+        cur->setSrcLoc(@$);
+        cur->setExecutionPlan(clone($query_plan));
         $$.push_back(std::move(cur));
       }
     }
