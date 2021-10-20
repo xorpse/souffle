@@ -40,7 +40,7 @@ namespace souffle::ram {
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * FOR t0 IN A
  *   ...
- *     ERASE (t0.a, t0.b, t0.c) FROM @new_X
+ *     ERASE (t0.a, t0.b, t0.c) FROM @delete_X
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
 class Erase : public Operation {
