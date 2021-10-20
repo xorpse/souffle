@@ -420,7 +420,7 @@ public:
             return false;
         }
         for (std::size_t i = 1; i < indexes.size(); ++i) {
-            static_cast<DeleteIndex>(indexes[i].get())->erase(tuple);
+            static_cast<DeleteIndex*>(indexes[i].get())->erase(tuple);
         }
         return true;
     }
