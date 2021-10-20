@@ -78,7 +78,7 @@ function(SOUFFLE_RUN_CPP_TEST_HELPER)
                                  OUTPUT_DIR ${OUTPUT_DIR}
                                  FIXTURE_NAME ${FIXTURE_NAME}
                                  TEST_LABELS "${TEST_LABELS}"
-                                 SOUFFLE_PARAMS "-g '${OUTPUT_DIR}/${TEST_NAME}.cpp'")
+                                 SOUFFLE_PARAMS "-g" "${OUTPUT_DIR}/${TEST_NAME}.cpp")
 
     souffle_run_cpp_test(TEST_NAME ${PARAM_TEST_NAME}
                          QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}

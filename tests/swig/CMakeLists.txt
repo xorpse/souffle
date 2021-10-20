@@ -96,7 +96,7 @@ function(SOUFFLE_RUN_SWIG_TEST_HELPER)
                                  OUTPUT_DIR ${OUTPUT_DIR}
                                  FIXTURE_NAME ${FIXTURE_NAME}
                                  TEST_LABELS "${TEST_LABELS}"
-                                 SOUFFLE_PARAMS "-s '${PARAM_LANGUAGE}'")
+                                 SOUFFLE_PARAMS "-s" "${PARAM_LANGUAGE}")
 
     if (PARAM_LANGUAGE STREQUAL "python")
         souffle_run_python_swig_test(TEST_NAME ${PARAM_TEST_NAME}

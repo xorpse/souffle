@@ -10,7 +10,7 @@ INPUT_DIR="$1"
 EXTRA_DATA="$2"
 BINARY="$3" #BINARY will be set to gzip or sqlite3
 
-find . -maxdepth 1 -name "*.csv.expected.sorted" | wc -l > num.generated
+find . -maxdepth 1 -name "*.csv" | wc -l > num.generated
 
 diff num.generated num.expected
 

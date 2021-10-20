@@ -348,6 +348,7 @@ endif(SOUFFLE_CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 add_subdirectory(src)
 
 if (SOUFFLE_ENABLE_TESTING)
+    find_package(Ruby 2.5)
     add_subdirectory(src/tests)
     add_subdirectory(tests)
 endif()
