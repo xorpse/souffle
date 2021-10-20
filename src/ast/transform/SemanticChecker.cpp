@@ -462,15 +462,6 @@ void SemanticCheckerImpl::checkClause(const Clause& clause) {
         checkFact(clause);
     }
 
-    if (isA<SubsumptiveClause>(clause)) {
-        auto literals = clause.getBodyLiterals();
-        const Atom* lt = as<Atom>(literals[0]);
-        const Atom* gt = as<Atom>(literals[1]);
-        if (lt->getQualifiedName() != gt->getQualifiedName()) {
-            report.addError("Subsumption must compare tuples from the same relation", clause.getSrcLoc());
-        }
-    }
-
     // check whether named unnamed variables of the form _<ident>
     // are only used once in a clause; if not, warnings will be
     // issued.
