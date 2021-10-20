@@ -381,7 +381,7 @@ Own<ram::Statement> UnitTranslator::generateStratumTableUpdates(
         const std::set<const ast::Relation*>& scc) const {
     VecOwn<ram::Statement> updateTable;
     for (const ast::Relation* rel : scc) {
-        if (context->hasLeq(rel->getQualifiedName())) {
+        if (context->hasSubsumptiveClause(rel->getQualifiedName())) {
             std::string mainRelation = getConcreteRelationName(rel->getQualifiedName());
             std::string newRelation = getNewRelationName(rel->getQualifiedName());
             std::string deltaRelation = getDeltaRelationName(rel->getQualifiedName());
