@@ -345,7 +345,6 @@ void DirectRelation::generateTypeStruct(std::ostream& out) {
 
     // erase method
     if (hasErase) {
-        // TODO: erase operation is not thread safe yet
         out << "bool erase(const t_tuple& t) {\n";
 
         out << "if (ind_" << masterIndex << ".erase(t) > 0) {\n";
