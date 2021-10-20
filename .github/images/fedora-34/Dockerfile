@@ -20,7 +20,6 @@ RUN dnf -y install \
     ncurses-devel \
     pkg-config \
     python39 \
-    redhat-lsb-core \
     rpm-build \
     sqlite-devel \
     zlib-devel
