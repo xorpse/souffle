@@ -904,6 +904,7 @@ public:
      * The iterator type to be utilized for scanning through btree instances.
      */
     class iterator : public std::iterator<std::bidirectional_iterator_tag, Key> {
+    public:
         // a pointer to the node currently referred to
         // node const* cur;
         node* cur;
@@ -911,7 +912,6 @@ public:
         // the index of the element currently addressed within the referenced node
         field_index_type pos = 0;
 
-    public:
         using iterator_category = std::forward_iterator_tag;
         using value_type = Key;
         using difference_type = ptrdiff_t;
