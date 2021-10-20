@@ -1078,7 +1078,7 @@ bool InlineRelationsTransformer::transform(TranslationUnit& translationUnit) {
         }
 
         // Delete all clauses that were replaced
-        for (const auto &clause : clausesToDelete) {
+        for (const auto& clause : clausesToDelete) {
             program.removeClause(clause.get());
             changed = true;
         }
