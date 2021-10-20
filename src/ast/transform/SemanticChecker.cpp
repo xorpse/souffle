@@ -612,12 +612,8 @@ void SemanticCheckerImpl::checkRelation(const Relation& relation) {
     }
 
     // check subsumption relations
-    bool hasSubsumptiveRule = false;
-    visit(program, [&](const Clause& clause) {
-        if (isA<SubsumptiveClause>(clause) &&
-                clause.getHead()->getQualifiedName() == relation.getQualifiedName()) {
-            hasSubsumptiveRule = true;
-        }
+    bool hasSubsumptiveRule = visitExists(program, [&](const SubsumptiveCause& sClause) {
+        return clause.getHead()->getQualifiedName() == relation.getQualifiedName();
     });
     if (relation.getRepresentation() == RelationRepresentation::BTREE_DELETE && !hasSubsumptiveRule) {
         report.addWarning("No subsumptive rule for relation " + toString(relation.getQualifiedName()),
