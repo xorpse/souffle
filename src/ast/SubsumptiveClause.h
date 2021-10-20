@@ -29,11 +29,11 @@ namespace souffle::ast {
 
 /**
  * @class SubsumptiveClause
- * @brief Intermediate representation of a horn clause
+ * @brief Intermediate representation of a subsumptive clause
  *
- *  A clause can either be:
- *      - a fact  - a clause with no body (e.g., X(a,b))
- *      - a rule  - a clause with a head and a body (e.g., Y(a,b) -: X(a,b))
+ * Format: 
+ *     A(x1,...) <= A(y1,...) :- <Body> .
+ *
  */
 class SubsumptiveClause : public Clause {
 public:
