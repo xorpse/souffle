@@ -10,7 +10,7 @@
  *
  * @file BTreeDeleteIndex.cpp
  *
- * Interpreter index with generic interface.
+ * Interpreter btree-deletion index with generic interface.
  *
  ***********************************************************************/
 
