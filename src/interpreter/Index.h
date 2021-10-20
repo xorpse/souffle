@@ -237,197 +237,9 @@ public:
     }
 
     /**
-     * Erase a tuple from this index.
-     */
-    bool erase(const Tuple& /* tuple */) {
-        abort();
-        return false;
-    }
-
-    /**
      * Inserts all elements of the given index.
      */
     void insert(const Index<Arity, Structure>& src) {
-        for (const auto& tuple : src) {
-            this->insert(tuple);
-        }
-    }
-
-    /**
-     * Tests whether the given tuple is present in this index or not.
-     */
-    bool contains(const Tuple& tuple) const {
-        return data.contains(tuple);
-    }
-
-    /**
-     * Tests whether this index contains any tuple within the given bounds.
-     */
-    bool contains(const Tuple& low, const Tuple& high) const {
-        return !range(low, high).empty();
-    }
-
-    /**
-     * Returns a pair of iterators covering the entire index content.
-     */
-    souffle::range<iterator> scan() const {
-        return {data.begin(), data.end()};
-    }
-
-    /**
-     * Returns a pair of iterators covering elements in the range [low,high)
-     */
-    souffle::range<iterator> range(const Tuple& low, const Tuple& high) const {
-        if (cmp(low, high) > 0) {
-            return {data.end(), data.end()};
-        }
-        return {data.lower_bound(low), data.upper_bound(high)};
-    }
-
-    /**
-     * Retruns a partitioned list of iterators for parallel computation
-     */
-    std::vector<souffle::range<iterator>> partitionScan(int partitionCount) const {
-        auto chunks = data.partition(partitionCount);
-        std::vector<souffle::range<iterator>> res;
-        res.reserve(chunks.size());
-        for (const auto& cur : chunks) {
-            res.push_back({cur.begin(), cur.end()});
-        }
-        return res;
-    }
-
-    /**
-     * Returns a partitioned list of iterators coving elements in range [low, high]
-     */
-    std::vector<souffle::range<iterator>> partitionRange(
-            const Tuple& low, const Tuple& high, int partitionCount) const {
-        auto ranges = this->range(low, high);
-        auto chunks = ranges.partition(partitionCount);
-        std::vector<souffle::range<iterator>> res;
-        res.reserve(chunks.size());
-        for (const auto& cur : chunks) {
-            res.push_back({cur.begin(), cur.end()});
-        }
-        return res;
-    }
-
-    /**
-     * Clears the content of this index, turning it empty.
-     */
-    void clear() {
-        data.clear();
-    }
-};
-
-/**
- * An index is an abstraction of a data structure
- */
-template <std::size_t _Arity>
-class Index<_Arity, BtreeDelete> {
-public:
-    static constexpr std::size_t Arity = _Arity;
-    using Data = BtreeDelete<Arity>;
-    using Tuple = typename souffle::Tuple<RamDomain, Arity>;
-    using iterator = typename Data::iterator;
-    using Hints = typename Data::operation_hints;
-    using Comparator = comparator<Arity>;
-
-    Index(Order order) : order(std::move(order)) {}
-
-protected:
-    Order order;
-    Data data;
-    Comparator cmp;
-
-public:
-    /**
-     * A view on a relation caching local access patterns (not thread safe!).
-     * Each thread should create and use its own view for accessing relations
-     * to exploit access patterns via operation hints.
-     */
-    class View : public ViewWrapper {
-        mutable Hints hints;
-        const Data& data;
-        Comparator cmp;
-
-    public:
-        View(const Data& data) : data(data) {}
-
-        /** Tests whether the given entry is contained in this index. */
-        bool contains(const Tuple& entry) {
-            return data.contains(entry, hints);
-        }
-
-        /** Tests whether any element in the given range is contained in this index. */
-        bool contains(const Tuple& low, const Tuple& high) {
-            return !range(low, high).empty();
-        }
-
-        /** Obtains a pair of iterators representing the given range within this index. */
-        souffle::range<iterator> range(const Tuple& low, const Tuple& high) {
-            if (cmp(low, high) > 0) {
-                return {data.end(), data.end()};
-            }
-            return {data.lower_bound(low, hints), data.upper_bound(high, hints)};
-        }
-    };
-
-public:
-    /**
-     * Requests the creation of a view on this index.
-     */
-    View createView() {
-        return View(this->data);
-    }
-
-    iterator begin() const {
-        return data.begin();
-    }
-
-    iterator end() const {
-        return data.end();
-    }
-
-    /**
-     * Obtains the lex order of this index.
-     */
-    Order getOrder() const {
-        return order;
-    }
-
-    /**
-     * Tests whether this index is empty or not.
-     */
-    bool empty() const {
-        return data.empty();
-    }
-
-    /**
-     * Obtains the number of elements stored in this index.
-     */
-    std::size_t size() const {
-        return data.size();
-    }
-
-    /**
-     * Inserts a tuple into this index.
-     */
-    bool insert(const Tuple& tuple) {
-        return data.insert(order.encode(tuple));
-    }
-
-    /**
-     * Erase a tuple from this index.
-     */
-    bool erase(const Tuple& tuple) {
-        return data.erase(order.encode(tuple)) > 0;
-    }
-
-    /**
-     * Inserts all elements of the given index.
-     */
-    void insert(const Index<Arity, BtreeDelete>& src) {
         for (const auto& tuple : src) {
             this->insert(tuple);
         }
@@ -593,10 +405,6 @@ public:
         return data = true;
     }
 
-    bool erase(const Tuple& /* t */) {
-        return data = false;
-    }
-
     void insert(const Index& src) {
         data = src.data;
     }
@@ -650,6 +458,25 @@ public:
      */
     void extend(EqrelIndex* otherIndex) {
         this->data.extend(otherIndex->data);
+    }
+};
+
+/**
+ * A BtreeDelete index
+ */
+template <std::size_t _Arity>
+class BtreeDeleteIndex : public interpreter::Index<_Arity, BtreeDelete> {
+public:
+    using Index<_Arity, BtreeDelete>::Index;
+    using Index<_Arity, BtreeDelete>::data;
+    using Index<_Arity, BtreeDelete>::order;
+    using Tuple = typename souffle::Tuple<RamDomain, _Arity>;
+
+    /**
+     * Erase a tuple from this index.
+     */
+    bool erase(const Tuple& tuple) {
+        return data.erase(order.encode(tuple)) > 0;
     }
 };
 

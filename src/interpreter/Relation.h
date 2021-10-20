@@ -107,8 +107,6 @@ public:
 
     virtual void insert(const RamDomain*) = 0;
 
-    virtual void erase(const RamDomain*) = 0;
-
     virtual bool contains(const RamDomain*) const = 0;
 
     virtual std::size_t size() const = 0;
@@ -219,10 +217,6 @@ public:
         insert(constructTuple(data));
     }
 
-    void erase(const RamDomain* data) override {
-        insert(constructTuple(data));
-    }
-
     bool contains(const RamDomain* data) const override {
         return contains(constructTuple(data));
     }
@@ -298,19 +292,6 @@ public:
         }
         for (std::size_t i = 1; i < indexes.size(); ++i) {
             indexes[i]->insert(tuple);
-        }
-        return true;
-    }
-
-    /**
-     * Erase the given tuple from this relation.
-     */
-    bool erase(const Tuple& tuple) {
-        if (!(main->erase(tuple))) {
-            return false;
-        }
-        for (std::size_t i = 1; i < indexes.size(); ++i) {
-            indexes[i]->erase(tuple);
         }
         return true;
     }
@@ -420,6 +401,29 @@ protected:
 
     // a pointer to the main index within the managed index
     Index* main;
+};
+
+template <std::size_t _Arity>
+class BtreeDeleteRelation : public Relation<_Arity, BtreeDelete> {
+public:
+    using Relation<_Arity, BtreeDelete>::Relation;
+    using Relation<_Arity, BtreeDelete>::main;
+    using Relation<_Arity, BtreeDelete>::indexes;
+    using Tuple = souffle::Tuple<RamDomain, _Arity>;
+
+    /**
+     * Erase the given tuple from this relation.
+     */
+    bool erase(const Tuple& tuple) {
+        using DeleteIndex = BtreeDeleteIndex<_Arity>;
+        if (!(static_cast<DeleteIndex*>(main))->erase(tuple)) {
+            return false;
+        }
+        for (std::size_t i = 1; i < indexes.size(); ++i) {
+            static_cast<DeleteIndex*>(indexes[i].get())->erase(tuple);
+        }
+        return true;
+    }
 };
 
 class EqrelRelation : public Relation<2, Eqrel> {

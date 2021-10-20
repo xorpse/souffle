@@ -89,7 +89,7 @@ struct RelationWrapper;
     Forward(Filter)\
     FOR_EACH(Expand, GuardedInsert)\
     FOR_EACH(Expand, Insert)\
-    FOR_EACH(Expand, Erase)\
+    FOR_EACH_BTREE_DELETE(Expand, Erase)\
     Forward(SubroutineReturn)\
     Forward(Sequence)\
     Forward(Parallel)\
