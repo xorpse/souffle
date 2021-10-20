@@ -12,7 +12,7 @@
  *
  * An implementation of a generic B-tree data structure including
  * interfaces for utilizing instances as set or multiset containers
- * and deletion. 
+ * and deletion.
  *
  ***********************************************************************/
 
