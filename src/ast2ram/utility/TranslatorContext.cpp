@@ -156,7 +156,7 @@ std::vector<ast::Clause*> TranslatorContext::getClauses(const ast::QualifiedName
     return relationDetail->getClauses(name);
 }
 
-bool TranslatorContext::hasLeq(const ast::QualifiedName& name) const {
+bool TranslatorContext::hasSubsumptiveClause(const ast::QualifiedName& name) const {
     for (const auto* clause : getClauses(name)) {
         if (isA<ast::SubsumptiveClause>(clause)) {
             return true;
