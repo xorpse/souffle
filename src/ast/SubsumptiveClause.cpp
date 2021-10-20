@@ -36,7 +36,6 @@ void SubsumptiveClause::print(std::ostream& os) const {
     os << *bodyLiterals[0];
     os << " <= ";
     os << *bodyLiterals[1];
-    // TODO: print from second onwards
     os << " :- \n";
     std::size_t i = 2;
     while (i < bodyLiterals.size() - 1) {
