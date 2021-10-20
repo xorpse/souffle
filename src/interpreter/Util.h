@@ -83,7 +83,6 @@ namespace souffle::interpreter {
     func(Btree, 20, __VA_ARGS__)
 
 #define FOR_EACH_BTREE_DELETE(func, ...)\
-    func(BtreeDelete, 0, __VA_ARGS__) \
     func(BtreeDelete, 1, __VA_ARGS__) \
     func(BtreeDelete, 2, __VA_ARGS__) \
     func(BtreeDelete, 3, __VA_ARGS__) \

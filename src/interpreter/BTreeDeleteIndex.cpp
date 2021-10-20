@@ -30,7 +30,7 @@ namespace souffle::interpreter {
 Own<RelationWrapper> createBTreeDeleteRelation(
         const ram::Relation& id, const ram::analysis::IndexCluster& indexSelection) {
     switch (id.getArity()) {
-        FOR_EACH_BTREE(CREATE_BTREE_DELETE_REL);
+        FOR_EACH_BTREE_DELETE(CREATE_BTREE_DELETE_REL);
 
         default: fatal("Requested arity not yet supported. Feel free to add it.");
     }
