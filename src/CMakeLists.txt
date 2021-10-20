@@ -125,6 +125,7 @@ set(SOUFFLE_SOURCES
     interpreter/Generator.cpp
     interpreter/BrieIndex.cpp
     interpreter/BTreeIndex.cpp
+    interpreter/BTreeDeleteIndex.cpp
     interpreter/EqrelIndex.cpp
     interpreter/ProvenanceIndex.cpp
     parser/ParserDriver.cpp

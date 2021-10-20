@@ -237,6 +237,14 @@ public:
     }
 
     /**
+     * Erase a tuple from this index.
+     */
+    bool erase(const Tuple& /* tuple */) {
+       //  return data.erase(order.encode(tuple)) > 0 ;
+       return false;
+    }
+
+    /**
      * Inserts all elements of the given index.
      */
     void insert(const Index<Arity, Structure>& src) {
@@ -403,6 +411,10 @@ public:
 
     bool insert(const Tuple& /* t */) {
         return data = true;
+    }
+
+    bool erase(const Tuple& /* t */) {
+        return data = false;
     }
 
     void insert(const Index& src) {

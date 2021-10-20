@@ -903,7 +903,7 @@ public:
     /**
      * The iterator type to be utilized for scanning through btree instances.
      */
-    struct iterator : public std::iterator<std::bidirectional_iterator_tag, Key> {
+    class iterator : public std::iterator<std::bidirectional_iterator_tag, Key> {
         // a pointer to the node currently referred to
         // node const* cur;
         node* cur;

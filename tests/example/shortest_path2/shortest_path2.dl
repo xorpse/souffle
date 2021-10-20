@@ -5,12 +5,11 @@
 // - <souffle root>/licenses/SOUFFLE-UPL.txt
 
 // define edge relation of a directed graph
-.decl e(x:number, y:number)
+.decl e(x:number, y:number, c:number)
 
-e(1,2).
-e(2,2).
-e(2,3).
-e(1,3).
+e(1,2,1).
+e(2,2,1).
+e(2,3,1).
 
 // define shortest path relation
 .decl sp(x:number, y:number, c:number) btree_delete
@@ -26,14 +25,14 @@ sp(x,y,c1) <= sp(x,y, c2) :-
 //
 // base case
 //
-sp(x,y,1) :-
-  e(x,y).
+sp(x,y,c) :-
+  e(x,y,c).
 
 //
 // inductive case
 //
-sp(x,z,c + 1) :-
-  sp(x,y,c),
-  e(y,z).
+sp(x,z,c1 + c2) :-
+  sp(x,y,c1),
+  e(y,z,c2).
 
 .output sp

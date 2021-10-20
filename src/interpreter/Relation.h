@@ -107,6 +107,8 @@ public:
 
     virtual void insert(const RamDomain*) = 0;
 
+    virtual void erase(const RamDomain*) = 0;
+
     virtual bool contains(const RamDomain*) const = 0;
 
     virtual std::size_t size() const = 0;
@@ -217,6 +219,10 @@ public:
         insert(constructTuple(data));
     }
 
+    void erase(const RamDomain* data) override {
+        insert(constructTuple(data));
+    }
+
     bool contains(const RamDomain* data) const override {
         return contains(constructTuple(data));
     }
@@ -295,6 +301,20 @@ public:
         }
         return true;
     }
+
+    /**
+     * Erase the given tuple from this relation.
+     */
+    bool erase(const Tuple& tuple) {
+        if (!(main->erase(tuple))) {
+            return false;
+        }
+        for (std::size_t i = 1; i < indexes.size(); ++i) {
+            indexes[i]->erase(tuple);
+        }
+        return true;
+    }
+
 
     /**
      * Add all entries of the given relation to this relation.
@@ -422,12 +442,18 @@ using RelationFactory = Own<RelationWrapper> (*)(
 Own<RelationWrapper> createBTreeRelation(
         const ram::Relation& id, const ram::analysis::IndexCluster& indexSelection);
 
+// A factory for BTreeDelete based relation.
+Own<RelationWrapper> createBTreeDeleteRelation(
+        const ram::Relation& id, const ram::analysis::IndexCluster& indexSelection);
+
 // A factory for BTree provenance index.
 Own<RelationWrapper> createProvenanceRelation(
         const ram::Relation& id, const ram::analysis::IndexCluster& indexSelection);
+
 // A factory for Brie based index.
 Own<RelationWrapper> createBrieRelation(
         const ram::Relation& id, const ram::analysis::IndexCluster& indexSelection);
+
 // A factory for Eqrel index.
 Own<RelationWrapper> createEqrelRelation(
         const ram::Relation& id, const ram::analysis::IndexCluster& indexSelection);

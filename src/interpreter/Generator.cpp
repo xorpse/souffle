@@ -354,6 +354,14 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Insert>, const ram::Insert& ins
     return mk<Insert>(type, &insert, rel, std::move(superOp));
 }
 
+NodePtr NodeGenerator::visit_(type_identity<ram::Erase>, const ram::Erase& erase) {
+    SuperInstruction superOp = getEraseSuperInstInfo(erase);
+    std::size_t relId = encodeRelation(erase.getRelation());
+    auto rel = getRelationHandle(relId);
+    NodeType type = constructNodeType("Erase", lookup(erase.getRelation()));
+    return mk<Erase>(type, &erase, rel, std::move(superOp));
+}
+
 NodePtr NodeGenerator::visit_(type_identity<ram::SubroutineReturn>, const ram::SubroutineReturn& ret) {
     NodePtrVec children;
     for (const auto& value : ret.getValues()) {
@@ -696,6 +704,34 @@ SuperInstruction NodeGenerator::getExistenceSuperInstInfo(const ram::AbstractExi
 }
 
 SuperInstruction NodeGenerator::getInsertSuperInstInfo(const ram::Insert& exist) {
+    std::size_t arity = getArity(exist.getRelation());
+    SuperInstruction superOp(arity);
+    const auto& children = exist.getValues();
+    for (std::size_t i = 0; i < arity; ++i) {
+        auto& child = children[i];
+        // Constant
+        if (isA<ram::NumericConstant>(child)) {
+            superOp.first[i] = as<ram::NumericConstant>(child)->getConstant();
+            continue;
+        }
+
+        // TupleElement
+        if (isA<ram::TupleElement>(child)) {
+            auto tuple = as<ram::TupleElement>(child);
+            std::size_t tupleId = tuple->getTupleId();
+            std::size_t elementId = tuple->getElement();
+            std::size_t newElementId = orderingContext.mapOrder(tupleId, elementId);
+            superOp.tupleFirst.push_back({i, tupleId, newElementId});
+            continue;
+        }
+
+        // Generic expression
+        superOp.exprFirst.push_back(std::pair<std::size_t, Own<Node>>(i, dispatch(*child)));
+    }
+    return superOp;
+}
+
+SuperInstruction NodeGenerator::getEraseSuperInstInfo(const ram::Erase& exist) {
     std::size_t arity = getArity(exist.getRelation());
     SuperInstruction superOp(arity);
     const auto& children = exist.getValues();

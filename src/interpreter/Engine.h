@@ -153,6 +153,9 @@ private:
     template <typename Rel>
     RamDomain evalInsert(Rel& rel, const Insert& shadow, Context& ctxt);
 
+    template <typename Rel>
+    RamDomain evalErase(Rel& rel, const Erase& shadow, Context& ctxt);
+
     /** If profile is enable in this program */
     const bool profileEnabled;
     const bool frequencyCounterEnabled;
