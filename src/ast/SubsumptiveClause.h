@@ -31,7 +31,7 @@ namespace souffle::ast {
  * @class SubsumptiveClause
  * @brief Intermediate representation of a subsumptive clause
  *
- * Format: 
+ * Format:
  *     A(x1,...) <= A(y1,...) :- <Body> .
  *
  */
