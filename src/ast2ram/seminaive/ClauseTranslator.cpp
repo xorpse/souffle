@@ -138,7 +138,7 @@ std::string ClauseTranslator::getClauseAtomName(const ast::Clause& clause, const
     if (isA<ast::SubsumptiveClause>(clause)) {
         if (clause.getHead() == atom) {
             if (version == 2 || version == 3) {
-                return getToEraseRelationName(atom->getQualifiedName());
+                return getDeleteRelationName(atom->getQualifiedName());
             }
             return getRejectRelationName(atom->getQualifiedName());
         }

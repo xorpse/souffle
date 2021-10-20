@@ -51,7 +51,7 @@ std::string getRejectRelationName(const ast::QualifiedName& name) {
     return getConcreteRelationName(name, "@reject_");
 }
 
-std::string getToEraseRelationName(const ast::QualifiedName& name) {
+std::string getDeleteRelationName(const ast::QualifiedName& name) {
     return getConcreteRelationName(name, "@delete_");
 }
 

@@ -132,7 +132,7 @@ Own<ram::Statement> UnitTranslator::generateNonRecursiveRelation(
 
     // compute deletion set for subsumptive relations
     if (rel.getRepresentation() == RelationRepresentation::BTREE_DELETE) {
-        std::string eraseRelation = getToEraseRelationName(rel.getQualifiedName());
+        std::string eraseRelation = getDeleteRelationName(rel.getQualifiedName());
 
         // Compute subsumptive deletions for non-recursive rules
         for (auto clause : context->getClauses(rel.getQualifiedName())) {
@@ -343,7 +343,7 @@ Own<ram::Statement> UnitTranslator::generateStratumPostamble(
         appendStmt(postamble, mk<ram::Clear>(getDeltaRelationName(rel->getQualifiedName())));
         appendStmt(postamble, mk<ram::Clear>(getNewRelationName(rel->getQualifiedName())));
         if (rel->getRepresentation() == RelationRepresentation::BTREE_DELETE) {
-            appendStmt(postamble, mk<ram::Clear>(getToEraseRelationName(rel->getQualifiedName())));
+            appendStmt(postamble, mk<ram::Clear>(getDeleteRelationName(rel->getQualifiedName())));
             appendStmt(postamble, mk<ram::Clear>(getRejectRelationName(rel->getQualifiedName())));
         }
     }
@@ -356,7 +356,7 @@ Own<ram::Statement> UnitTranslator::generateStratumTableDeletes(
     for (const ast::Relation* rel : scc) {
         if (rel->getRepresentation() == RelationRepresentation::BTREE_DELETE) {
             std::string mainRelation = getConcreteRelationName(rel->getQualifiedName());
-            std::string eraseRelation = getToEraseRelationName(rel->getQualifiedName());
+            std::string eraseRelation = getDeleteRelationName(rel->getQualifiedName());
             Own<ram::Statement> d = mk<ram::Sequence>(
                     generateEraseTuples(rel, mainRelation, eraseRelation), mk<ram::Clear>(eraseRelation));
             if (Global::config().has("profile")) {
@@ -588,7 +588,7 @@ VecOwn<ram::Relation> UnitTranslator::createRamRelations(const std::vector<std::
                 // Add auxiliary relation for subsumption
                 if (rel->getRepresentation() == RelationRepresentation::BTREE_DELETE) {
                     // Add deletion relation
-                    std::string toEraseName = getToEraseRelationName(rel->getQualifiedName());
+                    std::string toEraseName = getDeleteRelationName(rel->getQualifiedName());
                     ramRelations.push_back(createRamRelation(rel, toEraseName));
 
                     // Add reject relation
@@ -597,7 +597,7 @@ VecOwn<ram::Relation> UnitTranslator::createRamRelations(const std::vector<std::
                 }
             } else if (rel->getRepresentation() == RelationRepresentation::BTREE_DELETE) {
                 // Add deletion relation for non recursive subsumptive relations
-                std::string toEraseName = getToEraseRelationName(rel->getQualifiedName());
+                std::string toEraseName = getDeleteRelationName(rel->getQualifiedName());
                 ramRelations.push_back(createRamRelation(rel, toEraseName));
             }
         }
