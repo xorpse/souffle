@@ -10,6 +10,8 @@
 e(1,2,1).
 e(2,2,1).
 e(2,3,1).
+e(3,4,1).
+e(1,4,100).
 
 // define shortest path relation
 .decl sp(x:number, y:number, c:number) btree_delete
