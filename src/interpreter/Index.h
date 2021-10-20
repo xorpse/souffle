@@ -240,7 +240,7 @@ public:
      * Erase a tuple from this index.
      */
     bool erase(const Tuple& /* tuple */) {
-       //  return data.erase(order.encode(tuple)) > 0 ;
+       abort(); 
        return false;
     }
 
