@@ -240,8 +240,8 @@ public:
      * Erase a tuple from this index.
      */
     bool erase(const Tuple& /* tuple */) {
-       abort(); 
-       return false;
+        abort();
+        return false;
     }
 
     /**
@@ -327,7 +327,7 @@ template <std::size_t _Arity>
 class Index<_Arity, BtreeDelete> {
 public:
     static constexpr std::size_t Arity = _Arity;
-    using Data = BtreeDelete<Arity>; 
+    using Data = BtreeDelete<Arity>;
     using Tuple = typename souffle::Tuple<RamDomain, Arity>;
     using iterator = typename Data::iterator;
     using Hints = typename Data::operation_hints;
@@ -420,8 +420,8 @@ public:
     /**
      * Erase a tuple from this index.
      */
-    bool erase(const Tuple& tuple ) {
-       return data.erase(order.encode(tuple)) > 0 ;
+    bool erase(const Tuple& tuple) {
+        return data.erase(order.encode(tuple)) > 0;
     }
 
     /**

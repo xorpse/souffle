@@ -637,7 +637,7 @@ void SemanticCheckerImpl::checkRelation(const Relation& relation) {
                                 "\"btree_delete\" is missing",
                 relation.getSrcLoc());
     }
-    if(relation.getRepresentation() == RelationRepresentation::BTREE_DELETE && relation.getArity() == 0) { 
+    if (relation.getRepresentation() == RelationRepresentation::BTREE_DELETE && relation.getArity() == 0) {
         report.addError("Subsumptive relation \"" + toString(relation.getQualifiedName()) +
                                 "\"  must not be a nullary relation",
                 relation.getSrcLoc());

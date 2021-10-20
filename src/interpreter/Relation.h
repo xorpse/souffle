@@ -315,7 +315,6 @@ public:
         return true;
     }
 
-
     /**
      * Add all entries of the given relation to this relation.
      */

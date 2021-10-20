@@ -767,7 +767,6 @@ public:
             : Node(ty, sdw), SuperOperation(std::move(superInst)), RelationalOperation(relHandle) {}
 };
 
-
 /**
  * @class GuardedInsert
  */

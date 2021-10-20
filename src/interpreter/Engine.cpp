@@ -31,10 +31,10 @@
 #include "ram/Constraint.h"
 #include "ram/DebugInfo.h"
 #include "ram/EmptinessCheck.h"
+#include "ram/Erase.h"
 #include "ram/ExistenceCheck.h"
 #include "ram/Exit.h"
 #include "ram/Extend.h"
-#include "ram/Erase.h"
 #include "ram/False.h"
 #include "ram/Filter.h"
 #include "ram/IO.h"
@@ -1746,7 +1746,6 @@ RamDomain Engine::evalInsert(Rel& rel, const Insert& shadow, Context& ctxt) {
     rel.insert(tuple);
     return true;
 }
-
 
 template <typename Rel>
 RamDomain Engine::evalErase(Rel& rel, const Erase& shadow, Context& ctxt) {

@@ -17,9 +17,9 @@
 #pragma once
 
 #include "ast/Atom.h"
+#include "ast/Clause.h"
 #include "ast/Literal.h"
 #include "ast/Node.h"
-#include "ast/Clause.h"
 #include "ast/QualifiedName.h"
 #include "parser/SrcLocation.h"
 #include <iosfwd>
@@ -37,8 +37,8 @@ namespace souffle::ast {
  */
 class SubsumptiveClause : public Clause {
 public:
-    SubsumptiveClause(Own<Atom> head, VecOwn<Literal> bodyLiterals, Own<ExecutionPlan> plan = {},
-            SrcLocation loc = {});
+    SubsumptiveClause(
+            Own<Atom> head, VecOwn<Literal> bodyLiterals, Own<ExecutionPlan> plan = {}, SrcLocation loc = {});
 
     SubsumptiveClause(Own<Atom> head, SrcLocation loc = {});
 
@@ -47,7 +47,7 @@ public:
     /** Add a literal to the body of the clause as a first literal */
     void addToBodyFront(Own<Literal> literal);
 
-    Clause* cloneHead() const override;  
+    Clause* cloneHead() const override;
 
 protected:
     void print(std::ostream& os) const override;

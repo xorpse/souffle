@@ -54,9 +54,9 @@ SubsumptiveClause* SubsumptiveClause::cloning() const {
     return new SubsumptiveClause(clone(head), clone(bodyLiterals), clone(plan), getSrcLoc());
 }
 
-Clause* SubsumptiveClause::cloneHead() const { 
-     SubsumptiveClause *myClone = new SubsumptiveClause(clone(head), getSrcLoc()); 
-     if (getExecutionPlan() != nullptr) {
+Clause* SubsumptiveClause::cloneHead() const {
+    SubsumptiveClause* myClone = new SubsumptiveClause(clone(head), getSrcLoc());
+    if (getExecutionPlan() != nullptr) {
         myClone->setExecutionPlan(clone(getExecutionPlan()));
     }
     return myClone;
