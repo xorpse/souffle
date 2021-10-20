@@ -1103,13 +1103,14 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
         FOR_EACH(INSERT)
 #undef INSERT
 
-#define ERASE(Structure, Arity, ...)                              \
-    CASE(Erase, Structure, Arity)                                 \
-        auto& rel = *static_cast<RelType*>(shadow.getRelation()); \
-        return evalErase(rel, shadow, ctxt);                      \
+#define ERASE(Structure, Arity, ...)                                                 \
+    CASE(Erase, Structure, Arity)                                                    \
+        void(static_cast<RelType*>(shadow.getRelation()));                           \
+        auto& rel = *static_cast<BtreeDeleteRelation<Arity>*>(shadow.getRelation()); \
+        return evalErase(rel, shadow, ctxt);                                         \
     ESAC(Erase)
 
-        FOR_EACH(ERASE)
+        FOR_EACH_BTREE_DELETE(ERASE)
 #undef ERASE
 
         CASE(SubroutineReturn)
