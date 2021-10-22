@@ -119,16 +119,18 @@ std::optional<detail::LinuxWaitStatus> execute(
     memset(&pi, 0, sizeof(pi));
 
     std::size_t l;
-    std::wstring program_w(program.length(), L' ');
-    program_w.resize(::mbstowcs_s(&l, program_w.data(), program_w.size(), program.data(), program.size()));
+    std::wstring program_w(program.length() + 1, L' ');
+    ::mbstowcs_s(&l, program_w.data(), program_w.size(), program.data(), program.size());
+    program_w.resize(l - 1);
 
-    std::wstring args_w;
-    args_w += program_w;
+    std::wstringstream args_w;
+    args_w << program_w;
     for (const auto& arg : argv) {
         std::string arg_s(arg);
-        std::wstring arg_w(arg_s.size(), L' ');
-        arg_w.resize(::mbstowcs_s(&l, arg_w.data(), arg_w.size(), arg_s.data(), arg_s.size()));
-        args_w += (L' ' + arg_w);
+        std::wstring arg_w(arg_s.length() + 1, L' ');
+        ::mbstowcs_s(&l, arg_w.data(), arg_w.size(), arg_s.data(), arg_s.size());
+        arg_w.resize(l - 1);
+        args_w << L' ' << arg_w;
     }
 
     std::string envir;
@@ -141,7 +143,7 @@ std::optional<detail::LinuxWaitStatus> execute(
     envir += '\0';
 
     if (!CreateProcessW(
-                program_w.c_str(), args_w.data(), NULL, NULL, FALSE, 0, envir.data(), NULL, &si, &pi)) {
+                program_w.c_str(), args_w.str().data(), NULL, NULL, FALSE, 0, envir.data(), NULL, &si, &pi)) {
         return {};
     }
 

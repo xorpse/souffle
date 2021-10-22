@@ -39,8 +39,8 @@ def compare_files expected_file, actual_file
   actual_lines = File.readlines(actual_file)
 
   if actual_lines != expected_lines
-    STDERR.write "Found output difference expected file:'#{expected_file}' actual file:'#{actual_file}'"
-    STDERR.write `diff #{expected_file} #{actual_file}`
+    STDERR.puts "Found output difference expected file:'#{File.absolute_path expected_file}' actual file:'#{File.absolute_path actual_file}'"
+    #STDERR.write `diff #{expected_file} #{actual_file}`
     raise ("Differences in expected:'%s' actual:'%s'" % [expected_file, actual_file]) 
   end
   true

@@ -25,9 +25,20 @@ function(SOUFFLE_RUN_CPP_TEST)
         ${ARGV}
     )
 
+  set(ADDITIONNAL_FLAGS "")
+
+  if (OPENMP_FOUND)
+    string(APPEND ADDITIONNAL_FLAGS " ${OpenMP_CXX_FLAGS}")
+  endif()
+
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
+      string(APPEND ADDITIONNAL_FLAGS " -lstdc++fs")
+    endif ()
+  endif()
 
     add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_compile_cpp
-             COMMAND sh -c "set -e; '${CMAKE_CXX_COMPILER}' --std=c++17 -D__EMBEDDED_SOUFFLE__  '-I${CMAKE_SOURCE_DIR}/src/include' '${TEST_NAME}.cpp' '${PARAM_INPUT_DIR}/driver.cpp' -o '${TEST_NAME}'")
+      COMMAND sh -c "set -e; '${CMAKE_CXX_COMPILER}' --std=c++17 -D__EMBEDDED_SOUFFLE__  '-I${CMAKE_SOURCE_DIR}/src/include' '${TEST_NAME}.cpp' '${PARAM_INPUT_DIR}/driver.cpp' -o '${TEST_NAME}' ${ADDITIONNAL_FLAGS}")
     set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_compile_cpp PROPERTIES
                          WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
                          LABELS "${PARAM_TEST_LABELS}"

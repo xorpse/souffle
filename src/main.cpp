@@ -272,7 +272,7 @@ int main(int argc, char** argv) {
                 {"parse-errors", '\5', "", "", false, "Show parsing errors, if any, then exit."},
                 {"help", 'h', "", "", false, "Display this help message."},
                 {"legacy", '\6', "", "", false, "Enable legacy support."},
-                {"preprocessor", '\7', "CMD", "", false, "preprocessor to use instead of mcpp"}};
+                {"preprocessor", '\7', "CMD", "", false, "C preprocessor to use."}};
         Global::config().processArgs(argc, argv, header.str(), footer.str(), options);
 
         // ------ command line arguments -------------
@@ -404,26 +404,33 @@ int main(int argc, char** argv) {
     } else {
         cmd = which("mcpp");
         if (isExecutable(cmd)) {
-            cmd += " -e utf8 -W0 ";
+            cmd += " -e utf8 -W0";
         } else {
             cmd = which("gcc");
             if (isExecutable(cmd)) {
-                cmd += " -x c -E ";
+                cmd += " -x c -E";
             } else {
+                std::cerr << "failed to locate mcpp or gcc pre-processors\n";
                 throw std::runtime_error("failed to locate mcpp or gcc pre-processors");
             }
         }
     }
 
-    cmd += toString(join(Global::config().getMany("include-dir"), " ",
-            [&](auto&& os, auto&& dir) { tfm::format(os, "'-I%s'", dir); }));
+    cmd += " " + toString(join(Global::config().getMany("include-dir"), " ",
+                         [&](auto&& os, auto&& dir) { tfm::format(os, "-I \"%s\"", dir); }));
 
     if (Global::config().has("macro")) {
         cmd += " " + Global::config().get("macro");
     }
     // Add RamDomain size as a macro
     cmd += " -DRAM_DOMAIN_SIZE=" + std::to_string(RAM_DOMAIN_SIZE);
-    cmd += " '" + Global::config().get("") + "'";
+    cmd += " \"" + Global::config().get("") + "\"";
+#ifdef _MSC_VER
+    // cl.exe prints the input file name on the standard error stream,
+    // we must silent it in order to preserve an empty error output
+    // because Souffle test-suite is sensible to error outputs.
+    cmd += " 2> nul";
+#endif
     FILE* in = popen(cmd.c_str(), "r");
 
     /* Time taking for parsing */
@@ -442,6 +449,10 @@ int main(int argc, char** argv) {
     if (preprocessor_status == -1) {
         perror(nullptr);
         throw std::runtime_error("failed to close pre-processor pipe");
+    } else if (preprocessor_status != 0) {
+        std::cerr << "Pre-processors command failed with code " << preprocessor_status << ": '" << cmd
+                  << "'\n";
+        throw std::runtime_error("Pre-processor command failed");
     }
 
     /* Report run-time of the parser if verbose flag is set */
@@ -771,7 +782,7 @@ int main(int argc, char** argv) {
 
             if (must_compile) {
                 /* Fail if a souffle-compile executable is not found */
-                auto souffle_compile = findTool("souffle-compile", souffleExecutable, ".");
+                auto souffle_compile = findTool("souffle-compile", souffleExecutable, ".:..");
                 if (!isExecutable(souffle_compile))
                     throw std::runtime_error("failed to locate souffle-compile");
 

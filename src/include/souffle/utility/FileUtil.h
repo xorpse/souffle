@@ -20,12 +20,17 @@
 #include <climits>
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <map>
 #include <sstream>
 #include <string>
 #include <utility>
 #include <sys/stat.h>
+
+// -------------------------------------------------------------------------------
+//                               File Utils
+// -------------------------------------------------------------------------------
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -37,20 +42,10 @@
 #include <windows.h>
 
 // -------------------------------------------------------------------------------
-//                               File Utils
+//                               Windows
 // -------------------------------------------------------------------------------
 
-#define X_OK 1 /* execute permission - unsupported in windows*/
-
 #define PATH_MAX 260
-
-/**
- * access and realpath are missing on windows, we use their windows equivalents
- * as work-arounds.
- */
-inline int access(const char* path, int mode) {
-    return _access(path, mode);
-}
 
 inline char* realpath(const char* path, char* resolved_path) {
     return _fullpath(resolved_path, path, PATH_MAX);
@@ -63,12 +58,16 @@ inline char* realpath(const char* path, char* resolved_path) {
 #define pclose _pclose
 #endif
 
+// -------------------------------------------------------------------------------
+//                               All systems
+// -------------------------------------------------------------------------------
+
 namespace souffle {
 
 // The separator in the PATH variable
 #ifdef _MSC_VER
 const char PATHdelimiter = ';';
-const char pathSeparator = '\\';
+const char pathSeparator = '/';
 #else
 const char PATHdelimiter = ':';
 const char pathSeparator = '/';
@@ -76,8 +75,13 @@ const char pathSeparator = '/';
 
 inline std::string& makePreferred(std::string& name) {
     std::replace(name.begin(), name.end(), '\\', '/');
-    std::replace(name.begin(), name.end(), '/', pathSeparator);
+    // std::replace(name.begin(), name.end(), '/', pathSeparator);
     return name;
+}
+
+inline bool isAbsolute(const std::string& path) {
+    std::filesystem::path P(path);
+    return P.is_absolute();
 }
 
 /**
@@ -89,14 +93,15 @@ inline bool existFile(const std::string& name) {
     if (it != existFileCache.end()) {
         return it->second;
     }
-
-    bool result = false;
+    std::filesystem::path P(name);
+    bool result = std::filesystem::exists(P);
+    /*bool result = false;
     struct stat buffer = {};
-    if (stat(name.c_str(), &buffer) == 0) {
+    if (stat(P.native().c_str(), &buffer) == 0) {
         if ((buffer.st_mode & S_IFMT) != 0) {
             result = true;
         }
-    }
+    }*/
     existFileCache[name] = result;
     return result;
 }
@@ -117,16 +122,24 @@ inline bool existDir(const std::string& name) {
 /**
  * Check whether a given file exists and it is an executable
  */
+#ifdef _WIN32
+inline bool isExecutable(const std::string& name) {
+    return existFile(
+            name);  // there is no EXECUTABLE bit on Windows, so theoretically any file may be executable
+}
+#else
 inline bool isExecutable(const std::string& name) {
     return existFile(name) && (access(name.c_str(), X_OK) == 0);
 }
+#endif
 
 /**
  * Simple implementation of a which tool
  */
 inline std::string which(const std::string& name) {
     // Check if name has path components in it and if so return it immediately
-    if (name.find(pathSeparator) != std::string::npos) {
+    std::filesystem::path P(name);
+    if (P.has_parent_path()) {
         return name;
     }
     // Get PATH from environment, if it exists.
@@ -156,6 +169,14 @@ inline std::string dirName(const std::string& name) {
     if (name.empty()) {
         return ".";
     }
+
+    std::filesystem::path P(name);
+    if (P.has_parent_path()) {
+        return P.parent_path().string();
+    } else {
+        return ".";
+    }
+
     std::size_t lastNotSlash = name.find_last_not_of(pathSeparator);
     // All '/'
     if (lastNotSlash == std::string::npos) {
@@ -203,12 +224,12 @@ inline std::string pathJoin(const std::string& first, const std::string& second)
  * colon-separated list of directories.
  */
 inline std::string findTool(const std::string& tool, const std::string& base, const std::string& path) {
-    std::string dir = dirName(base);
+    std::filesystem::path dir(dirName(base));
     std::stringstream sstr(path);
     std::string sub;
 
     while (std::getline(sstr, sub, ':')) {
-        std::string subpath = dir + pathSeparator + sub + pathSeparator + tool;
+        std::string subpath = (dir / sub / tool).string();
         if (isExecutable(subpath)) {
             return absPath(subpath);
         }

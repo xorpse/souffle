@@ -4,6 +4,24 @@
 # - https://opensource.org/licenses/UPL
 # - <souffle root>/licenses/SOUFFLE-UPL.txt
 
+
+if (MSVC)
+    add_compile_options(/bigobj)
+
+    add_compile_options(/wd6326 /wd5105)
+
+    if (NOT (MSVC_VERSION LESS 1910))
+      add_compile_options (/permissive-)
+    endif()
+
+    add_compile_options(/Zc:preprocessor)
+
+    add_compile_options(/EHsc)
+
+    add_compile_definitions(USE_CUSTOM_GETOPTLONG)
+endif (MSVC)
+
+
 set(SOUFFLE_SOURCES
     FunctorOps.cpp
     Global.cpp
@@ -206,29 +224,29 @@ target_compile_options(libsouffle
                        PUBLIC "")
 endif ()
 
-target_link_libraries(libsouffle PRIVATE Threads::Threads)
+if (Threads_FOUND)
+  target_link_libraries(libsouffle PUBLIC Threads::Threads)
+endif ()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
+    target_link_libraries(libsouffle PUBLIC stdc++fs)
+  endif ()
+endif ()
+
 
 if(SOUFFLE_CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_link_libraries(libsouffle PUBLIC coverage_config)
-endif(SOUFFLE_CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+endif ()
 
-if (MSVC)
-    add_definitions (/bigobj)
 
-    add_definitions(/wd6326 /wd5105)
+target_link_libraries(libsouffle PUBLIC "${CMAKE_DL_LIBS}")
 
-    if (NOT (MSVC_VERSION LESS 1910))
-      add_definitions (/permissive-)
-    endif()
 
-    add_definitions(/Zc:preprocessor)
-
-    add_definitions(/openmp)
-
-    add_definitions(/EHsc)
-
-    target_compile_definitions(libsouffle PUBLIC USE_CUSTOM_GETOPTLONG)
-endif (MSVC)
+if (SOUFFLE_DOMAIN_64BIT)
+    target_compile_definitions(libsouffle
+                               PUBLIC RAM_DOMAIN_SIZE=64)
+endif()
 
 if (SOUFFLE_USE_LIBFFI)
 if (libffi_FOUND)
@@ -238,26 +256,8 @@ else ()
 endif ()
 endif ()
 
-# FIXME: Better to have a library list 
 if (OPENMP_FOUND)
-    target_link_libraries(libsouffle
-                      PUBLIC OpenMP::OpenMP_CXX
-                             $<$<BOOL:${SOUFFLE_USE_ZLIB}>:ZLIB::ZLIB>
-                             $<$<BOOL:${SOUFFLE_USE_SQLITE}>:SQLite::SQLite3>
-                             $<$<BOOL:${SOUFFLE_USE_CURSES}>:Curses::NCurses>
-                             "${CMAKE_DL_LIBS}")
-else()
-    target_link_libraries(libsouffle
-                      PUBLIC $<$<BOOL:${SOUFFLE_USE_ZLIB}>:ZLIB::ZLIB>
-                             $<$<BOOL:${SOUFFLE_USE_SQLITE}>:SQLite::SQLite3>
-                             $<$<BOOL:${SOUFFLE_USE_CURSES}>:Curses::NCurses>
-                             "${CMAKE_DL_LIBS}")
-endif()
-
-
-if (SOUFFLE_DOMAIN_64BIT)
-    target_compile_definitions(libsouffle
-                               PUBLIC RAM_DOMAIN_SIZE=64)
+    target_link_libraries(libsouffle PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
 if (SOUFFLE_CUSTOM_GETOPTLONG)
@@ -268,16 +268,19 @@ endif()
 if (SOUFFLE_USE_CURSES)
     target_compile_definitions(libsouffle
                                PUBLIC USE_NCURSES)
+    target_link_libraries(libsouffle PUBLIC Curses::NCurses)
 endif()
 
 if (SOUFFLE_USE_ZLIB)
     target_compile_definitions(libsouffle
                                PUBLIC USE_LIBZ)
+    target_link_libraries(libsouffle PUBLIC ZLIB::ZLIB)
 endif()
 
 if (SOUFFLE_USE_SQLITE)
     target_compile_definitions(libsouffle
                                PUBLIC USE_SQLITE)
+    target_link_libraries(libsouffle PUBLIC SQLite::SQLite3)
 endif()
 
 if (SOUFFLE_USE_LIBFFI)
@@ -348,16 +351,27 @@ function(AUTOMAKE_COMPATIBLE_SUBST F_IN F_OUT)
     # *) Synth'd code isn't warning free for now anyways.
     #    TODO: Require/verify that test case synthesised code is warning free as part of test suite.
     string(REGEX REPLACE "-Werror" ""  SOUFFLE_CXXFLAGS "${CMAKE_CXX_FLAGS}")
+
     set(SOUFFLE_CXXFLAGS "${SOUFFLE_CXXFLAGS} ${CMAKE_CXX_FLAGS_${BT_UPPER}} ${SUBST_DEFS}")
+
     if (OPENMP_FOUND)
        set(SOUFFLE_CXXFLAGS "${SOUFFLE_CXXFLAGS} -fopenmp")
     endif()
 
-    # Libraries
-    set(LIBS "-lpthread")
+    set(LIBS "")
+
+    if (THREADS_FOUND)
+      string(APPEND LIBS " ${CMAKE_THREAD_LIBS_INIT}")
+    endif()
 
     if (CMAKE_DL_LIBS)
        string(APPEND LIBS " -l${CMAKE_DL_LIBS}")
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+      if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
+        string(APPEND LIBS " -lstdc++fs")
+      endif ()
     endif()
 
     if (SOUFFLE_USE_SQLITE)
@@ -373,12 +387,29 @@ function(AUTOMAKE_COMPATIBLE_SUBST F_IN F_OUT)
     endif()
 
     configure_file("${F_IN}" "${F_OUT}" @ONLY)
+    file(CHMOD ${F_OUT} 
+      PERMISSIONS 
+      OWNER_EXECUTE OWNER_READ OWNER_WRITE
+      GROUP_EXECUTE GROUP_READ
+      WORLD_EXECUTE WORLD_READ)
 endfunction()
 
 automake_compatible_subst("${CMAKE_CURRENT_SOURCE_DIR}/souffle-compile.in"
                           "${CMAKE_CURRENT_BINARY_DIR}/souffle-compile")
 
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/souffle-compile DESTINATION bin)
+
+#file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/souffle-compile.yml" CONTENT 
+#    "compiler = ${CMAKE_CXX_COMPILER}
+#     include = ${CMAKE_CURRENT_SOURCE_DIR}/include 
+#     std_flag = ${CMAKE_CXX17_STANDARD_COMPILE_OPTION}
+#     cxx_flags = ${CMAKE_CXX_FLAGS}
+#     release_cxx_flags = ${CMAKE_CXX_FLAGS_RELEASE}
+#     debug_cxx_flags = ${CMAKE_CXX_FLAGS_DEBUG}
+#     definitions = $<TARGET_PROPERTY:libsouffle,COMPILE_DEFINITIONS>
+#     libsouffle_compile_options = $<TARGET_PROPERTY:libsouffle,COMPILE_OPTIONS>
+#     link_flags =  $<TARGET_PROPERTY:libsouffle,LINK_OPTIONS>
+#    ")
 
 # FIXME: Ideally, eventually we will move these out to the "tests" subdirectory
 # now that we have a sane(er?) build system

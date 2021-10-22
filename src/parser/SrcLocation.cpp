@@ -38,7 +38,7 @@ std::string getCurrentFilename(const std::vector<std::string>& filenames) {
 
     std::string path = ".";
     for (const std::string& filename : filenames) {
-        if (!filename.empty() && filename[0] == pathSeparator) {
+        if (!filename.empty() && isAbsolute(filename)) {
             path = dirName(filename);
         } else if (existFile(path + pathSeparator + filename)) {
             path = dirName(path + pathSeparator + filename);
