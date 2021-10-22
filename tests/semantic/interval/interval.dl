@@ -6,21 +6,39 @@
 
 // Test intervals for simple number range
 
+
+// Recursive case considering overlaps
+
 .decl R(lower_bound:number, upper_bound:number) btree_delete
-R(1,10). 
+R(1,10).
 R(1,1).
 R(2,2).
-R(2,130). 
+R(2,130).
 
-// Subsume ranges 
-R(lb1,ub1) <= R(lb2, ub2) :- 
-  lb2 <= lb1, 
-  ub1 <= ub2. 
+// Subsume ranges
+R(lb1,ub1) <= R(lb2, ub2) :-
+  lb2 <= lb1,
+  ub1 <= ub2.
 
-// Consolidate overlapping ranges 
-R(min(lb1,lb2), max(ub1,ub2)) :- 
-   R(lb1, ub1), 
+// Consolidate overlapping ranges
+R(min(lb1,lb2), max(ub1,ub2)) :-
+   R(lb1, ub1),
    R(lb2, ub2),
    lb2 < ub1.
 
-.output R 
+.output R
+
+// Non-recursive case ommitting overlaps
+
+.decl R1(lower_bound:number, upper_bound:number) btree_delete
+R1(1,10).
+R1(1,1).
+R1(2,2).
+R1(2,130).
+
+// Subsume ranges
+R1(lb1,ub1) <= R1(lb2, ub2) :-
+  lb2 <= lb1,
+  ub1 <= ub2.
+
+.output R1
