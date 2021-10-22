@@ -24,6 +24,7 @@
 #include <functional>
 #include <map>
 #include <set>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -55,13 +56,16 @@ struct deref_less {
  * source:
  * https://stackoverflow.com/questions/7943525/is-it-possible-to-figure-out-the-parameter-type-and-return-type-of-a-lambda
  */
+template <typename A, typename = void>
+struct lambda_traits;
+
 template <typename A>
-struct lambda_traits : lambda_traits<decltype(&std::decay_t<A>::operator())> {};
+struct lambda_traits<A, std::enable_if_t<std::is_class_v<std::decay_t<A>>>>
+        : lambda_traits<decltype(&std::decay_t<A>::operator())> {};
 
 #define LAMBDA_TYPE_INFO_REM_CTOR(...) __VA_ARGS__
-#define LAMBDA_TYPE_INFO_SPEC(cv, var, is_var)                                       \
-    template <typename C, typename R, typename... Args>                              \
-    struct lambda_traits<R (C::*)(Args... LAMBDA_TYPE_INFO_REM_CTOR var) cv> {       \
+#define LAMBDA_TYPE_INFO_SPEC(kind, cv, var, is_var)                                 \
+    struct lambda_traits<R(kind)(Args... LAMBDA_TYPE_INFO_REM_CTOR var) cv, void> {  \
         using arity = std::integral_constant<std::size_t, sizeof...(Args)>;          \
         using is_variadic = std::integral_constant<bool, is_var>;                    \
         using is_const = std::is_const<int cv>;                                      \
@@ -72,12 +76,26 @@ struct lambda_traits : lambda_traits<decltype(&std::decay_t<A>::operator())> {};
         using arg = typename std::tuple_element<i, std::tuple<Args..., void>>::type; \
     };
 
-LAMBDA_TYPE_INFO_SPEC(const, (, ...), 1)
-LAMBDA_TYPE_INFO_SPEC(const, (), 0)
-LAMBDA_TYPE_INFO_SPEC(, (, ...), 1)
-LAMBDA_TYPE_INFO_SPEC(, (), 0)
+#define LAMBDA_TYPE_INFO_MEMBER(cv, var, is_var)        \
+    template <typename C, typename R, typename... Args> \
+    LAMBDA_TYPE_INFO_SPEC(C::*, cv, var, is_var)
+
+#define LAMBDA_TYPE_INFO_FUNC(var, is_var)  \
+    template <typename R, typename... Args> \
+    LAMBDA_TYPE_INFO_SPEC(*, , var, is_var) \
+    template <typename R, typename... Args> \
+    LAMBDA_TYPE_INFO_SPEC(&, , var, is_var)
+
+LAMBDA_TYPE_INFO_MEMBER(const, (, ...), 1)
+LAMBDA_TYPE_INFO_MEMBER(const, (), 0)
+LAMBDA_TYPE_INFO_MEMBER(, (, ...), 1)
+LAMBDA_TYPE_INFO_MEMBER(, (), 0)
+LAMBDA_TYPE_INFO_FUNC((, ...), 1)
+LAMBDA_TYPE_INFO_FUNC((), 0)
 #undef LAMBDA_TYPE_INFO_REM_CTOR
 #undef LAMBDA_TYPE_INFO_SPEC
+#undef LAMBDA_TYPE_INFO_MEMBER
+#undef LAMBDA_TYPE_INFO_FUNC
 
 namespace detail {
 
