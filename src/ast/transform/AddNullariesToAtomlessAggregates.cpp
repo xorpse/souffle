@@ -49,7 +49,7 @@ bool AddNullariesToAtomlessAggregatesTransformer::transform(TranslationUnit& tra
         // +Tautology()
         std::string const relName = "+Tautology";
 
-        if (getRelation(program, relName) == nullptr) {
+        if (program.getRelation(relName) == nullptr) {
             // +Tautology().
             auto fact = mk<Clause>(relName);
             // .decl +Tautology()
@@ -57,6 +57,7 @@ bool AddNullariesToAtomlessAggregatesTransformer::transform(TranslationUnit& tra
             program.addRelation(std::move(tautologyRel));
             program.addClause(std::move(fact));
         }
+
         VecOwn<Literal> newBody;
         for (const auto& lit : agg.getBodyLiterals()) {
             newBody.push_back(clone(lit));

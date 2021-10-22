@@ -116,7 +116,7 @@ void ParserDriver::addFunctorDeclaration(Own<ast::FunctorDeclaration> f) {
 void ParserDriver::addRelation(Own<ast::Relation> r) {
     const auto& name = r->getQualifiedName();
     ast::Program& program = translationUnit->getProgram();
-    if (ast::Relation* prev = getRelation(program, name)) {
+    if (ast::Relation* prev = program.getRelation(name)) {
         Diagnostic err(Diagnostic::Type::ERROR,
                 DiagnosticMessage("Redefinition of relation " + toString(name), r->getSrcLoc()),
                 {DiagnosticMessage("Previous definition", prev->getSrcLoc())});

@@ -30,7 +30,6 @@
 #include "ast/TypeCast.h"
 #include "ast/analysis/Constraint.h"
 #include "ast/analysis/ConstraintSystem.h"
-#include "ast/analysis/RelationDetailCache.h"
 #include "souffle/BinaryConstraintOps.h"
 #include "souffle/utility/StreamUtil.h"
 #include <algorithm>
@@ -153,11 +152,10 @@ BoolDisjunctConstraint imply(const std::vector<BoolDisjunctVar>& vars, const Boo
 }
 
 struct GroundednessAnalysis : public ConstraintAnalysis<BoolDisjunctVar> {
-    const RelationDetailCacheAnalysis& relCache;
+    Program& program;
     std::set<const Atom*> ignore;
 
-    GroundednessAnalysis(const TranslationUnit& tu)
-            : relCache(tu.getAnalysis<RelationDetailCacheAnalysis>()) {}
+    GroundednessAnalysis(const TranslationUnit& tu) : program(tu.getProgram()) {}
 
     // atoms are producing grounded variables
     void visit_(type_identity<Atom>, const Atom& cur) override {
@@ -180,13 +178,11 @@ struct GroundednessAnalysis : public ConstraintAnalysis<BoolDisjunctVar> {
 
     // also skip head if we don't have an inline qualifier
     void visit_(type_identity<Clause>, const Clause& clause) override {
-        if (auto clauseHead = clause.getHead()) {
-            auto relation = relCache.getRelation(clauseHead->getQualifiedName());
-            // Only skip the head if the relation ISN'T inline. Keeping the head will ground
-            // any mentioned variables, allowing us to pretend they're grounded.
-            if (!(relation && relation->hasQualifier(RelationQualifier::INLINE))) {
-                ignore.insert(clauseHead);
-            }
+        auto relation = program.getRelation(clause);
+        // Only skip the head if the relation ISN'T inline. Keeping the head will ground
+        // any mentioned variables, allowing us to pretend they're grounded.
+        if (!(relation && relation->hasQualifier(RelationQualifier::INLINE))) {
+            ignore.insert(clause.getHead());
         }
     }
 

@@ -330,7 +330,7 @@ void TypeDeclarationChecker::run() {
 }
 
 void TypeCheckerImpl::visit_(type_identity<Atom>, const Atom& atom) {
-    auto relation = getAtomRelation(&atom, &program);
+    auto relation = program.getRelation(atom);
     if (relation == nullptr) {
         return;  // error unrelated to types.
     }

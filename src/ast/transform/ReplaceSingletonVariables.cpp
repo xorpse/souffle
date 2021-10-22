@@ -54,7 +54,7 @@ bool ReplaceSingletonVariablesTransformer::transform(TranslationUnit& translatio
     };
 
     for (Relation* rel : program.getRelations()) {
-        for (Clause* clause : getClauses(program, *rel)) {
+        for (auto&& clause : program.getClauses(*rel)) {
             std::set<std::string> nonsingletons;
             std::set<std::string> vars;
 

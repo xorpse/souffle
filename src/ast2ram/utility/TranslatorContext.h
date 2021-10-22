@@ -54,7 +54,6 @@ class FunctorAnalysis;
 class IOTypeAnalysis;
 class PolymorphicObjectsAnalysis;
 class RecursiveClausesAnalysis;
-class RelationDetailCacheAnalysis;
 class RelationScheduleAnalysis;
 class SumTypeBranchesAnalysis;
 class SCCGraphAnalysis;
@@ -76,8 +75,6 @@ public:
     }
 
     /** Relation methods */
-    ast::Relation* getRelation(const ast::QualifiedName& name) const;
-    const ast::Relation* getAtomRelation(const ast::Atom* atom) const;
     std::vector<ast::Directive*> getStoreDirectives(const ast::QualifiedName& name) const;
     std::vector<ast::Directive*> getLoadDirectives(const ast::QualifiedName& name) const;
     std::string getAttributeTypeQualifier(const ast::QualifiedName& name) const;
@@ -85,7 +82,6 @@ public:
     std::size_t getSizeLimit(const ast::Relation* relation) const;
 
     /** Clause methods */
-    std::vector<ast::Clause*> getClauses(const ast::QualifiedName& name) const;
     bool isRecursiveClause(const ast::Clause* clause) const;
     std::size_t getClauseNum(const ast::Clause* clause) const;
 
@@ -133,7 +129,6 @@ private:
     const ast::analysis::RecursiveClausesAnalysis* recursiveClauses;
     const ast::analysis::RelationScheduleAnalysis* relationSchedule;
     const ast::analysis::SCCGraphAnalysis* sccGraph;
-    const ast::analysis::RelationDetailCacheAnalysis* relationDetail;
     const ast::analysis::FunctorAnalysis* functorAnalysis;
     const ast::analysis::IOTypeAnalysis* ioType;
     const ast::analysis::TypeAnalysis* typeAnalysis;

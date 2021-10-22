@@ -32,7 +32,7 @@ namespace souffle::ast::analysis {
 void IOTypeAnalysis::run(const TranslationUnit& translationUnit) {
     const Program& program = translationUnit.getProgram();
     visit(program, [&](const Directive& directive) {
-        auto* relation = getRelation(program, directive.getQualifiedName());
+        auto* relation = program.getRelation(directive);
         if (relation == nullptr) {
             return;
         }

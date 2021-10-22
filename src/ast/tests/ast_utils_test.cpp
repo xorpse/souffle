@@ -112,7 +112,7 @@ TEST(AstUtils, GroundedRecords) {
 
     Program& program = tu->getProgram();
 
-    Clause* clause = getClauses(program, "s")[0];
+    auto* clause = program.getClauses("s")[0];
 
     // check construction
     EXPECT_EQ("s(x) :- \n   r([x,y]).", toString(*clause));
@@ -146,12 +146,11 @@ TEST(AstUtils, ReorderClauseAtoms) {
     Program& program = tu->getProgram();
     EXPECT_EQ(5, program.getRelations().size());
 
-    Relation* a = getRelation(program, "a");
-    EXPECT_NE(a, nullptr);
-    const auto& clauses = getClauses(program, *a);
+    EXPECT_NE(program.getRelation("a"), nullptr);
+    auto&& clauses = program.getClauses("a");
     EXPECT_EQ(1, clauses.size());
 
-    Clause* clause = clauses[0];
+    auto&& clause = clauses[0];
     EXPECT_EQ("a(x) :- \n   b(x),\n   c(x),\n   1 != 2,\n   d(y),\n   !e(z),\n   c(z),\n   e(x).",
             toString(*clause));
 
@@ -182,12 +181,11 @@ TEST(AstUtils, RemoveEquivalentClauses) {
     Program& program = tu->getProgram();
     EXPECT_EQ(1, program.getRelations().size());
 
-    Relation* a = getRelation(program, "a");
-    EXPECT_NE(a, nullptr);
-    EXPECT_EQ(15, getClauses(program, *a).size());
+    EXPECT_NE(program.getRelation("a"), nullptr);
+    EXPECT_EQ(15, program.getClauses("a").size());
 
-    removeRelation(*tu, "a");
-    EXPECT_EQ(0, getClauses(program, *a).size());
+    program.removeRelation("a");
+    EXPECT_EQ(0, program.getClauses("a").size());
 }
 
 }  // namespace test

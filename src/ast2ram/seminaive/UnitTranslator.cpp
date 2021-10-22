@@ -95,7 +95,7 @@ Own<ram::Statement> UnitTranslator::generateNonRecursiveRelation(const ast::Rela
     std::string relName = getConcreteRelationName(rel.getQualifiedName());
 
     // Iterate over all non-recursive clauses that belong to the relation
-    for (const auto* clause : context->getClauses(rel.getQualifiedName())) {
+    for (auto&& clause : context->getProgram()->getClauses(rel)) {
         // Skip recursive rules
         if (context->isRecursiveClause(clause)) {
             continue;
@@ -212,7 +212,7 @@ Own<ram::Statement> UnitTranslator::translateRecursiveClauses(
     VecOwn<ram::Statement> result;
 
     // Translate each recursive clasue
-    for (const auto* clause : context->getClauses(rel->getQualifiedName())) {
+    for (auto&& clause : context->getProgram()->getClauses(*rel)) {
         // Skip non-recursive clauses
         if (!context->isRecursiveClause(clause)) {
             continue;
@@ -230,7 +230,7 @@ Own<ram::Statement> UnitTranslator::translateRecursiveClauses(
 VecOwn<ram::Statement> UnitTranslator::generateClauseVersions(
         const ast::Clause* clause, const std::set<const ast::Relation*>& scc) const {
     const auto& sccAtoms = filter(ast::getBodyLiterals<ast::Atom>(*clause),
-            [&](const ast::Atom* atom) { return contains(scc, context->getAtomRelation(atom)); });
+            [&](auto* atom) { return contains(scc, context->getProgram()->getRelation(*atom)); });
 
     // Create each version
     VecOwn<ram::Statement> clauseVersions;

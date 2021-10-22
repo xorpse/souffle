@@ -250,7 +250,7 @@ void TypeConstraintsAnalysis::visit_(type_identity<Aggregator>, const Aggregator
 void TypeConstraintsAnalysis::iterateOverAtom(
         const Atom& atom, std::function<void(const Argument&, const Type&)> map) {
     // get relation
-    auto rel = getAtomRelation(&atom, &program);
+    auto rel = program.getRelation(atom);
     if (rel == nullptr) {
         return;  // error in input program
     }

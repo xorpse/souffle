@@ -22,13 +22,13 @@
 namespace souffle::ast::analysis {
 class IOTypeAnalysis;
 class ProfileUseAnalysis;
-class RelationDetailCacheAnalysis;
 }  // namespace souffle::ast::analysis
 namespace souffle::ast {
 
 class Atom;
 class BindingStore;
 class Clause;
+class Program;
 class TranslationUnit;
 
 /**
@@ -171,31 +171,30 @@ protected:
 /** Goal: prioritise (1) all-bound, then (2) input, and then (3) left-most */
 class InputSips : public SipsMetric {
 public:
-    InputSips(const analysis::RelationDetailCacheAnalysis& relDetail, const analysis::IOTypeAnalysis& ioTypes)
-            : relDetail(relDetail), ioTypes(ioTypes) {}
+    InputSips(const Program& program, const analysis::IOTypeAnalysis& ioTypes)
+            : program(program), ioTypes(ioTypes) {}
 
 protected:
     std::vector<double> evaluateCosts(
             const std::vector<Atom*> atoms, const BindingStore& bindingStore) const override;
 
 private:
-    const analysis::RelationDetailCacheAnalysis& relDetail;
+    const Program& program;
     const analysis::IOTypeAnalysis& ioTypes;
 };
 
 /** Goal: prioritise (1) all-bound, then (2) deltas, then (3) input, and then (4) left-most */
 class DeltaInputSips : public SipsMetric {
 public:
-    DeltaInputSips(
-            const analysis::RelationDetailCacheAnalysis& relDetail, const analysis::IOTypeAnalysis& ioTypes)
-            : relDetail(relDetail), ioTypes(ioTypes) {}
+    DeltaInputSips(const Program& program, const analysis::IOTypeAnalysis& ioTypes)
+            : program(program), ioTypes(ioTypes) {}
 
 protected:
     std::vector<double> evaluateCosts(
             const std::vector<Atom*> atoms, const BindingStore& bindingStore) const override;
 
 private:
-    const analysis::RelationDetailCacheAnalysis& relDetail;
+    const Program& program;
     const analysis::IOTypeAnalysis& ioTypes;
 };
 

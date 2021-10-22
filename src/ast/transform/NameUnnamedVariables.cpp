@@ -55,7 +55,7 @@ bool NameUnnamedVariablesTransformer::transform(TranslationUnit& translationUnit
 
     Program& program = translationUnit.getProgram();
     for (Relation* rel : program.getRelations()) {
-        for (Clause* clause : getClauses(program, *rel)) {
+        for (auto&& clause : program.getClauses(*rel)) {
             nameVariables update;
             clause->apply(update);
             changed |= update.changed;

@@ -111,7 +111,7 @@ bool RemoveBooleanConstraintsTransformer::transform(TranslationUnit& translation
 
     // Remove true and false constant literals from all clauses
     for (Relation* rel : program.getRelations()) {
-        for (Clause* clause : getClauses(program, *rel)) {
+        for (auto&& clause : program.getClauses(*rel)) {
             bool containsTrue = false;
             bool containsFalse = false;
 
@@ -123,7 +123,7 @@ bool RemoveBooleanConstraintsTransformer::transform(TranslationUnit& translation
 
             if (containsFalse) {
                 // Clause will always fail
-                program.removeClause(clause);
+                program.removeClause(*clause);
             } else if (containsTrue) {
                 auto replacementClause = cloneHead(*clause);
 
@@ -134,7 +134,7 @@ bool RemoveBooleanConstraintsTransformer::transform(TranslationUnit& translation
                     }
                 }
 
-                program.removeClause(clause);
+                program.removeClause(*clause);
                 program.addClause(std::move(replacementClause));
             }
         }

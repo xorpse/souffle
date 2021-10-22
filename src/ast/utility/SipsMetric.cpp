@@ -20,7 +20,6 @@
 #include "ast/Variable.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/ProfileUse.h"
-#include "ast/analysis/RelationDetailCache.h"
 #include "ast/utility/BindingStore.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
@@ -81,11 +80,9 @@ std::unique_ptr<SipsMetric> SipsMetric::create(const std::string& heuristic, con
     else if (heuristic == "delta")
         return mk<DeltaSips>();
     else if (heuristic == "input")
-        return mk<InputSips>(tu.getAnalysis<analysis::RelationDetailCacheAnalysis>(),
-                tu.getAnalysis<analysis::IOTypeAnalysis>());
+        return mk<InputSips>(tu.getProgram(), tu.getAnalysis<analysis::IOTypeAnalysis>());
     else if (heuristic == "delta-input")
-        return mk<DeltaInputSips>(tu.getAnalysis<analysis::RelationDetailCacheAnalysis>(),
-                tu.getAnalysis<analysis::IOTypeAnalysis>());
+        return mk<DeltaInputSips>(tu.getProgram(), tu.getAnalysis<analysis::IOTypeAnalysis>());
 
     // default is all-bound
     return create("all-bound", tu);
@@ -340,7 +337,7 @@ std::vector<double> InputSips::evaluateCosts(
         if (arity == numBound) {
             // prioritise all-bound
             cost.push_back(0);
-        } else if (ioTypes.isInput(relDetail.getRelation(relName))) {
+        } else if (ioTypes.isInput(program.getRelation(relName))) {
             // then input
             cost.push_back(1);
         } else {
@@ -369,7 +366,7 @@ std::vector<double> DeltaInputSips::evaluateCosts(
         } else if (isDeltaRelation(relName)) {
             // then deltas
             cost.push_back(1);
-        } else if (ioTypes.isInput(relDetail.getRelation(relName))) {
+        } else if (ioTypes.isInput(program.getRelation(relName))) {
             // then input
             cost.push_back(2);
         } else {

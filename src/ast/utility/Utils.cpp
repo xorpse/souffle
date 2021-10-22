@@ -33,7 +33,6 @@
 #include "ast/Relation.h"
 #include "ast/TranslationUnit.h"
 #include "ast/analysis/Functor.h"
-#include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/typesystem/Type.h"
 #include "ast/analysis/typesystem/TypeSystem.h"
 
@@ -54,61 +53,17 @@ std::string pprint(const Node& node) {
     return toString(node);
 }
 
-std::vector<Clause*> getClauses(const Program& program, const QualifiedName& relationName) {
-    // TODO: REMOVE ENTIRELY
-    return program.getClauses(relationName);
-}
-
-std::vector<Clause*> getClauses(const Program& program, const Relation& rel) {
-    // TODO: REMOVE ENTIRELY
-    return getClauses(program, rel.getQualifiedName());
-}
-
-std::vector<Directive*> getDirectives(const Program& program, const QualifiedName& name) {
-    // TODO: REMOVE ENTIRELY
-    return program.getDirectives(name);
-}
-
-Relation* getRelation(const Program& program, const QualifiedName& name) {
-    // TODO: REMOVE ENTIRELY
-    return program.getRelation(name);
-}
-
 FunctorDeclaration* getFunctorDeclaration(const Program& program, const std::string& name) {
     // FIXME: O(n). This is awful.
     return getIf(program.getFunctorDeclarations(),
             [&](const FunctorDeclaration* r) { return r->getName() == name; });
 }
 
-void removeRelation(TranslationUnit& tu, const QualifiedName& name) {
-    // TODO: REMOVE ENTIRELY
-    tu.getProgram().removeRelation(name);
-}
-
-const Relation* getAtomRelation(const Atom* atom, const Program* program) {
-    return getRelation(*program, atom->getQualifiedName());
-}
-
-const Relation* getHeadRelation(const Clause* clause, const Program* program) {
-    return getAtomRelation(clause->getHead(), program);
-}
-
-std::set<const Relation*> getBodyRelations(const Clause* clause, const Program* program) {
-    std::set<const Relation*> bodyRelations;
-    for (const auto& lit : clause->getBodyLiterals()) {
-        visit(*lit, [&](const Atom& atom) { bodyRelations.insert(getAtomRelation(&atom, program)); });
-    }
-    for (const auto& arg : clause->getHead()->getArguments()) {
-        visit(*arg, [&](const Atom& atom) { bodyRelations.insert(getAtomRelation(&atom, program)); });
-    }
-    return bodyRelations;
-}
-
 bool hasClauseWithNegatedRelation(const Relation* relation, const Relation* negRelation,
         const Program* program, const Literal*& foundLiteral) {
-    for (const Clause* cl : getClauses(*program, *relation)) {
+    for (auto&& cl : program->getClauses(*relation)) {
         for (const auto* neg : getBodyLiterals<Negation>(*cl)) {
-            if (negRelation == getAtomRelation(neg->getAtom(), program)) {
+            if (negRelation == program->getRelation(*neg->getAtom())) {
                 foundLiteral = neg;
                 return true;
             }
@@ -119,21 +74,20 @@ bool hasClauseWithNegatedRelation(const Relation* relation, const Relation* negR
 
 bool hasClauseWithAggregatedRelation(const Relation* relation, const Relation* aggRelation,
         const Program* program, const Literal*& foundLiteral) {
-    for (const Clause* cl : getClauses(*program, *relation)) {
-        bool hasAgg = false;
-        visit(*cl, [&](const Aggregator& cur) {
-            visit(cur, [&](const Atom& atom) {
-                if (aggRelation == getAtomRelation(&atom, program)) {
-                    foundLiteral = &atom;
-                    hasAgg = true;
-                }
-            });
+    bool found_in_agg = false;
+    visitFrontier(program->getClauses(*relation), [&](const Aggregator& cur) {
+        found_in_agg = found_in_agg || visitExists(cur, [&](const Atom& atom) {
+            if (aggRelation == program->getRelation(atom)) {
+                foundLiteral = &atom;
+                return true;
+            }
+
+            return false;
         });
-        if (hasAgg) {
-            return true;
-        }
-    }
-    return false;
+        return found_in_agg;
+    });
+
+    return found_in_agg;
 }
 
 bool isRecursiveClause(const Clause& clause) {

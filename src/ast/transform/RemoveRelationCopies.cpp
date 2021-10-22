@@ -51,7 +51,7 @@ bool RemoveRelationCopiesTransformer::removeRelationCopies(TranslationUnit& tran
         if (!rel->getFunctionalDependencies().empty()) {
             continue;
         }
-        const auto& clauses = getClauses(program, *rel);
+        const auto& clauses = program.getClauses(*rel);
         if (!ioType.isIO(rel) && clauses.size() == 1u) {
             // .. of shape r(x,y,..) :- s(x,y,..)
             Clause* cl = clauses[0];

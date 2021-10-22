@@ -19,6 +19,7 @@
 #include "ast/Clause.h"
 #include "ast/ExecutionOrder.h"
 #include "ast/ExecutionPlan.h"
+#include "ast/Program.h"
 #include "ast/Relation.h"
 #include "ast/TranslationUnit.h"
 #include "ast/analysis/RecursiveClauses.h"
@@ -43,7 +44,7 @@ bool ExecutionPlanChecker::transform(TranslationUnit& translationUnit) {
     for (const analysis::RelationScheduleAnalysisStep& step : relationSchedule.schedule()) {
         const std::set<const Relation*>& scc = step.computed();
         for (const Relation* rel : scc) {
-            for (const Clause* clause : getClauses(program, *rel)) {
+            for (auto&& clause : program.getClauses(*rel)) {
                 if (!recursiveClauses.recursive(clause)) {
                     continue;
                 }
@@ -52,7 +53,7 @@ bool ExecutionPlanChecker::transform(TranslationUnit& translationUnit) {
                 }
                 int version = 0;
                 for (const auto* atom : getBodyLiterals<Atom>(*clause)) {
-                    if (scc.count(getAtomRelation(atom, &program)) != 0u) {
+                    if (scc.count(program.getRelation(*atom)) != 0u) {
                         version++;
                     }
                 }

@@ -177,7 +177,7 @@ std::string findUniqueVariableName(const Clause& clause, std::string base) {
 std::string findUniqueRelationName(const Program& program, std::string base) {
     int counter = 0;
     auto candidate = base;
-    while (getRelation(program, candidate) != nullptr) {
+    while (program.getRelation(candidate) != nullptr) {
         candidate = base + toString(counter++);
     }
     return candidate;

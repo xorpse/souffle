@@ -28,7 +28,7 @@
 #include "ast/Type.h"
 #include "souffle/utility/FunctionalUtil.h"
 #include "souffle/utility/Visitor.h"
-#include <algorithm>
+#include "souffle/utility/span.h"
 #include <iosfwd>
 #include <vector>
 
@@ -36,6 +36,7 @@ namespace souffle {
 class ParserDriver;
 
 namespace ast {
+class Atom;
 class Program;
 
 namespace transform {
@@ -111,6 +112,9 @@ public:
 
     /** Returns the first `Relation` declartion for a given name, if any */
     Relation* getRelation(QualifiedName const&) const;
+    Relation* getRelation(Atom const&) const;
+    Relation* getRelation(Clause const&) const;
+    Relation* getRelation(Directive const&) const;
 
     /**
      * Returns all `Relation` declartions for a given name.
@@ -161,29 +165,41 @@ public:
      */
     bool removeRelation(QualifiedName const&);
 
+    /**
+     * Remove a relation by identity. The relation must be owned by the program.
+     * It is not expected that there are useful cases where some are not owned, and it is often
+     * symptomatic of a bug to try to remove a clause that isn't part of the program.
+     */
+    void removeRelation(Relation const&);
+
     /** Add a clause */
     void addClause(Own<Clause> clause);
+
+    // Common case helper.
+    void addClauses(VecOwn<Clause> clauses);
 
     /** Add a type declaration */
     void addType(Own<Type> type);
 
     /**
-     * Remove a clause by identity.
-     * @return true IFF the clause was found and removed
+     * Remove a clause by identity. The clause must be owned by the program.
+     * It is not expected that there are useful cases where some are not owned, and it is often
+     * symptomatic of a bug to try to remove a clause that isn't part of the program.
      */
-    bool removeClause(const Clause&);
+    void removeClause(const Clause&);
 
     /**
-     * Remove a clause by identity. (Deprecated helper. TODO: Remove before PR.)
-     * @return true IFF the clause was found and removed
+     * Remove multiple clauses by identity. All of these clauses must be owned by the program.
+     * It is not expected that there are useful cases where some are not owned, and it is often
+     * symptomatic of a bug to try to remove a clause that isn't part of the program.
      */
-    bool removeClause(const Clause* clause);
+    void removeClauses(span<Clause const* const>);
 
     /**
      * Remove a directive by identity.
      * @return true IFF the directive was found and removed
      */
-    bool removeDirective(const Directive&);
+    void removeDirective(const Directive&);
 
     /** Return components */
     std::vector<Component*> getComponents() const;

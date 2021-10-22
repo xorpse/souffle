@@ -75,33 +75,6 @@ std::vector<T*> getBodyLiterals(const C& clause) {
 }
 
 /**
- * Returns a vector of clauses in the program describing the relation with the given name.
- *
- * @param program the program
- * @param name the name of the relation to search for
- * @return vector of clauses describing the relation with the given name
- */
-std::vector<Clause*> getClauses(const Program& program, const QualifiedName& relationName);
-
-/**
- * Returns a vector of clauses in the program describing the given relation.
- *
- * @param program the program
- * @param rel the relation to search for
- * @return vector of clauses describing the given relation
- */
-std::vector<Clause*> getClauses(const Program& program, const Relation& rel);
-
-/**
- * Returns the relation with the given name in the program.
- *
- * @param program the program
- * @param name the name of the relation to search for
- * @return the relation if it exists; nullptr otherwise
- */
-Relation* getRelation(const Program& program, const QualifiedName& name);
-
-/**
  * Returns the functor declaration with the given name in the program.
  *
  * @param program the program
@@ -109,47 +82,6 @@ Relation* getRelation(const Program& program, const QualifiedName& name);
  * @return the functor declaration if it exists; nullptr otherwise
  */
 FunctorDeclaration* getFunctorDeclaration(const Program& program, const std::string& name);
-
-/**
- * Returns the set of directives associated with a given relation in a program.
- *
- * @param program the program
- * @param name the name of the relation to search for
- * @return a vector of all associated directives
- */
-std::vector<Directive*> getDirectives(const Program& program, const QualifiedName& relationName);
-
-/**
- * Remove relation and all its clauses from the program.
- *
- * @param tu the translation unit
- * @param name the name of the relation to delete
- */
-void removeRelation(TranslationUnit& tu, const QualifiedName& name);
-
-/**
- * Returns the relation referenced by the given atom.
- * @param atom the atom
- * @param program the program containing the relations
- * @return relation referenced by the atom
- */
-const Relation* getAtomRelation(const Atom* atom, const Program* program);
-
-/**
- * Returns the relation referenced by the head of the given clause.
- * @param clause the clause
- * @param program the program containing the relations
- * @return relation referenced by the clause head
- */
-const Relation* getHeadRelation(const Clause* clause, const Program* program);
-
-/**
- * Returns the relations referenced in the body of the given clause.
- * @param clause the clause
- * @param program the program containing the relations
- * @return relation referenced in the clause body
- */
-std::set<const Relation*> getBodyRelations(const Clause* clause, const Program* program);
 
 /**
  * Returns whether the given relation has any clauses which contain a negation of a specific relation.

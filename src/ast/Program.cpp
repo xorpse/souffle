@@ -53,12 +53,20 @@ auto toPtrVector(RelationInfoMap const& map, SeqOwnT RelationInfo::*member) {
 template <typename A, typename SeqOwnT>
 auto eraseByIdentity(RelationInfoMap& map, SeqOwnT RelationInfo::*member, A const& elem) {
     auto it = map.find(elem.getQualifiedName());
-    if (it == map.end()) return false;
+    if (it == map.end()) {
+        assert(false &&
+                "attempted to remove something not owned by the program. this is symptomatic of a bug");
+        return false;
+    }
 
     auto&& [_, info] = *it;
     auto& xs = info.*member;
     auto xs_it = std::remove_if(xs.begin(), xs.end(), [&](auto&& x) { return x.get() == &elem; });
-    if (xs_it == xs.end()) return false;
+    if (xs_it == xs.end()) {
+        assert(false &&
+                "attempted to remove something not owned by the program. this is symptomatic of a bug");
+        return false;
+    }
 
     xs.erase(xs_it);
 
@@ -121,6 +129,18 @@ Relation* Program::getRelation(QualifiedName const& name) const {
     return info.decls.front().get();
 }
 
+Relation* Program::getRelation(Atom const& x) const {
+    return getRelation(x.getQualifiedName());
+}
+
+Relation* Program::getRelation(Clause const& x) const {
+    return getRelation(x.getQualifiedName());
+}
+
+Relation* Program::getRelation(Directive const& x) const {
+    return getRelation(x.getQualifiedName());
+}
+
 std::vector<Relation*> Program::getRelationAll(QualifiedName const& name) const {
     return toPtrVector(relations, &RelationInfo::decls, name);
 }
@@ -162,6 +182,11 @@ bool Program::removeRelation(QualifiedName const& name) {
     return 0 < relations.erase(name);
 }
 
+void Program::removeRelation(Relation const& r) {
+    eraseByIdentity(relations, &RelationInfo::decls, r);  // run just for assert/sancheck
+    removeRelation(r.getQualifiedName());
+}
+
 void Program::addClause(Own<Clause> clause) {
     assert(clause != nullptr && "Undefined clause");
     assert(clause_visit_in_progress == 0 && "Don't modify program clause collection mid-traversal");
@@ -169,24 +194,25 @@ void Program::addClause(Own<Clause> clause) {
     info.clauses.push_back(std::move(clause));
 }
 
-bool Program::removeClause(const Clause& clause) {
+void Program::addClauses(VecOwn<Clause> clauses) {
+    for (Own<Clause>& cl : clauses)
+        addClause(std::move(cl));
+}
+
+void Program::removeClause(const Clause& clause) {
     assert(clause_visit_in_progress == 0 && "Don't modify program clause collection mid-traversal");
-    return eraseByIdentity(relations, &RelationInfo::clauses, clause);
+    eraseByIdentity(relations, &RelationInfo::clauses, clause);
 }
 
-/**
- * Remove a clause by identity. (Deprecated helper. TODO: Remove before PR.)
- * @return true IFF the clause was found and removed
- */
-bool Program::removeClause(const Clause* clause) {
-    assert(clause);
-    auto removed = removeClause(*clause);
-    assert(removed && "likely mistake: cloning a clause and attempting to remove the clone");
-    return removed;
+void Program::removeClauses(span<Clause const* const> clauses) {
+    for (auto&& cl : clauses) {
+        assert(cl);
+        removeClause(*cl);
+    }
 }
 
-bool Program::removeDirective(const Directive& directive) {
-    return eraseByIdentity(relations, &RelationInfo::directives, directive);
+void Program::removeDirective(const Directive& directive) {
+    eraseByIdentity(relations, &RelationInfo::directives, directive);
 }
 
 std::vector<Component*> Program::getComponents() const {

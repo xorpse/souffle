@@ -26,7 +26,6 @@
 #include "ast/QualifiedName.h"
 #include "ast/Relation.h"
 #include "ast/TranslationUnit.h"
-#include "ast/analysis/RelationDetailCache.h"
 #include "ast/utility/Visitor.h"
 #include <set>
 #include <string>
@@ -37,17 +36,14 @@ namespace souffle::ast::analysis {
 void PrecedenceGraphAnalysis::run(const TranslationUnit& translationUnit) {
     /* Get relations */
     Program& program = translationUnit.getProgram();
-    const auto& relationDetail = translationUnit.getAnalysis<RelationDetailCacheAnalysis>();
 
     for (const auto* r : program.getRelations()) {
         backingGraph.insert(r);
-        for (const auto& c : relationDetail.getClauses(r)) {
-            souffle::visit(c->getBodyLiterals(), [&](const Atom& atom) {
-                backingGraph.insert(relationDetail.getRelation(atom.getQualifiedName()), r);
-            });
-            souffle::visit(c->getHead()->getArguments(), [&](const Atom& atom) {
-                backingGraph.insert(relationDetail.getRelation(atom.getQualifiedName()), r);
-            });
+
+        auto addEdgeToR = [&](const Atom& atom) { backingGraph.insert(program.getRelation(atom), r); };
+        for (auto&& c : program.getClauses(*r)) {
+            souffle::visit(c->getBodyLiterals(), addEdgeToR);
+            souffle::visit(c->getHead()->getArguments(), addEdgeToR);
         }
     }
 }

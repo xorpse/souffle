@@ -22,7 +22,6 @@
 #include "ast/analysis/Functor.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/RecursiveClauses.h"
-#include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/RelationSchedule.h"
 #include "ast/analysis/SCCGraph.h"
 #include "ast/analysis/typesystem/PolymorphicObjects.h"
@@ -54,7 +53,6 @@ TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
     recursiveClauses = &tu.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
     sccGraph = &tu.getAnalysis<ast::analysis::SCCGraphAnalysis>();
     relationSchedule = &tu.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
-    relationDetail = &tu.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
     ioType = &tu.getAnalysis<ast::analysis::IOTypeAnalysis>();
     typeAnalysis = &tu.getAnalysis<ast::analysis::TypeAnalysis>();
     typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>().getTypeEnvironment();
@@ -64,7 +62,7 @@ TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
     // Set up clause nums
     for (const ast::Relation* rel : program->getRelations()) {
         std::size_t count = 1;
-        for (const ast::Clause* clause : relationDetail->getClauses(rel->getQualifiedName())) {
+        for (auto&& clause : program->getClauses(*rel)) {
             if (isFact(*clause)) {
                 clauseNums[clause] = 0;
             }
@@ -131,10 +129,6 @@ std::size_t TranslatorContext::getSizeLimit(const ast::Relation* relation) const
     return ioType->getLimitSize(relation);
 }
 
-const ast::Relation* TranslatorContext::getAtomRelation(const ast::Atom* atom) const {
-    return ast::getAtomRelation(atom, program);
-}
-
 std::set<const ast::Relation*> TranslatorContext::getRelationsInSCC(std::size_t scc) const {
     return sccGraph->getInternalRelations(scc);
 }
@@ -149,14 +143,6 @@ std::set<const ast::Relation*> TranslatorContext::getOutputRelationsInSCC(std::s
 
 std::set<const ast::Relation*> TranslatorContext::getExpiredRelations(std::size_t scc) const {
     return relationSchedule->schedule().at(scc).expired();
-}
-
-std::vector<ast::Clause*> TranslatorContext::getClauses(const ast::QualifiedName& name) const {
-    return relationDetail->getClauses(name);
-}
-
-ast::Relation* TranslatorContext::getRelation(const ast::QualifiedName& name) const {
-    return relationDetail->getRelation(name);
 }
 
 TypeAttribute TranslatorContext::getFunctorReturnTypeAttribute(const ast::Functor& functor) const {
