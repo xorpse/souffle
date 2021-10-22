@@ -58,24 +58,6 @@ class TypeAnalysis;
 std::string pprint(const Node& node);
 
 /**
- * Obtains a list of all variables referenced within the AST rooted
- * by the given root node.
- *
- * @param root the root of the AST to be searched
- * @return a list of all variables referenced within
- */
-std::vector<const Variable*> getVariables(const Node& root);
-
-/**
- * Obtains a list of all records referenced within the AST rooted
- * by the given root node.
- *
- * @param root the root of the AST to be searched
- * @return a list of all records referenced within
- */
-std::vector<const RecordInit*> getRecords(const Node& root);
-
-/**
  * Returns literals of a particular type in the body of a clause.
  *
  * @param the clause

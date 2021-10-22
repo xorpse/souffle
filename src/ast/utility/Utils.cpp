@@ -54,20 +54,6 @@ std::string pprint(const Node& node) {
     return toString(node);
 }
 
-std::vector<const Variable*> getVariables(const Node& root) {
-    // simply collect the list of all variables by visiting all variables
-    std::vector<const Variable*> vars;
-    visit(root, [&](const Variable& var) { vars.push_back(&var); });
-    return vars;
-}
-
-std::vector<const RecordInit*> getRecords(const Node& root) {
-    // simply collect the list of all records by visiting all records
-    std::vector<const RecordInit*> recs;
-    visit(root, [&](const RecordInit& rec) { recs.push_back(&rec); });
-    return recs;
-}
-
 std::vector<Clause*> getClauses(const Program& program, const QualifiedName& relationName) {
     std::vector<Clause*> clauses;
     for (Clause* clause : program.getClauses()) {

@@ -44,11 +44,11 @@ void GroundedTermsChecker::verify(TranslationUnit& translationUnit) {
 
         std::set<std::string> reportedVars;
         // all terms in head need to be grounded
-        for (auto&& cur : getVariables(clause)) {
-            if (!isGrounded[cur] && reportedVars.insert(cur->getName()).second) {
-                report.addError("Ungrounded variable " + cur->getName(), cur->getSrcLoc());
+        visit(clause, [&](const Variable& cur) {
+            if (!isGrounded[&cur] && reportedVars.insert(cur.getName()).second) {
+                report.addError("Ungrounded variable " + cur.getName(), cur.getSrcLoc());
             }
-        }
+        });
 
         // all records need to be grounded
         visit(clause, [&](const RecordInit& record) {
