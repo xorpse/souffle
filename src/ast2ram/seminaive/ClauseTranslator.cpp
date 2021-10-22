@@ -142,13 +142,13 @@ std::string ClauseTranslator::getClauseAtomName(const ast::Clause& clause, const
             }
             return getRejectRelationName(atom->getQualifiedName());
         }
-        if (sccAtoms.at(0) == atom) {
+        if (sccAtoms.at(dominatedHead) == atom) {
             if (version == 2 || version == 3) {
                 return getConcreteRelationName(atom->getQualifiedName());
             }
             return getNewRelationName(atom->getQualifiedName());
         }
-        if (sccAtoms.at(1) == atom) {
+        if (sccAtoms.at(dominatingHead) == atom) {
             if (version == 0 || version == 3) {
                 return getConcreteRelationName(atom->getQualifiedName());
             }
@@ -666,6 +666,12 @@ Own<ram::Condition> ClauseTranslator::getFunctionalDependencies(const ast::Claus
 }
 
 std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& clause) const {
+    // set dominating/dominated head of clause
+    if (isA<ast::SubsumptiveClause>(clause)) {
+        dominatedHead = 0;
+        dominatingHead = 1;
+    }
+
     auto atoms = ast::getBodyLiterals<ast::Atom>(clause);
 
     const auto& plan = clause.getExecutionPlan();
@@ -681,7 +687,17 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
 
     // get the imposed order, and change it to start at zero
     const auto& order = orders.at(version);
-    std::vector<unsigned int> newOrder(order->getOrder().size());
+    auto sz = order->getOrder().size();
+    std::vector<unsigned int> newOrder(sz);
+    if (isA<ast::SubsumptiveClause>(clause)) {
+        for (std::size_t i = 0; i < sz; ++i) {
+            if (order->getOrder()[i] == 0) {
+                dominatedHead = newOrder[0];
+            } else if (order->getOrder()[i] == 1) {
+                dominatingHead = newOrder[1];
+            }
+        }
+    }
     std::transform(order->getOrder().begin(), order->getOrder().end(), newOrder.begin(),
             [](unsigned int i) -> unsigned int { return i - 1; });
     return reorderAtoms(atoms, newOrder);

@@ -133,6 +133,9 @@ protected:
 private:
     std::vector<const ast::Argument*> generators;
     std::vector<const ast::Node*> operators;
+
+    // Index of dominated/dominating heads in a subsumptive clause
+    mutable int dominatedHead{0}, dominatingHead{1};
 };
 
 }  // namespace souffle::ast2ram::seminaive
