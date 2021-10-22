@@ -5,23 +5,6 @@
 # - <souffle root>/licenses/SOUFFLE-UPL.txt
 
 
-if (MSVC)
-    add_compile_options(/bigobj)
-
-    add_compile_options(/wd6326 /wd5105)
-
-    if (NOT (MSVC_VERSION LESS 1910))
-      add_compile_options (/permissive-)
-    endif()
-
-    add_compile_options(/Zc:preprocessor)
-
-    add_compile_options(/EHsc)
-
-    add_compile_definitions(USE_CUSTOM_GETOPTLONG)
-endif (MSVC)
-
-
 set(SOUFFLE_SOURCES
     FunctorOps.cpp
     Global.cpp
@@ -211,26 +194,32 @@ target_include_directories(libsouffle
 # install souffle directory
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/souffle DESTINATION include)
 
+add_library(compiled STATIC dummy.cpp)
+
 # Set C++ standard to C++17
-target_compile_features(libsouffle
-                        PUBLIC cxx_std_17)
+target_compile_features(libsouffle PUBLIC cxx_std_17)
+target_compile_features(compiled PUBLIC cxx_std_17)
+
 set_target_properties(libsouffle PROPERTIES CXX_EXTENSIONS OFF)
+set_target_properties(compiled PROPERTIES CXX_EXTENSIONS OFF)
 
 if (NOT MSVC)
-target_compile_options(libsouffle
-                       PUBLIC "-Wall;-Wextra;-Werror;-fwrapv")
+target_compile_options(libsouffle PUBLIC "-Wall;-Wextra;-Werror;-fwrapv")
 else ()
-target_compile_options(libsouffle
-                       PUBLIC "")
+target_compile_options(libsouffle PUBLIC "")
 endif ()
+
+target_compile_options(compiled PUBLIC "")
 
 if (Threads_FOUND)
   target_link_libraries(libsouffle PUBLIC Threads::Threads)
+  target_link_libraries(compiled PUBLIC Threads::Threads)
 endif ()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
     target_link_libraries(libsouffle PUBLIC stdc++fs)
+    target_link_libraries(compiled PUBLIC stdc++fs)
   endif ()
 endif ()
 
@@ -241,11 +230,12 @@ endif ()
 
 
 target_link_libraries(libsouffle PUBLIC "${CMAKE_DL_LIBS}")
+target_link_libraries(compiled PUBLIC "${CMAKE_DL_LIBS}")
 
 
 if (SOUFFLE_DOMAIN_64BIT)
-    target_compile_definitions(libsouffle
-                               PUBLIC RAM_DOMAIN_SIZE=64)
+    target_compile_definitions(libsouffle PUBLIC RAM_DOMAIN_SIZE=64)
+    target_compile_definitions(compiled PUBLIC RAM_DOMAIN_SIZE=64)
 endif()
 
 if (SOUFFLE_USE_LIBFFI)
@@ -258,6 +248,7 @@ endif ()
 
 if (OPENMP_FOUND)
     target_link_libraries(libsouffle PUBLIC OpenMP::OpenMP_CXX)
+    target_link_libraries(compiled PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
 if (SOUFFLE_CUSTOM_GETOPTLONG)
@@ -266,21 +257,24 @@ if (SOUFFLE_CUSTOM_GETOPTLONG)
 endif()
 
 if (SOUFFLE_USE_CURSES)
-    target_compile_definitions(libsouffle
-                               PUBLIC USE_NCURSES)
+    target_compile_definitions(libsouffle PUBLIC USE_NCURSES)
+    target_compile_definitions(compiled PUBLIC USE_NCURSES)
     target_link_libraries(libsouffle PUBLIC Curses::NCurses)
+    target_link_libraries(compiled PUBLIC Curses::NCurses)
 endif()
 
 if (SOUFFLE_USE_ZLIB)
-    target_compile_definitions(libsouffle
-                               PUBLIC USE_LIBZ)
+    target_compile_definitions(libsouffle PUBLIC USE_LIBZ)
+    target_compile_definitions(compiled PUBLIC USE_LIBZ)
     target_link_libraries(libsouffle PUBLIC ZLIB::ZLIB)
+    target_link_libraries(compiled PUBLIC ZLIB::ZLIB)
 endif()
 
 if (SOUFFLE_USE_SQLITE)
-    target_compile_definitions(libsouffle
-                               PUBLIC USE_SQLITE)
+    target_compile_definitions(libsouffle PUBLIC USE_SQLITE)
+    target_compile_definitions(compiled PUBLIC USE_SQLITE)
     target_link_libraries(libsouffle PUBLIC SQLite::SQLite3)
+    target_link_libraries(compiled PUBLIC SQLite::SQLite3)
 endif()
 
 if (SOUFFLE_USE_LIBFFI)
@@ -317,6 +311,28 @@ install(TARGETS souffleprof DESTINATION bin)
 target_compile_features(souffleprof
                         PUBLIC cxx_std_17)
 endif()
+
+if (MSVC)
+  target_compile_options(libsouffle PRIVATE /bigobj)
+  target_compile_options(compiled PRIVATE /bigobj)
+
+  target_compile_options(libsouffle PRIVATE /wd6326 /wd5105)
+
+  if (NOT (MSVC_VERSION LESS 1910))
+    target_compile_options(libsouffle PUBLIC /permissive-)
+    target_compile_options(compiled PUBLIC /permissive-)
+  endif()
+
+  target_compile_options(libsouffle PUBLIC /Zc:preprocessor)
+  target_compile_options(compiled PUBLIC /Zc:preprocessor)
+
+  target_compile_options(libsouffle PUBLIC /EHsc)
+  target_compile_options(compiled PUBLIC /EHsc)
+
+  target_compile_definitions(libsouffle PUBLIC USE_CUSTOM_GETOPTLONG)
+endif (MSVC)
+
+
 
 # --------------------------------------------------
 # Substitutions for souffle-compile
@@ -399,17 +415,69 @@ automake_compatible_subst("${CMAKE_CURRENT_SOURCE_DIR}/souffle-compile.in"
 
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/souffle-compile DESTINATION bin)
 
-#file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/souffle-compile.yml" CONTENT 
-#    "compiler = ${CMAKE_CXX_COMPILER}
-#     include = ${CMAKE_CURRENT_SOURCE_DIR}/include 
-#     std_flag = ${CMAKE_CXX17_STANDARD_COMPILE_OPTION}
-#     cxx_flags = ${CMAKE_CXX_FLAGS}
-#     release_cxx_flags = ${CMAKE_CXX_FLAGS_RELEASE}
-#     debug_cxx_flags = ${CMAKE_CXX_FLAGS_DEBUG}
-#     definitions = $<TARGET_PROPERTY:libsouffle,COMPILE_DEFINITIONS>
-#     libsouffle_compile_options = $<TARGET_PROPERTY:libsouffle,COMPILE_OPTIONS>
-#     link_flags =  $<TARGET_PROPERTY:libsouffle,LINK_OPTIONS>
-#    ")
+# ---------------------------------------
+set(SOUFFLE_COMPILED_CXX_COMPILER ${CMAKE_CXX_COMPILER})
+set(SOUFFLE_COMPILED_CXX_COMPILER_ID ${CMAKE_CXX_COMPILER_ID})
+set(SOUFFLE_COMPILED_CXX_COMPILER_VERSION ${CMAKE_CXX_COMPILER_VERSION})
+set(SOUFFLE_COMPILED_CXX_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(SOUFFLE_COMPILED_CXX_STANDARD ${CMAKE_CXX17_STANDARD_COMPILE_OPTION})
+set(SOUFFLE_COMPILED_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+set(SOUFFLE_COMPILED_RELEASE_CXX_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
+set(SOUFFLE_COMPILED_DEBUG_CXX_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
+get_target_property(SOUFFLE_COMPILED_DEFS compiled COMPILE_DEFINITIONS)
+get_target_property(SOUFFLE_COMPILED_OPTS compiled COMPILE_OPTIONS)
+
+set(SOUFFLE_COMPILED_LIBS "")
+
+if (THREADS_FOUND)
+  list(APPEND SOUFFLE_COMPILED_LIBS ${CMAKE_THREAD_LIBS_INIT})
+endif()
+
+if (CMAKE_DL_LIBS)
+  list(APPEND SOUFFLE_COMPILED_LIBS -l${CMAKE_DL_LIBS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
+    list(APPEND SOUFFLE_COMPILED_LIBS -lstdc++fs)
+  endif ()
+endif()
+
+if (SOUFFLE_USE_SQLITE)
+  list(APPEND SOUFFLE_COMPILED_LIBS ${SQLite3_LIBRARY})
+endif()
+
+if (SOUFFLE_USE_ZLIB)
+  list(APPEND SOUFFLE_COMPILED_LIBS ${ZLIB_LIBRARY_RELEASE})
+endif()
+
+if (SOUFFLE_USE_CURSES)
+  list(APPEND SOUFFLE_COMPILED_LIBS ${CURSES_NCURSES_LIBRARY})
+endif()
+
+list(JOIN SOUFFLE_COMPILED_OPTS " " SOUFFLE_COMPILED_CXX_OPTIONS)
+
+list(JOIN SOUFFLE_COMPILED_LIBS " " SOUFFLE_COMPILED_LINK_OPTIONS)
+
+list(TRANSFORM SOUFFLE_COMPILED_DEFS PREPEND "-D")
+list(JOIN SOUFFLE_COMPILED_DEFS " " SOUFFLE_COMPILED_DEFINITIONS)
+
+file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/souffle-compile.yml" CONTENT 
+"{
+  \"compiler\": \"${SOUFFLE_COMPILED_CXX_COMPILER}\",
+  \"compiler_id\": \"${SOUFFLE_COMPILED_CXX_COMPILER_ID}\",
+  \"compiler_version\": \"${SOUFFLE_COMPILED_CXX_COMPILER_VERSION}\",
+  \"msvc_version\": \"${MSVC_VERSION}\",
+  \"includes\": \"${SOUFFLE_COMPILED_CXX_INCLUDES}\",
+  \"std_flag\": \"${SOUFFLE_COMPILED_CXX_STANDARD}\",
+  \"cxx_flags\": \"${SOUFFLE_COMPILED_CXX_FLAGS}\",
+  \"release_cxx_flags\": \"${SOUFFLE_COMPILED_RELEASE_CXX_FLAGS}\",
+  \"debug_cxx_flags\": \"${SOUFFLE_COMPILED_DEBUG_CXX_FLAGS}\",
+  \"definitions\": \"${SOUFFLE_COMPILED_DEFINITIONS}\",
+  \"compile_options\": \"${SOUFFLE_COMPILED_CXX_OPTIONS}\",
+  \"link_options\": \"${SOUFFLE_COMPILED_LINK_OPTIONS}\"
+}")
+# ---------------------------------------
 
 # FIXME: Ideally, eventually we will move these out to the "tests" subdirectory
 # now that we have a sane(er?) build system
