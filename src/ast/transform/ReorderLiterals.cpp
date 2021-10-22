@@ -37,8 +37,8 @@
 namespace souffle::ast::transform {
 
 Clause* ReorderLiteralsTransformer::reorderClauseWithSips(const SipsMetric& sips, const Clause* clause) {
-    // ignore clauses with fixed execution plans
-    if (clause->getExecutionPlan() != nullptr) {
+    // ignore clauses with fixed execution plans or a clause is a subsumptive clause
+    if (clause->getExecutionPlan() != nullptr || isA<SubsumptiveClause>(clause)) {
         return nullptr;
     }
 
