@@ -519,22 +519,24 @@ bool NormaliseDatabaseTransformer::querifyOutputRelations(TranslationUnit& trans
 }
 
 bool NormaliseDatabaseTransformer::normaliseArguments(TranslationUnit& translationUnit) {
+    using Constaints = VecOwn<BinaryConstraint>;
+
     Program& program = translationUnit.getProgram();
 
     // Replace all non-variable-arguments nested inside the node with named variables
     // Also, keeps track of constraints to add to keep the clause semantically equivalent
     struct argument_normaliser : public NodeMapper {
-        std::set<Own<BinaryConstraint>>& constraints;
+        Constaints& constraints;
         int& changeCount;
 
-        argument_normaliser(std::set<Own<BinaryConstraint>>& constraints, int& changeCount)
+        argument_normaliser(Constaints& constraints, int& changeCount)
                 : constraints(constraints), changeCount(changeCount) {}
 
         Own<Node> operator()(Own<Node> node) const override {
             if (auto* aggr = as<Aggregator>(node)) {
                 // Aggregator variable scopes should be maintained, so changes shouldn't propagate
                 // above this level.
-                std::set<Own<BinaryConstraint>> subConstraints;
+                Constaints subConstraints;
                 argument_normaliser aggrUpdate(subConstraints, changeCount);
                 aggr->apply(aggrUpdate);
 
@@ -565,7 +567,7 @@ bool NormaliseDatabaseTransformer::normaliseArguments(TranslationUnit& translati
                     }
 
                     // Link other variables back to their original value with a `<var> = <arg>` constraint
-                    constraints.insert(mk<BinaryConstraint>(
+                    constraints.push_back(mk<BinaryConstraint>(
                             BinaryConstraintOp::EQ, mk<ast::Variable>(name.str()), clone(arg)));
                     return mk<ast::Variable>(name.str());
                 }
@@ -580,7 +582,7 @@ bool NormaliseDatabaseTransformer::normaliseArguments(TranslationUnit& translati
     bool changed = false;
     for (auto* clause : program.getClauses()) {
         int changeCount = 0;
-        std::set<Own<BinaryConstraint>> constraintsToAdd;
+        Constaints constraintsToAdd;
         argument_normaliser update(constraintsToAdd, changeCount);
 
         // Apply to each clause head
