@@ -21,6 +21,7 @@
 #include "ast/Atom.h"
 #include "ast/Clause.h"
 #include "ast/Program.h"
+#include "ast/SubsumptiveClause.h"
 #include "ast/TranslationUnit.h"
 #include "ast/Variable.h"
 #include "ast/analysis/ProfileUse.h"
