@@ -34,8 +34,8 @@ namespace souffle::ast2ram::provenance {
 
 class ClauseTranslator : public ast2ram::seminaive::ClauseTranslator {
 public:
-    ClauseTranslator(const TranslatorContext& context, TranslationMode mode = DEFAULT) :
-    ast2ram::seminaive::ClauseTranslator(context, mode) {}
+    ClauseTranslator(const TranslatorContext& context, TranslationMode mode = DEFAULT)
+            : ast2ram::seminaive::ClauseTranslator(context, mode) {}
 
 protected:
     Own<ram::Operation> addNegatedDeltaAtom(Own<ram::Operation> op, const ast::Atom* atom) const override;
