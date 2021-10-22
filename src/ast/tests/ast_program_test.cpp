@@ -194,7 +194,9 @@ TESTASTCLONEANDEQUAL(RelationCopies,
             )");
 
 /** test removeClause, addRelation and removeRelation */
-TEST(Program, RemoveClause) {
+
+// should *not* remove anything because `removeClause` operates by identity, not equality
+TEST(Program, RemoveClauseByEquality) {
     auto atom = mk<Atom>("B");
     atom->addArgument(mk<Variable>("x"));
     auto sum = mk<Aggregator>(AggregateOp::SUM, mk<Variable>("x"));
@@ -205,7 +207,15 @@ TEST(Program, RemoveClause) {
     auto tu1 = makeATU(".decl A,B(x:number) \n A(sum x : B(x)).");
     auto clause = makeClause("A", std::move(sum));
 
-    tu1->getProgram().removeClause(clause.get());
+    EXPECT_FALSE(tu1->getProgram().removeClause(*clause));
+}
+
+TEST(Program, RemoveClauseByIdentity) {
+    auto tu1 = makeATU(".decl A,B(x:number) \n A(sum x : B(x)).");
+    auto clauses = tu1->getProgram().getClauses("A");
+    EXPECT_EQ(1, clauses.size());
+    EXPECT_TRUE(tu1->getProgram().removeClause(*clauses[0]));
+
     auto tu2 = makeATU(".decl A,B(x:number)");
     EXPECT_EQ(tu1->getProgram(), tu2->getProgram());
 }

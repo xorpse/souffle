@@ -127,29 +127,21 @@ bool RemoveRelationCopiesTransformer::removeRelationCopies(TranslationUnit& tran
         return false;
     }
 
-    // replace usage of relations according to alias map
-    visit(program, [&](Atom& atom) {
-        auto pos = isAliasOf.find(atom.getQualifiedName());
-        if (pos != isAliasOf.end()) {
-            atom.setQualifiedName(pos->second);
-        }
-    });
-
     // break remaining cycles
     for (const auto& rep : cycle_reps) {
-        const auto& rel = *getRelation(program, rep);
-        const auto& clauses = getClauses(program, rel);
-        assert(clauses.size() == 1u && "unexpected number of clauses in relation");
-        program.removeClause(clauses[0]);
+        auto* info = program.getRelationInfo(rep);
+        assert(info && info->clauses.size() == 1 && "unexpected number of clauses in relation");
+        info->clauses.clear();  // remove the clause for a broken cycle
     }
 
     // remove unused relations
     for (const auto& cur : isAliasOf) {
-        if (cycle_reps.count(cur.first) == 0u) {
-            removeRelation(translationUnit, getRelation(program, cur.first)->getQualifiedName());
+        if (!contains(cycle_reps, cur.first)) {
+            program.removeRelation(cur.first);
         }
     }
 
+    renameAtoms(program, isAliasOf);
     return true;
 }
 

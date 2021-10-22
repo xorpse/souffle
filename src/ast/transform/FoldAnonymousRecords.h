@@ -57,37 +57,6 @@ private:
     }
 
     bool transform(TranslationUnit& translationUnit) override;
-
-    /**
-     * Process a single clause.
-     *
-     * @parem clause Clause to be processed.
-     * @param newClauses a destination for the newly produced clauses.
-     */
-    void transformClause(const Clause& clause, VecOwn<Clause>& newClauses);
-
-    /**
-     * Expand constraint on records position-wise.
-     *
-     * eg.
-     * [1, 2, 3] = [a, b, c] => vector(1 = a, 2 = b, 3 = c)
-     * [x, y, z] != [a, b, c] => vector(x != a, x != b, z != c)
-     *
-     * Procedure assumes that argument has a valid operation,
-     * that children are of type RecordInit and that the size
-     * of both sides is the same
-     */
-    VecOwn<Literal> expandRecordBinaryConstraint(const BinaryConstraint&);
-
-    /**
-     * Determine if the clause contains at least one binary constraint which can be expanded.
-     */
-    bool containsValidRecordConstraint(const Clause&);
-
-    /**
-     * Determine if binary constraint can be expanded.
-     */
-    bool isValidRecordConstraint(const Literal* literal);
 };
 
 }  // namespace souffle::ast::transform

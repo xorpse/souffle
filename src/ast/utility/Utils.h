@@ -128,22 +128,6 @@ std::vector<Directive*> getDirectives(const Program& program, const QualifiedNam
 void removeRelation(TranslationUnit& tu, const QualifiedName& name);
 
 /**
- * Removes the set of clauses with the given relation name.
- *
- * @param tu the translation unit
- * @param name the name of the relation to search for
- */
-void removeRelationClauses(TranslationUnit& tu, const QualifiedName& name);
-
-/**
- * Removes the set of IOs with the given relation name.
- *
- * @param tu the translation unit
- * @param name the name of the relation to search for
- */
-void removeRelationIOs(TranslationUnit& tu, const QualifiedName& name);
-
-/**
  * Returns the relation referenced by the given atom.
  * @param atom the atom
  * @param program the program containing the relations
@@ -259,11 +243,29 @@ void negateConstraintInPlace(Constraint& constraint);
 IntrinsicFunctors validOverloads(const analysis::TypeAnalysis&, const IntrinsicFunctor&);
 
 /**
- * Rename all atoms hat appear in a node to a given name.
- * @param node node to alter the children of
+ * Rename all atoms that appear the clause node to a given name (including the clause's head).
+ * @param clause the clause in question (must *not* be owned by a program)
  * @param oldToNew map from old atom names to new atom names
  * @return true if the node was changed
  */
-bool renameAtoms(Node& node, const std::map<QualifiedName, QualifiedName>& oldToNew);
+bool renameAtoms(Own<Clause>& clause, const std::map<QualifiedName, QualifiedName>& oldToNew);
+
+/**
+ * Rename all atoms in the program to a given name, including clause heads.
+ * @param program the program upon which to act
+ * @param oldToNew map from old atom names to new atom names
+ * @return true if the node was changed
+ */
+bool renameAtoms(Program& program, const std::map<QualifiedName, QualifiedName>& oldToNew);
+
+/**
+ * Rename all atoms that appear in a given relation's clauses (including the clause's head).
+ * @param program the program upon which to act
+ * @param relation the relation to modify
+ * @param oldToNew map from old atom names to new atom names
+ * @return true if the node was changed
+ */
+bool renameAtoms(Program& program, QualifiedName const& relation,
+        const std::map<QualifiedName, QualifiedName>& oldToNew);
 
 }  // namespace souffle::ast

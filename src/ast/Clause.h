@@ -59,6 +59,9 @@ public:
         return head.get();
     }
 
+    /** Obtain the clause's qualified name. Sugar for `getHead()->getQualifiedName()`. */
+    QualifiedName const& getQualifiedName() const;
+
     /** Obtains a copy of the internally maintained body literals */
     std::vector<Literal*> getBodyLiterals() const;
 

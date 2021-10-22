@@ -418,16 +418,14 @@ TEST(Transformers, RemoveClauseRedundancies) {
             errorReport, debugReport);
 
     const auto& program = tu->getProgram();
-
-    // Invoking the `RemoveRelationCopiesTransformer` to create some extra redundancy
-    // In particular: The relation `c` will be replaced with `b` throughout, creating
-    // the clause b(x) :- b(x).
+    // Invoking the `RemoveRelationCopiesTransformer` should not create redundancy.
+    // In particular: Replacing relation `c` with `b` should not create a clause
+    // `b(x) :- b(x)` from `c(x) :- b(x)`.
     mk<RemoveRelationCopiesTransformer>()->apply(*tu);
     EXPECT_EQ(nullptr, getRelation(program, "c"));
     auto bIntermediateClauses = getClauses(program, "b");
-    EXPECT_EQ(2, bIntermediateClauses.size());
+    EXPECT_EQ(1, bIntermediateClauses.size());
     EXPECT_EQ("b(1).", toString(*bIntermediateClauses[0]));
-    EXPECT_EQ("b(X) :- \n   b(X).", toString(*bIntermediateClauses[1]));
 
     // Attempt to minimise the program
     mk<MinimiseProgramTransformer>()->apply(*tu);

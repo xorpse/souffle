@@ -392,26 +392,24 @@ bool MinimiseProgramTransformer::removeRedundantClauses(TranslationUnit& transla
         return false;
     };
 
-    std::set<Own<Clause>> clausesToRemove;
-    for (const auto* clause : program.getClauses()) {
+    bool changed = false;
+    for (auto* clause : program.getClauses()) {
         if (isRedundant(clause)) {
-            clausesToRemove.insert(clone(clause));
+            program.removeClause(*clause);
+            changed = true;
         }
     }
 
-    for (auto& clause : clausesToRemove) {
-        program.removeClause(clause.get());
-    }
-    return !clausesToRemove.empty();
+    return changed;
 }
 
 bool MinimiseProgramTransformer::reduceClauseBodies(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
-    std::set<Own<Clause>> clausesToAdd;
-    std::set<Own<Clause>> clausesToRemove;
 
-    for (const auto* clause : program.getClauses()) {
+    bool changed = false;
+    for (auto* clause : program.getClauses()) {
         auto bodyLiterals = clause->getBodyLiterals();
+        // TODO: This is n^2. Add AST hashing and use a hash-set.
         std::set<std::size_t> redundantPositions;
         for (std::size_t i = 0; i < bodyLiterals.size(); i++) {
             for (std::size_t j = 0; j < i; j++) {
@@ -423,25 +421,19 @@ bool MinimiseProgramTransformer::reduceClauseBodies(TranslationUnit& translation
         }
 
         if (!redundantPositions.empty()) {
-            auto minimisedClause = mk<Clause>(clone(clause->getHead()));
+            VecOwn<Literal> lits;
             for (std::size_t i = 0; i < bodyLiterals.size(); i++) {
                 if (!contains(redundantPositions, i)) {
-                    minimisedClause->addToBody(clone(bodyLiterals[i]));
+                    lits.push_back(clone(bodyLiterals[i]));
                 }
             }
-            clausesToAdd.insert(std::move(minimisedClause));
-            clausesToRemove.insert(clone(clause));
+
+            clause->setBodyLiterals(std::move(lits));
+            changed = true;
         }
     }
 
-    for (auto& clause : clausesToRemove) {
-        program.removeClause(clause.get());
-    }
-    for (auto& clause : clausesToAdd) {
-        program.addClause(clone(clause));
-    }
-
-    return !clausesToAdd.empty();
+    return changed;
 }
 
 bool MinimiseProgramTransformer::transform(TranslationUnit& translationUnit) {

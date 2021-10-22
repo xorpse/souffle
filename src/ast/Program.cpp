@@ -8,23 +8,129 @@
 
 #include "ast/Program.h"
 
+#include "ast/Node.h"
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include <cassert>
 #include <utility>
 
+namespace souffle {
+
+using RelationInfo = ast::Program::RelationInfo;
+using RelationInfoMap = ast::Program::RelationInfoMap;
+
+template <typename SeqOwnT>
+auto toPtrVector(RelationInfoMap const& map, SeqOwnT RelationInfo::*member, ast::QualifiedName const& name) {
+    using A = typename SeqOwnT::value_type::element_type;
+    std::vector<A*> ys;
+
+    auto it = map.find(name);
+    if (it != map.end()) {
+        for (auto&& x : it->second.*member) {
+            assert(name == x->getQualifiedName());
+            ys.push_back(x.get());
+        }
+    }
+
+    return ys;
+}
+
+template <typename SeqOwnT>
+auto toPtrVector(RelationInfoMap const& map, SeqOwnT RelationInfo::*member) {
+    using A = typename SeqOwnT::value_type::element_type;
+    std::vector<A*> ys;
+
+    for ([[maybe_unused]] auto&& [k, info] : map) {
+        for (auto&& x : info.*member) {
+            assert(k == x->getQualifiedName());
+            ys.push_back(x.get());
+        }
+    }
+
+    return ys;
+}
+
+template <typename A, typename SeqOwnT>
+auto eraseByIdentity(RelationInfoMap& map, SeqOwnT RelationInfo::*member, A const& elem) {
+    auto it = map.find(elem.getQualifiedName());
+    if (it == map.end()) return false;
+
+    auto&& [_, info] = *it;
+    auto& xs = info.*member;
+    auto xs_it = std::remove_if(xs.begin(), xs.end(), [&](auto&& x) { return x.get() == &elem; });
+    if (xs_it == xs.end()) return false;
+
+    xs.erase(xs_it);
+
+    if (info.decls.empty() && info.clauses.empty() && info.directives.empty()) {
+        // everything was removed. can drop the bucket.
+        map.erase(it);
+    }
+
+    return true;
+}
+
+template <typename SeqOwnT>
+auto mapAll(RelationInfoMap& map, SeqOwnT RelationInfo::*member, const ast::NodeMapper& mapper) {
+    for ([[maybe_unused]] auto&& [k, info] : map) {
+        // assume `info` is well formed (no wrong names). only bother checking post-condition.
+        mapAll(info.*member, mapper);
+
+#ifndef NDEBUG
+        for (auto&& x : info.*member)
+            assert(k == x->getQualifiedName());
+#endif
+    }
+}
+
+template <typename SeqOwnT>
+void append(std::vector<ast::Node const*>& res, RelationInfoMap const& map, SeqOwnT RelationInfo::*member) {
+    for ([[maybe_unused]] auto&& [k, info] : map) {
+        for (auto&& x : info.*member) {
+            assert(k == x->getQualifiedName());
+            res.push_back(x.get());
+        }
+    }
+}
+
+}  // namespace souffle
+
 namespace souffle::ast {
+
+using souffle::clone;
+
+Program::RelationInfo clone(Program::RelationInfo const& x) {
+    return {clone(x.decls), clone(x.clauses), clone(x.directives)};
+}
 
 std::vector<Type*> Program::getTypes() const {
     return toPtrVector(types);
 }
 
 std::vector<Relation*> Program::getRelations() const {
-    return toPtrVector(relations);
+    return toPtrVector(relations, &RelationInfo::decls);
+}
+
+Relation* Program::getRelation(QualifiedName const& name) const {
+    auto it = relations.find(name);
+    if (it == relations.end()) return nullptr;
+
+    auto&& [_, info] = *it;
+    if (info.decls.empty()) return nullptr;
+
+    return info.decls.front().get();
+}
+
+std::vector<Relation*> Program::getRelationAll(QualifiedName const& name) const {
+    return toPtrVector(relations, &RelationInfo::decls, name);
 }
 
 std::vector<Clause*> Program::getClauses() const {
-    return toPtrVector(clauses);
+    return toPtrVector(relations, &RelationInfo::clauses);
+}
+
+std::vector<Clause*> Program::getClauses(QualifiedName const& name) const {
+    return toPtrVector(relations, &RelationInfo::clauses, name);
 }
 
 std::vector<FunctorDeclaration*> Program::getFunctorDeclarations() const {
@@ -32,69 +138,55 @@ std::vector<FunctorDeclaration*> Program::getFunctorDeclarations() const {
 }
 
 std::vector<Directive*> Program::getDirectives() const {
-    return toPtrVector(directives);
+    return toPtrVector(relations, &RelationInfo::directives);
+}
+
+std::vector<Directive*> Program::getDirectives(QualifiedName const& name) const {
+    return toPtrVector(relations, &RelationInfo::directives, name);
 }
 
 void Program::addDirective(Own<Directive> directive) {
     assert(directive && "NULL directive");
-    directives.push_back(std::move(directive));
+    auto& info = relations[directive->getQualifiedName()];
+    info.directives.push_back(std::move(directive));
 }
 
 void Program::addRelation(Own<Relation> relation) {
     assert(relation != nullptr);
-    [[maybe_unused]] auto* existingRelation = getIf(getRelations(), [&](const Relation* current) {
-        return current->getQualifiedName() == relation->getQualifiedName();
-    });
-    assert(existingRelation == nullptr && "Redefinition of relation!");
-    relations.push_back(std::move(relation));
+    auto& info = relations[relation->getQualifiedName()];
+    assert(info.decls.empty() && "Redefinition of relation!");
+    info.decls.push_back(std::move(relation));
 }
 
-bool Program::removeRelationDecl(const QualifiedName& name) {
-    // FIXME: Refactor to std::remove/erase
-    for (auto it = relations.begin(); it != relations.end(); it++) {
-        const auto& rel = *it;
-        if (rel->getQualifiedName() == name) {
-            relations.erase(it);
-            return true;
-        }
-    }
-    return false;
-}
-
-void Program::setClauses(VecOwn<Clause> newClauses) {
-    assert(allValidPtrs(newClauses));
-    assert(clause_visit_in_progress == 0 && "Don't modify program clause collection mid-traversal");
-    clauses = std::move(newClauses);
+bool Program::removeRelation(QualifiedName const& name) {
+    return 0 < relations.erase(name);
 }
 
 void Program::addClause(Own<Clause> clause) {
     assert(clause != nullptr && "Undefined clause");
-    assert(clause->getHead() != nullptr && "Undefined head of the clause");
     assert(clause_visit_in_progress == 0 && "Don't modify program clause collection mid-traversal");
-    clauses.push_back(std::move(clause));
+    auto& info = relations[clause->getQualifiedName()];
+    info.clauses.push_back(std::move(clause));
 }
 
+bool Program::removeClause(const Clause& clause) {
+    assert(clause_visit_in_progress == 0 && "Don't modify program clause collection mid-traversal");
+    return eraseByIdentity(relations, &RelationInfo::clauses, clause);
+}
+
+/**
+ * Remove a clause by identity. (Deprecated helper. TODO: Remove before PR.)
+ * @return true IFF the clause was found and removed
+ */
 bool Program::removeClause(const Clause* clause) {
-    assert(clause_visit_in_progress == 0 && "Don't modify program clause collection mid-traversal");
-    // FIXME: Refactor to std::remove/erase
-    for (auto it = clauses.begin(); it != clauses.end(); it++) {
-        if (**it == *clause) {
-            clauses.erase(it);
-            return true;
-        }
-    }
-    return false;
+    assert(clause);
+    auto removed = removeClause(*clause);
+    assert(removed && "likely mistake: cloning a clause and attempting to remove the clone");
+    return removed;
 }
 
-bool Program::removeDirective(const Directive* directive) {
-    // FIXME: Refactor to std::remove/erase
-    for (auto it = directives.begin(); it != directives.end(); it++) {
-        if (**it == *directive) {
-            directives.erase(it);
-            return true;
-        }
-    }
-    return false;
+bool Program::removeDirective(const Directive& directive) {
+    return eraseByIdentity(relations, &RelationInfo::directives, directive);
 }
 
 std::vector<Component*> Program::getComponents() const {
@@ -137,9 +229,9 @@ void Program::apply(const NodeMapper& map) {
     mapAll(instantiations, map);
     mapAll(functors, map);
     mapAll(types, map);
-    mapAll(relations, map);
-    mapAll(clauses, map);
-    mapAll(directives, map);
+    mapAll(relations, &RelationInfo::decls, map);
+    mapAll(relations, &RelationInfo::clauses, map);
+    mapAll(relations, &RelationInfo::directives, map);
 }
 
 Node::NodeVec Program::getChildren() const {
@@ -149,9 +241,9 @@ Node::NodeVec Program::getChildren() const {
     append(res, makePtrRange(instantiations));
     append(res, makePtrRange(functors));
     append(res, makePtrRange(types));
-    append(res, makePtrRange(relations));
-    append(res, makePtrRange(clauses));
-    append(res, makePtrRange(directives));
+    append(res, relations, &RelationInfo::decls);
+    append(res, relations, &RelationInfo::clauses);
+    append(res, relations, &RelationInfo::directives);
     return res;
 }
 
@@ -165,9 +257,9 @@ void Program::print(std::ostream& os) const {
     show(instantiations);
     show(types);
     show(functors);
-    show(relations);
-    show(clauses, "\n\n");
-    show(directives, "\n\n");
+    show(getRelations());
+    show(getClauses(), "\n\n");
+    show(getDirectives(), "\n\n");
 }
 
 bool Program::equal(const Node& node) const {
@@ -178,9 +270,11 @@ bool Program::equal(const Node& node) const {
            equal_targets(instantiations, other.instantiations) &&
            equal_targets(functors, other.functors) &&
            equal_targets(types, other.types) &&
-           equal_targets(relations, other.relations) &&
-           equal_targets(clauses, other.clauses) &&
-           equal_targets(directives, other.directives);
+           equal_targets_map(relations, other.relations, [](auto& a, auto& b) {
+                return  equal_targets(a.decls     , b.decls     ) &&
+                        equal_targets(a.clauses   , b.clauses   ) &&
+                        equal_targets(a.directives, b.directives);
+           });
     // clang-format on
 }
 
@@ -202,8 +296,6 @@ Program* Program::cloning() const {
     res->types = clone(types);
     res->functors = clone(functors);
     res->relations = clone(relations);
-    res->clauses = clone(clauses);
-    res->directives = clone(directives);
     return res;
 }
 

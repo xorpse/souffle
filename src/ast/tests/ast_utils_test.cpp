@@ -186,7 +186,7 @@ TEST(AstUtils, RemoveEquivalentClauses) {
     EXPECT_NE(a, nullptr);
     EXPECT_EQ(15, getClauses(program, *a).size());
 
-    removeRelationClauses(*tu, "a");
+    removeRelation(*tu, "a");
     EXPECT_EQ(0, getClauses(program, *a).size());
 }
 

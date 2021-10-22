@@ -242,9 +242,6 @@ private:
 
     std::set<adorned_predicate> headAdornmentsToDo;
     std::set<QualifiedName> headAdornmentsSeen;
-
-    VecOwn<Clause> adornedClauses;
-    VecOwn<Clause> redundantClauses;
     std::set<QualifiedName> weaklyIgnoredRelations;
 
     bool transform(TranslationUnit& translationUnit) override;
