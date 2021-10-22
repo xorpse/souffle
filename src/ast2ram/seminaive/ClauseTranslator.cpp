@@ -64,7 +64,8 @@
 
 namespace souffle::ast2ram::seminaive {
 
-ClauseTranslator::ClauseTranslator(const TranslatorContext& context) : ast2ram::ClauseTranslator(context) {}
+ClauseTranslator::ClauseTranslator(const TranslatorContext& context, TranslationMode mode) :
+ast2ram::ClauseTranslator(context, mode) {}
 
 ClauseTranslator::~ClauseTranslator() = default;
 

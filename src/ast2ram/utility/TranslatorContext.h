@@ -21,6 +21,7 @@
 #include "souffle/BinaryConstraintOps.h"
 #include "souffle/TypeAttribute.h"
 #include "souffle/utility/ContainerUtil.h"
+#include "ast2ram/ClauseTranslator.h"
 #include <cstddef>
 #include <set>
 #include <vector>
@@ -121,9 +122,10 @@ public:
     }
 
     /** Translation strategy */
-    Own<ram::Statement> translateNonRecursiveClause(const ast::Clause& clause) const;
+    Own<ram::Statement> translateNonRecursiveClause(const ast::Clause& clause, TranslationMode mode = DEFAULT) const;
     Own<ram::Statement> translateRecursiveClause(
-            const ast::Clause& clause, const std::set<const ast::Relation*>& scc, std::size_t version) const;
+            const ast::Clause& clause, const std::set<const ast::Relation*>& scc, std::size_t version, TranslationMode
+            mode = DEFAULT) const;
 
     Own<ram::Condition> translateConstraint(const ValueIndex& index, const ast::Literal* lit) const;
 

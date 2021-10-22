@@ -32,9 +32,13 @@ namespace souffle::ast2ram {
 
 class TranslatorContext;
 
+/** Translation modes */ 
+enum TranslationMode {DEFAULT, SubsumeRNC, SubsumeRNN, SubsumeDCN, SubsumeDCC};
+
+/* Abstract Clause Translator */ 
 class ClauseTranslator {
 public:
-    ClauseTranslator(const TranslatorContext& context) : context(context) {}
+    ClauseTranslator(const TranslatorContext& context, TranslationMode mode) : context(context), mode(mode) {}
     virtual ~ClauseTranslator() = default;
 
     virtual Own<ram::Statement> translateNonRecursiveClause(const ast::Clause& clause) = 0;
@@ -43,6 +47,7 @@ public:
 
 protected:
     const TranslatorContext& context;
+    enum TranslationMode mode;
 };
 
 }  // namespace souffle::ast2ram

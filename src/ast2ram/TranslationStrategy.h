@@ -17,6 +17,7 @@
 #pragma once
 
 #include "souffle/utility/ContainerUtil.h"
+#include "ast2ram/ClauseTranslator.h"
 
 namespace souffle::ast2ram {
 
@@ -38,7 +39,7 @@ public:
     virtual UnitTranslator* createUnitTranslator() const = 0;
 
     /** AST clause -> RAM statement translator */
-    virtual ClauseTranslator* createClauseTranslator(const TranslatorContext& context) const = 0;
+    virtual ClauseTranslator* createClauseTranslator(const TranslatorContext& context, TranslationMode mode) const = 0;
 
     /** AST literal -> RAM condition translator */
     virtual ConstraintTranslator* createConstraintTranslator(

@@ -37,7 +37,7 @@ public:
     }
 
     ast2ram::UnitTranslator* createUnitTranslator() const override;
-    ast2ram::ClauseTranslator* createClauseTranslator(const TranslatorContext& context) const override;
+    ast2ram::ClauseTranslator* createClauseTranslator(const TranslatorContext& context, TranslationMode mode) const override;
     ast2ram::ConstraintTranslator* createConstraintTranslator(
             const TranslatorContext& context, const ValueIndex& index) const override;
     ast2ram::ValueTranslator* createValueTranslator(

@@ -51,7 +51,7 @@ namespace souffle::ast2ram::seminaive {
 
 class ClauseTranslator : public ast2ram::ClauseTranslator {
 public:
-    ClauseTranslator(const TranslatorContext& context);
+    ClauseTranslator(const TranslatorContext& context, TranslationMode mode = DEFAULT);
     ~ClauseTranslator();
 
     /** Entry points */

@@ -226,14 +226,15 @@ bool TranslatorContext::isADTBranchSimple(const ast::BranchInit* adt) const {
     return arity <= 1;
 }
 
-Own<ram::Statement> TranslatorContext::translateNonRecursiveClause(const ast::Clause& clause) const {
-    auto clauseTranslator = Own<ClauseTranslator>(translationStrategy->createClauseTranslator(*this));
+Own<ram::Statement> TranslatorContext::translateNonRecursiveClause(const ast::Clause& clause, TranslationMode mode) const {
+    auto clauseTranslator = Own<ClauseTranslator>(translationStrategy->createClauseTranslator(*this, mode));
     return clauseTranslator->translateNonRecursiveClause(clause);
 }
 
 Own<ram::Statement> TranslatorContext::translateRecursiveClause(
-        const ast::Clause& clause, const std::set<const ast::Relation*>& scc, std::size_t version) const {
-    auto clauseTranslator = Own<ClauseTranslator>(translationStrategy->createClauseTranslator(*this));
+        const ast::Clause& clause, const std::set<const ast::Relation*>& scc, std::size_t version, TranslationMode
+        mode) const {
+    auto clauseTranslator = Own<ClauseTranslator>(translationStrategy->createClauseTranslator(*this, mode));
     return clauseTranslator->translateRecursiveClause(clause, scc, version);
 }
 
