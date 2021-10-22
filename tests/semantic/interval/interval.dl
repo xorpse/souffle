@@ -6,7 +6,6 @@
 
 // Test intervals for simple number range
 
-
 // Recursive case considering overlaps
 
 .decl R(lower_bound:number, upper_bound:number) btree_delete
