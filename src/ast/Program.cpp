@@ -183,8 +183,9 @@ bool Program::removeRelation(QualifiedName const& name) {
 }
 
 void Program::removeRelation(Relation const& r) {
+    auto name = r.getQualifiedName();
     eraseByIdentity(relations, &RelationInfo::decls, r);  // run just for assert/sancheck
-    removeRelation(r.getQualifiedName());
+    removeRelation(name);
 }
 
 void Program::addClause(Own<Clause> clause) {
