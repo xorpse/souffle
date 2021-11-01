@@ -25,6 +25,7 @@ namespace souffle::ast {
 class Clause;
 class Relation;
 class TranslationUnit;
+class Atom;
 }  // namespace souffle::ast
 
 namespace souffle::ram {
@@ -52,6 +53,8 @@ protected:
             const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const;
     VecOwn<ram::Statement> generateClauseVersions(
             const ast::Clause* clause, const std::set<const ast::Relation*>& scc) const;
+    std::vector<ast::Atom*> getSccAtoms(
+            const ast::Clause* clause, const std::set<const ast::Relation*>& scc) const;
 
     virtual void addAuxiliaryArity(
             const ast::Relation* relation, std::map<std::string, std::string>& directives) const;
@@ -60,8 +63,7 @@ protected:
 
     /** High-level relation translation */
     virtual Own<ram::Sequence> generateProgram(const ast::TranslationUnit& translationUnit);
-    Own<ram::Statement> generateNonRecursiveRelation(
-            const ast::Relation& rel, const std::set<const ast::Relation*>& scc) const;
+    Own<ram::Statement> generateNonRecursiveRelation(const ast::Relation& rel) const;
     Own<ram::Statement> generateRecursiveStratum(const std::set<const ast::Relation*>& scc) const;
 
     /** IO translation */

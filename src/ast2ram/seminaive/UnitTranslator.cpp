@@ -23,6 +23,7 @@
 #include "ast/analysis/TopologicallySortedSCCGraph.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
+#include "ast2ram/ClauseTranslator.h"
 #include "ast2ram/utility/TranslatorContext.h"
 #include "ast2ram/utility/Utils.h"
 #include "ram/Call.h"
@@ -93,8 +94,7 @@ Own<ram::Statement> UnitTranslator::generateClearRelation(const ast::Relation* r
     return mk<ram::Clear>(getConcreteRelationName(relation->getQualifiedName()));
 }
 
-Own<ram::Statement> UnitTranslator::generateNonRecursiveRelation(
-        const ast::Relation& rel, const std::set<const ast::Relation*>& scc) const {
+Own<ram::Statement> UnitTranslator::generateNonRecursiveRelation(const ast::Relation& rel) const {
     VecOwn<ram::Statement> result;
 
     // Get relation names
@@ -137,7 +137,7 @@ Own<ram::Statement> UnitTranslator::generateNonRecursiveRelation(
         // Compute subsumptive deletions for non-recursive rules
         for (auto clause : context->getClauses(rel.getQualifiedName())) {
             if (isA<ast::SubsumptiveClause>(clause)) {
-                appendStmt(result, context->translateRecursiveClause(*clause, scc, 3));
+                appendStmt(result, context->translateNonRecursiveClause(*clause, SubsumeDCC));
             }
         }
         appendStmt(result, mk<ram::Sequence>(generateEraseTuples(&rel, relName, eraseRelation),
@@ -183,7 +183,7 @@ Own<ram::Statement> UnitTranslator::generateStratum(std::size_t scc) const {
     } else {
         assert(sccRelations.size() == 1 && "only one relation should exist in non-recursive stratum");
         const auto* relation = *sccRelations.begin();
-        appendStmt(current, generateNonRecursiveRelation(*relation, sccRelations));
+        appendStmt(current, generateNonRecursiveRelation(*relation));
     }
 
     // Store all internal output relations to the output dir with a .csv extension
@@ -280,9 +280,16 @@ Own<ram::Statement> UnitTranslator::translateRecursiveClauses(
         }
         // Process subsumptive clauses
         if (isA<ast::SubsumptiveClause>(clause)) {
-            appendStmt(deletions, context->translateRecursiveClause(*clause, scc, 0));
-            appendStmt(deletions, context->translateRecursiveClause(*clause, scc, 1));
-            appendStmt(deletions, context->translateRecursiveClause(*clause, scc, 2));
+            const auto& sccAtoms = getSccAtoms(clause, scc);
+            for (std::size_t version = 0; version < sccAtoms.size(); version++) {
+                appendStmt(deletions, context->translateRecursiveClause(*clause, scc, version, SubsumeRNN));
+            }
+            for (std::size_t version = 0; version < sccAtoms.size(); version++) {
+                appendStmt(deletions, context->translateRecursiveClause(*clause, scc, version, SubsumeRNC));
+            }
+            for (std::size_t version = 0; version < sccAtoms.size(); version++) {
+                appendStmt(deletions, context->translateRecursiveClause(*clause, scc, version, SubsumeDCN));
+            }
             continue;
         }
 
@@ -296,10 +303,23 @@ Own<ram::Statement> UnitTranslator::translateRecursiveClauses(
     return mk<ram::Sequence>(mk<ram::Sequence>(std::move(result)), mk<ram::Sequence>(std::move(deletions)));
 }
 
+std::vector<ast::Atom*> UnitTranslator::getSccAtoms(
+        const ast::Clause* clause, const std::set<const ast::Relation*>& scc) const {
+    const auto& sccAtoms = filter(ast::getBodyLiterals<ast::Atom>(*clause), [&](const ast::Atom* atom) {
+        if (isA<ast::SubsumptiveClause>(clause)) {
+            const auto& body = clause->getBodyLiterals();
+            // skip dominated head
+            auto dominatedHeadAtom = dynamic_cast<const ast::Atom*>(body[0]);
+            if (atom == dominatedHeadAtom) return false;
+        }
+        return contains(scc, context->getAtomRelation(atom));
+    });
+    return sccAtoms;
+}
+
 VecOwn<ram::Statement> UnitTranslator::generateClauseVersions(
         const ast::Clause* clause, const std::set<const ast::Relation*>& scc) const {
-    const auto& sccAtoms = filter(ast::getBodyLiterals<ast::Atom>(*clause),
-            [&](const ast::Atom* atom) { return contains(scc, context->getAtomRelation(atom)); });
+    const auto& sccAtoms = getSccAtoms(clause, scc);
 
     // Create each version
     VecOwn<ram::Statement> clauseVersions;
@@ -327,7 +347,7 @@ Own<ram::Statement> UnitTranslator::generateStratumPreamble(const std::set<const
         std::string mainRelation = getConcreteRelationName(rel->getQualifiedName());
 
         // Generate code for the non-recursive rules of relation
-        appendStmt(preamble, generateNonRecursiveRelation(*rel, scc));
+        appendStmt(preamble, generateNonRecursiveRelation(*rel));
 
         // Copy found tuples into delta relation
         appendStmt(preamble, generateMergeRelations(rel, deltaRelation, mainRelation));

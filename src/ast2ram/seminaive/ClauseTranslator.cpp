@@ -137,25 +137,36 @@ Own<ram::Statement> ClauseTranslator::translateNonRecursiveClause(const ast::Cla
 
 std::string ClauseTranslator::getClauseAtomName(const ast::Clause& clause, const ast::Atom* atom) const {
     if (isA<ast::SubsumptiveClause>(clause)) {
+        // find the dominated / dominating heads
+        const auto& body = clause.getBodyLiterals();
+        auto dominatedHeadAtom = dynamic_cast<const ast::Atom*>(body[dominatedHead]);
+        auto dominatingHeadAtom = dynamic_cast<const ast::Atom*>(body[dominatingHead]);
+
         if (clause.getHead() == atom) {
-            if (version == 2 || version == 3) {
+            if (mode == SubsumeDCN || mode == SubsumeDCC) {
                 return getDeleteRelationName(atom->getQualifiedName());
             }
+            // assert ((mode == SubsumeRNN || mode == SubsumeRNC) && "unknown mode for subsumptive clause");
             return getRejectRelationName(atom->getQualifiedName());
         }
-        if (sccAtoms.at(dominatedHead) == atom) {
-            if (version == 2 || version == 3) {
+
+        if (dominatedHeadAtom == atom) {
+            if (mode == SubsumeDCN || mode == SubsumeDCC) {
                 return getConcreteRelationName(atom->getQualifiedName());
             }
+            // assert ((mode == SubsumeRNN || mode == SubsumeRNC) && "unknown mode for subsumptive clause");
             return getNewRelationName(atom->getQualifiedName());
         }
-        if (sccAtoms.at(dominatingHead) == atom) {
-            if (version == 0 || version == 3) {
+
+        if (dominatingHeadAtom == atom) {
+            if (mode == SubsumeRNC || mode == SubsumeDCC) {
                 return getConcreteRelationName(atom->getQualifiedName());
             }
+            // assert ((mode == SubsumeRNN || mode == SubsumeDCN) && "unknown mode for subsumptive clause");
             return getNewRelationName(atom->getQualifiedName());
         }
     }
+
     if (!isRecursive()) {
         return getConcreteRelationName(atom->getQualifiedName());
     }
@@ -517,8 +528,12 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
     }
 
     if (isA<ast::SubsumptiveClause>(clause)) {
-        if (version == 1 || version == 3) {
-            op = addDistinct(std::move(op), sccAtoms.at(0), sccAtoms.at(1));
+        if (mode == SubsumeRNN || mode == SubsumeDCC) {
+            // find the dominated / dominating heads
+            const auto& body = clause.getBodyLiterals();
+            auto dominatedHeadAtom = dynamic_cast<const ast::Atom*>(body[dominatedHead]);
+            auto dominatingHeadAtom = dynamic_cast<const ast::Atom*>(body[dominatingHead]);
+            op = addDistinct(std::move(op), dominatedHeadAtom, dominatingHeadAtom);
         }
         return op;
     }
@@ -690,6 +705,10 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
     const auto& order = orders.at(version);
     auto sz = order->getOrder().size();
     std::vector<unsigned int> newOrder(sz);
+
+    // assign dominatedHead/dominatingHead index in case
+    // a query plan has been specified for a subsumptive
+    // clause.
     if (isA<ast::SubsumptiveClause>(clause)) {
         for (std::size_t i = 0; i < sz; ++i) {
             if (order->getOrder()[i] == 0) {
@@ -699,8 +718,10 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
             }
         }
     }
+
     std::transform(order->getOrder().begin(), order->getOrder().end(), newOrder.begin(),
             [](unsigned int i) -> unsigned int { return i - 1; });
+
     return reorderAtoms(atoms, newOrder);
 }
 
