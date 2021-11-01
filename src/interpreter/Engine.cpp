@@ -1193,7 +1193,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                             .getReader(directive, getSymbolTable(), getRecordTable())
                             ->readAll(rel);
                 } catch (std::exception& e) {
-                    std::cerr << "Error loading data: " << e.what() << "\n";
+                    std::cerr << "Error loading " << rel.getName() << " data: " << e.what() << "\n";
                 }
                 return true;
             } else if (op == "output" || op == "printsize") {
