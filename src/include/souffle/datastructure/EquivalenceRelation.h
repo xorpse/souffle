@@ -163,10 +163,8 @@ public:
                     if (repsCovered.count(rep) == 0) {
                         repsCovered.emplace(rep);
                     }
-                    toInsert.emplace_back(el, rep);
-                } else {
-                    toInsert.emplace_back(el, this->sds.findNode(el));
-                }
+                } 
+                toInsert.emplace_back(el, this->sds.findNode(el));
             }
         }
         assert(size >= 0);
@@ -193,7 +191,6 @@ public:
             value_type rep;
             for (std::pair<value_type, value_type> p : toInsert) {
                 std::tie(el, rep) = p;
-                std::cout << "Inserting " << el << " " << rep << std::endl;
                 other.insert(el, rep);
             }
         }

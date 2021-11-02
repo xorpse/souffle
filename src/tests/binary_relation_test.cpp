@@ -219,7 +219,7 @@ TEST(EqRelTest, Shuffled) {
     EXPECT_EQ(count, br.size());
 }
 
-TEST(EqRelTest, Extend) {
+TEST(EqRelTest, MergeExtend) {
     // test running extend for a relation
 
     // br is {{0,1,2,3,4,5,6}, {8,9}, {44, 70}, {11}}
@@ -274,7 +274,7 @@ TEST(EqRelTest, Extend) {
 
     // check that the new knowledge was inserted in the old relation
     // br is {{0,1,2,3,4,5,6,8,9,33,99},{44,68,69,70},{101,102},{11}}
-    EXPECT_EQ(br.size(), (12 * 12) + (4 * 4) + (2 * 2) + (1 * 1));
+    EXPECT_EQ(br.size(), (11 * 11) + (4 * 4) + (2 * 2) + (1 * 1));
     // check that it was properly extended
     EXPECT_EQ(br2.size(), (11 * 11) + (4 * 4) + (2 * 2));
 }

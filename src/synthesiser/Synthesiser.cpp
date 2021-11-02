@@ -33,7 +33,7 @@
 #include "ram/ExistenceCheck.h"
 #include "ram/Exit.h"
 #include "ram/Expression.h"
-#include "ram/Extend.h"
+#include "ram/MergeExtend.h"
 #include "ram/False.h"
 #include "ram/Filter.h"
 #include "ram/FloatConstant.h"
@@ -559,7 +559,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             PRINT_END_COMMENT(out);
         }
 
-        void visit_(type_identity<Extend>, const Extend& extend, std::ostream& out) override {
+        void visit_(type_identity<MergeExtend>, const MergeExtend& extend, std::ostream& out) override {
             PRINT_BEGIN_COMMENT(out);
             out << synthesiser.getRelationName(synthesiser.lookup(extend.getSourceRelation())) << "->"
                 << "extendAndInsert("

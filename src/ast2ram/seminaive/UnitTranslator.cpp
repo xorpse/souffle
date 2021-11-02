@@ -33,7 +33,7 @@
 #include "ram/EmptinessCheck.h"
 #include "ram/Exit.h"
 #include "ram/Expression.h"
-#include "ram/Extend.h"
+#include "ram/MergeExtend.h"
 #include "ram/Filter.h"
 #include "ram/IO.h"
 #include "ram/Insert.h"
@@ -196,7 +196,7 @@ Own<ram::Statement> UnitTranslator::generateMergeRelations(
 
     // Predicate - insert all values
     if (rel->getRepresentation() == RelationRepresentation::EQREL) {
-        return mk<ram::Extend>(destRelation, srcRelation);
+        return mk<ram::MergeExtend>(destRelation, srcRelation);
     }
     for (std::size_t i = 0; i < rel->getArity(); i++) {
         values.push_back(mk<ram::TupleElement>(0, i));

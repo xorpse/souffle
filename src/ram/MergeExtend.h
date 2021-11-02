@@ -8,7 +8,7 @@
 
 /************************************************************************
  *
- * @file Extend.h
+ * @file MergeExtend.h
  *
  ***********************************************************************/
 
@@ -26,17 +26,17 @@
 namespace souffle::ram {
 
 /**
- * @class Extend
- * @brief Extend equivalence relation.
+ * @class MergeExtend
+ * @brief MergeExtend equivalence relation.
  *
  * The following example merges A into B:
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * EXTEND B WITH A
+ * MERGE EXTEND B WITH A
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-class Extend : public BinRelationStatement {
+class MergeExtend : public BinRelationStatement {
 public:
-    Extend(std::string tRef, const std::string& sRef) : BinRelationStatement(sRef, tRef) {}
+    MergeExtend(std::string tRef, const std::string& sRef) : BinRelationStatement(sRef, tRef) {}
 
     /** @brief Get source relation */
     const std::string& getSourceRelation() const {
@@ -48,15 +48,15 @@ public:
         return getSecondRelation();
     }
 
-    Extend* cloning() const override {
-        auto* res = new Extend(second, first);
+    MergeExtend* cloning() const override {
+        auto* res = new MergeExtend(second, first);
         return res;
     }
 
 protected:
     void print(std::ostream& os, int tabpos) const override {
         os << times(" ", tabpos);
-        os << "EXTEND " << getTargetRelation() << " WITH " << getSourceRelation();
+        os << "MERGE EXTEND " << getTargetRelation() << " WITH " << getSourceRelation();
         os << std::endl;
     }
 };

@@ -27,7 +27,7 @@
 #include "ram/ExistenceCheck.h"
 #include "ram/Exit.h"
 #include "ram/Expression.h"
-#include "ram/Extend.h"
+#include "ram/MergeExtend.h"
 #include "ram/Filter.h"
 #include "ram/IO.h"
 #include "ram/Insert.h"
@@ -92,16 +92,16 @@ TEST(Clear, CloneAndEquals) {
     delete c;
 }
 
-TEST(Extend, CloneAndEquals) {
+TEST(MergeExtend, CloneAndEquals) {
     // MERGE B WITH A
     Relation A("A", 1, 1, {"x"}, {"i"}, RelationRepresentation::DEFAULT);
     Relation B("B", 1, 1, {"x"}, {"i"}, RelationRepresentation::DEFAULT);
-    Extend a("B", "A");
-    Extend b("B", "A");
+    MergeExtend a("B", "A");
+    MergeExtend b("B", "A");
     EXPECT_EQ(a, b);
     EXPECT_NE(&a, &b);
 
-    Extend* c = a.cloning();
+    MergeExtend* c = a.cloning();
     EXPECT_EQ(a, *c);
     EXPECT_NE(&a, c);
     delete c;

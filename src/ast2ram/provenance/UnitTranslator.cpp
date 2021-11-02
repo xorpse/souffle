@@ -28,7 +28,7 @@
 #include "ram/DebugInfo.h"
 #include "ram/ExistenceCheck.h"
 #include "ram/Expression.h"
-#include "ram/Extend.h"
+#include "ram/MergeExtend.h"
 #include "ram/Filter.h"
 #include "ram/Insert.h"
 #include "ram/LogRelationTimer.h"
@@ -184,7 +184,7 @@ Own<ram::Statement> UnitTranslator::generateMergeRelations(
     auto insertion = mk<ram::Insert>(destRelation, std::move(values));
     auto stmt = mk<ram::Query>(mk<ram::Scan>(srcRelation, 0, std::move(insertion)));
     if (rel->getRepresentation() == RelationRepresentation::EQREL) {
-        return mk<ram::Sequence>(mk<ram::Extend>(destRelation, srcRelation), std::move(stmt));
+        return mk<ram::Sequence>(mk<ram::MergeExtend>(destRelation, srcRelation), std::move(stmt));
     }
     return stmt;
 }
