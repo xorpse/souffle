@@ -1612,7 +1612,7 @@ private:
 
 /**
  * A sparse bit-map is a bit map virtually assigning a bit value to every value if the
- * uint32_t domain. However, only 1-bits are stored utilizing a nested sparse array
+ * uint64_t domain. However, only 1-bits are stored utilizing a nested sparse array
  * structure.
  *
  * @tparam BITS similar to the BITS parameter of the sparse array type
@@ -1936,8 +1936,8 @@ class TrieIterator {
     // remove ref-qual (if any); this can happen if we're a iterator-view
     using iter_core_arg_type = typename std::remove_reference_t<IterCore>::store_iter;
 
-    Value value;         // the value currently pointed to
-    IterCore iter_core;  // the wrapped iterator
+    Value value = {};         // the value currently pointed to
+    IterCore iter_core = {};  // the wrapped iterator
 
     // return an ephemeral nested iterator-view (view -> mutating us mutates our parent)
     // NB: be careful that the lifetime of this iterator-view doesn't exceed that of its parent.

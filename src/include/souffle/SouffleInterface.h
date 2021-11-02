@@ -43,7 +43,7 @@ class tuple;
  */
 class Relation {
 public:
-    using arity_type = uint32_t;
+    using arity_type = std::size_t;
 
 protected:
     /**
@@ -67,15 +67,15 @@ protected:
          *
          * TODO (Honghyw) : Provide a clear documentation of what id is used for.
          */
-        uint32_t id;
+        std::size_t id;
 
     public:
         /**
          * Get the ID of the iterator_base object.
          *
-         * @return ID of the iterator_base object (unit32_t)
+         * @return ID of the iterator_base object (std::size_t)
          */
-        virtual uint32_t getId() const {
+        virtual std::size_t getId() const {
             return id;
         }
 
@@ -84,9 +84,9 @@ protected:
          *
          * Create an instance of iterator_base and set its ID to be arg_id.
          *
-         * @param arg_id ID of an iterator object (unit32_t)
+         * @param arg_id ID of an iterator object (std::size_t)
          */
-        iterator_base(uint32_t arg_id) : id(arg_id) {}
+        iterator_base(std::size_t arg_id) : id(arg_id) {}
 
         /**
          * Destructor.

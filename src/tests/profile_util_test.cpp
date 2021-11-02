@@ -64,9 +64,9 @@ TEST(StringUtil, formatMemory) {
     EXPECT_EQ("1000GB", Tools::formatMemory(1000 * 1024 * 1024));
     EXPECT_EQ("1900GB", Tools::formatMemory(1900 * 1024 * 1024));
 
-    EXPECT_EQ("2TB", Tools::formatMemory(2L * 1024 * 1024 * 1024));
-    EXPECT_EQ("1000TB", Tools::formatMemory(1000L * 1024 * 1024 * 1024));
-    EXPECT_EQ("1900TB", Tools::formatMemory(1900L * 1024 * 1024 * 1024));
+    EXPECT_EQ("2TB", Tools::formatMemory(2UL * 1024UL * 1024UL * 1024UL));
+    EXPECT_EQ("1000TB", Tools::formatMemory(1000UL * 1024UL * 1024UL * 1024UL));
+    EXPECT_EQ("1900TB", Tools::formatMemory(1900UL * 1024UL * 1024UL * 1024UL));
 }
 
 TEST(StringUtil, formatTime) {

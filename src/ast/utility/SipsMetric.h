@@ -46,7 +46,7 @@ public:
      * @param clause clause to reorder
      * @return the vector of new positions; v[i] = j iff atom j moves to pos i
      */
-    std::vector<unsigned int> getReordering(const Clause* clause) const;
+    std::vector<std::size_t> getReordering(const Clause* clause) const;
 
     /** Create a SIPS metric based on a given heuristic. */
     static std::unique_ptr<SipsMetric> create(const std::string& heuristic, const TranslationUnit& tu);

@@ -1961,7 +1961,7 @@ private:
         const int N = node::maxKeys;
 
         // divide range in N+1 sub-ranges
-        int length = (b - a) + 1;
+        int64_t length = (b - a) + 1;
 
         // terminal case: length is less then maxKeys
         if (length <= N) {
@@ -1978,7 +1978,7 @@ private:
 
         // recursive case - compute step size
         int numKeys = N;
-        int step = ((length - numKeys) / (numKeys + 1));
+        int64_t step = ((length - numKeys) / (numKeys + 1));
 
         while (numKeys > 1 && (step < N / 2)) {
             numKeys--;

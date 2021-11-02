@@ -865,8 +865,8 @@ void SemanticCheckerImpl::checkInlining() {
         cycle << "{" << cycleOrigin->getQualifiedName();
 
         // Print it backwards to preserve the initial cycle order
-        for (int i = result.size() - 2; i >= 0; i--) {
-            cycle << ", " << result[i];
+        for (std::size_t i = result.size() - 1; i >= 1; i--) {
+            cycle << ", " << result[i-1];
         }
 
         cycle << "}";

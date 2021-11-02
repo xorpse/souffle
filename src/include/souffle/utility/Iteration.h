@@ -283,9 +283,9 @@ struct range {
     }
 
     // splits up this range into the given number of partitions
-    std::vector<range> partition(int np = 100) {
+    std::vector<range> partition(std::size_t np = 100) {
         // obtain the size
-        int n = 0;
+      std::size_t n = 0;
         for (auto i = a; i != b; ++i) {
             n++;
         }
@@ -297,8 +297,8 @@ struct range {
         res.reserve(np);
         auto cur = a;
         auto last = cur;
-        int i = 0;
-        int p = 0;
+        std::size_t i = 0;
+        std::size_t p = 0;
         while (cur != b) {
             ++cur;
             i++;

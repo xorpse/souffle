@@ -162,14 +162,23 @@ set(SOUFFLE_SOURCES
 # Flex/Bison
 # --------------------------------------------------
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/parser")
-flex_target(scanner parser/scanner.ll ${CMAKE_CURRENT_BINARY_DIR}/parser/scanner.cc)
+
+flex_target(scanner parser/scanner.ll ${CMAKE_CURRENT_BINARY_DIR}/parser/scanner.cc
+  COMPILE_FLAGS ${SCANNER_COMPILE_FLAGS})
+
 bison_target(parser parser/parser.yy ${CMAKE_CURRENT_BINARY_DIR}/parser/parser.cc
              COMPILE_FLAGS "-Wall -Werror -Wno-error=deprecated -Wno-error=other -v -d")
 add_flex_bison_dependency(scanner parser)
 
-# OSX compiler doesn't recognise `(void)var;` ideom
-if (NOT MSVC)
-set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/parser/scanner.cc PROPERTIES
+
+if (MSVC)
+  set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/parser/scanner.cc PROPERTIES
+             COMPILE_FLAGS "/wd4005 /wd4996")
+  set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/parser/parser.cc PROPERTIES
+             COMPILE_FLAGS "/wd4005 /wd26819")
+else ()
+  # OSX compiler doesn't recognise `(void)var;` ideom
+  set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/parser/scanner.cc PROPERTIES
              COMPILE_FLAGS "-Wno-error=unused-parameter")
 endif ()
 
@@ -196,6 +205,8 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/souffle DESTINATION includ
 
 add_library(compiled STATIC dummy.cpp)
 
+target_include_directories(compiled PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
 # Set C++ standard to C++17
 target_compile_features(libsouffle PUBLIC cxx_std_17)
 target_compile_features(compiled PUBLIC cxx_std_17)
@@ -204,9 +215,9 @@ set_target_properties(libsouffle PROPERTIES CXX_EXTENSIONS OFF)
 set_target_properties(compiled PROPERTIES CXX_EXTENSIONS OFF)
 
 if (NOT MSVC)
-target_compile_options(libsouffle PUBLIC "-Wall;-Wextra;-Werror;-fwrapv")
+  target_compile_options(libsouffle PUBLIC -Wall -Wextra -Werror -fwrapv)
 else ()
-target_compile_options(libsouffle PUBLIC "")
+  target_compile_options(libsouffle PUBLIC /W3 /WX -UndefIntOverflow–)
 endif ()
 
 target_compile_options(compiled PUBLIC "")
@@ -313,10 +324,22 @@ target_compile_features(souffleprof
 endif()
 
 if (MSVC)
-  target_compile_options(libsouffle PRIVATE /bigobj)
-  target_compile_options(compiled PRIVATE /bigobj)
+  target_compile_options(libsouffle PUBLIC /bigobj)
+  target_compile_options(compiled PUBLIC /bigobj)
 
-  target_compile_options(libsouffle PRIVATE /wd6326 /wd5105)
+  target_compile_options(libsouffle PUBLIC /wd5105)
+  target_compile_options(compiled PUBLIC /wd5105)
+
+  target_compile_options(libsouffle PUBLIC /wd6326)
+  target_compile_options(compiled PUBLIC /wd6326)
+
+  target_compile_options(libsouffle PUBLIC /wd26110)
+  target_compile_options(libsouffle PUBLIC /wd4065 /wd4200)
+
+  # to prevent old versions of Flex from redeclaring int types
+  target_compile_definitions(libsouffle PRIVATE __STDC_LIMIT_MACROS)
+
+  target_compile_definitions(libsouffle PUBLIC _CRT_SECURE_NO_WARNINGS)
 
   if (NOT (MSVC_VERSION LESS 1910))
     target_compile_options(libsouffle PUBLIC /permissive-)
@@ -419,13 +442,13 @@ install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/souffle-compile DESTINATION bin)
 set(SOUFFLE_COMPILED_CXX_COMPILER ${CMAKE_CXX_COMPILER})
 set(SOUFFLE_COMPILED_CXX_COMPILER_ID ${CMAKE_CXX_COMPILER_ID})
 set(SOUFFLE_COMPILED_CXX_COMPILER_VERSION ${CMAKE_CXX_COMPILER_VERSION})
-set(SOUFFLE_COMPILED_CXX_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(SOUFFLE_COMPILED_CXX_STANDARD ${CMAKE_CXX17_STANDARD_COMPILE_OPTION})
 set(SOUFFLE_COMPILED_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 set(SOUFFLE_COMPILED_RELEASE_CXX_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
 set(SOUFFLE_COMPILED_DEBUG_CXX_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
 get_target_property(SOUFFLE_COMPILED_DEFS compiled COMPILE_DEFINITIONS)
 get_target_property(SOUFFLE_COMPILED_OPTS compiled COMPILE_OPTIONS)
+get_target_property(SOUFFLE_COMPILED_INCS compiled INCLUDE_DIRECTORIES)
 
 set(SOUFFLE_COMPILED_LIBS "")
 
@@ -455,28 +478,51 @@ if (SOUFFLE_USE_CURSES)
   list(APPEND SOUFFLE_COMPILED_LIBS ${CURSES_NCURSES_LIBRARY})
 endif()
 
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  set(OUTNAME_FMT "-o%s")
+  set(EXE_EXTENSION "")
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  set(OUTNAME_FMT "/Fe:%s")
+  set(EXE_EXTENSION ".exe")
+endif ()
+
 list(JOIN SOUFFLE_COMPILED_OPTS " " SOUFFLE_COMPILED_CXX_OPTIONS)
 
 list(JOIN SOUFFLE_COMPILED_LIBS " " SOUFFLE_COMPILED_LINK_OPTIONS)
 
+list(TRANSFORM SOUFFLE_COMPILED_INCS PREPEND "-I")
+list(JOIN SOUFFLE_COMPILED_INCS " " SOUFFLE_COMPILED_INCLUDES)
+
 list(TRANSFORM SOUFFLE_COMPILED_DEFS PREPEND "-D")
 list(JOIN SOUFFLE_COMPILED_DEFS " " SOUFFLE_COMPILED_DEFINITIONS)
 
-file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/souffle-compile.yml" CONTENT 
-"{
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/souffle-compile.rb.template TEMPLATE)
+
+set(SOUFFLE_COMPILE_RB 
+"#!/usr/bin/env ruby
+JSON_DATA_TEXT = '{
   \"compiler\": \"${SOUFFLE_COMPILED_CXX_COMPILER}\",
   \"compiler_id\": \"${SOUFFLE_COMPILED_CXX_COMPILER_ID}\",
   \"compiler_version\": \"${SOUFFLE_COMPILED_CXX_COMPILER_VERSION}\",
   \"msvc_version\": \"${MSVC_VERSION}\",
-  \"includes\": \"${SOUFFLE_COMPILED_CXX_INCLUDES}\",
+  \"includes\": \"${SOUFFLE_COMPILED_INCLUDES}\",
   \"std_flag\": \"${SOUFFLE_COMPILED_CXX_STANDARD}\",
   \"cxx_flags\": \"${SOUFFLE_COMPILED_CXX_FLAGS}\",
   \"release_cxx_flags\": \"${SOUFFLE_COMPILED_RELEASE_CXX_FLAGS}\",
   \"debug_cxx_flags\": \"${SOUFFLE_COMPILED_DEBUG_CXX_FLAGS}\",
   \"definitions\": \"${SOUFFLE_COMPILED_DEFINITIONS}\",
   \"compile_options\": \"${SOUFFLE_COMPILED_CXX_OPTIONS}\",
-  \"link_options\": \"${SOUFFLE_COMPILED_LINK_OPTIONS}\"
-}")
+  \"link_options\": \"${SOUFFLE_COMPILED_LINK_OPTIONS}\",
+  \"outname_fmt\": \"${OUTNAME_FMT}\",
+  \"exe_extension\": \"${EXE_EXTENSION}\"
+}'
+${TEMPLATE}
+")
+
+file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/souffle-compile.rb" CONTENT "${SOUFFLE_COMPILE_RB}")
+
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/souffle-compile.rb" "${SOUFFLE_COMPILE_RB}")
+
 # ---------------------------------------
 
 # FIXME: Ideally, eventually we will move these out to the "tests" subdirectory

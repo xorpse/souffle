@@ -134,6 +134,7 @@ public:
                 values.emplace_back(key, s);
             }
         };
+
 #ifdef _OPENMP
 #pragma omp parallel
         {

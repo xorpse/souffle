@@ -248,11 +248,18 @@ public:
         container_size = 0;
     }
 
-    class iterator : std::iterator<std::forward_iterator_tag, T> {
+    class iterator {
         std::size_t cIndex = 0;
         PiggyList* bl;
 
     public:
+        
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = T;
+        using difference_type = void;
+        using pointer = T*;
+        using reference = T&;
+
         // default ctor, to silence
         iterator() = default;
 

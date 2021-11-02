@@ -154,7 +154,7 @@ constexpr RamDomain RAM_BIT_SHIFT_MASK = RAM_DOMAIN_SIZE - 1;
 #ifdef _OPENMP
 std::size_t number_of_threads(const std::size_t user_specified) {
     if (user_specified > 0) {
-        omp_set_num_threads(user_specified);
+        omp_set_num_threads(static_cast<int>(user_specified));
         return user_specified;
     } else {
         return omp_get_max_threads();
@@ -312,7 +312,7 @@ void Engine::swapRelation(const std::size_t ramRel1, const std::size_t ramRel2) 
     std::swap(rel1, rel2);
 }
 
-int Engine::incCounter() {
+RamDomain Engine::incCounter() {
     return counter++;
 }
 
@@ -466,7 +466,7 @@ void Engine::executeMain() {
         ProfileEventSingleton::instance().stopTimer();
         for (auto const& cur : frequencies) {
             for (std::size_t i = 0; i < cur.second.size(); ++i) {
-                ProfileEventSingleton::instance().makeQuantityEvent(cur.first, cur.second[i], i);
+                ProfileEventSingleton::instance().makeQuantityEvent(cur.first, cur.second[i], static_cast<int>(i));
             }
         }
         for (auto const& cur : reads) {
@@ -626,8 +626,8 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 #define CONV_TO_STRING(op, ty)                                                             \
     case FunctorOp::op: return getSymbolTable().encode(std::to_string(EVAL_CHILD(ty, 0)));
 #define CONV_FROM_STRING(op, ty)                              \
-    case FunctorOp::op: return evaluator::symbol2numeric<ty>( \
-        getSymbolTable().decode(EVAL_CHILD(RamDomain, 0)));
+    case FunctorOp::op: return ramBitCast(evaluator::symbol2numeric<ty>( \
+        getSymbolTable().decode(EVAL_CHILD(RamDomain, 0))));
             // clang-format on
 
             const auto& args = cur.getArguments();
@@ -689,8 +689,9 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                     // clang-format on
 
                 case FunctorOp::EXP: {
-                    return ramBitCast(static_cast<RamSigned>(static_cast<EXP_RamSigned>(
-                            std::pow(execute(shadow.getChild(0), ctxt), execute(shadow.getChild(1), ctxt)))));
+                    auto first = ramBitCast<RamSigned>(execute(shadow.getChild(0), ctxt));
+                    auto second = ramBitCast<RamSigned>(execute(shadow.getChild(1), ctxt));
+                    return ramBitCast(static_cast<RamSigned>(std::pow(first, second)));
                 }
 
                 case FunctorOp::UEXP: {
@@ -1331,7 +1332,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
         CASE(LogSize)
             const auto& rel = *shadow.getRelation();
             ProfileEventSingleton::instance().makeQuantityEvent(
-                    cur.getMessage(), rel.size(), getIterationNumber());
+                    cur.getMessage(), rel.size(), static_cast<int>(getIterationNumber()));
             return true;
         ESAC(LogSize)
 

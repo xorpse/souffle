@@ -36,7 +36,7 @@
 namespace testutil {
 
 template <typename T>
-std::vector<T> generateRandomVector(const std::size_t vectorSize, const int seed = 3) {
+std::vector<T> generateRandomVector(const std::size_t vectorSize, const int seed) {
     std::vector<T> values(vectorSize);
 
     std::default_random_engine randomGenerator(seed);
@@ -58,6 +58,48 @@ std::vector<T> generateRandomVector(const std::size_t vectorSize, const int seed
         return values;
     }
 }
+
+/** Generate some corner-case test values. */
+template <typename T>
+std::vector<T> generateValues() {
+  std::vector<T> values;
+
+  if constexpr (std::is_floating_point<T>::value) {
+    // corner cases
+    values.push_back(std::numeric_limits<T>::min());
+    values.push_back(0.0);
+    values.push_back(1.0);
+    values.push_back(1.0 + std::numeric_limits<T>::epsilon());
+    values.push_back(1.0 - std::numeric_limits<T>::epsilon());
+    values.push_back(std::numeric_limits<T>::max());
+    values.push_back(std::numeric_limits<T>::max() / 2.0);
+
+    if constexpr (std::is_signed<T>::value) {
+      values.push_back(std::numeric_limits<T>::lowest());
+      values.push_back(std::numeric_limits<T>::lowest() / 2.0);
+      values.push_back(-1.0);
+    }
+
+    return values;
+  } else {
+    // corner cases
+    values.push_back(0);
+    values.push_back(1);
+    values.push_back(0xAAAAAAAA);
+    values.push_back(0x55555555);
+    values.push_back(std::numeric_limits<T>::max());
+    values.push_back(std::numeric_limits<T>::max() / 2);
+
+    if constexpr (std::is_signed<T>::value) {
+      values.push_back(std::numeric_limits<T>::lowest());
+      values.push_back(std::numeric_limits<T>::lowest() / 2);
+      values.push_back(-1);
+    }
+
+    return values;
+  }
+}
+
 
 // easy function to suppress unused var warnings (when we REALLY don't need to use them!)
 template <class T>

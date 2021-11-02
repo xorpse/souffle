@@ -23,6 +23,7 @@
 #include <filesystem>
 #include <fstream>
 #include <map>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -207,7 +208,9 @@ inline std::string absPath(const std::string& path) {
  *  Join two paths together; note that this does not resolve overlaps or relative paths.
  */
 inline std::string pathJoin(const std::string& first, const std::string& second) {
-    unsigned firstPos = static_cast<unsigned>(first.size()) - 1;
+    return (std::filesystem::path(first) / std::filesystem::path(second)).string();
+
+    /*unsigned firstPos = static_cast<unsigned>(first.size()) - 1;
     while (first.at(firstPos) == pathSeparator) {
         firstPos--;
     }
@@ -215,7 +218,7 @@ inline std::string pathJoin(const std::string& first, const std::string& second)
     while (second.at(secondPos) == pathSeparator) {
         secondPos++;
     }
-    return first.substr(0, firstPos + 1) + pathSeparator + second.substr(secondPos);
+    return first.substr(0, firstPos + 1) + pathSeparator + second.substr(secondPos);*/
 }
 
 /*
@@ -223,18 +226,18 @@ inline std::string pathJoin(const std::string& first, const std::string& second)
  * relative to the directory given by @ base. A path here refers a
  * colon-separated list of directories.
  */
-inline std::string findTool(const std::string& tool, const std::string& base, const std::string& path) {
+inline std::optional<std::string> findTool(const std::string& tool, const std::string& base, const std::string& path) {
     std::filesystem::path dir(dirName(base));
     std::stringstream sstr(path);
     std::string sub;
 
     while (std::getline(sstr, sub, ':')) {
-        std::string subpath = (dir / sub / tool).string();
-        if (isExecutable(subpath)) {
-            return absPath(subpath);
+        auto subpath = (dir / sub / tool);
+        if (std::filesystem::exists(subpath)) {
+          return absPath(subpath.string());
         }
     }
-    return "";
+    return {};
 }
 
 /*
@@ -300,10 +303,11 @@ inline std::string fileExtension(const std::string& path) {
  */
 inline std::string tempFile() {
 #ifdef _WIN32
+    char ctempl[L_tmpnam];
     std::string templ;
     std::FILE* f = nullptr;
     while (f == nullptr) {
-        templ = std::tmpnam(nullptr);
+        templ = std::tmpnam(ctempl);
         f = fopen(templ.c_str(), "wx");
     }
     fclose(f);
@@ -318,13 +322,16 @@ inline std::string tempFile() {
 inline std::stringstream execStdOut(char const* cmd) {
     FILE* in = popen(cmd, "r");
     std::stringstream data;
-    while (in != nullptr) {
+
+    if (in == nullptr) {
+        return data;
+    }
+
+    while (!feof(in)) {
         int c = fgetc(in);
-        if (feof(in) != 0) {
-            break;
-        }
         data << static_cast<char>(c);
     }
+
     pclose(in);
     return data;
 }

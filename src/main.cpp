@@ -157,6 +157,9 @@ namespace souffle {
  */
 void compileToBinary(const std::string& command, std::string_view sourceFilename) {
     std::vector<std::string> argv;
+
+    argv.push_back(command);
+
     if (Global::config().has("swig")) {
         argv.push_back("-s");
         argv.push_back(Global::config().get("swig"));
@@ -179,8 +182,8 @@ void compileToBinary(const std::string& command, std::string_view sourceFilename
 
     argv.push_back(std::string(sourceFilename));
 
-    auto exit = execute(command, argv);
-    if (!exit) throw std::invalid_argument(tfm::format("unable to execute tool <%s>", command));
+    auto exit = execute("ruby", argv);
+    if (!exit) throw std::invalid_argument(tfm::format("unable to execute tool <ruby %s>", command));
     if (exit != 0)
         throw std::invalid_argument(tfm::format("failed to compile C++ source <%s>", sourceFilename));
 }
@@ -389,7 +392,7 @@ int main(int argc, char** argv) {
 
     // ------ start souffle -------------
 
-    std::string souffleExecutable = which(argv[0]);
+    const std::string souffleExecutable = which(argv[0]);
 
     if (souffleExecutable.empty()) {
         throw std::runtime_error("failed to determine souffle executable path");
@@ -472,7 +475,7 @@ int main(int argc, char** argv) {
         }
 
         std::cout << astTranslationUnit->getErrorReport();
-        return astTranslationUnit->getErrorReport().getNumErrors();
+        return static_cast<int>(astTranslationUnit->getErrorReport().getNumErrors());
     }
 
     // ------- check for parse errors -------------
@@ -782,12 +785,12 @@ int main(int argc, char** argv) {
 
             if (must_compile) {
                 /* Fail if a souffle-compile executable is not found */
-                auto souffle_compile = findTool("souffle-compile", souffleExecutable, ".:..");
-                if (!isExecutable(souffle_compile))
+                const auto souffle_compile = findTool("souffle-compile.rb", souffleExecutable, ".");
+                if (!souffle_compile)
                     throw std::runtime_error("failed to locate souffle-compile");
 
                 auto t_bgn = std::chrono::high_resolution_clock::now();
-                compileToBinary(souffle_compile, sourceFilename);
+                compileToBinary(*souffle_compile, sourceFilename);
                 auto t_end = std::chrono::high_resolution_clock::now();
 
                 if (Global::config().has("verbose")) {

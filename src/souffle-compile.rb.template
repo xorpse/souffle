@@ -1,0 +1,95 @@
+#!/usr/bin/env ruby
+
+require 'json'
+require 'fileutils'
+require 'open3'
+
+conf = JSON.load(JSON_DATA_TEXT)
+
+verbose = false
+debug_mode = false
+testing_mode = false
+input_path = nil
+lib_dirs = []
+lib_names = []
+
+args = ARGV.dup
+until args.empty?
+  arg = args.shift
+  case arg
+  when "-h","-?"
+    exit 0
+  when "-g"
+    debug_mode = true
+  when "-L"
+    lib_dirs << args.shift
+  when "-l"
+    lib_names << args.shift
+  when "-t"
+    testing_mode = true
+    warning_mode = true
+  when "-w"
+    warning_mode = true
+  when "-v"
+    verbose = true
+  when "-s"
+    raise "Unsupported SWIG mode"
+  else
+    if input_path.nil?
+      input_path = arg
+    else
+      raise "Unexpected argument: #{arg}"
+    end
+  end
+end
+
+raise "no input file" if input_path.nil?
+raise "cannot open source file: '#{input_path}'" unless File.readable?(input_path)
+
+input_path = File.absolute_path(input_path)
+
+extname = File.extname(input_path)
+raise "source file is not a .cpp file: #{input_path}" unless extname == ".cpp"
+
+basename = File.basename(input_path,extname)
+dirname = File.dirname(input_path)
+exeext = conf['exe_extension']
+exepath = File.join(dirname, "%s%s" % [basename,exeext])
+
+
+cmd = []
+cmd << '"%s"' % [conf['compiler']]
+cmd << conf['std_flag']
+cmd << conf['cxx_flags']
+
+if debug_mode
+  cmd << conf['debug_cxx_flags']
+else
+  cmd << conf['release_cxx_flags']
+end
+
+OUTNAME_FMT = conf['outname_fmt']
+
+cmd << OUTNAME_FMT % [exepath]
+cmd << input_path
+
+
+cmd << conf['definitions']
+cmd << conf['includes']
+cmd << conf['compile_options']
+cmd << conf['link_options']
+
+#STDOUT.puts cmd.join(" ")
+
+FileUtils.rm(exepath) if File.exist?(exepath)
+out,err,status = Open3.capture3(cmd.join(" "))
+
+if status.success?
+  exit 0
+else
+  STDOUT.write out
+  STDERR.write err
+  exit 1
+end
+
+

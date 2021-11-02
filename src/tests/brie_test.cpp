@@ -123,18 +123,18 @@ TEST(SparseArray, IteratorStress) {
     auto random = std::bind(distribution, randomGenerator);
     auto rnd = [&]() { return random(); };
 
-    SparseArray<int> map;
+    SparseArray<RamDomain> map;
     using index_type = SparseArray<int>::index_type;
 
-    std::vector<int> pos;
+    std::vector<RamDomain> pos;
     while (pos.size() < N) {
-        int n = rnd();
+        RamDomain n = rnd();
         if (!contains(pos, n)) {
             pos.push_back(n);
         }
     }
 
-    std::set<std::pair<index_type, int>> should;
+    std::set<std::pair<index_type, RamDomain>> should;
     for (int i = 0; i < N; i++) {
         should.insert(std::make_pair(pos[i], i + 1));
     }
@@ -144,7 +144,7 @@ TEST(SparseArray, IteratorStress) {
         ASSERT_TRUE(map[cur.first] == cur.second);
     }
 
-    std::set<std::pair<index_type, int>> is;
+    std::set<std::pair<index_type, RamDomain>> is;
     for (const auto& cur : map) {
         is.insert(cur);
     }
@@ -163,20 +163,20 @@ TEST(SparseArray, IteratorStress2) {
     bool log = false;
 
     for (unsigned j = 0; j < N; j++) {
-        SparseArray<int> map;
+        SparseArray<RamDomain> map;
         using index_type = SparseArray<int>::index_type;
 
         if (log) std::cout << "Creating " << j << " random numbers ..\n";
-        std::vector<int> pos;
+        std::vector<RamDomain> pos;
         while (pos.size() < j) {
-            int n = rnd();
+            RamDomain n = rnd();
             if (!contains(pos, n)) {
                 pos.push_back(n);
             }
         }
 
         if (log) std::cout << "Creating input list ..\n";
-        std::set<std::pair<index_type, int>> should;
+        std::set<std::pair<index_type, RamDomain>> should;
         for (unsigned i = 0; i < j; i++) {
             should.insert(std::make_pair(pos[i], i + 1));
         }
@@ -190,7 +190,7 @@ TEST(SparseArray, IteratorStress2) {
         if (log) std::cout << "Sort should list ..\n";
 
         if (log) std::cout << "Collect is list ..\n";
-        std::set<std::pair<index_type, int>> is;
+        std::set<std::pair<index_type, RamDomain>> is;
         unsigned i = 0;
         for (const auto& cur : map) {
             is.insert(cur);
@@ -526,7 +526,7 @@ TEST(SparseBitMap, Basic) {
 }
 
 TEST(SparseBitMap, Stress) {
-    const static int N = 10000;
+    const static RamDomain N = 10000;
 
     std::default_random_engine randomGenerator(3);
     std::uniform_int_distribution<RamDomain> distribution(0, 10 * N - 1);
@@ -535,9 +535,9 @@ TEST(SparseBitMap, Stress) {
 
     SparseBitMap<> map;
 
-    std::vector<int> should;
+    std::vector<RamDomain> should;
     while (should.size() < N) {
-        int n = rnd();
+        RamDomain n = rnd();
         if (!contains(should, n)) {
             should.push_back(n);
         }
@@ -549,7 +549,7 @@ TEST(SparseBitMap, Stress) {
     }
 
     // check all the entries
-    for (int i = 0; i < N * 10; i++) {
+    for (RamDomain i = 0; i < N * 10; i++) {
         EXPECT_EQ(map[i], contains(should, i));
     }
 }
@@ -557,7 +557,7 @@ TEST(SparseBitMap, Stress) {
 TEST(SparseBitMap, Iterator) {
     SparseBitMap<> map;
 
-    std::set<int> vals;
+    std::set<uint64_t> vals;
     for (const auto& cur : map) {
         vals.insert(cur);
     }
@@ -594,7 +594,7 @@ TEST(SparseBitMap, Iterator) {
 }
 
 TEST(SparseBitMap, IteratorStress2) {
-    const static int N = 1000;
+    const static RamDomain N = 1000;
 
     std::default_random_engine randomGenerator(3);
     std::uniform_int_distribution<RamDomain> distribution(0, 10 * N - 1);
@@ -603,13 +603,13 @@ TEST(SparseBitMap, IteratorStress2) {
 
     bool log = false;
 
-    for (unsigned j = 0; j < N; j++) {
+    for (RamDomain j = 0; j < N; j++) {
         SparseBitMap<> map;
 
         if (log) std::cout << "Creating " << j << " random numbers ..\n";
-        std::set<int> should;
-        while (should.size() < j) {
-            int n = rnd();
+        std::set<RamDomain> should;
+        while (static_cast<int64_t>(should.size()) < j) {
+            RamDomain n = rnd();
             if (!contains(should, n)) {
                 should.insert(n);
             }
@@ -622,8 +622,8 @@ TEST(SparseBitMap, IteratorStress2) {
         }
 
         if (log) std::cout << "Collect is list ..\n";
-        std::set<int> is;
-        unsigned i = 0;
+        std::set<RamDomain> is;
+        RamDomain i = 0;
         for (const auto& cur : map) {
             is.insert(cur);
             i++;
