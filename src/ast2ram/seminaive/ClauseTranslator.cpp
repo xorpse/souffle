@@ -143,31 +143,35 @@ std::string ClauseTranslator::getClauseAtomName(const ast::Clause& clause, const
         auto dominatingHeadAtom = dynamic_cast<const ast::Atom*>(body[dominatingHead]);
 
         if (clause.getHead() == atom) {
-            if (mode == SubsumeDCN || mode == SubsumeDCC) {
+            if (mode == SubsumeDCD || mode == SubsumeDCC) {
                 return getDeleteRelationName(atom->getQualifiedName());
             }
-            // assert ((mode == SubsumeRNN || mode == SubsumeRNC) && "unknown mode for subsumptive clause");
             return getRejectRelationName(atom->getQualifiedName());
         }
 
         if (dominatedHeadAtom == atom) {
-            if (mode == SubsumeDCN || mode == SubsumeDCC) {
+            if (mode == SubsumeDCD || mode == SubsumeDCC) {
                 return getConcreteRelationName(atom->getQualifiedName());
             }
-            // assert ((mode == SubsumeRNN || mode == SubsumeRNC) && "unknown mode for subsumptive clause");
             return getNewRelationName(atom->getQualifiedName());
         }
 
         if (dominatingHeadAtom == atom) {
             if (mode == SubsumeRNC || mode == SubsumeDCC) {
                 return getConcreteRelationName(atom->getQualifiedName());
+            } else if (mode == SubsumeDCD) {
+                return getDeltaRelationName(atom->getQualifiedName());
+            } else {
+                // assert ((mode == SubsumeRNN || mode == SubsumeDCD) && "unknown mode for subsumptive
+                // clause");
+                return getNewRelationName(atom->getQualifiedName());
             }
-            // assert ((mode == SubsumeRNN || mode == SubsumeDCN) && "unknown mode for subsumptive clause");
-            return getNewRelationName(atom->getQualifiedName());
         }
 
-        if (sccAtoms.at(version + 1) == atom) {
-            return getDeltaRelationName(atom->getQualifiedName());
+        if (isRecursive()) {
+            if (sccAtoms.at(version + 1) == atom) {
+                return getDeltaRelationName(atom->getQualifiedName());
+            }
         }
     }
 

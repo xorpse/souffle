@@ -33,7 +33,7 @@ namespace souffle::ast2ram {
 class TranslatorContext;
 
 /** Translation modes */
-enum TranslationMode { DEFAULT, SubsumeRNC, SubsumeRNN, SubsumeDCN, SubsumeDCC };
+enum TranslationMode { DEFAULT, SubsumeRNC, SubsumeRNN, SubsumeDCD, SubsumeDCC };
 
 /* Abstract Clause Translator */
 class ClauseTranslator {

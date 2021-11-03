@@ -98,7 +98,7 @@ Own<ram::Statement> UnitTranslator::generateNonRecursiveRelation(const ast::Rela
     VecOwn<ram::Statement> result;
 
     // Get relation names
-    std::string relName = getConcreteRelationName(rel.getQualifiedName());
+    std::string mainRelation = getConcreteRelationName(rel.getQualifiedName());
 
     // Iterate over all non-recursive clauses that belong to the relation
     for (const auto* clause : context->getClauses(rel.getQualifiedName())) {
@@ -117,7 +117,7 @@ Own<ram::Statement> UnitTranslator::generateNonRecursiveRelation(const ast::Rela
             const std::string clauseText = stringify(toString(*clause));
             const std::string logTimerStatement =
                     LogStatement::tNonrecursiveRule(relationName, srcLocation, clauseText);
-            rule = mk<ram::LogRelationTimer>(std::move(rule), logTimerStatement, relName);
+            rule = mk<ram::LogRelationTimer>(std::move(rule), logTimerStatement, mainRelation);
         }
 
         // Add debug info
@@ -141,12 +141,12 @@ Own<ram::Statement> UnitTranslator::generateNonRecursiveRelation(const ast::Rela
             const std::string logTimerStatement =
                     LogStatement::tNonrecursiveRelation(relationName, srcLocation);
             auto newStmt = mk<ram::LogRelationTimer>(
-                    mk<ram::Sequence>(std::move(result)), logTimerStatement, relName);
+                    mk<ram::Sequence>(std::move(result)), logTimerStatement, mainRelation);
             result.clear();
             appendStmt(result, std::move(newStmt));
         } else {
             // Add table size printer
-            appendStmt(result, mk<ram::LogSize>(relName, logSizeStatement));
+            appendStmt(result, mk<ram::LogSize>(mainRelation, logSizeStatement));
         }
     }
 
@@ -277,6 +277,7 @@ Own<ram::Statement> UnitTranslator::translateRecursiveClauses(
 Own<ram::Statement> UnitTranslator::translateSubsumptiveRecursiveClauses(
         const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const {
     assert(contains(scc, rel) && "relation should belong to scc");
+
     VecOwn<ram::Statement> code;
 
     // Translate subsumptive clauses
@@ -286,21 +287,36 @@ Own<ram::Statement> UnitTranslator::translateSubsumptiveRecursiveClauses(
             continue;
         }
 
-        // delete subsumed tuples in new knowledge
+        std::string mainRelation = getConcreteRelationName(rel->getQualifiedName());
+        std::string newRelation = getNewRelationName(rel->getQualifiedName());
+        std::string deltaRelation = getDeltaRelationName(rel->getQualifiedName());
+        std::string rejectRelation = getRejectRelationName(rel->getQualifiedName());
+        std::string deleteRelation = getDeleteRelationName(rel->getQualifiedName());
+
+        // old delta relation can be cleared
+        appendStmt(code, mk<ram::Clear>(deltaRelation));
+
+        // compute reject set using the subsumptive clause
         const auto& sccAtoms = getSccAtoms(clause, scc);
         for (std::size_t version = 0; version < sccAtoms.size(); version++) {
+            // find dominated tuples in the newR by tuples in newR  and store them in rejectR
             appendStmt(code, context->translateRecursiveClause(*clause, scc, version, SubsumeRNN));
-        }
-        for (std::size_t version = 0; version < sccAtoms.size(); version++) {
+
+            // find dominated tuples in the newR by tuples in R and store them in rejectR
             appendStmt(code, context->translateRecursiveClause(*clause, scc, version, SubsumeRNC));
         }
 
-        // compute delta
+        // compute new delta set, i.e., deltaR = newR \ rejectR
+        appendStmt(code, generateMergeRelationsWithFilter(rel, deltaRelation, newRelation, rejectRelation));
+        appendStmt(code, mk<ram::Clear>(rejectRelation));
+        appendStmt(code, mk<ram::Clear>(newRelation));
 
-        // delete tuples in
+        // compute delete set,  remove tuples from R, and clear delete set
         for (std::size_t version = 0; version < sccAtoms.size(); version++) {
-            appendStmt(code, context->translateRecursiveClause(*clause, scc, version, SubsumeDCN));
+            appendStmt(code, context->translateRecursiveClause(*clause, scc, version, SubsumeDCD));
         }
+        appendStmt(code, generateEraseTuples(rel, mainRelation, deleteRelation));
+        appendStmt(code, mk<ram::Clear>(deleteRelation));
     }
 
     return mk<ram::Sequence>(std::move(code));
@@ -353,40 +369,45 @@ Own<ram::Statement> UnitTranslator::generateStratumPreamble(const std::set<const
     }
 
     // Generate code for non-recursive subsumption
+    // @pre: non-recursive tuples for all relations in the scc have been computed
     for (const ast::Relation* rel : scc) {
-        if (context->hasSubsumptiveClause(rel->getQualifiedName())) {
-            std::string relName = getConcreteRelationName(rel->getQualifiedName());
-            std::string eraseRelation = getDeleteRelationName(rel->getQualifiedName());
-
-            // Compute subsumptive deletions for non-recursive rules
-            for (auto clause : context->getClauses(rel->getQualifiedName())) {
-                if (isA<ast::SubsumptiveClause>(clause)) {
-                    // Translate subsumptive clause
-                    Own<ram::Statement> rule = context->translateNonRecursiveClause(*clause, SubsumeDCC);
-
-                    // Add logging for subsumptive clause
-                    if (Global::config().has("profile")) {
-                        const std::string& relationName = toString(rel->getQualifiedName());
-                        const auto& srcLocation = clause->getSrcLoc();
-                        const std::string clauseText = stringify(toString(*clause));
-                        const std::string logTimerStatement =
-                                LogStatement::tNonrecursiveRule(relationName, srcLocation, clauseText);
-                        rule = mk<ram::LogRelationTimer>(std::move(rule), logTimerStatement, relName);
-                    }
-
-                    // Add debug info for subsumptive clause
-                    std::ostringstream ds;
-                    ds << toString(*clause) << "\nin file ";
-                    ds << clause->getSrcLoc();
-                    rule = mk<ram::DebugInfo>(std::move(rule), ds.str());
-
-                    // Add subsumptive rule to result
-                    appendStmt(preamble, std::move(rule));
-                }
-            }
-            appendStmt(preamble, mk<ram::Sequence>(generateEraseTuples(rel, relName, eraseRelation),
-                                         mk<ram::Clear>(eraseRelation)));
+        if (!context->hasSubsumptiveClause(rel->getQualifiedName())) {
+            continue;
         }
+
+        std::string mainRelation = getConcreteRelationName(rel->getQualifiedName());
+        std::string deleteRelation = getDeleteRelationName(rel->getQualifiedName());
+
+        // Compute subsumptive deletions for non-recursive rules
+        for (auto clause : context->getClauses(rel->getQualifiedName())) {
+            if (!isA<ast::SubsumptiveClause>(clause)) {
+                continue;
+            }
+
+            // Translate subsumptive clause
+            Own<ram::Statement> rule = context->translateNonRecursiveClause(*clause, SubsumeDCC);
+
+            // Add logging for subsumptive clause
+            if (Global::config().has("profile")) {
+                const std::string& relationName = toString(rel->getQualifiedName());
+                const auto& srcLocation = clause->getSrcLoc();
+                const std::string clauseText = stringify(toString(*clause));
+                const std::string logTimerStatement =
+                        LogStatement::tNonrecursiveRule(relationName, srcLocation, clauseText);
+                rule = mk<ram::LogRelationTimer>(std::move(rule), logTimerStatement, mainRelation);
+            }
+
+            // Add debug info for subsumptive clause
+            std::ostringstream ds;
+            ds << toString(*clause) << "\nin file ";
+            ds << clause->getSrcLoc();
+            rule = mk<ram::DebugInfo>(std::move(rule), ds.str());
+
+            // Add subsumptive rule to result
+            appendStmt(preamble, std::move(rule));
+        }
+        appendStmt(preamble, mk<ram::Sequence>(generateEraseTuples(rel, mainRelation, deleteRelation),
+                                     mk<ram::Clear>(deleteRelation)));
     }
 
     // Generate code for priming relation
@@ -405,63 +426,16 @@ Own<ram::Statement> UnitTranslator::generateStratumPostamble(
         // Drop temporary tables after recursion
         appendStmt(postamble, mk<ram::Clear>(getDeltaRelationName(rel->getQualifiedName())));
         appendStmt(postamble, mk<ram::Clear>(getNewRelationName(rel->getQualifiedName())));
-        if (context->hasSubsumptiveClause(rel->getQualifiedName())) {
-            appendStmt(postamble, mk<ram::Clear>(getDeleteRelationName(rel->getQualifiedName())));
-            appendStmt(postamble, mk<ram::Clear>(getRejectRelationName(rel->getQualifiedName())));
-        }
     }
     return mk<ram::Sequence>(std::move(postamble));
-}
-
-Own<ram::Statement> UnitTranslator::generateStratumTableDeletes(
-        const std::set<const ast::Relation*>& scc) const {
-    VecOwn<ram::Statement> updateTable;
-    for (const ast::Relation* rel : scc) {
-        if (context->hasSubsumptiveClause(rel->getQualifiedName())) {
-            std::string mainRelation = getConcreteRelationName(rel->getQualifiedName());
-            std::string eraseRelation = getDeleteRelationName(rel->getQualifiedName());
-            Own<ram::Statement> d = mk<ram::Sequence>(
-                    generateEraseTuples(rel, mainRelation, eraseRelation), mk<ram::Clear>(eraseRelation));
-            if (Global::config().has("profile")) {
-                d = mk<ram::LogRelationTimer>(std::move(d),
-                        LogStatement::tRecursiveRule(toString(rel->getQualifiedName()), 0, rel->getSrcLoc(),
-                                toString(rel->getQualifiedName()) + " erase"),
-                        eraseRelation);
-            }
-            d = mk<ram::DebugInfo>(std::move(d), toString(rel->getQualifiedName()) + " erase");
-            if (Global::config().has("profile")) {
-                d = mk<ram::LogRelationTimer>(std::move(d),
-                        LogStatement::tRecursiveRelation(toString(rel->getQualifiedName()), rel->getSrcLoc()),
-                        eraseRelation);
-            }
-            appendStmt(updateTable, std::move(d));
-        }
-    }
-    return mk<ram::Sequence>(std::move(updateTable));
 }
 
 Own<ram::Statement> UnitTranslator::generateStratumTableUpdates(
         const std::set<const ast::Relation*>& scc) const {
     VecOwn<ram::Statement> updateTable;
+
     for (const ast::Relation* rel : scc) {
         if (context->hasSubsumptiveClause(rel->getQualifiedName())) {
-            std::string mainRelation = getConcreteRelationName(rel->getQualifiedName());
-            std::string newRelation = getNewRelationName(rel->getQualifiedName());
-            std::string deltaRelation = getDeltaRelationName(rel->getQualifiedName());
-            std::string rejectRelation = getRejectRelationName(rel->getQualifiedName());
-
-            Own<ram::Statement> updateRelTable = mk<ram::Sequence>(mk<ram::Clear>(deltaRelation),
-                    generateMergeRelationsWithFilter(rel, deltaRelation, newRelation, rejectRelation),
-                    generateMergeRelations(rel, mainRelation, deltaRelation), mk<ram::Clear>(newRelation),
-                    mk<ram::Clear>(rejectRelation));
-
-            // Measure update time
-            if (Global::config().has("profile")) {
-                updateRelTable = mk<ram::LogRelationTimer>(std::move(updateRelTable),
-                        LogStatement::cRecursiveRelation(toString(rel->getQualifiedName()), rel->getSrcLoc()),
-                        newRelation);
-            }
-            appendStmt(updateTable, std::move(updateRelTable));
             continue;
         }
 
@@ -554,11 +528,10 @@ Own<ram::Statement> UnitTranslator::generateRecursiveStratum(
 
     // Add in the main fixpoint loop
     auto loopBody = generateStratumLoopBody(scc);
-    auto deleteSequence = generateStratumTableDeletes(scc);
     auto exitSequence = generateStratumExitSequence(scc);
     auto updateSequence = generateStratumTableUpdates(scc);
-    auto fixpointLoop = mk<ram::Loop>(mk<ram::Sequence>(std::move(loopBody), std::move(deleteSequence),
-            std::move(exitSequence), std::move(updateSequence)));
+    auto fixpointLoop = mk<ram::Loop>(
+            mk<ram::Sequence>(std::move(loopBody), std::move(exitSequence), std::move(updateSequence)));
     appendStmt(result, std::move(fixpointLoop));
 
     // Add in the postamble
@@ -661,13 +634,13 @@ VecOwn<ram::Relation> UnitTranslator::createRamRelations(const std::vector<std::
 
                 // Add auxiliary relation for subsumption
                 if (context->hasSubsumptiveClause(rel->getQualifiedName())) {
-                    // Add deletion relation
-                    std::string toEraseName = getDeleteRelationName(rel->getQualifiedName());
-                    ramRelations.push_back(createRamRelation(rel, toEraseName));
-
                     // Add reject relation
                     std::string rejectName = getRejectRelationName(rel->getQualifiedName());
                     ramRelations.push_back(createRamRelation(rel, rejectName));
+
+                    // Add deletion relation
+                    std::string toEraseName = getDeleteRelationName(rel->getQualifiedName());
+                    ramRelations.push_back(createRamRelation(rel, toEraseName));
                 }
             } else if (context->hasSubsumptiveClause(rel->getQualifiedName())) {
                 // Add deletion relation for non recursive subsumptive relations
