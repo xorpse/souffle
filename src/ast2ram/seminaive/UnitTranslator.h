@@ -51,6 +51,8 @@ protected:
     virtual VecOwn<ram::Relation> createRamRelations(const std::vector<std::size_t>& sccOrdering) const;
     Own<ram::Statement> translateRecursiveClauses(
             const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const;
+    Own<ram::Statement> translateSubsumptiveRecursiveClauses(
+            const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const;
     VecOwn<ram::Statement> generateClauseVersions(
             const ast::Clause* clause, const std::set<const ast::Relation*>& scc) const;
     std::vector<ast::Atom*> getSccAtoms(
