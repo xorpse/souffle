@@ -165,6 +165,10 @@ std::string ClauseTranslator::getClauseAtomName(const ast::Clause& clause, const
             // assert ((mode == SubsumeRNN || mode == SubsumeDCN) && "unknown mode for subsumptive clause");
             return getNewRelationName(atom->getQualifiedName());
         }
+
+        if (sccAtoms.at(version + 1) == atom) {
+            return getDeltaRelationName(atom->getQualifiedName());
+        }
     }
 
     if (!isRecursive()) {

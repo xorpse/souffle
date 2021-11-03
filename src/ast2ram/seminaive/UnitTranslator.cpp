@@ -137,7 +137,27 @@ Own<ram::Statement> UnitTranslator::generateNonRecursiveRelation(const ast::Rela
         // Compute subsumptive deletions for non-recursive rules
         for (auto clause : context->getClauses(rel.getQualifiedName())) {
             if (isA<ast::SubsumptiveClause>(clause)) {
-                appendStmt(result, context->translateNonRecursiveClause(*clause, SubsumeDCC));
+                // Translate subsumptive clause
+                Own<ram::Statement> rule = context->translateNonRecursiveClause(*clause, SubsumeDCC);
+
+                // Add logging for subsumptive clause
+                if (Global::config().has("profile")) {
+                    const std::string& relationName = toString(rel.getQualifiedName());
+                    const auto& srcLocation = clause->getSrcLoc();
+                    const std::string clauseText = stringify(toString(*clause));
+                    const std::string logTimerStatement =
+                            LogStatement::tNonrecursiveRule(relationName, srcLocation, clauseText);
+                    rule = mk<ram::LogRelationTimer>(std::move(rule), logTimerStatement, relName);
+                }
+
+                // Add debug info for subsumptive clause
+                std::ostringstream ds;
+                ds << toString(*clause) << "\nin file ";
+                ds << clause->getSrcLoc();
+                rule = mk<ram::DebugInfo>(std::move(rule), ds.str());
+
+                // Add subsumptive rule to result
+                appendStmt(result, std::move(rule));
             }
         }
         appendStmt(result, mk<ram::Sequence>(generateEraseTuples(&rel, relName, eraseRelation),
