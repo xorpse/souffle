@@ -477,8 +477,7 @@ Own<ram::Statement> UnitTranslator::generateStratumTableUpdates(
         // swap new and and delta relation and clear new relation afterwards (if not a subsumptive relation)
         Own<ram::Statement> updateRelTable;
         if (!context->hasSubsumptiveClause(rel->getQualifiedName())) {
-            Own<ram::Statement> updateRelTable = generateMergeRelations(rel, mainRelation, newRelation);
-            updateRelTable = mk<ram::Sequence>(std::move(updateRelTable),
+            updateRelTable = mk<ram::Sequence>(generateMergeRelations(rel, mainRelation, newRelation),
                     mk<ram::Swap>(deltaRelation, newRelation), mk<ram::Clear>(newRelation));
         } else {
             updateRelTable = generateMergeRelations(rel, mainRelation, deltaRelation);
