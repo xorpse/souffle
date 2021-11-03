@@ -162,8 +162,6 @@ std::string ClauseTranslator::getClauseAtomName(const ast::Clause& clause, const
             } else if (mode == SubsumeDCD) {
                 return getDeltaRelationName(atom->getQualifiedName());
             } else {
-                // assert ((mode == SubsumeRNN || mode == SubsumeDCD) && "unknown mode for subsumptive
-                // clause");
                 return getNewRelationName(atom->getQualifiedName());
             }
         }
