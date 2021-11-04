@@ -21,6 +21,7 @@
 #include "ast/RecordInit.h"
 #include "ast/Relation.h"
 #include "ast/TranslationUnit.h"
+#include "ast/SubsumptiveClause.h"
 #include "ast/UnnamedVariable.h"
 #include "ast/Variable.h"
 #include "ast/utility/Utils.h"
@@ -55,6 +56,9 @@ bool ReplaceSingletonVariablesTransformer::transform(TranslationUnit& translatio
 
     for (Relation* rel : program.getRelations()) {
         for (Clause* clause : getClauses(program, *rel)) {
+            if (isA<SubsumptiveClause>(clause)) {
+                continue; 
+            }
             std::set<std::string> nonsingletons;
             std::set<std::string> vars;
 
