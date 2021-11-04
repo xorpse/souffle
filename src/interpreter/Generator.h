@@ -203,6 +203,8 @@ public:
 
     NodePtr visit_(type_identity<ram::Insert>, const ram::Insert& insert) override;
 
+    NodePtr visit_(type_identity<ram::Erase>, const ram::Erase& erase) override;
+
     NodePtr visit_(type_identity<ram::SubroutineReturn>, const ram::SubroutineReturn& ret) override;
 
     NodePtr visit_(type_identity<ram::Sequence>, const ram::Sequence& seq) override;
@@ -335,6 +337,7 @@ private:
      * only be done during runtime.
      */
     SuperInstruction getInsertSuperInstInfo(const ram::Insert& exist);
+    SuperInstruction getEraseSuperInstInfo(const ram::Erase& exist);
 
     /** Environment encoding, store a mapping from ram::Node to its operation index id. */
     std::unordered_map<const ram::Node*, std::size_t> indexTable;

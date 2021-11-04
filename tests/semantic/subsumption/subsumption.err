@@ -1,0 +1,7 @@
+Error: Subsumptive relation "A"  must not be a nullary relation in file subsumption.dl at line 10
+.decl A() btree_delete
+------^----------------
+Error: Relation "C" has one or more subsumptive rules and relational representation "btree_delete" is missing in file subsumption.dl at line 14
+.decl C(x:number, y:number)
+------^---------------------
+2 errors generated, evaluation aborted

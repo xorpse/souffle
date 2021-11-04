@@ -89,6 +89,7 @@ struct RelationWrapper;
     Forward(Filter)\
     FOR_EACH(Expand, GuardedInsert)\
     FOR_EACH(Expand, Insert)\
+    FOR_EACH_BTREE_DELETE(Expand, Erase)\
     Forward(SubroutineReturn)\
     Forward(Sequence)\
     Forward(Parallel)\
@@ -142,9 +143,11 @@ inline NodeType constructNodeType(std::string tokBase, const ram::Relation& rel)
     std::string arity = std::to_string(rel.getArity());
     if (rel.getRepresentation() == RelationRepresentation::EQREL) {
         return map.at("I_" + tokBase + "_Eqrel_" + arity);
+    } else if(rel.getRepresentation() == RelationRepresentation::BTREE_DELETE) { 
+        return map.at("I_" + tokBase + "_BtreeDelete_" + arity);
     } else if (isProvenance) {
         return map.at("I_" + tokBase + "_Provenance_" + arity);
-    } else {
+    } else  {
         return map.at("I_" + tokBase + "_Btree_" + arity);
     }
 
@@ -752,6 +755,15 @@ public:
 class Insert : public Node, public SuperOperation, public RelationalOperation {
 public:
     Insert(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle, SuperInstruction superInst)
+            : Node(ty, sdw), SuperOperation(std::move(superInst)), RelationalOperation(relHandle) {}
+};
+
+/**
+ * @class Erase
+ */
+class Erase : public Node, public SuperOperation, public RelationalOperation {
+public:
+    Erase(enum NodeType ty, const ram::Node* sdw, RelationHandle* relHandle, SuperInstruction superInst)
             : Node(ty, sdw), SuperOperation(std::move(superInst)), RelationalOperation(relHandle) {}
 };
 

@@ -18,6 +18,7 @@
 #include "Global.h"
 #include "souffle/RamTypes.h"
 #include "souffle/datastructure/BTree.h"
+#include "souffle/datastructure/BTreeDelete.h"
 #include "souffle/datastructure/Brie.h"
 #include "souffle/datastructure/EquivalenceRelation.h"
 #include "souffle/utility/ContainerUtil.h"
@@ -81,6 +82,28 @@ namespace souffle::interpreter {
     func(Btree, 19, __VA_ARGS__) \
     func(Btree, 20, __VA_ARGS__)
 
+#define FOR_EACH_BTREE_DELETE(func, ...)\
+    func(BtreeDelete, 1, __VA_ARGS__) \
+    func(BtreeDelete, 2, __VA_ARGS__) \
+    func(BtreeDelete, 3, __VA_ARGS__) \
+    func(BtreeDelete, 4, __VA_ARGS__) \
+    func(BtreeDelete, 5, __VA_ARGS__) \
+    func(BtreeDelete, 6, __VA_ARGS__) \
+    func(BtreeDelete, 7, __VA_ARGS__) \
+    func(BtreeDelete, 8, __VA_ARGS__) \
+    func(BtreeDelete, 9, __VA_ARGS__) \
+    func(BtreeDelete, 10, __VA_ARGS__) \
+    func(BtreeDelete, 11, __VA_ARGS__) \
+    func(BtreeDelete, 12, __VA_ARGS__) \
+    func(BtreeDelete, 13, __VA_ARGS__) \
+    func(BtreeDelete, 14, __VA_ARGS__) \
+    func(BtreeDelete, 15, __VA_ARGS__) \
+    func(BtreeDelete, 16, __VA_ARGS__) \
+    func(BtreeDelete, 17, __VA_ARGS__) \
+    func(BtreeDelete, 18, __VA_ARGS__) \
+    func(BtreeDelete, 19, __VA_ARGS__) \
+    func(BtreeDelete, 20, __VA_ARGS__)
+
 // Brie is disabled for now.
 #define FOR_EACH_BRIE(func, ...)
     /* func(Brie, 0, __VA_ARGS__) \ */
@@ -110,6 +133,7 @@ namespace souffle::interpreter {
 
 #define FOR_EACH(func, ...)                 \
     FOR_EACH_BTREE(func, __VA_ARGS__)       \
+    FOR_EACH_BTREE_DELETE(func, __VA_ARGS__)       \
     FOR_EACH_BRIE(func, __VA_ARGS__)        \
     FOR_EACH_PROVENANCE(func, __VA_ARGS__)  \
     FOR_EACH_EQREL(func, __VA_ARGS__)
@@ -223,6 +247,10 @@ using prov_comparator = typename index_utils::get_full_prov_index<Arity>::type::
 // Alias for btree_set
 template <std::size_t Arity>
 using Btree = btree_set<t_tuple<Arity>, comparator<Arity>>;
+
+// Alias for btree_set
+template <std::size_t Arity>
+using BtreeDelete = btree_delete_set<t_tuple<Arity>, comparator<Arity>>;
 
 // Alias for Trie
 template <std::size_t Arity>

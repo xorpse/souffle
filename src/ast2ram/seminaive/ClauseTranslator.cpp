@@ -27,6 +27,7 @@
 #include "ast/RecordInit.h"
 #include "ast/Relation.h"
 #include "ast/StringConstant.h"
+#include "ast/SubsumptiveClause.h"
 #include "ast/UnnamedVariable.h"
 #include "ast/analysis/Functor.h"
 #include "ast/utility/Utils.h"
@@ -63,7 +64,8 @@
 
 namespace souffle::ast2ram::seminaive {
 
-ClauseTranslator::ClauseTranslator(const TranslatorContext& context) : ast2ram::ClauseTranslator(context) {}
+ClauseTranslator::ClauseTranslator(const TranslatorContext& context, TranslationMode mode)
+        : ast2ram::ClauseTranslator(context, mode) {}
 
 ClauseTranslator::~ClauseTranslator() = default;
 
@@ -112,7 +114,7 @@ Own<ram::Statement> ClauseTranslator::translateRecursiveClause(
         const std::string logSizeStatement =
                 LogStatement::nRecursiveRule(relationName, version, srcLocation, clauseText);
         rule = mk<ram::LogRelationTimer>(
-                std::move(rule), logTimerStatement, getNewRelationName(clause.getHead()->getQualifiedName()));
+                std::move(rule), logTimerStatement, getClauseAtomName(clause, clause.getHead()));
     }
 
     // Add debug info
@@ -134,6 +136,43 @@ Own<ram::Statement> ClauseTranslator::translateNonRecursiveClause(const ast::Cla
 }
 
 std::string ClauseTranslator::getClauseAtomName(const ast::Clause& clause, const ast::Atom* atom) const {
+    if (isA<ast::SubsumptiveClause>(clause)) {
+        // find the dominated / dominating heads
+        const auto& body = clause.getBodyLiterals();
+        auto dominatedHeadAtom = dynamic_cast<const ast::Atom*>(body[dominatedHead]);
+        auto dominatingHeadAtom = dynamic_cast<const ast::Atom*>(body[dominatingHead]);
+
+        if (clause.getHead() == atom) {
+            if (mode == SubsumeDCD || mode == SubsumeDCC) {
+                return getDeleteRelationName(atom->getQualifiedName());
+            }
+            return getRejectRelationName(atom->getQualifiedName());
+        }
+
+        if (dominatedHeadAtom == atom) {
+            if (mode == SubsumeDCD || mode == SubsumeDCC) {
+                return getConcreteRelationName(atom->getQualifiedName());
+            }
+            return getNewRelationName(atom->getQualifiedName());
+        }
+
+        if (dominatingHeadAtom == atom) {
+            if (mode == SubsumeRNC || mode == SubsumeDCC) {
+                return getConcreteRelationName(atom->getQualifiedName());
+            } else if (mode == SubsumeDCD) {
+                return getDeltaRelationName(atom->getQualifiedName());
+            } else {
+                return getNewRelationName(atom->getQualifiedName());
+            }
+        }
+
+        if (isRecursive()) {
+            if (sccAtoms.at(version + 1) == atom) {
+                return getDeltaRelationName(atom->getQualifiedName());
+            }
+        }
+    }
+
     if (!isRecursive()) {
         return getConcreteRelationName(atom->getQualifiedName());
     }
@@ -163,8 +202,8 @@ Own<ram::Statement> ClauseTranslator::createRamRuleQuery(const ast::Clause& clau
 
     // Set up the RAM statement bottom-up
     auto op = createInsertion(clause);
-    op = addVariableBindingConstraints(std::move(op));
     op = addBodyLiteralConstraints(clause, std::move(op));
+    op = addVariableBindingConstraints(std::move(op));
     op = addGeneratorLevels(std::move(op), clause);
     op = addVariableIntroductions(clause, std::move(op));
     op = addEntryPoint(clause, std::move(op));
@@ -427,6 +466,23 @@ Own<ram::Operation> ClauseTranslator::addGeneratorLevels(
     return op;
 }
 
+Own<ram::Operation> ClauseTranslator::addDistinct(
+        Own<ram::Operation> op, const ast::Atom* atom1, const ast::Atom* atom2) const {
+    std::size_t arity = atom1->getArity();
+
+    VecOwn<ram::Condition> conditions;
+    auto args1 = atom1->getArguments();
+    auto args2 = atom2->getArguments();
+    for (std::size_t i = 0; i < arity; i++) {
+        Own<ram::Expression> a1 = context.translateValue(*valueIndex, args1[i]);
+        Own<ram::Expression> a2 = context.translateValue(*valueIndex, args2[i]);
+        if (*a1 != *a2) {
+            conditions.push_back(mk<ram::Constraint>(BinaryConstraintOp::EQ, std::move(a1), std::move(a2)));
+        }
+    }
+    return mk<ram::Filter>(mk<ram::Negation>(toCondition(conditions)), std::move(op));
+}
+
 Own<ram::Operation> ClauseTranslator::addNegatedDeltaAtom(
         Own<ram::Operation> op, const ast::Atom* atom) const {
     std::size_t arity = atom->getArity();
@@ -475,6 +531,17 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
         if (auto condition = context.translateConstraint(*valueIndex, lit)) {
             op = mk<ram::Filter>(std::move(condition), std::move(op));
         }
+    }
+
+    if (isA<ast::SubsumptiveClause>(clause)) {
+        if (mode == SubsumeRNN || mode == SubsumeDCC) {
+            // find the dominated / dominating heads
+            const auto& body = clause.getBodyLiterals();
+            auto dominatedHeadAtom = dynamic_cast<const ast::Atom*>(body[dominatedHead]);
+            auto dominatingHeadAtom = dynamic_cast<const ast::Atom*>(body[dominatingHead]);
+            op = addDistinct(std::move(op), dominatedHeadAtom, dominatingHeadAtom);
+        }
+        return op;
     }
 
     if (isRecursive()) {
@@ -621,6 +688,12 @@ Own<ram::Condition> ClauseTranslator::getFunctionalDependencies(const ast::Claus
 }
 
 std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& clause) const {
+    // set dominating/dominated head of clause
+    if (isA<ast::SubsumptiveClause>(clause)) {
+        dominatedHead = 0;
+        dominatingHead = 1;
+    }
+
     auto atoms = ast::getBodyLiterals<ast::Atom>(clause);
 
     const auto& plan = clause.getExecutionPlan();
@@ -636,9 +709,25 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
 
     // get the imposed order, and change it to start at zero
     const auto& order = orders.at(version);
-    std::vector<unsigned int> newOrder(order->getOrder().size());
+    auto sz = order->getOrder().size();
+    std::vector<unsigned int> newOrder(sz);
+
+    // assign dominatedHead/dominatingHead index in case
+    // a query plan has been specified for a subsumptive
+    // clause.
+    if (isA<ast::SubsumptiveClause>(clause)) {
+        for (std::size_t i = 0; i < sz; ++i) {
+            if (order->getOrder()[i] == 0) {
+                dominatedHead = newOrder[0];
+            } else if (order->getOrder()[i] == 1) {
+                dominatingHead = newOrder[1];
+            }
+        }
+    }
+
     std::transform(order->getOrder().begin(), order->getOrder().end(), newOrder.begin(),
             [](unsigned int i) -> unsigned int { return i - 1; });
+
     return reorderAtoms(atoms, newOrder);
 }
 

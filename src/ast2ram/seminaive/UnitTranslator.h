@@ -25,6 +25,7 @@ namespace souffle::ast {
 class Clause;
 class Relation;
 class TranslationUnit;
+class Atom;
 }  // namespace souffle::ast
 
 namespace souffle::ram {
@@ -50,7 +51,11 @@ protected:
     virtual VecOwn<ram::Relation> createRamRelations(const std::vector<std::size_t>& sccOrdering) const;
     Own<ram::Statement> translateRecursiveClauses(
             const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const;
+    Own<ram::Statement> translateSubsumptiveRecursiveClauses(
+            const std::set<const ast::Relation*>& scc, const ast::Relation* rel) const;
     VecOwn<ram::Statement> generateClauseVersions(
+            const ast::Clause* clause, const std::set<const ast::Relation*>& scc) const;
+    std::vector<ast::Atom*> getSccAtoms(
             const ast::Clause* clause, const std::set<const ast::Relation*>& scc) const;
 
     virtual void addAuxiliaryArity(
@@ -70,6 +75,7 @@ protected:
     /** Low-level stratum translation */
     Own<ram::Statement> generateStratum(std::size_t scc) const;
     Own<ram::Statement> generateStratumPreamble(const std::set<const ast::Relation*>& scc) const;
+    Own<ram::Statement> generateNonRecursiveDelete(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumPostamble(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumLoopBody(const std::set<const ast::Relation*>& scc) const;
     Own<ram::Statement> generateStratumTableUpdates(const std::set<const ast::Relation*>& scc) const;
@@ -80,6 +86,11 @@ protected:
             const std::set<const ast::Relation*>& expiredRelations) const;
     Own<ram::Statement> generateClearRelation(const ast::Relation* relation) const;
     virtual Own<ram::Statement> generateMergeRelations(
+            const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const;
+    virtual Own<ram::Statement> generateMergeRelationsWithFilter(const ast::Relation* rel,
+            const std::string& destRelation, const std::string& srcRelation,
+            const std::string& filterRelation) const;
+    virtual Own<ram::Statement> generateEraseTuples(
             const ast::Relation* rel, const std::string& destRelation, const std::string& srcRelation) const;
 
 private:

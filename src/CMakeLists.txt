@@ -17,6 +17,7 @@ set(SOUFFLE_SOURCES
     ast/BranchType.cpp
     ast/BranchInit.cpp
     ast/Clause.cpp
+    ast/SubsumptiveClause.cpp
     ast/Component.cpp
     ast/ComponentInit.cpp
     ast/ComponentType.cpp
@@ -124,6 +125,7 @@ set(SOUFFLE_SOURCES
     interpreter/Generator.cpp
     interpreter/BrieIndex.cpp
     interpreter/BTreeIndex.cpp
+    interpreter/BTreeDeleteIndex.cpp
     interpreter/EqrelIndex.cpp
     interpreter/ProvenanceIndex.cpp
     parser/ParserDriver.cpp
