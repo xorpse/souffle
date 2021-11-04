@@ -33,9 +33,9 @@
 #include <omp.h>
 #endif
 
+#include "souffle/datastructure/EquivalenceRelation.h"
 #include "souffle/datastructure/PiggyList.h"
 #include "souffle/datastructure/UnionFind.h"
-#include "souffle/datastructure/EquivalenceRelation.h"
 
 namespace souffle {
 namespace test {
@@ -675,11 +675,11 @@ TEST(EqRelTest, MergeExtend) {
     souffle::EquivalenceRelation<Tuple<std::size_t, 2>> eqrelOther;
     souffle::EquivalenceRelation<Tuple<std::size_t, 2>> eqrelNew;
 
-    eqrelOther.insert(0,1);
+    eqrelOther.insert(0, 1);
 
-    eqrelNew.insert(1,2);
-    eqrelNew.insert(1,3);
-    eqrelNew.insert(4,5);
+    eqrelNew.insert(1, 2);
+    eqrelNew.insert(1, 3);
+    eqrelNew.insert(4, 5);
 
     std::size_t otherSize = eqrelOther.size();
     std::size_t newSize = eqrelNew.size();
@@ -694,11 +694,11 @@ TEST(EqRelTest, MergeExtendSameSize) {
     souffle::EquivalenceRelation<Tuple<std::size_t, 2>> eqrelOther;
     souffle::EquivalenceRelation<Tuple<std::size_t, 2>> eqrelNew;
 
-    eqrelOther.insert(0,1);
-    eqrelOther.insert(1,2);
-    eqrelOther.insert(7,8);
+    eqrelOther.insert(0, 1);
+    eqrelOther.insert(1, 2);
+    eqrelOther.insert(7, 8);
 
-    eqrelNew.insert(2,7);
+    eqrelNew.insert(2, 7);
 
     eqrelNew.extendAndInsert(eqrelOther);
 
@@ -709,11 +709,11 @@ TEST(EqRelTest, MergeExtendDisjoint) {
     souffle::EquivalenceRelation<Tuple<std::size_t, 2>> eqrelOther;
     souffle::EquivalenceRelation<Tuple<std::size_t, 2>> eqrelNew;
 
-    eqrelOther.insert(0,1);
-    eqrelOther.insert(1,2);
-    eqrelOther.insert(7,8);
+    eqrelOther.insert(0, 1);
+    eqrelOther.insert(1, 2);
+    eqrelOther.insert(7, 8);
 
-    eqrelNew.insert(3,4);
+    eqrelNew.insert(3, 4);
 
     std::size_t eqrelNewSize = eqrelNew.size();
     std::size_t eqrelOtherSize = eqrelOther.size();

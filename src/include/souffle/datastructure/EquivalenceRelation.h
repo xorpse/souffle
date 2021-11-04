@@ -163,7 +163,7 @@ public:
                     if (repsCovered.count(rep) == 0) {
                         repsCovered.emplace(rep);
                     }
-                } 
+                }
                 toInsert.emplace_back(el, this->sds.findNode(el));
             }
         }
