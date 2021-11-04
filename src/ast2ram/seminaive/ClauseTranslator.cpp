@@ -712,6 +712,9 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
     auto sz = order->getOrder().size();
     std::vector<unsigned int> newOrder(sz);
 
+    std::transform(order->getOrder().begin(), order->getOrder().end(), newOrder.begin(),
+            [](unsigned int i) -> unsigned int { return i - 1; });
+
     // assign dominatedHead/dominatingHead index in case
     // a query plan has been specified for a subsumptive
     // clause.
@@ -724,9 +727,6 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
             }
         }
     }
-
-    std::transform(order->getOrder().begin(), order->getOrder().end(), newOrder.begin(),
-            [](unsigned int i) -> unsigned int { return i - 1; });
 
     return reorderAtoms(atoms, newOrder);
 }
