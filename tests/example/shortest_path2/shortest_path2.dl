@@ -19,7 +19,7 @@ e(1,4,100).
 //
 // subsumption
 //
-// A longer path is subsumed by a shorted path, i.e.,
+// A longer path is subsumed by a shorter path, i.e.,
 // the longer path is discarded from the relation.
 sp(x,y,c1) <= sp(x,y, c2) :-
   c2 <= c1.
