@@ -33,7 +33,25 @@ namespace souffle::ast2ram {
 class TranslatorContext;
 
 /** Translation modes */
-enum TranslationMode { DEFAULT, SubsumeRNC, SubsumeRNN, SubsumeDCD, SubsumeDCC };
+enum TranslationMode {
+    DEFAULT,
+    // Subsumptive clause translation:
+    //
+    //   R(x0) <= R(x1) :- body.
+    //
+    // are translated to clauses of the format
+    //
+    //   R(x0) :- R(x0), R(x1), body.
+    //
+    // using different auxiliary tables (delta/new/reject/delete).
+    // There are different modes for translating a subsumptive clause
+    // (i.e. inside / outside of the fix-point).
+    //
+    SubsumeRNC,  // delete reject-R(x0) :- new-R(x0), R(x1), body. (inside fix-point)
+    SubsumeRNN,  // delete reject-R(x0) :- new-R(x0), R(x1), x0!=x1, body. (inside fix-point)
+    SubsumeDCD,  // delete delete-R(x0) :- R(x0), delta-R(x1), body. (inside fix-point)
+    SubsumeDCC   // delete delete-R(x0) :- R(x0), R(x1), x0!=x1, body. (outside fix-point)
+};
 
 /* Abstract Clause Translator */
 class ClauseTranslator {
