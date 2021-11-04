@@ -28,9 +28,6 @@ RUN apt-get update && \
 	zlib1g-dev \
 	cmake
 
-# For CMakeLists.txt to figure out the specific version of Ubuntu
-RUN apt-get -y install lsb-release
-
 # Copy everything into souffle directory
 COPY . .
 

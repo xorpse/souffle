@@ -1046,7 +1046,7 @@ bool InlineRelationsTransformer::transform(TranslationUnit& translationUnit) {
     // terminate.
     bool clausesChanged = true;
     while (clausesChanged) {
-        std::set<Clause*> clausesToDelete;
+        VecOwn<Clause> clausesToDelete;
         clausesChanged = false;
 
         // Go through each relation in the program and check if we need to inline any of its clauses
@@ -1065,7 +1065,7 @@ bool InlineRelationsTransformer::transform(TranslationUnit& translationUnit) {
                     std::vector<Clause*> newClauses = getInlinedClause(program, *clause);
 
                     // Replace the clause with these equivalent versions
-                    clausesToDelete.insert(clause);
+                    clausesToDelete.push_back(clone(clause));
                     for (Clause* replacementClause : newClauses) {
                         program.addClause(Own<Clause>(replacementClause));
                     }
@@ -1078,8 +1078,8 @@ bool InlineRelationsTransformer::transform(TranslationUnit& translationUnit) {
         }
 
         // Delete all clauses that were replaced
-        for (const Clause* clause : clausesToDelete) {
-            program.removeClause(clause);
+        for (const auto& clause : clausesToDelete) {
+            program.removeClause(clause.get());
             changed = true;
         }
     }

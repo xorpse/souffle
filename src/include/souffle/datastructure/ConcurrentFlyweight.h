@@ -170,7 +170,8 @@ public:
             NextMaybeUnassignedSlot = END;
             for (lane_id I = 0; I < This->Lanes.lanes(); ++I) {
                 const auto Lane = This->Lanes.guard(I);
-                if (This->Handles[I].NextSlot > Slot && This->Handles[I].NextSlot < NextMaybeUnassignedSlot) {
+                if ((Slot == NONE || This->Handles[I].NextSlot > Slot) &&
+                        This->Handles[I].NextSlot < NextMaybeUnassignedSlot) {
                     NextMaybeUnassignedSlot = This->Handles[I].NextSlot;
                     NextMaybeUnassignedHandle = I;
                 }
@@ -188,6 +189,7 @@ public:
         bool MoveToNextAssignedSlot() {
             static_assert(NONE == std::numeric_limits<slot_type>::max(),
                     "required for wrap around to 0 for begin-iterator-scan");
+            static_assert(NONE + 1 == 0, "required for wrap around to 0 for begin-iterator-scan");
             while (Slot != END) {
                 assert(Slot + 1 < SLOT_MAX);
                 if (Slot + 1 < NextMaybeUnassignedSlot) {  // next unassigned slot not reached
@@ -206,9 +208,7 @@ public:
                     This->Lanes.lock(NextMaybeUnassignedHandle);
                     const bool IsAssigned = (Slot + 1 < This->Handles[NextMaybeUnassignedHandle].NextSlot);
                     This->Lanes.unlock(NextMaybeUnassignedHandle);
-                    if (IsAssigned) {
-                        Slot = Slot + 1;
-                    }
+                    Slot = Slot + 1;
                     FindNextMaybeUnassignedSlot();
                     if (IsAssigned) {
                         return true;
