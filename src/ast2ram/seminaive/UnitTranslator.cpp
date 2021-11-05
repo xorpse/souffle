@@ -306,7 +306,8 @@ Own<ram::Statement> UnitTranslator::translateSubsumptiveRecursiveClauses(
             appendStmt(code, context->translateRecursiveClause(*clause, scc, version, SubsumeRejectNewNew));
 
             // find dominated tuples in the newR by tuples in R and store them in rejectR
-            appendStmt(code, context->translateRecursiveClause(*clause, scc, version, SubsumeRejectNewCurrent));
+            appendStmt(
+                    code, context->translateRecursiveClause(*clause, scc, version, SubsumeRejectNewCurrent));
         }
 
         // compute new delta set, i.e., deltaR = newR \ rejectR
@@ -316,7 +317,8 @@ Own<ram::Statement> UnitTranslator::translateSubsumptiveRecursiveClauses(
 
         // compute delete set,  remove tuples from R, and clear delete set
         for (std::size_t version = 0; version < sccAtoms.size(); version++) {
-            appendStmt(code, context->translateRecursiveClause(*clause, scc, version, SubsumeDeleteCurrentDelta));
+            appendStmt(code,
+                    context->translateRecursiveClause(*clause, scc, version, SubsumeDeleteCurrentDelta));
         }
         appendStmt(code, generateEraseTuples(rel, mainRelation, deleteRelation));
         appendStmt(code, mk<ram::Clear>(deleteRelation));
@@ -381,7 +383,8 @@ Own<ram::Statement> UnitTranslator::generateNonRecursiveDelete(
             }
 
             // Translate subsumptive clause
-            Own<ram::Statement> rule = context->translateNonRecursiveClause(*clause, SubsumeDeleteCurrentCurrent);
+            Own<ram::Statement> rule =
+                    context->translateNonRecursiveClause(*clause, SubsumeDeleteCurrentCurrent);
 
             // Add logging for subsumptive clause
             if (Global::config().has("profile")) {
