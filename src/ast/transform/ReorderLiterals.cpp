@@ -21,6 +21,7 @@
 #include "ast/Atom.h"
 #include "ast/Clause.h"
 #include "ast/Program.h"
+#include "ast/SubsumptiveClause.h"
 #include "ast/TranslationUnit.h"
 #include "ast/Variable.h"
 #include "ast/analysis/ProfileUse.h"
@@ -37,8 +38,8 @@
 namespace souffle::ast::transform {
 
 Clause* ReorderLiteralsTransformer::reorderClauseWithSips(const SipsMetric& sips, const Clause* clause) {
-    // ignore clauses with fixed execution plans
-    if (clause->getExecutionPlan() != nullptr) {
+    // ignore clauses with fixed execution plans or a clause is a subsumptive clause
+    if (clause->getExecutionPlan() != nullptr || isA<SubsumptiveClause>(clause)) {
         return nullptr;
     }
 

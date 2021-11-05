@@ -49,6 +49,7 @@
 #include "ast/Relation.h"
 #include "ast/StringConstant.h"
 #include "ast/SubsetType.h"
+#include "ast/SubsumptiveClause.h"
 #include "ast/Term.h"
 #include "ast/Type.h"
 #include "ast/TypeCast.h"
@@ -110,6 +111,7 @@ struct Visitor : souffle::detail::VisitorBase<R, NodeType, Params...> {
         // rest
         SOUFFLE_VISITOR_FORWARD(Attribute);
         SOUFFLE_VISITOR_FORWARD(Clause);
+        SOUFFLE_VISITOR_FORWARD(SubsumptiveClause);
         SOUFFLE_VISITOR_FORWARD(Relation);
         SOUFFLE_VISITOR_FORWARD(Program);
         SOUFFLE_VISITOR_FORWARD(Pragma);
@@ -170,6 +172,7 @@ struct Visitor : souffle::detail::VisitorBase<R, NodeType, Params...> {
     // -- others --
     SOUFFLE_VISITOR_LINK(Program, Node);
     SOUFFLE_VISITOR_LINK(Attribute, Node);
+    SOUFFLE_VISITOR_LINK(SubsumptiveClause, Clause);
     SOUFFLE_VISITOR_LINK(Clause, Node);
     SOUFFLE_VISITOR_LINK(Relation, Node);
     SOUFFLE_VISITOR_LINK(Pragma, Node);

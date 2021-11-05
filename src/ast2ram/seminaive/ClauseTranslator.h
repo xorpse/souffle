@@ -51,7 +51,7 @@ namespace souffle::ast2ram::seminaive {
 
 class ClauseTranslator : public ast2ram::ClauseTranslator {
 public:
-    ClauseTranslator(const TranslatorContext& context);
+    ClauseTranslator(const TranslatorContext& context, TranslationMode mode = DEFAULT);
     ~ClauseTranslator();
 
     /** Entry points */
@@ -72,6 +72,8 @@ protected:
     virtual Own<ram::Operation> addNegatedAtom(
             Own<ram::Operation> op, const ast::Clause& clause, const ast::Atom* atom) const;
     virtual Own<ram::Operation> addNegatedDeltaAtom(Own<ram::Operation> op, const ast::Atom* atom) const;
+    virtual Own<ram::Operation> addDistinct(
+            Own<ram::Operation> op, const ast::Atom* atom1, const ast::Atom* atom2) const;
 
     Own<ValueIndex> valueIndex;
 
@@ -131,6 +133,9 @@ protected:
 private:
     std::vector<const ast::Argument*> generators;
     std::vector<const ast::Node*> operators;
+
+    // Index of dominated/dominating heads in a subsumptive clause
+    mutable int dominatedHead{0}, dominatingHead{1};
 };
 
 }  // namespace souffle::ast2ram::seminaive

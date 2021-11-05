@@ -31,6 +31,7 @@
 #include "ram/Constraint.h"
 #include "ram/DebugInfo.h"
 #include "ram/EmptinessCheck.h"
+#include "ram/Erase.h"
 #include "ram/ExistenceCheck.h"
 #include "ram/Exit.h"
 #include "ram/Extend.h"
@@ -208,12 +209,12 @@ void Engine::createRelation(const ram::Relation& id, const std::size_t idx) {
 
     if (id.getRepresentation() == RelationRepresentation::EQREL) {
         res = createEqrelRelation(id, isa.getIndexSelection(id.getName()));
+    } else if (id.getRepresentation() == RelationRepresentation::BTREE_DELETE) {
+        res = createBTreeDeleteRelation(id, isa.getIndexSelection(id.getName()));
+    } else if (isProvenance) {
+        res = createProvenanceRelation(id, isa.getIndexSelection(id.getName()));
     } else {
-        if (isProvenance) {
-            res = createProvenanceRelation(id, isa.getIndexSelection(id.getName()));
-        } else {
-            res = createBTreeRelation(id, isa.getIndexSelection(id.getName()));
-        }
+        res = createBTreeRelation(id, isa.getIndexSelection(id.getName()));
     }
     relations[idx] = mk<RelationHandle>(std::move(res));
 }
@@ -1102,6 +1103,16 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
         FOR_EACH(INSERT)
 #undef INSERT
 
+#define ERASE(Structure, Arity, ...)                                                 \
+    CASE(Erase, Structure, Arity)                                                    \
+        void(static_cast<RelType*>(shadow.getRelation()));                           \
+        auto& rel = *static_cast<BtreeDeleteRelation<Arity>*>(shadow.getRelation()); \
+        return evalErase(rel, shadow, ctxt);                                         \
+    ESAC(Erase)
+
+        FOR_EACH_BTREE_DELETE(ERASE)
+#undef ERASE
+
         CASE(SubroutineReturn)
             for (std::size_t i = 0; i < cur.getValues().size(); ++i) {
                 if (shadow.getChild(i) == nullptr) {
@@ -1734,6 +1745,27 @@ RamDomain Engine::evalInsert(Rel& rel, const Insert& shadow, Context& ctxt) {
 
     // insert in target relation
     rel.insert(tuple);
+    return true;
+}
+
+template <typename Rel>
+RamDomain Engine::evalErase(Rel& rel, const Erase& shadow, Context& ctxt) {
+    constexpr std::size_t Arity = Rel::Arity;
+    const auto& superInfo = shadow.getSuperInst();
+    souffle::Tuple<RamDomain, Arity> tuple;
+    TUPLE_COPY_FROM(tuple, superInfo.first);
+
+    /* TupleElement */
+    for (const auto& tupleElement : superInfo.tupleFirst) {
+        tuple[tupleElement[0]] = ctxt[tupleElement[1]][tupleElement[2]];
+    }
+    /* Generic */
+    for (const auto& expr : superInfo.exprFirst) {
+        tuple[expr.first] = execute(expr.second.get(), ctxt);
+    }
+
+    // insert in target relation
+    rel.erase(tuple);
     return true;
 }
 

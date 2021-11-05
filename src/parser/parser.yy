@@ -37,11 +37,14 @@
     #include "AggregateOp.h"
     #include "FunctorOps.h"
     #include "ast/Aggregator.h"
+    #include "ast/AliasType.h"
+    #include "ast/AlgebraicDataType.h"
     #include "ast/Argument.h"
     #include "ast/Atom.h"
     #include "ast/Attribute.h"
     #include "ast/BinaryConstraint.h"
     #include "ast/BooleanConstraint.h"
+    #include "ast/BranchType.h"
     #include "ast/BranchInit.h"
     #include "ast/Clause.h"
     #include "ast/Component.h"
@@ -49,11 +52,11 @@
     #include "ast/ComponentType.h"
     #include "ast/Constraint.h"
     #include "ast/Counter.h"
+    #include "ast/Directive.h"
     #include "ast/ExecutionOrder.h"
     #include "ast/ExecutionPlan.h"
     #include "ast/FunctionalConstraint.h"
     #include "ast/FunctorDeclaration.h"
-    #include "ast/Directive.h"
     #include "ast/IntrinsicFunctor.h"
     #include "ast/Literal.h"
     #include "ast/NilConstant.h"
@@ -65,9 +68,7 @@
     #include "ast/Relation.h"
     #include "ast/StringConstant.h"
     #include "ast/SubsetType.h"
-    #include "ast/AliasType.h"
-    #include "ast/AlgebraicDataType.h"
-    #include "ast/BranchType.h"
+    #include "ast/SubsumptiveClause.h"
     #include "ast/Type.h"
     #include "ast/TypeCast.h"
     #include "ast/UnionType.h"
@@ -131,6 +132,7 @@
 %token PRINTSIZE_QUALIFIER       "relation qualifier printsize"
 %token BRIE_QUALIFIER            "BRIE datastructure qualifier"
 %token BTREE_QUALIFIER           "BTREE datastructure qualifier"
+%token BTREE_DELETE_QUALIFIER    "BTREE_DELETE datastructure qualifier"
 %token EQREL_QUALIFIER           "equivalence relation qualifier"
 %token OVERRIDABLE_QUALIFIER     "relation qualifier overidable"
 %token INLINE_QUALIFIER          "relation qualifier inline"
@@ -303,7 +305,7 @@ program
   ;
 
 /**
- * Top-level Program Elements 
+ * Top-level Program Elements
  */
 unit
   : %empty
@@ -376,12 +378,12 @@ type_decl
     }
   | TYPE IDENT EQUALS union_type_list
     {
-      if ($union_type_list.size() > 1) { 
+      if ($union_type_list.size() > 1) {
          $$ = mk<ast::UnionType>($IDENT, $union_type_list, @$);
-      } else { 
+      } else {
          assert($union_type_list.size() == 1 && "qualified name missing for alias type");
          $$ = mk<ast::AliasType>($IDENT, $union_type_list[0], @$);
-      } 
+      }
     }
   | TYPE IDENT EQUALS record_type_list
     {
@@ -504,7 +506,7 @@ relation_names
  */
 attributes_list
   : LPAREN RPAREN
-    { 
+    {
     }
   | LPAREN non_empty_attributes RPAREN
     {
@@ -564,6 +566,10 @@ relation_tags
   | relation_tags BTREE_QUALIFIER
     {
       $$ = driver.addReprTag(RelationTag::BTREE, @2, $1);
+    }
+  | relation_tags BTREE_DELETE_QUALIFIER
+    {
+      $$ = driver.addReprTag(RelationTag::BTREE_DELETE, @2, $1);
     }
   | relation_tags EQREL_QUALIFIER
     {
@@ -667,6 +673,39 @@ rule
       auto query_plan = $query_plan;
       for (auto&& rule : $$) {
         rule->setExecutionPlan(clone(query_plan));
+      }
+    }
+   | atom[less] LE atom[greater] IF body DOT 
+    {
+      auto bodies = $body->toClauseBodies();
+      Own<ast::Atom> gt = std::move($greater);
+      Own<ast::Atom> lt = std::move($less);
+      for (auto&& body : bodies) {
+        auto cur = mk<ast::SubsumptiveClause>(clone(lt)); 
+        cur->setBodyLiterals(clone(body->getBodyLiterals()));
+        auto literals = cur->getBodyLiterals();
+        cur->setHead(clone(lt));
+        cur->addToBodyFront(clone(gt));
+        cur->addToBodyFront(clone(lt));
+        cur->setSrcLoc(@$);
+        $$.push_back(std::move(cur));
+      }
+    }
+   | atom[less] LE atom[greater] IF body DOT query_plan
+    {
+      auto bodies = $body->toClauseBodies();
+      Own<ast::Atom> gt = std::move($greater);
+      Own<ast::Atom> lt = std::move($less);
+      for (auto&& body : bodies) {
+        auto cur = mk<ast::SubsumptiveClause>(clone(lt)); 
+        cur->setBodyLiterals(clone(body->getBodyLiterals()));
+        auto literals = cur->getBodyLiterals();
+        cur->setHead(clone(lt));
+        cur->addToBodyFront(clone(gt));
+        cur->addToBodyFront(clone(lt));
+        cur->setSrcLoc(@$);
+        cur->setExecutionPlan(clone($query_plan));
+        $$.push_back(std::move(cur));
       }
     }
   ;
@@ -825,7 +864,7 @@ constraint
  */
 arg_list
   : %empty
-    { 
+    {
     }
   | non_empty_arg_list
     {
@@ -1230,7 +1269,7 @@ component_param_list
   ;
 
 /**
- * Component body 
+ * Component body
  */
 component_body
   : %empty

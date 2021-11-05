@@ -371,7 +371,7 @@ Own<Clause> ResolveAliasesTransformer::resolveAliases(const Clause& clause) {
 }
 
 Own<Clause> ResolveAliasesTransformer::removeTrivialEquality(const Clause& clause) {
-    auto res = cloneHead(clause);
+    auto res = Own<Clause>(clause.cloneHead());
 
     // add all literals, except filtering out t = t constraints
     for (Literal* literal : clause.getBodyLiterals()) {

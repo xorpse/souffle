@@ -403,6 +403,29 @@ protected:
     Index* main;
 };
 
+template <std::size_t _Arity>
+class BtreeDeleteRelation : public Relation<_Arity, BtreeDelete> {
+public:
+    using Relation<_Arity, BtreeDelete>::Relation;
+    using Relation<_Arity, BtreeDelete>::main;
+    using Relation<_Arity, BtreeDelete>::indexes;
+    using Tuple = souffle::Tuple<RamDomain, _Arity>;
+
+    /**
+     * Erase the given tuple from this relation.
+     */
+    bool erase(const Tuple& tuple) {
+        using DeleteIndex = BtreeDeleteIndex<_Arity>;
+        if (!(static_cast<DeleteIndex*>(main))->erase(tuple)) {
+            return false;
+        }
+        for (std::size_t i = 1; i < indexes.size(); ++i) {
+            static_cast<DeleteIndex*>(indexes[i].get())->erase(tuple);
+        }
+        return true;
+    }
+};
+
 class EqrelRelation : public Relation<2, Eqrel> {
 public:
     using Relation<2, Eqrel>::Relation;
@@ -422,12 +445,18 @@ using RelationFactory = Own<RelationWrapper> (*)(
 Own<RelationWrapper> createBTreeRelation(
         const ram::Relation& id, const ram::analysis::IndexCluster& indexSelection);
 
+// A factory for BTreeDelete based relation.
+Own<RelationWrapper> createBTreeDeleteRelation(
+        const ram::Relation& id, const ram::analysis::IndexCluster& indexSelection);
+
 // A factory for BTree provenance index.
 Own<RelationWrapper> createProvenanceRelation(
         const ram::Relation& id, const ram::analysis::IndexCluster& indexSelection);
+
 // A factory for Brie based index.
 Own<RelationWrapper> createBrieRelation(
         const ram::Relation& id, const ram::analysis::IndexCluster& indexSelection);
+
 // A factory for Eqrel index.
 Own<RelationWrapper> createEqrelRelation(
         const ram::Relation& id, const ram::analysis::IndexCluster& indexSelection);
