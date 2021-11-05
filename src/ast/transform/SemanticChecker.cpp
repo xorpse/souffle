@@ -462,34 +462,46 @@ void SemanticCheckerImpl::checkClause(const Clause& clause) {
         checkFact(clause);
     }
 
-    // check whether named unnamed variables of the form _<ident>
-    // are only used once in a clause; if not, warnings will be
-    // issued.
-    std::map<std::string, int> var_count;
-    std::map<std::string, const ast::Variable*> var_pos;
-    visit(clause, [&](const ast::Variable& var) {
-        var_count[var.getName()]++;
-        var_pos[var.getName()] = &var;
-    });
-    for (const auto& cur : var_count) {
-        int numAppearances = cur.second;
-        const auto& varName = cur.first;
-        const auto& varLocation = var_pos[varName]->getSrcLoc();
-        if (varName[0] == '_') {
-            assert(varName.size() > 1 && "named variable should not be a single underscore");
-            if (numAppearances > 1) {
-                report.addWarning("Variable " + varName + " marked as singleton but occurs more than once",
-                        varLocation);
-            }
+    // check dominated/dominating head of a subsumptive clause
+    // whether they are from the same relation.
+    if (isA<SubsumptiveClause>(clause)) {
+        auto literals = clause.getBodyLiterals();
+        const Atom* lt = as<Atom>(literals[0]);
+        const Atom* gt = as<Atom>(literals[1]);
+        if (lt->getQualifiedName() != gt->getQualifiedName()) {
+            report.addError("Subsumption must compare tuples from the same relation", clause.getSrcLoc());
         }
     }
+}
 
-    // check auto-increment
-    if (recursiveClauses.recursive(&clause)) {
-        visit(clause, [&](const Counter& ctr) {
-            report.addError("Auto-increment functor in a recursive rule", ctr.getSrcLoc());
-        });
+// check whether named unnamed variables of the form _<ident>
+// are only used once in a clause; if not, warnings will be
+// issued.
+std::map<std::string, int> var_count;
+std::map<std::string, const ast::Variable*> var_pos;
+visit(clause, [&](const ast::Variable& var) {
+    var_count[var.getName()]++;
+    var_pos[var.getName()] = &var;
+});
+for (const auto& cur : var_count) {
+    int numAppearances = cur.second;
+    const auto& varName = cur.first;
+    const auto& varLocation = var_pos[varName]->getSrcLoc();
+    if (varName[0] == '_') {
+        assert(varName.size() > 1 && "named variable should not be a single underscore");
+        if (numAppearances > 1) {
+            report.addWarning(
+                    "Variable " + varName + " marked as singleton but occurs more than once", varLocation);
+        }
     }
+}
+
+// check auto-increment
+if (recursiveClauses.recursive(&clause)) {
+    visit(clause, [&](const Counter& ctr) {
+        report.addError("Auto-increment functor in a recursive rule", ctr.getSrcLoc());
+    });
+}
 }
 
 void SemanticCheckerImpl::checkComplexRule(std::set<const Clause*> multiRule) {

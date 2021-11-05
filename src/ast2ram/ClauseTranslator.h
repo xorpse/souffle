@@ -35,7 +35,8 @@ class TranslatorContext;
 /** Translation modes */
 enum TranslationMode {
     DEFAULT,
-    // Subsumptive clause translation:
+
+    // Subsumptive clauses
     //
     //   R(x0) <= R(x1) :- body.
     //
@@ -44,13 +45,21 @@ enum TranslationMode {
     //   R(x0) :- R(x0), R(x1), body.
     //
     // using different auxiliary tables (delta/new/reject/delete).
+    //
     // There are different modes for translating a subsumptive clause
     // (i.e. inside / outside of the fix-point).
-    //
-    SubsumeRNC,  // delete reject-R(x0) :- new-R(x0), R(x1), body. (inside fix-point)
-    SubsumeRNN,  // delete reject-R(x0) :- new-R(x0), R(x1), x0!=x1, body. (inside fix-point)
-    SubsumeDCD,  // delete delete-R(x0) :- R(x0), delta-R(x1), body. (inside fix-point)
-    SubsumeDCC   // delete delete-R(x0) :- R(x0), R(x1), x0!=x1, body. (outside fix-point)
+
+    // delete reject-R(x0) :- new-R(x0), R(x1), body. (inside fix-point)
+    SubsumeRejectNewCurrent,
+
+    // delete reject-R(x0) :- new-R(x0), new-R(x1), x0!=x1, body. (inside fix-point)
+    SubsumeRejectNewNew,
+
+    // delete delete-R(x0) :- R(x0), delta-R(x1), body. (inside fix-point)
+    SubsumeDeleteCurrentDelta,
+
+    // delete delete-R(x0) :- R(x0), R(x1), x0!=x1, body. (outside fix-point)
+    SubsumeDeleteCurrentCurrent
 };
 
 /* Abstract Clause Translator */
