@@ -282,24 +282,26 @@ Own<ram::Statement> UnitTranslator::translateSubsumptiveRecursiveClauses(
     assert(contains(scc, rel) && "relation should belong to scc");
 
     VecOwn<ram::Statement> code;
+    if (!context->hasSubsumptiveClause(rel->getQualifiedName())) {
+        return mk<ram::Sequence>(std::move(code));
+    }
 
-    // Translate subsumptive clauses
+    std::string mainRelation = getConcreteRelationName(rel->getQualifiedName());
+    std::string newRelation = getNewRelationName(rel->getQualifiedName());
+    std::string deltaRelation = getDeltaRelationName(rel->getQualifiedName());
+    std::string rejectRelation = getRejectRelationName(rel->getQualifiedName());
+    std::string deleteRelation = getDeleteRelationName(rel->getQualifiedName());
+
+    // old delta relation can be cleared
+    appendStmt(code, mk<ram::Clear>(deltaRelation));
+
+    // compute reject set using the subsumptive clauses
     for (const auto* clause : context->getClauses(rel->getQualifiedName())) {
         // Skip non-subsumptive clauses
         if (!isA<ast::SubsumptiveClause>(clause)) {
             continue;
         }
 
-        std::string mainRelation = getConcreteRelationName(rel->getQualifiedName());
-        std::string newRelation = getNewRelationName(rel->getQualifiedName());
-        std::string deltaRelation = getDeltaRelationName(rel->getQualifiedName());
-        std::string rejectRelation = getRejectRelationName(rel->getQualifiedName());
-        std::string deleteRelation = getDeleteRelationName(rel->getQualifiedName());
-
-        // old delta relation can be cleared
-        appendStmt(code, mk<ram::Clear>(deltaRelation));
-
-        // compute reject set using the subsumptive clause
         const auto& sccAtoms = getSccAtoms(clause, scc);
         for (std::size_t version = 0; version < sccAtoms.size(); version++) {
             // find dominated tuples in the newR by tuples in newR  and store them in rejectR
@@ -309,13 +311,21 @@ Own<ram::Statement> UnitTranslator::translateSubsumptiveRecursiveClauses(
             appendStmt(
                     code, context->translateRecursiveClause(*clause, scc, version, SubsumeRejectNewCurrent));
         }
+    }
 
-        // compute new delta set, i.e., deltaR = newR \ rejectR
-        appendStmt(code, generateMergeRelationsWithFilter(rel, deltaRelation, newRelation, rejectRelation));
-        appendStmt(code, mk<ram::Clear>(rejectRelation));
-        appendStmt(code, mk<ram::Clear>(newRelation));
+    // compute new delta set, i.e., deltaR = newR \ rejectR
+    appendStmt(code, generateMergeRelationsWithFilter(rel, deltaRelation, newRelation, rejectRelation));
+    appendStmt(code, mk<ram::Clear>(rejectRelation));
+    appendStmt(code, mk<ram::Clear>(newRelation));
 
-        // compute delete set,  remove tuples from R, and clear delete set
+    // compute delete set,  remove tuples from R, and clear delete set
+    for (const auto* clause : context->getClauses(rel->getQualifiedName())) {
+        // Skip non-subsumptive clauses
+        if (!isA<ast::SubsumptiveClause>(clause)) {
+            continue;
+        }
+
+        const auto& sccAtoms = getSccAtoms(clause, scc);
         for (std::size_t version = 0; version < sccAtoms.size(); version++) {
             appendStmt(code,
                     context->translateRecursiveClause(*clause, scc, version, SubsumeDeleteCurrentDelta));
