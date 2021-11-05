@@ -143,26 +143,25 @@ std::string ClauseTranslator::getClauseAtomName(const ast::Clause& clause, const
         auto dominatingHeadAtom = dynamic_cast<const ast::Atom*>(body[dominatingHead]);
 
         if (clause.getHead() == atom) {
-            if (mode == SubsumeDCD || mode == SubsumeDCC) {
+            if (mode == SubsumeDeleteCurrentDelta || mode == SubsumeDeleteCurrentCurrent) {
                 return getDeleteRelationName(atom->getQualifiedName());
             }
             return getRejectRelationName(atom->getQualifiedName());
         }
 
         if (dominatedHeadAtom == atom) {
-            if (mode == SubsumeDCD || mode == SubsumeDCC) {
+            if (mode == SubsumeDeleteCurrentDelta || mode == SubsumeDeleteCurrentCurrent) {
                 return getConcreteRelationName(atom->getQualifiedName());
             }
             return getNewRelationName(atom->getQualifiedName());
         }
 
         if (dominatingHeadAtom == atom) {
-            if (mode == SubsumeRNC || mode == SubsumeDCC) {
-                return getConcreteRelationName(atom->getQualifiedName());
-            } else if (mode == SubsumeDCD) {
-                return getDeltaRelationName(atom->getQualifiedName());
-            } else {
-                return getNewRelationName(atom->getQualifiedName());
+            switch (mode) {
+                case SubsumeRejectNewCurrent:
+                case SubsumeDeleteCurrentCurrent: return getConcreteRelationName(atom->getQualifiedName());
+                case SubsumeDeleteCurrentDelta: return getDeltaRelationName(atom->getQualifiedName());
+                default: return getNewRelationName(atom->getQualifiedName());
             }
         }
 
@@ -534,7 +533,7 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
     }
 
     if (isA<ast::SubsumptiveClause>(clause)) {
-        if (mode == SubsumeRNN || mode == SubsumeDCC) {
+        if (mode == SubsumeRejectNewNew || mode == SubsumeDeleteCurrentCurrent) {
             // find the dominated / dominating heads
             const auto& body = clause.getBodyLiterals();
             auto dominatedHeadAtom = dynamic_cast<const ast::Atom*>(body[dominatedHead]);
