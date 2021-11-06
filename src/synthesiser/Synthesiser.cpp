@@ -360,7 +360,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 out << ")->readAll(*" << synthesiser.getRelationName(synthesiser.lookup(io.getRelation()));
                 out << ");\n";
                 out << "} catch (std::exception& e) {std::cerr << \"Error loading "
-                    << synthesiser.getRelationName(synthesiser.lookup(io.getRelation()))
+                    << io.getRelation()
                     << " data: \" << e.what() "
                        "<< "
                        "'\\n';}\n";
@@ -2770,7 +2770,7 @@ void runFunction(std::string  inputDirectoryArg,
         os << ")->readAll(*" << getRelationName(lookup(load->getRelation()));
         os << ");\n";
         os << "} catch (std::exception& e) {std::cerr << \"Error loading "
-           << getRelationName(lookup(load->getRelation()))
+           << load->getRelation()
            << " data: \" << e.what() << "
               "'\\n';}\n";
     }
