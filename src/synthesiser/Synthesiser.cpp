@@ -360,7 +360,8 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 out << "directiveMap, symTable, recordTable";
                 out << ")->readAll(*" << synthesiser.getRelationName(synthesiser.lookup(io.getRelation()));
                 out << ");\n";
-                out << "} catch (std::exception& e) {std::cerr << \"Error loading data: \" << e.what() "
+                out << "} catch (std::exception& e) {std::cerr << \"Error loading " << io.getRelation()
+                    << " data: \" << e.what() "
                        "<< "
                        "'\\n';}\n";
             } else if (op == "output" || op == "printsize") {
@@ -2782,7 +2783,8 @@ void runFunction(std::string  inputDirectoryArg,
         os << "directiveMap, symTable, recordTable";
         os << ")->readAll(*" << getRelationName(lookup(load->getRelation()));
         os << ");\n";
-        os << "} catch (std::exception& e) {std::cerr << \"Error loading data: \" << e.what() << "
+        os << "} catch (std::exception& e) {std::cerr << \"Error loading " << load->getRelation()
+           << " data: \" << e.what() << "
               "'\\n';}\n";
     }
 
