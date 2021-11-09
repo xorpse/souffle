@@ -487,24 +487,34 @@ Own<ram::Statement> UnitTranslator::generateStratumTableUpdates(
 
 Own<ram::Statement> UnitTranslator::generateStratumLoopBody(const std::set<const ast::Relation*>& scc) const {
     VecOwn<ram::Statement> loopBody;
-    for (const ast::Relation* rel : scc) {
-        auto relClauses = translateRecursiveClauses(scc, rel);
 
-        auto delClauses = translateSubsumptiveRecursiveClauses(scc, rel);
-
-        relClauses = mk<ram::Sequence>(std::move(relClauses), std::move(delClauses));
-
-        // add profiling information
+    auto addProfiling = [](const ast::Relation* rel, Own<ram::Statement> stmt) -> Own<ram::Statement> {
         if (Global::config().has("profile")) {
             const std::string& relationName = toString(rel->getQualifiedName());
             const auto& srcLocation = rel->getSrcLoc();
             const std::string logTimerStatement = LogStatement::tRecursiveRelation(relationName, srcLocation);
-            relClauses = mk<ram::LogRelationTimer>(mk<ram::Sequence>(std::move(relClauses)),
-                    logTimerStatement, getNewRelationName(rel->getQualifiedName()));
+            return mk<ram::LogRelationTimer>(mk<ram::Sequence>(std::move(stmt)), logTimerStatement,
+                    getNewRelationName(rel->getQualifiedName()));
         }
+        return stmt;
+    };
 
+    // first translate regular recursive clauses
+    for (const ast::Relation* rel : scc) {
+        auto relClauses = translateRecursiveClauses(scc, rel);
+        // add profiling information
+        relClauses = addProfiling(rel, std::move(relClauses));
         appendStmt(loopBody, mk<ram::Sequence>(std::move(relClauses)));
     }
+
+    // translating subsumptive clauses
+    for (const ast::Relation* rel : scc) {
+        auto relClauses = translateSubsumptiveRecursiveClauses(scc, rel);
+        // add profiling information
+        relClauses = addProfiling(rel, std::move(relClauses));
+        appendStmt(loopBody, mk<ram::Sequence>(std::move(relClauses)));
+    }
+
     return mk<ram::Sequence>(std::move(loopBody));
 }
 
