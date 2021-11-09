@@ -493,8 +493,8 @@ Own<ram::Statement> UnitTranslator::generateStratumLoopBody(const std::set<const
             const std::string& relationName = toString(rel->getQualifiedName());
             const auto& srcLocation = rel->getSrcLoc();
             const std::string logTimerStatement = LogStatement::tRecursiveRelation(relationName, srcLocation);
-            return mk<ram::LogRelationTimer>(mk<ram::Sequence>(std::move(stmt)),
-                    logTimerStatement, getNewRelationName(rel->getQualifiedName()));
+            return mk<ram::LogRelationTimer>(mk<ram::Sequence>(std::move(stmt)), logTimerStatement,
+                    getNewRelationName(rel->getQualifiedName()));
         }
         return stmt;
     };
