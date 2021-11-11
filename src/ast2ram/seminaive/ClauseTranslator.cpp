@@ -65,7 +65,7 @@
 namespace souffle::ast2ram::seminaive {
 
 ClauseTranslator::ClauseTranslator(const TranslatorContext& context, TranslationMode mode)
-        : ast2ram::ClauseTranslator(context, mode) {}
+        : ast2ram::ClauseTranslator(context, mode), valueIndex(mk<ValueIndex>()) {}
 
 ClauseTranslator::~ClauseTranslator() = default;
 
@@ -196,7 +196,6 @@ Own<ram::Statement> ClauseTranslator::createRamRuleQuery(const ast::Clause& clau
     assert(isRule(clause) && "clause should be rule");
 
     // Index all variables and generators in the clause
-    valueIndex = mk<ValueIndex>();
     indexClause(clause);
 
     // Set up the RAM statement bottom-up
