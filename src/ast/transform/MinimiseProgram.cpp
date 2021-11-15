@@ -320,7 +320,7 @@ bool MinimiseProgramTransformer::reduceSingletonRelations(TranslationUnit& trans
     for (std::size_t i = 0; i < singletonRelationClauses.size(); i++) {
         const auto* first = singletonRelationClauses[i];
         // an earlier clause may have been found to be bijective with this one. no need to reprocess it.
-        if (contains(canonicalName, first->getQualifiedName())) continue;
+        if (contains(canonicalName, ast::getName(*first))) continue;
 
         for (std::size_t j = i + 1; j < singletonRelationClauses.size(); j++) {
             const auto* second = singletonRelationClauses[j];
@@ -330,7 +330,7 @@ bool MinimiseProgramTransformer::reduceSingletonRelations(TranslationUnit& trans
             const auto& normedSecond = normalisations.getNormalisation(second);
             if (areBijectivelyEquivalent(normedFirst, normedSecond) &&
                     areEquivalentRelations(program.getRelation(*first), program.getRelation(*second))) {
-                canonicalName.insert({second->getQualifiedName(), first->getQualifiedName()});
+                canonicalName.insert({ast::getName(*second), ast::getName(*first)});
             }
         }
     }

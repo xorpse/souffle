@@ -1130,7 +1130,7 @@ bool MagicSetCoreTransformer::transform(TranslationUnit& translationUnit) {
 
     /** Perform the Magic Set Transformation */
     for (auto* clause : program.getClauses()) {
-        auto adorned = isAdorned(clause->getQualifiedName());
+        auto adorned = isAdorned(ast::getName(*clause));
 
         // (1) Add the associated magic rules
         auto eqConstraints = getBindingEqualityConstraints(clause);

@@ -53,6 +53,22 @@ std::string pprint(const Node& node) {
     return toString(node);
 }
 
+QualifiedName getName(const Atom& x) {
+    return x.getQualifiedName();
+}
+
+QualifiedName getName(const Clause& x) {
+    return x.getHead()->getQualifiedName();
+}
+
+QualifiedName getName(const Directive& x) {
+    return x.getQualifiedName();
+}
+
+QualifiedName getName(const Relation& x) {
+    return x.getQualifiedName();
+}
+
 FunctorDeclaration* getFunctorDeclaration(const Program& program, const std::string& name) {
     // FIXME: O(n). This is awful.
     return getIf(program.getFunctorDeclarations(),
@@ -223,7 +239,7 @@ bool renameAtoms(Program& program, const std::map<QualifiedName, QualifiedName>&
     for ([[maybe_unused]] auto&& [name, info] : program.getRelationInfo()) {
         bool clauses_changed = false;
         for (auto&& cl : info.clauses) {
-            assert(cl->getQualifiedName() == name && "sanity check - name lookup tables corrupted");
+            assert(getName(*cl) == name && "sanity check - name lookup tables corrupted");
             clauses_changed |= renameAtoms(cl, oldToNew);
         }
 

@@ -49,10 +49,6 @@ void Clause::setBodyLiterals(VecOwn<Literal> body) {
     bodyLiterals = std::move(body);
 }
 
-QualifiedName const& Clause::getQualifiedName() const {
-    return getHead()->getQualifiedName();
-}
-
 std::vector<Literal*> Clause::getBodyLiterals() const {
     return toPtrVector(bodyLiterals);
 }

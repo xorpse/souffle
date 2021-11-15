@@ -26,6 +26,7 @@
 #include "ast/QualifiedName.h"
 #include "ast/Relation.h"
 #include "ast/Type.h"
+#include "ast/utility/Utils.h"
 #include "souffle/utility/FunctionalUtil.h"
 #include "souffle/utility/Visitor.h"
 #include "souffle/utility/span.h"
@@ -273,11 +274,11 @@ void visit(ast::Program& program, F&& go) {
     program.clause_visit_in_progress++;
     for ([[maybe_unused]] auto&& [k, info] : program.relations)
         for (auto&& cl : info.clauses) {
-            assert(k == cl->getQualifiedName());
+            assert(k == ast::getName(*cl));
             go(*cl);
             // post-condition verify isn't robust; other `visit` calls could inadvertently modify head name
             // e.g. `visit(program, [](Atom&) {})`
-            assert(k == cl->getQualifiedName());
+            assert(k == ast::getName(*cl));
         }
     program.clause_visit_in_progress--;
 }
@@ -287,11 +288,11 @@ void visit(ast::Program const& program, F&& go) {
     program.clause_visit_in_progress++;
     for ([[maybe_unused]] auto&& [k, info] : program.relations)
         for (auto&& cl : info.clauses) {
-            assert(k == cl->getQualifiedName());
+            assert(k == ast::getName(*cl));
             go(static_cast<ast::Clause const&>(*cl));
             // post-condition verify isn't robust; other `visit` calls could inadvertently modify head name
             // e.g. `visit(program, [](Atom&) {})`
-            assert(k == cl->getQualifiedName());
+            assert(k == ast::getName(*cl));
         }
     program.clause_visit_in_progress--;
 }

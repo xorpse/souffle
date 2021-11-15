@@ -9,6 +9,7 @@
 #include "ast/Program.h"
 
 #include "ast/Node.h"
+#include "ast/utility/Utils.h"
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/StreamUtil.h"
 #include <cassert>
@@ -27,7 +28,7 @@ auto toPtrVector(RelationInfoMap const& map, SeqOwnT RelationInfo::*member, ast:
     auto it = map.find(name);
     if (it != map.end()) {
         for (auto&& x : it->second.*member) {
-            assert(name == x->getQualifiedName());
+            assert(name == getName(*x));
             ys.push_back(x.get());
         }
     }
@@ -42,7 +43,7 @@ auto toPtrVector(RelationInfoMap const& map, SeqOwnT RelationInfo::*member) {
 
     for ([[maybe_unused]] auto&& [k, info] : map) {
         for (auto&& x : info.*member) {
-            assert(k == x->getQualifiedName());
+            assert(k == getName(*x));
             ys.push_back(x.get());
         }
     }
@@ -52,7 +53,7 @@ auto toPtrVector(RelationInfoMap const& map, SeqOwnT RelationInfo::*member) {
 
 template <typename A, typename SeqOwnT>
 auto eraseByIdentity(RelationInfoMap& map, SeqOwnT RelationInfo::*member, A const& elem) {
-    auto it = map.find(elem.getQualifiedName());
+    auto it = map.find(getName(elem));
     if (it == map.end()) {
         assert(false &&
                 "attempted to remove something not owned by the program. this is symptomatic of a bug");
@@ -86,7 +87,7 @@ auto mapAll(RelationInfoMap& map, SeqOwnT RelationInfo::*member, const ast::Node
 
 #ifndef NDEBUG
         for (auto&& x : info.*member)
-            assert(k == x->getQualifiedName());
+            assert(k == getName(*x));
 #endif
     }
 }
@@ -95,7 +96,7 @@ template <typename SeqOwnT>
 void append(std::vector<ast::Node const*>& res, RelationInfoMap const& map, SeqOwnT RelationInfo::*member) {
     for ([[maybe_unused]] auto&& [k, info] : map) {
         for (auto&& x : info.*member) {
-            assert(k == x->getQualifiedName());
+            assert(k == getName(*x));
             res.push_back(x.get());
         }
     }
@@ -130,15 +131,15 @@ Relation* Program::getRelation(QualifiedName const& name) const {
 }
 
 Relation* Program::getRelation(Atom const& x) const {
-    return getRelation(x.getQualifiedName());
+    return getRelation(getName(x));
 }
 
 Relation* Program::getRelation(Clause const& x) const {
-    return getRelation(x.getQualifiedName());
+    return getRelation(getName(x));
 }
 
 Relation* Program::getRelation(Directive const& x) const {
-    return getRelation(x.getQualifiedName());
+    return getRelation(getName(x));
 }
 
 std::vector<Relation*> Program::getRelationAll(QualifiedName const& name) const {
@@ -191,7 +192,7 @@ void Program::removeRelation(Relation const& r) {
 void Program::addClause(Own<Clause> clause) {
     assert(clause != nullptr && "Undefined clause");
     assert(clause_visit_in_progress == 0 && "Don't modify program clause collection mid-traversal");
-    auto& info = relations[clause->getQualifiedName()];
+    auto& info = relations[getName(*clause)];
     info.clauses.push_back(std::move(clause));
 }
 

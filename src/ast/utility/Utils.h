@@ -17,6 +17,7 @@
 #pragma once
 
 #include "FunctorOps.h"
+#include "ast/QualifiedName.h"
 #include "souffle/utility/DynamicCasting.h"
 #include "souffle/utility/Types.h"
 #include <cstddef>
@@ -56,6 +57,12 @@ class TypeAnalysis;
 // all AST nodes during debugging. If `toString` were to be used, only
 // the specific instanciations would be available at runtime.
 std::string pprint(const Node& node);
+
+// Helpers for uniformly accessing the name of a atom, clause, directive, or relation.
+QualifiedName getName(const Atom&);
+QualifiedName getName(const Clause&);
+QualifiedName getName(const Directive&);
+QualifiedName getName(const Relation&);
 
 /**
  * Returns literals of a particular type in the body of a clause.
