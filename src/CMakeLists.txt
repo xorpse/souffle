@@ -17,6 +17,7 @@ set(SOUFFLE_SOURCES
     ast/BranchType.cpp
     ast/BranchInit.cpp
     ast/Clause.cpp
+    ast/SubsumptiveClause.cpp
     ast/Component.cpp
     ast/ComponentInit.cpp
     ast/ComponentType.cpp
@@ -123,6 +124,7 @@ set(SOUFFLE_SOURCES
     interpreter/Generator.cpp
     interpreter/BrieIndex.cpp
     interpreter/BTreeIndex.cpp
+    interpreter/BTreeDeleteIndex.cpp
     interpreter/EqrelIndex.cpp
     interpreter/ProvenanceIndex.cpp
     parser/ParserDriver.cpp
@@ -294,14 +296,14 @@ function(AUTOMAKE_COMPATIBLE_SUBST F_IN F_OUT)
 
     # Compile flags
     string(TOUPPER ${CMAKE_BUILD_TYPE} BT_UPPER)
-    # Remove -Wall/-Wextra/-Werror from the default flag set for compilation using `souffle-compile`.
-    # *) `-d` option in `souffle-compile` adds these flags back
+    # Remove -Werror from the default flag set for compilation using `souffle-compile`.
+    # *) `-d` option in `souffle-compile` adds this flag back
     # *) The compiler used by `souffle-compile` isn't neccesarily the same as the one used by `cmake`.
     #    Code that's free of warnings w/ the cmake compiler might not be w/ `souffle-compile`'s compiler.
     #    e.g. we might use clang-10, user might use gcc or some newer version of clang.
     # *) Synth'd code isn't warning free for now anyways.
     #    TODO: Require/verify that test case synthesised code is warning free as part of test suite.
-    string(REGEX REPLACE "-Wall|-Wextra|-Werror" ""  SOUFFLE_CXXFLAGS "${CMAKE_CXX_FLAGS}")
+    string(REGEX REPLACE "-Werror" ""  SOUFFLE_CXXFLAGS "${CMAKE_CXX_FLAGS}")
     set(SOUFFLE_CXXFLAGS "${SOUFFLE_CXXFLAGS} ${CMAKE_CXX_FLAGS_${BT_UPPER}} ${SUBST_DEFS}")
     if (OPENMP_FOUND)
        set(SOUFFLE_CXXFLAGS "${SOUFFLE_CXXFLAGS} -fopenmp")

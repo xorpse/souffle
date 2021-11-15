@@ -18,6 +18,7 @@
 #include "FunctorOps.h"
 #include "ast/NumericConstant.h"
 #include "ast/analysis/typesystem/Type.h"
+#include "ast2ram/ClauseTranslator.h"
 #include "souffle/BinaryConstraintOps.h"
 #include "souffle/TypeAttribute.h"
 #include "souffle/utility/ContainerUtil.h"
@@ -82,6 +83,7 @@ public:
     std::size_t getSizeLimit(const ast::Relation* relation) const;
 
     /** Clause methods */
+    bool hasSubsumptiveClause(const ast::QualifiedName& name) const;
     bool isRecursiveClause(const ast::Clause* clause) const;
     std::size_t getClauseNum(const ast::Clause* clause) const;
 
@@ -116,9 +118,11 @@ public:
     }
 
     /** Translation strategy */
-    Own<ram::Statement> translateNonRecursiveClause(const ast::Clause& clause) const;
-    Own<ram::Statement> translateRecursiveClause(
-            const ast::Clause& clause, const std::set<const ast::Relation*>& scc, std::size_t version) const;
+    Own<ram::Statement> translateNonRecursiveClause(
+            const ast::Clause& clause, TranslationMode mode = DEFAULT) const;
+    Own<ram::Statement> translateRecursiveClause(const ast::Clause& clause,
+            const std::set<const ast::Relation*>& scc, std::size_t version,
+            TranslationMode mode = DEFAULT) const;
 
     Own<ram::Condition> translateConstraint(const ValueIndex& index, const ast::Literal* lit) const;
 

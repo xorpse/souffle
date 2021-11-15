@@ -46,6 +46,7 @@
 #include "ast/RecordInit.h"
 #include "ast/Relation.h"
 #include "ast/StringConstant.h"
+#include "ast/SubsumptiveClause.h"
 #include "ast/Term.h"
 #include "ast/TranslationUnit.h"
 #include "ast/Type.h"
@@ -173,7 +174,6 @@ SemanticCheckerImpl::SemanticCheckerImpl(TranslationUnit& tu) : tu(tu) {
     for (auto* clause : program.getClauses()) {
         checkClause(*clause);
     }
-
     for (auto* decl : program.getFunctorDeclarations()) {
         checkFunctorDeclaration(*decl);
     }
@@ -462,6 +462,17 @@ void SemanticCheckerImpl::checkClause(const Clause& clause) {
         checkFact(clause);
     }
 
+    // check dominated/dominating head of a subsumptive clause
+    // whether they are from the same relation.
+    if (isA<SubsumptiveClause>(clause)) {
+        auto literals = clause.getBodyLiterals();
+        const Atom* lt = as<Atom>(literals[0]);
+        const Atom* gt = as<Atom>(literals[1]);
+        if (lt->getQualifiedName() != gt->getQualifiedName()) {
+            report.addError("Subsumption must compare tuples from the same relation", clause.getSrcLoc());
+        }
+    }
+
     // check whether named unnamed variables of the form _<ident>
     // are only used once in a clause; if not, warnings will be
     // issued.
@@ -594,6 +605,7 @@ void SemanticCheckerImpl::checkRelationFunctionalDependencies(const Relation& re
 }
 
 void SemanticCheckerImpl::checkRelation(const Relation& relation) {
+    // Check signature of equivalence relations
     if (relation.getRepresentation() == RelationRepresentation::EQREL) {
         if (relation.getArity() == 2) {
             const auto& attributes = relation.getAttributes();
@@ -608,6 +620,25 @@ void SemanticCheckerImpl::checkRelation(const Relation& relation) {
                     "Equivalence relation " + toString(relation.getQualifiedName()) + " is not binary",
                     relation.getSrcLoc());
         }
+    }
+
+    // check subsumption relations
+    bool hasSubsumptiveRule = visitExists(program, [&](const ast::SubsumptiveClause& sClause) {
+        return sClause.getHead()->getQualifiedName() == relation.getQualifiedName();
+    });
+    if (relation.getRepresentation() == RelationRepresentation::BTREE_DELETE && !hasSubsumptiveRule) {
+        report.addWarning("No subsumptive rule for relation " + toString(relation.getQualifiedName()),
+                relation.getSrcLoc());
+    } else if (relation.getRepresentation() != RelationRepresentation::BTREE_DELETE && hasSubsumptiveRule) {
+        report.addError("Relation \"" + toString(relation.getQualifiedName()) +
+                                "\" has one or more subsumptive rules and relational representation "
+                                "\"btree_delete\" is missing",
+                relation.getSrcLoc());
+    }
+    if (relation.getRepresentation() == RelationRepresentation::BTREE_DELETE && relation.getArity() == 0) {
+        report.addError("Subsumptive relation \"" + toString(relation.getQualifiedName()) +
+                                "\"  must not be a nullary relation",
+                relation.getSrcLoc());
     }
 
     // start with declaration

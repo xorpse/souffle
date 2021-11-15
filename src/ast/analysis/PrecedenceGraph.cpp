@@ -42,8 +42,11 @@ void PrecedenceGraphAnalysis::run(const TranslationUnit& translationUnit) {
 
         auto addEdgeToR = [&](const Atom& atom) { backingGraph.insert(program.getRelation(atom), r); };
         for (auto&& c : program.getClauses(*r)) {
-            souffle::visit(c->getBodyLiterals(), addEdgeToR);
             souffle::visit(c->getHead()->getArguments(), addEdgeToR);
+            auto literals = c->getBodyLiterals();
+            for (std::size_t i = as<SubsumptiveClause>(c) ? 2 : 0; i < literals.size(); i++) {
+                souffle::visit(literals[i], addEdgeToR);
+            }
         }
     }
 }

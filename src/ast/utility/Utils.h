@@ -136,13 +136,6 @@ bool isProposition(const Atom* atom);
 bool isDeltaRelation(const QualifiedName& name);
 
 /**
- * Returns a clause which contains head of the given clause
- * @param clause the clause which head to be cloned
- * @return pointer to clause which has head cloned from given clause
- */
-Own<Clause> cloneHead(const Clause& clause);
-
-/**
  * Reorders the atoms of a clause to be in the given order.
  * Remaining body literals remain in the same order.
  *

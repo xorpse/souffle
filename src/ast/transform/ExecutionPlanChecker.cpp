@@ -21,6 +21,7 @@
 #include "ast/ExecutionPlan.h"
 #include "ast/Program.h"
 #include "ast/Relation.h"
+#include "ast/SubsumptiveClause.h"
 #include "ast/TranslationUnit.h"
 #include "ast/analysis/RecursiveClauses.h"
 #include "ast/analysis/RelationSchedule.h"
@@ -49,6 +50,9 @@ bool ExecutionPlanChecker::transform(TranslationUnit& translationUnit) {
                     continue;
                 }
                 if (clause->getExecutionPlan() == nullptr) {
+                    continue;
+                }
+                if (isA<SubsumptiveClause>(clause)) {
                     continue;
                 }
                 int version = 0;

@@ -22,6 +22,7 @@
 #include "ast/Program.h"
 #include "ast/QualifiedName.h"
 #include "ast/Relation.h"
+#include "ast/SubsumptiveClause.h"
 #include "ast/TranslationUnit.h"
 #include "ast/analysis/ClauseNormalisation.h"
 #include "ast/analysis/IOType.h"
@@ -348,6 +349,9 @@ bool MinimiseProgramTransformer::reduceSingletonRelations(TranslationUnit& trans
 bool MinimiseProgramTransformer::removeRedundantClauses(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
     auto isRedundant = [&](const Clause* clause) {
+        if (isA<SubsumptiveClause>(clause)) {
+            return false;
+        }
         const auto* head = clause->getHead();
         for (const auto* lit : clause->getBodyLiterals()) {
             if (*head == *lit) {

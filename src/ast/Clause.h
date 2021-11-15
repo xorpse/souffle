@@ -20,6 +20,7 @@
 #include "ast/ExecutionPlan.h"
 #include "ast/Literal.h"
 #include "ast/Node.h"
+#include "ast/QualifiedName.h"
 #include "parser/SrcLocation.h"
 #include <iosfwd>
 #include <vector>
@@ -78,6 +79,9 @@ public:
         plan = nullptr;
     }
 
+    /** Clones the head/source location/plan of a clause without the body */
+    virtual Clause* cloneHead() const;
+
     void apply(const NodeMapper& map) override;
 
 protected:
@@ -85,12 +89,11 @@ protected:
 
     NodeVec getChildren() const override;
 
-private:
     bool equal(const Node& node) const override;
 
     Clause* cloning() const override;
 
-private:
+protected:
     /** Head of the clause */
     Own<Atom> head;
 

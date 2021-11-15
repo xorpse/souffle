@@ -141,14 +141,6 @@ bool isDeltaRelation(const QualifiedName& name) {
     return isPrefix("@delta_", qualifiers[0]);
 }
 
-Own<Clause> cloneHead(const Clause& clause) {
-    auto myClone = mk<Clause>(clone(clause.getHead()), clause.getSrcLoc());
-    if (clause.getExecutionPlan() != nullptr) {
-        myClone->setExecutionPlan(clone(clause.getExecutionPlan()));
-    }
-    return myClone;
-}
-
 std::vector<Atom*> reorderAtoms(const std::vector<Atom*>& atoms, const std::vector<unsigned int>& newOrder) {
     // Validate given order
     assert(newOrder.size() == atoms.size());
@@ -185,7 +177,7 @@ Clause* reorderAtoms(const Clause* clause, const std::vector<unsigned int>& newO
     assert(std::is_permutation(nopOrder.begin(), nopOrder.end(), newOrder.begin()));
 
     // Create a new clause with the given atom order, leaving the rest unchanged
-    auto newClause = cloneHead(*clause);
+    auto newClause = Own<Clause>(clause->cloneHead());
     unsigned int currentAtom = 0;
     for (unsigned int currentLiteral = 0; currentLiteral < bodyLiterals.size(); currentLiteral++) {
         Literal* literalToAdd = bodyLiterals[currentLiteral];

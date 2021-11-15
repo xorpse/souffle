@@ -125,7 +125,7 @@ bool RemoveBooleanConstraintsTransformer::transform(TranslationUnit& translation
                 // Clause will always fail
                 program.removeClause(*clause);
             } else if (containsTrue) {
-                auto replacementClause = cloneHead(*clause);
+                auto replacementClause = Own<Clause>(clause->cloneHead());
 
                 // Only keep non-'true' literals
                 for (Literal* lit : clause->getBodyLiterals()) {

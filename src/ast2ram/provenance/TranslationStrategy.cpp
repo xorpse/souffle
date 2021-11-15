@@ -28,8 +28,8 @@ ast2ram::UnitTranslator* TranslationStrategy::createUnitTranslator() const {
 }
 
 ast2ram::ClauseTranslator* TranslationStrategy::createClauseTranslator(
-        const TranslatorContext& context) const {
-    return new ClauseTranslator(context);
+        const TranslatorContext& context, TranslationMode mode) const {
+    return new ClauseTranslator(context, mode);
 }
 
 ast2ram::ConstraintTranslator* TranslationStrategy::createConstraintTranslator(
