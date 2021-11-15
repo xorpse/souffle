@@ -51,8 +51,9 @@ auto toPtrVector(RelationInfoMap const& map, SeqOwnT RelationInfo::*member) {
     return ys;
 }
 
+namespace {
 template <typename A, typename SeqOwnT>
-auto eraseByIdentity(RelationInfoMap& map, SeqOwnT RelationInfo::*member, A const& elem) {
+auto erase(RelationInfoMap& map, SeqOwnT RelationInfo::*member, A const& elem) {
     auto it = map.find(getName(elem));
     if (it == map.end()) {
         assert(false &&
@@ -78,6 +79,7 @@ auto eraseByIdentity(RelationInfoMap& map, SeqOwnT RelationInfo::*member, A cons
 
     return true;
 }
+}  // namespace
 
 template <typename SeqOwnT>
 auto mapAll(RelationInfoMap& map, SeqOwnT RelationInfo::*member, const ast::NodeMapper& mapper) {
@@ -185,7 +187,7 @@ bool Program::removeRelation(QualifiedName const& name) {
 
 void Program::removeRelation(Relation const& r) {
     auto name = r.getQualifiedName();
-    eraseByIdentity(relations, &RelationInfo::decls, r);  // run just for assert/sancheck
+    erase(relations, &RelationInfo::decls, r);  // run just for assert/sancheck
     removeRelation(name);
 }
 
@@ -203,7 +205,7 @@ void Program::addClauses(VecOwn<Clause> clauses) {
 
 void Program::removeClause(const Clause& clause) {
     assert(clause_visit_in_progress == 0 && "Don't modify program clause collection mid-traversal");
-    eraseByIdentity(relations, &RelationInfo::clauses, clause);
+    erase(relations, &RelationInfo::clauses, clause);
 }
 
 void Program::removeClauses(span<Clause const* const> clauses) {
@@ -214,7 +216,7 @@ void Program::removeClauses(span<Clause const* const> clauses) {
 }
 
 void Program::removeDirective(const Directive& directive) {
-    eraseByIdentity(relations, &RelationInfo::directives, directive);
+    erase(relations, &RelationInfo::directives, directive);
 }
 
 std::vector<Component*> Program::getComponents() const {
