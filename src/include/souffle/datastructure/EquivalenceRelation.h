@@ -34,8 +34,8 @@
 #include <shared_mutex>
 #include <stdexcept>
 #include <tuple>
-#include <utility>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace souffle {
