@@ -56,7 +56,7 @@ public:
 protected:
     void print(std::ostream& os, int tabpos) const override {
         os << times(" ", tabpos);
-        os << "MERGE EXTEND " << getTargetRelation() << " WITH " << getSourceRelation();
+        os << "MERGE-EXTEND " << getTargetRelation() << " WITH " << getSourceRelation();
         os << std::endl;
     }
 };

@@ -35,6 +35,7 @@
 #include <stdexcept>
 #include <tuple>
 #include <utility>
+#include <unordered_set>
 #include <vector>
 
 namespace souffle {
@@ -139,7 +140,7 @@ public:
     void extendAndInsert(EquivalenceRelation<TupleType>& other) {
         if (other.size() == 0 && this->size() == 0) return;
 
-        std::set<value_type> repsCovered;
+        std::unordered_set<value_type> repsCovered;
 
         // This vector holds all of the elements of this equivalence relation
         // that aren't yet in other, which get inserted after extending this
