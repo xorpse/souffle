@@ -91,11 +91,11 @@ protected:
             *pptr() = c;
             pbump(1);
         }
-        const unsigned int toWrite = static_cast<unsigned int>(pptr() - pbase());
-        if (gzwrite(fileHandle, pbase(), toWrite) != toWrite) {
+        const int toWrite = static_cast<int>(pptr() - pbase());
+        if (gzwrite(fileHandle, pbase(), static_cast<unsigned int>(toWrite)) != toWrite) {
             return EOF;
         }
-        pbump(-(static_cast<int>(toWrite)));
+        pbump(-toWrite);
 
         return c;
     }
@@ -126,11 +126,11 @@ protected:
 
     int sync() override {
         if ((pptr() != nullptr) && pptr() > pbase()) {
-            const unsigned int toWrite = static_cast<unsigned int>(pptr() - pbase());
-            if (gzwrite(fileHandle, pbase(), toWrite) != toWrite) {
+            const int toWrite = static_cast<int>(pptr() - pbase());
+            if (gzwrite(fileHandle, pbase(), static_cast<unsigned int>(toWrite)) != toWrite) {
                 return -1;
             }
-            pbump(-(static_cast<int>(toWrite)));
+            pbump(-toWrite);
         }
         return 0;
     }

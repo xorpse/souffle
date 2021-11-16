@@ -1,5 +1,5 @@
 // Implementation of getopt_long for Windows.
-
+#pragma once
 #ifdef USE_CUSTOM_GETOPTLONG
 
 #include "GetOptLong.h"

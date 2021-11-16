@@ -767,6 +767,7 @@ int main(int argc, char** argv) {
             else {
                 std::ofstream os{sourceFilename};
                 synthesiser->generateCode(os, baseIdentifier, withSharedLibrary);
+                os.close();
             }
             if (Global::config().has("verbose")) {
                 auto synthesisEnd = std::chrono::high_resolution_clock::now();
@@ -801,7 +802,11 @@ int main(int argc, char** argv) {
 
             // run compiled C++ program if requested.
             if (must_execute) {
-                executeBinaryAndExit(baseFilename);
+                std::string binaryFilename = baseFilename;
+#if defined(_MSC_VER)
+                binaryFilename += ".exe";
+#endif
+                executeBinaryAndExit(binaryFilename);
             }
         }
     } catch (std::exception& e) {

@@ -5,7 +5,7 @@
 #define USE_CUSTOM_GETOPTLONG
 #endif
 
-#include "GetOptLong.cpp"
+#include "souffle/utility/GetOptLongImpl.h"
 
 namespace souffle::test {
 

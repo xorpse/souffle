@@ -8,7 +8,6 @@
 set(SOUFFLE_SOURCES
     FunctorOps.cpp
     Global.cpp
-    GetOptLong.cpp
     ast/Aggregator.cpp
     ast/AlgebraicDataType.cpp
     ast/AliasType.cpp
@@ -265,6 +264,8 @@ endif()
 if (SOUFFLE_CUSTOM_GETOPTLONG)
     target_compile_definitions(libsouffle
                                PUBLIC USE_CUSTOM_GETOPTLONG)
+    target_compile_definitions(compiled
+                               PUBLIC USE_CUSTOM_GETOPTLONG)
 endif()
 
 if (SOUFFLE_USE_CURSES)
@@ -286,6 +287,7 @@ if (SOUFFLE_USE_SQLITE)
     target_compile_definitions(compiled PUBLIC USE_SQLITE)
     target_link_libraries(libsouffle PUBLIC SQLite::SQLite3)
     target_link_libraries(compiled PUBLIC SQLite::SQLite3)
+    target_include_directories(compiled PUBLIC ${SQLite3_INCLUDE_DIRS})
 endif()
 
 if (SOUFFLE_USE_LIBFFI)
@@ -353,6 +355,7 @@ if (MSVC)
   target_compile_options(compiled PUBLIC /EHsc)
 
   target_compile_definitions(libsouffle PUBLIC USE_CUSTOM_GETOPTLONG)
+  target_compile_definitions(compiled PUBLIC USE_CUSTOM_GETOPTLONG)
 endif (MSVC)
 
 
@@ -444,6 +447,7 @@ set(SOUFFLE_COMPILED_CXX_COMPILER_ID ${CMAKE_CXX_COMPILER_ID})
 set(SOUFFLE_COMPILED_CXX_COMPILER_VERSION ${CMAKE_CXX_COMPILER_VERSION})
 set(SOUFFLE_COMPILED_CXX_STANDARD ${CMAKE_CXX17_STANDARD_COMPILE_OPTION})
 set(SOUFFLE_COMPILED_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+set(SOUFFLE_COMPILED_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS})
 set(SOUFFLE_COMPILED_RELEASE_CXX_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
 set(SOUFFLE_COMPILED_DEBUG_CXX_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
 get_target_property(SOUFFLE_COMPILED_DEFS compiled COMPILE_DEFINITIONS)
@@ -479,7 +483,7 @@ if (SOUFFLE_USE_CURSES)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  set(OUTNAME_FMT "-o%s")
+  set(OUTNAME_FMT "-o %s")
   set(EXE_EXTENSION "")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set(OUTNAME_FMT "/Fe:%s")
@@ -508,6 +512,7 @@ JSON_DATA_TEXT = '{
   \"includes\": \"${SOUFFLE_COMPILED_INCLUDES}\",
   \"std_flag\": \"${SOUFFLE_COMPILED_CXX_STANDARD}\",
   \"cxx_flags\": \"${SOUFFLE_COMPILED_CXX_FLAGS}\",
+  \"cxx_link_flags\": \"${SOUFFLE_COMPILED_CXX_LINK_FLAGS}\",
   \"release_cxx_flags\": \"${SOUFFLE_COMPILED_RELEASE_CXX_FLAGS}\",
   \"debug_cxx_flags\": \"${SOUFFLE_COMPILED_DEBUG_CXX_FLAGS}\",
   \"definitions\": \"${SOUFFLE_COMPILED_DEFINITIONS}\",

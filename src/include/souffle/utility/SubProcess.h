@@ -123,6 +123,13 @@ std::optional<detail::LinuxWaitStatus> execute(
     ::mbstowcs_s(&l, program_w.data(), program_w.size(), program.data(), program.size());
     program_w.resize(l - 1);
 
+    WCHAR FoundPath[PATH_MAX];
+    int64_t Found = (int64_t)FindExecutableW(program_w.c_str(), nullptr, FoundPath);
+    if (Found <= 32) {
+        std::cerr << "Cannot find executable '" << program << "'.\n";
+        return {};
+    }
+
     std::wstringstream args_w;
     args_w << program_w;
     for (const auto& arg : argv) {
@@ -143,7 +150,7 @@ std::optional<detail::LinuxWaitStatus> execute(
     envir += '\0';
 
     if (!CreateProcessW(
-                program_w.c_str(), args_w.str().data(), NULL, NULL, FALSE, 0, envir.data(), NULL, &si, &pi)) {
+                FoundPath, args_w.str().data(), NULL, NULL, FALSE, 0, /*envir.data()*/nullptr, NULL, &si, &pi)) {
         return {};
     }
 

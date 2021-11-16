@@ -30,7 +30,7 @@
 #include <utility>
 
 #ifdef USE_CUSTOM_GETOPTLONG
-#include "GetOptLong.h"
+#include "souffle/utility/GetOptLongImpl.h"
 #else
 #include <getopt.h>
 #endif
