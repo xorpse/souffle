@@ -75,7 +75,7 @@ bool ReduceExistentialsTransformer::transform(TranslationUnit& translationUnit) 
         if (ioType.isIO(relation)) {
             minimalIrreducibleRelations.insert(relation->getQualifiedName());
         }
-        for (Clause* clause : getClauses(program, *relation)) {
+        for (auto&& clause : program.getClauses(*relation)) {
             bool recursive = isRecursiveClause(*clause);
             visit(*clause, [&](const Atom& atom) {
                 if (atom.getQualifiedName() == clause->getHead()->getQualifiedName()) {
@@ -114,7 +114,7 @@ bool ReduceExistentialsTransformer::transform(TranslationUnit& translationUnit) 
     // All other relations are necessarily existential
     std::set<QualifiedName> existentialRelations;
     for (Relation* relation : program.getRelations()) {
-        if (!getClauses(program, *relation).empty() && relation->getArity() != 0 &&
+        if (!program.getClauses(*relation).empty() && relation->getArity() != 0 &&
                 irreducibleRelations.find(relation->getQualifiedName()) == irreducibleRelations.end()) {
             existentialRelations.insert(relation->getQualifiedName());
         }
@@ -122,7 +122,7 @@ bool ReduceExistentialsTransformer::transform(TranslationUnit& translationUnit) 
 
     // Reduce the existential relations
     for (QualifiedName relationName : existentialRelations) {
-        Relation* originalRelation = getRelation(program, relationName);
+        Relation* originalRelation = program.getRelation(relationName);
 
         std::stringstream newRelationName;
         newRelationName << "+?exists_" << relationName;
@@ -135,7 +135,7 @@ bool ReduceExistentialsTransformer::transform(TranslationUnit& translationUnit) 
         }
 
         // Keep all non-recursive clauses
-        for (Clause* clause : getClauses(program, *originalRelation)) {
+        for (auto&& clause : program.getClauses(*originalRelation)) {
             if (!isRecursiveClause(*clause)) {
                 auto newClause = mk<Clause>(mk<Atom>(newRelationName.str()), clone(clause->getBodyLiterals()),
                         // clone handles nullptr gracefully

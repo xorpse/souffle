@@ -13,21 +13,18 @@
  ***********************************************************************/
 
 #include "ast/transform/RemoveRedundantRelations.h"
-#include "ast/Relation.h"
+#include "ast/Program.h"
 #include "ast/TranslationUnit.h"
 #include "ast/analysis/RedundantRelations.h"
 #include "ast/utility/Utils.h"
-#include <set>
 
 namespace souffle::ast::transform {
 
 bool RemoveRedundantRelationsTransformer::transform(TranslationUnit& translationUnit) {
     bool changed = false;
     auto& redundantRelationsAnalysis = translationUnit.getAnalysis<analysis::RedundantRelationsAnalysis>();
-    std::set<QualifiedName> redundantRelations = redundantRelationsAnalysis.getRedundantRelations();
-    for (auto name : redundantRelations) {
-        removeRelation(translationUnit, name);
-        changed = true;
+    for (auto&& name : redundantRelationsAnalysis.getRedundantRelations()) {
+        changed |= translationUnit.getProgram().removeRelation(name);
     }
     return changed;
 }

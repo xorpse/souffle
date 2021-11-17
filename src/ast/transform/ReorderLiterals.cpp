@@ -85,9 +85,7 @@ bool ReorderLiteralsTransformer::transform(TranslationUnit& translationUnit) {
     }
 
     changed |= !clausesToRemove.empty();
-    for (auto* clause : clausesToRemove) {
-        program.removeClause(clause);
-    }
+    program.removeClauses(clausesToRemove);
 
     // --- profile-guided reordering ---
     if (Global::config().has("profile-use")) {
@@ -106,9 +104,7 @@ bool ReorderLiteralsTransformer::transform(TranslationUnit& translationUnit) {
         }
 
         changed |= !clausesToRemove.empty();
-        for (auto* clause : clausesToRemove) {
-            program.removeClause(clause);
-        }
+        program.removeClauses(clausesToRemove);
     }
 
     return changed;

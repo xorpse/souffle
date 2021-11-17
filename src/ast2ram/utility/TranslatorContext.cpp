@@ -23,7 +23,6 @@
 #include "ast/analysis/Functor.h"
 #include "ast/analysis/IOType.h"
 #include "ast/analysis/RecursiveClauses.h"
-#include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/RelationSchedule.h"
 #include "ast/analysis/SCCGraph.h"
 #include "ast/analysis/typesystem/PolymorphicObjects.h"
@@ -55,7 +54,6 @@ TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
     recursiveClauses = &tu.getAnalysis<ast::analysis::RecursiveClausesAnalysis>();
     sccGraph = &tu.getAnalysis<ast::analysis::SCCGraphAnalysis>();
     relationSchedule = &tu.getAnalysis<ast::analysis::RelationScheduleAnalysis>();
-    relationDetail = &tu.getAnalysis<ast::analysis::RelationDetailCacheAnalysis>();
     ioType = &tu.getAnalysis<ast::analysis::IOTypeAnalysis>();
     typeAnalysis = &tu.getAnalysis<ast::analysis::TypeAnalysis>();
     typeEnv = &tu.getAnalysis<ast::analysis::TypeEnvironmentAnalysis>().getTypeEnvironment();
@@ -65,7 +63,7 @@ TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
     // Set up clause nums
     for (const ast::Relation* rel : program->getRelations()) {
         std::size_t count = 1;
-        for (const ast::Clause* clause : relationDetail->getClauses(rel->getQualifiedName())) {
+        for (auto&& clause : program->getClauses(*rel)) {
             if (isFact(*clause)) {
                 clauseNums[clause] = 0;
             }
@@ -112,14 +110,14 @@ bool TranslatorContext::isRecursiveSCC(std::size_t scc) const {
 }
 
 std::vector<ast::Directive*> TranslatorContext::getStoreDirectives(const ast::QualifiedName& name) const {
-    return filter(getDirectives(*program, name), [&](const ast::Directive* dir) {
+    return filter(program->getDirectives(name), [&](const ast::Directive* dir) {
         return dir->getType() == ast::DirectiveType::printsize ||
                dir->getType() == ast::DirectiveType::output;
     });
 }
 
 std::vector<ast::Directive*> TranslatorContext::getLoadDirectives(const ast::QualifiedName& name) const {
-    return filter(getDirectives(*program, name),
+    return filter(program->getDirectives(name),
             [&](const ast::Directive* dir) { return dir->getType() == ast::DirectiveType::input; });
 }
 
@@ -130,10 +128,6 @@ bool TranslatorContext::hasSizeLimit(const ast::Relation* relation) const {
 std::size_t TranslatorContext::getSizeLimit(const ast::Relation* relation) const {
     assert(hasSizeLimit(relation) && "relation does not have a size limit");
     return ioType->getLimitSize(relation);
-}
-
-const ast::Relation* TranslatorContext::getAtomRelation(const ast::Atom* atom) const {
-    return ast::getAtomRelation(atom, program);
 }
 
 std::set<const ast::Relation*> TranslatorContext::getRelationsInSCC(std::size_t scc) const {
@@ -152,21 +146,13 @@ std::set<const ast::Relation*> TranslatorContext::getExpiredRelations(std::size_
     return relationSchedule->schedule().at(scc).expired();
 }
 
-std::vector<ast::Clause*> TranslatorContext::getClauses(const ast::QualifiedName& name) const {
-    return relationDetail->getClauses(name);
-}
-
 bool TranslatorContext::hasSubsumptiveClause(const ast::QualifiedName& name) const {
-    for (const auto* clause : getClauses(name)) {
+    for (const auto* clause : getProgram()->getClauses(name)) {
         if (isA<ast::SubsumptiveClause>(clause)) {
             return true;
         }
     }
     return false;
-}
-
-ast::Relation* TranslatorContext::getRelation(const ast::QualifiedName& name) const {
-    return relationDetail->getRelation(name);
 }
 
 TypeAttribute TranslatorContext::getFunctorReturnTypeAttribute(const ast::Functor& functor) const {

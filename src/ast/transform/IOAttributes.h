@@ -77,7 +77,7 @@ private:
             if (io->getType() == ast::DirectiveType::limitsize) {
                 continue;
             }
-            Relation* rel = getRelation(program, io->getQualifiedName());
+            Relation* rel = program.getRelation(*io);
             // Prepare type system information.
             std::vector<std::string> attributesParams;
 
@@ -110,7 +110,7 @@ private:
             if (io->hasParameter("attributeNames")) {
                 continue;
             }
-            Relation* rel = getRelation(program, io->getQualifiedName());
+            Relation* rel = program.getRelation(*io);
             std::string delimiter("\t");
             if (io->hasParameter("delimiter")) {
                 delimiter = io->getParameter("delimiter");
@@ -132,7 +132,7 @@ private:
         auto& typeEnv = translationUnit.getAnalysis<analysis::TypeEnvironmentAnalysis>().getTypeEnvironment();
 
         for (Directive* io : program.getDirectives()) {
-            Relation* rel = getRelation(program, io->getQualifiedName());
+            Relation* rel = program.getRelation(*io);
             // Prepare type system information.
             std::vector<std::string> attributesTypes;
 

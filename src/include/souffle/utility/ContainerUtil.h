@@ -230,6 +230,15 @@ bool equal_targets(const std::map<Key, Own<Value>>& a, const std::map<Key, Own<V
             a, b, [&comp](auto& a, auto& b) { return a.first == b.first && comp(a.second, b.second); });
 }
 
+/**
+ * A function testing whether two maps are equivalent using projected values.
+ */
+template <typename Key, typename Value, typename F>
+bool equal_targets_map(const std::map<Key, Value>& a, const std::map<Key, Value>& b, F&& comp) {
+    return equal_targets(
+            a, b, [&](auto& a, auto& b) { return a.first == b.first && comp(a.second, b.second); });
+}
+
 // -------------------------------------------------------------------------------
 //                             Checking Utilities
 // -------------------------------------------------------------------------------

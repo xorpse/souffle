@@ -23,6 +23,7 @@
 #include <cassert>
 #include <chrono>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <optional>
 #include <type_traits>
@@ -136,6 +137,14 @@ Own<A> clone(const A* node) {
 template <typename A>
 Own<A> clone(const Own<A>& node) {
     return clone(node.get());
+}
+
+template <typename K, typename V>
+auto clone(const std::map<K, V>& xs) {
+    std::map<K, decltype(clone(std::declval<const V&>()))> ys;
+    for (auto&& [k, v] : xs)
+        ys.insert({k, clone(v)});
+    return ys;
 }
 
 /**

@@ -59,7 +59,7 @@ TEST(Transformers, GroundTermPropagation) {
     Program& program = tu->getProgram();
 
     // check types in clauses
-    Clause* a = getClauses(program, "p")[0];
+    auto* a = program.getClauses("p")[0];
 
     EXPECT_EQ("p(a,b) :- \n   p(x,y),\n   r = [x,y],\n   s = r,\n   s = [w,v],\n   [w,v] = [a,b].",
             toString(*a));
@@ -90,7 +90,7 @@ TEST(Transformers, GroundTermPropagation2) {
     Program& program = tu->getProgram();
 
     // check types in clauses
-    Clause* a = getClauses(program, "p")[0];
+    auto* a = program.getClauses("p")[0];
 
     EXPECT_EQ("p(a,b) :- \n   p(x,y),\n   x = y,\n   x = a,\n   y = b.", toString(*a));
 
@@ -117,11 +117,11 @@ TEST(Transformers, ResolveGroundedAliases) {
     Program& program = tu->getProgram();
 
     EXPECT_EQ("p(a,b) :- \n   p(x,y),\n   r = [x,y],\n   s = r,\n   s = [w,v],\n   [w,v] = [a,b].",
-            toString(*getClauses(program, "p")[0]));
+            toString(*program.getClauses("p")[0]));
 
     mk<ResolveAliasesTransformer>()->apply(*tu);
 
-    EXPECT_EQ("p(x,y) :- \n   p(x,y).", toString(*getClauses(program, "p")[0]));
+    EXPECT_EQ("p(x,y) :- \n   p(x,y).", toString(*program.getClauses("p")[0]));
 }
 
 TEST(Transformers, ResolveAliasesWithTermsInAtoms) {
@@ -140,12 +140,12 @@ TEST(Transformers, ResolveAliasesWithTermsInAtoms) {
     Program& program = tu->getProgram();
 
     EXPECT_EQ("p(x,c) :- \n   p(x,b),\n   p(b,c),\n   c = (b+1),\n   x = (c+2).",
-            toString(*getClauses(program, "p")[0]));
+            toString(*program.getClauses("p")[0]));
 
     mk<ResolveAliasesTransformer>()->apply(*tu);
 
     EXPECT_EQ("p(x,c) :- \n   p(x,b),\n   p(b,c),\n   c = (b+1),\n   x = (c+2).",
-            toString(*getClauses(program, "p")[0]));
+            toString(*program.getClauses("p")[0]));
 }
 
 /**
@@ -267,9 +267,9 @@ TEST(Transformers, CheckClausalEquivalence) {
 
     // Resolve aliases to remove trivial equalities
     mk<ResolveAliasesTransformer>()->apply(*tu);
-    auto aClauses = getClauses(program, "A");
-    auto bClauses = getClauses(program, "B");
-    auto cClauses = getClauses(program, "C");
+    auto aClauses = program.getClauses("A");
+    auto bClauses = program.getClauses("B");
+    auto cClauses = program.getClauses("C");
 
     EXPECT_EQ(3, aClauses.size());
     EXPECT_EQ("A(0,0).", toString(*aClauses[0]));
@@ -309,9 +309,9 @@ TEST(Transformers, CheckClausalEquivalence) {
 
     // Make sure equivalent (and only equivalent) clauses are removed by the minimiser
     mk<MinimiseProgramTransformer>()->apply(*tu);
-    auto aMinClauses = getClauses(program, "A");
-    auto bMinClauses = getClauses(program, "B");
-    auto cMinClauses = getClauses(program, "C");
+    auto&& aMinClauses = program.getClauses("A");
+    auto&& bMinClauses = program.getClauses("B");
+    auto&& cMinClauses = program.getClauses("C");
 
     EXPECT_EQ(2, aMinClauses.size());
     EXPECT_EQ("A(0,0).", toString(*aMinClauses[0]));
@@ -368,13 +368,13 @@ TEST(Transformers, CheckAggregatorEquivalence) {
 
     // A, B, C, D should still be the relations
     EXPECT_EQ(4, program.getRelations().size());
-    EXPECT_NE(nullptr, getRelation(program, "A"));
-    EXPECT_NE(nullptr, getRelation(program, "B"));
-    EXPECT_NE(nullptr, getRelation(program, "C"));
-    EXPECT_NE(nullptr, getRelation(program, "D"));
+    EXPECT_NE(nullptr, program.getRelation("A"));
+    EXPECT_NE(nullptr, program.getRelation("B"));
+    EXPECT_NE(nullptr, program.getRelation("C"));
+    EXPECT_NE(nullptr, program.getRelation("D"));
 
     // D should now only have the two clauses non-equivalent clauses
-    const auto& dClauses = getClauses(program, "D");
+    auto&& dClauses = program.getClauses("D");
     EXPECT_EQ(2, dClauses.size());
     EXPECT_EQ(
             "D(X) :- \n   B(X),\n   X < max Y : { C(Y),B(Y),Y < 2 },\n   A(Z),\n   Z = sum A : { C(A),B(A),A "
@@ -418,31 +418,29 @@ TEST(Transformers, RemoveClauseRedundancies) {
             errorReport, debugReport);
 
     const auto& program = tu->getProgram();
-
-    // Invoking the `RemoveRelationCopiesTransformer` to create some extra redundancy
-    // In particular: The relation `c` will be replaced with `b` throughout, creating
-    // the clause b(x) :- b(x).
+    // Invoking the `RemoveRelationCopiesTransformer` should not create redundancy.
+    // In particular: Replacing relation `c` with `b` should not create a clause
+    // `b(x) :- b(x)` from `c(x) :- b(x)`.
     mk<RemoveRelationCopiesTransformer>()->apply(*tu);
-    EXPECT_EQ(nullptr, getRelation(program, "c"));
-    auto bIntermediateClauses = getClauses(program, "b");
-    EXPECT_EQ(2, bIntermediateClauses.size());
+    EXPECT_EQ(nullptr, program.getRelation("c"));
+    auto&& bIntermediateClauses = program.getClauses("b");
+    EXPECT_EQ(1, bIntermediateClauses.size());
     EXPECT_EQ("b(1).", toString(*bIntermediateClauses[0]));
-    EXPECT_EQ("b(X) :- \n   b(X).", toString(*bIntermediateClauses[1]));
 
     // Attempt to minimise the program
     mk<MinimiseProgramTransformer>()->apply(*tu);
     EXPECT_EQ(3, program.getRelations().size());
 
-    auto aClauses = getClauses(program, "a");
+    auto&& aClauses = program.getClauses("a");
     EXPECT_EQ(2, aClauses.size());
     EXPECT_EQ("a(0).", toString(*aClauses[0]));
     EXPECT_EQ("a(X) :- \n   b(X).", toString(*aClauses[1]));
 
-    auto bClauses = getClauses(program, "b");
+    auto&& bClauses = program.getClauses("b");
     EXPECT_EQ(1, bClauses.size());
     EXPECT_EQ("b(1).", toString(*bClauses[0]));
 
-    auto qClauses = getClauses(program, "q");
+    auto&& qClauses = program.getClauses("q");
     EXPECT_EQ(1, qClauses.size());
     EXPECT_EQ("q(X) :- \n   a(X).", toString(*qClauses[0]));
 }
@@ -499,7 +497,7 @@ TEST(Transformers, MagicSetComprehensive) {
         for (const auto* rel : program.getRelations()) {
             std::multiset<std::string> clauseStrings;
             auto relName = rel->getQualifiedName();
-            for (const auto* clause : getClauses(program, rel->getQualifiedName())) {
+            for (auto&& clause : program.getClauses(*rel)) {
                 clauseStrings.insert(toString(*clause));
             }
             result[toString(relName)] = clauseStrings;

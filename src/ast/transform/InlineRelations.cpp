@@ -97,7 +97,7 @@ bool normaliseInlinedHeads(Program& program) {
             continue;
         }
 
-        for (Clause* clause : getClauses(program, *rel)) {
+        for (auto&& clause : program.getClauses(*rel)) {
             // Set up the new clause with an empty body and no arguments in the head
             auto newClause = mk<Clause>(clause->getHead()->getQualifiedName(), clause->getSrcLoc());
             newClause->setBodyLiterals(clone(clause->getBodyLiterals()));
@@ -136,7 +136,7 @@ bool normaliseInlinedHeads(Program& program) {
 
             // Replace the old clause with this one
             program.addClause(std::move(newClause));
-            program.removeClause(clause);
+            program.removeClause(*clause);
             changed = true;
         }
     }
@@ -204,16 +204,12 @@ bool nameInlinedUnderscores(Program& program) {
  * Checks if a given clause contains an atom that should be inlined.
  */
 bool containsInlinedAtom(const Program& program, const Clause& clause) {
-    bool foundInlinedAtom = false;
-
-    visit(clause, [&](const Atom& atom) {
-        Relation* rel = getRelation(program, atom.getQualifiedName());
-        if (rel->hasQualifier(RelationQualifier::INLINE)) {
-            foundInlinedAtom = true;
-        }
-    });
-
-    return foundInlinedAtom;
+    auto hasInlinedAtom = [&](const Atom& atom) {
+        Relation* rel = program.getRelation(atom);
+        return rel->hasQualifier(RelationQualifier::INLINE);
+    };
+    return visitExists(clause.getHead()->getArguments(), hasInlinedAtom) ||
+           visitExists(clause.getBodyLiterals(), hasInlinedAtom);
 }
 
 /**
@@ -306,7 +302,7 @@ NullableVector<std::pair<Argument*, Argument*>> unifyAtoms(Atom* first, Atom* se
  * If unification is unsuccessful, the vector of literals is marked as invalid.
  */
 std::pair<NullableVector<Literal*>, std::vector<BinaryConstraint*>> inlineBodyLiterals(
-        Atom* atom, Clause* atomInlineClause) {
+        Atom& atom, Clause& atomInlineClause) {
     bool changed = false;
     std::vector<Literal*> addedLits;
     std::vector<BinaryConstraint*> constraints;
@@ -341,7 +337,7 @@ std::pair<NullableVector<Literal*>, std::vector<BinaryConstraint*>> inlineBodyLi
     inlineCount++;
 
     // Get the constraints needed to unify th366Ge two atoms
-    NullableVector<std::pair<Argument*, Argument*>> res = unifyAtoms(atomClause->getHead(), atom);
+    auto res = unifyAtoms(atomClause->getHead(), &atom);
     if (res.isValid()) {
         changed = true;
         for (std::pair<Argument*, Argument*> pair : res.getVector()) {
@@ -453,12 +449,9 @@ std::vector<std::vector<Literal*>> formNegatedLiterals(Program& program, Atom* a
     std::vector<std::vector<BinaryConstraint*>> addedConstraints;
 
     // Go through every possible clause associated with the given atom
-    for (Clause* inClause : getClauses(program, *getRelation(program, atom->getQualifiedName()))) {
+    for (auto&& inClause : program.getClauses(atom->getQualifiedName())) {
         // Form the replacement clause by inlining based on the current clause
-        std::pair<NullableVector<Literal*>, std::vector<BinaryConstraint*>> inlineResult =
-                inlineBodyLiterals(atom, inClause);
-        NullableVector<Literal*> replacementBodyLiterals = inlineResult.first;
-        std::vector<BinaryConstraint*> currConstraints = inlineResult.second;
+        auto [replacementBodyLiterals, currConstraints] = inlineBodyLiterals(*atom, *inClause);
 
         if (!replacementBodyLiterals.isValid()) {
             // Failed to unify, so just move on
@@ -801,7 +794,7 @@ NullableVector<std::vector<Literal*>> getInlinedLiteral(Program& program, Litera
 
     if (auto* atom = as<Atom>(lit)) {
         // Check if this atom is meant to be inlined
-        Relation* rel = getRelation(program, atom->getQualifiedName());
+        Relation* rel = program.getRelation(*atom);
 
         if (rel->hasQualifier(RelationQualifier::INLINE)) {
             // We found an atom in the clause that needs to be inlined!
@@ -810,12 +803,9 @@ NullableVector<std::vector<Literal*>> getInlinedLiteral(Program& program, Litera
 
             // N new clauses should be formed, where N is the number of clauses
             // associated with the inlined relation
-            for (Clause* inClause : getClauses(program, *rel)) {
+            for (auto&& inClause : program.getClauses(*rel)) {
                 // Form the replacement clause
-                std::pair<NullableVector<Literal*>, std::vector<BinaryConstraint*>> inlineResult =
-                        inlineBodyLiterals(atom, inClause);
-                NullableVector<Literal*> replacementBodyLiterals = inlineResult.first;
-                std::vector<BinaryConstraint*> currConstraints = inlineResult.second;
+                auto [replacementBodyLiterals, currConstraints] = inlineBodyLiterals(*atom, *inClause);
 
                 if (!replacementBodyLiterals.isValid()) {
                     // Failed to unify the atoms! We can skip this one...
@@ -1046,7 +1036,6 @@ bool InlineRelationsTransformer::transform(TranslationUnit& translationUnit) {
     // terminate.
     bool clausesChanged = true;
     while (clausesChanged) {
-        VecOwn<Clause> clausesToDelete;
         clausesChanged = false;
 
         // Go through each relation in the program and check if we need to inline any of its clauses
@@ -1059,28 +1048,21 @@ bool InlineRelationsTransformer::transform(TranslationUnit& translationUnit) {
             }
 
             // Go through the relation's clauses and try inlining them
-            for (Clause* clause : getClauses(program, *rel)) {
+            for (auto&& clause : program.getClauses(*rel)) {
                 if (containsInlinedAtom(program, *clause)) {
                     // Generate the inlined versions of this clause - the clause will be replaced by these
-                    std::vector<Clause*> newClauses = getInlinedClause(program, *clause);
-
-                    // Replace the clause with these equivalent versions
-                    clausesToDelete.push_back(clone(clause));
-                    for (Clause* replacementClause : newClauses) {
+                    for (auto* replacementClause : getInlinedClause(program, *clause)) {
                         program.addClause(Own<Clause>(replacementClause));
                     }
+
+                    // Remove old clause
+                    program.removeClause(*clause);
 
                     // We've changed the program this iteration
                     clausesChanged = true;
                     changed = true;
                 }
             }
-        }
-
-        // Delete all clauses that were replaced
-        for (const auto& clause : clausesToDelete) {
-            program.removeClause(clause.get());
-            changed = true;
         }
     }
 

@@ -98,7 +98,7 @@ Own<ram::Statement> ClauseTranslator::translateRecursiveClause(
         const ast::Clause& clause, const std::set<const ast::Relation*>& scc, std::size_t version) {
     // Update version config
     sccAtoms = filter(ast::getBodyLiterals<ast::Atom>(clause),
-            [&](const ast::Atom* atom) { return contains(scc, context.getAtomRelation(atom)); });
+            [&](auto* atom) { return contains(scc, context.getProgram()->getRelation(*atom)); });
     this->version = version;
 
     // Translate the resultant clause as would be done normally
@@ -622,7 +622,7 @@ Own<ram::Operation> ClauseTranslator::addConstantConstraints(
 
 Own<ram::Condition> ClauseTranslator::getFunctionalDependencies(const ast::Clause& clause) const {
     const auto* head = clause.getHead();
-    const auto* relation = context.getRelation(head->getQualifiedName());
+    const auto* relation = context.getProgram()->getRelation(clause);
     if (relation->getFunctionalDependencies().empty()) {
         return nullptr;
     }

@@ -61,7 +61,7 @@ bool PartitionBodyLiteralsTransformer::transform(TranslationUnit& translationUni
      */
 
     // Store clauses to add and remove after analysing the program
-    std::vector<Clause*> clausesToAdd;
+    VecOwn<Clause> clausesToAdd;
     std::vector<const Clause*> clausesToRemove;
 
     // The transformation is local to each rule, so can visit each independently
@@ -142,7 +142,7 @@ bool PartitionBodyLiteralsTransformer::transform(TranslationUnit& translationUni
 
         // Need to extract some disconnected lits!
         changed = true;
-        std::vector<Atom*> replacementAtoms;
+        VecOwn<Literal> replacementAtoms;
 
         // Construct the new rules
         for (const std::set<std::string>& component : connectedComponents) {
@@ -175,18 +175,16 @@ bool PartitionBodyLiteralsTransformer::transform(TranslationUnit& translationUni
             }
 
             // Create the atom to replace all these literals
-            replacementAtoms.push_back(new Atom(newRelationName));
+            replacementAtoms.push_back(mk<Atom>(newRelationName));
 
             // Add the clause to the program
-            // FIXME: tomp - this should be managed
-            clausesToAdd.push_back(disconnectedClause.release());
+            clausesToAdd.push_back(std::move(disconnectedClause));
         }
 
         // Create the replacement clause
         // a(x) <- b(x), c(y), d(z). --> a(x) <- newrel0(), newrel1(), b(x).
-        auto replacementClause = mk<Clause>(clone(clause.getHead()),
-                VecOwn<Literal>(replacementAtoms.begin(), replacementAtoms.end()), nullptr,
-                clause.getSrcLoc());
+        auto replacementClause =
+                mk<Clause>(clone(clause.getHead()), std::move(replacementAtoms), nullptr, clause.getSrcLoc());
 
         // Add the remaining body literals to the clause
         for (Literal* bodyLiteral : clause.getBodyLiterals()) {
@@ -205,19 +203,12 @@ bool PartitionBodyLiteralsTransformer::transform(TranslationUnit& translationUni
 
         // Replace the old clause with the new one
         clausesToRemove.push_back(&clause);
-        // FIXME: tomp - this should be managed
-        clausesToAdd.push_back(replacementClause.release());
+        clausesToAdd.push_back(std::move(replacementClause));
     });
 
     // Adjust the program
-    for (Clause* newClause : clausesToAdd) {
-        program.addClause(Own<Clause>(newClause));
-    }
-
-    for (const Clause* oldClause : clausesToRemove) {
-        program.removeClause(oldClause);
-    }
-
+    program.addClauses(std::move(clausesToAdd));
+    program.removeClauses(clausesToRemove);
     return changed;
 }
 

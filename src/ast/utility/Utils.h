@@ -17,6 +17,7 @@
 #pragma once
 
 #include "FunctorOps.h"
+#include "ast/QualifiedName.h"
 #include "souffle/utility/DynamicCasting.h"
 #include "souffle/utility/Types.h"
 #include <cstddef>
@@ -57,23 +58,11 @@ class TypeAnalysis;
 // the specific instanciations would be available at runtime.
 std::string pprint(const Node& node);
 
-/**
- * Obtains a list of all variables referenced within the AST rooted
- * by the given root node.
- *
- * @param root the root of the AST to be searched
- * @return a list of all variables referenced within
- */
-std::vector<const Variable*> getVariables(const Node& root);
-
-/**
- * Obtains a list of all records referenced within the AST rooted
- * by the given root node.
- *
- * @param root the root of the AST to be searched
- * @return a list of all records referenced within
- */
-std::vector<const RecordInit*> getRecords(const Node& root);
+// Helpers for uniformly accessing the name of a atom, clause, directive, or relation.
+QualifiedName getName(const Atom&);
+QualifiedName getName(const Clause&);
+QualifiedName getName(const Directive&);
+QualifiedName getName(const Relation&);
 
 /**
  * Returns literals of a particular type in the body of a clause.
@@ -93,33 +82,6 @@ std::vector<T*> getBodyLiterals(const C& clause) {
 }
 
 /**
- * Returns a vector of clauses in the program describing the relation with the given name.
- *
- * @param program the program
- * @param name the name of the relation to search for
- * @return vector of clauses describing the relation with the given name
- */
-std::vector<Clause*> getClauses(const Program& program, const QualifiedName& relationName);
-
-/**
- * Returns a vector of clauses in the program describing the given relation.
- *
- * @param program the program
- * @param rel the relation to search for
- * @return vector of clauses describing the given relation
- */
-std::vector<Clause*> getClauses(const Program& program, const Relation& rel);
-
-/**
- * Returns the relation with the given name in the program.
- *
- * @param program the program
- * @param name the name of the relation to search for
- * @return the relation if it exists; nullptr otherwise
- */
-Relation* getRelation(const Program& program, const QualifiedName& name);
-
-/**
  * Returns the functor declaration with the given name in the program.
  *
  * @param program the program
@@ -127,63 +89,6 @@ Relation* getRelation(const Program& program, const QualifiedName& name);
  * @return the functor declaration if it exists; nullptr otherwise
  */
 FunctorDeclaration* getFunctorDeclaration(const Program& program, const std::string& name);
-
-/**
- * Returns the set of directives associated with a given relation in a program.
- *
- * @param program the program
- * @param name the name of the relation to search for
- * @return a vector of all associated directives
- */
-std::vector<Directive*> getDirectives(const Program& program, const QualifiedName& relationName);
-
-/**
- * Remove relation and all its clauses from the program.
- *
- * @param tu the translation unit
- * @param name the name of the relation to delete
- */
-void removeRelation(TranslationUnit& tu, const QualifiedName& name);
-
-/**
- * Removes the set of clauses with the given relation name.
- *
- * @param tu the translation unit
- * @param name the name of the relation to search for
- */
-void removeRelationClauses(TranslationUnit& tu, const QualifiedName& name);
-
-/**
- * Removes the set of IOs with the given relation name.
- *
- * @param tu the translation unit
- * @param name the name of the relation to search for
- */
-void removeRelationIOs(TranslationUnit& tu, const QualifiedName& name);
-
-/**
- * Returns the relation referenced by the given atom.
- * @param atom the atom
- * @param program the program containing the relations
- * @return relation referenced by the atom
- */
-const Relation* getAtomRelation(const Atom* atom, const Program* program);
-
-/**
- * Returns the relation referenced by the head of the given clause.
- * @param clause the clause
- * @param program the program containing the relations
- * @return relation referenced by the clause head
- */
-const Relation* getHeadRelation(const Clause* clause, const Program* program);
-
-/**
- * Returns the relations referenced in the body of the given clause.
- * @param clause the clause
- * @param program the program containing the relations
- * @return relation referenced in the clause body
- */
-std::set<const Relation*> getBodyRelations(const Clause* clause, const Program* program);
 
 /**
  * Returns whether the given relation has any clauses which contain a negation of a specific relation.
@@ -270,11 +175,29 @@ void negateConstraintInPlace(Constraint& constraint);
 IntrinsicFunctors validOverloads(const analysis::TypeAnalysis&, const IntrinsicFunctor&);
 
 /**
- * Rename all atoms hat appear in a node to a given name.
- * @param node node to alter the children of
+ * Rename all atoms that appear the clause node to a given name (including the clause's head).
+ * @param clause the clause in question (must *not* be owned by a program)
  * @param oldToNew map from old atom names to new atom names
  * @return true if the node was changed
  */
-bool renameAtoms(Node& node, const std::map<QualifiedName, QualifiedName>& oldToNew);
+bool renameAtoms(Own<Clause>& clause, const std::map<QualifiedName, QualifiedName>& oldToNew);
+
+/**
+ * Rename all atoms in the program to a given name, including clause heads.
+ * @param program the program upon which to act
+ * @param oldToNew map from old atom names to new atom names
+ * @return true if the node was changed
+ */
+bool renameAtoms(Program& program, const std::map<QualifiedName, QualifiedName>& oldToNew);
+
+/**
+ * Rename all atoms that appear in a given relation's clauses (including the clause's head).
+ * @param program the program upon which to act
+ * @param relation the relation to modify
+ * @param oldToNew map from old atom names to new atom names
+ * @return true if the node was changed
+ */
+bool renameAtoms(Program& program, QualifiedName const& relation,
+        const std::map<QualifiedName, QualifiedName>& oldToNew);
 
 }  // namespace souffle::ast

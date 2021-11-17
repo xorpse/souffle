@@ -69,9 +69,7 @@ Node::NodeVec Clause::getChildren() const {
 }
 
 void Clause::print(std::ostream& os) const {
-    if (head != nullptr) {
-        os << *head;
-    }
+    os << *head;
     if (!bodyLiterals.empty()) {
         os << " :- \n   " << join(bodyLiterals, ",\n   ");
     }

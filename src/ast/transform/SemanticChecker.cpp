@@ -159,7 +159,7 @@ SemanticCheckerImpl::SemanticCheckerImpl(TranslationUnit& tu) : tu(tu) {
                     }
 
                     // update suppressed qualifier if the relation is found
-                    if (Relation* rel = getRelation(program, relid)) {
+                    if (Relation* rel = program.getRelation(relid)) {
                         rel->addQualifier(RelationQualifier::SUPPRESSED);
                     }
                 }
@@ -237,7 +237,7 @@ SemanticCheckerImpl::SemanticCheckerImpl(TranslationUnit& tu) : tu(tu) {
 
 void SemanticCheckerImpl::checkAtom(const Atom& atom) {
     // check existence of relation
-    auto* r = getRelation(program, atom.getQualifiedName());
+    auto* r = program.getRelation(atom);
     if (r == nullptr) {
         report.addError("Undefined relation " + toString(atom.getQualifiedName()), atom.getSrcLoc());
         return;
@@ -430,7 +430,7 @@ void SemanticCheckerImpl::checkFact(const Clause& fact) {
         return;  // checked by clause
     }
 
-    Relation* rel = getRelation(program, head->getQualifiedName());
+    Relation* rel = program.getRelation(*head);
     if (rel == nullptr) {
         return;  // checked by clause
     }
@@ -648,7 +648,7 @@ void SemanticCheckerImpl::checkRelation(const Relation& relation) {
     checkRelationFunctionalDependencies(relation);
 
     // check whether this relation is empty
-    if (getClauses(program, relation).empty() && !ioTypes.isInput(&relation) &&
+    if (program.getClauses(relation).empty() && !ioTypes.isInput(&relation) &&
             !relation.hasQualifier(RelationQualifier::SUPPRESSED)) {
         report.addWarning("No rules/facts defined for relation " + toString(relation.getQualifiedName()),
                 relation.getSrcLoc());
@@ -657,8 +657,7 @@ void SemanticCheckerImpl::checkRelation(const Relation& relation) {
 
 void SemanticCheckerImpl::checkIO() {
     auto checkIO = [&](const Directive* directive) {
-        auto* r = getRelation(program, directive->getQualifiedName());
-        if (r == nullptr) {
+        if (!program.getRelation(*directive)) {
             report.addError(
                     "Undefined relation " + toString(directive->getQualifiedName()), directive->getSrcLoc());
         }
@@ -859,7 +858,7 @@ void SemanticCheckerImpl::checkInlining() {
 
     // If the result contains anything, then a cycle was found
     if (!result.empty()) {
-        Relation* cycleOrigin = getRelation(program, result[result.size() - 1]);
+        Relation* cycleOrigin = program.getRelation(result[result.size() - 1]);
 
         // Construct the string representation of the cycle
         std::stringstream cycle;
@@ -881,7 +880,7 @@ void SemanticCheckerImpl::checkInlining() {
 
     // Check if an inlined literal ever takes in a $
     visit(program, [&](const Atom& atom) {
-        Relation* associatedRelation = getRelation(program, atom.getQualifiedName());
+        Relation* associatedRelation = program.getRelation(atom);
         if (associatedRelation != nullptr && isInline(associatedRelation)) {
             visit(atom, [&](const Argument& arg) {
                 if (isA<Counter>(&arg)) {
@@ -894,14 +893,11 @@ void SemanticCheckerImpl::checkInlining() {
 
     // Check if an inlined clause ever contains a $
     for (const Relation* rel : inlinedRelations) {
-        for (Clause* clause : getClauses(program, *rel)) {
-            visit(*clause, [&](const Argument& arg) {
-                if (isA<Counter>(&arg)) {
-                    report.addError(
-                            "Cannot inline clause containing a counter argument '$'", arg.getSrcLoc());
-                }
-            });
-        }
+        visit(program.getClauses(*rel), [&](const Argument& arg) {
+            if (isA<Counter>(&arg)) {
+                report.addError("Cannot inline clause containing a counter argument '$'", arg.getSrcLoc());
+            }
+        });
     }
 
     // Check 3:
@@ -913,7 +909,7 @@ void SemanticCheckerImpl::checkInlining() {
     RelationSet nonNegatableRelations;
     for (const Relation* rel : inlinedRelations) {
         bool foundNonNegatable = false;
-        for (const Clause* clause : getClauses(program, *rel)) {
+        for (auto&& clause : program.getClauses(*rel)) {
             // Get the variables in the head
             std::set<std::string> headVariables;
             visit(*clause->getHead(), [&](const ast::Variable& var) { headVariables.insert(var.getName()); });
@@ -941,7 +937,7 @@ void SemanticCheckerImpl::checkInlining() {
 
     // Check that these relations never appear negated
     visit(program, [&](const Negation& neg) {
-        Relation* associatedRelation = getRelation(program, neg.getAtom()->getQualifiedName());
+        Relation* associatedRelation = program.getRelation(*neg.getAtom());
         if (associatedRelation != nullptr &&
                 nonNegatableRelations.find(associatedRelation) != nonNegatableRelations.end()) {
             report.addError(
@@ -963,7 +959,7 @@ void SemanticCheckerImpl::checkInlining() {
 
     visitFrontier(program, [&](const Aggregator& aggr) {
         visit(aggr, [&](const Atom& subatom) {
-            const Relation* rel = getRelation(program, subatom.getQualifiedName());
+            const Relation* rel = program.getRelation(subatom);
             if (rel != nullptr && isInline(rel)) {
                 report.addError("Cannot inline relations that appear in aggregator", subatom.getSrcLoc());
             }
@@ -1011,7 +1007,7 @@ void SemanticCheckerImpl::checkInlining() {
     // Perform the check
     visit(program, [&](const Negation& negation) {
         const Atom* associatedAtom = negation.getAtom();
-        const Relation* associatedRelation = getRelation(program, associatedAtom->getQualifiedName());
+        const Relation* associatedRelation = program.getRelation(*associatedAtom);
         if (associatedRelation != nullptr && isInline(associatedRelation)) {
             std::pair<bool, SrcLocation> atomStatus = checkInvalidUnderscore(*associatedAtom);
             if (atomStatus.first) {

@@ -81,9 +81,9 @@ TEST(Program, Parse) {
     EXPECT_EQ(1, prog.getTypes().size());
     EXPECT_EQ(2, prog.getRelations().size());
 
-    EXPECT_TRUE(getRelation(prog, "e"));
-    EXPECT_TRUE(getRelation(prog, "r"));
-    EXPECT_FALSE(getRelation(prog, "n"));
+    EXPECT_TRUE(prog.getRelation("e"));
+    EXPECT_TRUE(prog.getRelation("r"));
+    EXPECT_FALSE(prog.getRelation("n"));
 }
 
 #define TESTASTCLONEANDEQUAL(SUBTYPE, DL)                                       \
@@ -194,7 +194,9 @@ TESTASTCLONEANDEQUAL(RelationCopies,
             )");
 
 /** test removeClause, addRelation and removeRelation */
-TEST(Program, RemoveClause) {
+
+// should *not* remove anything because `removeClause` operates by identity, not equality
+TEST(Program, RemoveClauseByEquality) {
     auto atom = mk<Atom>("B");
     atom->addArgument(mk<Variable>("x"));
     auto sum = mk<Aggregator>(AggregateOp::SUM, mk<Variable>("x"));
@@ -203,9 +205,26 @@ TEST(Program, RemoveClause) {
     sum->setBody(std::move(body));
 
     auto tu1 = makeATU(".decl A,B(x:number) \n A(sum x : B(x)).");
-    auto clause = makeClause("A", std::move(sum));
+    auto clauses_pre = tu1->getProgram().getClauses();
+    EXPECT_EQ(1, clauses_pre.size());
+    auto* clause_1 = clauses_pre[0];
 
-    tu1->getProgram().removeClause(clause.get());
+    auto clause = makeClause("A", std::move(sum));
+    auto& clause_2 = *clause;
+    tu1->getProgram().addClause(std::move(clause));
+    tu1->getProgram().removeClause(clause_2);  // remove the second (and equal-value) clause
+
+    auto&& clauses_post = tu1->getProgram().getClauses();
+    EXPECT_EQ(1, clauses_post.size());
+    EXPECT_EQ(clause_1, clauses_post[0]);
+}
+
+TEST(Program, RemoveClauseByIdentity) {
+    auto tu1 = makeATU(".decl A,B(x:number) \n A(sum x : B(x)).");
+    auto clauses = tu1->getProgram().getClauses("A");
+    EXPECT_EQ(1, clauses.size());
+    tu1->getProgram().removeClause(*clauses[0]);
+
     auto tu2 = makeATU(".decl A,B(x:number)");
     EXPECT_EQ(tu1->getProgram(), tu2->getProgram());
 }
@@ -223,7 +242,7 @@ TEST(Program, AppendRelation) {
 
 TEST(Program, RemoveRelation) {
     auto tu1 = makeATU(".decl A,B,C(x:number)");
-    removeRelation(*tu1, "B");
+    EXPECT_TRUE(tu1->getProgram().removeRelation("B"));
     auto tu2 = makeATU(".decl A,C(x:number)");
     EXPECT_EQ(tu1->getProgram(), tu2->getProgram());
 }

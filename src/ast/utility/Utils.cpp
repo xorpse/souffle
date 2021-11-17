@@ -33,7 +33,6 @@
 #include "ast/Relation.h"
 #include "ast/TranslationUnit.h"
 #include "ast/analysis/Functor.h"
-#include "ast/analysis/RelationDetailCache.h"
 #include "ast/analysis/typesystem/Type.h"
 #include "ast/analysis/typesystem/TypeSystem.h"
 
@@ -54,109 +53,33 @@ std::string pprint(const Node& node) {
     return toString(node);
 }
 
-std::vector<const Variable*> getVariables(const Node& root) {
-    // simply collect the list of all variables by visiting all variables
-    std::vector<const Variable*> vars;
-    visit(root, [&](const Variable& var) { vars.push_back(&var); });
-    return vars;
+QualifiedName getName(const Atom& x) {
+    return x.getQualifiedName();
 }
 
-std::vector<const RecordInit*> getRecords(const Node& root) {
-    // simply collect the list of all records by visiting all records
-    std::vector<const RecordInit*> recs;
-    visit(root, [&](const RecordInit& rec) { recs.push_back(&rec); });
-    return recs;
+QualifiedName getName(const Clause& x) {
+    return x.getHead()->getQualifiedName();
 }
 
-std::vector<Clause*> getClauses(const Program& program, const QualifiedName& relationName) {
-    std::vector<Clause*> clauses;
-    for (Clause* clause : program.getClauses()) {
-        if (clause->getHead()->getQualifiedName() == relationName) {
-            clauses.push_back(clause);
-        }
-    }
-    return clauses;
+QualifiedName getName(const Directive& x) {
+    return x.getQualifiedName();
 }
 
-std::vector<Clause*> getClauses(const Program& program, const Relation& rel) {
-    return getClauses(program, rel.getQualifiedName());
-}
-
-std::vector<Directive*> getDirectives(const Program& program, const QualifiedName& name) {
-    std::vector<Directive*> directives;
-    for (Directive* dir : program.getDirectives()) {
-        if (dir->getQualifiedName() == name) {
-            directives.push_back(dir);
-        }
-    }
-    return directives;
-}
-
-Relation* getRelation(const Program& program, const QualifiedName& name) {
-    return getIf(program.getRelations(), [&](const Relation* r) { return r->getQualifiedName() == name; });
+QualifiedName getName(const Relation& x) {
+    return x.getQualifiedName();
 }
 
 FunctorDeclaration* getFunctorDeclaration(const Program& program, const std::string& name) {
+    // FIXME: O(n). This is awful.
     return getIf(program.getFunctorDeclarations(),
             [&](const FunctorDeclaration* r) { return r->getName() == name; });
 }
 
-void removeRelation(TranslationUnit& tu, const QualifiedName& name) {
-    Program& program = tu.getProgram();
-    if (getRelation(program, name) != nullptr) {
-        removeRelationClauses(tu, name);
-        removeRelationIOs(tu, name);
-        program.removeRelationDecl(name);
-    }
-}
-
-void removeRelationClauses(TranslationUnit& tu, const QualifiedName& name) {
-    Program& program = tu.getProgram();
-    const auto& relDetail = tu.getAnalysis<analysis::RelationDetailCacheAnalysis>();
-
-    // Make copies of the clauses to avoid use-after-delete for equivalent clauses
-    std::set<Own<Clause>> clausesToRemove;
-    for (const auto* clause : relDetail.getClauses(name)) {
-        clausesToRemove.insert(clone(clause));
-    }
-    for (const auto& clause : clausesToRemove) {
-        program.removeClause(clause.get());
-    }
-
-    tu.invalidateAnalyses();
-}
-
-void removeRelationIOs(TranslationUnit& tu, const QualifiedName& name) {
-    Program& program = tu.getProgram();
-    for (const auto* directive : getDirectives(program, name)) {
-        program.removeDirective(directive);
-    }
-}
-
-const Relation* getAtomRelation(const Atom* atom, const Program* program) {
-    return getRelation(*program, atom->getQualifiedName());
-}
-
-const Relation* getHeadRelation(const Clause* clause, const Program* program) {
-    return getAtomRelation(clause->getHead(), program);
-}
-
-std::set<const Relation*> getBodyRelations(const Clause* clause, const Program* program) {
-    std::set<const Relation*> bodyRelations;
-    for (const auto& lit : clause->getBodyLiterals()) {
-        visit(*lit, [&](const Atom& atom) { bodyRelations.insert(getAtomRelation(&atom, program)); });
-    }
-    for (const auto& arg : clause->getHead()->getArguments()) {
-        visit(*arg, [&](const Atom& atom) { bodyRelations.insert(getAtomRelation(&atom, program)); });
-    }
-    return bodyRelations;
-}
-
 bool hasClauseWithNegatedRelation(const Relation* relation, const Relation* negRelation,
         const Program* program, const Literal*& foundLiteral) {
-    for (const Clause* cl : getClauses(*program, *relation)) {
+    for (auto&& cl : program->getClauses(*relation)) {
         for (const auto* neg : getBodyLiterals<Negation>(*cl)) {
-            if (negRelation == getAtomRelation(neg->getAtom(), program)) {
+            if (negRelation == program->getRelation(*neg->getAtom())) {
                 foundLiteral = neg;
                 return true;
             }
@@ -167,21 +90,20 @@ bool hasClauseWithNegatedRelation(const Relation* relation, const Relation* negR
 
 bool hasClauseWithAggregatedRelation(const Relation* relation, const Relation* aggRelation,
         const Program* program, const Literal*& foundLiteral) {
-    for (const Clause* cl : getClauses(*program, *relation)) {
-        bool hasAgg = false;
-        visit(*cl, [&](const Aggregator& cur) {
-            visit(cur, [&](const Atom& atom) {
-                if (aggRelation == getAtomRelation(&atom, program)) {
-                    foundLiteral = &atom;
-                    hasAgg = true;
-                }
-            });
+    bool found_in_agg = false;
+    visitFrontier(program->getClauses(*relation), [&](const Aggregator& cur) {
+        found_in_agg = found_in_agg || visitExists(cur, [&](const Atom& atom) {
+            if (aggRelation == program->getRelation(atom)) {
+                foundLiteral = &atom;
+                return true;
+            }
+
+            return false;
         });
-        if (hasAgg) {
-            return true;
-        }
-    }
-    return false;
+        return found_in_agg;
+    });
+
+    return found_in_agg;
 }
 
 bool isRecursiveClause(const Clause& clause) {
@@ -296,27 +218,67 @@ void negateConstraintInPlace(Constraint& constraint) {
     }
 }
 
-bool renameAtoms(Node& node, const std::map<QualifiedName, QualifiedName>& oldToNew) {
-    struct rename_atoms : public NodeMapper {
-        mutable bool changed{false};
-        const std::map<QualifiedName, QualifiedName>& oldToNew;
-        rename_atoms(const std::map<QualifiedName, QualifiedName>& oldToNew) : oldToNew(oldToNew) {}
-        Own<Node> operator()(Own<Node> node) const override {
-            node->apply(*this);
-            if (auto* atom = as<Atom>(node)) {
-                if (contains(oldToNew, atom->getQualifiedName())) {
-                    auto renamedAtom = clone(atom);
-                    renamedAtom->setQualifiedName(oldToNew.at(atom->getQualifiedName()));
-                    changed = true;
-                    return renamedAtom;
-                }
-            }
-            return node;
+bool renameAtoms(Own<Clause>& clause, const std::map<QualifiedName, QualifiedName>& oldToNew) {
+    bool changed = false;
+    visit(clause, [&](Atom& atom) {
+        auto it = oldToNew.find(atom.getQualifiedName());
+        if (it != oldToNew.end()) {
+            atom.setQualifiedName(it->second);
+            changed = true;
         }
-    };
-    rename_atoms update(oldToNew);
-    node.apply(update);
-    return update.changed;
+    });
+    return changed;
 }
 
+bool renameAtoms(Program& program, const std::map<QualifiedName, QualifiedName>& oldToNew) {
+    bool changed = false;
+
+    // Can't rename clause head atoms while the clause is attached w/o invalidating by-name lookup tables.
+    // -> Detach clauses w/ renamed head atoms. Reinsert after atom rename.
+    VecOwn<Clause> renamed_clauses;
+    for ([[maybe_unused]] auto&& [name, info] : program.getRelationInfo()) {
+        bool clauses_changed = false;
+        for (auto&& cl : info.clauses) {
+            assert(getName(*cl) == name && "sanity check - name lookup tables corrupted");
+            clauses_changed |= renameAtoms(cl, oldToNew);
+        }
+
+        if (contains(oldToNew, name)) {
+            assert((clauses_changed || info.clauses.empty()) && "clause heads should have been renamed");
+            renamed_clauses = concat(std::move(renamed_clauses), std::move(info.clauses));
+            info.clauses = VecOwn<Clause>{};
+        }
+
+        changed |= clauses_changed;
+    }
+
+    // Reattach clauses after doing renames to prevent transitive renames.
+    // This function only does a single renaming 'step'.
+    for (auto& cl : renamed_clauses)
+        program.addClause(std::move(cl));
+
+    return changed;
+}
+
+bool renameAtoms(Program& program, QualifiedName const& relation,
+        const std::map<QualifiedName, QualifiedName>& oldToNew) {
+    auto info = program.getRelationInfo(relation);
+    if (!info) return false;
+
+    bool changed = false;
+    for (auto& cl : info->clauses)
+        changed |= renameAtoms(cl, oldToNew);
+
+    // if clause heads were renamed -> detach/re-insert clauses to maintain by-name lookup tables
+    if (contains(oldToNew, relation)) {
+        assert(changed && "clause head atoms should have been renamed");
+
+        for (auto& cl : info->clauses)
+            program.addClause(std::move(cl));  // steal & reinsert under new name
+
+        info->clauses.clear();
+    }
+
+    return changed;
+}
 }  // namespace souffle::ast

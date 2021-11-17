@@ -101,7 +101,7 @@ Own<ram::Statement> UnitTranslator::generateNonRecursiveRelation(const ast::Rela
     std::string mainRelation = getConcreteRelationName(rel.getQualifiedName());
 
     // Iterate over all non-recursive clauses that belong to the relation
-    for (const auto* clause : context->getClauses(rel.getQualifiedName())) {
+    for (auto&& clause : context->getProgram()->getClauses(rel)) {
         // Skip recursive and subsumptive clauses
         if (context->isRecursiveClause(clause) || isA<ast::SubsumptiveClause>(clause)) {
             continue;
@@ -260,8 +260,8 @@ Own<ram::Statement> UnitTranslator::translateRecursiveClauses(
     assert(contains(scc, rel) && "relation should belong to scc");
     VecOwn<ram::Statement> code;
 
-    // Translate each recursive clause
-    for (const auto* clause : context->getClauses(rel->getQualifiedName())) {
+    // Translate each recursive clasue
+    for (auto&& clause : context->getProgram()->getClauses(*rel)) {
         // Skip non-recursive and subsumptive clauses
         if (!context->isRecursiveClause(clause) || isA<ast::SubsumptiveClause>(clause)) {
             continue;
@@ -296,7 +296,7 @@ Own<ram::Statement> UnitTranslator::translateSubsumptiveRecursiveClauses(
     appendStmt(code, mk<ram::Clear>(deltaRelation));
 
     // compute reject set using the subsumptive clauses
-    for (const auto* clause : context->getClauses(rel->getQualifiedName())) {
+    for (const auto* clause : context->getProgram()->getClauses(*rel)) {
         // Skip non-subsumptive clauses
         if (!isA<ast::SubsumptiveClause>(clause)) {
             continue;
@@ -319,7 +319,7 @@ Own<ram::Statement> UnitTranslator::translateSubsumptiveRecursiveClauses(
     appendStmt(code, mk<ram::Clear>(newRelation));
 
     // compute delete set,  remove tuples from R, and clear delete set
-    for (const auto* clause : context->getClauses(rel->getQualifiedName())) {
+    for (const auto* clause : context->getProgram()->getClauses(*rel)) {
         // Skip non-subsumptive clauses
         if (!isA<ast::SubsumptiveClause>(clause)) {
             continue;
@@ -346,7 +346,7 @@ std::vector<ast::Atom*> UnitTranslator::getSccAtoms(
             auto dominatedHeadAtom = dynamic_cast<const ast::Atom*>(body[0]);
             if (atom == dominatedHeadAtom) return false;
         }
-        return contains(scc, context->getAtomRelation(atom));
+        return contains(scc, context->getProgram()->getRelation(*atom));
     });
     return sccAtoms;
 }
@@ -387,7 +387,7 @@ Own<ram::Statement> UnitTranslator::generateNonRecursiveDelete(
         std::string deleteRelation = getDeleteRelationName(rel->getQualifiedName());
 
         // Compute subsumptive deletions for non-recursive rules
-        for (auto clause : context->getClauses(rel->getQualifiedName())) {
+        for (auto clause : context->getProgram()->getClauses(*rel)) {
             if (!isA<ast::SubsumptiveClause>(clause)) {
                 continue;
             }

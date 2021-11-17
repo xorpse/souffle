@@ -59,7 +59,6 @@ set(SOUFFLE_SOURCES
     ast/analysis/ProfileUse.cpp
     ast/analysis/RecursiveClauses.cpp
     ast/analysis/RedundantRelations.cpp
-    ast/analysis/RelationDetailCache.cpp
     ast/analysis/RelationSchedule.cpp
     ast/analysis/SCCGraph.cpp
     ast/analysis/TopologicallySortedSCCGraph.cpp

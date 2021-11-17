@@ -23,7 +23,6 @@
 #include "ast/Program.h"
 #include "ast/Relation.h"
 #include "ast/TranslationUnit.h"
-#include "ast/analysis/RelationDetailCache.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
 #include "souffle/utility/StreamUtil.h"
@@ -49,18 +48,17 @@ void RecursiveClausesAnalysis::print(std::ostream& os) const {
 
 bool RecursiveClausesAnalysis::computeIsRecursive(
         const Clause& clause, const TranslationUnit& translationUnit) const {
-    const auto& relationDetail = translationUnit.getAnalysis<RelationDetailCacheAnalysis>();
     const Program& program = translationUnit.getProgram();
 
     // we want to reach the atom of the head through the body
-    const Relation* trg = getHeadRelation(&clause, &program);
+    const Relation* trg = program.getRelation(clause);
 
     std::set<const Relation*> reached;
     std::vector<const Relation*> worklist;
 
     // set up start list
     for (const auto* cur : getBodyLiterals<Atom>(clause)) {
-        auto rel = relationDetail.getRelation(cur->getQualifiedName());
+        auto rel = program.getRelation(*cur);
         if (rel == trg) {
             return true;
         }
@@ -84,9 +82,9 @@ bool RecursiveClausesAnalysis::computeIsRecursive(
         }
 
         // check all atoms in the relations
-        for (const Clause* cl : relationDetail.getClauses(cur)) {
+        for (auto&& cl : program.getClauses(*cur)) {
             for (const Atom* at : getBodyLiterals<Atom>(*cl)) {
-                auto rel = relationDetail.getRelation(at->getQualifiedName());
+                auto rel = program.getRelation(*at);
                 if (rel == trg) {
                     return true;
                 }

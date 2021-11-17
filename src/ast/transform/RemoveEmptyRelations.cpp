@@ -35,28 +35,25 @@ namespace souffle::ast::transform {
 
 bool RemoveEmptyRelationsTransformer::removeEmptyRelations(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
+    auto& ioTypes = translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
+
+    std::set<QualifiedName> atoms_in_aggs;
+    visitFrontier(program, [&](Aggregator& agg) {
+        visit(agg, [&](Atom& atom) { atoms_in_aggs.insert(atom.getQualifiedName()); });
+        return true;
+    });
+
     std::set<QualifiedName> emptyRelations;
     bool changed = false;
     for (auto rel : program.getRelations()) {
-        auto& ioTypes = translationUnit.getAnalysis<analysis::IOTypeAnalysis>();
-        if (!getClauses(program, *rel).empty() || ioTypes.isInput(rel)) {
-            continue;
-        }
+        if (ioTypes.isInput(rel)) continue;
+        if (!program.getClauses(*rel).empty()) continue;
+
         emptyRelations.insert(rel->getQualifiedName());
 
-        bool usedInAggregate = false;
-        visit(program, [&](const Aggregator& agg) {
-            for (const auto lit : agg.getBodyLiterals()) {
-                visit(*lit, [&](const Atom& atom) {
-                    if (getAtomRelation(&atom, &program) == rel) {
-                        usedInAggregate = true;
-                    }
-                });
-            }
-        });
-
+        bool usedInAggregate = contains(atoms_in_aggs, rel->getQualifiedName());
         if (!usedInAggregate && !ioTypes.isOutput(rel)) {
-            removeRelation(translationUnit, rel->getQualifiedName());
+            program.removeRelation(*rel);
             changed = true;
         }
     }
@@ -85,7 +82,7 @@ bool RemoveEmptyRelationsTransformer::removeEmptyRelationUses(
         for (Literal* lit : cl->getBodyLiterals()) {
             if (auto* arg = as<Atom>(lit)) {
                 if (arg->getQualifiedName() == emptyRelationName) {
-                    program.removeClause(cl);
+                    program.removeClause(*cl);
                     removed = true;
                     changed = true;
                     break;
@@ -121,7 +118,7 @@ bool RemoveEmptyRelationsTransformer::removeEmptyRelationUses(
                     }
                 }
 
-                program.removeClause(cl);
+                program.removeClause(*cl);
                 program.addClause(std::move(res));
                 changed = true;
             }

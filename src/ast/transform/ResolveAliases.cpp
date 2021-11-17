@@ -503,7 +503,7 @@ bool ResolveAliasesTransformer::transform(TranslationUnit& translationUnit) {
         const auto& qualifiers = rel.getQualifiers();
         // Don't resolve clauses of inlined relations
         if (qualifiers.count(RelationQualifier::INLINE) == 0) {
-            for (const auto& clause : getClauses(program, rel)) {
+            for (auto&& clause : program.getClauses(rel)) {
                 clauses.push_back(clause);
             }
         }
@@ -525,7 +525,7 @@ bool ResolveAliasesTransformer::transform(TranslationUnit& translationUnit) {
         // swap if changed
         if (*normalised != *clause) {
             changed = true;
-            program.removeClause(clause);
+            program.removeClause(*clause);
             program.addClause(std::move(normalised));
         }
     }

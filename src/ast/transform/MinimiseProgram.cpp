@@ -264,7 +264,8 @@ bool MinimiseProgramTransformer::reduceLocallyEquivalentClauses(TranslationUnit&
     for (Relation* rel : program.getRelations()) {
         std::vector<std::vector<Clause*>> equivalenceClasses;
 
-        for (Clause* clause : getClauses(program, *rel)) {
+        for (auto&& cl : program.getClauses(*rel)) {
+            auto* clause = &*cl;
             bool added = false;
 
             for (std::vector<Clause*>& eqClass : equivalenceClasses) {
@@ -288,9 +289,7 @@ bool MinimiseProgramTransformer::reduceLocallyEquivalentClauses(TranslationUnit&
     }
 
     // remove non-representative clauses
-    for (auto clause : clausesToDelete) {
-        program.removeClause(clause);
-    }
+    program.removeClauses(clausesToDelete);
 
     // changed iff any clauses were deleted
     return !clausesToDelete.empty();
@@ -306,14 +305,13 @@ bool MinimiseProgramTransformer::reduceSingletonRelations(TranslationUnit& trans
     // Find all singleton relations to consider
     std::vector<Clause*> singletonRelationClauses;
     for (Relation* rel : program.getRelations()) {
-        if (!ioTypes.isIO(rel) && getClauses(program, *rel).size() == 1) {
-            Clause* clause = getClauses(program, *rel)[0];
-            singletonRelationClauses.push_back(clause);
+        if (ioTypes.isIO(rel)) continue;
+
+        auto clauses = program.getClauses(*rel);
+        if (clauses.size() == 1) {
+            singletonRelationClauses.push_back(&*clauses[0]);
         }
     }
-
-    // Keep track of clauses found to be redundant
-    std::set<const Clause*> redundantClauses;
 
     // Keep track of canonical relation name for each redundant clause
     std::map<QualifiedName, QualifiedName> canonicalName;
@@ -321,10 +319,8 @@ bool MinimiseProgramTransformer::reduceSingletonRelations(TranslationUnit& trans
     // Check pairwise equivalence of each singleton relation
     for (std::size_t i = 0; i < singletonRelationClauses.size(); i++) {
         const auto* first = singletonRelationClauses[i];
-        if (redundantClauses.find(first) != redundantClauses.end()) {
-            // Already found to be redundant, no need to check
-            continue;
-        }
+        // an earlier clause may have been found to be bijective with this one. no need to reprocess it.
+        if (contains(canonicalName, ast::getName(*first))) continue;
 
         for (std::size_t j = i + 1; j < singletonRelationClauses.size(); j++) {
             const auto* second = singletonRelationClauses[j];
@@ -332,50 +328,19 @@ bool MinimiseProgramTransformer::reduceSingletonRelations(TranslationUnit& trans
             // Note: Bijective-equivalence check does not care about the head relation name
             const auto& normedFirst = normalisations.getNormalisation(first);
             const auto& normedSecond = normalisations.getNormalisation(second);
-            if (areBijectivelyEquivalent(normedFirst, normedSecond)) {
-                QualifiedName firstName = first->getHead()->getQualifiedName();
-                QualifiedName secondName = second->getHead()->getQualifiedName();
-                if (areEquivalentRelations(
-                            getRelation(program, firstName), getRelation(program, secondName))) {
-                    redundantClauses.insert(second);
-                    canonicalName.insert(std::pair(secondName, firstName));
-                }
+            if (areBijectivelyEquivalent(normedFirst, normedSecond) &&
+                    areEquivalentRelations(program.getRelation(*first), program.getRelation(*second))) {
+                canonicalName.insert({ast::getName(*second), ast::getName(*first)});
             }
         }
     }
 
     // Remove redundant relation definitions
-    for (const auto* clause : redundantClauses) {
-        auto relName = clause->getHead()->getQualifiedName();
-        assert(getRelation(program, relName) && "relation does not exist in program");
-        removeRelation(translationUnit, relName);
-    }
+    for (auto&& [name, _] : canonicalName)
+        program.removeRelation(name);
 
     // Replace each redundant relation appearance with its canonical name
-    struct replaceRedundantRelations : public NodeMapper {
-        const std::map<QualifiedName, QualifiedName>& canonicalName;
-
-        replaceRedundantRelations(const std::map<QualifiedName, QualifiedName>& canonicalName)
-                : canonicalName(canonicalName) {}
-
-        Own<Node> operator()(Own<Node> node) const override {
-            // Remove appearances from children nodes
-            node->apply(*this);
-
-            if (auto* atom = as<Atom>(node)) {
-                auto pos = canonicalName.find(atom->getQualifiedName());
-                if (pos != canonicalName.end()) {
-                    auto newAtom = clone(atom);
-                    newAtom->setQualifiedName(pos->second);
-                    return newAtom;
-                }
-            }
-
-            return node;
-        }
-    };
-    replaceRedundantRelations update(canonicalName);
-    program.apply(update);
+    renameAtoms(program, canonicalName);
 
     // Program was changed iff a relation was replaced
     return !canonicalName.empty();
@@ -396,26 +361,24 @@ bool MinimiseProgramTransformer::removeRedundantClauses(TranslationUnit& transla
         return false;
     };
 
-    std::set<Own<Clause>> clausesToRemove;
-    for (const auto* clause : program.getClauses()) {
+    bool changed = false;
+    for (auto* clause : program.getClauses()) {
         if (isRedundant(clause)) {
-            clausesToRemove.insert(clone(clause));
+            program.removeClause(*clause);
+            changed = true;
         }
     }
 
-    for (auto& clause : clausesToRemove) {
-        program.removeClause(clause.get());
-    }
-    return !clausesToRemove.empty();
+    return changed;
 }
 
 bool MinimiseProgramTransformer::reduceClauseBodies(TranslationUnit& translationUnit) {
     Program& program = translationUnit.getProgram();
-    std::set<Own<Clause>> clausesToAdd;
-    std::set<Own<Clause>> clausesToRemove;
 
-    for (const auto* clause : program.getClauses()) {
+    bool changed = false;
+    for (auto* clause : program.getClauses()) {
         auto bodyLiterals = clause->getBodyLiterals();
+        // TODO: This is n^2. Add AST hashing and use a hash-set.
         std::set<std::size_t> redundantPositions;
         for (std::size_t i = 0; i < bodyLiterals.size(); i++) {
             for (std::size_t j = 0; j < i; j++) {
@@ -427,25 +390,19 @@ bool MinimiseProgramTransformer::reduceClauseBodies(TranslationUnit& translation
         }
 
         if (!redundantPositions.empty()) {
-            auto minimisedClause = mk<Clause>(clone(clause->getHead()));
+            VecOwn<Literal> lits;
             for (std::size_t i = 0; i < bodyLiterals.size(); i++) {
                 if (!contains(redundantPositions, i)) {
-                    minimisedClause->addToBody(clone(bodyLiterals[i]));
+                    lits.push_back(clone(bodyLiterals[i]));
                 }
             }
-            clausesToAdd.insert(std::move(minimisedClause));
-            clausesToRemove.insert(clone(clause));
+
+            clause->setBodyLiterals(std::move(lits));
+            changed = true;
         }
     }
 
-    for (auto& clause : clausesToRemove) {
-        program.removeClause(clause.get());
-    }
-    for (auto& clause : clausesToAdd) {
-        program.addClause(clone(clause));
-    }
-
-    return !clausesToAdd.empty();
+    return changed;
 }
 
 bool MinimiseProgramTransformer::transform(TranslationUnit& translationUnit) {

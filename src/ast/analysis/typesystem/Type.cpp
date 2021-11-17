@@ -552,7 +552,7 @@ void TypeAnnotationPrinter::print_(type_identity<Atom>, const Atom& atom) {
     auto name = atom.getQualifiedName();
     os << name << "(";
     auto args = atom.getArguments();
-    auto rel = getAtomRelation(&atom, &program);
+    auto rel = program.getRelation(atom);
     auto atts = rel->getAttributes();
 
     std::size_t i = 0;
