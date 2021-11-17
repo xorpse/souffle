@@ -79,7 +79,9 @@ cmd << conf['includes']
 cmd << conf['compile_options']
 cmd << conf['link_options']
 
-#STDOUT.puts cmd.join(" ")
+if verbose
+  STDOUT.puts cmd.join(" ")
+end
 
 FileUtils.rm(exepath) if File.exist?(exepath)
 out,err,status = Open3.capture3(cmd.join(" "))

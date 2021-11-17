@@ -30,18 +30,12 @@
 #include <utility>
 
 #ifdef _WIN32
+#define NOMINMAX
 #define NOGDI
 #include <fcntl.h>
 #include <io.h>
 #include <stdlib.h>
 #include <windows.h>
-
-/**
- * Windows headers define these and they interfere with the standard library
- * functions.
- */
-#undef min
-#undef max
 
 /**
  * On windows, the following gcc builtins are missing.

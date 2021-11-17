@@ -363,7 +363,7 @@ Own<ram::Operation> ClauseTranslator::addVariableIntroductions(
             if (!context.isADTBranchSimple(adt)) {
                 // for non-simple ADTs (arity > 1), we introduced two
                 // nesting levels
-                i--;
+                p--;
             }
         } else {
             fatal("Unsupported AST node for creation of scan-level!");

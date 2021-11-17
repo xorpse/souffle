@@ -36,6 +36,7 @@
 #ifndef _WIN32
 #include <unistd.h>
 #else
+#define NOMINMAX
 #define NOGDI
 #include <fcntl.h>
 #include <io.h>

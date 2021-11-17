@@ -1098,7 +1098,16 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 out << "auto part = range.partition();\n";
                 out << "#pragma omp for reduction(" << op << ":" << sharedVariable << ")\n";
                 // iterate over each part
-                out << "for (auto it = part.begin(); it < part.end(); ++it) {\n";
+                out << R"cpp(
+                   #if defined _OPENMP && _OPENMP < 200805
+                           auto count = std::distance(part.begin(), part.end());
+                           auto base = part.begin();
+                           for(int index  = 0; index < count; index++) {
+                               auto it = base + index;
+                   #else
+                           for(auto it = part.begin(); it < part.end(); ++it) {
+                   #endif
+                   )cpp";
                 // iterate over tuples in each part
                 out << "for (const auto& env" << identifier << ": *it) {\n";
             }
@@ -1452,7 +1461,16 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             // pragma statement
             out << "#pragma omp for reduction(" << op << ":" << sharedVariable << ")\n";
             // iterate over each part
-            out << "for (auto it = part.begin(); it < part.end(); ++it) {\n";
+            out << R"cpp(
+                   #if defined _OPENMP && _OPENMP < 200805
+                           auto count = std::distance(part.begin(), part.end());
+                           auto base = part.begin();
+                           for(int index  = 0; index < count; index++) {
+                               auto it = base + index;
+                   #else
+                           for(auto it = part.begin(); it < part.end(); ++it) {
+                   #endif
+                   )cpp";
             // iterate over tuples in each part
             out << "for (const auto& env" << identifier << ": *it) {\n";
 

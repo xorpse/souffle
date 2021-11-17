@@ -25,6 +25,7 @@
 #include <type_traits>
 
 #ifdef _MSC_VER
+#define NOMINMAX
 #include <windows.h>
 #else
 #include <sys/wait.h>

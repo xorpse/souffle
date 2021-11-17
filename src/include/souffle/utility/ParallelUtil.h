@@ -50,6 +50,7 @@ constexpr std::size_t hardware_destructive_interference_size = 2 * sizeof(max_al
 #define pthread_yield sched_yield
 #elif defined _MSC_VER
 #include <thread>
+#define NOMINMAX
 #include <windows.h>
 #define pthread_yield std::this_thread::yield
 #endif
