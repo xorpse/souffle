@@ -253,8 +253,8 @@ Own<ram::Operation> ClauseTranslator::createInsertion(const ast::Clause& clause)
     return mk<ram::Insert>(headRelationName, std::move(values));
 }
 
-Own<ram::Operation> ClauseTranslator::addAtomScan(
-        Own<ram::Operation> op, const ast::Atom* atom, const ast::Clause& clause, std::size_t curLevel) const {
+Own<ram::Operation> ClauseTranslator::addAtomScan(Own<ram::Operation> op, const ast::Atom* atom,
+        const ast::Clause& clause, std::size_t curLevel) const {
     const ast::Atom* head = clause.getHead();
 
     // add constraints
@@ -348,7 +348,7 @@ Own<ram::Operation> ClauseTranslator::addAdtUnpack(
 
 Own<ram::Operation> ClauseTranslator::addVariableIntroductions(
         const ast::Clause& clause, Own<ram::Operation> op) {
-    for ( std::size_t p = operators.size(); p > 0; p--) {
+    for (std::size_t p = operators.size(); p > 0; p--) {
         std::size_t i = p - 1;
         const auto* curOp = operators.at(i);
         if (const auto* atom = as<ast::Atom>(curOp)) {
@@ -372,8 +372,8 @@ Own<ram::Operation> ClauseTranslator::addVariableIntroductions(
     return op;
 }
 
-Own<ram::Operation> ClauseTranslator::instantiateAggregator(
-        Own<ram::Operation> op, const ast::Clause& clause, const ast::Aggregator* agg, std::size_t curLevel) const {
+Own<ram::Operation> ClauseTranslator::instantiateAggregator(Own<ram::Operation> op, const ast::Clause& clause,
+        const ast::Aggregator* agg, std::size_t curLevel) const {
     auto addAggEqCondition = [&](Own<ram::Condition> aggr, Own<ram::Expression> value, std::size_t pos) {
         if (isUndefValue(value.get())) return aggr;
 
@@ -720,7 +720,8 @@ std::size_t ClauseTranslator::addGeneratorLevel(const ast::Argument* arg) {
     return generatorLevel;
 }
 
-void ClauseTranslator::indexNodeArguments(std::size_t nodeLevel, const std::vector<ast::Argument*>& nodeArgs) {
+void ClauseTranslator::indexNodeArguments(
+        std::size_t nodeLevel, const std::vector<ast::Argument*>& nodeArgs) {
     for (std::size_t i = 0; i < nodeArgs.size(); i++) {
         const auto& arg = nodeArgs.at(i);
 

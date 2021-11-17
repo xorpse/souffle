@@ -227,7 +227,8 @@ inline std::string pathJoin(const std::string& first, const std::string& second)
  * relative to the directory given by @ base. A path here refers a
  * colon-separated list of directories.
  */
-inline std::optional<std::string> findTool(const std::string& tool, const std::string& base, const std::string& path) {
+inline std::optional<std::string> findTool(
+        const std::string& tool, const std::string& base, const std::string& path) {
     std::filesystem::path dir(dirName(base));
     std::stringstream sstr(path);
     std::string sub;
@@ -235,7 +236,7 @@ inline std::optional<std::string> findTool(const std::string& tool, const std::s
     while (std::getline(sstr, sub, ':')) {
         auto subpath = (dir / sub / tool);
         if (std::filesystem::exists(subpath)) {
-          return absPath(subpath.string());
+            return absPath(subpath.string());
         }
     }
     return {};

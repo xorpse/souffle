@@ -150,8 +150,8 @@ std::optional<detail::LinuxWaitStatus> execute(
     }
     envir += '\0';
 
-    if (!CreateProcessW(
-                FoundPath, args_w.str().data(), NULL, NULL, FALSE, 0, /*envir.data()*/nullptr, NULL, &si, &pi)) {
+    if (!CreateProcessW(FoundPath, args_w.str().data(), NULL, NULL, FALSE, 0, /*envir.data()*/ nullptr, NULL,
+                &si, &pi)) {
         return {};
     }
 
