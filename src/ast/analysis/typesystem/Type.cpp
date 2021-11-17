@@ -733,10 +733,12 @@ void TypeAnnotationPrinter::print_(type_identity<Aggregator>, const Aggregator& 
     auto bodyLiterals = agg.getBodyLiterals();
     os << baseOperator << " ";
     auto targetExpr = agg.getTargetExpression();
-    auto tySet = argumentTypes.find(targetExpr)->second;
-    assert(tySet.size() == 1);
-    auto ty = tySet.begin();
-    branchOnArgument(targetExpr, *ty);
+    if (targetExpr /* the target expression can be null */) {
+        auto tySet = argumentTypes.find(targetExpr)->second;
+        assert(tySet.size() == 1);
+        auto ty = tySet.begin();
+        branchOnArgument(targetExpr, *ty);
+    }
     os << " : { ";
     printBodyLiterals(bodyLiterals, "        ");
     os << " }";
