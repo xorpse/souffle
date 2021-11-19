@@ -513,10 +513,10 @@ public:
             case TypeAttribute::Unsigned: return getType("__unsignedConstant");
             case TypeAttribute::Float: return getType("__floatConstant");
             case TypeAttribute::Symbol: return getType("__symbolConstant");
-            case TypeAttribute::Record: break;
-            case TypeAttribute::ADT: break;
+            case TypeAttribute::Record: return getType("__numberConstant");
+            case TypeAttribute::ADT: return getType("__numberConstant");
         }
-        fatal("There is no constant record type");
+        fatal("Unhandled type");
     }
 
     bool isPrimitiveType(const QualifiedName& identifier) const {
