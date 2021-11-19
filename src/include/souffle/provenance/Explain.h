@@ -519,7 +519,7 @@ private:
         }
         werase(queryWindow);
         wrefresh(queryWindow);
-        mvwprintw(queryWindow, 1, 0, prompt.c_str());
+        mvwprintw(queryWindow, 1, 0, "%s", prompt.c_str());
     }
 
     /* Print a tree */
@@ -532,7 +532,7 @@ private:
             tree->place(0, 0);
             ScreenBuffer screenBuffer(tree->getWidth(), tree->getHeight());
             tree->render(screenBuffer);
-            wprintw(treePad, screenBuffer.getString().c_str());
+            wprintw(treePad, "%s", screenBuffer.getString().c_str());
         } else {
             if (ExplainConfig::getExplainConfig().outputStream == nullptr) {
                 std::stringstream ss;
@@ -542,7 +542,7 @@ private:
                 prov.printRulesJSON(ss);
                 ss << "}\n";
 
-                wprintw(treePad, ss.str().c_str());
+                wprintw(treePad, "%s", ss.str().c_str());
             } else {
                 std::ostream* output = ExplainConfig::getExplainConfig().outputStream.get();
                 *output << "{ \"proof\":\n";
@@ -559,13 +559,13 @@ private:
         if (!isatty(fileno(stdin))) {
             return;
         }
-        wprintw(treePad, info.c_str());
+        wprintw(treePad, "%s", info.c_str());
         prefresh(treePad, 0, 0, 0, 0, maxy - 3, maxx - 1);
     }
 
     /* Print an error, such as a wrong command */
     void printError(const std::string& error) override {
-        wprintw(treePad, error.c_str());
+        wprintw(treePad, "%s", error.c_str());
         prefresh(treePad, 0, 0, 0, 0, maxy - 3, maxx - 1);
     }
 
