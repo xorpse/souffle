@@ -177,7 +177,7 @@ public:
                 }
             }
             if (NextMaybeUnassignedSlot == END) {
-                NextMaybeUnassignedSlot = This->NextSlot;
+                NextMaybeUnassignedSlot = This->NextSlot.load(std::memory_order_acquire);
                 NextMaybeUnassignedHandle = NONE;
             }
         }
@@ -230,7 +230,7 @@ public:
         Slots = std::make_unique<const value_type*[]>(InitialCapacity);
         Handles = std::make_unique<Handle[]>(HandleCount);
         NextSlot = (ReserveFirst ? 1 : 0);
-        MaxSlotBeforeGrow = InitialCapacity - 1;
+        SlotCount = InitialCapacity;
     }
 
     /// Initialize the datastructure with a capacity of 8 elements.
@@ -287,7 +287,7 @@ public:
     /// Assumption: the index is mapped in the datastructure.
     const Key& fetch(const lane_id H, const index_type Idx) const {
         const auto Lane = Lanes.guard(H);
-        assert(Idx <= MaxSlotBeforeGrow);
+        assert(Idx < SlotCount.load(std::memory_order_relaxed));
         return Slots[Idx]->first;
     }
 
@@ -298,34 +298,61 @@ public:
     template <class... Args>
     std::pair<index_type, bool> findOrInsert(const lane_id H, Args&&... Xs) {
         const auto Lane = Lanes.guard(H);
-        slot_type Slot = Handles[H].NextSlot;
         node_type Node;
 
-        if (Slot == NONE) {
-            // reserve a slot in the index, be it for now or later usage.
-            Slot = NextSlot++;
-            Node = Mapping.node(static_cast<index_type>(Slot));
+        slot_type Slot = Handles[H].NextSlot;
 
-            Handles[H].NextSlot = Slot;
-            Handles[H].NextNode = Node;
-
-            if (Slot > MaxSlotBeforeGrow) {
-                tryGrow(H);
+        // Getting the next insertion slot for the current lane may require
+        // more than one attempts if the datastructure must grow and other
+        // threads are waiting for the same lane @p H.
+        while (true) {
+            if (Slot == NONE) {
+                // Reserve a slot for the lane, the datastructure might need to
+                // grow before the slot memory location becomes available.
+                Slot = NextSlot++;
+                Handles[H].NextSlot = Slot;
+                Handles[H].NextNode = Mapping.node(static_cast<index_type>(Slot));
             }
-        } else {
-            Node = Handles[H].NextNode;
+
+            if (Slot >= SlotCount.load(std::memory_order_relaxed)) {
+                // The slot memory location is not yet available, try to
+                // grow the datastructure. Other threads in other lanes might
+                // be attempting to grow the datastructure concurrently.
+                //
+                // Anyway when this call returns the Slot memory location is
+                // available.
+                tryGrow(H);
+
+                // Reload the Slot for the current lane since another thread
+                // using the same lane may take-over the lane during tryGrow()
+                // and consume the slot before the current thread is
+                // rescheduled on the lane.
+                Slot = Handles[H].NextSlot;
+            } else {
+                // From here the slot is known, allocated and available.
+                break;
+            }
         }
 
-        // insert key in the index in advance
+        Node = Handles[H].NextNode;
+
+        // Insert key in the index in advance.
         Slots[Slot] = &Node->value();
 
         auto Res = Mapping.get(H, Node, std::forward<Args>(Xs)...);
         if (Res.second) {
-            // inserted by self
-            Handles[H] = {};
+            // Inserted by self, slot is consumed, clear the lane's state.
+            Handles[H].clear();
             return std::make_pair(static_cast<index_type>(Slot), true);
         } else {
-            // inserted concurrently by another handle,
+            // Inserted concurrently by another thread, clearing the slot is
+            // not strictly needed but it avoids leaving a dangling pointer
+            // there.
+            //
+            // The reserved slot and node remains in the lane state so that
+            // they can be consumed by the next insertion operation on this
+            // lane.
+            Slots[Slot] = nullptr;
             return std::make_pair(Res.first->second, false);
         }
     }
@@ -335,7 +362,11 @@ private:
     using node_type = typename map_type::node_type;
 
     struct Handle {
-        /// Slot where this handle will store its next value
+        void clear() {
+            NextSlot = NONE;
+            NextNode = nullptr;
+        }
+
         slot_type NextSlot = NONE;
         node_type NextNode = nullptr;
     };
@@ -360,13 +391,21 @@ private:
     // Next available slot.
     std::atomic<slot_type> NextSlot;
 
-    // Maximum allowed slot index before growing
-    slot_type MaxSlotBeforeGrow;
+    // Number of slots.
+    std::atomic<slot_type> SlotCount;
 
+    /// Grow the datastructure if needed.
     bool tryGrow(const lane_id H) {
+        // This call may release and re-acquire the lane to
+        // allow progress of a concurrent growing operation.
+        //
+        // It is possible that another thread is waiting to
+        // enter the same lane, and that other thread might
+        // take and leave the lane before the current thread
+        // re-acquires it.
         Lanes.beforeLockAllBut(H);
 
-        if (NextSlot <= MaxSlotBeforeGrow) {
+        if (NextSlot < SlotCount) {
             // Current size is fine
             Lanes.beforeUnlockAllBut(H);
             return false;
@@ -375,12 +414,15 @@ private:
         Lanes.lockAllBut(H);
 
         {  // safe section
-            const std::size_t CurrentSize = MaxSlotBeforeGrow + 1;
-            const std::size_t NewSize = (CurrentSize << 1);  // double size policy
+            const std::size_t CurrentSize = SlotCount;
+            std::size_t NewSize = (CurrentSize << 1);  // double size policy
+            while (NewSize < NextSlot) {
+                NewSize <<= 1;  // double size
+            }
             std::unique_ptr<const value_type*[]> NewSlots = std::make_unique<const value_type*[]>(NewSize);
             std::memcpy(NewSlots.get(), Slots.get(), sizeof(const value_type*) * CurrentSize);
             Slots = std::move(NewSlots);
-            MaxSlotBeforeGrow = NewSize - 1;
+            SlotCount = NewSize;
         }
 
         Lanes.beforeUnlockAllBut(H);

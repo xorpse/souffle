@@ -68,7 +68,32 @@ void ignore(const T&) {}
 
 static class TestCase* base = nullptr;
 
-class TestCase {
+class TestCaseInterface {
+public:
+    /**
+     * Checks condition
+     *
+     * checks whether condition holds and update counters.
+     */
+    struct test_result {
+        bool success;
+        std::ostream& out;
+        test_result(bool success, std::ostream& out) : success(success), out(out) {}
+        ~test_result() {
+            if (!success) out << "\n\n";
+        }
+        operator bool() const {
+            return success;
+        }
+    };
+
+    virtual test_result evaluate(bool condition) = 0;
+    virtual std::ostream& fatal(
+            bool condition, const std::string& /* txt */, const std::string& /* loc */) = 0;
+    virtual std::ostream& log() = 0;
+};
+
+class TestCase : public TestCaseInterface {
 private:
     TestCase* next;          // next test case (linked by constructor)
     std::string group;       // group name of test
@@ -87,27 +112,14 @@ public:
     }
     virtual ~TestCase() = default;
 
-    /**
-     * Checks condition
-     *
-     * checks whether condition holds and update counters.
-     */
-    struct test_result {
-        bool success;
-        std::ostream& out;
-        test_result(bool success, std::ostream& out) : success(success), out(out) {}
-        ~test_result() {
-            if (!success) out << "\n\n";
-        }
-        operator bool() const {
-            return success;
-        }
-    };
+    TestCaseInterface& testInterface() {
+        return *this;
+    }
 
     /**
      * Checks the condition and keeps record of passed and failed checkes.
      */
-    test_result evaluate(bool condition) {
+    test_result evaluate(bool condition) override {
         num_checks++;
         if (!condition) num_failed++;
         return test_result(condition, logstream);
@@ -119,11 +131,15 @@ public:
      * Same as check() except in case of a condition that evaluates to false, the method
      * aborts the test.
      */
-    std::ostream& fatal(bool condition, const std::string& /* txt */, const std::string& /* loc */) {
+    std::ostream& fatal(bool condition, const std::string& /* txt */, const std::string& /* loc */) override {
         if (!condition) {
             std::cerr << "Tests failed.\n";
             exit(99);
         }
+        return logstream;
+    }
+
+    std::ostream& log() override {
         return logstream;
     }
 
@@ -179,6 +195,15 @@ public:
     } Test_##a##_##b(#a, #b);                                            \
     void test_##a##_##b::run()
 
+#define DERIVED_TEST(a, b, Base)                                                  \
+    class test_##a##_##b : public TestCase, public Base {                         \
+    public:                                                                       \
+        test_##a##_##b(std::string g, std::string t)                              \
+                : TestCase(g, t), Base(*static_cast<TestCaseInterface*>(this)) {} \
+        void run();                                                               \
+    } Test_##a##_##b(#a, #b);                                                     \
+    void test_##a##_##b::run()
+
 #define TEMPLATE_TEST(a, b, Param, P)                                                       \
     template <Param>                                                                        \
     class test_##a##_##b : public TestCase {                                                \
@@ -200,10 +225,10 @@ public:
 #define S__LINE__ S_(__LINE__)
 
 #define LOC S__LINE__
-#define _EXPECT(condition, loc)             \
-    if (auto __res = evaluate(condition)) { \
-    } else                                  \
-        logstream << "\t\tTEST FAILED @ line " << (loc) << " : "
+#define _EXPECT(condition, loc)                             \
+    if (auto __res = testInterface().evaluate(condition)) { \
+    } else                                                  \
+        testInterface().log() << "\t\tTEST FAILED @ line " << (loc) << " : "
 
 #define EXPECT_TRUE(a) _EXPECT(a, LOC) << "expecting " << #a << " to be true, evaluated to false"
 #define EXPECT_FALSE(a) _EXPECT(!(a), LOC) << "expecting " << #a << " to be false, evaluated to true"
