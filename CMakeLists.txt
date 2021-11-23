@@ -320,12 +320,16 @@ endif()
 # Installing bash completion file
 # --------------------------------------------------
 IF (SOUFFLE_BASH_COMPLETION) 
-    find_package (bash-completion)
-    if (BASH_COMPLETION_FOUND)
-        message(STATUS "Using bash completion dir ${BASH_COMPLETION_COMPLETIONSDIR}")
+    if(NOT DEFINED BASH_COMPLETION_COMPLETIONSDIR)
+        find_package (bash-completion)
+        if (BASH_COMPLETION_FOUND)
+            message(STATUS "Using bash completion dir ${BASH_COMPLETION_COMPLETIONSDIR}")
+        else()
+            set (BASH_COMPLETION_COMPLETIONSDIR "/etc/bash_completion.d")
+            message (STATUS "Using fallback bash completion dir ${BASH_COMPLETION_COMPLETIONSDIR}")
+        endif()
     else()
-        set (BASH_COMPLETION_COMPLETIONSDIR "/etc/bash_completion.d")
-        message (STATUS "Using fallback bash completion dir ${BASH_COMPLETION_COMPLETIONSDIR}")
+        message(STATUS "Using user-provided bash completion dir ${BASH_COMPLETION_COMPLETIONSDIR}")
     endif()
 
     install(
