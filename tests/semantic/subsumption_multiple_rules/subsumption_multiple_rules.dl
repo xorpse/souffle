@@ -34,12 +34,12 @@ A(from1, to, c) <= A(from2, to, c) :-
     from1 > from2.
 
 
-.decl eql(a: number, b: number) 
+.decl eql(a: number, b: number)
 .decl rel(a: number, b: number) btree_delete
 
-eql(x,x) :- eql(x,_); eql(_,x). 
-eql(x,y) :- eql(y,x). 
-eql(x,z) :- eql(x,y), eql(y,z). 
+eql(x,x) :- eql(x,_); eql(_,x).
+eql(x,y) :- eql(y,x).
+eql(x,z) :- eql(x,y), eql(y,z).
 
 rel(1, 2).
 rel(1, 3).
