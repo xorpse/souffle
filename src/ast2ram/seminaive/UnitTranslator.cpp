@@ -227,7 +227,7 @@ Own<ram::Statement> UnitTranslator::generateMergeRelationsWithFilter(const ast::
     auto stmt = mk<ram::Query>(mk<ram::Scan>(srcRelation, 0, std::move(filtered)));
 
     if (rel->getRepresentation() == RelationRepresentation::EQREL) {
-        return mk<ram::Sequence>(mk<ram::Extend>(destRelation, srcRelation), std::move(stmt));
+        return mk<ram::Sequence>(mk<ram::MergeExtend>(destRelation, srcRelation), std::move(stmt));
     }
     return stmt;
 }
