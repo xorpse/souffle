@@ -486,10 +486,10 @@ NodePtr NodeGenerator::visit_(type_identity<ram::Query>, const ram::Query& query
     return res;
 }
 
-NodePtr NodeGenerator::visit_(type_identity<ram::Extend>, const ram::Extend& extend) {
+NodePtr NodeGenerator::visit_(type_identity<ram::MergeExtend>, const ram::MergeExtend& extend) {
     std::size_t src = encodeRelation(extend.getFirstRelation());
     std::size_t target = encodeRelation(extend.getSecondRelation());
-    return mk<Extend>(I_Extend, &extend, src, target);
+    return mk<MergeExtend>(I_MergeExtend, &extend, src, target);
 }
 
 NodePtr NodeGenerator::visit_(type_identity<ram::Swap>, const ram::Swap& swap) {

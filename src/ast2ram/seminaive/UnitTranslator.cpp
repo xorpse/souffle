@@ -37,7 +37,6 @@
 #include "ram/ExistenceCheck.h"
 #include "ram/Exit.h"
 #include "ram/Expression.h"
-#include "ram/Extend.h"
 #include "ram/Filter.h"
 #include "ram/IO.h"
 #include "ram/Insert.h"
@@ -45,6 +44,7 @@
 #include "ram/LogSize.h"
 #include "ram/LogTimer.h"
 #include "ram/Loop.h"
+#include "ram/MergeExtend.h"
 #include "ram/Negation.h"
 #include "ram/Parallel.h"
 #include "ram/Program.h"
@@ -227,7 +227,7 @@ Own<ram::Statement> UnitTranslator::generateMergeRelationsWithFilter(const ast::
     auto stmt = mk<ram::Query>(mk<ram::Scan>(srcRelation, 0, std::move(filtered)));
 
     if (rel->getRepresentation() == RelationRepresentation::EQREL) {
-        return mk<ram::Sequence>(mk<ram::Extend>(destRelation, srcRelation), std::move(stmt));
+        return mk<ram::Sequence>(mk<ram::MergeExtend>(destRelation, srcRelation), std::move(stmt));
     }
     return stmt;
 }
@@ -244,14 +244,14 @@ Own<ram::Statement> UnitTranslator::generateMergeRelations(
     }
 
     // Predicate - insert all values
+    if (rel->getRepresentation() == RelationRepresentation::EQREL) {
+        return mk<ram::MergeExtend>(destRelation, srcRelation);
+    }
     for (std::size_t i = 0; i < rel->getArity(); i++) {
         values.push_back(mk<ram::TupleElement>(0, i));
     }
     auto insertion = mk<ram::Insert>(destRelation, std::move(values));
     auto stmt = mk<ram::Query>(mk<ram::Scan>(srcRelation, 0, std::move(insertion)));
-    if (rel->getRepresentation() == RelationRepresentation::EQREL) {
-        return mk<ram::Sequence>(mk<ram::Extend>(destRelation, srcRelation), std::move(stmt));
-    }
     return stmt;
 }
 

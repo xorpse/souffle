@@ -33,6 +33,7 @@
 #include <omp.h>
 #endif
 
+#include "souffle/datastructure/EquivalenceRelation.h"
 #include "souffle/datastructure/PiggyList.h"
 #include "souffle/datastructure/UnionFind.h"
 
@@ -669,6 +670,59 @@ TEST(LambdaBTree, ContendParallel) {
     EXPECT_EQ(N, counter.load());
 }
 #endif
+
+TEST(EqRelTest, MergeExtend) {
+    souffle::EquivalenceRelation<Tuple<std::size_t, 2>> eqrelOther;
+    souffle::EquivalenceRelation<Tuple<std::size_t, 2>> eqrelNew;
+
+    eqrelOther.insert(0, 1);
+
+    eqrelNew.insert(1, 2);
+    eqrelNew.insert(1, 3);
+    eqrelNew.insert(4, 5);
+
+    std::size_t otherSize = eqrelOther.size();
+    std::size_t newSize = eqrelNew.size();
+
+    eqrelNew.extendAndInsert(eqrelOther);
+
+    EXPECT_LT(otherSize, eqrelOther.size());
+    EXPECT_LT(newSize, eqrelNew.size());
+}
+
+TEST(EqRelTest, MergeExtendSameSize) {
+    souffle::EquivalenceRelation<Tuple<std::size_t, 2>> eqrelOther;
+    souffle::EquivalenceRelation<Tuple<std::size_t, 2>> eqrelNew;
+
+    eqrelOther.insert(0, 1);
+    eqrelOther.insert(1, 2);
+    eqrelOther.insert(7, 8);
+
+    eqrelNew.insert(2, 7);
+
+    eqrelNew.extendAndInsert(eqrelOther);
+
+    EXPECT_EQ(eqrelOther.size(), eqrelNew.size());
+}
+
+TEST(EqRelTest, MergeExtendDisjoint) {
+    souffle::EquivalenceRelation<Tuple<std::size_t, 2>> eqrelOther;
+    souffle::EquivalenceRelation<Tuple<std::size_t, 2>> eqrelNew;
+
+    eqrelOther.insert(0, 1);
+    eqrelOther.insert(1, 2);
+    eqrelOther.insert(7, 8);
+
+    eqrelNew.insert(3, 4);
+
+    std::size_t eqrelNewSize = eqrelNew.size();
+    std::size_t eqrelOtherSize = eqrelOther.size();
+
+    eqrelNew.extendAndInsert(eqrelOther);
+
+    EXPECT_EQ(eqrelNewSize, eqrelNew.size());
+    EXPECT_EQ(eqrelOtherSize + eqrelNewSize, eqrelOther.size());
+}
 
 }  // namespace test
 }  // namespace souffle

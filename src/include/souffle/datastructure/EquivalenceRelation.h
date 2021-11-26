@@ -34,6 +34,7 @@
 #include <shared_mutex>
 #include <stdexcept>
 #include <tuple>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -128,16 +129,27 @@ public:
     }
 
     /**
-     * Extend this relation with another relation, expanding this equivalence relation
-     * The supplied relation is the old knowledge, whilst this relation only contains
-     * explicitly new knowledge. After this operation the "implicitly new tuples" are now
-     * explicitly inserted this relation.
+     * Extend this relation with another relation, expanding this equivalence
+     * relation and inserting it into the other relation.
+     *
+     * The supplied relation is the old knowledge, whilst this relation only
+     * contains explicitly new knowledge. After this operation the "implicitly
+     * new tuples" are now explicitly inserted this relation, and all of the new
+     * tuples in this relation are inserted into the old relation.
      */
-    void extend(const EquivalenceRelation<TupleType>& other) {
-        // nothing to extend if there's no new/original knowledge
-        if (other.size() == 0 || this->size() == 0) return;
+    void extendAndInsert(EquivalenceRelation<TupleType>& other) {
+        if (other.size() == 0 && this->size() == 0) return;
 
-        std::set<value_type> repsCovered;
+        std::unordered_set<value_type> repsCovered;
+
+        // This vector holds all of the elements of this equivalence relation
+        // that aren't yet in other, which get inserted after extending this
+        // relation by other. These operations are interleaved for maximum
+        // efficiency - either extend or inserting first would make the other
+        // operation unnecessarily slow.
+        std::vector<std::pair<value_type, value_type>> toInsert;
+        auto size = std::distance(this->sds.sparseToDenseMap.begin(), this->sds.sparseToDenseMap.end());
+        toInsert.reserve(size);
 
         // find all the disjoint sets that need to be added to this relation
         // that exist in other (and exist in this)
@@ -153,8 +165,11 @@ public:
                         repsCovered.emplace(rep);
                     }
                 }
+                toInsert.emplace_back(el, this->sds.findNode(el));
             }
         }
+        assert(size >= 0);
+        assert(toInsert.size() == (std::size_t)size);
 
         // add the intersecting dj sets into this one
         {
@@ -168,6 +183,16 @@ public:
                 if (repsCovered.count(rep) != 0) {
                     this->insert(el, rep);
                 }
+            }
+        }
+
+        // Insert all new tuples from this relation into the old relation
+        {
+            value_type el;
+            value_type rep;
+            for (std::pair<value_type, value_type> p : toInsert) {
+                std::tie(el, rep) = p;
+                other.insert(el, rep);
             }
         }
     }
