@@ -37,7 +37,6 @@
 #include "ram/ExistenceCheck.h"
 #include "ram/Exit.h"
 #include "ram/Expression.h"
-#include "ram/Extend.h"
 #include "ram/False.h"
 #include "ram/Filter.h"
 #include "ram/IO.h"
@@ -52,6 +51,7 @@
 #include "ram/LogSize.h"
 #include "ram/LogTimer.h"
 #include "ram/Loop.h"
+#include "ram/MergeExtend.h"
 #include "ram/Negation.h"
 #include "ram/NestedIntrinsicOperator.h"
 #include "ram/NestedOperation.h"
@@ -231,7 +231,7 @@ public:
 
     NodePtr visit_(type_identity<ram::Query>, const ram::Query& query) override;
 
-    NodePtr visit_(type_identity<ram::Extend>, const ram::Extend& extend) override;
+    NodePtr visit_(type_identity<ram::MergeExtend>, const ram::MergeExtend& extend) override;
 
     NodePtr visit_(type_identity<ram::Swap>, const ram::Swap& swap) override;
 

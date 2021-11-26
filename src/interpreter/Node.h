@@ -102,7 +102,7 @@ struct RelationWrapper;
     Forward(LogSize)\
     Forward(IO)\
     Forward(Query)\
-    Forward(Extend)\
+    Forward(MergeExtend)\
     Forward(Swap)\
     Forward(Call)
 
@@ -341,7 +341,7 @@ protected:
 /**
  * @class BinRelOperation
  * @brief  operation that involves with two relations should inherit from this class.
- *        E.g. Swap, Extend
+ *        E.g. Swap, MergeExtend
  */
 class BinRelOperation {
 public:
@@ -886,11 +886,11 @@ class Query : public UnaryNode, public AbstractParallel {
 };
 
 /**
- * @class Extend
+ * @class MergeExtend
  */
-class Extend : public Node, public BinRelOperation {
+class MergeExtend : public Node, public BinRelOperation {
 public:
-    Extend(enum NodeType ty, const ram::Node* sdw, std::size_t src, std::size_t target)
+    MergeExtend(enum NodeType ty, const ram::Node* sdw, std::size_t src, std::size_t target)
             : Node(ty, sdw), BinRelOperation(src, target) {}
 };
 

@@ -34,7 +34,6 @@
 #include "ram/Erase.h"
 #include "ram/ExistenceCheck.h"
 #include "ram/Exit.h"
-#include "ram/Extend.h"
 #include "ram/False.h"
 #include "ram/Filter.h"
 #include "ram/IO.h"
@@ -48,6 +47,7 @@
 #include "ram/LogSize.h"
 #include "ram/LogTimer.h"
 #include "ram/Loop.h"
+#include "ram/MergeExtend.h"
 #include "ram/Negation.h"
 #include "ram/NestedIntrinsicOperator.h"
 #include "ram/NumericConstant.h"
@@ -1261,13 +1261,12 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
             return true;
         ESAC(Query)
 
-        CASE(Extend)
+        CASE(MergeExtend)
             auto& src = *static_cast<EqrelRelation*>(getRelationHandle(shadow.getSourceId()).get());
             auto& trg = *static_cast<EqrelRelation*>(getRelationHandle(shadow.getTargetId()).get());
-            src.extend(trg);
-            trg.insert(src);
+            src.extendAndInsert(trg);
             return true;
-        ESAC(Extend)
+        ESAC(MergeExtend)
 
         CASE(Swap)
             swapRelation(shadow.getSourceId(), shadow.getTargetId());

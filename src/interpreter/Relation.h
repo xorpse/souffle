@@ -430,10 +430,10 @@ class EqrelRelation : public Relation<2, Eqrel> {
 public:
     using Relation<2, Eqrel>::Relation;
 
-    void extend(const EqrelRelation& rel) {
+    void extendAndInsert(const EqrelRelation& rel) {
         auto src = static_cast<EqrelIndex*>(this->main);
         auto trg = static_cast<EqrelIndex*>(rel.main);
-        src->extend(trg);
+        src->extendAndInsert(trg);
     }
 };
 

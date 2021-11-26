@@ -35,7 +35,6 @@
 #include "ram/ExistenceCheck.h"
 #include "ram/Exit.h"
 #include "ram/Expression.h"
-#include "ram/Extend.h"
 #include "ram/False.h"
 #include "ram/Filter.h"
 #include "ram/FloatConstant.h"
@@ -53,6 +52,7 @@
 #include "ram/LogSize.h"
 #include "ram/LogTimer.h"
 #include "ram/Loop.h"
+#include "ram/MergeExtend.h"
 #include "ram/Negation.h"
 #include "ram/NestedIntrinsicOperator.h"
 #include "ram/NestedOperation.h"
@@ -168,7 +168,7 @@ struct Visitor : souffle::detail::VisitorBase<R, NodeType, Params...> {
         SOUFFLE_VISITOR_FORWARD(LogSize);
 
         SOUFFLE_VISITOR_FORWARD(Swap);
-        SOUFFLE_VISITOR_FORWARD(Extend);
+        SOUFFLE_VISITOR_FORWARD(MergeExtend);
 
         // Control-flow
         SOUFFLE_VISITOR_FORWARD(Program);
@@ -195,7 +195,7 @@ protected:
     SOUFFLE_VISITOR_LINK(RelationStatement, Statement);
 
     SOUFFLE_VISITOR_LINK(Swap, BinRelationStatement);
-    SOUFFLE_VISITOR_LINK(Extend, BinRelationStatement);
+    SOUFFLE_VISITOR_LINK(MergeExtend, BinRelationStatement);
     SOUFFLE_VISITOR_LINK(BinRelationStatement, Statement);
 
     SOUFFLE_VISITOR_LINK(Sequence, ListStatement);
