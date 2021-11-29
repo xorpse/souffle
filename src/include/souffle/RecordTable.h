@@ -490,6 +490,8 @@ public:
 
     virtual RamDomain pack(const RamDomain* Tuple, const std::size_t Arity) = 0;
 
+    virtual RamDomain pack(const std::initializer_list<RamDomain>& List) = 0;
+
     virtual const RamDomain* unpack(const RamDomain Ref, const std::size_t Arity) const = 0;
 };
 
@@ -546,10 +548,16 @@ public:
         }
     }
 
-    /** @brief convert record to record reference */
+    /** @brief convert tuple to record reference */
     virtual RamDomain pack(const RamDomain* Tuple, const std::size_t Arity) override {
         auto Guard = Lanes.guard();
         return lookupMap(Arity).pack(Tuple);
+    }
+
+    /** @brief convert tuple to record reference */
+    virtual RamDomain pack(const std::initializer_list<RamDomain>& List) override {
+        auto Guard = Lanes.guard();
+        return lookupMap(List.size()).pack(std::data(List));
     }
 
     /** @brief convert record reference to a record */
@@ -612,6 +620,12 @@ RamDomain pack(RecordTableT&& recordTab, Tuple<RamDomain, Arity> const& tuple) {
 template <class RecordTableT, std::size_t Arity>
 RamDomain pack(RecordTableT&& recordTab, span<const RamDomain, Arity> tuple) {
     return recordTab.pack(tuple.data(), Arity);
+}
+
+/** @brief helper to pack using an initialization-list of RamDomain values. */
+template <class RecordTableT>
+RamDomain pack(RecordTableT&& recordTab, const std::initializer_list<RamDomain>&& initlist) {
+    return recordTab.pack(std::data(initlist), initlist.size());
 }
 
 }  // namespace souffle
