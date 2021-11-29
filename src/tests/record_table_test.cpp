@@ -45,6 +45,30 @@ TEST(Pack, Tuple) {
     }
 }
 
+TEST(Pack, InitList) {
+    SpecializedRecordTable<3> recordTable;
+
+    RamDomain ref = recordTable.pack({1, 2, 3});
+
+    const RamDomain* ptr = recordTable.unpack(ref, 3);
+
+    EXPECT_EQ(1, ptr[0]);
+    EXPECT_EQ(2, ptr[1]);
+    EXPECT_EQ(3, ptr[2]);
+}
+
+TEST(Pack, InitListHelper) {
+    SpecializedRecordTable<3> recordTable;
+
+    RamDomain ref = pack(recordTable, {1, 2, 3});
+
+    const RamDomain* ptr = recordTable.unpack(ref, 3);
+
+    EXPECT_EQ(1, ptr[0]);
+    EXPECT_EQ(2, ptr[1]);
+    EXPECT_EQ(3, ptr[2]);
+}
+
 // Generate random tuples
 // pack them all
 // unpack and test for equality
