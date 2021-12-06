@@ -97,7 +97,7 @@ option(SOUFFLE_TEST_EVALUATION "Enable/Disable testing of evaluation examples in
 option(SOUFFLE_ENABLE_TESTING "Enable/Disable testing" ${SOUFFLE_ENABLE_TESTING_DEFAULT})
 option(SOUFFLE_GENERATE_DOXYGEN "Generate Doxygen files (html;htmlhelp;man;rtf;xml;latex)" "")
 option(SOUFFLE_CODE_COVERAGE "Enable coverage reporting" OFF)
-option(SOUFFLE_BASH_COMPLETION "Enable/Disable bash completion" ON)
+option(SOUFFLE_BASH_COMPLETION "Enable/Disable bash completion" OFF)
 
 cmake_dependent_option(SOUFFLE_USE_LIBCPP "Link to libc++ instead of libstdc++" ON
     "CMAKE_CXX_COMPILER_ID STREQUAL Clang" OFF)
