@@ -54,7 +54,7 @@ public:
 
     void parse() {
         if (args.size() == 0) {
-            std::cout << "No arguments provided.\nTry souffle-profile -h for help.\n";
+            std::cout << "No arguments provided.\nTry souffleprof -h for help.\n";
             exit(EXIT_FAILURE);
         }
 
