@@ -139,8 +139,8 @@ std::string ClauseTranslator::getClauseAtomName(const ast::Clause& clause, const
     if (isA<ast::SubsumptiveClause>(clause)) {
         // find the dominated / dominating heads
         const auto& body = clause.getBodyLiterals();
-        auto dominatedHeadAtom = dynamic_cast<const ast::Atom*>(body[dominatedHead]);
-        auto dominatingHeadAtom = dynamic_cast<const ast::Atom*>(body[dominatingHead]);
+        auto dominatedHeadAtom = dynamic_cast<const ast::Atom*>(body[0]);
+        auto dominatingHeadAtom = dynamic_cast<const ast::Atom*>(body[1]);
 
         if (clause.getHead() == atom) {
             if (mode == SubsumeDeleteCurrentDelta || mode == SubsumeDeleteCurrentCurrent) {
@@ -535,8 +535,8 @@ Own<ram::Operation> ClauseTranslator::addBodyLiteralConstraints(
         if (mode == SubsumeRejectNewNew || mode == SubsumeDeleteCurrentCurrent) {
             // find the dominated / dominating heads
             const auto& body = clause.getBodyLiterals();
-            auto dominatedHeadAtom = dynamic_cast<const ast::Atom*>(body[dominatedHead]);
-            auto dominatingHeadAtom = dynamic_cast<const ast::Atom*>(body[dominatingHead]);
+            auto dominatedHeadAtom = dynamic_cast<const ast::Atom*>(body[0]);
+            auto dominatingHeadAtom = dynamic_cast<const ast::Atom*>(body[1]);
             op = addDistinct(std::move(op), dominatedHeadAtom, dominatingHeadAtom);
         }
         return op;
@@ -686,12 +686,6 @@ Own<ram::Condition> ClauseTranslator::getFunctionalDependencies(const ast::Claus
 }
 
 std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& clause) const {
-    // set dominating/dominated head of clause
-    if (isA<ast::SubsumptiveClause>(clause)) {
-        dominatedHead = 0;
-        dominatingHead = 1;
-    }
-
     auto atoms = ast::getBodyLiterals<ast::Atom>(clause);
 
     const auto& plan = clause.getExecutionPlan();
@@ -709,23 +703,8 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
     const auto& order = orders.at(version);
     auto sz = order->getOrder().size();
     std::vector<unsigned int> newOrder(sz);
-
     std::transform(order->getOrder().begin(), order->getOrder().end(), newOrder.begin(),
             [](unsigned int i) -> unsigned int { return i - 1; });
-
-    // assign dominatedHead/dominatingHead index in case
-    // a query plan has been specified for a subsumptive
-    // clause.
-    if (isA<ast::SubsumptiveClause>(clause)) {
-        for (std::size_t i = 0; i < sz; ++i) {
-            if (order->getOrder()[i] == 0) {
-                dominatedHead = newOrder[0];
-            } else if (order->getOrder()[i] == 1) {
-                dominatingHead = newOrder[1];
-            }
-        }
-    }
-
     return reorderAtoms(atoms, newOrder);
 }
 
