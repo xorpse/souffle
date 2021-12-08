@@ -10,15 +10,36 @@ domain-specific language for analysis problems.
 
 ## Features of Soufflé
 
-*   Efficient translation to parallel C++ of Datalog programs
+*   Efficient translation to parallel C++ of Datalog programs (CAV'16, CC'16)
 
-*   Efficient interpretation
+*   Efficient interpretation using de-specialization techniques (PLDI'21)
+
+*   Specialized data structure for relations (PACT'19, PPoPP'19, PMAM'19) with optimal index selection (VLDB'18)
 
 *   Extended semantics of Datalog, e.g., permitting unbounded recursions with numbers and terms
 
 *   Simple component model for Datalog specifications
 
-*   Recursively defined record types (aka. constructors) for tuples
+*   Recursively defined record types/ADTs (aka. constructors) for tuples
+
+*   User-defined functors
+
+*   Strongly-typed types for safety
+
+*   Subsumption
+
+*   Aggregation
+
+*   Choice Construct (APLAS'21)
+
+*   Extended I/O system for relations (including SQLITE3 interfaces)
+
+*   C++/SWIG interfaces
+
+*   Provenance/Debugging (TOPLAS'20)
+
+*   Profiling tools
+
 
 ## How to get Soufflé
 
@@ -86,3 +107,9 @@ For more information on building and developing Souffle, please read the [develo
 ## [Issues](https://github.com/souffle-lang/souffle/issues)
 
 ## [License](https://github.com/souffle-lang/souffle/blob/master/licenses/SOUFFLE-UPL.txt)
+
+## For academics
+
+If you use our work, please cite our work. A list of publications can be found [here](https://souffle-lang.github.io/publications). The main publications are:
+ * Herbert Jordan, Bernhard Scholz, Pavle Subotić: Souffle: On Synthesis of Program Analyzers. CAV 2016.
+ * Bernhard Scholz, Herbert Jordan, Pavle Subotić, Till Westmann: On fast large-scale program analysis in Datalog. CC 2016: 196-206
