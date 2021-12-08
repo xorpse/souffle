@@ -50,3 +50,14 @@ eql(2, 3).
 rel(a, b) <= rel(c, d) :- eql(a, c), eql(b, d), a <= c, b <= d.
 
 .output rel
+
+// check query plan
+.decl C(x:number) btree_delete
+.decl D(x:number, y:number)
+C(1).
+D(1, 1).
+C(x1) <= C(x2) :-
+    D(x1, x2),
+    x1 <= x2.
+    .plan 0:(1,3,2)
+.output C
