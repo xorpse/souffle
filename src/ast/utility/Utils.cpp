@@ -149,14 +149,6 @@ bool isProposition(const Atom* atom) {
     return atom->getArguments().empty();
 }
 
-bool isDeltaRelation(const QualifiedName& name) {
-    const auto& qualifiers = name.getQualifiers();
-    if (qualifiers.empty()) {
-        return false;
-    }
-    return isPrefix("@delta_", qualifiers[0]);
-}
-
 std::vector<Atom*> reorderAtoms(const std::vector<Atom*>& atoms, const std::vector<unsigned int>& newOrder) {
     // Validate given order
     assert(newOrder.size() == atoms.size());

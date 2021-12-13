@@ -137,12 +137,6 @@ bool isRule(const Clause& clause);
 bool isProposition(const Atom* atom);
 
 /**
- * Returns whether the given atom is a delta relation
- * @return true iff the atom is a delta relation
- */
-bool isDeltaRelation(const QualifiedName& name);
-
-/**
  * Reorders the atoms of a clause to be in the given order.
  * Remaining body literals remain in the same order.
  *
