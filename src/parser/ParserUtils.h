@@ -85,8 +85,8 @@ private:
 };
 
 /**
- * Name unnamed variables in an atom 
- */ 
+ * Name unnamed variables in an atom
+ */
 Own<ast::Atom> nameUnnamedVariables(Own<ast::Atom> atom);
 
 }  // end of namespace souffle
