@@ -21,6 +21,8 @@
 #include "ast/Literal.h"
 #include "ast/Negation.h"
 #include "ast/Node.h"
+#include "ast/UnnamedVariable.h"
+#include "ast/Variable.h"
 #include "ast/utility/Utils.h"
 #include "souffle/utility/ContainerUtil.h"
 #include "souffle/utility/MiscUtil.h"
@@ -219,6 +221,23 @@ void RuleBody::insert(std::vector<clause>& cnf, clause&& cls) {
     }
     res.swap(cnf);
     cnf.push_back(std::move(cls));
+}
+
+Own<ast::Atom> nameUnnamedVariables(Own<ast::Atom> atom) {
+    assert(atom != nullptr && "Atom is a null-pointer");
+    auto const& args = atom->getArguments();
+    auto arity = atom->getArity();
+    VecOwn<ast::Argument> newArgs;
+    for (std::size_t i = 0; i < arity; i++) {
+        if (isA<ast::UnnamedVariable>(args[i])) {
+            std::stringstream varName;
+            varName << "@var" << i;
+            newArgs.push_back(mk<ast::Variable>(varName.str()));
+        } else {
+            newArgs.push_back(clone(args[i]));
+        }
+    }
+    return mk<ast::Atom>(atom->getQualifiedName(), std::move(newArgs), atom->getSrcLoc());
 }
 
 }  // end of namespace souffle

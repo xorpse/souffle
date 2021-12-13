@@ -61,3 +61,15 @@ C(x1) <= C(x2) :-
     x1 <= x2.
     .plan 0:(1,3,2)
 .output C
+
+// check unnamed variables in dominated head
+
+.decl E(x:number, y:number) btree_delete
+
+E(1,1).
+E(1,2).
+
+E(_, x1) <= E(_, x2) :-
+   x1 <= x2.
+
+.output E

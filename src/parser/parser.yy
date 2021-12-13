@@ -678,8 +678,8 @@ rule
    | atom[less] LE atom[greater] IF body DOT 
     {
       auto bodies = $body->toClauseBodies();
+      Own<ast::Atom> lt = nameUnnamedVariables(std::move($less));
       Own<ast::Atom> gt = std::move($greater);
-      Own<ast::Atom> lt = std::move($less);
       for (auto&& body : bodies) {
         auto cur = mk<ast::SubsumptiveClause>(clone(lt)); 
         cur->setBodyLiterals(clone(body->getBodyLiterals()));
@@ -694,8 +694,8 @@ rule
    | atom[less] LE atom[greater] IF body DOT query_plan
     {
       auto bodies = $body->toClauseBodies();
+      Own<ast::Atom> lt = nameUnnamedVariables(std::move($less));
       Own<ast::Atom> gt = std::move($greater);
-      Own<ast::Atom> lt = std::move($less);
       for (auto&& body : bodies) {
         auto cur = mk<ast::SubsumptiveClause>(clone(lt)); 
         cur->setBodyLiterals(clone(body->getBodyLiterals()));
