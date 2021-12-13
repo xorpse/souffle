@@ -84,4 +84,9 @@ private:
     static void insert(std::vector<clause>& cnf, clause&& cls);
 };
 
+/**
+ * Name unnamed variables in an atom 
+ */ 
+Own<ast::Atom> nameUnnamedVariables(Own<ast::Atom> atom);
+
 }  // end of namespace souffle
