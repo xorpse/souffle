@@ -224,6 +224,7 @@ void RuleBody::insert(std::vector<clause>& cnf, clause&& cls) {
 }
 
 Own<ast::Atom> nameUnnamedVariables(Own<ast::Atom> atom) {
+    assert(atom != nullptr && "Atom is a null-pointer"); 
     auto const& args = atom->getArguments();
     auto arity = atom->getArity();
     VecOwn<ast::Argument> newArgs;
