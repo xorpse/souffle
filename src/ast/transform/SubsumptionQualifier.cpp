@@ -70,9 +70,9 @@ bool SubsumptionQualifierTransformer::transform(TranslationUnit& translationUnit
         });
 
         // rewrite relation representation
-        if (relation->getRepresentation() == RelationRepresentation::DEFAULT && hasSubsumptiveRule) { 
+        if (relation->getRepresentation() == RelationRepresentation::DEFAULT && hasSubsumptiveRule) {
             relation->setRepresentation(RelationRepresentation::BTREE_DELETE);
-        } 
+        }
     }
     return changed;
 }

@@ -10,8 +10,8 @@
  *
  * @file SubsumptionQualifier.h
  *
- * Transformation to change default representation to a "btree_delete" 
- * representation in the presence of subsumptive clauses. 
+ * Transformation to change default representation to a "btree_delete"
+ * representation in the presence of subsumptive clauses.
  *
  ***********************************************************************/
 
