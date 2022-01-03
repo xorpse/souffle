@@ -100,6 +100,7 @@ set(SOUFFLE_SOURCES
     ast/transform/ResolveAliases.cpp
     ast/transform/ResolveAnonymousRecordAliases.cpp
     ast/transform/SemanticChecker.cpp
+    ast/transform/SubsumptionQualifier.cpp
     ast/transform/SimplifyAggregateTargetExpression.cpp
     ast/transform/Transformer.cpp
     ast/transform/TypeChecker.cpp
