@@ -497,7 +497,7 @@ int main(int argc, char** argv) {
             mk<ast::transform::FixpointTransformer>(mk<ast::transform::PipelineTransformer>(
                     mk<ast::transform::ResolveAnonymousRecordAliasesTransformer>(),
                     mk<ast::transform::FoldAnonymousRecords>())),
-            mk<ast::transform::SubsumptionQualifier>(), 
+            mk<ast::transform::SubsumptionQualifierTransformer>(), 
             mk<ast::transform::SemanticChecker>(), mk<ast::transform::GroundWitnessesTransformer>(),
             mk<ast::transform::UniqueAggregationVariablesTransformer>(),
             mk<ast::transform::MaterializeSingletonAggregationTransformer>(),
