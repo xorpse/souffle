@@ -115,7 +115,7 @@ public:
      */
     std::pair<RamDomain, bool> findOrInsert(const std::string& symbol) {
         auto Res = Base::findOrInsert(symbol);
-        return std::make_pair(Res.first, Res.second);
+        return std::make_pair(static_cast<RamDomain>(Res.first), Res.second);
     }
 };
 

@@ -1,4 +1,5 @@
-#!/usr/bin/env ruby
+
+# JSON_DATA_TEXT variable is inserted before this line
 
 require 'json'
 require 'fileutils'

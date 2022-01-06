@@ -25,35 +25,61 @@ function(SOUFFLE_RUN_CPP_TEST)
         ${ARGV}
     )
 
-  set(ADDITIONNAL_FLAGS "")
+  set(ADDITIONNAL_FLAGS)
 
   if (OPENMP_FOUND)
-    string(APPEND ADDITIONNAL_FLAGS " ${OpenMP_CXX_FLAGS}")
+    list(APPEND ADDITIONNAL_FLAGS ${OpenMP_CXX_FLAGS})
   endif()
 
   if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
-      string(APPEND ADDITIONNAL_FLAGS " -lstdc++fs")
+      list(APPEND ADDITIONNAL_FLAGS "-lstdc++fs")
     endif ()
   endif()
 
-    add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_compile_cpp
-      COMMAND sh -c "set -e; '${CMAKE_CXX_COMPILER}' --std=c++17 -D__EMBEDDED_SOUFFLE__  '-I${CMAKE_SOURCE_DIR}/src/include' '${TEST_NAME}.cpp' '${PARAM_INPUT_DIR}/driver.cpp' -o '${TEST_NAME}' ${ADDITIONNAL_FLAGS}")
-    set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_compile_cpp PROPERTIES
-                         WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
-                         LABELS "${PARAM_TEST_LABELS}"
-                         FIXTURES_SETUP ${PARAM_FIXTURE_NAME}_compile_cpp
-                         FIXTURES_REQUIRED ${PARAM_FIXTURE_NAME}_run_souffle
-                        )
+  if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set(OUTNAME ${TEST_NAME})
+    set(OUT_OPTION "-o" "${TEST_NAME}")
+  elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    set(OUTNAME "${TEST_NAME}.exe")
+    set(OUT_OPTION "/Fe:${TEST_NAME}")
+    list(APPEND ADDITIONNAL_FLAGS "/Zc:preprocessor")
+    list(APPEND ADDITIONNAL_FLAGS "/permissive-")
+    list(APPEND ADDITIONNAL_FLAGS "/EHsc")
+    list(APPEND ADDITIONNAL_FLAGS "/nologo")
+  endif ()
 
-    add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_cpp
-            COMMAND sh -c "set -e; './${TEST_NAME}' '${FACTS_DIR}' > '${TEST_NAME}.out' 2> '${TEST_NAME}.err'")
-    set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_run_cpp PROPERTIES
-                         WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
-                         LABELS "${PARAM_TEST_LABELS}"
-                         FIXTURES_SETUP ${PARAM_FIXTURE_NAME}_run_cpp
-                         FIXTURES_REQUIRED ${PARAM_FIXTURE_NAME}_compile_cpp
-                        )
+  add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_compile_cpp
+    COMMAND
+    #${RUBY_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/redirect.rb
+      ${CMAKE_CXX_COMPILER}
+      ${CMAKE_CXX17_STANDARD_COMPILE_OPTION}
+      ${OUT_OPTION}
+      -D__EMBEDDED_SOUFFLE__
+      "-I${CMAKE_SOURCE_DIR}/src/include"
+      "${TEST_NAME}.cpp"
+      "${PARAM_INPUT_DIR}/driver.cpp"
+      ${ADDITIONNAL_FLAGS})
+
+  set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_compile_cpp PROPERTIES
+    WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
+    LABELS "${PARAM_TEST_LABELS}"
+    FIXTURES_SETUP ${PARAM_FIXTURE_NAME}_compile_cpp
+    FIXTURES_REQUIRED ${PARAM_FIXTURE_NAME}_run_souffle)
+
+  add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_cpp
+    COMMAND 
+    ${RUBY_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/redirect.rb
+      --out "${TEST_NAME}.out"
+      --err "${TEST_NAME}.err"
+      "${OUTNAME}" "${FACTS_DIR}")
+    #sh -c "set -e; './${TEST_NAME}' '${FACTS_DIR}' > '${TEST_NAME}.out' 2> '${TEST_NAME}.err'")
+  set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_run_cpp PROPERTIES
+    WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
+    LABELS "${PARAM_TEST_LABELS}"
+    FIXTURES_SETUP ${PARAM_FIXTURE_NAME}_run_cpp
+    FIXTURES_REQUIRED ${PARAM_FIXTURE_NAME}_compile_cpp
+    )
 endfunction()
 
 function(SOUFFLE_RUN_CPP_TEST_HELPER)
@@ -75,6 +101,12 @@ function(SOUFFLE_RUN_CPP_TEST_HELPER)
     set(FIXTURE_NAME ${QUALIFIED_TEST_NAME}_fixture)
     set(TEST_LABELS "positive;integration")
 
+    set(PP_FLAGS)
+    if (MSVC)
+      list(APPEND PP_FLAGS "--preprocessor" "cl -nologo -TC -E")
+    endif()
+
+
     souffle_setup_integration_test_dir(TEST_NAME ${PARAM_TEST_NAME}
                                        QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
                                        DATA_CHECK_DIR ${INPUT_DIR}
@@ -89,7 +121,7 @@ function(SOUFFLE_RUN_CPP_TEST_HELPER)
                                  OUTPUT_DIR ${OUTPUT_DIR}
                                  FIXTURE_NAME ${FIXTURE_NAME}
                                  TEST_LABELS "${TEST_LABELS}"
-                                 SOUFFLE_PARAMS "-g" "${OUTPUT_DIR}/${TEST_NAME}.cpp")
+                                 SOUFFLE_PARAMS "-g" "${OUTPUT_DIR}/${TEST_NAME}.cpp" ${PP_FLAGS})
 
     souffle_run_cpp_test(TEST_NAME ${PARAM_TEST_NAME}
                          QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
