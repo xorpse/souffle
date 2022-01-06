@@ -1035,11 +1035,13 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             // Set reduction operation
             std::string op;
+            std::string omp_min_ver;
             switch (aggregate.getFunction()) {
                 case AggregateOp::MIN:
                 case AggregateOp::FMIN:
                 case AggregateOp::UMIN: {
                     op = "min";
+                    omp_min_ver = "200805"; // from OMP 3.0
                     break;
                 }
 
@@ -1047,6 +1049,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case AggregateOp::FMAX:
                 case AggregateOp::UMAX: {
                     op = "max";
+                    omp_min_ver = "200805"; // from OMP 3.0
                     break;
                 }
 
@@ -1055,6 +1058,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case AggregateOp::USUM:
                 case AggregateOp::COUNT:
                 case AggregateOp::SUM: {
+                    omp_min_ver = "0";
                     op = "+";
                     break;
                 }
@@ -1083,7 +1087,11 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "PARALLEL_START\n";
             // check whether there is an index to use
             if (keys.empty()) {
+                // OMP reduction is not available on all versions of OpenMP
+                out << "#if defined _OPENMP && _OPENMP >= " << omp_min_ver << "\n";
                 out << "#pragma omp for reduction(" << op << ":" << sharedVariable << ")\n";
+                out << "#endif\n";
+
                 out << "for(const auto& env" << identifier << " : "
                     << "*" << relName << ") {\n";
             } else {
@@ -1096,12 +1104,23 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                     << rangeBounds.second.str() << "," << ctxName << ");\n";
 
                 out << "auto part = range.partition();\n";
-                out << "#pragma omp for reduction(" << op << ":" << sharedVariable << ")\n";
-                // iterate over each part
+
+                // old OpenMP versions cannot loop on iterators
                 out << R"cpp(
                    #if defined _OPENMP && _OPENMP < 200805
                            auto count = std::distance(part.begin(), part.end());
                            auto base = part.begin();
+                   #endif
+                   )cpp";
+
+                // OMP reduction is not available on all versions of OpenMP
+                out << "#if defined _OPENMP && _OPENMP >= " << omp_min_ver << "\n";
+                out << "#pragma omp for reduction(" << op << ":" << sharedVariable << ")\n";
+                out << "#endif\n";
+
+                // iterate over each part
+                out << R"cpp(
+                   #if defined _OPENMP && _OPENMP < 200805
                            for(int index  = 0; index < count; index++) {
                                auto it = base + index;
                    #else
@@ -1408,11 +1427,13 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             // Set reduction operation
             std::string op;
+            std::string omp_min_ver;
             switch (aggregate.getFunction()) {
                 case AggregateOp::MIN:
                 case AggregateOp::FMIN:
                 case AggregateOp::UMIN: {
                     op = "min";
+                    omp_min_ver = "200805"; // from OMP 3.0
                     break;
                 }
 
@@ -1420,6 +1441,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case AggregateOp::FMAX:
                 case AggregateOp::UMAX: {
                     op = "max";
+                    omp_min_ver = "200805"; // from OMP 3.0
                     break;
                 }
 
@@ -1429,6 +1451,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case AggregateOp::COUNT:
                 case AggregateOp::SUM: {
                     op = "+";
+                    omp_min_ver = "0";
                     break;
                 }
 
@@ -1458,13 +1481,23 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "auto part = " << relName << "->partition();\n";
             out << "PARALLEL_START\n";
             out << preamble.str();
-            // pragma statement
-            out << "#pragma omp for reduction(" << op << ":" << sharedVariable << ")\n";
-            // iterate over each part
+
+            // old OpenMP versions cannot loop on iterators
             out << R"cpp(
                    #if defined _OPENMP && _OPENMP < 200805
                            auto count = std::distance(part.begin(), part.end());
                            auto base = part.begin();
+                   #endif
+                   )cpp";
+
+            // pragma statement
+            out << "#if defined _OPENMP && _OPENMP >= " << omp_min_ver << "\n";
+            out << "#pragma omp for reduction(" << op << ":" << sharedVariable << ")\n";
+            out << "#endif\n";
+            
+            // iterate over each part
+            out << R"cpp(
+                   #if defined _OPENMP && _OPENMP < 200805
                            for(int index  = 0; index < count; index++) {
                                auto it = base + index;
                    #else
