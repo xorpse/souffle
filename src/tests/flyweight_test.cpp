@@ -81,7 +81,7 @@ public:
     void parametrizedFindOrInsertCopy(
             const std::size_t LaneCount, const std::size_t InitialCapacity, std::size_t MaxThreadCount) {
 #ifdef _OPENMP
-        omp_set_num_threads(std::min(MaxThreadCount, (std::size_t)omp_get_max_threads()));
+        omp_set_num_threads(static_cast<int>(std::min(MaxThreadCount, (std::size_t)omp_get_max_threads())));
 #else
         testutil::ignore(MaxThreadCount);
 #endif
