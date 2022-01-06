@@ -23,8 +23,12 @@ until args.empty?
     debug_mode = true
   when "-L"
     lib_dirs << args.shift
+  when /^\-L(.+)/
+    lib_dirs << $1
   when "-l"
     lib_names << args.shift
+  when /^\-l(.+)/
+    lib_names << $1
   when "-t"
     testing_mode = true
     warning_mode = true
@@ -69,6 +73,8 @@ else
 end
 
 OUTNAME_FMT = conf['outname_fmt']
+LIBDIR_FMT = conf['libdir_fmt']
+LIBNAME_FMT = conf['libname_fmt']
 
 cmd << OUTNAME_FMT % [exepath]
 cmd << input_path
@@ -78,6 +84,8 @@ cmd << conf['definitions']
 cmd << conf['includes']
 cmd << conf['compile_options']
 cmd << conf['link_options']
+cmd += lib_dirs.map{|dir| "-L%s" % [dir]}
+cmd += lib_names.map{|name| "-l%s" % [name]}
 
 if verbose
   STDOUT.puts cmd.join(" ")

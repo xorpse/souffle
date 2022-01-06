@@ -489,9 +489,13 @@ endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   set(OUTNAME_FMT "-o %s")
+  set(LIBDIR_FMT "-L%s")
+  set(LIBNAME_FMT "-l%s")
   set(EXE_EXTENSION "")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set(OUTNAME_FMT "/Fe:%s")
+  set(LIBDIR_FMT "/LIBPATH:%s")
+  set(LIBNAME_FMT "%s")
   set(EXE_EXTENSION ".exe")
 endif ()
 
@@ -524,6 +528,8 @@ JSON_DATA_TEXT = '{
   \"compile_options\": \"${SOUFFLE_COMPILED_CXX_OPTIONS}\",
   \"link_options\": \"${SOUFFLE_COMPILED_LINK_OPTIONS}\",
   \"outname_fmt\": \"${OUTNAME_FMT}\",
+  \"libdir_fmt\": \"${LIBDIR_FMT}\",
+  \"libname_fmt\": \"${LIBNAME_FMT}\",
   \"exe_extension\": \"${EXE_EXTENSION}\"
 }'
 ${TEMPLATE}
