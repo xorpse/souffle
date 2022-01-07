@@ -46,12 +46,13 @@ function(SOUFFLE_RUN_CPP_TEST)
     list(APPEND ADDITIONNAL_FLAGS "/Zc:preprocessor")
     list(APPEND ADDITIONNAL_FLAGS "/permissive-")
     list(APPEND ADDITIONNAL_FLAGS "/EHsc")
+    list(APPEND ADDITIONNAL_FLAGS "/D_CRT_SECURE_NO_WARNINGS")
     list(APPEND ADDITIONNAL_FLAGS "/nologo")
   endif ()
 
+  # compilation
   add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_compile_cpp
     COMMAND
-    #${RUBY_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/redirect.rb
       ${CMAKE_CXX_COMPILER}
       ${CMAKE_CXX17_STANDARD_COMPILE_OPTION}
       ${OUT_OPTION}
@@ -67,16 +68,61 @@ function(SOUFFLE_RUN_CPP_TEST)
     FIXTURES_SETUP ${PARAM_FIXTURE_NAME}_compile_cpp
     FIXTURES_REQUIRED ${PARAM_FIXTURE_NAME}_run_souffle)
 
+  set(RPATHS)
+  # library path for SQLite
+  if (SOUFFLE_USE_SQLITE)
+    if (COMMAND cmake_path)
+      cmake_path(GET SQLite3_LIBRARY PARENT_PATH SQLite3_RPATH)
+    else ()
+      get_filename_component(SQLite3_RPATH ${SQLite3_LIBRARY} DIRECTORY)
+    endif ()
+    list(APPEND RPATHS ${SQLite3_RPATH})
+  endif()
+
+  # library path for Zlib
+  if (SOUFFLE_USE_ZLIB)
+    if (COMMAND cmake_path)
+      cmake_path(GET ZLIB_LIBRARY_RELEASE PARENT_PATH ZLIB_RPATH)
+    else ()
+      get_filename_component(ZLIB_RPATH ${ZLIB_LIBRARY_RELEASE} DIRECTORY)
+    endif ()
+    list(APPEND RPATHS ${ZLIB_RPATH})
+  endif()
+
+  # library path for Curses
+  if (SOUFFLE_USE_CURSES)
+    if (COMMAND cmake_path)
+      cmake_path(GET CURSES_NCURSES_LIBRARY PARENT_PATH NCURSES_RPATH)
+    else ()
+      get_filename_component(NCURSES_RPATH ${CURSES_NCURSES_LIBRARY} DIRECTORY)
+    endif ()
+    list(APPEND RPATHS ${NCURSES_RPATH})
+  endif()
+
+  set(ENV_PATH_LIST)
+  if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    # no need to set LD_LIBRARY_PATH since souffle-compile set the linker RPATH.
+    #list(JOIN RPATHS ":" ENV_PATH_LIST)
+    #set(ENV_PATH_LIST "LD_LIBRARY_PATH=${ENV_PATH_LIST}:$ENV{LD_LIBRARY_PATH}")
+  elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    # must add path of libraries in PATH on Windows (or should we copy dlls to the execution path?)
+    list(JOIN RPATHS "\;" ENV_PATH_LIST)
+    set(ENV_PATH_LIST "PATH=${ENV_PATH_LIST}:$ENV{PATH}")
+    string(REPLACE ";" "\\;" ENV_PATH_LIST "${ENV_PATH_LIST}")
+  endif ()
+
+  # execution
   add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_cpp
     COMMAND 
     ${RUBY_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/redirect.rb
       --out "${TEST_NAME}.out"
       --err "${TEST_NAME}.err"
       "${OUTNAME}" "${FACTS_DIR}")
-    #sh -c "set -e; './${TEST_NAME}' '${FACTS_DIR}' > '${TEST_NAME}.out' 2> '${TEST_NAME}.err'")
+
   set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_run_cpp PROPERTIES
     WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
     LABELS "${PARAM_TEST_LABELS}"
+    ENVIRONMENT "${ENV_PATH_LIST}"
     FIXTURES_SETUP ${PARAM_FIXTURE_NAME}_run_cpp
     FIXTURES_REQUIRED ${PARAM_FIXTURE_NAME}_compile_cpp
     )

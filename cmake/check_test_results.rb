@@ -60,7 +60,9 @@ if extra_file_pattern
       `"#{binary}" -d -c "#{file}" > "#{generated_file}"`
     when "sqlite3"
       generated_file = "%s.csv" % [File.basename(file, ".sqlite.output")]
-      `"#{binary}" -batch "#{file}" -init "#{input_dir}/#{file}.script" "" > "#{generated_file}"`
+      cmd = "\"#{binary}\" -batch -init \"#{input_dir}/#{file}.script\" \"#{file}\" \"\" > \"#{generated_file}\""
+      `#{cmd}`
+
     when "json"
       generated_file = file
     end

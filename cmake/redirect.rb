@@ -21,6 +21,7 @@ until args.empty?
     @err_file = args.shift
   else
     @command = args.dup
+    @command[0] = File.absolute_path(@command[0])
     args = []
   end
 end

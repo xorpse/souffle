@@ -455,6 +455,7 @@ get_target_property(SOUFFLE_COMPILED_OPTS compiled COMPILE_OPTIONS)
 get_target_property(SOUFFLE_COMPILED_INCS compiled INCLUDE_DIRECTORIES)
 
 set(SOUFFLE_COMPILED_LIBS "")
+set(SOUFFLE_COMPILED_RPATHS "")
 
 if (THREADS_FOUND)
   list(APPEND SOUFFLE_COMPILED_LIBS ${CMAKE_THREAD_LIBS_INIT})
@@ -477,31 +478,55 @@ endif()
 
 if (SOUFFLE_USE_SQLITE)
   list(APPEND SOUFFLE_COMPILED_LIBS ${SQLite3_LIBRARY})
+  if (COMMAND cmake_path)
+    cmake_path(GET SQLite3_LIBRARY PARENT_PATH SQLite3_RPATH)
+  else ()
+    get_filename_component(SQLite3_RPATH ${SQLite3_LIBRARY} DIRECTORY)
+  endif ()
+  list(APPEND SOUFFLE_COMPILED_RPATHS ${SQLite3_RPATH})
 endif()
 
 if (SOUFFLE_USE_ZLIB)
   list(APPEND SOUFFLE_COMPILED_LIBS ${ZLIB_LIBRARY_RELEASE})
+  if (COMMAND cmake_path)
+    cmake_path(GET ZLIB_LIBRARY_RELEASE PARENT_PATH ZLIB_RPATH)
+  else ()
+    get_filename_component(ZLIB_RPATH ${ZLIB_LIBRARY_RELEASE} DIRECTORY)
+  endif ()
+  list(APPEND SOUFFLE_COMPILED_RPATHS ${ZLIB_RPATH})
 endif()
 
 if (SOUFFLE_USE_CURSES)
   list(APPEND SOUFFLE_COMPILED_LIBS ${CURSES_NCURSES_LIBRARY})
+  if (COMMAND cmake_path)
+    cmake_path(GET CURSES_NCURSES_LIBRARY PARENT_PATH NCURSES_RPATH)
+  else ()
+    get_filename_component(NCURSES_RPATH ${CURSES_NCURSES_LIBRARY} DIRECTORY)
+  endif ()
+  list(APPEND SOUFFLE_COMPILED_RPATHS ${NCURSES_RPATH})
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   set(OUTNAME_FMT "-o %s")
   set(LIBDIR_FMT "-L%s")
   set(LIBNAME_FMT "-l%s")
+  set(RPATH_FMT "-Wl,-rpath,%s")
   set(EXE_EXTENSION "")
+  set(OS_PATH_DELIMITER ":")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set(OUTNAME_FMT "/Fe:%s")
   set(LIBDIR_FMT "/LIBPATH:%s")
   set(LIBNAME_FMT "%s")
+  set(RPATH_FMT "")
   set(EXE_EXTENSION ".exe")
+  set(OS_PATH_DELIMITER "\;")
 endif ()
 
 list(JOIN SOUFFLE_COMPILED_OPTS " " SOUFFLE_COMPILED_CXX_OPTIONS)
 
 list(JOIN SOUFFLE_COMPILED_LIBS " " SOUFFLE_COMPILED_LINK_OPTIONS)
+
+list(JOIN SOUFFLE_COMPILED_RPATHS ${OS_PATH_DELIMITER} SOUFFLE_COMPILED_RPATH_LIST)
 
 list(TRANSFORM SOUFFLE_COMPILED_INCS PREPEND "-I")
 list(JOIN SOUFFLE_COMPILED_INCS " " SOUFFLE_COMPILED_INCLUDES)
@@ -527,9 +552,12 @@ JSON_DATA_TEXT = '{
   \"definitions\": \"${SOUFFLE_COMPILED_DEFINITIONS}\",
   \"compile_options\": \"${SOUFFLE_COMPILED_CXX_OPTIONS}\",
   \"link_options\": \"${SOUFFLE_COMPILED_LINK_OPTIONS}\",
+  \"rpaths\": \"${SOUFFLE_COMPILED_RPATH_LIST}\",
   \"outname_fmt\": \"${OUTNAME_FMT}\",
   \"libdir_fmt\": \"${LIBDIR_FMT}\",
   \"libname_fmt\": \"${LIBNAME_FMT}\",
+  \"rpath_fmt\": \"${RPATH_FMT}\",
+  \"path_delimiter\": \"${OS_PATH_DELIMITER}\",
   \"exe_extension\": \"${EXE_EXTENSION}\"
 }'
 ${TEMPLATE}

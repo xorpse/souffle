@@ -76,6 +76,9 @@ end
 OUTNAME_FMT = conf['outname_fmt']
 LIBDIR_FMT = conf['libdir_fmt']
 LIBNAME_FMT = conf['libname_fmt']
+RPATH_FMT = conf['rpath_fmt']
+PATH_DELIMITER = conf['path_delimiter']
+RPATHS = conf['rpaths'].split(PATH_DELIMITER)
 
 cmd << OUTNAME_FMT % [exepath]
 cmd << input_path
@@ -85,6 +88,7 @@ cmd << conf['definitions']
 cmd << conf['includes']
 cmd << conf['compile_options']
 cmd << conf['link_options']
+cmd += RPATHS.map{|rpath| RPATH_FMT % [rpath]}
 cmd += lib_dirs.map{|dir| "-L%s" % [dir]}
 cmd += lib_names.map{|name| "-l%s" % [name]}
 
