@@ -6,6 +6,8 @@ require 'open3'
 @err_file = nil
 @command = nil
 
+debug = false
+
 args = ARGV.dup
 until args.empty?
   arg = args.first
@@ -44,6 +46,9 @@ if @err_file
 end
 
 if !status.success?
+  if debug
+    STDERR.puts File.read(@err_file)
+  end
   exit -1
 end
 

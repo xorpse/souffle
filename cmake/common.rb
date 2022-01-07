@@ -35,13 +35,16 @@ def compare_files expected_file, actual_file
 
   #STDERR.puts "Comparing %s %s" % [expected_file, actual_file]
 
-  expected_lines = File.readlines(expected_file)
-  actual_lines = File.readlines(actual_file)
+  expected_lines = File.readlines(expected_file).map{|l| l.chomp}
+  actual_lines = File.readlines(actual_file).map{|l| l.chomp}
 
   if actual_lines != expected_lines
     STDERR.puts "Found output difference expected file:'#{File.absolute_path expected_file}' actual file:'#{File.absolute_path actual_file}'"
+    pp expected_lines
+    pp actual_lines
     #STDERR.write `diff #{expected_file} #{actual_file}`
-    raise ("Differences in expected:'%s' actual:'%s'" % [expected_file, actual_file]) 
+    #raise ("Differences in expected:'%s' actual:'%s'" % [expected_file, actual_file]) 
+    exit 1
   end
   true
 end
@@ -49,8 +52,8 @@ end
 # Compare '{file_name}' with '{file_name}.expected'
 # exit with an error status if files do not match.
 def compare_file file_name
-  expected_file = file_name
-  actual_file = "%s.expected" % [file_name]
+  actual_file = file_name
+  expected_file = "%s.expected" % [file_name]
 
   compare_files expected_file, actual_file
 end
@@ -58,8 +61,8 @@ end
 # Compare '{file_name}.sorted' with '{file_name}.expected.sorted'
 # exit with an error status if files do not match.
 def compare_sorted_file file_name
-  expected_file = "%s.sorted" % [file_name]
-  actual_file = "%s.expected.sorted" % [file_name]
+  actual_file = "%s.sorted" % [file_name]
+  expected_file = "%s.expected.sorted" % [file_name]
 
   compare_files expected_file, actual_file
 end

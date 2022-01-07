@@ -93,7 +93,7 @@ cmd += lib_dirs.map{|dir| "-L%s" % [dir]}
 cmd += lib_names.map{|name| "-l%s" % [name]}
 
 if verbose
-  STDOUT.puts cmd.join(" ")
+  STDERR.puts cmd.join(" ")
 end
 
 FileUtils.rm(exepath) if File.exist?(exepath)

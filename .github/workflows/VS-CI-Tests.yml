@@ -34,7 +34,6 @@ jobs:
       run: |
         choco config set cacheLocation ${{ env.CHOCO_CACHE_DIR }}
         choco install choco-packages.config --no-progress --installargs 'ADD_CMAKE_TO_PATH=""System""'
-        choco info cmake
 
     # Use vcpkg to install devel library dependencies.
     - name: Library Dependencies (vcpkg)
@@ -54,13 +53,17 @@ jobs:
         $env:ChocolateyInstall = Convert-Path "$((Get-Command choco).Path)\..\.."
         Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
         refreshenv
-        cmake -S . -B build -G "Visual Studio 16 2019" -A x64 "-DCMAKE_TOOLCHAIN_FILE=${{env.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake" "-DCMAKE_BUILD_TYPE=Release" -DCMAKE_CXX_FLAGS=/bigobj -DSOUFFLE_DOMAIN_64BIT=ON -DCMAKE_FIND_LIBRARY_PREFIXES=";lib" -DCMAKE_FIND_LIBRARY_SUFFIXES=".lib;.dll" -DSOUFFLE_USE_CURSES=OFF -DSOUFFLE_USE_ZLIB=ON -DCMAKE_FIND_DEBUG_MODE=FALSE -DSOUFFLE_BASH_COMPLETION=OFF
+        cmake -S . -B build -G "Visual Studio 16 2019" -A x64 "-DCMAKE_TOOLCHAIN_FILE=${{env.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=/bigobj -DSOUFFLE_DOMAIN_64BIT=ON -DCMAKE_FIND_LIBRARY_PREFIXES=";lib" -DCMAKE_FIND_LIBRARY_SUFFIXES=".lib;.dll" -DSOUFFLE_USE_CURSES=OFF -DSOUFFLE_USE_ZLIB=ON -DCMAKE_FIND_DEBUG_MODE=FALSE -DSOUFFLE_BASH_COMPLETION=OFF
+
     - name: Build
       working-directory: ${{github.workspace}}
       run: cmake --build build --config Release -j4
 
-    - name: Test
-      #if: ${{ false }} # disabled
+    # Run the tests, Visual Studio must be in the environment because cl.exe is required for compiled Souffle.
+    - name: Check
       working-directory: ${{github.workspace}}/build
-      run: ctest --output-on-failure --build-config Release --progress -j4
+      shell: cmd
+      run: |
+        pushd "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build" & call vcvars64.bat & popd
+        ctest --output-on-failure --build-config Release --progress -j4
 

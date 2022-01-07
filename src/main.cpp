@@ -428,7 +428,7 @@ int main(int argc, char** argv) {
     // Add RamDomain size as a macro
     cmd += " -DRAM_DOMAIN_SIZE=" + std::to_string(RAM_DOMAIN_SIZE);
     cmd += " \"" + Global::config().get("") + "\"";
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
     // cl.exe prints the input file name on the standard error stream,
     // we must silent it in order to preserve an empty error output
     // because Souffle test-suite is sensible to error outputs.

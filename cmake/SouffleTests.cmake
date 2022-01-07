@@ -40,50 +40,6 @@ function(SOUFFLE_RUN_INTEGRATION_TEST)
       set (STDIN_ARGS "--in" "${PARAM_TEST_NAME}.in")
     endif()
 
-    set(RPATHS)
-    # library path for SQLite
-    if (SOUFFLE_USE_SQLITE)
-      if (COMMAND cmake_path)
-        cmake_path(GET SQLite3_LIBRARY PARENT_PATH SQLite3_RPATH)
-      else ()
-        get_filename_component(SQLite3_RPATH ${SQLite3_LIBRARY} DIRECTORY)
-      endif ()
-      list(APPEND RPATHS ${SQLite3_RPATH})
-    endif()
-
-    # library path for Zlib
-    if (SOUFFLE_USE_ZLIB)
-      if (COMMAND cmake_path)
-        cmake_path(GET ZLIB_LIBRARY_RELEASE PARENT_PATH ZLIB_RPATH)
-      else ()
-        get_filename_component(ZLIB_RPATH ${ZLIB_LIBRARY_RELEASE} DIRECTORY)
-      endif ()
-      list(APPEND RPATHS ${ZLIB_RPATH})
-    endif()
-
-    # library path for Curses
-    if (SOUFFLE_USE_CURSES)
-      if (COMMAND cmake_path)
-        cmake_path(GET CURSES_NCURSES_LIBRARY PARENT_PATH NCURSES_RPATH)
-      else ()
-        get_filename_component(NCURSES_RPATH ${CURSES_NCURSES_LIBRARY} DIRECTORY)
-      endif ()
-      list(APPEND RPATHS ${NCURSES_RPATH})
-    endif()
-
-
-    set(ENV_PATH_LIST)
-    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-      # no need to set LD_LIBRARY_PATH since souffle-compile set the linker RPATH.
-      #list(JOIN RPATHS ":" ENV_PATH_LIST)
-      #set(ENV_PATH_LIST "LD_LIBRARY_PATH=${ENV_PATH_LIST}:$ENV{LD_LIBRARY_PATH}")
-    elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-      # must add path of libraries in PATH on Windows (or should we copy dlls to the execution path?)
-      list(JOIN RPATHS "\;" ENV_PATH_LIST)
-      set(ENV_PATH_LIST "PATH=${ENV_PATH_LIST}:$ENV{PATH}")
-      string(REPLACE ";" "\\;" ENV_PATH_LIST "${ENV_PATH_LIST}")
-    endif ()
-
     add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_souffle
       COMMAND
       ${RUBY_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/redirect.rb
@@ -100,7 +56,6 @@ function(SOUFFLE_RUN_INTEGRATION_TEST)
       #souffle are dropped in there
       WORKING_DIRECTORY "${PARAM_OUTPUT_DIR}"
       LABELS "${PARAM_TEST_LABELS}"
-      ENVIRONMENT "${ENV_PATH_LIST}"
       FIXTURES_SETUP ${PARAM_FIXTURE_NAME}_run_souffle
       FIXTURES_REQUIRED ${PARAM_FIXTURE_NAME}_setup)
 

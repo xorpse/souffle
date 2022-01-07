@@ -310,6 +310,30 @@ add_executable(souffle
 target_link_libraries(souffle libsouffle)
 install(TARGETS souffle DESTINATION bin)
 
+# Copy the dlls in the same directory as Souffle so that they will
+# be immediately found by the operating system.
+
+if (SOUFFLE_USE_SQLITE)
+add_custom_command(TARGET souffle POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+  ${SQLite3_LIBRARY} ${ZLIB_LIBRARY_RELEASE}
+  $<TARGET_FILE_DIR:souffle>)
+endif ()
+
+if (SOUFFLE_USE_ZLIB)
+add_custom_command(TARGET souffle POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+  ${SQLite3_LIBRARY} ${ZLIB_LIBRARY_RELEASE}
+  $<TARGET_FILE_DIR:souffle>)
+endif ()
+
+if (SOUFFLE_USE_CURSES)
+add_custom_command(TARGET souffle POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+  ${CURSES_NCURSES_LIBRARY}
+  $<TARGET_FILE_DIR:souffle>)
+endif ()
+
 # --------------------------------------------------
 # Souffle's profiler binary
 # --------------------------------------------------
