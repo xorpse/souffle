@@ -342,6 +342,7 @@ add_subdirectory(src)
 
 if (SOUFFLE_ENABLE_TESTING)
     find_package(Ruby 2.5)
+    find_package(Python 3 REQUIRED)
     add_subdirectory(src/tests)
     add_subdirectory(tests)
 endif()

@@ -19,8 +19,12 @@ function(SOUFFLE_SETUP_INTEGRATION_TEST_DIR)
 
 #Set up the test directory
     add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_setup
-      COMMAND ${RUBY_EXECUTABLE} "${PROJECT_SOURCE_DIR}/cmake/setup_test_dir.rb" "${PARAM_DATA_CHECK_DIR}" "${PARAM_OUTPUT_DIR}"
-                                                    "${PARAM_TEST_NAME}" "${PARAM_EXTRA_DATA}")
+      COMMAND ${Python_EXECUTABLE} "${PROJECT_SOURCE_DIR}/cmake/setup_test_dir.py"
+        "${PARAM_DATA_CHECK_DIR}"
+        "${PARAM_OUTPUT_DIR}"
+        "${PARAM_TEST_NAME}"
+        "${PARAM_EXTRA_DATA}")
+
     set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_setup PROPERTIES
                          LABELS "${PARAM_TEST_LABELS}"
                          FIXTURES_SETUP ${PARAM_FIXTURE_NAME}_setup)
@@ -42,7 +46,7 @@ function(SOUFFLE_RUN_INTEGRATION_TEST)
 
     add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_souffle
       COMMAND
-      ${RUBY_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/redirect.rb
+      ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/redirect.py
         --out ${PARAM_TEST_NAME}.out
         --err ${PARAM_TEST_NAME}.err
         ${STDIN_ARGS}
@@ -77,7 +81,7 @@ function(SOUFFLE_COMPARE_STD_OUTPUTS)
 
     add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_compare_std_outputs
       COMMAND
-        ${RUBY_EXECUTABLE} "${PROJECT_SOURCE_DIR}/cmake/check_std_outputs.rb"
+        ${Python_EXECUTABLE} "${PROJECT_SOURCE_DIR}/cmake/check_std_outputs.py"
         "${PARAM_TEST_NAME}"
         "${PARAM_EXTRA_DATA}")
 
@@ -111,7 +115,7 @@ function(SOUFFLE_COMPARE_CSV)
         endif()
 
         add_test(NAME ${QUALIFIED_TEST_NAME}_compare_csv
-          COMMAND ${RUBY_EXECUTABLE} "${PROJECT_SOURCE_DIR}/cmake/check_test_results.rb"
+          COMMAND ${Python_EXECUTABLE} "${PROJECT_SOURCE_DIR}/cmake/check_test_results.py"
             "${PARAM_INPUT_DIR}"
             ${PARAM_EXTRA_DATA}
             "${EXTRA_BINARY}")
