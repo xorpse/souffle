@@ -131,9 +131,22 @@ namespace souffle {
     std::map<char const*, std::string> env;
     if (Global::config().has("library-dir")) {
         auto escapeLdPath = [](auto&& xs) { return escape(xs, {':', ' '}, "\\"); };
-        auto ld_path = toString(join(map(Global::config().getMany("library-dir"), escapeLdPath), ":"));
+        auto ld_path = toString(join(map(Global::config().getMany("library-dir"), escapeLdPath), std::string(1,PATHdelimiter)));
 #if defined(_MSC_VER)
-        SetEnvironmentVariable("TODO", ld_path.c_str());
+        std::size_t l;
+        std::wstring env_path(ld_path.length() + 1, L' ');
+        ::mbstowcs_s(&l, env_path.data(), env_path.size(), ld_path.data(), ld_path.size());
+        env_path.resize(l - 1);
+
+        DWORD n = GetEnvironmentVariableW(L"PATH", nullptr, 0);
+        if (n > 0) {
+            // append path
+            std::unique_ptr<wchar_t[]> orig(new wchar_t[n]);
+            GetEnvironmentVariableW(L"PATH", orig.get(), n);
+            env_path = env_path + L";" + std::wstring(orig.get());
+        }
+        SetEnvironmentVariableW(L"PATH", env_path.c_str());
+        
 #elif defined(__APPLE__)
         env["DYLD_LIBRARY_PATH"] = ld_path;
 #else
@@ -160,6 +173,11 @@ void compileToBinary(const std::string& command, std::string_view sourceFilename
 
     argv.push_back(command);
 
+#ifndef NDEBUG
+    // compile with debug
+    argv.push_back("-g");
+#endif
+
     if (Global::config().has("swig")) {
         argv.push_back("-s");
         argv.push_back(Global::config().get("swig"));
@@ -182,8 +200,13 @@ void compileToBinary(const std::string& command, std::string_view sourceFilename
 
     argv.push_back(std::string(sourceFilename));
 
-    auto exit = execute("ruby", argv);
-    if (!exit) throw std::invalid_argument(tfm::format("unable to execute tool <ruby %s>", command));
+#if defined(_MSC_VER)
+    const char* interpreter = "python";
+#else
+    const char* interpreter = "python3";
+#endif
+    auto exit = execute(interpreter, argv);
+    if (!exit) throw std::invalid_argument(tfm::format("unable to execute tool <python3 %s>", command));
     if (exit != 0)
         throw std::invalid_argument(tfm::format("failed to compile C++ source <%s>", sourceFilename));
 }
@@ -786,9 +809,9 @@ int main(int argc, char** argv) {
 
             if (must_compile) {
                 /* Fail if a souffle-compile executable is not found */
-                const auto souffle_compile = findTool("souffle-compile.rb", souffleExecutable, ".");
+                const auto souffle_compile = findTool("souffle-compile.py", souffleExecutable, ".");
                 if (!souffle_compile)
-                    throw std::runtime_error("failed to locate souffle-compile");
+                    throw std::runtime_error("failed to locate souffle-compile.py");
 
                 auto t_bgn = std::chrono::high_resolution_clock::now();
                 compileToBinary(*souffle_compile, sourceFilename);

@@ -45,7 +45,7 @@ F makeFun() {
     // Even thought the lambda is stateless, it has no default ctor
     // Is this gross?  Yes, yes it is.
     // FIXME: Remove after C++20
-    typename std::aligned_storage<sizeof(F)>::type fakeLam;
+    typename std::aligned_storage<sizeof(F)>::type fakeLam{};
     return reinterpret_cast<F const&>(fakeLam);
 }
 #ifdef _MSC_VER

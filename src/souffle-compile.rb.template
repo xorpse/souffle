@@ -89,8 +89,8 @@ cmd << conf['includes']
 cmd << conf['compile_options']
 cmd << conf['link_options']
 cmd += RPATHS.map{|rpath| RPATH_FMT % [rpath]}
-cmd += lib_dirs.map{|dir| "-L%s" % [dir]}
-cmd += lib_names.map{|name| "-l%s" % [name]}
+cmd += lib_dirs.map{|dir| LIBDIR_FMT % [dir]}
+cmd += lib_names.map{|name| LIBNAME_FMT % [name]}
 
 if verbose
   STDERR.puts cmd.join(" ")

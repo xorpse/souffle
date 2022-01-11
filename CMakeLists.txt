@@ -121,8 +121,22 @@ if (SOUFFLE_USE_LIBCPP)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -lc++abi")
 endif()
 
-if (MSVC)
+if (WIN32)
+  # Search libraries with and without 'lib' prefix.
   set(CMAKE_FIND_LIBRARY_PREFIXES ";lib")
+
+  # Prefix all shared libraries with 'lib'.
+  set(CMAKE_SHARED_LIBRARY_PREFIX "lib")
+
+  # Prefix all static libraries with 'lib'.
+  set(CMAKE_STATIC_LIBRARY_PREFIX "lib")
+
+  SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIRECTORY}")
+  SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIRECTORY}")
+  SET( CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIRECTORY}")
+  SET( CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIRECTORY}")
+  SET( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIRECTORY}")
+  SET( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIRECTORY}")
 endif ()
 
 # --------------------------------------------------
@@ -152,7 +166,7 @@ if (SOUFFLE_SWIG_PYTHON OR SOUFFLE_SWIG_JAVA)
     find_package(SWIG REQUIRED)
 
     if (SOUFFLE_SWIG_PYTHON)
-        find_package(Python "3.7" REQUIRED)
+        find_package(Python3 3.7 REQUIRED)
     endif()
 
     if (SOUFFLE_SWIG_JAVA)
@@ -341,8 +355,7 @@ endif(SOUFFLE_CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 add_subdirectory(src)
 
 if (SOUFFLE_ENABLE_TESTING)
-    find_package(Ruby 2.5)
-    find_package(Python 3 REQUIRED)
+    find_package(Python3 3.7 REQUIRED)
     add_subdirectory(src/tests)
     add_subdirectory(tests)
 endif()
@@ -372,7 +385,7 @@ IF (SOUFFLE_BASH_COMPLETION)
 endif()
 
 
-if (NOT MSVC)
+if (NOT WIN32)
 # --------------------------------------------------
 # CPack configuration
 # --------------------------------------------------

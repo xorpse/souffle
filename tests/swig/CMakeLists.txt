@@ -16,7 +16,7 @@ function(SOUFFLE_RUN_PYTHON_SWIG_TEST)
     )
 
     add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_swig
-             COMMAND sh -c "set -e; PYTHONPATH=. '${Python_EXECUTABLE}' '${PARAM_INPUT_DIR}/driver.py' '${PARAM_FACTS_DIR}'
+             COMMAND sh -c "set -e; PYTHONPATH=. '${Python3_EXECUTABLE}' '${PARAM_INPUT_DIR}/driver.py' '${PARAM_FACTS_DIR}'
                                             1> '${PARAM_TEST_NAME}-python.out' \\
                                             2> '${PARAM_TEST_NAME}-python.err'")
     set_tests_properties(${PARAM_QUALIFIED_TEST_NAME}_run_swig PROPERTIES

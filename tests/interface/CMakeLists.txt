@@ -68,8 +68,8 @@ function(SOUFFLE_RUN_CPP_TEST)
 
   # execution
   add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_cpp
-    COMMAND 
-    ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/redirect.py
+    COMMAND
+    ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/redirect.py
       --out "${TEST_NAME}.out"
       --err "${TEST_NAME}.err"
       "${OUTNAME}" "${FACTS_DIR}")

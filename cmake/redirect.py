@@ -14,8 +14,7 @@ parser.add_argument('arguments', nargs=argparse.REMAINDER)
 args = parser.parse_args()
 
 if args.in_file:
-    with open(args.in_file) as file:
-        stdin = file.read()
+    stdin = open(args.in_file)
 else:
     stdin = None
 

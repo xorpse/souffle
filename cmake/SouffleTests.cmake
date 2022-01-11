@@ -19,7 +19,7 @@ function(SOUFFLE_SETUP_INTEGRATION_TEST_DIR)
 
 #Set up the test directory
     add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_setup
-      COMMAND ${Python_EXECUTABLE} "${PROJECT_SOURCE_DIR}/cmake/setup_test_dir.py"
+      COMMAND ${Python3_EXECUTABLE} "${PROJECT_SOURCE_DIR}/cmake/setup_test_dir.py"
         "${PARAM_DATA_CHECK_DIR}"
         "${PARAM_OUTPUT_DIR}"
         "${PARAM_TEST_NAME}"
@@ -46,7 +46,7 @@ function(SOUFFLE_RUN_INTEGRATION_TEST)
 
     add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_run_souffle
       COMMAND
-      ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/redirect.py
+      ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/redirect.py
         --out ${PARAM_TEST_NAME}.out
         --err ${PARAM_TEST_NAME}.err
         ${STDIN_ARGS}
@@ -81,7 +81,7 @@ function(SOUFFLE_COMPARE_STD_OUTPUTS)
 
     add_test(NAME ${PARAM_QUALIFIED_TEST_NAME}_compare_std_outputs
       COMMAND
-        ${Python_EXECUTABLE} "${PROJECT_SOURCE_DIR}/cmake/check_std_outputs.py"
+        ${Python3_EXECUTABLE} "${PROJECT_SOURCE_DIR}/cmake/check_std_outputs.py"
         "${PARAM_TEST_NAME}"
         "${PARAM_EXTRA_DATA}")
 
@@ -115,7 +115,7 @@ function(SOUFFLE_COMPARE_CSV)
         endif()
 
         add_test(NAME ${QUALIFIED_TEST_NAME}_compare_csv
-          COMMAND ${Python_EXECUTABLE} "${PROJECT_SOURCE_DIR}/cmake/check_test_results.py"
+          COMMAND ${Python3_EXECUTABLE} "${PROJECT_SOURCE_DIR}/cmake/check_test_results.py"
             "${PARAM_INPUT_DIR}"
             ${PARAM_EXTRA_DATA}
             "${EXTRA_BINARY}")
@@ -129,9 +129,9 @@ endfunction()
 
 function(SOUFFLE_RUN_TEST_HELPER)
 #PARAM_CATEGORY - e.g.syntactic, example etc.
-#PARAM_TEST_NAME - the name of the test, the short directory name under tests / < category> / < test_name>
-#PARAM_COMPILED - with or without - c
-#PARAM_FUNCTORS - with - L for finding functor library in the testsuite
+#PARAM_TEST_NAME - the name of the test, the short directory name under tests / <category> / <test_name>
+#PARAM_COMPILED - with or without -c
+#PARAM_FUNCTORS - with -L for finding functor library in the testsuite
 #PARAM_NEGATIVE - should it fail or not
 #PARAM_MULTI_TEST - used to distinguish "multi-tests", sort of left over from automake
 #Basically, the same test dir has multiple sets of facts / outputs
@@ -164,7 +164,11 @@ function(SOUFFLE_RUN_TEST_HELPER)
     endif()
 
     if (PARAM_FUNCTORS)
-      list(APPEND EXTRA_FLAGS "-L${CMAKE_CURRENT_BINARY_DIR}/${PARAM_TEST_NAME}")
+      #if (MSVC)
+      #  list(APPEND EXTRA_FLAGS "-L${CMAKE_CURRENT_BINARY_DIR}/${PARAM_TEST_NAME}/${CMAKE_BUILD_TYPE}")
+      #else ()
+        list(APPEND EXTRA_FLAGS "-L${CMAKE_CURRENT_BINARY_DIR}/${PARAM_TEST_NAME}")
+        #endif ()
     endif()
 
     if (NOT PARAM_FACTS_DIR_NAME)

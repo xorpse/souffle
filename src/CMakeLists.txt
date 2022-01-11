@@ -216,7 +216,7 @@ set_target_properties(compiled PROPERTIES CXX_EXTENSIONS OFF)
 if (NOT MSVC)
   target_compile_options(libsouffle PUBLIC -Wall -Wextra -Werror -fwrapv)
 else ()
-  target_compile_options(libsouffle PUBLIC /W3 /WX -UndefIntOverflow–)
+  target_compile_options(libsouffle PUBLIC /W3 /WX)
 endif ()
 
 target_compile_options(compiled PUBLIC "")
@@ -338,15 +338,15 @@ endif ()
 # Souffle's profiler binary
 # --------------------------------------------------
 
-if (NOT MSVC)
-add_executable(souffleprof
-               souffle_prof.cpp)
-target_include_directories(souffleprof PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-install(TARGETS souffleprof DESTINATION bin)
+if (NOT WIN32)
+  add_executable(souffleprof
+    souffle_prof.cpp)
+  target_include_directories(souffleprof PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  install(TARGETS souffleprof DESTINATION bin)
 
-# Set C++ standard to C++17
-target_compile_features(souffleprof
-                        PUBLIC cxx_std_17)
+  # Set C++ standard to C++17
+  target_compile_features(souffleprof
+    PUBLIC cxx_std_17)
 endif()
 
 if (MSVC)
@@ -531,26 +531,46 @@ if (SOUFFLE_USE_CURSES)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  set(OUTNAME_FMT "-o %s")
-  set(LIBDIR_FMT "-L%s")
-  set(LIBNAME_FMT "-l%s")
-  set(RPATH_FMT "-Wl,-rpath,%s")
+  # using Python3 PEP 3101 Format String:
+  set(OUTNAME_FMT "-o {}")
+  set(LIBDIR_FMT "-L{}")
+  set(LIBNAME_FMT "-l{}")
+  set(RPATH_FMT "-Wl,-rpath,{}")
   set(EXE_EXTENSION "")
   set(OS_PATH_DELIMITER ":")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  set(OUTNAME_FMT "/Fe:%s")
-  set(LIBDIR_FMT "/LIBPATH:%s")
-  set(LIBNAME_FMT "%s")
+  # using Python3 PEP 3101 Format String:
+  set(OUTNAME_FMT "/Fe:{}")
+  set(LIBDIR_FMT "/libpath:{}")
+  set(LIBNAME_FMT "{}.lib")
   set(RPATH_FMT "")
   set(EXE_EXTENSION ".exe")
-  set(OS_PATH_DELIMITER "\;")
+  set(OS_PATH_DELIMITER ";")
+endif ()
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  ## Is is very important that the Runtime Library match between
+  ## the Souffle compiled program and any dynamically loaded functor library.
+  if (CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "^MultiThreaded(Debug)?$")
+    # static multi-threaded library
+    string(APPEND SOUFFLE_COMPILED_DEBUG_CXX_FLAGS " /MTd")
+    string(APPEND SOUFFLE_COMPILED_RELEASE_CXX_FLAGS " /MT")
+  else ()
+    # dynamic multi-threaded library
+    string(APPEND SOUFFLE_COMPILED_DEBUG_CXX_FLAGS " /MDd")
+    string(APPEND SOUFFLE_COMPILED_RELEASE_CXX_FLAGS " /MD")
+  endif ()
 endif ()
 
 list(JOIN SOUFFLE_COMPILED_OPTS " " SOUFFLE_COMPILED_CXX_OPTIONS)
 
 list(JOIN SOUFFLE_COMPILED_LIBS " " SOUFFLE_COMPILED_LINK_OPTIONS)
 
-list(JOIN SOUFFLE_COMPILED_RPATHS ${OS_PATH_DELIMITER} SOUFFLE_COMPILED_RPATH_LIST)
+if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  set(SOUFFLE_COMPILED_LINK_OPTIONS "/link ${SOUFFLE_COMPILED_LINK_OPTIONS}")
+endif ()
+
+list(JOIN SOUFFLE_COMPILED_RPATHS "${OS_PATH_DELIMITER}" SOUFFLE_COMPILED_RPATH_LIST)
 
 list(TRANSFORM SOUFFLE_COMPILED_INCS PREPEND "-I")
 list(JOIN SOUFFLE_COMPILED_INCS " " SOUFFLE_COMPILED_INCLUDES)
@@ -558,11 +578,11 @@ list(JOIN SOUFFLE_COMPILED_INCS " " SOUFFLE_COMPILED_INCLUDES)
 list(TRANSFORM SOUFFLE_COMPILED_DEFS PREPEND "-D")
 list(JOIN SOUFFLE_COMPILED_DEFS " " SOUFFLE_COMPILED_DEFINITIONS)
 
-file(READ ${CMAKE_CURRENT_SOURCE_DIR}/souffle-compile.rb.template TEMPLATE)
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/souffle-compile.template.py TEMPLATE)
 
 set(SOUFFLE_COMPILE_RB 
-"#!/usr/bin/env ruby
-JSON_DATA_TEXT = '{
+"#!/usr/bin/env python3
+JSON_DATA_TEXT = \"\"\"{
   \"compiler\": \"${SOUFFLE_COMPILED_CXX_COMPILER}\",
   \"compiler_id\": \"${SOUFFLE_COMPILED_CXX_COMPILER_ID}\",
   \"compiler_version\": \"${SOUFFLE_COMPILED_CXX_COMPILER_VERSION}\",
@@ -583,13 +603,15 @@ JSON_DATA_TEXT = '{
   \"rpath_fmt\": \"${RPATH_FMT}\",
   \"path_delimiter\": \"${OS_PATH_DELIMITER}\",
   \"exe_extension\": \"${EXE_EXTENSION}\"
-}'
+}\"\"\"
 ${TEMPLATE}
 ")
 
-file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/souffle-compile.rb" CONTENT "${SOUFFLE_COMPILE_RB}")
+#file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/souffle-compile.rb" CONTENT "${SOUFFLE_COMPILE_RB}")
+#file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/souffle-compile.rb" "${SOUFFLE_COMPILE_RB}")
 
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/souffle-compile.rb" "${SOUFFLE_COMPILE_RB}")
+file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/souffle-compile.py" CONTENT "${SOUFFLE_COMPILE_RB}")
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/souffle-compile.py DESTINATION bin)
 
 # ---------------------------------------
 
