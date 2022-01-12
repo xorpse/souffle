@@ -70,29 +70,29 @@ std::optional<std::size_t> LevelAnalysis::getLevel(const Node* node) const {
             } else if (b.has_value()) {
                 return b;
             } else {
-                return {};
+                return std::nullopt;
             }
         }
 
     public:
         // string constant
         maybe_level visit_(type_identity<StringConstant>, const StringConstant&) override {
-            return {};
+            return std::nullopt;
         }
 
         // number constant
         maybe_level visit_(type_identity<NumericConstant>, const NumericConstant&) override {
-            return {};
+            return std::nullopt;
         }
 
         // true
         maybe_level visit_(type_identity<True>, const True&) override {
-            return {};
+            return std::nullopt;
         }
 
         // false
         maybe_level visit_(type_identity<False>, const False&) override {
-            return {};
+            return std::nullopt;
         }
 
         // tuple element access
@@ -102,12 +102,12 @@ std::optional<std::size_t> LevelAnalysis::getLevel(const Node* node) const {
 
         // scan
         maybe_level visit_(type_identity<Scan>, const Scan&) override {
-            return {};
+            return std::nullopt;
         }
 
         // index scan
         maybe_level visit_(type_identity<IndexScan>, const IndexScan& indexScan) override {
-            maybe_level level = {};
+            maybe_level level = std::nullopt;
             for (auto& index : indexScan.getRangePattern().first) {
                 level = max(level, dispatch(*index));
             }
@@ -124,7 +124,7 @@ std::optional<std::size_t> LevelAnalysis::getLevel(const Node* node) const {
 
         // index choice
         maybe_level visit_(type_identity<IndexIfExists>, const IndexIfExists& indexIfExists) override {
-            maybe_level level = {};
+            maybe_level level = std::nullopt;
             for (auto& index : indexIfExists.getRangePattern().first) {
                 level = max(level, dispatch(*index));
             }
@@ -141,7 +141,7 @@ std::optional<std::size_t> LevelAnalysis::getLevel(const Node* node) const {
 
         // index aggregate
         maybe_level visit_(type_identity<IndexAggregate>, const IndexAggregate& indexAggregate) override {
-            maybe_level level = {};
+            maybe_level level = std::nullopt;
             for (auto& index : indexAggregate.getRangePattern().first) {
                 level = max(level, dispatch(*index));
             }
@@ -169,7 +169,7 @@ std::optional<std::size_t> LevelAnalysis::getLevel(const Node* node) const {
 
         // guarded insert
         maybe_level visit_(type_identity<GuardedInsert>, const GuardedInsert& guardedInsert) override {
-            maybe_level level = {};
+            maybe_level level = std::nullopt;
             for (auto& exp : guardedInsert.getValues()) {
                 level = max(level, dispatch(*exp));
             }
@@ -179,7 +179,7 @@ std::optional<std::size_t> LevelAnalysis::getLevel(const Node* node) const {
 
         // insert
         maybe_level visit_(type_identity<Insert>, const Insert& insert) override {
-            maybe_level level = {};
+            maybe_level level = std::nullopt;
             for (auto& exp : insert.getValues()) {
                 level = max(level, dispatch(*exp));
             }
@@ -188,7 +188,7 @@ std::optional<std::size_t> LevelAnalysis::getLevel(const Node* node) const {
 
         // return
         maybe_level visit_(type_identity<SubroutineReturn>, const SubroutineReturn& ret) override {
-            maybe_level level = {};
+            maybe_level level = std::nullopt;
             for (auto& exp : ret.getValues()) {
                 level = max(level, dispatch(*exp));
             }
@@ -197,17 +197,17 @@ std::optional<std::size_t> LevelAnalysis::getLevel(const Node* node) const {
 
         // auto increment
         maybe_level visit_(type_identity<AutoIncrement>, const AutoIncrement&) override {
-            return {};
+            return std::nullopt;
         }
 
         // undef value
         maybe_level visit_(type_identity<UndefValue>, const UndefValue&) override {
-            return {};
+            return std::nullopt;
         }
 
         // intrinsic functors
         maybe_level visit_(type_identity<IntrinsicOperator>, const IntrinsicOperator& op) override {
-            maybe_level level = {};
+            maybe_level level = std::nullopt;
             for (const auto& arg : op.getArguments()) {
                 level = max(level, dispatch(*arg));
             }
@@ -216,7 +216,7 @@ std::optional<std::size_t> LevelAnalysis::getLevel(const Node* node) const {
 
         // pack operator
         maybe_level visit_(type_identity<PackRecord>, const PackRecord& pack) override {
-            maybe_level level = {};
+            maybe_level level = std::nullopt;
             for (const auto& arg : pack.getArguments()) {
                 level = max(level, dispatch(*arg));
             }
@@ -225,12 +225,12 @@ std::optional<std::size_t> LevelAnalysis::getLevel(const Node* node) const {
 
         // argument
         maybe_level visit_(type_identity<SubroutineArgument>, const SubroutineArgument&) override {
-            return {};
+            return std::nullopt;
         }
 
         // user defined operator
         maybe_level visit_(type_identity<UserDefinedOperator>, const UserDefinedOperator& op) override {
-            maybe_level level = {};
+            maybe_level level = std::nullopt;
             for (const auto& arg : op.getArguments()) {
                 level = max(level, dispatch(*arg));
             }
@@ -254,7 +254,7 @@ std::optional<std::size_t> LevelAnalysis::getLevel(const Node* node) const {
 
         // existence check
         maybe_level visit_(type_identity<ExistenceCheck>, const ExistenceCheck& exists) override {
-            maybe_level level = {};
+            maybe_level level = std::nullopt;
             for (const auto& cur : exists.getValues()) {
                 level = max(level, dispatch(*cur));
             }
@@ -264,7 +264,7 @@ std::optional<std::size_t> LevelAnalysis::getLevel(const Node* node) const {
         // provenance existence check
         maybe_level visit_(type_identity<ProvenanceExistenceCheck>,
                 const ProvenanceExistenceCheck& provExists) override {
-            maybe_level level = {};
+            maybe_level level = std::nullopt;
             for (const auto& cur : provExists.getValues()) {
                 level = max(level, dispatch(*cur));
             }
@@ -273,7 +273,7 @@ std::optional<std::size_t> LevelAnalysis::getLevel(const Node* node) const {
 
         // emptiness check
         maybe_level visit_(type_identity<EmptinessCheck>, const EmptinessCheck&) override {
-            return {};  // can be in the top level
+            return std::nullopt;  // can be in the top level
         }
 
         // default rule
