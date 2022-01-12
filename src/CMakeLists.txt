@@ -163,7 +163,7 @@ set(SOUFFLE_SOURCES
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/parser")
 
 flex_target(scanner parser/scanner.ll ${CMAKE_CURRENT_BINARY_DIR}/parser/scanner.cc
-  COMPILE_FLAGS ${SCANNER_COMPILE_FLAGS})
+  COMPILE_FLAGS "${SCANNER_COMPILE_FLAGS} -d")
 
 bison_target(parser parser/parser.yy ${CMAKE_CURRENT_BINARY_DIR}/parser/parser.cc
              COMPILE_FLAGS "-Wall -Werror -Wno-error=deprecated -Wno-error=other -v -d")

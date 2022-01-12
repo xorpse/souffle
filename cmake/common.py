@@ -4,8 +4,9 @@
 # - https://opensource.org/licenses/UPL
 # - <souffle root>/licenses/SOUFFLE-UPL.txt
 
-import os
+import difflib
 import re
+import os
 
 ## sort file `file_name` to file `file_name.sorted`
 def sort_file(file_name):
@@ -43,6 +44,7 @@ def compare_files(expected_file, actual_file):
         actual_lines = [line.rstrip() for line in f]
 
     if actual_lines != expected_lines:
+        os.sys.stdout.writelines(difflib.unified_diff(open(expected_file).readlines(), open(actual_file).readlines(), fromfile=expected_file, tofile=actual_file))
         os.sys.exit("Found output difference, expected file:'{}', actual file:'{}".format(expected_file, actual_file))
 
     return True

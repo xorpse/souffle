@@ -292,7 +292,7 @@ WS [ \t\r\v\f]
 \n                                    { }
 }
 \n                                    { yycolumn = 1; }
-{WS}*                                 { }
+{WS}+                                 { }
 <<EOF>>                               { return yy::parser::make_END(yylloc); }
 .                                     { driver.error(yylloc, std::string("unexpected ") + yytext); }
 %%

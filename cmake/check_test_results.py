@@ -53,7 +53,7 @@ if extra_file_pattern:
         elif extra_data == "sqlite3":
             generated_file = "{}.csv".format(os.path.basename(file).rstrip(".sqlite.output"))
             script = os.path.join(input_dir, "{}.script".format(file))
-            with open(genrated_file, "w") as generated:
+            with open(generated_file, "w") as generated:
                 subprocess.run([binary,"-batch","-init",script,file,""], check=True, stdout=generated)
         elif extra_data == "json":
             generated_file = file
