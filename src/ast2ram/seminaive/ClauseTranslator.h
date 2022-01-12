@@ -104,11 +104,12 @@ protected:
     Own<ram::Operation> addEntryPoint(const ast::Clause& clause, Own<ram::Operation> op) const;
 
     /** Levelling methods */
-    virtual Own<ram::Operation> addAtomScan(
-            Own<ram::Operation> op, const ast::Atom* atom, const ast::Clause& clause, std::size_t curLevel) const;
+    virtual Own<ram::Operation> addAtomScan(Own<ram::Operation> op, const ast::Atom* atom,
+            const ast::Clause& clause, std::size_t curLevel) const;
     Own<ram::Operation> addRecordUnpack(
             Own<ram::Operation> op, const ast::RecordInit* rec, std::size_t curLevel) const;
-    Own<ram::Operation> addAdtUnpack(Own<ram::Operation> op, const ast::BranchInit* adt, std::size_t curLevel) const;
+    Own<ram::Operation> addAdtUnpack(
+            Own<ram::Operation> op, const ast::BranchInit* adt, std::size_t curLevel) const;
 
     /** Helper methods */
     Own<ram::Operation> addConstantConstraints(

@@ -63,15 +63,15 @@ std::optional<std::size_t> LevelAnalysis::getLevel(const Node* node) const {
         using Visitor<maybe_level>::visit_;
 
         static maybe_level max(const maybe_level& a, const maybe_level& b) {
-          if (a.has_value() && b.has_value()) {
-            return std::max(*a, *b);
-          } else if (a.has_value()) {
-            return a;
-          } else if (b.has_value()) {
-            return b;
-          } else {
-            return {};
-          }
+            if (a.has_value() && b.has_value()) {
+                return std::max(*a, *b);
+            } else if (a.has_value()) {
+                return a;
+            } else if (b.has_value()) {
+                return b;
+            } else {
+                return {};
+            }
         }
 
     public:
@@ -298,7 +298,7 @@ std::optional<std::size_t> LevelAnalysis::getLevel(const Node* node) const {
 }
 
 bool LevelAnalysis::hasLevel(const Node* value) const {
-  return getLevel(value).has_value();
+    return getLevel(value).has_value();
 }
 
 }  // namespace souffle::ram::analysis

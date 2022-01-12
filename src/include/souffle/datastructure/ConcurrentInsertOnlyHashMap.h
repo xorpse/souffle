@@ -413,7 +413,8 @@ private:
             // given the current number of elements in the map.
             const std::size_t CurrentSize = Size;
             assert(LoadFactor > 0);
-            const std::size_t NeededBucketCount = static_cast<std::size_t>(std::ceil(static_cast<double>(CurrentSize) / LoadFactor));
+            const std::size_t NeededBucketCount =
+                    static_cast<std::size_t>(std::ceil(static_cast<double>(CurrentSize) / LoadFactor));
             std::size_t NewBucketCount = NeededBucketCount;
             for (std::size_t I = 0; I < details::ToPrime.size(); ++I) {
                 const uint64_t N = details::ToPrime[I].first;
@@ -452,7 +453,8 @@ private:
 
             Buckets = std::move(NewBuckets);
             BucketCount = NewBucketCount;
-            MaxSizeBeforeGrow = static_cast<std::size_t>(std::ceil(static_cast<double>(NewBucketCount) * LoadFactor));
+            MaxSizeBeforeGrow =
+                    static_cast<std::size_t>(std::ceil(static_cast<double>(NewBucketCount) * LoadFactor));
         }
 
         Lanes.beforeUnlockAllBut(H);

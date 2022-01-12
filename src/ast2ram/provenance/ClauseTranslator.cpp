@@ -122,8 +122,8 @@ Own<ram::Expression> ClauseTranslator::getLevelNumber(const ast::Clause& clause)
     return mk<ram::IntrinsicOperator>(FunctorOp::ADD, std::move(addArgs));
 }
 
-Own<ram::Operation> ClauseTranslator::addAtomScan(
-        Own<ram::Operation> op, const ast::Atom* atom, const ast::Clause& clause, std::size_t curLevel) const {
+Own<ram::Operation> ClauseTranslator::addAtomScan(Own<ram::Operation> op, const ast::Atom* atom,
+        const ast::Clause& clause, std::size_t curLevel) const {
     // add constraints
     op = addConstantConstraints(curLevel, atom->getArguments(), std::move(op));
 

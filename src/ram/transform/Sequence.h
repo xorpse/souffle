@@ -58,11 +58,11 @@ public:
         // Note that for other semantics, new transformer
         // sequence class needs to be introduced.
         for (auto const& cur : transformers) {
-            //std::cout << "=============================================\n"
-            //          << "      " << cur->getName() << "\n"
-            //          << "=============================================\n";
+            // std::cout << "=============================================\n"
+            //           << "      " << cur->getName() << "\n"
+            //           << "=============================================\n";
             changed = cur->apply(tU);
-            //std::cout << tU.getProgram() ;
+            // std::cout << tU.getProgram() ;
         }
         return changed;
     }

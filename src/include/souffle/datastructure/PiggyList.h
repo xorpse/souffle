@@ -253,7 +253,6 @@ public:
         PiggyList* bl;
 
     public:
-        
         using iterator_category = std::forward_iterator_tag;
         using value_type = T;
         using difference_type = void;

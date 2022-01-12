@@ -887,7 +887,7 @@ void SemanticCheckerImpl::checkInlining() {
 
         // Print it backwards to preserve the initial cycle order
         for (std::size_t i = result.size() - 1; i >= 1; i--) {
-            cycle << ", " << result[i-1];
+            cycle << ", " << result[i - 1];
         }
 
         cycle << "}";

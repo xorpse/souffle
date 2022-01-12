@@ -181,9 +181,11 @@ private:
                 // I don't think we care enough to handle this fringe failure mode.
                 // Worse case we don't get an error message.
 #ifdef _MSC_VER
-                [[maybe_unused]] auto _ = ::_write(STDERR_FILENO, msg, static_cast<unsigned int>(::strlen(msg)));
+                [[maybe_unused]] auto _ =
+                        ::_write(STDERR_FILENO, msg, static_cast<unsigned int>(::strlen(msg)));
 #else
-                [[maybe_unused]] auto _ = ::write(STDERR_FILENO, msg, static_cast<unsigned int>(::strlen(msg)));
+                [[maybe_unused]] auto _ =
+                        ::write(STDERR_FILENO, msg, static_cast<unsigned int>(::strlen(msg)));
 #endif
             }
         };

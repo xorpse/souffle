@@ -131,7 +131,8 @@ namespace souffle {
     std::map<char const*, std::string> env;
     if (Global::config().has("library-dir")) {
         auto escapeLdPath = [](auto&& xs) { return escape(xs, {':', ' '}, "\\"); };
-        auto ld_path = toString(join(map(Global::config().getMany("library-dir"), escapeLdPath), std::string(1,PATHdelimiter)));
+        auto ld_path = toString(join(
+                map(Global::config().getMany("library-dir"), escapeLdPath), std::string(1, PATHdelimiter)));
 #if defined(_MSC_VER)
         std::size_t l;
         std::wstring env_path(ld_path.length() + 1, L' ');
@@ -146,7 +147,7 @@ namespace souffle {
             env_path = env_path + L";" + std::wstring(orig.get());
         }
         SetEnvironmentVariableW(L"PATH", env_path.c_str());
-        
+
 #elif defined(__APPLE__)
         env["DYLD_LIBRARY_PATH"] = ld_path;
 #else
@@ -810,8 +811,7 @@ int main(int argc, char** argv) {
             if (must_compile) {
                 /* Fail if a souffle-compile executable is not found */
                 const auto souffle_compile = findTool("souffle-compile.py", souffleExecutable, ".");
-                if (!souffle_compile)
-                    throw std::runtime_error("failed to locate souffle-compile.py");
+                if (!souffle_compile) throw std::runtime_error("failed to locate souffle-compile.py");
 
                 auto t_bgn = std::chrono::high_resolution_clock::now();
                 compileToBinary(*souffle_compile, sourceFilename);

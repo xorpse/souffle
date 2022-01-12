@@ -336,7 +336,7 @@ class IndexCluster;
  */
 class SearchBipartiteMap {
 public:
-    void addSearch(const SearchSignature &s) {
+    void addSearch(const SearchSignature& s) {
         // Map the signature to its node in the left and right bi-partitions
         signatureToNodeA.insert({s, currentIndex});
         signatureToNodeB.insert({s, currentIndex + 1});
@@ -346,11 +346,11 @@ public:
         currentIndex += 2;
     }
 
-    AttributeIndex getLeftNode(const SearchSignature &s) const {
+    AttributeIndex getLeftNode(const SearchSignature& s) const {
         return signatureToNodeA.at(s);
     }
 
-    AttributeIndex getRightNode(const SearchSignature &s) const {
+    AttributeIndex getRightNode(const SearchSignature& s) const {
         return signatureToNodeB.at(s);
     }
 
@@ -384,7 +384,7 @@ public:
 
 protected:
     /** @Brief maps a provided search to its corresponding lexicographical ordering **/
-    std::size_t map(const SearchSignature &cols, [[maybe_unused]] const OrderCollection& orders,
+    std::size_t map(const SearchSignature& cols, [[maybe_unused]] const OrderCollection& orders,
             const ChainOrderMap& chainToOrder) const {
         assert(orders.size() == chainToOrder.size() && "Order and Chain Sizes do not match!!");
 
@@ -403,7 +403,7 @@ protected:
     }
 
     /** @Brief insert an index based on the delta */
-    void insertIndex(LexOrder& ids, const SearchSignature &delta) const {
+    void insertIndex(LexOrder& ids, const SearchSignature& delta) const {
         LexOrder backlog;  // add inequalities at the end
         for (std::size_t pos = 0; pos < delta.arity(); pos++) {
             if (delta[pos] == AttributeConstraint::Equal) {
@@ -423,7 +423,7 @@ protected:
      * we follow it from set B until it cannot be matched from B
      * if not matched from B then umn is a chain.
      */
-    Chain getChain(const SearchSignature &umn, const MaxMatching::Matchings& match,
+    Chain getChain(const SearchSignature& umn, const MaxMatching::Matchings& match,
             const SearchBipartiteMap& mapping) const;
 
     /** @Brief get all chains from the matching */
@@ -436,7 +436,7 @@ protected:
         SearchSet unmatched;
 
         // For all nodes n such that n is not in match
-        for (const auto &node : nodes) {
+        for (const auto& node : nodes) {
             if (match.find(mapping.getLeftNode(node)) == match.end()) {
                 unmatched.insert(node);
             }
@@ -462,11 +462,11 @@ public:
     const SearchCollection getSearches() const {
         return searches;
     }
-    const LexOrder getLexOrder(const SearchSignature &cols) const {
+    const LexOrder getLexOrder(const SearchSignature& cols) const {
         return indexSelection.at(cols);
     }
 
-    std::size_t getLexOrderNum(const SearchSignature &cols) const {
+    std::size_t getLexOrderNum(const SearchSignature& cols) const {
         // get the corresponding order
         auto order = getLexOrder(cols);
         // find the order in the collection

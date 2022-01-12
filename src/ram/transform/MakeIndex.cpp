@@ -87,8 +87,8 @@ ExpressionPair MakeIndexTransformer::getExpressionPair(
 
 // Retrieves the <expr1> <= Tuple[level, element] <= <expr2> part of the constraint as a pair { <expr1>,
 // <expr2> }
-ExpressionPair MakeIndexTransformer::getLowerUpperExpression(
-        Condition* c, std::size_t& element, const std::optional<std::size_t>& identifier, RelationRepresentation rep) {
+ExpressionPair MakeIndexTransformer::getLowerUpperExpression(Condition* c, std::size_t& element,
+        const std::optional<std::size_t>& identifier, RelationRepresentation rep) {
     if (auto* binRelOp = as<Constraint>(c)) {
         bool interpreter = !Global::config().has("compile") && !Global::config().has("dl-program") &&
                            !Global::config().has("generate") && !Global::config().has("swig");

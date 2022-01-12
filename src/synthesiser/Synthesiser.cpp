@@ -1041,7 +1041,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case AggregateOp::FMIN:
                 case AggregateOp::UMIN: {
                     op = "min";
-                    omp_min_ver = "200805"; // from OMP 3.0
+                    omp_min_ver = "200805";  // from OMP 3.0
                     break;
                 }
 
@@ -1049,7 +1049,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case AggregateOp::FMAX:
                 case AggregateOp::UMAX: {
                     op = "max";
-                    omp_min_ver = "200805"; // from OMP 3.0
+                    omp_min_ver = "200805";  // from OMP 3.0
                     break;
                 }
 
@@ -1433,7 +1433,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case AggregateOp::FMIN:
                 case AggregateOp::UMIN: {
                     op = "min";
-                    omp_min_ver = "200805"; // from OMP 3.0
+                    omp_min_ver = "200805";  // from OMP 3.0
                     break;
                 }
 
@@ -1441,7 +1441,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 case AggregateOp::FMAX:
                 case AggregateOp::UMAX: {
                     op = "max";
-                    omp_min_ver = "200805"; // from OMP 3.0
+                    omp_min_ver = "200805";  // from OMP 3.0
                     break;
                 }
 
@@ -1494,7 +1494,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "#if defined _OPENMP && _OPENMP >= " << omp_min_ver << "\n";
             out << "#pragma omp for reduction(" << op << ":" << sharedVariable << ")\n";
             out << "#endif\n";
-            
+
             // iterate over each part
             out << R"cpp(
                    #if defined _OPENMP && _OPENMP < 200805

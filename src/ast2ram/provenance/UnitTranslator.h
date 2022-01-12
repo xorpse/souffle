@@ -70,7 +70,8 @@ private:
             const std::map<std::size_t, std::string>& idToVarName, ValueIndex& valueIndex) const;
     Own<ram::SubroutineReturn> makeRamReturnTrue() const;
     Own<ram::SubroutineReturn> makeRamReturnFalse() const;
-    void transformVariablesToSubroutineArgs(ram::Node* node, const std::map<std::size_t, std::string>& idToVar) const;
+    void transformVariablesToSubroutineArgs(
+            ram::Node* node, const std::map<std::size_t, std::string>& idToVar) const;
     Own<ram::Sequence> makeIfStatement(
             Own<ram::Condition> condition, Own<ram::Operation> trueOp, Own<ram::Operation> falseOp) const;
 };

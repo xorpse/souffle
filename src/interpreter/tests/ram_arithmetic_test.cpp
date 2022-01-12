@@ -258,8 +258,8 @@ TEST(Binary, SignedSub) {
 
     for (auto arg1 : vecArg1) {
         for (auto arg2 : vecArg2) {
-          RamDomain result = evalBinary(functor, arg1, arg2);
-          EXPECT_EQ(result, arg1 - arg2);
+            RamDomain result = evalBinary(functor, arg1, arg2);
+            EXPECT_EQ(result, arg1 - arg2);
         }
     }
 }
@@ -271,10 +271,10 @@ TEST(Binary, UnsignedSub) {
     auto vecArg2 = testutil::generateValues<RamUnsigned>();
 
     for (auto arg1 : vecArg1) {
-      for (auto arg2 : vecArg2) {
-        RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
-        EXPECT_EQ(ramBitCast<RamUnsigned>(result), arg1 - arg2);
-      }
+        for (auto arg2 : vecArg2) {
+            RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
+            EXPECT_EQ(ramBitCast<RamUnsigned>(result), arg1 - arg2);
+        }
     }
 }
 
@@ -285,10 +285,10 @@ TEST(Binary, FloatSub) {
     auto vecArg2 = testutil::generateValues<RamFloat>();
 
     for (auto arg1 : vecArg1) {
-      for (auto arg2 : vecArg2) {
-        RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
-        EXPECT_EQ(ramBitCast<RamFloat>(result), arg1 - arg2);
-      }
+        for (auto arg2 : vecArg2) {
+            RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
+            EXPECT_EQ(ramBitCast<RamFloat>(result), arg1 - arg2);
+        }
     }
 }
 
@@ -299,10 +299,10 @@ TEST(Binary, SignedMul) {
     auto vecArg2 = testutil::generateValues<RamDomain>();
 
     for (auto arg1 : vecArg1) {
-      for (auto arg2 : vecArg2) {
-        RamDomain result = evalBinary(functor, arg1, arg2);
-        EXPECT_EQ(result, arg1 * arg2);
-      }
+        for (auto arg2 : vecArg2) {
+            RamDomain result = evalBinary(functor, arg1, arg2);
+            EXPECT_EQ(result, arg1 * arg2);
+        }
     }
 }
 
@@ -313,10 +313,10 @@ TEST(Binary, UnsignedMul) {
     auto vecArg2 = testutil::generateValues<RamUnsigned>();
 
     for (auto arg1 : vecArg1) {
-      for (auto arg2 : vecArg2) {
-        RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
-        EXPECT_EQ(ramBitCast<RamUnsigned>(result), arg1 * arg2);
-      }
+        for (auto arg2 : vecArg2) {
+            RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
+            EXPECT_EQ(ramBitCast<RamUnsigned>(result), arg1 * arg2);
+        }
     }
 }
 
@@ -327,10 +327,10 @@ TEST(Binary, FloatMul) {
     auto vecArg2 = testutil::generateValues<RamFloat>();
 
     for (auto arg1 : vecArg1) {
-      for (auto arg2 : vecArg2) {
-        RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
-        EXPECT_EQ(ramBitCast<RamFloat>(result), arg1 * arg2);
-      }
+        for (auto arg2 : vecArg2) {
+            RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
+            EXPECT_EQ(ramBitCast<RamFloat>(result), arg1 * arg2);
+        }
     }
 }
 
@@ -389,10 +389,10 @@ TEST(Binary, SignedExp) {
     auto vecArg2 = testutil::generateValues<RamDomain>();
 
     for (auto arg1 : vecArg1) {
-      for (auto arg2 : vecArg2) {
-        RamDomain result = evalBinary(functor, arg1, arg2);
-        EXPECT_EQ(result, ramBitCast(static_cast<RamSigned>(std::pow(arg1, arg2))));
-      }
+        for (auto arg2 : vecArg2) {
+            RamDomain result = evalBinary(functor, arg1, arg2);
+            EXPECT_EQ(result, ramBitCast(static_cast<RamSigned>(std::pow(arg1, arg2))));
+        }
     }
 }
 
@@ -403,10 +403,10 @@ TEST(Binary, UnsignedExp) {
     auto vecArg2 = testutil::generateValues<RamUnsigned>();
 
     for (auto arg1 : vecArg1) {
-      for (auto arg2 : vecArg2) {
-        RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
-        EXPECT_EQ(ramBitCast<RamUnsigned>(result), static_cast<RamUnsigned>(std::pow(arg1, arg2)));
-      }
+        for (auto arg2 : vecArg2) {
+            RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
+            EXPECT_EQ(ramBitCast<RamUnsigned>(result), static_cast<RamUnsigned>(std::pow(arg1, arg2)));
+        }
     }
 }
 
@@ -432,12 +432,12 @@ TEST(Binary, SignedMod) {
     auto vecArg2 = testutil::generateValues<RamDomain>();
 
     for (auto arg1 : vecArg1) {
-      for (auto arg2 : vecArg2) {
-        if (arg2 > 0) {
-            RamDomain result = evalBinary(functor, arg1, arg2);
-            EXPECT_EQ(result, arg1 % arg2);
+        for (auto arg2 : vecArg2) {
+            if (arg2 > 0) {
+                RamDomain result = evalBinary(functor, arg1, arg2);
+                EXPECT_EQ(result, arg1 % arg2);
+            }
         }
-      }
     }
 }
 
@@ -448,12 +448,12 @@ TEST(Binary, UnsignedMod) {
     auto vecArg2 = testutil::generateValues<RamUnsigned>();
 
     for (auto arg1 : vecArg1) {
-      for (auto arg2 : vecArg2) {
-        if (arg2 > 0) {
-          RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
-          EXPECT_EQ(ramBitCast<RamUnsigned>(result), arg1 % arg2);
+        for (auto arg2 : vecArg2) {
+            if (arg2 > 0) {
+                RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
+                EXPECT_EQ(ramBitCast<RamUnsigned>(result), arg1 % arg2);
+            }
         }
-      }
     }
 }
 
@@ -464,10 +464,10 @@ TEST(Binary, SignedBinaryAnd) {
     auto vecArg2 = testutil::generateValues<RamDomain>();
 
     for (auto arg1 : vecArg1) {
-      for (auto arg2 : vecArg2) {
-        RamDomain result = evalBinary(functor, arg1, arg2);
-        EXPECT_EQ(result, arg1 & arg2);
-      }
+        for (auto arg2 : vecArg2) {
+            RamDomain result = evalBinary(functor, arg1, arg2);
+            EXPECT_EQ(result, arg1 & arg2);
+        }
     }
 }
 
@@ -478,10 +478,10 @@ TEST(Binary, UnsignedBinaryAnd) {
     auto vecArg2 = testutil::generateValues<RamUnsigned>();
 
     for (auto arg1 : vecArg1) {
-      for (auto arg2 : vecArg2) {
-        RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
-        EXPECT_EQ(ramBitCast<RamUnsigned>(result), arg1 & arg2);
-      }
+        for (auto arg2 : vecArg2) {
+            RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
+            EXPECT_EQ(ramBitCast<RamUnsigned>(result), arg1 & arg2);
+        }
     }
 }
 
@@ -492,10 +492,10 @@ TEST(Binary, SignedBinaryOr) {
     auto vecArg2 = testutil::generateValues<RamDomain>();
 
     for (auto arg1 : vecArg1) {
-      for (auto arg2 : vecArg2) {
-        RamDomain result = evalBinary(functor, arg1, arg2);
-        EXPECT_EQ(result, arg1 | arg2);
-      }
+        for (auto arg2 : vecArg2) {
+            RamDomain result = evalBinary(functor, arg1, arg2);
+            EXPECT_EQ(result, arg1 | arg2);
+        }
     }
 }
 
@@ -506,10 +506,10 @@ TEST(Binary, UnsignedBinaryOr) {
     auto vecArg2 = testutil::generateValues<RamUnsigned>();
 
     for (auto arg1 : vecArg1) {
-      for (auto arg2 : vecArg2) {
-        RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
-        EXPECT_EQ(ramBitCast<RamUnsigned>(result), arg1 | arg2);
-      }
+        for (auto arg2 : vecArg2) {
+            RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
+            EXPECT_EQ(ramBitCast<RamUnsigned>(result), arg1 | arg2);
+        }
     }
 }
 
@@ -520,10 +520,10 @@ TEST(Binary, SignedBinaryXor) {
     auto vecArg2 = testutil::generateValues<RamDomain>();
 
     for (auto arg1 : vecArg1) {
-      for (auto arg2 : vecArg2) {
-        RamDomain result = evalBinary(functor, arg1, arg2);
-        EXPECT_EQ(result, arg1 ^ arg2);
-      }
+        for (auto arg2 : vecArg2) {
+            RamDomain result = evalBinary(functor, arg1, arg2);
+            EXPECT_EQ(result, arg1 ^ arg2);
+        }
     }
 }
 
@@ -534,10 +534,10 @@ TEST(Binary, UnsignedBinaryXor) {
     auto vecArg2 = testutil::generateValues<RamUnsigned>();
 
     for (auto arg1 : vecArg1) {
-      for (auto arg2 : vecArg2) {
-        RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
-        EXPECT_EQ(ramBitCast<RamUnsigned>(result), arg1 ^ arg2);
-      }
+        for (auto arg2 : vecArg2) {
+            RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
+            EXPECT_EQ(ramBitCast<RamUnsigned>(result), arg1 ^ arg2);
+        }
     }
 }
 
@@ -548,10 +548,10 @@ TEST(Binary, SignedLogicalAnd) {
     auto vecArg2 = testutil::generateValues<RamDomain>();
 
     for (auto arg1 : vecArg1) {
-      for (auto arg2 : vecArg2) {
-        RamDomain result = evalBinary(functor, arg1, arg2);
-        EXPECT_EQ(result, arg1 && arg2);
-      }
+        for (auto arg2 : vecArg2) {
+            RamDomain result = evalBinary(functor, arg1, arg2);
+            EXPECT_EQ(result, arg1 && arg2);
+        }
     }
 }
 
@@ -562,10 +562,10 @@ TEST(Binary, UnsignedLogicalAnd) {
     auto vecArg2 = testutil::generateValues<RamUnsigned>();
 
     for (auto arg1 : vecArg1) {
-      for (auto arg2 : vecArg2) {
-        RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
-        EXPECT_EQ(ramBitCast<RamUnsigned>(result), arg1 && arg2);
-      }
+        for (auto arg2 : vecArg2) {
+            RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
+            EXPECT_EQ(ramBitCast<RamUnsigned>(result), arg1 && arg2);
+        }
     }
 }
 
@@ -576,10 +576,10 @@ TEST(Binary, SignedLogicalOr) {
     auto vecArg2 = testutil::generateValues<RamDomain>();
 
     for (auto arg1 : vecArg1) {
-      for (auto arg2 : vecArg2) {
-        RamDomain result = evalBinary(functor, arg1, arg2);
-        EXPECT_EQ(result, arg1 || arg2);
-      }
+        for (auto arg2 : vecArg2) {
+            RamDomain result = evalBinary(functor, arg1, arg2);
+            EXPECT_EQ(result, arg1 || arg2);
+        }
     }
 }
 
@@ -590,10 +590,10 @@ TEST(Binary, UnsignedLogicalOr) {
     auto vecArg2 = testutil::generateValues<RamUnsigned>();
 
     for (auto arg1 : vecArg1) {
-      for (auto arg2 : vecArg2) {
-        RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
-        EXPECT_EQ(ramBitCast<RamUnsigned>(result), arg1 || arg2);
-      }
+        for (auto arg2 : vecArg2) {
+            RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
+            EXPECT_EQ(ramBitCast<RamUnsigned>(result), arg1 || arg2);
+        }
     }
 }
 

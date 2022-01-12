@@ -114,7 +114,8 @@ protected:
         }
         memcpy(buffer + reserveSize - charsPutBack, gptr() - charsPutBack, charsPutBack);
 
-        int charsRead = gzread(fileHandle, buffer + reserveSize, static_cast<unsigned int>(bufferSize - reserveSize));
+        int charsRead =
+                gzread(fileHandle, buffer + reserveSize, static_cast<unsigned int>(bufferSize - reserveSize));
         if (charsRead <= 0) {
             return EOF;
         }

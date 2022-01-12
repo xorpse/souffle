@@ -118,7 +118,7 @@ public:
     std::vector<std::pair<FlyweightImpl<std::string>::index_type, std::string>> random_flyweight(
             FlyweightImpl<std::string>& flyweight, std::size_t min_size, std::size_t max_size) {
         assert(min_size < max_size);
-    assert(static_cast<std::size_t>(std::numeric_limits<int>::max()) >= max_size);
+        assert(static_cast<std::size_t>(std::numeric_limits<int>::max()) >= max_size);
         std::vector<std::pair<FlyweightImpl<std::string>::index_type, std::string>> values;
         values.reserve(max_size);
 

@@ -316,8 +316,8 @@ Own<ram::Statement> UnitTranslator::makeSubproofSubroutine(const ast::Clause& cl
     return SubproofGenerator(*context).translateNonRecursiveClause(clause);
 }
 
-Own<ram::ExistenceCheck> UnitTranslator::makeRamAtomExistenceCheck(
-        const ast::Atom* atom, const std::map<std::size_t, std::string>& idToVarName, ValueIndex& valueIndex) const {
+Own<ram::ExistenceCheck> UnitTranslator::makeRamAtomExistenceCheck(const ast::Atom* atom,
+        const std::map<std::size_t, std::string>& idToVarName, ValueIndex& valueIndex) const {
     auto relName = getConcreteRelationName(atom->getQualifiedName());
 
     // Construct a query
@@ -356,7 +356,8 @@ void UnitTranslator::transformVariablesToSubroutineArgs(
     struct VariablesToArguments : public ram::NodeMapper {
         const std::map<std::size_t, std::string>& idToVarName;
 
-        VariablesToArguments(const std::map<std::size_t, std::string>& idToVarName) : idToVarName(idToVarName) {}
+        VariablesToArguments(const std::map<std::size_t, std::string>& idToVarName)
+                : idToVarName(idToVarName) {}
 
         Own<ram::Node> operator()(Own<ram::Node> node) const override {
             if (const auto* tuple = as<ram::TupleElement>(node.get())) {

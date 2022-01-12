@@ -63,7 +63,7 @@ bool ExecutionPlanChecker::transform(TranslationUnit& translationUnit) {
                 }
                 std::optional<std::size_t> maxVersion;
                 for (auto const& cur : clause->getExecutionPlan()->getOrders()) {
-                  maxVersion = std::max(cur.first, maxVersion.value_or(cur.first));
+                    maxVersion = std::max(cur.first, maxVersion.value_or(cur.first));
 
                     bool isComplete = true;
                     auto order = cur.second->getOrder();

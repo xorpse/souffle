@@ -38,7 +38,8 @@ std::vector<std::size_t> SipsMetric::getReordering(const Clause* clause) const {
     while (numAdded < atoms.size()) {
         // grab the index of the next atom, based on the SIPS function
         const auto& costs = evaluateCosts(atoms, bindingStore);
-        std::size_t minIdx = static_cast<std::size_t>(std::distance(costs.begin(), std::min_element(costs.begin(), costs.end())));
+        std::size_t minIdx = static_cast<std::size_t>(
+                std::distance(costs.begin(), std::min_element(costs.begin(), costs.end())));
         const auto* nextAtom = atoms[minIdx];
         assert(nextAtom != nullptr && "nullptr atoms should have maximal cost");
 

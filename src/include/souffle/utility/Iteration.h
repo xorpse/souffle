@@ -119,7 +119,7 @@ public:
     }
 
     /* Support for the pointer operator. */
-    auto operator-> () const {
+    auto operator->() const {
         return &**this;
     }
 
@@ -285,7 +285,7 @@ struct range {
     // splits up this range into the given number of partitions
     std::vector<range> partition(std::size_t np = 100) {
         // obtain the size
-      std::size_t n = 0;
+        std::size_t n = 0;
         for (auto i = a; i != b; ++i) {
             n++;
         }

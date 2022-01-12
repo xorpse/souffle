@@ -440,7 +440,7 @@ public:
     }
 
     std::vector<souffle::range<iterator>> partitionRange(
-            const Tuple& /* l */, const Tuple& /* h */, std::size_t/* partitionCount */) const {
+            const Tuple& /* l */, const Tuple& /* h */, std::size_t /* partitionCount */) const {
         return this->partitionScan(0);
     }
 

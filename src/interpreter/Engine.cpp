@@ -466,7 +466,8 @@ void Engine::executeMain() {
         ProfileEventSingleton::instance().stopTimer();
         for (auto const& cur : frequencies) {
             for (std::size_t i = 0; i < cur.second.size(); ++i) {
-                ProfileEventSingleton::instance().makeQuantityEvent(cur.first, cur.second[i], static_cast<int>(i));
+                ProfileEventSingleton::instance().makeQuantityEvent(
+                        cur.first, cur.second[i], static_cast<int>(i));
             }
         }
         for (auto const& cur : reads) {
