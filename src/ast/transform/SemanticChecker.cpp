@@ -504,16 +504,14 @@ void SemanticCheckerImpl::checkClause(const Clause& clause) {
 }
 
 void SemanticCheckerImpl::checkComplexRule(const std::set<const Clause*>& multiRule) {
-    // each variable appearing in a clause body must also appear: 
+    // each variable appearing in a clause body must also appear:
     // - at least a second time in the same clause body,
     // - or at least once in one of the heads of the clause.
     std::set<std::string> var_in_head;
     std::map<std::string, const ast::Variable*> report_var_pos;
 
     for (auto clause : multiRule) {
-        visit(*(clause->getHead()), [&](const ast::Variable& var) {
-            var_in_head.emplace(var.getName());
-            });
+        visit(*(clause->getHead()), [&](const ast::Variable& var) { var_in_head.emplace(var.getName()); });
     }
 
     for (auto clause : multiRule) {
@@ -525,7 +523,7 @@ void SemanticCheckerImpl::checkComplexRule(const std::set<const Clause*>& multiR
             visit(*literal, [&](const ast::Variable& var) {
                 var_count[var.getName()]++;
                 var_pos[var.getName()] = &var;
-                });
+            });
         }
 
         // Check that each clause body variable occurs twice in the body or
@@ -554,8 +552,6 @@ void SemanticCheckerImpl::checkComplexRule(const std::set<const Clause*>& multiR
             report.addWarning("Variable " + varName + " only occurs once", varLocation);
         }
     }
-
-    
 }
 
 void SemanticCheckerImpl::checkType(ast::Attribute const& attr, std::string const& name) {
