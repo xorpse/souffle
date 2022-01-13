@@ -504,51 +504,41 @@ void SemanticCheckerImpl::checkClause(const Clause& clause) {
 }
 
 void SemanticCheckerImpl::checkComplexRule(const std::set<const Clause*>& multiRule) {
-    // each variable appearing in a clause body must also appear:
-    // - at least a second time in the same clause body,
-    // - or at least once in one of the heads of the clause.
-    std::set<std::string> var_in_head;
-    std::map<std::string, const ast::Variable*> report_var_pos;
+    std::map<std::string, int> var_count;
+    std::map<std::string, const ast::Variable*> var_pos;
 
-    for (auto clause : multiRule) {
-        visit(*(clause->getHead()), [&](const ast::Variable& var) { var_in_head.emplace(var.getName()); });
-    }
-
-    for (auto clause : multiRule) {
-        std::map<std::string, int> var_count;
-        std::map<std::string, const ast::Variable*> var_pos;
-
-        // count variable occurence in the clause body
-        for (auto literal : clause->getBodyLiterals()) {
-            visit(*literal, [&](const ast::Variable& var) {
-                var_count[var.getName()]++;
-                var_pos[var.getName()] = &var;
-            });
-        }
-
-        // Check that each clause body variable occurs twice in the body or
-        // at least once in one of the heads.
-        for (const auto& cur : var_count) {
-            int numAppearancesInBody = cur.second;
-            const auto& varName = cur.first;
-            const bool appearsInHead = (var_in_head.count(varName) > 0);
-            const auto& varLocation = var_pos[varName]->getSrcLoc();
-
-            if (varName[0] != '_' && numAppearancesInBody == 1 && !appearsInHead) {
-                if (report_var_pos.count(varName) > 0) {
-                    const auto& reportLocation = report_var_pos[varName]->getSrcLoc();
-                    if (varLocation < reportLocation) {
-                        report_var_pos[varName] = var_pos[varName];
-                    }
-                } else {
-                    report_var_pos[varName] = var_pos[varName];
-                }
+    auto count_var = [&](const ast::Variable& var) {
+        const auto& varName = var.getName();
+        if (0 == var_count[varName]++) {
+            var_pos[varName] = &var;
+        } else {
+            const auto& PrevLoc = var_pos[varName]->getSrcLoc();
+            const auto& Loc = var.getSrcLoc();
+            if (PrevLoc < Loc) {
+                var_pos[varName] = &var;
             }
         }
+    };
 
-        for (const auto& cur : report_var_pos) {
-            const auto& varName = cur.first;
-            const auto& varLocation = cur.second->getSrcLoc();
+    // Count the variable occurrence for the body of a
+    // complex rule only once.
+    // TODO (b-scholz): for negation / disjunction this is not quite
+    // right; we would need more semantic information here.
+    for (auto literal : (*multiRule.begin())->getBodyLiterals()) {
+        visit(*literal, count_var);
+    }
+
+    // Count variable occurrence for each head separately
+    for (auto clause : multiRule) {
+        visit(*(clause->getHead()), count_var);
+    }
+
+    // Check that a variables occurs more than once
+    for (const auto& cur : var_count) {
+        int numAppearances = cur.second;
+        const auto& varName = cur.first;
+        const auto& varLocation = var_pos[varName]->getSrcLoc();
+        if (varName[0] != '_' && numAppearances == 1) {
             report.addWarning("Variable " + varName + " only occurs once", varLocation);
         }
     }

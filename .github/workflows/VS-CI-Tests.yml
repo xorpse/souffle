@@ -60,10 +60,17 @@ jobs:
       run: cmake --build build --config Release -j4
 
     # Run the tests, Visual Studio must be in the environment because cl.exe is required for compiled Souffle.
-    - name: Check
+    - name: Check interpreter
       working-directory: ${{github.workspace}}/build
       shell: cmd
       run: |
         pushd "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build" & call vcvars64.bat & popd
-        ctest --output-on-failure --build-config Release --progress -j4
+        ctest --output-on-failure --build-config Release --progress -j4 -L interpreted
+
+    - name: Check others
+      working-directory: ${{github.workspace}}/build
+      shell: cmd
+      run: |
+        pushd "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build" & call vcvars64.bat & popd
+        ctest --output-on-failure --build-config Release --progress -j4 -LE interpreted
 
