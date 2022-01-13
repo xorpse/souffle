@@ -68,7 +68,11 @@ positive_test(functor_arity)
 positive_test(grammar)
 positive_test(hex)
 positive_test(independent_body1)
+if (NOT MSVC)
+  # the semantics checker does not produce a deterministic warning
+  # message location "variable occurs only once" in complex rules.
 positive_test(independent_body2)
+endif ()
 positive_test(index)
 positive_test(indexed_inequalities)
 positive_test(indirect_negation)
