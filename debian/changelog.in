@@ -5,7 +5,7 @@ souffle (2.2); urgency=low
   * Improved packaging (@XiaowenHu96, @quentin, @uxhg, @cwarden)
   * Improved loading of DLLs (@quentin)
   * Type annotation printer (@hide-kawabata)
-  * Performance improvements for eqrel (@langston-barrett, @
+  * Performance improvements for eqrel (@langston-barrett, @kevzhumba)
 
 souffle (2.1); urgency=low
  
