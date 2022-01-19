@@ -270,6 +270,10 @@ private:
         auto name = getOr(rwOperation, "dbname", rwOperation.at("name") + ".sqlite");
         name = getOr(rwOperation, "filename", name);
 
+        if (name.rfind("file:", 0) == 0 || name.rfind(":memory:", 0) == 0) {
+            return name;
+        }
+
         if (name.front() != '/') {
             name = getOr(rwOperation, "output-dir", ".") + "/" + name;
         }
