@@ -13,15 +13,12 @@
 .decl b__(a:number) 
 .decl c__(a:number, b:number) 
 
-.output c__ // Output relation
+.output c__, isEqrel, notEqrel // Output relation
 
 notEqrel(x, y) :- isEqrel(x, y).
 isEqrel(x, y) :- notEqrel(x, y).
 isEqrel(0,1).
 notEqrel(1,2).
-
-
-
 
 a__(b, b) :- notEqrel(b, b).
 a__(b, b) :- isEqrel(a, b), !isEqrel(a, b).  // new rule
