@@ -9,9 +9,9 @@
 
 .decl notEqrel(x:number,y:number)
 .decl isEqrel(x:number, y:number) eqrel
-.decl a__(a:number, b:number) 
-.decl b__(a:number) 
-.decl c__(a:number, b:number) 
+.decl a__(a:number, b:number)
+.decl b__(a:number)
+.decl c__(a:number, b:number)
 
 .output c__, isEqrel, notEqrel // Output relation
 
