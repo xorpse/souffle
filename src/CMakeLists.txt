@@ -385,87 +385,8 @@ endif (MSVC)
 
 
 # --------------------------------------------------
-# Substitutions for souffle-compile
+# Substitutions for souffle-compile.py
 # --------------------------------------------------
-# FIXME: This is a bit fragile but there is actually no better way
-# to do this, AFAIK
-# Maybe we could make a cmake script instead of using shell?
-function(AUTOMAKE_COMPATIBLE_SUBST F_IN F_OUT)
-    # enclose in scope so we can create the
-    # values to substitute
-
-    set(CXX ${CMAKE_CXX_COMPILER})
-
-    set(CMAKE_HEADER_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include")
-
-    set(CPPFLAGS "")
-
-    # Compile definitions
-    get_target_property(COMP_DEFS libsouffle COMPILE_DEFINITIONS)
-    set(SUBST_DEFS "")
-    foreach(DEF ${COMP_DEFS})
-        string(APPEND SUBST_DEFS "-D${DEF} ")
-    endforeach()
-
-    # Compile flags
-    string(TOUPPER ${CMAKE_BUILD_TYPE} BT_UPPER)
-    # Remove -Werror from the default flag set for compilation using `souffle-compile`.
-    # *) `-d` option in `souffle-compile` adds this flag back
-    # *) The compiler used by `souffle-compile` isn't neccesarily the same as the one used by `cmake`.
-    #    Code that's free of warnings w/ the cmake compiler might not be w/ `souffle-compile`'s compiler.
-    #    e.g. we might use clang-10, user might use gcc or some newer version of clang.
-    # *) Synth'd code isn't warning free for now anyways.
-    #    TODO: Require/verify that test case synthesised code is warning free as part of test suite.
-    string(REGEX REPLACE "-Werror" ""  SOUFFLE_CXXFLAGS "${CMAKE_CXX_FLAGS}")
-
-    set(SOUFFLE_CXXFLAGS "${SOUFFLE_CXXFLAGS} ${CMAKE_CXX_FLAGS_${BT_UPPER}} ${SUBST_DEFS}")
-
-    if (OPENMP_FOUND)
-       set(SOUFFLE_CXXFLAGS "${SOUFFLE_CXXFLAGS} -fopenmp")
-    endif()
-
-    set(LIBS "")
-
-    if (THREADS_FOUND)
-      string(APPEND LIBS " ${CMAKE_THREAD_LIBS_INIT}")
-    endif()
-
-    if (CMAKE_DL_LIBS)
-       string(APPEND LIBS " -l${CMAKE_DL_LIBS}")
-    endif()
-
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-      if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
-        string(APPEND LIBS " -lstdc++fs")
-      endif ()
-    endif()
-
-    if (SOUFFLE_USE_SQLITE)
-        string(APPEND LIBS " ${SQLite3_LIBRARY}")
-    endif()
-
-    if (SOUFFLE_USE_ZLIB)
-        string(APPEND LIBS " ${ZLIB_LIBRARY_RELEASE}")
-    endif()
-
-    if (SOUFFLE_USE_CURSES)
-        string(APPEND LIBS " ${CURSES_NCURSES_LIBRARY}")
-    endif()
-
-    configure_file("${F_IN}" "${F_OUT}" @ONLY)
-    file(CHMOD ${F_OUT} 
-      PERMISSIONS 
-      OWNER_EXECUTE OWNER_READ OWNER_WRITE
-      GROUP_EXECUTE GROUP_READ
-      WORLD_EXECUTE WORLD_READ)
-endfunction()
-
-automake_compatible_subst("${CMAKE_CURRENT_SOURCE_DIR}/souffle-compile.in"
-                          "${CMAKE_CURRENT_BINARY_DIR}/souffle-compile")
-
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/souffle-compile DESTINATION bin)
-
-# ---------------------------------------
 set(SOUFFLE_COMPILED_CXX_COMPILER ${CMAKE_CXX_COMPILER})
 set(SOUFFLE_COMPILED_CXX_COMPILER_ID ${CMAKE_CXX_COMPILER_ID})
 set(SOUFFLE_COMPILED_CXX_COMPILER_VERSION ${CMAKE_CXX_COMPILER_VERSION})
@@ -580,7 +501,8 @@ list(JOIN SOUFFLE_COMPILED_DEFS " " SOUFFLE_COMPILED_DEFINITIONS)
 
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/souffle-compile.template.py TEMPLATE)
 
-set(SOUFFLE_COMPILE_RB 
+# json parameters injected at the begining of souffle-compile.py
+set(SOUFFLE_COMPILE_PY
 "#!/usr/bin/env python3
 JSON_DATA_TEXT = \"\"\"{
   \"compiler\": \"${SOUFFLE_COMPILED_CXX_COMPILER}\",
@@ -607,10 +529,7 @@ JSON_DATA_TEXT = \"\"\"{
 ${TEMPLATE}
 ")
 
-#file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/souffle-compile.rb" CONTENT "${SOUFFLE_COMPILE_RB}")
-#file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/souffle-compile.rb" "${SOUFFLE_COMPILE_RB}")
-
-file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/souffle-compile.py" CONTENT "${SOUFFLE_COMPILE_RB}")
+file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/souffle-compile.py" CONTENT "${SOUFFLE_COMPILE_PY}")
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/souffle-compile.py DESTINATION bin)
 
 # ---------------------------------------
