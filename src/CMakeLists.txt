@@ -525,7 +525,8 @@ JSON_DATA_TEXT = \"\"\"{
   \"rpath_fmt\": \"${RPATH_FMT}\",
   \"path_delimiter\": \"${OS_PATH_DELIMITER}\",
   \"exe_extension\": \"${EXE_EXTENSION}\",
-  \"source_include_dir\": \"${CMAKE_CURRENT_SOURCE_DIR}/include\"
+  \"source_include_dir\": \"${CMAKE_CURRENT_SOURCE_DIR}/include\",
+  \"jni_includes\": \"${JAVA_INCLUDE_PATH}${OS_PATH_DELIMITER}${JAVA_INCLUDE_PATH2}\"
 }\"\"\"
 ${TEMPLATE}
 ")

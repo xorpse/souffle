@@ -692,7 +692,8 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                 case FunctorOp::EXP: {
                     auto first = ramBitCast<RamSigned>(execute(shadow.getChild(0), ctxt));
                     auto second = ramBitCast<RamSigned>(execute(shadow.getChild(1), ctxt));
-                    return ramBitCast(static_cast<RamSigned>(std::pow(first, second)));
+                    return ramBitCast(
+                            static_cast<RamSigned>(static_cast<EXP_RamSigned>(std::pow(first, second))));
                 }
 
                 case FunctorOp::UEXP: {

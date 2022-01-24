@@ -39,7 +39,7 @@ if os.path.isdir(output_dir):
         else:
             os.remove(path) # only remove files
 else:
-    os.mkdir(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
 
 if extra_data == "json":
     for file in [os.path.basename(p) for p in glob.glob(os.path.join(input_dir,"*.json"))]:
