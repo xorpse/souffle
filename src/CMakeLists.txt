@@ -524,7 +524,8 @@ JSON_DATA_TEXT = \"\"\"{
   \"libname_fmt\": \"${LIBNAME_FMT}\",
   \"rpath_fmt\": \"${RPATH_FMT}\",
   \"path_delimiter\": \"${OS_PATH_DELIMITER}\",
-  \"exe_extension\": \"${EXE_EXTENSION}\"
+  \"exe_extension\": \"${EXE_EXTENSION}\",
+  \"source_include_dir\": \"${CMAKE_CURRENT_SOURCE_DIR}/include\"
 }\"\"\"
 ${TEMPLATE}
 ")

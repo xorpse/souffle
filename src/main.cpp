@@ -718,7 +718,7 @@ int main(int argc, char** argv) {
     const bool must_interpret =
             !execute_mode && !compile_mode && !generate_mode && !Global::config().has("swig");
     const bool must_execute = execute_mode;
-    const bool must_compile = must_execute || compile_mode;
+    const bool must_compile = must_execute || compile_mode || Global::config().has("swig");
 
     try {
         if (must_interpret) {
