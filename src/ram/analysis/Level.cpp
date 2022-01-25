@@ -285,15 +285,6 @@ std::optional<std::size_t> LevelAnalysis::getLevel(const Node* node) const {
     assert((isA<Expression>(node) || isA<Condition>(node) || isA<Operation>(node)) &&
             "not an expression/condition/operation");
     auto res = ValueLevelVisitor().dispatch(*node);
-    /*
-    std::cout << *node << " => ";
-    if (res) {
-        std::cout << *res;
-    } else {
-        std::cout << -1;
-    }
-    std::cout << "\n";
-    */
     return res;
 }
 
