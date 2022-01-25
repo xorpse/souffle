@@ -415,7 +415,7 @@ if (CHECK_OS_RESULT EQUAL 0)
         # --------------------------------------------------
 
         # Specifying runtime dependencies
-        set(CPACK_DEBIAN_PACKAGE_DEPENDS "g++ (>= 8), libffi-dev, libncurses5-dev, libsqlite3-dev, mcpp, zlib1g-dev")
+        set(CPACK_DEBIAN_PACKAGE_DEPENDS "g++ (>= 8), libffi-dev, libncurses5-dev, libsqlite3-dev, mcpp, zlib1g-dev, python3")
 
         # Auto-generate any runtime dependencies that are required
         SET(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
@@ -426,23 +426,23 @@ if (CHECK_OS_RESULT EQUAL 0)
     endif()
 
     if (CHECK_OS_OUTPUT MATCHES "FEDORA" OR CHECK_OS_OUTPUT MATCHES "CENTOS")
-        SET(CPACK_RPM_PACKAGE_GROUP "Unspecified")
-        SET(CPACK_RPM_PACKAGE_LICENSE "UPL-1.0 License")
-        SET(CPACK_RPM_PACKAGE_VENDOR "Souffle-lang")
+      SET(CPACK_RPM_PACKAGE_GROUP "Unspecified")
+      SET(CPACK_RPM_PACKAGE_LICENSE "UPL-1.0 License")
+      SET(CPACK_RPM_PACKAGE_VENDOR "Souffle-lang")
 
-		# Generate both DEB and RPM packages
-		SET(CPACK_GENERATOR "RPM")
+      # Generate both DEB and RPM packages
+      SET(CPACK_GENERATOR "RPM")
 
-		# --------------------------------------------------
-		# Variables relevent to RPM packages
-		# --------------------------------------------------
+      # --------------------------------------------------
+      # Variables relevent to RPM packages
+      # --------------------------------------------------
 
-		# Specifying runtime dependencies
-		set(CPACK_RPM_PACKAGE_REQUIRES "gcc-c++ >= 8, libffi, libffi-devel, ncurses-devel, sqlite-devel, mcpp, zlib-devel")
+      # Specifying runtime dependencies
+      set(CPACK_RPM_PACKAGE_REQUIRES "gcc-c++ >= 8, libffi, libffi-devel, ncurses-devel, sqlite-devel, mcpp, zlib-devel, python3")
 
-        # Note: By default automatic dependency detection is enabled by rpm generator.
-        # SET(CPACK_RPM_PACKAGE_AUTOREQPROV "no")
-        INCLUDE(CPack)
-	endif()
+      # Note: By default automatic dependency detection is enabled by rpm generator.
+      # SET(CPACK_RPM_PACKAGE_AUTOREQPROV "no")
+      INCLUDE(CPack)
+    endif()
 endif()
 endif()
