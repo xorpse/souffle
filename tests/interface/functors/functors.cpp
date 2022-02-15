@@ -78,6 +78,13 @@ FF_float incr(FF_float x) {
     return x + 1.0;
 }
 
+const char* concat(FF_float f, FF_int i, FF_uint u, const char* s) {
+    std::string str = std::to_string(f) + std::to_string(i) + std::to_string(u) + std::string(s);
+    char* cstr = (char*)malloc(str.size() + 1);
+    strcpy(cstr, str.c_str());
+    return cstr;
+}
+
 // Stateful Functors
 souffle::RamDomain mycat(souffle::SymbolTable* symbolTable,
         [[maybe_unused]] souffle::RecordTable* recordTable, souffle::RamDomain arg1,
