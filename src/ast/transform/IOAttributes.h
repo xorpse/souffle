@@ -233,7 +233,8 @@ private:
             if (isA<analysis::RecordType>(skipAliasesType(type))) {
                 elementTypes.clear();
 
-                for (const analysis::Type* field : as<analysis::RecordType>(skipAliasesType(type))->getFields()) {
+                for (const analysis::Type* field :
+                        as<analysis::RecordType>(skipAliasesType(type))->getFields()) {
                     elementTypes.push_back(getTypeQualifier(*field));
                 }
                 const std::size_t recordArity = elementTypes.size();

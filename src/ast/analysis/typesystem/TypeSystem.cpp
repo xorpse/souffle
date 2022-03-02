@@ -208,7 +208,7 @@ bool isBaseOfKind(const Type& type, TypeAttribute kind) {
     }
 
     if (auto alias = as<AliasType>(type)) {
-      return isBaseOfKind(alias->getAliasType(), kind);
+        return isBaseOfKind(alias->getAliasType(), kind);
     }
 
     if (kind == TypeAttribute::Record) {
@@ -422,7 +422,7 @@ const Type& getBaseType(const Type* type) {
     }
 
     if (auto alias = as<AliasType>(type)) {
-      return getBaseType(&alias->getAliasType());
+        return getBaseType(&alias->getAliasType());
     }
 
     assert((isA<ConstantType>(type) || isA<RecordType>(type)) &&
@@ -432,7 +432,7 @@ const Type& getBaseType(const Type* type) {
 
 const Type& skipAliasesType(const Type* type) {
     if (auto alias = as<AliasType>(type)) {
-      return skipAliasesType(&alias->getAliasType());
+        return skipAliasesType(&alias->getAliasType());
     }
 
     return *type;
@@ -440,7 +440,7 @@ const Type& skipAliasesType(const Type* type) {
 
 const Type& skipAliasesType(const Type& type) {
     if (auto alias = as<AliasType>(type)) {
-      return skipAliasesType(alias->getAliasType());
+        return skipAliasesType(alias->getAliasType());
     }
 
     return type;

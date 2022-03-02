@@ -586,7 +586,8 @@ std::string getTypeQualifier(const Type& type);
 bool isOfKind(const Type& type, TypeAttribute kind);
 bool isOfKind(const TypeSet& typeSet, TypeAttribute kind);
 
-/** Check if the type is a direct or a sub-type or an alias-type of a kind corresponding to the TypeAttribute */
+/** Check if the type is a direct or a sub-type or an alias-type of a kind corresponding to the TypeAttribute
+ */
 bool isBaseOfKind(const Type& type, TypeAttribute kind);
 
 /** Get type attributes */
