@@ -127,7 +127,7 @@ protected:
     }
 
     void openDB() {
-        sqlite3_config(SQLITE_CONFIG_URI,1);
+        sqlite3_config(SQLITE_CONFIG_URI, 1);
         if (sqlite3_open(dbFilename.c_str(), &db) != SQLITE_OK) {
             throwError("SQLite error in sqlite3_open: ");
         }
