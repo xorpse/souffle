@@ -141,9 +141,7 @@ TEST(GetOptLong, Short2) {
     optind = 0;
     opterr = 0;
 
-    char* const argv[] = {
-      const_cast<char*>("test"),
-      const_cast<char*>("-nnntarg")};
+    char* const argv[] = {const_cast<char*>("test"), const_cast<char*>("-nnntarg")};
 
     const int argc = 2;
     const char* optstr = "nt:";
@@ -212,13 +210,8 @@ TEST(GetOptLong, NonOpts) {
     optind = 0;
     opterr = 0;
 
-    char* const argv[] = {
-            const_cast<char*>("test"),
-            const_cast<char*>("nonopt1"),
-            const_cast<char*>("nonopt2"),
-            const_cast<char*>("nonopt3"),
-            const_cast<char*>("-n")
-    };
+    char* const argv[] = {const_cast<char*>("test"), const_cast<char*>("nonopt1"),
+            const_cast<char*>("nonopt2"), const_cast<char*>("nonopt3"), const_cast<char*>("-n")};
 
     const int argc = 5;
     const char* optstr = "nt:";
@@ -246,10 +239,7 @@ TEST(GetOptLong, MissingArg) {
     optind = 0;
     opterr = 0;
 
-    char* const argv[] = {
-            const_cast<char*>("test"),
-            const_cast<char*>("-t")
-    };
+    char* const argv[] = {const_cast<char*>("test"), const_cast<char*>("-t")};
 
     const int argc = 2;
     const char* optstr = "nt:";
@@ -266,10 +256,7 @@ TEST(GetOptLong, MissingArg2) {
     optind = 0;
     opterr = 0;
 
-    char* const argv[] = {
-            const_cast<char*>("test"),
-            const_cast<char*>("-t")
-    };
+    char* const argv[] = {const_cast<char*>("test"), const_cast<char*>("-t")};
 
     const int argc = 2;
     const char* optstr = ":nt:";
@@ -286,11 +273,7 @@ TEST(GetOptLong, MissingArg3) {
     optind = 0;
     opterr = 0;
 
-    char* const argv[] = {
-            const_cast<char*>("test"),
-            const_cast<char*>("-t"),
-            const_cast<char*>("-t")
-    };
+    char* const argv[] = {const_cast<char*>("test"), const_cast<char*>("-t"), const_cast<char*>("-t")};
 
     const int argc = 3;
     const char* optstr = "nt:";
@@ -307,11 +290,7 @@ TEST(GetOptLong, MissingArg4) {
     optind = 0;
     opterr = 0;
 
-    char* const argv[] = {
-            const_cast<char*>("test"),
-            const_cast<char*>("-t"),
-            const_cast<char*>("-n")
-    };
+    char* const argv[] = {const_cast<char*>("test"), const_cast<char*>("-t"), const_cast<char*>("-n")};
 
     const int argc = 3;
     const char* optstr = "nt:";
@@ -328,16 +307,12 @@ TEST(GetOptLong, MissingArg5) {
     optind = 0;
     opterr = 0;
 
-    char* const argv[] = {
-            const_cast<char*>("test"),
-            const_cast<char*>("-t"),
-            const_cast<char*>("--long")
-    };
+    char* const argv[] = {const_cast<char*>("test"), const_cast<char*>("-t"), const_cast<char*>("--long")};
 
     const int argc = 3;
     const char* optstr = "nt:";
     struct option longopts[2];
-    memset(longopts, 0, 2*sizeof(struct option));
+    memset(longopts, 0, 2 * sizeof(struct option));
     longopts[1].name = "long";
     longopts[1].val = 1;
 
@@ -381,11 +356,7 @@ TEST(GetOptLong, NonOptionDash) {
     optind = 0;
     opterr = 0;
 
-    char* const argv[] = {
-            const_cast<char*>("test"),
-            const_cast<char*>("-"),
-            const_cast<char*>("-n")
-    };
+    char* const argv[] = {const_cast<char*>("test"), const_cast<char*>("-"), const_cast<char*>("-n")};
 
     const int argc = 3;
     const char* optstr = "nt:";
@@ -407,13 +378,8 @@ TEST(GetOptLong, DashDashEndScan) {
     optind = 0;
     opterr = 0;
 
-    char* const argv[] = {
-            const_cast<char*>("test"),
-            const_cast<char*>("-n"),
-            const_cast<char*>("--"),
-            const_cast<char*>("-t"),
-            const_cast<char*>("opt")
-    };
+    char* const argv[] = {const_cast<char*>("test"), const_cast<char*>("-n"), const_cast<char*>("--"),
+            const_cast<char*>("-t"), const_cast<char*>("opt")};
 
     const int argc = 5;
     const char* optstr = "nt:";
@@ -433,15 +399,11 @@ TEST(GetOptLong, DashDashEndScan) {
     EXPECT_EQ(std::string(argv[4]), std::string("opt"));
 }
 
-
 TEST(GetOptLong, NotAnOption) {
     optind = 0;
     opterr = 0;
 
-    char* const argv[] = {
-            const_cast<char*>("test"),
-            const_cast<char*>("-x")
-    };
+    char* const argv[] = {const_cast<char*>("test"), const_cast<char*>("-x")};
 
     const int argc = 2;
     const char* optstr = "nt:";
@@ -458,10 +420,7 @@ TEST(GetOptLong, NotAnOption2) {
     optind = 0;
     opterr = 0;
 
-    char* const argv[] = {
-            const_cast<char*>("test"),
-            const_cast<char*>("-x")
-    };
+    char* const argv[] = {const_cast<char*>("test"), const_cast<char*>("-x")};
 
     const int argc = 2;
     const char* optstr = "nt:";
@@ -478,16 +437,10 @@ TEST(GetOptLong, LongOptions) {
     optind = 0;
     opterr = 0;
 
-    char* const argv[] = {
-            const_cast<char*>("souffle"),
-            const_cast<char*>("--fact-dir"),
-            const_cast<char*>("-"),
-            const_cast<char*>("--version"),
-            const_cast<char*>("input.dl"),
-            const_cast<char*>("--generate"),
-            const_cast<char*>("--output-dir=out"),
-            const_cast<char*>("--jobs=4")
-    };
+    char* const argv[] = {const_cast<char*>("souffle"), const_cast<char*>("--fact-dir"),
+            const_cast<char*>("-"), const_cast<char*>("--version"), const_cast<char*>("input.dl"),
+            const_cast<char*>("--generate"), const_cast<char*>("--output-dir=out"),
+            const_cast<char*>("--jobs=4")};
 
     int jobs_flag = -1;
     int version_flag = -1;
@@ -495,15 +448,10 @@ TEST(GetOptLong, LongOptions) {
 
     const int argc = 8;
     const char* optstr = "F:D:j:vg::";
-    struct option longopts[] = {
-      {"fact-dir", required_argument, nullptr, 'F'},
-      {"output-dir", required_argument, nullptr, 'D'},
-      {"jobs", required_argument, &jobs_flag, 'j'},
-      {"version", no_argument, &version_flag, 'v'},
-      {"generate", optional_argument, nullptr, 'g'},
-      {"show", required_argument, &show_flag, 0x4},
-      {nullptr, 0, nullptr, 0}
-    };
+    struct option longopts[] = {{"fact-dir", required_argument, nullptr, 'F'},
+            {"output-dir", required_argument, nullptr, 'D'}, {"jobs", required_argument, &jobs_flag, 'j'},
+            {"version", no_argument, &version_flag, 'v'}, {"generate", optional_argument, nullptr, 'g'},
+            {"show", required_argument, &show_flag, 0x4}, {nullptr, 0, nullptr, 0}};
 
     char c;
     int longindex;

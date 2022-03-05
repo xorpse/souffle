@@ -21,11 +21,7 @@ int optind = 0;
 int opterr = 1;
 int optopt = 0;
 
-enum {
-  no_argument = 0,
-  required_argument = 1,
-  optional_argument = 2
-};
+enum { no_argument = 0, required_argument = 1, optional_argument = 2 };
 
 namespace {
 
@@ -121,11 +117,11 @@ int parse_long_option(const int argc, char* const argv[], const struct option* l
 
 // permute argv[last] and argv[last-1] and recurse
 void permute(char* argv[], int first, int last) {
-  if (first >= last) return;
-  char* tmp = argv[last];
-  argv[last] = argv[last-1];
-  argv[last-1] = tmp;
-  permute(argv, first, last-1);
+    if (first >= last) return;
+    char* tmp = argv[last];
+    argv[last] = argv[last - 1];
+    argv[last - 1] = tmp;
+    permute(argv, first, last - 1);
 }
 
 void shift(char* argv[]) {
@@ -165,17 +161,17 @@ int getopt_long(
     }
 
     if (*optstring == ':') {
-      missing_argument = (int)':';
-      print_error_message = 0;
-      ++optstring;
+        missing_argument = (int)':';
+        print_error_message = 0;
+        ++optstring;
     }
 
-    if (nextchar == nullptr) { // scan starting at argv[optind]
-      if (nonopt_count > 0) { // previous scan skipped over some non-option arguments
-          shift((char**)argv);
-      } else {
-        previous_optind = optind;
-      }
+    if (nextchar == nullptr) {   // scan starting at argv[optind]
+        if (nonopt_count > 0) {  // previous scan skipped over some non-option arguments
+            shift((char**)argv);
+        } else {
+            previous_optind = optind;
+        }
     }
 
     if (optind >= argc) {
@@ -183,23 +179,23 @@ int getopt_long(
         return -1;
     }
 
-    if (nextchar == nullptr) { // scan starting at argv[optind], skip over any non-option elements
-      while ((optind + nonopt_count < argc) &&
-              (argv[optind + nonopt_count][0] != '-' || argv[optind + nonopt_count][1] == 0)) {
-          ++nonopt_count;
-      }
+    if (nextchar == nullptr) {  // scan starting at argv[optind], skip over any non-option elements
+        while ((optind + nonopt_count < argc) &&
+                (argv[optind + nonopt_count][0] != '-' || argv[optind + nonopt_count][1] == 0)) {
+            ++nonopt_count;
+        }
 
-      if (optind + nonopt_count == argc) {
-        // no more options
-        nonopt_count = 0;
-        return -1;
-      }
+        if (optind + nonopt_count == argc) {
+            // no more options
+            nonopt_count = 0;
+            return -1;
+        }
 
-      optind += nonopt_count;
+        optind += nonopt_count;
     }
 
-    if (nextchar == nullptr && optind < argc) { // scan starting at argv[optind]
-      nextchar = argv[optind];
+    if (nextchar == nullptr && optind < argc) {  // scan starting at argv[optind]
+        nextchar = argv[optind];
     }
 
     if (nextchar == argv[optind] && *nextchar == '-') {
