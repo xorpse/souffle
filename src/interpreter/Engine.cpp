@@ -119,9 +119,6 @@
 #include <dlfcn.h>
 #endif
 
-// Dynamic-size arrays are not compatible with all compilers, so make it unique pointers of array type
-#define dynarray(type, name, size) std::unique_ptr<type[]> name = std::make_unique<type[]>(size)
-
 #ifdef USE_LIBFFI
 #include <ffi.h>
 #endif
@@ -836,8 +833,8 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                 }
 #ifdef USE_LIBFFI
                 // prepare dynamic call environment
-                dynarray(void*, values, arity + 2);
-                dynarray(RamDomain, intVal, arity);
+                std::unique_ptr<void*[]> values = std::make_unique<void*[]>(arity + 2);
+                std::unique_ptr<RamDomain[]> intVal = std::make_unique<RamDomain[]>(arity);
                 RamDomain rc;
 
                 /* Initialize arguments for ffi-call */
@@ -850,7 +847,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                     values[i + 2] = &intVal[i];
                 }
 
-                ffi_call(shadow.getFFIcif(), userFunctor, &rc, values);
+                ffi_call(shadow.getFFIcif(), userFunctor, &rc, values.get());
                 return rc;
 #else
                 fatal("unsupported stateful functor arity without libffi support");
@@ -868,11 +865,11 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
 
 #ifdef USE_LIBFFI
                 // prepare dynamic call environment
-                dynarray(void*, values, arity);
-                dynarray(RamDomain, intVal, arity);
-                dynarray(RamUnsigned, uintVal, arity);
-                dynarray(RamFloat, floatVal, arity);
-                dynarray(const char*, strVal, arity);
+                std::unique_ptr<void*[]> values = std::make_unique<void*[]>(arity);
+                std::unique_ptr<RamSigned[]> intVal = std::make_unique<RamSigned[]>(arity);
+                std::unique_ptr<RamUnsigned[]> uintVal = std::make_unique<RamUnsigned[]>(arity);
+                std::unique_ptr<RamFloat[]> floatVal = std::make_unique<RamFloat[]>(arity);
+                std::unique_ptr<const char*[]> strVal = std::make_unique<const char*[]>(arity);
 
                 /* Initialize arguments for ffi-call */
                 for (std::size_t i = 0; i < arity; i++) {
@@ -907,7 +904,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                     ffi_arg dummy;  // ensures minium size
                 } rvalue;
 
-                ffi_call(shadow.getFFIcif(), userFunctor, &rvalue, values);
+                ffi_call(shadow.getFFIcif(), userFunctor, &rvalue, values.get());
 
                 switch (cur.getReturnType()) {
                     case TypeAttribute::Signed: return static_cast<RamDomain>(rvalue.s);
@@ -928,7 +925,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
         CASE(PackRecord)
             auto values = cur.getArguments();
             std::size_t arity = values.size();
-            dynarray(RamDomain, data, arity);
+            std::unique_ptr<RamDomain[]> data = std::make_unique<RamDomain[]>(arity);
             for (std::size_t i = 0; i < arity; ++i) {
                 data[i] = execute(shadow.getChild(i), ctxt);
             }

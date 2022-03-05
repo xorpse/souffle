@@ -146,7 +146,7 @@ NodePtr NodeGenerator::visit_(type_identity<ram::UserDefinedOperator>, const ram
         }
     }
 
-    const auto prepStatus = ffi_prep_cif(cif.get(), FFI_DEFAULT_ABI, nbArgs, codomain, args.get());
+    const auto prepStatus = ffi_prep_cif(cif.get(), FFI_DEFAULT_ABI, static_cast<unsigned int>(nbArgs), codomain, args.get());
     if (prepStatus != FFI_OK) {
         fatal("Failed to prepare CIF for user-defined operator `%s`; error code = %d", op.getName(),
                 prepStatus);
