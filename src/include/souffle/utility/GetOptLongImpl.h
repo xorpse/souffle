@@ -15,23 +15,31 @@
 #include <string.h>
 
 char* optarg = nullptr;
+
+// the index of the next element to be processed in argv
 int optind = 0;
 int opterr = 1;
 int optopt = 0;
 
+enum {
+  no_argument = 0,
+  required_argument = 1,
+  optional_argument = 2
+};
+
 namespace {
 
-char* const EMPTY = const_cast<char*>("");
+// nextchar points to the next option character in an element of argv
+char* nextchar = nullptr;
 
-char* nextchar = EMPTY;
+// value of optind at the previous call of getopt_long
+int previous_optind = -1;
 
-// detected non-options are moved at argv[first_nonopt .. end_nonopt - 1]
-// position in argv of the first non-option.
-int first_nonopt;
-// one position past the last non-option in argv.
-int end_nonopt;
+// the number of non-options elements of argv skipped last time getopt was called
+int nonopt_count = 0;
 
-int parse_long_option(const int argc, char* const argv[], const struct option* longopts, int* longindex) {
+int parse_long_option(const int argc, char* const argv[], const struct option* longopts, int* longindex,
+        const int print_error_message, const int missing_argument) {
     char* const current = nextchar;
     ++optind;
 
@@ -54,17 +62,17 @@ int parse_long_option(const int argc, char* const argv[], const struct option* l
 
     if (match == -1) {
         // cannot find long option
-        if (opterr) {
+        if (print_error_message) {
             fprintf(stderr, "unknown option -- %.*s\n", static_cast<int>(namelength), current);
         }
         optopt = 0;
         return (int)'?';
     }
 
-    if (longopts[match].has_arg == 0) {
+    if (longopts[match].has_arg == no_argument) {
         // no argument expected
         if (hasequal) {
-            if (opterr) {
+            if (print_error_message) {
                 fprintf(stderr, "unexpected argument -- %.*s\n", static_cast<int>(namelength), current);
             }
             if (longopts[match].flag == nullptr) {
@@ -76,7 +84,7 @@ int parse_long_option(const int argc, char* const argv[], const struct option* l
         }
     }
 
-    if (longopts[match].has_arg == 1 || longopts[match].has_arg == 2) {
+    if (longopts[match].has_arg == required_argument || longopts[match].has_arg == optional_argument) {
         if (hasequal) {
             // argument is in the same argv after '=' sign
             optarg = hasequal + 1;
@@ -85,19 +93,19 @@ int parse_long_option(const int argc, char* const argv[], const struct option* l
             // If argument is optional, leave optarg to null, user is in charge
             // of verifying the value of argv[optind] and increment optind
             // if the argument is valid.
-            if (longopts[match].has_arg == 1) {
+            if (longopts[match].has_arg == required_argument) {
                 // mandatory argument
                 optarg = argv[optind++];
             }
         } else {
             // no argument found
-            if (longopts[match].has_arg == 1) {
-                if (opterr) {
+            if (longopts[match].has_arg == required_argument) {
+                if (print_error_message) {
                     fprintf(stderr, "missing mandatory argument -- %.*s\n", static_cast<int>(namelength),
                             current);
                 }
                 optopt = 0;
-                return (int)':';
+                return missing_argument;
             }
         }
     }  // unexpected value of has_arg is not verified
@@ -111,34 +119,27 @@ int parse_long_option(const int argc, char* const argv[], const struct option* l
     }
 }
 
-// Permute current non-option with next available option if any.
-// Return 1 if a permutation occured and optind is the index of an option in
-// argc, 0 otherwise.
-int permute(int argc, char** argv) {
-    // find next option
-    int next_opt;
+// permute argv[last] and argv[last-1] and recurse
+void permute(char* argv[], int first, int last) {
+  if (first >= last) return;
+  char* tmp = argv[last];
+  argv[last] = argv[last-1];
+  argv[last-1] = tmp;
+  permute(argv, first, last-1);
+}
 
-    for (next_opt = optind; next_opt < argc; ++next_opt) {
-        if (argv[next_opt][0] == '-') {
-            break;
-        }
+void shift(char* argv[]) {
+    // done with reading options from argv[previous_optind]..argv[optind-1]
+
+    int start = previous_optind;
+    for (int mv = previous_optind + nonopt_count; mv < optind; ++mv) {
+        permute(argv, start, mv);
+        ++start;
     }
 
-    if (next_opt == argc) {
-        // no more options
-        return 0;
-    }
-
-    // move argc[next_opt] to argc[optind]
-    // shift argc[optind .. next_opt - 1] to argc[optind + 1 .. next_opt]
-    char* const option = argv[next_opt];
-    int i;
-    for (i = next_opt; i > optind; --i) {
-        argv[i] = argv[i - 1];
-    }
-    argv[optind] = option;
-
-    return 1;
+    optind -= nonopt_count;
+    previous_optind = optind;
+    nonopt_count = 0;
 }
 
 }  // anonymous namespace
@@ -146,48 +147,78 @@ int permute(int argc, char** argv) {
 int getopt_long(
         int argc, char* const argv[], const char* optstring, const struct option* longopts, int* longindex) {
     if (optind == 0) {  // full reset
+        nextchar = nullptr;
+        nonopt_count = 0;
+        optarg = nullptr;
         optind = 1;
-        nextchar = EMPTY;
-        first_nonopt = 1;
-        end_nonopt = 1;
+        previous_optind = optind;
     }
 
-    if (optstring[0] == '+' || optstring[0] == '-') {
-        throw "Mode +/- of optstring is not supported.";
-    }
-
-    if (optind >= argc) {
-        // all command-line arguments have been parsed
-        return -1;
-    }
-
-    if (*nextchar == 0) {
-        nextchar = argv[optind];
-        if (*nextchar != '-') {
-            // not starting with an option
-            // try to permute with the next option if available
-            if (permute(argc, const_cast<char**>(argv))) {
-                nextchar = argv[optind];
-            } else {
-                // definitely no more options
-                nextchar = EMPTY;
-                return -1;
-            }
-        }
-    }
+    int missing_argument = (int)'?';
+    int print_error_message = opterr;
 
     optarg = nullptr;
 
+    if (*optstring == '+' || *optstring == '-') {
+        throw "Mode +/- of optstring is not supported.";
+        ++optstring;
+    }
+
+    if (*optstring == ':') {
+      missing_argument = (int)':';
+      print_error_message = 0;
+      ++optstring;
+    }
+
+    if (nextchar == nullptr) { // scan starting at argv[optind]
+      if (nonopt_count > 0) { // previous scan skipped over some non-option arguments
+          shift((char**)argv);
+      } else {
+        previous_optind = optind;
+      }
+    }
+
+    if (optind >= argc) {
+        // all command-line arguments have been scanned
+        return -1;
+    }
+
+    if (nextchar == nullptr) { // scan starting at argv[optind], skip over any non-option elements
+      while ((optind + nonopt_count < argc) &&
+              (argv[optind + nonopt_count][0] != '-' || argv[optind + nonopt_count][1] == 0)) {
+          ++nonopt_count;
+      }
+
+      if (optind + nonopt_count == argc) {
+        // no more options
+        nonopt_count = 0;
+        return -1;
+      }
+
+      optind += nonopt_count;
+    }
+
+    if (nextchar == nullptr && optind < argc) { // scan starting at argv[optind]
+      nextchar = argv[optind];
+    }
+
     if (nextchar == argv[optind] && *nextchar == '-') {
         ++nextchar;
-        if (*nextchar == '-' && *(++nextchar)) {
+        if (*nextchar == '-' && nextchar[1] == 0) {
+            // double-dash marks the end of the option scan
+            nextchar = nullptr;
+            shift((char**)argv);
+            return -1;
+        } else if (*nextchar == '-' && *(++nextchar)) {
             // search long option
-            optopt = parse_long_option(argc, argv, longopts, longindex);
-            nextchar = EMPTY;
+            optopt =
+                    parse_long_option(argc, argv, longopts, longindex, print_error_message, missing_argument);
+            nextchar = nullptr;
             return optopt;
         } else if (*nextchar == 0) {
             // missing option character
-            nextchar = EMPTY;
+            optind += 1;
+            nextchar = nullptr;
             return -1;
         }
     }
@@ -197,7 +228,7 @@ int getopt_long(
     optopt = *nextchar++;
     if ((option = strchr(optstring, optopt)) == nullptr) {
         // cannot find option
-        if (opterr) {
+        if (print_error_message) {
             fprintf(stderr, "unknown option -- %c\n", optopt);
         }
         return (int)'?';
@@ -208,37 +239,44 @@ int getopt_long(
         // no argument required
         if (!*nextchar) {
             ++optind;
+            nextchar = nullptr;
         }
     } else {
         if (*nextchar) {
             // if argument is in the same argv, always set optarg
             optarg = nextchar;
             ++optind;
-            nextchar = EMPTY;
+            nextchar = nullptr;
         } else if (argc <= ++optind) {
             // no argument found
-            nextchar = EMPTY;
+            nextchar = nullptr;
+            optarg = nullptr;
+
             if (*option != ':') {
-                // option has mandatory argument
-                if (opterr) {
+                // mandatory argument is missing
+                if (print_error_message) {
                     fprintf(stderr, "missing mandatory argument -- %c\n", optopt);
                 }
-                return (int)':';
-            } else {
-                // option has optional argument
-                optarg = nullptr;
+                return missing_argument;
             }
         } else {
             // argument is in next argv
-            if (*argv[optind] == '-' && *option != ':') {
-                // argument is mandatory, but must not start with a dash
-                if (opterr) {
+            nextchar = nullptr;
+
+            if (*option != ':' &&
+                    ((argv[optind][0] == '-' && (argv[optind][1] != 0 && argv[optind][1] != '-')) ||
+                            (argv[optind][0] == '-' && argv[optind][1] == '-' && argv[optind][2] != 0))) {
+                // argument is mandatory, but must not start with a dash or a double-dash
+                // or must be exactly dash or double-dash.
+                if (print_error_message) {
                     fprintf(stderr, "missing mandatory argument -- %c\n", optopt);
                 }
-                return (int)':';
+                optarg = nullptr;
+                return missing_argument;
             }
+
             if (*option != ':') {
-                // argument  is mandatory
+                // argument is mandatory
                 optarg = argv[optind++];
             } else {
                 // Argument is optional but not in the same argv, set optarg to null.
@@ -246,8 +284,6 @@ int getopt_long(
                 // if it considers its a valid argument.
                 optarg = nullptr;
             }
-
-            nextchar = EMPTY;
         }
     }
 
