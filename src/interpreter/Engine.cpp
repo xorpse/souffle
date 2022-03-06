@@ -682,8 +682,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                     auto second = ramBitCast<RamSigned>(execute(shadow.getChild(1), ctxt));
                     // std::pow return a double
                     static_assert(std::is_same_v<double, decltype(std::pow(first, second))>);
-                    return ramBitCast(
-                            static_cast<RamSigned>(std::pow(first, second)));
+                    return ramBitCast(static_cast<RamSigned>(std::pow(first, second)));
                 }
 
                 case FunctorOp::UEXP: {
@@ -691,8 +690,7 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                     auto second = ramBitCast<RamUnsigned>(execute(shadow.getChild(1), ctxt));
                     // std::pow return a double
                     static_assert(std::is_same_v<double, decltype(std::pow(first, second))>);
-                    return ramBitCast(
-                            static_cast<RamUnsigned>(std::pow(first, second)));
+                    return ramBitCast(static_cast<RamUnsigned>(std::pow(first, second)));
                 }
 
                 case FunctorOp::FEXP: {
