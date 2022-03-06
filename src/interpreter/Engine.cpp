@@ -136,15 +136,6 @@ namespace souffle::interpreter {
 #endif
 #endif
 
-// Aliases for foreign function interface.
-#if RAM_DOMAIN_SIZE == 64
-#define EXP_RamUnsigned RamUnsigned
-#define EXP_RamSigned RamSigned
-#else
-#define EXP_RamUnsigned int64_t
-#define EXP_RamSigned int64_t
-#endif
-
 namespace {
 constexpr RamDomain RAM_BIT_SHIFT_MASK = RAM_DOMAIN_SIZE - 1;
 
@@ -689,22 +680,27 @@ RamDomain Engine::execute(const Node* node, Context& ctxt) {
                 case FunctorOp::EXP: {
                     auto first = ramBitCast<RamSigned>(execute(shadow.getChild(0), ctxt));
                     auto second = ramBitCast<RamSigned>(execute(shadow.getChild(1), ctxt));
+                    // std::pow return a double
+                    static_assert(std::is_same_v<double, decltype(std::pow(first, second))>);
                     return ramBitCast(
-                            static_cast<RamSigned>(static_cast<EXP_RamSigned>(std::pow(first, second))));
+                            static_cast<RamSigned>(std::pow(first, second)));
                 }
 
                 case FunctorOp::UEXP: {
                     auto first = ramBitCast<RamUnsigned>(execute(shadow.getChild(0), ctxt));
                     auto second = ramBitCast<RamUnsigned>(execute(shadow.getChild(1), ctxt));
-                    // Extra casting required: pow returns a floating point.
+                    // std::pow return a double
+                    static_assert(std::is_same_v<double, decltype(std::pow(first, second))>);
                     return ramBitCast(
-                            static_cast<RamUnsigned>(static_cast<EXP_RamUnsigned>(std::pow(first, second))));
+                            static_cast<RamUnsigned>(std::pow(first, second)));
                 }
 
                 case FunctorOp::FEXP: {
                     auto first = ramBitCast<RamFloat>(execute(shadow.getChild(0), ctxt));
                     auto second = ramBitCast<RamFloat>(execute(shadow.getChild(1), ctxt));
-                    return ramBitCast(static_cast<RamFloat>(std::pow(first, second)));
+                    // std::pow return the same type as the float arguments
+                    static_assert(std::is_same_v<RamFloat, decltype(std::pow(first, second))>);
+                    return ramBitCast(std::pow(first, second));
                 }
 
                     // clang-format off

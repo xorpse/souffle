@@ -69,6 +69,9 @@ std::vector<T> generateValues() {
         values.push_back(std::numeric_limits<T>::min());
         values.push_back(0.0);
         values.push_back(1.0);
+        values.push_back(1.0);
+        values.push_back(3.0);
+        values.push_back(12.0);
         values.push_back(1.0 + std::numeric_limits<T>::epsilon());
         values.push_back(1.0 - std::numeric_limits<T>::epsilon());
         values.push_back(std::numeric_limits<T>::max());
@@ -78,6 +81,8 @@ std::vector<T> generateValues() {
             values.push_back(std::numeric_limits<T>::lowest());
             values.push_back(std::numeric_limits<T>::lowest() / 2.0);
             values.push_back(-1.0);
+            values.push_back(-3.0);
+            values.push_back(-12.0);
         }
 
         return values;
@@ -85,6 +90,8 @@ std::vector<T> generateValues() {
         // corner cases
         values.push_back(0);
         values.push_back(1);
+        values.push_back(3);
+        values.push_back(12);
         values.push_back(0xAAAAAAAA);
         values.push_back(0x55555555);
         values.push_back(std::numeric_limits<T>::max());
@@ -94,6 +101,8 @@ std::vector<T> generateValues() {
             values.push_back(std::numeric_limits<T>::lowest());
             values.push_back(std::numeric_limits<T>::lowest() / 2);
             values.push_back(-1);
+            values.push_back(-3);
+            values.push_back(-12);
         }
 
         return values;

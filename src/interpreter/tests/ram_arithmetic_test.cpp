@@ -390,8 +390,9 @@ TEST(Binary, SignedExp) {
 
     for (auto arg1 : vecArg1) {
         for (auto arg2 : vecArg2) {
-            RamDomain result = evalBinary(functor, arg1, arg2);
-            EXPECT_EQ(result, ramBitCast(static_cast<RamSigned>(std::pow(arg1, arg2))));
+            const RamSigned result = ramBitCast<RamSigned>(evalBinary(functor, arg1, arg2));
+            const RamSigned expected = static_cast<RamSigned>(std::pow(arg1, arg2));
+            EXPECT_EQ(result, expected);
         }
     }
 }
@@ -404,8 +405,9 @@ TEST(Binary, UnsignedExp) {
 
     for (auto arg1 : vecArg1) {
         for (auto arg2 : vecArg2) {
-            RamDomain result = evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2));
-            EXPECT_EQ(ramBitCast<RamUnsigned>(result), static_cast<RamUnsigned>(std::pow(arg1, arg2)));
+            const RamUnsigned result = ramBitCast<RamUnsigned>(evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2)));
+            const RamUnsigned expected = static_cast<RamUnsigned>(std::pow(arg1, arg2));
+            EXPECT_EQ(result, expected);
         }
     }
 }
@@ -418,8 +420,8 @@ TEST(Binary, FloatExp) {
 
     for (auto arg1 : vecArg1) {
         for (auto arg2 : vecArg2) {
-            auto result = ramBitCast<RamFloat>(evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2)));
-            auto expected = static_cast<RamFloat>(std::pow(arg1, arg2));
+            const RamFloat result = ramBitCast<RamFloat>(evalBinary(functor, ramBitCast(arg1), ramBitCast(arg2)));
+            const RamFloat expected = static_cast<RamFloat>(std::pow(arg1, arg2));
             EXPECT_TRUE((std::isnan(result) && std::isnan(expected)) || result == expected);
         }
     }
