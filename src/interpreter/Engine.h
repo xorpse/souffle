@@ -27,6 +27,8 @@
 #include "souffle/RamTypes.h"
 #include "souffle/RecordTable.h"
 #include "souffle/SymbolTable.h"
+#include "souffle/datastructure/RecordTableImpl.h"
+#include "souffle/datastructure/SymbolTableImpl.h"
 #include "souffle/utility/ContainerUtil.h"
 #include <atomic>
 #include <cstddef>
@@ -186,7 +188,7 @@ private:
     /** Symbol table for relations */
     VecOwn<RelationHandle> relations;
     /** Symbol table */
-    SymbolTable symbolTable;
+    SymbolTableImpl symbolTable;
 };
 
 }  // namespace souffle::interpreter
