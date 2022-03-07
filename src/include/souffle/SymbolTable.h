@@ -26,6 +26,8 @@ namespace souffle {
 /** Interface of a generic SymbolTable iterator. */
 class SymbolTableIteratorInterface {
 public:
+    virtual ~SymbolTableIteratorInterface() {}
+
     virtual const std::pair<const std::string, const std::size_t>& get() const = 0;
 
     virtual bool equals(const SymbolTableIteratorInterface& other) = 0;
@@ -42,6 +44,8 @@ public:
  */
 class SymbolTable {
 public:
+    virtual ~SymbolTable() {}
+
     /**
      * @brief Iterator on a symbol table.
      *
