@@ -13,13 +13,11 @@
  * Testing the user-defined functor interface
  *
  ***********************************************************************/
-#include "souffle/RecordTable.h"
-#include "souffle/SymbolTable.h"
+#include "souffle/SouffleFunctor.h"
 #include "souffle/utility/MiscUtil.h"
+#include <cassert>
 #include <charconv>
 #include <cmath>
-#include <cstdint>
-#include <cstring>
 #include <deque>
 #include <mutex>
 #include <string>
