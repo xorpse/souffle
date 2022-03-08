@@ -39,6 +39,7 @@
 #include "ram/Aggregate.h"
 #include "ram/Break.h"
 #include "ram/Constraint.h"
+#include "ram/CountUniqueKeys.h"
 #include "ram/DebugInfo.h"
 #include "ram/EmptinessCheck.h"
 #include "ram/ExistenceCheck.h"
@@ -60,6 +61,7 @@
 #include "ram/utility/Utils.h"
 #include "souffle/utility/StringUtil.h"
 #include <map>
+#include <unordered_set>
 #include <vector>
 
 namespace souffle::ast2ram::seminaive {
@@ -687,7 +689,267 @@ Own<ram::Condition> ClauseTranslator::getFunctionalDependencies(const ast::Claus
 
 std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& clause) const {
     auto atoms = ast::getBodyLiterals<ast::Atom>(clause);
+    auto constraints = ast::getBodyLiterals<ast::BinaryConstraint>(clause);
 
+    std::stringstream ss;
+    ss << clause;
+    // exit early we have some nullary business
+    std::unordered_set<std::size_t> recursiveInCurrentStratum;
+
+    for (auto* a : sccAtoms) {
+        for (std::size_t i = 0; i < atoms.size(); ++i) {
+            if (*atoms[i] == *a) {
+                recursiveInCurrentStratum.insert(i);
+            }
+        }
+    }
+
+    // map variable name to constants if possible
+    std::unordered_map<std::string, ast::Constant*> varToConstant;
+
+    // map variables to necessary variables on other side of the equality
+    // i.e. x = y + z we should map x -> { y, z }
+    std::unordered_map<std::string, std::set<std::string>> varToOtherVars;
+
+    std::unordered_map<std::string, std::pair<std::set<std::string>, std::set<std::string>>> ineqToUpperLower;
+
+    for (auto* constraint : constraints) {
+        auto* lhs = constraint->getLHS();
+        auto* rhs = constraint->getRHS();
+
+        if (isIneqConstraint(constraint->getBaseOperator())) {
+            if (auto* var = as<ast::Variable>(lhs)) {
+                std::set<std::string> otherVars;
+                visit(rhs, [&](const ast::Variable& v) { otherVars.insert(v.getName()); });
+                if (isLessThan(constraint->getBaseOperator()) || isLessEqual(constraint->getBaseOperator())) {
+                    ineqToUpperLower[var->getName()].second = otherVars;
+                }
+                if (isGreaterThan(constraint->getBaseOperator()) ||
+                        isGreaterEqual(constraint->getBaseOperator())) {
+                    ineqToUpperLower[var->getName()].first = otherVars;
+                }
+            }
+
+            if (auto* var = as<ast::Variable>(rhs)) {
+                std::set<std::string> otherVars;
+                visit(lhs, [&](const ast::Variable& v) { otherVars.insert(v.getName()); });
+                if (isLessThan(constraint->getBaseOperator()) || isLessEqual(constraint->getBaseOperator())) {
+                    ineqToUpperLower[var->getName()].first = otherVars;
+                }
+                if (isGreaterThan(constraint->getBaseOperator()) ||
+                        isGreaterEqual(constraint->getBaseOperator())) {
+                    ineqToUpperLower[var->getName()].second = otherVars;
+                }
+            }
+        }
+
+        // only consider = constraint
+        if (!isEqConstraint(constraint->getBaseOperator())) {
+            continue;
+        }
+
+        if (isA<ast::Variable>(lhs) && isA<ast::Constant>(rhs)) {
+            varToConstant[as<ast::Variable>(lhs)->getName()] = as<ast::Constant>(rhs);
+            continue;
+        }
+
+        if (isA<ast::Constant>(lhs) && isA<ast::Variable>(rhs)) {
+            varToConstant[as<ast::Variable>(rhs)->getName()] = as<ast::Constant>(lhs);
+            continue;
+        }
+
+        if (auto* var = as<ast::Variable>(lhs)) {
+            std::set<std::string> otherVars;
+            visit(rhs, [&](const ast::Variable& v) { otherVars.insert(v.getName()); });
+            varToOtherVars[var->getName()] = otherVars;
+            continue;
+        }
+
+        if (auto* var = as<ast::Variable>(rhs)) {
+            std::set<std::string> otherVars;
+            visit(lhs, [&](const ast::Variable& v) { otherVars.insert(v.getName()); });
+            varToOtherVars[var->getName()] = otherVars;
+            continue;
+        }
+    }
+
+    // check for bounded inequality i.e. EA < EA2 < EA + Size
+    for (auto& p : ineqToUpperLower) {
+        // consider this like an equality
+        auto& [lower, upper] = p.second;
+        if (!lower.empty() && !upper.empty() &&
+                std::includes(upper.begin(), upper.end(), lower.begin(), lower.end())) {
+            varToOtherVars[p.first] = upper;
+        }
+    }
+
+    std::unordered_map<std::size_t, std::set<std::string>> atomIdxToGroundedVars;
+    for (std::size_t i = 0; i < atoms.size(); ++i) {
+        std::set<std::string> groundedVars;
+        visit(*atoms[i], [&](const ast::Variable& v) { groundedVars.insert(v.getName()); });
+        atomIdxToGroundedVars[i] = groundedVars;
+    }
+
+    // #atoms -> variables to join
+    std::map<std::size_t, std::set<std::set<std::size_t>>> cache;
+
+    std::unordered_map<std::size_t, std::map<std::size_t, std::string>> atomToIdxConstants;
+
+    std::size_t atomIdx = 0;
+    for (auto* atom : atoms) {
+        std::string name = getClauseAtomName(clause, atom);
+        std::map<std::size_t, std::string> idxConstant;
+
+        std::size_t i = 0;
+        for (auto* argument : atom->getArguments()) {
+            // if we have a variable and a constraint of the form x = 2 then treat x as 2
+            if (auto* var = as<ast::Variable>(argument)) {
+                if (varToConstant.count(var->getName())) {
+                    argument = varToConstant[var->getName()];
+                }
+            }
+
+            if (auto* constant = as<ast::Constant>(argument)) {
+                std::string constantValue = constant->getConstant();
+
+                // if it's a symbol constant then we need to resolve the symbol
+                if (isA<ast::StringConstant>(constant)) {
+                    // constantValue = std::to_string(symbolToIdx.at(constantValue));
+                }
+
+                idxConstant[i] = constantValue;
+            }
+            ++i;
+        }
+
+        atomToIdxConstants[atomIdx] = idxConstant;
+
+        // start by storing the access cost for each individual relation
+        cache[1].insert({atomIdx});
+        ++atomIdx;
+    }
+
+    auto getSubsets = [](std::size_t N, std::size_t K) {
+        // result of all combinations
+        std::vector<std::vector<std::size_t>> res;
+
+        // specific combination
+        std::vector<std::size_t> cur;
+        cur.reserve(K);
+
+        // use bitmask for subset generation
+        std::string bitmask(K, 1);  // K leading 1's
+        bitmask.resize(N, 0);       // N-K trailing 0's
+
+        // generate the combination while there are combinations to go
+        do {
+            cur.clear();
+            for (std::size_t i = 0; i < N; ++i)  // [0..N-1] integers
+            {
+                if (bitmask[i]) {
+                    cur.push_back(i);
+                }
+            }
+            res.push_back(cur);
+        } while (std::prev_permutation(bitmask.begin(), bitmask.end()));
+        return res;
+    };
+
+    std::set<std::string> seenNodes;
+
+    // do selinger's algorithm
+    std::size_t N = atoms.size();
+    for (std::size_t K = 2; K <= N; ++K) {
+        // for each K sized subset
+        for (auto& subset : getSubsets(N, K)) {
+            // remove an entry from the subset
+            for (std::size_t i = 0; i < subset.size(); ++i) {
+                // construct the set S \ S[i]
+                std::set<std::size_t> smallerSubset;
+                for (std::size_t j = 0; j < subset.size(); ++j) {
+                    if (i == j) {
+                        continue;
+                    }
+                    smallerSubset.insert(subset[j]);
+                }
+
+                // compute the grounded variables from the subset
+                std::set<std::string> groundedVariablesFromSubset;
+                for (auto idx : smallerSubset) {
+                    auto& varsGroundedByAtom = atomIdxToGroundedVars[idx];
+                    groundedVariablesFromSubset.insert(varsGroundedByAtom.begin(), varsGroundedByAtom.end());
+                }
+
+                // compute new cost
+                std::size_t atomIdx = subset[i];
+                auto* atom = atoms[atomIdx];
+                std::vector<std::size_t> joinColumns;
+                const auto& args = atom->getArguments();
+                std::size_t numBound = 0;
+                for (std::size_t argIdx = 0; argIdx < args.size(); ++argIdx) {
+                    auto* arg = args[argIdx];
+                    // if we have a constant or var = constant then we ignore
+                    if (atomToIdxConstants[atomIdx].count(argIdx) > 0) {
+                        ++numBound;
+                        continue;
+                    }
+
+                    // unnamed variable i.e. _
+                    if (isA<ast::UnnamedVariable>(arg)) {
+                        ++numBound;
+                        continue;
+                    }
+
+                    if (auto* var = as<ast::Variable>(arg)) {
+                        // free variable so we can't join on it
+                        if (varToOtherVars.count(var->getName()) > 0) {
+                            auto& dependentVars = varToOtherVars.at(var->getName());
+                            if (std::includes(groundedVariablesFromSubset.begin(),
+                                        groundedVariablesFromSubset.end(), dependentVars.begin(),
+                                        dependentVars.end())) {
+                                joinColumns.push_back(argIdx);
+                                ++numBound;
+                                continue;
+                            }
+                        }
+
+                        // direct match on variable
+                        if (groundedVariablesFromSubset.count(var->getName()) > 0) {
+                            joinColumns.push_back(argIdx);
+                            ++numBound;
+                            continue;
+                        }
+                    }
+                }
+
+                // construct a CountUniqueKeys ram node
+                bool isRecursive = recursiveInCurrentStratum.count(atomIdx) > 0;
+                auto relation = getClauseAtomName(clause, atom);
+                auto arity = args.size();
+                auto& constantMap = atomToIdxConstants[atomIdx];
+
+                std::stringstream ss;
+                ss << relation << " " << arity << " " << joinColumns << " " << constantMap << " "
+                   << isRecursive;
+                if (seenNodes.count(ss.str()) == 0) {
+                    auto node = mk<souffle::ram::CountUniqueKeys>(
+                            relation, arity, joinColumns, constantMap, isRecursive);
+                    if (!joinColumns.empty() || !constantMap.empty()) {
+                        std::cout << *node << std::endl;
+                    }
+
+                    seenNodes.insert(ss.str());
+                }
+
+                // if no plan then insert it
+                std::set<std::size_t> currentSet(subset.begin(), subset.end());
+                if (cache[K].count(currentSet) == 0) {
+                    cache[K].insert(currentSet);
+                }
+            }
+        }
+    }
+    // no plan
     const auto& plan = clause.getExecutionPlan();
     if (plan == nullptr) {
         return atoms;
