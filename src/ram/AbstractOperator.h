@@ -37,6 +37,8 @@ public:
         assert(allValidPtrs(arguments));
     }
 
+    virtual ~AbstractOperator() = default;
+
     /** @brief Get argument values */
     std::vector<Expression*> getArguments() const {
         return toPtrVector(arguments);

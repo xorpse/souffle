@@ -35,6 +35,8 @@ class SignedConstant : public NumericConstant {
 public:
     explicit SignedConstant(RamDomain val) : NumericConstant(val) {}
 
+    virtual ~SignedConstant() = default;
+
     /** @brief Get value of the constant. */
     RamDomain getValue() const {
         return constant;

@@ -207,6 +207,8 @@ int main(int argc, char** argv) {
         // the empty string if they take none
         // main option, the datalog program itself, has an empty key
         std::vector<MainOption> options{{"", 0, "", "", false, ""},
+                {"auto-schedule", 'a', "FILE", "", false,
+                        "Use profile auto-schedule <FILE> for auto-scheduling."},
                 {"fact-dir", 'F', "DIR", ".", false, "Specify directory for fact files."},
                 {"include-dir", 'I', "DIR", ".", true, "Specify directory for include files."},
                 {"output-dir", 'D', "DIR", ".", false,
@@ -240,6 +242,7 @@ int main(int argc, char** argv) {
                 {"dl-program", 'o', "FILE", "", false,
                         "Generate C++ source code, written to <FILE>, and compile this to a "
                         "binary executable (without executing it)."},
+                {"index-stats", '\7', "", "", false, "Enable collection of index statistics"},
                 {"live-profile", '\1', "", "", false, "Enable live profiling."},
                 {"profile", 'p', "FILE", "", false, "Enable profiling, and write profile data to <FILE>."},
                 {"profile-use", 'u', "FILE", "", false,

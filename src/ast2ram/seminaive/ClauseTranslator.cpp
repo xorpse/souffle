@@ -687,13 +687,77 @@ Own<ram::Condition> ClauseTranslator::getFunctionalDependencies(const ast::Claus
     return ram::toCondition(dependencies);
 }
 
+// need to define some helper types or we will go insane
+struct PlanTuplesCost {
+    PlanTuplesCost(const std::vector<std::size_t>& givenPlan, std::size_t givenTuples, double givenCost)
+            : plan(givenPlan), tuples(givenTuples), cost(givenCost) {}
+
+    std::vector<std::size_t> plan;
+    std::size_t tuples;
+    double cost;
+};
+
 std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& clause) const {
     auto atoms = ast::getBodyLiterals<ast::Atom>(clause);
     auto constraints = ast::getBodyLiterals<ast::BinaryConstraint>(clause);
-
-    std::stringstream ss;
-    ss << clause;
+    std::cout << clause << std::endl;
     // exit early we have some nullary business
+    if (atoms.size() <= 1 || !Global::config().has("auto-schedule")) {
+        // no plan
+        const auto& plan = clause.getExecutionPlan();
+        if (plan == nullptr) {
+            return atoms;
+        }
+
+        // check if there's a plan for the current version
+        auto orders = plan->getOrders();
+        if (!contains(orders, version)) {
+            return atoms;
+        }
+
+        // get the imposed order, and change it to start at zero
+        const auto& order = orders.at(version);
+        auto sz = order->getOrder().size();
+        std::vector<unsigned int> newOrder(sz);
+        std::transform(order->getOrder().begin(), order->getOrder().end(), newOrder.begin(),
+                [](unsigned int i) -> unsigned int { return i - 1; });
+        return reorderAtoms(atoms, newOrder);
+    }
+
+    assert(context.hasAutoSchedulerStats() && "Must have stats in order to auto-schedule!");
+
+    auto* contextPtr = &context;
+    auto getRelationSize = [&contextPtr](bool isRecursive, const ast::QualifiedName& rel,
+                                   const std::vector<std::size_t>& joinColumns,
+                                   const std::map<std::size_t, std::string>& constantsMap) {
+        std::set<std::size_t> joinKeys(joinColumns.begin(), joinColumns.end());
+        for (auto& [k, _] : constantsMap) {
+            joinKeys.insert(k);
+        }
+
+        if (joinKeys.empty() && !isRecursive) {
+            return contextPtr->getRelationSize(rel);
+        }
+
+        std::stringstream ss;
+        ss << joinKeys;
+        std::string attributes = ss.str();
+        attributes[0] = '[';
+        attributes[attributes.size() - 1] = ']';
+
+        std::stringstream cc;
+        cc << constantsMap;
+        std::string constants = cc.str();
+        constants[0] = '[';
+        constants[constants.size() - 1] = ']';
+
+        if (isRecursive) {
+            return contextPtr->getRecursiveUniqueKeys(rel.toString(), attributes, constants);
+        }
+
+        return contextPtr->getNonRecursiveUniqueKeys(rel.toString(), attributes, constants);
+    };
+
     std::unordered_set<std::size_t> recursiveInCurrentStratum;
 
     for (auto* a : sccAtoms) {
@@ -790,8 +854,8 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
         atomIdxToGroundedVars[i] = groundedVars;
     }
 
-    // #atoms -> variables to join
-    std::map<std::size_t, std::set<std::set<std::size_t>>> cache;
+    // #atoms -> variables to join -> plan, cost
+    std::map<std::size_t, std::map<std::set<std::size_t>, PlanTuplesCost>> cache;
 
     std::unordered_map<std::size_t, std::map<std::size_t, std::string>> atomToIdxConstants;
 
@@ -810,13 +874,9 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
             }
 
             if (auto* constant = as<ast::Constant>(argument)) {
-                std::string constantValue = constant->getConstant();
-
-                // if it's a symbol constant then we need to resolve the symbol
-                if (isA<ast::StringConstant>(constant)) {
-                    // constantValue = std::to_string(symbolToIdx.at(constantValue));
-                }
-
+                std::stringstream ss;
+                ss << *translateConstant(*constant);
+                std::string constantValue = ss.str();
                 idxConstant[i] = constantValue;
             }
             ++i;
@@ -825,7 +885,14 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
         atomToIdxConstants[atomIdx] = idxConstant;
 
         // start by storing the access cost for each individual relation
-        cache[1].insert({atomIdx});
+        std::vector<std::size_t> empty;
+        bool isRecursive = recursiveInCurrentStratum.count(atomIdx) > 0;
+        double tuples = getRelationSize(isRecursive, name, empty, idxConstant);
+
+        double cost = tuples * atom->getArity();
+        std::set<std::size_t> singleton = {atomIdx};
+        std::vector<std::size_t> plan = {atomIdx};
+        cache[1].insert(std::make_pair(singleton, PlanTuplesCost(plan, tuples, cost)));
         ++atomIdx;
     }
 
@@ -855,7 +922,13 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
         return res;
     };
 
-    std::set<std::string> seenNodes;
+    auto planToAtoms = [&](const std::vector<unsigned int>& plan) {
+        std::vector<ast::Atom*> joinedAtoms;
+        for (auto x : plan) {
+            joinedAtoms.push_back(atoms[x]);
+        }
+        return joinedAtoms;
+    };
 
     // do selinger's algorithm
     std::size_t N = atoms.size();
@@ -872,6 +945,12 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
                     }
                     smallerSubset.insert(subset[j]);
                 }
+
+                // lookup the cost in the cache
+                auto& planTuplesCost = cache[K - 1].at(smallerSubset);
+                auto& oldPlan = planTuplesCost.plan;
+                auto oldTuples = planTuplesCost.tuples;
+                auto oldCost = planTuplesCost.cost;
 
                 // compute the grounded variables from the subset
                 std::set<std::string> groundedVariablesFromSubset;
@@ -922,51 +1001,69 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
                     }
                 }
 
-                // construct a CountUniqueKeys ram node
                 bool isRecursive = recursiveInCurrentStratum.count(atomIdx) > 0;
-                auto relation = getClauseAtomName(clause, atom);
-                auto arity = args.size();
-                auto& constantMap = atomToIdxConstants[atomIdx];
+                std::vector<std::size_t> empty;
+                double expectedTuples = 0;
 
-                std::stringstream ss;
-                ss << relation << " " << arity << " " << joinColumns << " " << constantMap << " "
-                   << isRecursive;
-                if (seenNodes.count(ss.str()) == 0) {
-                    auto node = mk<souffle::ram::CountUniqueKeys>(
-                            relation, arity, joinColumns, constantMap, isRecursive);
-                    if (!joinColumns.empty() || !constantMap.empty()) {
-                        std::cout << *node << std::endl;
+                if (numBound == atom->getArity()) {
+                    expectedTuples = 1;
+                } else {
+                    auto relSizeWithConstants = getRelationSize(
+                            isRecursive, getClauseAtomName(clause, atom), empty, atomToIdxConstants[atomIdx]);
+
+                    if (joinColumns.empty()) {
+                        expectedTuples = relSizeWithConstants;
+                    } else {
+                        auto uniqueKeys = getRelationSize(isRecursive, getClauseAtomName(clause, atom),
+                                joinColumns, atomToIdxConstants[atomIdx]);
+
+                        bool normalize = (uniqueKeys > 0);
+                        expectedTuples =
+                                static_cast<double>(relSizeWithConstants) / (normalize ? uniqueKeys : 1);
+
+                        std::vector<unsigned int> dummy;
+                        for (auto x : oldPlan) {
+                            dummy.push_back(x);
+                        }
                     }
-
-                    seenNodes.insert(ss.str());
                 }
+
+                // calculate new number of tuples
+                double newTuples = oldTuples * expectedTuples;
+
+                // calculate new cost
+                double newCost = oldCost + newTuples * atom->getArity();
+
+                // calculate new plan
+                std::vector<std::size_t> newPlan(oldPlan.begin(), oldPlan.end());
+                newPlan.push_back(atomIdx);
 
                 // if no plan then insert it
                 std::set<std::size_t> currentSet(subset.begin(), subset.end());
                 if (cache[K].count(currentSet) == 0) {
-                    cache[K].insert(currentSet);
+                    cache[K].insert(std::make_pair(currentSet, PlanTuplesCost(newPlan, newTuples, newCost)));
+                }
+                // if we have a lower cost
+                else if (cache[K].at(currentSet).cost >= newCost) {
+                    cache[K].erase(currentSet);
+                    cache[K].insert(std::make_pair(currentSet, PlanTuplesCost(newPlan, newTuples, newCost)));
                 }
             }
         }
     }
-    // no plan
-    const auto& plan = clause.getExecutionPlan();
-    if (plan == nullptr) {
-        return atoms;
+
+    auto* unsafeClause = const_cast<ast::Clause*>(&clause);
+    unsafeClause->clearExecutionPlan();
+    std::vector<unsigned int> newOrder;
+    assert(cache[N].size() == 1);
+    auto& bestPlanTuplesCost = cache[N].begin()->second;
+
+    auto& bestPlan = bestPlanTuplesCost.plan;
+    for (std::size_t elem : bestPlan) {
+        newOrder.push_back(elem);
     }
 
-    // check if there's a plan for the current version
-    auto orders = plan->getOrders();
-    if (!contains(orders, version)) {
-        return atoms;
-    }
-
-    // get the imposed order, and change it to start at zero
-    const auto& order = orders.at(version);
-    auto sz = order->getOrder().size();
-    std::vector<unsigned int> newOrder(sz);
-    std::transform(order->getOrder().begin(), order->getOrder().end(), newOrder.begin(),
-            [](unsigned int i) -> unsigned int { return i - 1; });
+    std::cout << "Using order: " << planToAtoms(newOrder) << std::endl;
     return reorderAtoms(atoms, newOrder);
 }
 

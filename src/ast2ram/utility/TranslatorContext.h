@@ -17,6 +17,9 @@
 #include "AggregateOp.h"
 #include "FunctorOps.h"
 #include "ast/NumericConstant.h"
+#include "ast/QualifiedName.h"
+#include "ast/analysis/ProfileUse.h"
+#include "ast/analysis/UniqueKeys.h"
 #include "ast/analysis/typesystem/Type.h"
 #include "ast2ram/ClauseTranslator.h"
 #include "souffle/BinaryConstraintOps.h"
@@ -54,11 +57,13 @@ namespace souffle::ast::analysis {
 class FunctorAnalysis;
 class IOTypeAnalysis;
 class PolymorphicObjectsAnalysis;
+class ProfileUseAnalysis;
 class RecursiveClausesAnalysis;
 class RelationScheduleAnalysis;
 class SumTypeBranchesAnalysis;
 class SCCGraphAnalysis;
 class TypeEnvironment;
+class UniqueKeysAnalysis;
 }  // namespace souffle::ast::analysis
 
 namespace souffle::ast2ram {
@@ -95,6 +100,10 @@ public:
     std::set<const ast::Relation*> getInputRelationsInSCC(std::size_t scc) const;
     std::set<const ast::Relation*> getOutputRelationsInSCC(std::size_t scc) const;
 
+    /** UniqueKeys methods */
+    VecOwn<ram::Statement> getRecursiveUniqueKeyStatementsInSCC(std::size_t scc) const;
+    VecOwn<ram::Statement> getNonRecursiveUniqueKeyStatementsInSCC(std::size_t scc) const;
+
     /** Functor methods */
     TypeAttribute getFunctorReturnTypeAttribute(const ast::Functor& functor) const;
     TypeAttribute getFunctorParamTypeAtribute(const ast::Functor& functor, std::size_t idx) const;
@@ -128,6 +137,13 @@ public:
 
     Own<ram::Expression> translateValue(const ValueIndex& index, const ast::Argument* arg) const;
 
+    bool hasAutoSchedulerStats() const;
+    std::size_t getRecursiveUniqueKeys(
+            const std::string& rel, const std::string& attributes, const std::string& constants) const;
+    std::size_t getNonRecursiveUniqueKeys(
+            const std::string& rel, const std::string& attributes, const std::string& constants) const;
+    std::size_t getRelationSize(const ast::QualifiedName& rel) const;
+
 private:
     const ast::Program* program;
     const ast::analysis::RecursiveClausesAnalysis* recursiveClauses;
@@ -139,6 +155,8 @@ private:
     const ast::analysis::TypeEnvironment* typeEnv;
     const ast::analysis::SumTypeBranchesAnalysis* sumTypeBranches;
     const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis;
+    const ast::analysis::UniqueKeysAnalysis* uniqueKeysAnalysis;
+    const ast::analysis::ProfileUseAnalysis* profileUseAnalysis;
     std::map<const ast::Clause*, std::size_t> clauseNums;
     Own<ast::SipsMetric> sipsMetric;
     Own<TranslationStrategy> translationStrategy;

@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "ram/Expression.h"
 #include "ram/Node.h"
 #include "ram/Relation.h"
 #include "ram/RelationStatement.h"
@@ -38,9 +39,16 @@ namespace souffle::ram {
 class CountUniqueKeys : public RelationStatement {
 public:
     CountUniqueKeys(std::string rel, std::size_t providedArity, const std::vector<std::size_t>& columns,
-            const std::map<std::size_t, std::string>& keyToConstants, bool isRecursive)
-            : RelationStatement(rel), arity(providedArity), keyColumns(columns), constantsMap(keyToConstants),
-              recursiveRelation(isRecursive) {}
+            const std::map<std::size_t, const ram::Expression*>& keyToConstants, bool isRecursive)
+            : RelationStatement(rel), arity(providedArity), keyColumns(columns),
+              recursiveRelation(isRecursive) {
+        // copy the constants over
+        for (auto [k, constant] : keyToConstants) {
+            auto clonedConstant = clone(constant);
+            constantsMap[k] = clonedConstant.get();
+            constants.push_back(std::move(clonedConstant));
+        }
+    }
 
     std::size_t getArity() const {
         return arity;
@@ -50,7 +58,7 @@ public:
         return keyColumns;
     }
 
-    const std::map<std::size_t, std::string>& getConstantsMap() const {
+    const std::map<std::size_t, const ram::Expression*>& getConstantsMap() const {
         return constantsMap;
     }
 
@@ -66,7 +74,10 @@ protected:
     void print(std::ostream& os, int tabpos) const override {
         os << times(" ", tabpos) << "COUNT UNIQUE KEYS " << relation
            << " RECURSIVE: " << (recursiveRelation ? "true" : "false") << " COLUMNS: " << keyColumns
-           << " CONSTANTS: " << constantsMap;
+           << " CONSTANTS: ";
+        for (auto& p : constantsMap) {
+            os << "(" << p.first << ", " << *p.second << ") ";
+        }
         os << std::endl;
     }
 
@@ -79,7 +90,8 @@ protected:
 
     std::size_t arity;
     std::vector<std::size_t> keyColumns;
-    std::map<std::size_t, std::string> constantsMap;
+    std::map<std::size_t, const ram::Expression*> constantsMap;
+    VecOwn<const ram::Expression> constants;
     bool recursiveRelation;
 };
 
