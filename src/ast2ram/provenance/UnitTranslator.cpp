@@ -68,7 +68,9 @@ Own<ram::Sequence> UnitTranslator::generateProgram(const ast::TranslationUnit& t
 Own<ram::Relation> UnitTranslator::createRamRelation(
         const ast::Relation* baseRelation, std::string ramRelationName) const {
     auto arity = baseRelation->getArity();
-    auto representation = baseRelation->getRepresentation();
+
+    // All relations in a provenance program should have a provenance data structure
+    auto representation = RelationRepresentation::PROVENANCE;
 
     // Add in base relation information
     std::vector<std::string> attributeNames;

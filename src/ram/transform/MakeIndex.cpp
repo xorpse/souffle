@@ -92,7 +92,7 @@ ExpressionPair MakeIndexTransformer::getLowerUpperExpression(
     if (auto* binRelOp = as<Constraint>(c)) {
         bool interpreter = !Global::config().has("compile") && !Global::config().has("dl-program") &&
                            !Global::config().has("generate") && !Global::config().has("swig");
-        bool provenance = Global::config().has("provenance");
+        bool provenance = rep == RelationRepresentation::PROVENANCE;
         bool btree = (rep == RelationRepresentation::BTREE || rep == RelationRepresentation::DEFAULT ||
                       rep == RelationRepresentation::BTREE_DELETE);
         auto op = binRelOp->getOperator();
