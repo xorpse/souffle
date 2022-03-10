@@ -28,7 +28,7 @@ using ram::analysis::LexOrder;
 using ram::analysis::SearchSignature;
 
 std::string Relation::getTypeAttributeString(const std::vector<std::string>& attributeTypes,
-        const std::unordered_set<uint32_t>& attributesUsed) const {
+        const std::unordered_set<std::size_t>& attributesUsed) const {
     std::stringstream type;
     for (std::size_t i = 0; i < attributeTypes.size(); ++i) {
         // consider only attributes used in a lex-order
@@ -128,7 +128,7 @@ void DirectRelation::computeIndices() {
     // expand all search orders to be full
     for (auto& ind : inds) {
         // use a set as a cache for fast lookup
-        std::set<int> curIndexElems(ind.begin(), ind.end());
+        std::set<std::size_t> curIndexElems(ind.begin(), ind.end());
 
         // If this relation is used with provenance,
         // we must expand all search orders to be full indices,
@@ -166,7 +166,7 @@ void DirectRelation::computeIndices() {
 /** Generate type name of a direct indexed relation */
 std::string DirectRelation::getTypeName() {
     // collect all attributes used in the lex-order
-    std::unordered_set<uint32_t> attributesUsed;
+    std::unordered_set<std::size_t> attributesUsed;
     for (auto& ind : getIndices()) {
         for (auto& attr : ind) {
             attributesUsed.insert(attr);
@@ -199,7 +199,7 @@ void DirectRelation::generateTypeStruct(std::ostream& out) {
     auto types = relation.getAttributeTypes();
     const auto& inds = getIndices();
     std::size_t numIndexes = inds.size();
-    std::map<LexOrder, int> indexToNumMap;
+    std::map<LexOrder, std::size_t> indexToNumMap;
 
     // struct definition
     out << "struct " << getTypeName() << " {\n";
@@ -562,7 +562,7 @@ void IndirectRelation::computeIndices() {
 /** Generate type name of a indirect indexed relation */
 std::string IndirectRelation::getTypeName() {
     // collect all attributes used in the lex-order
-    std::unordered_set<uint32_t> attributesUsed;
+    std::unordered_set<std::size_t> attributesUsed;
     for (auto& ind : getIndices()) {
         for (auto& attr : ind) {
             attributesUsed.insert(attr);
@@ -589,7 +589,7 @@ void IndirectRelation::generateTypeStruct(std::ostream& out) {
     const auto& inds = getIndices();
     auto types = relation.getAttributeTypes();
     std::size_t numIndexes = inds.size();
-    std::map<LexOrder, int> indexToNumMap;
+    std::map<LexOrder, std::size_t> indexToNumMap;
 
     // struct definition
     out << "struct " << getTypeName() << " {\n";
@@ -887,7 +887,7 @@ void BrieRelation::computeIndices() {
     for (auto& ind : inds) {
         if (ind.size() != getArity()) {
             // use a set as a cache for fast lookup
-            std::set<int> curIndexElems(ind.begin(), ind.end());
+            std::set<std::size_t> curIndexElems(ind.begin(), ind.end());
 
             // expand index to be full
             for (std::size_t i = 0; i < getArity(); i++) {
@@ -907,7 +907,7 @@ void BrieRelation::computeIndices() {
 /** Generate type name of a brie relation */
 std::string BrieRelation::getTypeName() {
     // collect all attributes used in the lex-order
-    std::unordered_set<uint32_t> attributesUsed;
+    std::unordered_set<std::size_t> attributesUsed;
     for (auto& ind : getIndices()) {
         for (auto& attr : ind) {
             attributesUsed.insert(attr);
@@ -933,7 +933,7 @@ void BrieRelation::generateTypeStruct(std::ostream& out) {
     std::size_t arity = getArity();
     const auto& inds = getIndices();
     std::size_t numIndexes = inds.size();
-    std::map<LexOrder, int> indexToNumMap;
+    std::map<LexOrder, std::size_t> indexToNumMap;
 
     // struct definition
     out << "struct " << getTypeName() << " {\n";

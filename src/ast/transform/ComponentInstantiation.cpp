@@ -50,7 +50,8 @@ using namespace analysis;
 
 namespace {
 
-static const unsigned int MAX_INSTANTIATION_DEPTH = 1000;
+/* Used to be 1000 but stack-size on Windows does not allow such depth. */
+static const unsigned int MAX_INSTANTIATION_DEPTH = 100;
 
 /**
  * A container type for the (instantiated) content of a component.

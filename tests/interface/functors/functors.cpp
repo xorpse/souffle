@@ -74,7 +74,7 @@ FF_int factorial(FF_uint x) {
 }
 
 FF_int rnd(FF_float x) {
-    return round(x);
+    return static_cast<FF_int>(round(x));
 }
 
 FF_float incr(FF_float x) {
