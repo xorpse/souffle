@@ -2511,8 +2511,8 @@ void Synthesiser::generateCode(std::ostream& sos, const std::string& id, bool& w
     }
 
     if (Global::config().has("profile") || Global::config().has("live-profile")) {
-        os << "#include \"souffle/profile/Logger.h\"";
-        os << "#include \"souffle/profile/ProfileEvent.h\"";
+        os << "#include \"souffle/profile/Logger.h\"\n";
+        os << "#include \"souffle/profile/ProfileEvent.h\"\n";
     }
 
     os << "\n";
