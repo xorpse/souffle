@@ -316,9 +316,9 @@ TypeConstraint isSubtypeOfComponent(
     struct C : public Constraint<TypeVar> {
         TypeVar elementVariable;
         TypeVar recordVariable;
-        unsigned index;
+        std::size_t index;
 
-        C(TypeVar elementVariable, TypeVar recordVariable, int index)
+        C(TypeVar elementVariable, TypeVar recordVariable, std::size_t index)
                 : elementVariable(std::move(elementVariable)), recordVariable(std::move(recordVariable)),
                   index(index) {}
 

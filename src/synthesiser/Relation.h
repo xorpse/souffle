@@ -48,7 +48,7 @@ public:
         return computedIndices;
     }
 
-    std::set<int> getProvenenceIndexNumbers() const {
+    std::set<std::size_t> getProvenenceIndexNumbers() const {
         return provenanceIndexNumbers;
     }
 
@@ -62,7 +62,7 @@ public:
 
     /** Helper function to convert attribute types to a single string */
     std::string getTypeAttributeString(const std::vector<std::string>& attributeTypes,
-            const std::unordered_set<uint32_t>& attributesUsed) const;
+            const std::unordered_set<std::size_t>& attributesUsed) const;
 
     /** Generate relation type struct */
     virtual void generateTypeStruct(std::ostream& out) = 0;
@@ -85,7 +85,7 @@ protected:
     ram::analysis::OrderCollection computedIndices;
 
     /** The list of indices added for provenance computation */
-    std::set<int> provenanceIndexNumbers;
+    std::set<std::size_t> provenanceIndexNumbers;
 
     /** The number of the master index */
     std::size_t masterIndex = -1;

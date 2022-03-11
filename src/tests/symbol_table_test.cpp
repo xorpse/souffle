@@ -92,11 +92,11 @@ TEST(SymbolTable, Basics) {
 TEST(SymbolTable, Inserts) {
     for (int i = 0; i < RANDOM_TESTS; ++i) {
         SymbolTable X;
-        std::size_t size = random() % RANDOM_TEST_SIZE;
+        std::size_t size = rand() % RANDOM_TEST_SIZE;
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for (std::size_t j = 0; j < size; ++j) {
+        for (int j = 0; j < static_cast<int>(size); ++j) {
             // Guarantee uniqueness by appending something not in the character set
             // and then the index.
             X.encode(random_string() + "~" + std::to_string(j));

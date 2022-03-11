@@ -91,7 +91,7 @@ private:
     /** @brief Reset iteration number */
     void resetIterationNumber();
     /** @brief Increment the counter */
-    int incCounter();
+    RamDomain incCounter();
     /** @brief Return the relation map. */
     VecOwn<RelationHandle>& getRelationMap();
     /** @brief Create and add relation into the runtime environment.  */
