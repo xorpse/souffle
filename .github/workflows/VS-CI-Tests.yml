@@ -1,10 +1,6 @@
 name: VS-CI-Tests
 
 on:
-  # TODO remove me before merge
-  push:
-    branches:
-      - '**'
   pull_request:
     types: [opened, synchronize]
   workflow_dispatch:
