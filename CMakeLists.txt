@@ -393,7 +393,7 @@ execute_process(COMMAND bash "${CMAKE_SOURCE_DIR}/sh/check_os.sh"
                 RESULT_VARIABLE CHECK_OS_RESULT
                 OUTPUT_VARIABLE CHECK_OS_OUTPUT)
 
-SET(CPACK_PACKAGE_CONTACT "Patrick H.")
+SET(CPACK_PACKAGE_CONTACT "Bernhard Scholz <bernhard.scholz@sydney.edu.au>")
 SET(CPACK_PACKAGE_DESCRIPTION "Souffle - A Datalog Compiler")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A Datalog Compiler")
 

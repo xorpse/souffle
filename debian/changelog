@@ -1,4 +1,4 @@
-souffle (2.2) stable; urgency=low
+souffle (2.2-1) stable; urgency=low
 
   * Subsumption clauses, e.g., A(x1) <= A(x2) :- x1 <= x2 (@julienhenry, @b-scholz)
   * IR and build improvements (@OlivierHamel, @langston-barrett, @quentin, @b-scholz, @aeflores, @cmuellner, @broffra, @rahlk, @yihozhang, @trofi)
@@ -8,7 +8,7 @@ souffle (2.2) stable; urgency=low
   * Type annotation printer (@hide-kawabata)
   * Performance improvements for eqrel (@langston-barrett, @kevzhumba)
 
- -- Bernhard Scholz <Bernhard.Scholz@sydney.edu.au>  Mon, Jan 17 12:34:01 2022 +1100
+ -- Bernhard Scholz <Bernhard.Scholz@sydney.edu.au>  Mon, 17 Jan 2022 12:34:01 +1100
 
 souffle (2.1) stable; urgency=low
 
