@@ -2565,10 +2565,8 @@ void Synthesiser::generateCode(std::ostream& sos, const std::string& id, bool& w
 
     // synthesise data-structures for relations
     for (auto rel : prog.getRelations()) {
-        bool isProvInfo = rel->getRepresentation() == RelationRepresentation::INFO;
         auto relationType =
-                Relation::getSynthesiserRelation(*rel, idxAnalysis.getIndexSelection(rel->getName()),
-                        Global::config().has("provenance") && !isProvInfo);
+                Relation::getSynthesiserRelation(*rel, idxAnalysis.getIndexSelection(rel->getName()));
 
         generateRelationTypeStruct(os, std::move(relationType));
     }
@@ -2683,9 +2681,8 @@ void Synthesiser::generateCode(std::ostream& sos, const std::string& id, bool& w
         const std::string& datalogName = rel->getName();
         const std::string& cppName = getRelationName(*rel);
 
-        bool isProvInfo = rel->getRepresentation() == RelationRepresentation::INFO;
-        auto relationType = Relation::getSynthesiserRelation(*rel, idxAnalysis.getIndexSelection(datalogName),
-                Global::config().has("provenance") && !isProvInfo);
+        auto relationType =
+                Relation::getSynthesiserRelation(*rel, idxAnalysis.getIndexSelection(datalogName));
         const std::string& type = relationType->getTypeName();
 
         // defining table

@@ -285,7 +285,6 @@ RamDomain callStateless(ExecuteFn&& execute, Context& ctxt, Shadow& shadow, souf
 Engine::Engine(ram::TranslationUnit& tUnit)
         : profileEnabled(Global::config().has("profile")),
           frequencyCounterEnabled(Global::config().has("profile-frequency")),
-          isProvenance(Global::config().has("provenance")),
           numOfThreads(number_of_threads(std::stoi(Global::config().get("jobs")))), tUnit(tUnit),
           isa(tUnit.getAnalysis<ram::analysis::IndexAnalysis>()), recordTable(numOfThreads),
           symbolTable(numOfThreads) {}
@@ -337,7 +336,7 @@ void Engine::createRelation(const ram::Relation& id, const std::size_t idx) {
         res = createEqrelRelation(id, isa.getIndexSelection(id.getName()));
     } else if (id.getRepresentation() == RelationRepresentation::BTREE_DELETE) {
         res = createBTreeDeleteRelation(id, isa.getIndexSelection(id.getName()));
-    } else if (isProvenance) {
+    } else if (id.getRepresentation() == RelationRepresentation::PROVENANCE) {
         res = createProvenanceRelation(id, isa.getIndexSelection(id.getName()));
     } else {
         res = createBTreeRelation(id, isa.getIndexSelection(id.getName()));

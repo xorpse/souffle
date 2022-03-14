@@ -44,30 +44,30 @@ std::string Relation::getTypeAttributeString(const std::vector<std::string>& att
 }
 
 Own<Relation> Relation::getSynthesiserRelation(
-        const ram::Relation& ramRel, const ram::analysis::IndexCluster& indexSelection, bool isProvenance) {
+        const ram::Relation& ramRel, const ram::analysis::IndexCluster& indexSelection) {
     Relation* rel;
 
     // Handle the qualifier in souffle code
-    if (isProvenance) {
-        rel = new DirectRelation(ramRel, indexSelection, isProvenance, false);
+    if (ramRel.getRepresentation() == RelationRepresentation::PROVENANCE) {
+        rel = new DirectRelation(ramRel, indexSelection, true, false);
     } else if (ramRel.isNullary()) {
-        rel = new NullaryRelation(ramRel, indexSelection, isProvenance);
+        rel = new NullaryRelation(ramRel, indexSelection);
     } else if (ramRel.getRepresentation() == RelationRepresentation::BTREE) {
-        rel = new DirectRelation(ramRel, indexSelection, isProvenance, false);
+        rel = new DirectRelation(ramRel, indexSelection, false, false);
     } else if (ramRel.getRepresentation() == RelationRepresentation::BTREE_DELETE) {
-        rel = new DirectRelation(ramRel, indexSelection, isProvenance, true);
+        rel = new DirectRelation(ramRel, indexSelection, false, true);
     } else if (ramRel.getRepresentation() == RelationRepresentation::BRIE) {
-        rel = new BrieRelation(ramRel, indexSelection, isProvenance);
+        rel = new BrieRelation(ramRel, indexSelection);
     } else if (ramRel.getRepresentation() == RelationRepresentation::EQREL) {
-        rel = new EqrelRelation(ramRel, indexSelection, isProvenance);
+        rel = new EqrelRelation(ramRel, indexSelection);
     } else if (ramRel.getRepresentation() == RelationRepresentation::INFO) {
-        rel = new InfoRelation(ramRel, indexSelection, isProvenance);
+        rel = new InfoRelation(ramRel, indexSelection);
     } else {
         // Handle the data structure command line flag
         if (ramRel.getArity() > 6) {
-            rel = new IndirectRelation(ramRel, indexSelection, isProvenance);
+            rel = new IndirectRelation(ramRel, indexSelection);
         } else {
-            rel = new DirectRelation(ramRel, indexSelection, isProvenance, false);
+            rel = new DirectRelation(ramRel, indexSelection, false, false);
         }
     }
 
@@ -544,8 +544,6 @@ void DirectRelation::generateTypeStruct(std::ostream& out) {
 
 /** Generate index set for a indirect indexed relation */
 void IndirectRelation::computeIndices() {
-    assert(!isProvenance && "indirect indexes cannot used for provenance");
-
     // Generate and set indices
     auto inds = indexSelection.getAllOrders();
 
@@ -880,8 +878,6 @@ void IndirectRelation::generateTypeStruct(std::ostream& out) {
 
 /** Generate index set for a brie relation */
 void BrieRelation::computeIndices() {
-    assert(!isProvenance && "bries cannot be used with provenance");
-
     // Generate and set indices
     auto inds = indexSelection.getAllOrders();
 
