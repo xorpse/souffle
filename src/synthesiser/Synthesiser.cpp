@@ -2613,7 +2613,7 @@ void Synthesiser::generateCode(std::ostream& sos, const std::string& id, bool& w
 
     // issue symbol table with string constants
     visit(prog, [&](const StringConstant& sc) { convertSymbol2Idx(sc.getConstant()); });
-    os << "SymbolTable symTable";
+    os << "SymbolTableImpl symTable";
     if (!symbolMap.empty()) {
         os << "{\n";
         for (const auto& x : symbolIndex) {
