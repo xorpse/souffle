@@ -1,0 +1,54 @@
+// Souffle - A Datalog Compiler
+// Copyright (c) 2022, The Souffle Developers. All rights reserved
+// Licensed under the Universal Permissive License v 1.0 as shown at:
+// - https://opensource.org/licenses/UPL
+// - <souffle root>/licenses/SOUFFLE-UPL.txt
+
+
+//
+// Compute set of acyclic paths using subsumption
+//
+// See Example 2, Fixpoint Iteration with Subsumption in
+// Deductive Databases by G. Koestler et al.,
+// J. of Intelligent Information Systems,
+// 4, 123-148 (1995).
+//
+
+.type node <: symbol
+
+.type node_sequence = [x:node, p:node_sequence]
+
+//
+// Edge set of a directed graph
+//
+.decl Edge(x:node, y:node)
+
+Edge("n1","n2").
+Edge("n1","n3").
+Edge("n2","n4").
+Edge("n3","n4").
+Edge("n4","n1").
+Edge("n4","n5").
+
+//
+// Set of path sequences between node x and y represented as a
+// sequence of nodes of a given length.
+//
+
+.decl Path(x:node, y:node, seq:node_sequence, length:number)
+
+// base case: all edges (x,y) are paths of length 2
+Path(x,y,[x,[y,nil]],2) :-
+  Edge(x, y).
+
+// inductive case
+Path(x,z,[x,s],l+1) :-
+  Edge(x,y),
+  Path(y,z,s,l).
+
+// a longer path between node x and y is subsumed by a
+// shorter path.
+Path(x, y, _, l1) <= Path (x, y, _, l2) :-
+  l2 <= l1.
+
+.output Path
