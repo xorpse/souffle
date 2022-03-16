@@ -18,6 +18,8 @@
 
 .type node_sequence = [x:node, p:node_sequence]
 
+.functor isPrefix(node_sequence, node_sequence):number stateful
+
 //
 // Edge set of a directed graph
 //
@@ -35,20 +37,20 @@ Edge("n4","n5").
 // sequence of nodes of a given length.
 //
 
-.decl Path(x:node, y:node, seq:node_sequence, length:number)
+.decl Path(x:node, y:node, seq:node_sequence)
 
-// base case: all edges (x,y) are paths of length 2
-Path(x,y,[x,[y,nil]],2) :-
+// base case: all edges (x,y)
+Path(x,y,[x,[y,nil]]) :-
   Edge(x, y).
 
 // inductive case
-Path(x,z,[x,s],l+1) :-
+Path(x,z,[x,s]) :-
   Edge(x,y),
-  Path(y,z,s,l).
+  Path(y,z,s).
 
 // a longer path between node x and y is subsumed by a
 // shorter path.
-Path(x, y, _, l1) <= Path (x, y, _, l2) :-
-  l2 <= l1.
+Path(x, y, s1) <= Path (x, y, s2) :-
+ @isPrefix(s2,s1) = 1.
 
 .output Path
