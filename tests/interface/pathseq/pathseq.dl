@@ -39,17 +39,19 @@ Edge("n4","n5").
 
 .decl Path(x:node, y:node, seq:node_sequence)
 
-// base case: all edges (x,y)
+// Base case
 Path(x,y,[x,[y,nil]]) :-
   Edge(x, y).
 
-// inductive case
+// Inductive case
 Path(x,z,[x,s]) :-
   Edge(x,y),
   Path(y,z,s).
 
-// a longer path between node x and y is subsumed by a
-// shorter path.
+// If the node-sequence of path s1 is a prefix of a
+// node-sequence of path s2, the path of
+// node-sequence s2 subsumes the path of
+// node sequence s1.
 Path(x, y, s1) <= Path (x, y, s2) :-
  @isPrefix(s2,s1) = 1.
 
