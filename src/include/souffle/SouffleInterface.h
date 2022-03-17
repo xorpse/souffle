@@ -332,7 +332,8 @@ public:
     /**
      * Get the attribute type of a relation at the column specified by the parameter.
      * The attribute type is in the form "<primitive type>:<type name>".
-     * <primitive type> can be s, f, u, or i standing for symbol, float, unsigned, and integer respectively,
+     * <primitive type> can be s, f, u, i, r, or + standing for symbol, float,
+     * unsigned, integer, record, and ADT respectively,
      * which are the primitive types in Souffle.
      * <type name> is the name given by the user in the Souffle program
      *
@@ -576,7 +577,8 @@ public:
      */
     tuple& operator<<(RamSigned integer) {
         assert(pos < size() && "exceeded tuple's size");
-        assert((*relation.getAttrType(pos) == 'i' || *relation.getAttrType(pos) == 'r') &&
+        assert((*relation.getAttrType(pos) == 'i' || *relation.getAttrType(pos) == 'r' ||
+                       *relation.getAttrType(pos) == '+') &&
                 "wrong element type");
         array[pos++] = integer;
         return *this;
@@ -633,7 +635,8 @@ public:
      */
     tuple& operator>>(RamSigned& integer) {
         assert(pos < size() && "exceeded tuple's size");
-        assert((*relation.getAttrType(pos) == 'i' || *relation.getAttrType(pos) == 'r') &&
+        assert((*relation.getAttrType(pos) == 'i' || *relation.getAttrType(pos) == 'r' ||
+                       *relation.getAttrType(pos) == '+') &&
                 "wrong element type");
         integer = ramBitCast<RamSigned>(array[pos++]);
         return *this;
