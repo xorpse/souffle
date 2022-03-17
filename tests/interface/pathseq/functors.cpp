@@ -16,13 +16,12 @@
 
 #include "souffle/RecordTable.h"
 #include "souffle/SymbolTable.h"
-#include "souffle/utility/MiscUtil.h"
 #include <cassert>
 #include <stack>
 
 extern "C" {
 
-souffle::RamDomain isPrefix([[maybe_unused]] souffle::SymbolTable* symbolTable,
+souffle::RamDomain isSubsequence([[maybe_unused]] souffle::SymbolTable* symbolTable,
         souffle::RecordTable* recordTable, souffle::RamDomain arg1, souffle::RamDomain arg2) {
     assert(symbolTable && "NULL symbol table");
     assert(recordTable && "NULL record table");
@@ -52,10 +51,7 @@ souffle::RamDomain isPrefix([[maybe_unused]] souffle::SymbolTable* symbolTable,
         stack1.pop();
         stack2.pop();
     }
-    if (stack1.empty()) {
-        return 1;
-    }
-    return 0;
+    return stack1.empty();
 }
 
 }  // end of extern "C"

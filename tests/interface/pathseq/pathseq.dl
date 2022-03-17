@@ -18,7 +18,7 @@
 
 .type node_sequence = [x:node, p:node_sequence]
 
-.functor isPrefix(node_sequence, node_sequence):number stateful
+.functor isSubsequence(node_sequence, node_sequence):number stateful
 
 //
 // Edge set of a directed graph
@@ -53,6 +53,6 @@ Path(x,z,[x,s]) :-
 // node-sequence s2 subsumes the path of
 // node sequence s1.
 Path(x, y, s1) <= Path (x, y, s2) :-
- @isPrefix(s2,s1) = 1.
+ @isSubsequence(s2,s1) = 1.
 
 .output Path
