@@ -237,3 +237,4 @@ if (FALSE)
 # "variable only occurs once" issue.
 positive_test(complex_rule)
 endif ()
+positive_test(compose_components)

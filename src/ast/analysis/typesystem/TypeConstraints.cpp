@@ -353,7 +353,7 @@ TypeConstraint isSubtypeOfComponent(
                 newRecordTypes.insert(type);
 
                 // and its corresponding field.
-                newElementTypes.insert(*typeAsRecord.getFields()[index]);
+                newElementTypes.insert(skipAliasesType(*typeAsRecord.getFields()[index]));
             }
 
             // combine with current types assigned to element

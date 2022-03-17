@@ -17,6 +17,7 @@
 #include "tests/test.h"
 
 #include "souffle/SymbolTable.h"
+#include "souffle/datastructure/SymbolTableImpl.h"
 #include "souffle/utility/MiscUtil.h"
 #include <algorithm>
 #include <cstddef>
@@ -64,7 +65,7 @@ static std::string random_string() {
 }
 
 TEST(SymbolTable, Basics) {
-    SymbolTable table;
+    SymbolTableImpl table;
     for (int i = 0; i < RANDOM_TESTS; ++i) {
         std::string s = random_string();
 #ifdef _OPENMP
@@ -91,7 +92,7 @@ TEST(SymbolTable, Basics) {
 
 TEST(SymbolTable, Inserts) {
     for (int i = 0; i < RANDOM_TESTS; ++i) {
-        SymbolTable X;
+        SymbolTableImpl X;
         std::size_t size = rand() % RANDOM_TEST_SIZE;
 #ifdef _OPENMP
 #pragma omp parallel for
