@@ -2311,7 +2311,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
 
             auto args = op.getArguments();
             if (op.isStateful()) {
-                out << name << "(&symTable, &recordTable";
+                out << "functors::" << name << "(&symTable, &recordTable";
                 for (auto& arg : args) {
                     out << ",";
                     dispatch(*arg, out);
@@ -2323,7 +2323,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 if (op.getReturnType() == TypeAttribute::Symbol) {
                     out << "symTable.encode(";
                 }
-                out << name << "(";
+                out << "functors::" << name << "(";
 
                 for (std::size_t i = 0; i < args.size(); i++) {
                     if (i > 0) {
@@ -2524,7 +2524,7 @@ void Synthesiser::generateCode(std::ostream& sos, const std::string& id, bool& w
         }
         withSharedLibrary = true;
     });
-    os << "extern \"C\" {\n";
+    os << "namespace functors {\n extern \"C\" {\n";
     for (const auto& f : functors) {
         //        std::size_t arity = f.second.length() - 1;
         const std::string& name = f.first;
@@ -2558,7 +2558,7 @@ void Synthesiser::generateCode(std::ostream& sos, const std::string& id, bool& w
                     join(map(argsTypes, cppTypeDecl), ","));
         }
     }
-    os << "}\n";
+    os << "}\n}\n";
     os << "\n";
     os << "namespace souffle {\n";
     os << "static const RamDomain RAM_BIT_SHIFT_MASK = RAM_DOMAIN_SIZE - 1;\n";
