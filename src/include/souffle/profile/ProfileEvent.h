@@ -51,7 +51,7 @@ class ProfileEventSingleton {
 public:
     ~ProfileEventSingleton() {
         stopTimer();
-        ProfileEventSingleton::instance().dump();
+        dump();
     }
 
     /** get instance */
