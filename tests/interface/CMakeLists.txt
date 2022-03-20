@@ -7,6 +7,7 @@
 # Make sure that the functor library is built
 add_subdirectory(functors)
 add_subdirectory(graph_coloring)
+add_subdirectory(pathseq)
 
 # swig test which will run python, java or both
 function(SOUFFLE_POSITIVE_FUNCTOR_TEST TEST_NAME)
@@ -153,6 +154,7 @@ function(SOUFFLE_POSITIVE_CPP_TEST TEST_NAME)
 endfunction()
 
 souffle_positive_functor_test(functors CATEGORY interface)
+souffle_positive_functor_test(pathseq CATEGORY interface)
 souffle_positive_functor_test(graph_coloring CATEGORY interface)
 souffle_positive_cpp_test(contain_insert)
 souffle_positive_cpp_test(get_symboltabletype)
