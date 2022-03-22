@@ -339,6 +339,9 @@ public:
                         if (relationName.substr(0, 6) == "@delta") {
                             relationName = relationName.substr(7);
                         }
+                        if (relationName.substr(0, 4) == "@new") {
+                            relationName = relationName.substr(5);
+                        }
                         assert(relationMap.count(relationName) > 0 || "Relation name for atom not found");
                         relationMap[relationName]->addReads(atom.frequency);
                     }
