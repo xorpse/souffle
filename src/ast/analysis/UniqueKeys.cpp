@@ -415,8 +415,7 @@ UniqueKeysAnalysis::computeUniqueKeyStatements() {
     uniqueKeyStatements.resize(sccOrdering.size());
 
     auto& config = Global::config();
-    if (!config.has("profile") || !config.has("profile-frequency") || !config.has("index-stats")) {
-        std::cout << "Need profile + profile-frequency + index-stats for auto-scheduling" << std::endl;
+    if (!config.has("profile") || !config.has("index-stats")) {
         return uniqueKeyStatements;
     }
 

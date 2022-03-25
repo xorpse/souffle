@@ -700,7 +700,6 @@ struct PlanTuplesCost {
 std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& clause) const {
     auto atoms = ast::getBodyLiterals<ast::Atom>(clause);
     auto constraints = ast::getBodyLiterals<ast::BinaryConstraint>(clause);
-    std::cout << clause << std::endl;
     // exit early we have some nullary business
     if (atoms.size() <= 1 || !Global::config().has("auto-schedule")) {
         // no plan
@@ -896,45 +895,11 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
         ++atomIdx;
     }
 
-    auto getSubsets = [](std::size_t N, std::size_t K) {
-        // result of all combinations
-        std::vector<std::vector<std::size_t>> res;
-
-        // specific combination
-        std::vector<std::size_t> cur;
-        cur.reserve(K);
-
-        // use bitmask for subset generation
-        std::string bitmask(K, 1);  // K leading 1's
-        bitmask.resize(N, 0);       // N-K trailing 0's
-
-        // generate the combination while there are combinations to go
-        do {
-            cur.clear();
-            for (std::size_t i = 0; i < N; ++i)  // [0..N-1] integers
-            {
-                if (bitmask[i]) {
-                    cur.push_back(i);
-                }
-            }
-            res.push_back(cur);
-        } while (std::prev_permutation(bitmask.begin(), bitmask.end()));
-        return res;
-    };
-
-    auto planToAtoms = [&](const std::vector<unsigned int>& plan) {
-        std::vector<ast::Atom*> joinedAtoms;
-        for (auto x : plan) {
-            joinedAtoms.push_back(atoms[x]);
-        }
-        return joinedAtoms;
-    };
-
     // do selinger's algorithm
     std::size_t N = atoms.size();
     for (std::size_t K = 2; K <= N; ++K) {
         // for each K sized subset
-        for (auto& subset : getSubsets(N, K)) {
+        for (auto& subset : context.getSubsets(N, K)) {
             // remove an entry from the subset
             for (std::size_t i = 0; i < subset.size(); ++i) {
                 // construct the set S \ S[i]
@@ -1057,13 +1022,11 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
     std::vector<unsigned int> newOrder;
     assert(cache[N].size() == 1);
     auto& bestPlanTuplesCost = cache[N].begin()->second;
-
     auto& bestPlan = bestPlanTuplesCost.plan;
     for (std::size_t elem : bestPlan) {
         newOrder.push_back(elem);
     }
 
-    std::cout << "Using order: " << planToAtoms(newOrder) << std::endl;
     return reorderAtoms(atoms, newOrder);
 }
 
