@@ -1564,7 +1564,7 @@ template <typename Rel>
 RamDomain Engine::evalCountUniqueKeys(
         const Rel& rel, const ram::CountUniqueKeys& cur, const CountUniqueKeys& shadow, Context& ctxt) {
     (void)ctxt;
-
+    constexpr std::size_t Arity = Rel::Arity;
     bool onlyConstants = true;
 
     for (auto col : cur.getKeyColumns()) {
@@ -1618,7 +1618,7 @@ RamDomain Engine::evalCountUniqueKeys(
     if (!index->scan().empty()) {
         // assign first tuple as prev as a dummy
         bool first = true;
-        Tuple prev = *index->scan().begin();
+        Tuple<RamDomain, Arity> prev = *index->scan().begin();
 
         for (const auto& tuple : index->scan()) {
             // only if every constant matches do we consider the tuple
