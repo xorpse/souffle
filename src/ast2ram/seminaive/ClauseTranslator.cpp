@@ -718,7 +718,7 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
         // get the imposed order, and change it to start at zero
         const auto& order = orders.at(version);
         auto sz = order->getOrder().size();
-        std::vector<long unsigned int> newOrder(sz);
+        std::vector<std::size_t> newOrder(sz);
         std::transform(order->getOrder().begin(), order->getOrder().end(), newOrder.begin(),
                 [](unsigned int i) -> unsigned int { return i - 1; });
         return reorderAtoms(atoms, newOrder);
@@ -1020,7 +1020,7 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
 
     auto* unsafeClause = const_cast<ast::Clause*>(&clause);
     unsafeClause->clearExecutionPlan();
-    std::vector<long unsigned int> newOrder;
+    std::vector<std::size_t> newOrder;
     assert(cache[N].size() == 1);
     auto& bestPlanTuplesCost = cache[N].begin()->second;
     auto& bestPlan = bestPlanTuplesCost.plan;
