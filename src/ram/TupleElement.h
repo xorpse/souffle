@@ -41,7 +41,7 @@ public:
     virtual ~TupleElement() = default;
 
     /** @brief Get identifier */
-    int getTupleId() const {
+    std::size_t getTupleId() const {
         return identifier;
     }
 
