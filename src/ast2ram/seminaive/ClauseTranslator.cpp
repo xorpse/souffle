@@ -994,7 +994,7 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
                 }
 
                 // calculate new number of tuples
-                std::size_t newTuples = oldTuples * expectedTuples;
+                std::size_t newTuples = static_cast<std::size_t>(oldTuples * expectedTuples);
 
                 // calculate new cost
                 double newCost = oldCost + newTuples * atom->getArity();
