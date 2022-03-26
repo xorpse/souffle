@@ -437,7 +437,7 @@ public:
             total += count;
         }
         double average = ceil(total / m.size());
-        return average;
+        return static_cast<std::size_t>(average);
     }
 
     void addRelation(const DirectoryEntry& relation) {
