@@ -720,7 +720,7 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
         auto sz = order->getOrder().size();
         std::vector<std::size_t> newOrder(sz);
         std::transform(order->getOrder().begin(), order->getOrder().end(), newOrder.begin(),
-                [](unsigned int i) -> unsigned int { return i - 1; });
+                [](std::size_t i) -> std::size_t { return i - 1; });
         return reorderAtoms(atoms, newOrder);
     }
 
@@ -887,9 +887,8 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
         // start by storing the access cost for each individual relation
         std::vector<std::size_t> empty;
         bool isRecursive = recursiveInCurrentStratum.count(atomIdx) > 0;
-        double tuples = getRelationSize(isRecursive, name, empty, idxConstant);
-
-        double cost = tuples * atom->getArity();
+        std::size_t tuples = getRelationSize(isRecursive, name, empty, idxConstant);
+        double cost = static_cast<double>(tuples * atom->getArity());
         std::set<std::size_t> singleton = {atomIdx};
         std::vector<std::size_t> plan = {atomIdx};
         cache[1].insert(std::make_pair(singleton, PlanTuplesCost(plan, tuples, cost)));
@@ -987,7 +986,7 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
                         expectedTuples =
                                 static_cast<double>(relSizeWithConstants) / (normalize ? uniqueKeys : 1);
 
-                        std::vector<unsigned int> dummy;
+                        std::vector<std::size_t> dummy;
                         for (auto x : oldPlan) {
                             dummy.push_back(x);
                         }
