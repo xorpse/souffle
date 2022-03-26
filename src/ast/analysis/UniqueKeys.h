@@ -69,6 +69,9 @@ private:
     std::vector<Own<souffle::ram::CountUniqueKeys>> computeRuleVersionStatements(
             const std::set<const ast::Relation*>& sccRelations, const ast::Clause& clause,
             std::optional<std::size_t> version);
+    const std::vector<std::vector<std::size_t>>& getSubsets(std::size_t N, std::size_t K) const;
+
+    mutable std::map<std::pair<std::size_t, std::size_t>, std::vector<std::vector<std::size_t>>> cache;
 };
 
 }  // namespace souffle::ast::analysis
