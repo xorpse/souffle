@@ -977,7 +977,7 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
                             isRecursive, getClauseAtomName(clause, atom), empty, atomToIdxConstants[atomIdx]);
 
                     if (joinColumns.empty()) {
-                        expectedTuples = relSizeWithConstants;
+                        expectedTuples = static_cast<double>(relSizeWithConstants);
                     } else {
                         auto uniqueKeys = getRelationSize(isRecursive, getClauseAtomName(clause, atom),
                                 joinColumns, atomToIdxConstants[atomIdx]);
@@ -994,7 +994,7 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
                 }
 
                 // calculate new number of tuples
-                double newTuples = oldTuples * expectedTuples;
+                std::size_t newTuples = oldTuples * expectedTuples;
 
                 // calculate new cost
                 double newCost = oldCost + newTuples * atom->getArity();
