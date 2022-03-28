@@ -277,13 +277,12 @@ std::size_t TranslatorContext::getNonRecursiveUniqueKeys(
 std::size_t TranslatorContext::getRelationSize(const ast::QualifiedName& rel) const {
     return profileUseAnalysis->getRelationSize(rel);
 }
-const std::vector<std::vector<std::size_t>>& TranslatorContext::getSubsets(
-        std::size_t N, std::size_t K) const {
+const ast2ram::PowerSet& TranslatorContext::getSubsets(std::size_t N, std::size_t K) const {
     if (cache.count({N, K})) {
         return cache.at({N, K});
     }
     // result of all combinations
-    std::vector<std::vector<std::size_t>> res;
+    ast2ram::PowerSet res;
 
     // specific combination
     std::vector<std::size_t> cur;

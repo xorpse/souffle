@@ -38,6 +38,9 @@ namespace souffle::ast::analysis {
 /**
  * Analysis pass computing a schedule for computing relations.
  */
+using PowerSet = std::vector<std::vector<std::size_t>>;
+using StratumUniqueKeys = std::vector<Own<ram::CountUniqueKeys>>;
+
 class UniqueKeysAnalysis : public Analysis {
 public:
     static constexpr const char* name = "unique-keys";
@@ -49,13 +52,12 @@ public:
     /** Dump this relation schedule to standard error. */
     void print(std::ostream& os) const override;
 
-    const std::vector<Own<souffle::ram::CountUniqueKeys>>& getUniqueKeyStatementsInSCC(
-            std::size_t scc) const {
+    const StratumUniqueKeys& getUniqueKeyStatementsInSCC(std::size_t scc) const {
         return uniqueKeyStatements[scc];
     }
 
 private:
-    std::vector<std::vector<Own<souffle::ram::CountUniqueKeys>>> uniqueKeyStatements;
+    std::vector<StratumUniqueKeys> uniqueKeyStatements;
 
     std::set<std::string> seenNodes;
     ast::Program* program = nullptr;
@@ -65,13 +67,11 @@ private:
     PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
 
     // for each stratum compute the CountUniqueKeys nodes to emit
-    std::vector<std::vector<Own<souffle::ram::CountUniqueKeys>>> computeUniqueKeyStatements();
-    std::vector<Own<souffle::ram::CountUniqueKeys>> computeRuleVersionStatements(
-            const std::set<const ast::Relation*>& sccRelations, const ast::Clause& clause,
-            std::optional<std::size_t> version);
-    const std::vector<std::vector<std::size_t>>& getSubsets(std::size_t N, std::size_t K) const;
-
-    mutable std::map<std::pair<std::size_t, std::size_t>, std::vector<std::vector<std::size_t>>> cache;
+    std::vector<StratumUniqueKeys> computeUniqueKeyStatements();
+    StratumUniqueKeys computeRuleVersionStatements(const std::set<const ast::Relation*>& sccRelations,
+            const ast::Clause& clause, std::optional<std::size_t> version);
+    const PowerSet& getSubsets(std::size_t N, std::size_t K) const;
+    mutable std::map<std::pair<std::size_t, std::size_t>, PowerSet> cache;
 };
 
 }  // namespace souffle::ast::analysis

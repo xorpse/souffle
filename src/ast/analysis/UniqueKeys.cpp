@@ -45,13 +45,12 @@
 
 namespace souffle::ast::analysis {
 
-const std::vector<std::vector<std::size_t>>& UniqueKeysAnalysis::getSubsets(
-        std::size_t N, std::size_t K) const {
+const analysis::PowerSet& UniqueKeysAnalysis::getSubsets(std::size_t N, std::size_t K) const {
     if (cache.count({N, K})) {
         return cache.at({N, K});
     }
     // result of all combinations
-    std::vector<std::vector<std::size_t>> res;
+    analysis::PowerSet res;
 
     // specific combination
     std::vector<std::size_t> cur;
@@ -77,7 +76,7 @@ const std::vector<std::vector<std::size_t>>& UniqueKeysAnalysis::getSubsets(
     return cache.at({N, K});
 }
 
-std::vector<Own<souffle::ram::CountUniqueKeys>> UniqueKeysAnalysis::computeRuleVersionStatements(
+analysis::StratumUniqueKeys UniqueKeysAnalysis::computeRuleVersionStatements(
         const std::set<const ast::Relation*>& scc, const ast::Clause& clause,
         std::optional<std::size_t> version) {
     auto* prog = program;
@@ -105,7 +104,7 @@ std::vector<Own<souffle::ram::CountUniqueKeys>> UniqueKeysAnalysis::computeRuleV
         fatal("unaccounted-for constant");
     };
 
-    std::vector<Own<souffle::ram::CountUniqueKeys>> statements;
+    analysis::StratumUniqueKeys statements;
 
     auto getClauseAtomName = [&sccAtoms, &version](
                                      const ast::Clause& clause, const ast::Atom* atom, bool isRecursive) {
@@ -401,8 +400,7 @@ std::vector<Own<souffle::ram::CountUniqueKeys>> UniqueKeysAnalysis::computeRuleV
     return statements;
 }
 
-std::vector<std::vector<Own<souffle::ram::CountUniqueKeys>>>
-UniqueKeysAnalysis::computeUniqueKeyStatements() {
+std::vector<analysis::StratumUniqueKeys> UniqueKeysAnalysis::computeUniqueKeyStatements() {
     auto* prog = program;
     auto getSccAtoms = [prog](const ast::Clause* clause, const std::set<const ast::Relation*>& scc) {
         const auto& sccAtoms = filter(ast::getBodyLiterals<ast::Atom>(*clause),
@@ -412,7 +410,7 @@ UniqueKeysAnalysis::computeUniqueKeyStatements() {
 
     const auto& sccOrdering = topsortSCCGraphAnalysis->order();
 
-    std::vector<std::vector<Own<souffle::ram::CountUniqueKeys>>> uniqueKeyStatements;
+    std::vector<analysis::StratumUniqueKeys> uniqueKeyStatements;
     uniqueKeyStatements.resize(sccOrdering.size());
 
     auto& config = Global::config();
@@ -422,7 +420,7 @@ UniqueKeysAnalysis::computeUniqueKeyStatements() {
 
     // for each stratum (formed from scc ordering)
     for (std::size_t i = 0; i < sccOrdering.size(); i++) {
-        std::vector<Own<souffle::ram::CountUniqueKeys>> stratumNodes;
+        analysis::StratumUniqueKeys stratumNodes;
 
         auto scc = sccOrdering[i];
         const std::set<const ast::Relation*> sccRelations = sccGraph->getInternalRelations(scc);

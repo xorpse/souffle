@@ -68,6 +68,8 @@ class UniqueKeysAnalysis;
 
 namespace souffle::ast2ram {
 
+using PowerSet = std::vector<std::vector<std::size_t>>;
+
 class TranslationStrategy;
 class ValueIndex;
 
@@ -143,7 +145,7 @@ public:
     std::size_t getNonRecursiveUniqueKeys(
             const std::string& rel, const std::string& attributes, const std::string& constants) const;
     std::size_t getRelationSize(const ast::QualifiedName& rel) const;
-    const std::vector<std::vector<std::size_t>>& getSubsets(std::size_t N, std::size_t K) const;
+    const PowerSet& getSubsets(std::size_t N, std::size_t K) const;
 
 private:
     const ast::Program* program;
@@ -161,7 +163,7 @@ private:
     std::map<const ast::Clause*, std::size_t> clauseNums;
     Own<ast::SipsMetric> sipsMetric;
     Own<TranslationStrategy> translationStrategy;
-    mutable std::map<std::pair<std::size_t, std::size_t>, std::vector<std::vector<std::size_t>>> cache;
+    mutable std::map<std::pair<std::size_t, std::size_t>, PowerSet> cache;
 };
 
 }  // namespace souffle::ast2ram
