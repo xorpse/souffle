@@ -67,11 +67,18 @@ public:
 
 protected:
     void print(std::ostream& os, int tabpos) const override {
-        os << times(" ", tabpos) << "COUNT UNIQUE KEYS " << relation
-           << " RECURSIVE: " << (recursiveRelation ? "true" : "false") << " COLUMNS: " << keyColumns
-           << " CONSTANTS: ";
-        for (auto& p : constantsMap) {
-            os << "(" << p.first << ", " << *p.second << ") ";
+        os << times(" ", tabpos) << (recursiveRelation ? "REC" : "") << "UNIQUEKEYCOUNT " << relation << " ";
+        bool first = true;
+        for (auto k : keyColumns) {
+            if (first) {
+                first = false;
+            } else {
+                os << ", ";
+            }
+            os << "A" << k;
+            if (constantsMap.count(k)) {
+                os << " = " << *constantsMap.at(k);
+            }
         }
         os << std::endl;
     }
