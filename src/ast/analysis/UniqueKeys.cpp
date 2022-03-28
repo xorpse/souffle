@@ -254,7 +254,7 @@ analysis::StratumUniqueKeys UniqueKeysAnalysis::computeRuleVersionStatements(
 
         atomToIdxConstants[atomIdx] = std::move(idxConstant);
 
-        // start by storing the access cost for each individual relation
+        // store the sets of size 1
         cache[1].insert({atomIdx});
         ++atomIdx;
     }
@@ -414,7 +414,7 @@ std::vector<analysis::StratumUniqueKeys> UniqueKeysAnalysis::computeUniqueKeySta
     uniqueKeyStatements.resize(sccOrdering.size());
 
     auto& config = Global::config();
-    if (!config.has("profile") || !config.has("index-stats")) {
+    if (!config.has("index-stats")) {
         return uniqueKeyStatements;
     }
 

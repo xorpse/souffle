@@ -400,6 +400,13 @@ int main(int argc, char** argv) {
         if (Global::config().has("live-profile") && !Global::config().has("profile")) {
             Global::config().set("profile");
         }
+
+        /* if index-stats is set then check that the profiler is also set */
+        if (Global::config().has("index-stats")) {
+            if (!Global::config().has("profile"))
+                throw std::runtime_error("must be profiling to collect index-stats");
+        }
+
     } catch (std::exception& e) {
         std::cerr << e.what() << std::endl;
         exit(EXIT_FAILURE);
