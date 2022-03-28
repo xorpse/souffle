@@ -35,8 +35,6 @@ class UnsignedConstant : public NumericConstant {
 public:
     explicit UnsignedConstant(RamUnsigned val) : NumericConstant(ramBitCast(val)) {}
 
-    virtual ~UnsignedConstant() = default;
-
     /** @brief Get value of the constant. */
     RamUnsigned getValue() const {
         return ramBitCast<RamUnsigned>(constant);

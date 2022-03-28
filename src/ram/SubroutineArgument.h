@@ -36,8 +36,6 @@ class SubroutineArgument : public Expression {
 public:
     SubroutineArgument(std::size_t number) : number(number) {}
 
-    virtual ~SubroutineArgument() = default;
-
     /** @brief Get argument */
     std::size_t getArgument() const {
         return number;

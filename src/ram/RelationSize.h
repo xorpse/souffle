@@ -43,8 +43,6 @@ class RelationSize : public Expression {
 public:
     RelationSize(std::string rel) : relation(std::move(rel)) {}
 
-    virtual ~RelationSize() = default;
-
     /** @brief Get relation */
     const std::string getRelation() const {
         return relation;

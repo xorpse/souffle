@@ -33,8 +33,6 @@ public:
         return new UndefValue();
     }
 
-    virtual ~UndefValue() = default;
-
 protected:
     void print(std::ostream& os) const override {
         os << "UNDEF";

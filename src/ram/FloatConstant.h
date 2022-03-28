@@ -35,8 +35,6 @@ class FloatConstant : public NumericConstant {
 public:
     explicit FloatConstant(RamFloat val) : NumericConstant(ramBitCast(val)) {}
 
-    virtual ~FloatConstant() = default;
-
     /** @brief Get value of the constant. */
     RamFloat getValue() const {
         return ramBitCast<RamFloat>(constant);

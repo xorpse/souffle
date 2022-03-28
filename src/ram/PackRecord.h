@@ -39,8 +39,6 @@ public:
         assert(allValidPtrs(arguments));
     }
 
-    virtual ~PackRecord() = default;
-
     /** @brief Get record arguments */
     std::vector<Expression*> getArguments() const {
         return toPtrVector(arguments);

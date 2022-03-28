@@ -38,8 +38,6 @@ public:
 protected:
     explicit NumericConstant(RamDomain constant) : constant(constant) {}
 
-    virtual ~NumericConstant() = default;
-
     bool equal(const Node& node) const override {
         const auto& other = asAssert<NumericConstant>(node);
         return constant == other.constant;

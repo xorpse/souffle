@@ -33,8 +33,6 @@ class StringConstant : public Expression {
 public:
     StringConstant(std::string constant) : constant(constant) {}
 
-    virtual ~StringConstant() = default;
-
     /** @brief Get constant */
     const std::string& getConstant() const {
         return constant;

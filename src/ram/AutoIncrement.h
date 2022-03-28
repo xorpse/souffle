@@ -29,8 +29,6 @@ namespace souffle::ram {
  */
 class AutoIncrement : public Expression {
 public:
-    virtual ~AutoIncrement() = default;
-
     AutoIncrement* cloning() const override {
         return new AutoIncrement();
     }
