@@ -701,7 +701,7 @@ struct PlanTuplesCost {
 std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& clause) const {
     auto atoms = ast::getBodyLiterals<ast::Atom>(clause);
     auto constraints = ast::getBodyLiterals<ast::BinaryConstraint>(clause);
-    // exit early we have some nullary business
+
     if (atoms.size() <= 1 || !Global::config().has("auto-schedule")) {
         // no plan
         const auto& plan = clause.getExecutionPlan();

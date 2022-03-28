@@ -378,11 +378,10 @@ std::vector<Own<souffle::ram::CountUniqueKeys>> UniqueKeysAnalysis::computeRuleV
                 // construct a CountUniqueKeys ram node
                 bool isRecursive = recursiveInCurrentStratum.count(i) > 0;
                 auto relation = getClauseAtomName(clause, atom, isRecursive);
-                auto arity = args.size();
                 auto& constantMap = atomToIdxConstants.at(i);
 
                 std::stringstream ss;
-                ss << relation << " " << arity << " " << joinColumns << " ";
+                ss << relation << " " << joinColumns << " ";
                 for (auto& p : constantMap) {
                     ss << "(" << p.first << ", " << *p.second << ") ";
                 }
@@ -390,7 +389,7 @@ std::vector<Own<souffle::ram::CountUniqueKeys>> UniqueKeysAnalysis::computeRuleV
 
                 if (seenNodes.count(ss.str()) == 0) {
                     auto node = mk<souffle::ram::CountUniqueKeys>(
-                            relation, arity, joinColumns, constantMap, isRecursive);
+                            relation, joinColumns, constantMap, isRecursive);
                     seenNodes.insert(ss.str());
 
                     if (!joinColumns.empty() || isRecursive) {
