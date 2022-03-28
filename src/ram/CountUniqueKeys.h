@@ -34,7 +34,16 @@ namespace souffle::ram {
  * @class CountUniqueKeys
  * @brief Count the number of unique keys on a relation given the key columns etc.
  *
- * TODO: Example
+ * This statement counts the number of unique keys in a relation.
+
+* For example:
+* ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* UNIQUEKEYCOUNT rel A0 = 1, A1
+* ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ *
+ *
+ * Counts the number of tuples in rel with a unique value for attribute 1,
+ * while also having the first attribute with a value of 1
  */
 class CountUniqueKeys : public RelationStatement {
 public:

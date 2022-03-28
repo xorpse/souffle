@@ -10,9 +10,8 @@
  *
  * @file UniqueKeys.cpp
  *
- * Computes for every stratum, which CountUniqueKeys nodes to emit in the RAM
- * This is useful for the auto-scheduler to accumulate selectivity statistics
- *
+ * CountUniqueKeys are used for accumulating selectivity statistics for the auto scheduler
+ * This analysis determines which CountUniqueKeys statements to emit in the RAM
  *
  ***********************************************************************/
 
