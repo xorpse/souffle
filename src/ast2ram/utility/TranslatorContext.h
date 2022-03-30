@@ -68,8 +68,6 @@ class UniqueKeysAnalysis;
 
 namespace souffle::ast2ram {
 
-using PowerSet = std::vector<std::vector<std::size_t>>;
-
 class TranslationStrategy;
 class ValueIndex;
 
@@ -139,14 +137,6 @@ public:
 
     Own<ram::Expression> translateValue(const ValueIndex& index, const ast::Argument* arg) const;
 
-    bool hasAutoSchedulerStats() const;
-    std::size_t getRecursiveUniqueKeys(
-            const std::string& rel, const std::string& attributes, const std::string& constants) const;
-    std::size_t getNonRecursiveUniqueKeys(
-            const std::string& rel, const std::string& attributes, const std::string& constants) const;
-    std::size_t getRelationSize(const ast::QualifiedName& rel) const;
-    const PowerSet& getSubsets(std::size_t N, std::size_t K) const;
-
 private:
     const ast::Program* program;
     const ast::analysis::RecursiveClausesAnalysis* recursiveClauses;
@@ -159,11 +149,9 @@ private:
     const ast::analysis::SumTypeBranchesAnalysis* sumTypeBranches;
     const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis;
     const ast::analysis::UniqueKeysAnalysis* uniqueKeysAnalysis;
-    const ast::analysis::ProfileUseAnalysis* profileUseAnalysis;
     std::map<const ast::Clause*, std::size_t> clauseNums;
     Own<ast::SipsMetric> sipsMetric;
     Own<TranslationStrategy> translationStrategy;
-    mutable std::map<std::pair<std::size_t, std::size_t>, PowerSet> cache;
 };
 
 }  // namespace souffle::ast2ram

@@ -16,21 +16,32 @@
 
 #pragma once
 
+#include "souffle/utility/Types.h"
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
+namespace souffle::ram {
+class Expression;
+}  // namespace souffle::ram
+
 namespace souffle::ast::analysis {
 class IOTypeAnalysis;
 class ProfileUseAnalysis;
+class PolymorphicObjectsAnalysis;
+class SCCGraphAnalysis;
 }  // namespace souffle::ast::analysis
 namespace souffle::ast {
 
 class Atom;
 class BindingStore;
 class Clause;
+class Constant;
 class Program;
 class TranslationUnit;
+
+using PowerSet = std::vector<std::vector<std::size_t>>;
 
 /**
  * Class for SIPS cost-metric functions
@@ -54,10 +65,30 @@ public:
 
 class SelingerProfileSipsMetric : public SipsMetric {
 public:
+    SelingerProfileSipsMetric(const TranslationUnit& tu);
     std::vector<std::size_t> getReordering(const Clause* clause) const override;
 
-protected:
-    // TODO: helper functions for Selingers algorithm etc.
+private:
+    /* helper struct for Selinger */
+    struct PlanTuplesCost {
+        PlanTuplesCost(const std::vector<std::size_t>& givenPlan, std::size_t givenTuples, double givenCost)
+                : plan(givenPlan), tuples(givenTuples), cost(givenCost) {}
+
+        std::vector<std::size_t> plan;
+        std::size_t tuples;
+        double cost;
+    };
+
+    const PowerSet& getSubsets(std::size_t N, std::size_t K) const;
+    std::string getClauseAtomName(
+            const ast::Clause& clause, const ast::Atom* atom, const std::vector<ast::Atom*>& sccAtoms) const;
+    Own<ram::Expression> translateConstant(const ast::Constant& constant) const;
+
+    const ast::analysis::SCCGraphAnalysis* sccGraph = nullptr;
+    const ast::analysis::PolymorphicObjectsAnalysis* polyAnalysis = nullptr;
+    const ast::analysis::ProfileUseAnalysis* profileUseAnalysis = nullptr;
+    ast::Program* program = nullptr;
+    mutable std::map<std::pair<std::size_t, std::size_t>, PowerSet> cache;
 };
 
 class StaticSipsMetric : public SipsMetric {

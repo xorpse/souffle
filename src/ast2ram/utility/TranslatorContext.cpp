@@ -61,7 +61,6 @@ TranslatorContext::TranslatorContext(const ast::TranslationUnit& tu) {
     sumTypeBranches = &tu.getAnalysis<ast::analysis::SumTypeBranchesAnalysis>();
     polyAnalysis = &tu.getAnalysis<ast::analysis::PolymorphicObjectsAnalysis>();
     uniqueKeysAnalysis = &tu.getAnalysis<ast::analysis::UniqueKeysAnalysis>();
-    profileUseAnalysis = &tu.getAnalysis<ast::analysis::ProfileUseAnalysis>();
 
     // Set up clause nums
     for (const ast::Relation* rel : program->getRelations()) {
@@ -260,51 +259,4 @@ Own<ram::Condition> TranslatorContext::translateConstraint(
     return constraintTranslator->translateConstraint(lit);
 }
 
-bool TranslatorContext::hasAutoSchedulerStats() const {
-    return profileUseAnalysis->hasAutoSchedulerStats();
-}
-
-std::size_t TranslatorContext::getRecursiveUniqueKeys(
-        const std::string& rel, const std::string& attributes, const std::string& constants) const {
-    return profileUseAnalysis->getRecursiveUniqueKeys(rel, attributes, constants);
-}
-
-std::size_t TranslatorContext::getNonRecursiveUniqueKeys(
-        const std::string& rel, const std::string& attributes, const std::string& constants) const {
-    return profileUseAnalysis->getNonRecursiveUniqueKeys(rel, attributes, constants);
-}
-
-std::size_t TranslatorContext::getRelationSize(const ast::QualifiedName& rel) const {
-    return profileUseAnalysis->getRelationSize(rel);
-}
-const ast2ram::PowerSet& TranslatorContext::getSubsets(std::size_t N, std::size_t K) const {
-    if (cache.count({N, K})) {
-        return cache.at({N, K});
-    }
-    // result of all combinations
-    ast2ram::PowerSet res;
-
-    // specific combination
-    std::vector<std::size_t> cur;
-    cur.reserve(K);
-
-    // use bitmask for subset generation
-    std::string bitmask(K, 1);  // K leading 1's
-    bitmask.resize(N, 0);       // N-K trailing 0's
-
-    // generate the combination while there are combinations to go
-    do {
-        cur.clear();
-        for (std::size_t i = 0; i < N; ++i)  // [0..N-1] integers
-        {
-            if (bitmask[i]) {
-                cur.push_back(i);
-            }
-        }
-        res.push_back(cur);
-    } while (std::prev_permutation(bitmask.begin(), bitmask.end()));
-
-    cache[std::make_pair(N, K)] = res;
-    return cache.at({N, K});
-}
 }  // namespace souffle::ast2ram
