@@ -25,11 +25,12 @@
 #include "ast/utility/Visitor.h"
 #include <cmath>
 #include <limits>
+#include <numeric>
 #include <vector>
 
 namespace souffle::ast {
 
-std::vector<std::size_t> SipsMetric::getReordering(const Clause* clause) const {
+std::vector<std::size_t> StaticSipsMetric::getReordering(const Clause* clause) const {
     BindingStore bindingStore(clause);
     auto atoms = getBodyLiterals<Atom>(*clause);
     std::vector<std::size_t> newOrder(atoms.size());
@@ -55,6 +56,13 @@ std::vector<std::size_t> SipsMetric::getReordering(const Clause* clause) const {
         numAdded++;                   // move on
     }
 
+    return newOrder;
+}
+
+std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(const Clause* clause) const {
+    auto atoms = getBodyLiterals<Atom>(*clause);
+    std::vector<std::size_t> newOrder(atoms.size());
+    std::iota(newOrder.begin(), newOrder.end(), 0);
     return newOrder;
 }
 

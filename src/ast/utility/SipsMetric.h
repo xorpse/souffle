@@ -46,10 +46,23 @@ public:
      * @param clause clause to reorder
      * @return the vector of new positions; v[i] = j iff atom j moves to pos i
      */
-    std::vector<std::size_t> getReordering(const Clause* clause) const;
+    virtual std::vector<std::size_t> getReordering(const Clause* clause) const = 0;
 
     /** Create a SIPS metric based on a given heuristic. */
     static std::unique_ptr<SipsMetric> create(const std::string& heuristic, const TranslationUnit& tu);
+};
+
+class SelingerProfileSipsMetric : public SipsMetric {
+public:
+    std::vector<std::size_t> getReordering(const Clause* clause) const override;
+
+protected:
+    // TODO: helper functions for Selingers algorithm etc.
+};
+
+class StaticSipsMetric : public SipsMetric {
+public:
+    std::vector<std::size_t> getReordering(const Clause* clause) const override;
 
 protected:
     /**
@@ -62,7 +75,7 @@ protected:
 };
 
 /** Goal: Always choose the left-most atom */
-class StrictSips : public SipsMetric {
+class StrictSips : public StaticSipsMetric {
 public:
     StrictSips() = default;
 
@@ -72,7 +85,7 @@ protected:
 };
 
 /** Goal: Prioritise atoms with all arguments bound */
-class AllBoundSips : public SipsMetric {
+class AllBoundSips : public StaticSipsMetric {
 public:
     AllBoundSips() = default;
 
@@ -82,7 +95,7 @@ protected:
 };
 
 /** Goal: Prioritise (1) all bound, then (2) atoms with at least one bound argument, then (3) left-most */
-class NaiveSips : public SipsMetric {
+class NaiveSips : public StaticSipsMetric {
 public:
     NaiveSips() = default;
 
@@ -92,7 +105,7 @@ protected:
 };
 
 /** Goal: prioritise (1) all-bound, then (2) max number of bound vars, then (3) left-most */
-class MaxBoundSips : public SipsMetric {
+class MaxBoundSips : public StaticSipsMetric {
 public:
     MaxBoundSips() = default;
 
@@ -102,7 +115,7 @@ protected:
 };
 
 /** Goal: prioritise max ratio of bound args */
-class MaxRatioSips : public SipsMetric {
+class MaxRatioSips : public StaticSipsMetric {
 public:
     MaxRatioSips() = default;
 
@@ -112,7 +125,7 @@ protected:
 };
 
 /** Goal: choose the atom with the least number of unbound arguments */
-class LeastFreeSips : public SipsMetric {
+class LeastFreeSips : public StaticSipsMetric {
 public:
     LeastFreeSips() = default;
 
@@ -122,7 +135,7 @@ protected:
 };
 
 /** Goal: choose the atom with the least amount of unbound variables */
-class LeastFreeVarsSips : public SipsMetric {
+class LeastFreeVarsSips : public StaticSipsMetric {
 public:
     LeastFreeVarsSips() = default;
 
@@ -136,7 +149,7 @@ protected:
  * Metric: cost(atom_R) = log(|atom_R|) * #free/#args
  *         - exception: propositions are prioritised
  */
-class ProfileUseSips : public SipsMetric {
+class ProfileUseSips : public StaticSipsMetric {
 public:
     ProfileUseSips(const analysis::ProfileUseAnalysis& profileUse) : profileUse(profileUse) {}
 
@@ -149,7 +162,7 @@ private:
 };
 
 /** Goal: prioritise (1) all-bound, then (2) input, and then (3) left-most */
-class InputSips : public SipsMetric {
+class InputSips : public StaticSipsMetric {
 public:
     InputSips(const Program& program, const analysis::IOTypeAnalysis& ioTypes)
             : program(program), ioTypes(ioTypes) {}
