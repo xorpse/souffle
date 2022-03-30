@@ -15,6 +15,7 @@
  ***********************************************************************/
 
 #include "ast/utility/SipsMetric.h"
+#include "Global.h"
 #include "ast/Clause.h"
 #include "ast/TranslationUnit.h"
 #include "ast/Variable.h"
@@ -502,7 +503,9 @@ const ast::PowerSet& SelingerProfileSipsMetric::getSubsets(std::size_t N, std::s
 
 /** Create a SIPS metric based on a given heuristic. */
 std::unique_ptr<SipsMetric> SipsMetric::create(const std::string& heuristic, const TranslationUnit& tu) {
-    if (heuristic == "strict")
+    if (Global::config().has("auto-schedule"))
+        return mk<SelingerProfileSipsMetric>(tu);
+    else if (heuristic == "strict")
         return mk<StrictSips>();
     else if (heuristic == "all-bound")
         return mk<AllBoundSips>();
