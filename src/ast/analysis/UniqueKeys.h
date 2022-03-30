@@ -25,6 +25,7 @@
 #include "ast/analysis/TopologicallySortedSCCGraph.h"
 #include "ast/analysis/typesystem/PolymorphicObjects.h"
 #include "ast/utility/Visitor.h"
+#include "ast2ram/ClauseTranslator.h"
 #include "ram/CountUniqueKeys.h"
 #include "ram/Expression.h"
 #include <ostream>
@@ -69,7 +70,8 @@ private:
     // for each stratum compute the CountUniqueKeys nodes to emit
     std::vector<StratumUniqueKeys> computeUniqueKeyStatements();
     StratumUniqueKeys computeRuleVersionStatements(const std::set<const ast::Relation*>& sccRelations,
-            const ast::Clause& clause, std::optional<std::size_t> version);
+            const ast::Clause& clause, std::optional<std::size_t> version,
+            ast2ram::TranslationMode mode = ast2ram::TranslationMode::DEFAULT);
     const PowerSet& getSubsets(std::size_t N, std::size_t K) const;
     mutable std::map<std::pair<std::size_t, std::size_t>, PowerSet> cache;
 };

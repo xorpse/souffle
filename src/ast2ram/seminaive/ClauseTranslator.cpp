@@ -30,6 +30,7 @@
 #include "ast/SubsumptiveClause.h"
 #include "ast/UnnamedVariable.h"
 #include "ast/analysis/Functor.h"
+#include "ast/utility/SipsMetric.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
 #include "ast2ram/utility/Location.h"
@@ -702,11 +703,7 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
         return atoms;
     }
 
-    // get the imposed order, and change it to start at zero
-    const auto& order = orders.at(version);
-    std::vector<std::size_t> newOrder(order->getOrder().size());
-    std::transform(order->getOrder().begin(), order->getOrder().end(), newOrder.begin(),
-            [](std::size_t i) -> std::size_t { return i - 1; });
+    auto newOrder = context.getSipsMetric()->getReordering(&clause, version, mode);
     return reorderAtoms(atoms, newOrder);
 }
 

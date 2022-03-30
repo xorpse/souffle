@@ -97,7 +97,6 @@ set(SOUFFLE_SOURCES
     ast/transform/RemoveRedundantRelations.cpp
     ast/transform/RemoveRedundantSums.cpp
     ast/transform/RemoveRelationCopies.cpp
-    ast/transform/ReorderLiterals.cpp
     ast/transform/ReplaceSingletonVariables.cpp
     ast/transform/ResolveAliases.cpp
     ast/transform/ResolveAnonymousRecordAliases.cpp

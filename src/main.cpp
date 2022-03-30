@@ -50,7 +50,6 @@
 #include "ast/transform/RemoveRedundantRelations.h"
 #include "ast/transform/RemoveRedundantSums.h"
 #include "ast/transform/RemoveRelationCopies.h"
-#include "ast/transform/ReorderLiterals.h"
 #include "ast/transform/ReplaceSingletonVariables.h"
 #include "ast/transform/ResolveAliases.h"
 #include "ast/transform/ResolveAnonymousRecordAliases.h"
@@ -582,11 +581,10 @@ int main(int argc, char** argv) {
                     mk<ast::transform::RemoveRedundantRelationsTransformer>())),
             mk<ast::transform::RemoveRelationCopiesTransformer>(), std::move(partitionPipeline),
             std::move(equivalencePipeline), mk<ast::transform::RemoveRelationCopiesTransformer>(),
-            std::move(magicPipeline), mk<ast::transform::ReorderLiteralsTransformer>(),
-            mk<ast::transform::RemoveEmptyRelationsTransformer>(),
+            std::move(magicPipeline), mk<ast::transform::RemoveEmptyRelationsTransformer>(),
             mk<ast::transform::AddNullariesToAtomlessAggregatesTransformer>(),
-            mk<ast::transform::ReorderLiteralsTransformer>(), mk<ast::transform::ExecutionPlanChecker>(),
-            std::move(provenancePipeline), mk<ast::transform::IOAttributesTransformer>());
+            mk<ast::transform::ExecutionPlanChecker>(), std::move(provenancePipeline),
+            mk<ast::transform::IOAttributesTransformer>());
 
     // Disable unwanted transformations
     if (Global::config().has("disable-transformers")) {

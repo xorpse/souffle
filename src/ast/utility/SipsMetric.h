@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ast2ram/ClauseTranslator.h"
 #include "souffle/utility/Types.h"
 #include <map>
 #include <memory>
@@ -57,7 +58,8 @@ public:
      * @param clause clause to reorder
      * @return the vector of new positions; v[i] = j iff atom j moves to pos i
      */
-    virtual std::vector<std::size_t> getReordering(const Clause* clause) const = 0;
+    virtual std::vector<std::size_t> getReordering(
+            const Clause* clause, std::size_t version, ast2ram::TranslationMode mode) const = 0;
 
     /** Create a SIPS metric based on a given heuristic. */
     static std::unique_ptr<SipsMetric> create(const std::string& heuristic, const TranslationUnit& tu);
@@ -66,7 +68,8 @@ public:
 class SelingerProfileSipsMetric : public SipsMetric {
 public:
     SelingerProfileSipsMetric(const TranslationUnit& tu);
-    std::vector<std::size_t> getReordering(const Clause* clause) const override;
+    std::vector<std::size_t> getReordering(
+            const Clause* clause, std::size_t version, ast2ram::TranslationMode mode) const override;
 
 private:
     /* helper struct for Selinger */
@@ -80,8 +83,9 @@ private:
     };
 
     const PowerSet& getSubsets(std::size_t N, std::size_t K) const;
-    std::string getClauseAtomName(
-            const ast::Clause& clause, const ast::Atom* atom, const std::vector<ast::Atom*>& sccAtoms) const;
+    std::string getClauseAtomName(const ast::Clause& clause, const ast::Atom* atom,
+            const std::vector<ast::Atom*>& sccAtoms, std::size_t version,
+            ast2ram::TranslationMode mode) const;
     Own<ram::Expression> translateConstant(const ast::Constant& constant) const;
 
     const ast::analysis::SCCGraphAnalysis* sccGraph = nullptr;
@@ -93,7 +97,8 @@ private:
 
 class StaticSipsMetric : public SipsMetric {
 public:
-    std::vector<std::size_t> getReordering(const Clause* clause) const override;
+    std::vector<std::size_t> getReordering(
+            const Clause* clause, std::size_t version, ast2ram::TranslationMode mode) const override;
 
 protected:
     /**

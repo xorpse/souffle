@@ -25,6 +25,7 @@
 #include "ast/utility/BindingStore.h"
 #include "ast/utility/Utils.h"
 #include "ast/utility/Visitor.h"
+#include "ast2ram/utility/Utils.h"
 #include "ram/Expression.h"
 #include "ram/FloatConstant.h"
 #include "ram/SignedConstant.h"
@@ -38,7 +39,11 @@
 
 namespace souffle::ast {
 
-std::vector<std::size_t> StaticSipsMetric::getReordering(const Clause* clause) const {
+std::vector<std::size_t> StaticSipsMetric::getReordering(
+        const Clause* clause, std::size_t version, ast2ram::TranslationMode mode) const {
+    (void)version;
+    (void)mode;
+
     BindingStore bindingStore(clause);
     auto atoms = getBodyLiterals<Atom>(*clause);
     std::vector<std::size_t> newOrder(atoms.size());
@@ -74,7 +79,8 @@ SelingerProfileSipsMetric::SelingerProfileSipsMetric(const TranslationUnit& tu) 
     program = &tu.getProgram();
 }
 
-std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(const Clause* clause) const {
+std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
+        const Clause* clause, std::size_t version, ast2ram::TranslationMode mode) const {
     auto atoms = ast::getBodyLiterals<ast::Atom>(*clause);
     auto constraints = ast::getBodyLiterals<ast::BinaryConstraint>(*clause);
     std::size_t relStratum = sccGraph->getSCC(program->getRelation(*clause));
@@ -219,7 +225,7 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(const Clause* 
 
     std::size_t atomIdx = 0;
     for (auto* atom : atoms) {
-        std::string name = getClauseAtomName(*clause, atom, sccAtoms);
+        std::string name = getClauseAtomName(*clause, atom, sccAtoms, version, mode);
         std::map<std::size_t, std::string> idxConstant;
 
         std::size_t i = 0;
@@ -332,14 +338,15 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(const Clause* 
                     expectedTuples = 1;
                 } else {
                     auto relSizeWithConstants = getRelationSize(isRecursive,
-                            getClauseAtomName(*clause, atom, sccAtoms), empty, atomToIdxConstants[atomIdx]);
+                            getClauseAtomName(*clause, atom, sccAtoms, version, mode), empty,
+                            atomToIdxConstants[atomIdx]);
 
                     if (joinColumns.empty()) {
                         expectedTuples = static_cast<double>(relSizeWithConstants);
                     } else {
-                        auto uniqueKeys =
-                                getRelationSize(isRecursive, getClauseAtomName(*clause, atom, sccAtoms),
-                                        joinColumns, atomToIdxConstants[atomIdx]);
+                        auto uniqueKeys = getRelationSize(isRecursive,
+                                getClauseAtomName(*clause, atom, sccAtoms, version, mode), joinColumns,
+                                atomToIdxConstants[atomIdx]);
 
                         bool normalize = (uniqueKeys > 0);
                         expectedTuples =
@@ -408,8 +415,12 @@ Own<ram::Expression> SelingerProfileSipsMetric::translateConstant(const ast::Con
     fatal("unaccounted-for constant");
 }
 
-std::string SelingerProfileSipsMetric::getClauseAtomName(
-        const ast::Clause& clause, const ast::Atom* atom, const std::vector<ast::Atom*>& sccAtoms) const {
+std::string SelingerProfileSipsMetric::getClauseAtomName(const ast::Clause& clause, const ast::Atom* atom,
+        const std::vector<ast::Atom*>& sccAtoms, std::size_t version, ast2ram::TranslationMode mode) const {
+    using namespace souffle::ast2ram;
+
+    bool isRecursive = !sccAtoms.empty();
+
     if (isA<ast::SubsumptiveClause>(clause)) {
         // find the dominated / dominating heads
         const auto& body = clause.getBodyLiterals();
@@ -439,14 +450,14 @@ std::string SelingerProfileSipsMetric::getClauseAtomName(
             }
         }
 
-        if (isRecursive()) {
+        if (isRecursive) {
             if (sccAtoms.at(version + 1) == atom) {
                 return getDeltaRelationName(atom->getQualifiedName());
             }
         }
     }
 
-    if (!isRecursive()) {
+    if (!isRecursive) {
         return getConcreteRelationName(atom->getQualifiedName());
     }
     if (clause.getHead() == atom) {

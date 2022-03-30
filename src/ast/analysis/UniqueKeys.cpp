@@ -78,7 +78,7 @@ const analysis::PowerSet& UniqueKeysAnalysis::getSubsets(std::size_t N, std::siz
 
 analysis::StratumUniqueKeys UniqueKeysAnalysis::computeRuleVersionStatements(
         const std::set<const ast::Relation*>& scc, const ast::Clause& clause,
-        std::optional<std::size_t> version) {
+        std::optional<std::size_t> version, ast2ram::TranslationMode mode) {
     auto* prog = program;
     auto* poly = polyAnalysis;
     auto sccAtoms = filter(ast::getBodyLiterals<ast::Atom>(clause),
@@ -106,15 +106,50 @@ analysis::StratumUniqueKeys UniqueKeysAnalysis::computeRuleVersionStatements(
 
     analysis::StratumUniqueKeys statements;
 
-    auto getClauseAtomName = [&sccAtoms, &version](
-                                     const ast::Clause& clause, const ast::Atom* atom, bool isRecursive) {
+    auto getClauseAtomName = [&sccAtoms, &version](const ast::Clause& clause, const ast::Atom* atom,
+                                     bool isRecursive, ast2ram::TranslationMode mode) {
         using namespace souffle::ast2ram;
+
+        if (isA<ast::SubsumptiveClause>(clause)) {
+            // find the dominated / dominating heads
+            const auto& body = clause.getBodyLiterals();
+            auto dominatedHeadAtom = dynamic_cast<const ast::Atom*>(body[0]);
+            auto dominatingHeadAtom = dynamic_cast<const ast::Atom*>(body[1]);
+
+            if (clause.getHead() == atom) {
+                if (mode == SubsumeDeleteCurrentDelta || mode == SubsumeDeleteCurrentCurrent) {
+                    return getDeleteRelationName(atom->getQualifiedName());
+                }
+                return getRejectRelationName(atom->getQualifiedName());
+            }
+
+            if (dominatedHeadAtom == atom) {
+                if (mode == SubsumeDeleteCurrentDelta || mode == SubsumeDeleteCurrentCurrent) {
+                    return getConcreteRelationName(atom->getQualifiedName());
+                }
+                return getNewRelationName(atom->getQualifiedName());
+            }
+
+            if (dominatingHeadAtom == atom) {
+                switch (mode) {
+                    case SubsumeRejectNewCurrent:
+                    case SubsumeDeleteCurrentCurrent:
+                        return getConcreteRelationName(atom->getQualifiedName());
+                    case SubsumeDeleteCurrentDelta: return getDeltaRelationName(atom->getQualifiedName());
+                    default: return getNewRelationName(atom->getQualifiedName());
+                }
+            }
+
+            if (isRecursive) {
+                if (sccAtoms.at(*version + 1) == atom) {
+                    return getDeltaRelationName(atom->getQualifiedName());
+                }
+            }
+        }
+
         if (!isRecursive) {
             return getConcreteRelationName(atom->getQualifiedName());
         }
-
-        assert(version.has_value() && "Recursive rule must have a rule version");
-
         if (clause.getHead() == atom) {
             return getNewRelationName(atom->getQualifiedName());
         }
@@ -232,7 +267,7 @@ analysis::StratumUniqueKeys UniqueKeysAnalysis::computeRuleVersionStatements(
     std::size_t atomIdx = 0;
     for (auto* atom : atoms) {
         bool isRecursive = recursiveInCurrentStratum.count(atomIdx) > 0;
-        std::string name = getClauseAtomName(clause, atom, isRecursive);
+        std::string name = getClauseAtomName(clause, atom, isRecursive, mode);
         std::map<std::size_t, const ram::Expression*> idxConstant;
 
         std::size_t i = 0;
@@ -375,7 +410,7 @@ analysis::StratumUniqueKeys UniqueKeysAnalysis::computeRuleVersionStatements(
 
                 // construct a CountUniqueKeys ram node
                 bool isRecursive = recursiveInCurrentStratum.count(i) > 0;
-                auto relation = getClauseAtomName(clause, atom, isRecursive);
+                auto relation = getClauseAtomName(clause, atom, isRecursive, mode);
                 auto& constantMap = atomToIdxConstants.at(i);
 
                 std::stringstream ss;
@@ -434,9 +469,34 @@ std::vector<analysis::StratumUniqueKeys> UniqueKeysAnalysis::computeUniqueKeySta
                 if (recursiveClauses->recursive(clause)) {
                     // for each rule version
                     for (std::size_t version = 0; version < sccAtoms.size(); version++) {
-                        auto res = computeRuleVersionStatements(sccRelations, *clause, {version});
-                        for (auto& s : res) {
-                            stratumNodes.push_back(std::move(s));
+                        if (isA<ast::SubsumptiveClause>(clause)) {
+                            using namespace souffle::ast2ram;
+                            auto rejectNew = computeRuleVersionStatements(
+                                    sccRelations, *clause, {version}, TranslationMode::SubsumeRejectNewNew);
+                            auto rejectNewCurrent = computeRuleVersionStatements(sccRelations, *clause,
+                                    {version}, TranslationMode::SubsumeRejectNewCurrent);
+                            auto mode = (sccAtoms.size() > 1) ? TranslationMode::SubsumeDeleteCurrentCurrent
+                                                              : TranslationMode::SubsumeDeleteCurrentDelta;
+                            auto deleteCurrent =
+                                    computeRuleVersionStatements(sccRelations, *clause, {version}, mode);
+
+                            for (auto& s : rejectNew) {
+                                stratumNodes.push_back(std::move(s));
+                            }
+
+                            for (auto& s : rejectNewCurrent) {
+                                stratumNodes.push_back(std::move(s));
+                            }
+
+                            for (auto& s : deleteCurrent) {
+                                stratumNodes.push_back(std::move(s));
+                            }
+
+                        } else {
+                            auto res = computeRuleVersionStatements(sccRelations, *clause, {version});
+                            for (auto& s : res) {
+                                stratumNodes.push_back(std::move(s));
+                            }
                         }
                     }
                 } else {
