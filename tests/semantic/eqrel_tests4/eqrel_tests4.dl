@@ -4,7 +4,7 @@
 // - https://opensource.org/licenses/UPL
 // - <souffle root>/licenses/SOUFFLE-UPL.txt
 
-// Magic set transformations requires an explicit representation of 
+// Magic set transformations requires an explicit representation of
 // eqrel relations so that they can be properly specialized. See
 // issue #2190.
 //
@@ -13,8 +13,8 @@
 
 .decl notEqrel(x:number,y:number)
 .decl isEqrel(x:number, y:number) eqrel
-.decl a__(a:number) 
-.decl b__(a:number) 
+.decl a__(a:number)
+.decl b__(a:number)
 
 notEqrel(x, y) :- isEqrel(x, y).
 isEqrel(x, y) :- notEqrel(x, y).
