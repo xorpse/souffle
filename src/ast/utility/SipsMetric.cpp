@@ -111,6 +111,15 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
     }
 
     auto atoms = ast::getBodyLiterals<ast::Atom>(*clause);
+
+    // remember to exit for single atom bodies
+    if (atoms.size() <= 1) {
+        std::vector<std::size_t> res;
+        res.resize(atoms.size());
+        std::iota(res.begin(), res.end(), 0);
+        return res;
+    }
+
     auto constraints = ast::getBodyLiterals<ast::BinaryConstraint>(*clause);
     std::size_t relStratum = sccGraph->getSCC(program->getRelation(*clause));
     auto sccRelations = sccGraph->getInternalRelations(relStratum);
@@ -412,8 +421,6 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
         }
     }
 
-    auto* unsafeClause = const_cast<ast::Clause*>(clause);
-    unsafeClause->clearExecutionPlan();
     std::vector<std::size_t> newOrder;
     assert(cache[N].size() == 1);
     auto& bestPlanTuplesCost = cache[N].begin()->second;
