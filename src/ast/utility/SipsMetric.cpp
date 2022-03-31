@@ -243,7 +243,7 @@ std::vector<double> ProfileUseSips::evaluateCosts(
         // prioritise propositions
         std::size_t arity = atom->getArity();
         if (arity == 0) {
-            cost.push_back(0);
+            cost.push_back(-1);  // cheaper than any non-proposition
             continue;
         }
 
