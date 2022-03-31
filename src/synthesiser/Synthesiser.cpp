@@ -837,7 +837,7 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
                 if (const auto* signedConstant = as<ram::SignedConstant>(constant)) {
                     value = ramBitCast<RamDomain>(signedConstant->getValue());
                 } else if (const auto* stringConstant = as<ram::StringConstant>(constant)) {
-                    value = static_cast<RamDomain>(
+                    value = ramBitCast<RamDomain>(
                             synthesiser.convertSymbol2Idx(stringConstant->getConstant()));
                 } else if (const auto* unsignedConstant = as<ram::UnsignedConstant>(constant)) {
                     value = ramBitCast<RamDomain>(unsignedConstant->getValue());
