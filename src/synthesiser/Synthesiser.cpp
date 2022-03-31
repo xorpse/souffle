@@ -815,7 +815,11 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             const auto* rel = synthesiser.lookup(count.getRelation());
             auto relName = synthesiser.getRelationName(rel);
             auto keys = isa->getSearchSignature(&count);
-            auto indexNumber = isa->getIndexSelection(relName).getLexOrderNum(keys);
+
+            std::size_t indexNumber = 0;
+            if (!keys.empty()) {
+                indexNumber = isa->getIndexSelection(count.getRelation()).getLexOrderNum(keys);
+            }
             auto indexName = relName + "->ind_" + std::to_string(indexNumber);
 
             bool onlyConstants = true;
@@ -864,24 +868,29 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             std::string constants = stringify(constantsStream.str());
 
             std::string profilerText =
-                    (count.isRecursiveRelation() ? "@recursive-count-unique-keys;" + count.getRelation() +
-                                                           ";" + columns + ";" + constants
-                                                 : "@non-recursive-count-unique-keys;" + count.getRelation() +
-                                                           ";" + columns + ";" + constants);
+                    (count.isRecursiveRelation()
+                                    ? stringify("@recursive-count-unique-keys;" + count.getRelation() + ";" +
+                                                columns + ";" + constants)
+                                    : stringify("@non-recursive-count-unique-keys;" + count.getRelation() +
+                                                ";" + columns + ";" + constants));
 
             PRINT_BEGIN_COMMENT(out);
             auto ctxName = "READ_OP_CONTEXT(" + synthesiser.getOpContextName(*rel) + ")";
-
+            out << "{\n";
             out << "std::size_t total = 0;\n";
             out << "std::size_t duplicates = 0;\n";
 
             out << "if (!" << indexName << ".empty()) {\n";
             out << "bool first = true;\n";
             out << "auto prev = *" << indexName << ".begin();\n";
-            out << "for(const auto& env" << identifier << " : " << indexName << ") {\n";
+            out << "for(const auto& tup : " << indexName << ") {\n";
             out << "    bool matchesConstants = true;\n";
             for (auto& [k, constant] : keyConstants) {
-                out << "matchesConstants &= (env" << identifier << "[" << k << "] == " << constant << ");\n";
+                if (rel->getArity() > 6) {
+                    out << "matchesConstants &= (tup[0][" << k << "] == " << constant << ");\n";
+                } else {
+                    out << "matchesConstants &= (tup[" << k << "] == " << constant << ");\n";
+                }
             }
             out << "if (!matchesConstants) {\n";
             out << "    continue;\n";
@@ -890,22 +899,27 @@ void Synthesiser::emitCode(std::ostream& out, const Statement& stmt) {
             out << "else {\n";
             out << "    bool matchesPrev = true;\n";
             for (auto k : count.getKeyColumns()) {
-                out << "matchesPrev &= (env" << identifier << "[" << k << "] == prev[" << k << "]);\n";
+                if (rel->getArity() > 6) {
+                    out << "matchesPrev &= (tup[0][" << k << "] == prev[0][" << k << "]);\n";
+                } else {
+                    out << "matchesPrev &= (tup[" << k << "] == prev[" << k << "]);\n";
+                }
             }
             out << "if (matchesPrev) { ++duplicates; }\n";
             out << "}\n";
-            out << "prev = env" << identifier << "; ++total;\n";
+            out << "prev = tup; ++total;\n";
             out << "\n";
             out << "}\n";
             out << "}\n";
             out << "std::size_t uniqueKeys = (" << (onlyConstants ? "total" : "total - duplicates") << ");\n";
             if (count.isRecursiveRelation()) {
-                out << "ProfileEventSingleton::instance().makeRecursiveCountEvent(" << profilerText
-                    << ", uniqueKeys, iter);\n";
+                out << "ProfileEventSingleton::instance().makeRecursiveCountEvent(\"" << profilerText
+                    << "\", uniqueKeys, iter);\n";
             } else {
-                out << "ProfileEventSingleton::instance().makeNonRecursiveCountEvent(" << profilerText
-                    << ", uniqueKeys);\n";
+                out << "ProfileEventSingleton::instance().makeNonRecursiveCountEvent(\"" << profilerText
+                    << "\", uniqueKeys);\n";
             }
+            out << "}\n";
             PRINT_END_COMMENT(out);
         }
 
