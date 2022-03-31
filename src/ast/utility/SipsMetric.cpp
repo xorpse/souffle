@@ -45,20 +45,6 @@ std::vector<std::size_t> StaticSipsMetric::getReordering(
     (void)version;
     (void)mode;
 
-    // stick to the plan if we have one set
-    auto* plan = clause->getExecutionPlan();
-    if (plan != nullptr) {
-        auto orders = plan->getOrders();
-        if (contains(orders, version)) {
-            // get the imposed order, and change it to start at zero
-            const auto& order = orders.at(version);
-            std::vector<std::size_t> newOrder(order->getOrder().size());
-            std::transform(order->getOrder().begin(), order->getOrder().end(), newOrder.begin(),
-                    [](std::size_t i) -> std::size_t { return i - 1; });
-            return newOrder;
-        }
-    }
-
     BindingStore bindingStore(clause);
     auto atoms = getBodyLiterals<Atom>(*clause);
     std::vector<std::size_t> newOrder(atoms.size());
@@ -96,20 +82,6 @@ SelingerProfileSipsMetric::SelingerProfileSipsMetric(const TranslationUnit& tu) 
 
 std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
         const Clause* clause, std::size_t version, ast2ram::TranslationMode mode) const {
-    // stick to the plan if we have one set
-    auto* plan = clause->getExecutionPlan();
-    if (plan != nullptr) {
-        auto orders = plan->getOrders();
-        if (contains(orders, version)) {
-            // get the imposed order, and change it to start at zero
-            const auto& order = orders.at(version);
-            std::vector<std::size_t> newOrder(order->getOrder().size());
-            std::transform(order->getOrder().begin(), order->getOrder().end(), newOrder.begin(),
-                    [](std::size_t i) -> std::size_t { return i - 1; });
-            return newOrder;
-        }
-    }
-
     auto atoms = ast::getBodyLiterals<ast::Atom>(*clause);
 
     // remember to exit for single atom bodies
