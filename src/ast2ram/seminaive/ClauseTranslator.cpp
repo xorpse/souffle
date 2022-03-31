@@ -693,7 +693,7 @@ std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& cla
     auto atoms = ast::getBodyLiterals<ast::Atom>(clause);
 
     // stick to the plan if we have one set
-    auto* plan = clause->getExecutionPlan();
+    auto* plan = clause.getExecutionPlan();
     if (plan != nullptr) {
         auto orders = plan->getOrders();
         if (contains(orders, version)) {
