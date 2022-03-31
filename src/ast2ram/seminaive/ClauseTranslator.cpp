@@ -691,18 +691,6 @@ Own<ram::Condition> ClauseTranslator::getFunctionalDependencies(const ast::Claus
 
 std::vector<ast::Atom*> ClauseTranslator::getAtomOrdering(const ast::Clause& clause) const {
     auto atoms = ast::getBodyLiterals<ast::Atom>(clause);
-
-    const auto& plan = clause.getExecutionPlan();
-    if (plan == nullptr) {
-        return atoms;
-    }
-
-    // check if there's a plan for the current version
-    auto orders = plan->getOrders();
-    if (!contains(orders, version)) {
-        return atoms;
-    }
-
     auto newOrder = context.getSipsMetric()->getReordering(&clause, version, mode);
     return reorderAtoms(atoms, newOrder);
 }
