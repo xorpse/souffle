@@ -104,7 +104,7 @@ protected:
     }
 
     /** Lookup symbol index */
-    size_t convertSymbol2Idx(const std::string& symbol) const {
+    RamUnsigned convertSymbol2Idx(const std::string& symbol) const {
         auto it = symbolMap.find(symbol);
         if (it != symbolMap.end()) {
             return it->second;
