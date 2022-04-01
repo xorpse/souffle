@@ -50,7 +50,6 @@
 #include "ast/transform/RemoveRedundantRelations.h"
 #include "ast/transform/RemoveRedundantSums.h"
 #include "ast/transform/RemoveRelationCopies.h"
-#include "ast/transform/ReorderLiterals.h"
 #include "ast/transform/ReplaceSingletonVariables.h"
 #include "ast/transform/ResolveAliases.h"
 #include "ast/transform/ResolveAnonymousRecordAliases.h"
@@ -234,6 +233,8 @@ int main(int argc, char** argv) {
         // the empty string if they take none
         // main option, the datalog program itself, has an empty key
         std::vector<MainOption> options{{"", 0, "", "", false, ""},
+                {"auto-schedule", 'a', "FILE", "", false,
+                        "Use profile auto-schedule <FILE> for auto-scheduling."},
                 {"fact-dir", 'F', "DIR", ".", false, "Specify directory for fact files."},
                 {"include-dir", 'I', "DIR", ".", true, "Specify directory for include files."},
                 {"output-dir", 'D', "DIR", ".", false,
@@ -267,6 +268,7 @@ int main(int argc, char** argv) {
                 {"dl-program", 'o', "FILE", "", false,
                         "Generate C++ source code, written to <FILE>, and compile this to a "
                         "binary executable (without executing it)."},
+                {"index-stats", '\x9', "", "", false, "Enable collection of index statistics"},
                 {"live-profile", '\1', "", "", false, "Enable live profiling."},
                 {"profile", 'p', "FILE", "", false, "Enable profiling, and write profile data to <FILE>."},
                 {"profile-use", 'u', "FILE", "", false,
@@ -397,6 +399,13 @@ int main(int argc, char** argv) {
         if (Global::config().has("live-profile") && !Global::config().has("profile")) {
             Global::config().set("profile");
         }
+
+        /* if index-stats is set then check that the profiler is also set */
+        if (Global::config().has("index-stats")) {
+            if (!Global::config().has("profile"))
+                throw std::runtime_error("must be profiling to collect index-stats");
+        }
+
     } catch (std::exception& e) {
         std::cerr << e.what() << std::endl;
         exit(EXIT_FAILURE);
@@ -573,11 +582,10 @@ int main(int argc, char** argv) {
                     mk<ast::transform::RemoveRedundantRelationsTransformer>())),
             mk<ast::transform::RemoveRelationCopiesTransformer>(), std::move(partitionPipeline),
             std::move(equivalencePipeline), mk<ast::transform::RemoveRelationCopiesTransformer>(),
-            std::move(magicPipeline), mk<ast::transform::ReorderLiteralsTransformer>(),
-            mk<ast::transform::RemoveEmptyRelationsTransformer>(),
+            std::move(magicPipeline), mk<ast::transform::RemoveEmptyRelationsTransformer>(),
             mk<ast::transform::AddNullariesToAtomlessAggregatesTransformer>(),
-            mk<ast::transform::ReorderLiteralsTransformer>(), mk<ast::transform::ExecutionPlanChecker>(),
-            std::move(provenancePipeline), mk<ast::transform::IOAttributesTransformer>());
+            mk<ast::transform::ExecutionPlanChecker>(), std::move(provenancePipeline),
+            mk<ast::transform::IOAttributesTransformer>());
 
     // Disable unwanted transformations
     if (Global::config().has("disable-transformers")) {

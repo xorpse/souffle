@@ -30,10 +30,14 @@ namespace souffle::ast::analysis {
  * Run analysis, i.e., retrieve profile information
  */
 void ProfileUseAnalysis::run(const TranslationUnit&) {
+    std::string filename;
     if (Global::config().has("profile-use")) {
-        std::string filename = Global::config().get("profile-use");
-        profile::Reader(filename, programRun).processFile();
+        filename = Global::config().get("profile-use");
+    } else if (Global::config().has("auto-schedule")) {
+        filename = Global::config().get("auto-schedule");
     }
+    reader = mk<profile::Reader>(filename, programRun);
+    reader->processFile();
 }
 
 /**
@@ -57,6 +61,20 @@ std::size_t ProfileUseAnalysis::getRelationSize(const QualifiedName& rel) const 
     } else {
         return std::numeric_limits<std::size_t>::max();
     }
+}
+
+bool ProfileUseAnalysis::hasAutoSchedulerStats() const {
+    return reader->hasAutoSchedulerStats();
+}
+
+std::size_t ProfileUseAnalysis::getNonRecursiveUniqueKeys(
+        const std::string& rel, const std::string& attributes, const std::string& constants) const {
+    return reader->getNonRecursiveCountUniqueKeys(rel, attributes, constants);
+}
+
+std::size_t ProfileUseAnalysis::getRecursiveUniqueKeys(
+        const std::string& rel, const std::string& attributes, const std::string& constants) const {
+    return reader->getRecursiveCountUniqueKeys(rel, attributes, constants);
 }
 
 }  // namespace souffle::ast::analysis
