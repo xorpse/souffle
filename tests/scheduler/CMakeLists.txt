@@ -10,21 +10,22 @@ function(SOUFFLE_ADD_SCHEDULER_TEST TEST_NAME)
     set(INPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${TEST_NAME}")
     set(FACTS_DIR "${INPUT_DIR}/facts")
     set(OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}")
-    set(QUALIFIED_TEST_NAME scheduler/${TEST_NAME})
-    set(FIXTURE_NAME ${QUALIFIED_TEST_NAME}_fixture)
     set(TEST_LABELS "scheduler;positive;integration")
 
     # Setup test dir
-    set(QUALIFIED_TEST_NAME scheduler/${TEST_NAME}_stats_collection)
+    set(QUALIFIED_TEST_NAME scheduler/${TEST_NAME})
+    set(FIXTURE_NAME ${QUALIFIED_TEST_NAME}_fixture)
     souffle_setup_integration_test_dir(TEST_NAME ${TEST_NAME}
                                        QUALIFIED_TEST_NAME ${QUALIFIED_TEST_NAME}
                                        DATA_CHECK_DIR ${INPUT_DIR}
                                        OUTPUT_DIR ${OUTPUT_DIR}
                                        FIXTURE_NAME ${FIXTURE_NAME}
                                        TEST_LABELS ${TEST_LABELS})
+
+    set(QUALIFIED_TEST_NAME scheduler/${TEST_NAME}_stats_collection)
     # Run stats collection
     set(SOUFFLE_PARAMS "-p" "${OUTPUT_DIR}/${TEST_NAME}.prof" "--index-stats")
-    add_test(NAME ${QUALIFIED_TEST_NAME}_stats_collection
+    add_test(NAME ${QUALIFIED_TEST_NAME}
       COMMAND
       ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/redirect.py
         --out ${TEST_NAME}.out
@@ -35,7 +36,7 @@ function(SOUFFLE_ADD_SCHEDULER_TEST TEST_NAME)
         "${INPUT_DIR}/${TEST_NAME}.dl"
       COMMAND_EXPAND_LISTS)
 
-    set_tests_properties(${QUALIFIED_TEST_NAME}_stats_collection PROPERTIES
+    set_tests_properties(${QUALIFIED_TEST_NAME} PROPERTIES
       WORKING_DIRECTORY "${OUTPUT_DIR}"
       LABELS "${TEST_LABELS}"
       FIXTURES_SETUP ${FIXTURE_NAME}_stats_collection
@@ -90,4 +91,6 @@ function(SOUFFLE_ADD_SCHEDULER_TEST TEST_NAME)
                         TEST_LABELS ${TEST_LABELS})
 endfunction()
 
-souffle_add_scheduler_test(functionality)
+if (NOT MSVC)
+    souffle_add_scheduler_test(functionality)
+endif()
