@@ -25,9 +25,6 @@ function(SOUFFLE_ADD_SCHEDULER_TEST TEST_NAME)
     set(QUALIFIED_TEST_NAME scheduler/${TEST_NAME}_stats_collection)
     # Run stats collection
     set(SOUFFLE_PARAMS "-p" "${OUTPUT_DIR}/${TEST_NAME}.prof" "--index-stats")
-    if (MSVC)
-        list(PREPEND SOUFFLE_PARAMS "--preprocessor" "cl -nologo -TC -E")
-    endif()
     add_test(NAME ${QUALIFIED_TEST_NAME}
       COMMAND
       ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/redirect.py
@@ -62,9 +59,6 @@ function(SOUFFLE_ADD_SCHEDULER_TEST TEST_NAME)
     # Run scheduler
     set(QUALIFIED_TEST_NAME scheduler/${TEST_NAME}_auto_scheduler)
     set(SOUFFLE_PARAMS "--auto-schedule" "${OUTPUT_DIR}/${TEST_NAME}.prof" "-c")
-    if (MSVC)
-        list(PREPEND SOUFFLE_PARAMS "--preprocessor" "cl -nologo -TC -E")
-    endif()
     add_test(NAME ${QUALIFIED_TEST_NAME}
       COMMAND
       ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/redirect.py
@@ -97,4 +91,6 @@ function(SOUFFLE_ADD_SCHEDULER_TEST TEST_NAME)
                         TEST_LABELS ${TEST_LABELS})
 endfunction()
 
-souffle_add_scheduler_test(functionality)
+if (NOT MSVC)
+    souffle_add_scheduler_test(functionality)
+endif()
