@@ -41,7 +41,6 @@
 #include <optional>
 #include <set>
 #include <unordered_map>
-#include <unordered_set>
 
 namespace souffle::ast::analysis {
 
@@ -49,7 +48,8 @@ const analysis::PowerSet& UniqueKeysAnalysis::getSubsets(std::size_t N, std::siz
     if (cache.count({N, K})) {
         return cache.at({N, K});
     }
-    // result of all combinations
+
+    // this powerset represents all possible subsets of cardinality K of the set {1,...,N}
     analysis::PowerSet res;
 
     // specific combination
@@ -60,9 +60,11 @@ const analysis::PowerSet& UniqueKeysAnalysis::getSubsets(std::size_t N, std::siz
     std::string bitmask(K, 1);  // K leading 1's
     bitmask.resize(N, 0);       // N-K trailing 0's
 
-    // generate the combination while there are combinations to go
+    // generate the next permutation of the bitmask
     do {
         cur.clear();
+
+        // construct the subset using the set bits in the bitmask
         for (std::size_t i = 0; i < N; ++i)  // [0..N-1] integers
         {
             if (bitmask[i]) {
@@ -159,26 +161,35 @@ analysis::StratumUniqueKeys UniqueKeysAnalysis::computeRuleVersionStatements(
         return getConcreteRelationName(atom->getQualifiedName());
     };
 
-    std::unordered_set<std::size_t> recursiveInCurrentStratum;
+    using AtomIdx = std::size_t;
+    using AtomSet = std::set<std::size_t>;
+
+    AtomSet recursiveInCurrentStratum;
     auto atoms = ast::getBodyLiterals<ast::Atom>(clause);
     auto constraints = ast::getBodyLiterals<ast::BinaryConstraint>(clause);
 
     for (auto* a : sccAtoms) {
-        for (std::size_t i = 0; i < atoms.size(); ++i) {
+        for (AtomIdx i = 0; i < atoms.size(); ++i) {
             if (*atoms[i] == *a) {
                 recursiveInCurrentStratum.insert(i);
             }
         }
     }
 
+    using VarName = std::string;
+    using VarSet = std::set<VarName>;
+    using ArgIdx = std::size_t;
+
     // map variable name to constants if possible
-    std::unordered_map<std::string, ast::Constant*> varToConstant;
+    std::unordered_map<VarName, ast::Constant*> varToConstant;
 
     // map variables to necessary variables on other side of the equality
     // i.e. x = y + z we should map x -> { y, z }
-    std::unordered_map<std::string, std::set<std::string>> varToOtherVars;
+    std::unordered_map<VarName, VarSet> varToOtherVars;
 
-    std::unordered_map<std::string, std::pair<std::set<std::string>, std::set<std::string>>> ineqToUpperLower;
+    // map variable name to the lower and upper bounds of the inequality
+    // i.e. EA < Addr < EA + Size we should map Addr -> { { EA }, { EA, Size } }
+    std::unordered_map<VarName, std::pair<VarSet, VarSet>> ineqToUpperLower;
 
     for (auto* constraint : constraints) {
         auto* lhs = constraint->getLHS();
@@ -186,7 +197,7 @@ analysis::StratumUniqueKeys UniqueKeysAnalysis::computeRuleVersionStatements(
 
         if (isIneqConstraint(constraint->getBaseOperator())) {
             if (auto* var = as<ast::Variable>(lhs)) {
-                std::set<std::string> otherVars;
+                VarSet otherVars;
                 visit(rhs, [&](const ast::Variable& v) { otherVars.insert(v.getName()); });
                 if (isLessThan(constraint->getBaseOperator()) || isLessEqual(constraint->getBaseOperator())) {
                     ineqToUpperLower[var->getName()].second = otherVars;
@@ -198,7 +209,7 @@ analysis::StratumUniqueKeys UniqueKeysAnalysis::computeRuleVersionStatements(
             }
 
             if (auto* var = as<ast::Variable>(rhs)) {
-                std::set<std::string> otherVars;
+                VarSet otherVars;
                 visit(lhs, [&](const ast::Variable& v) { otherVars.insert(v.getName()); });
                 if (isLessThan(constraint->getBaseOperator()) || isLessEqual(constraint->getBaseOperator())) {
                     ineqToUpperLower[var->getName()].first = otherVars;
@@ -226,14 +237,14 @@ analysis::StratumUniqueKeys UniqueKeysAnalysis::computeRuleVersionStatements(
         }
 
         if (auto* var = as<ast::Variable>(lhs)) {
-            std::set<std::string> otherVars;
+            VarSet otherVars;
             visit(rhs, [&](const ast::Variable& v) { otherVars.insert(v.getName()); });
             varToOtherVars[var->getName()] = otherVars;
             continue;
         }
 
         if (auto* var = as<ast::Variable>(rhs)) {
-            std::set<std::string> otherVars;
+            VarSet otherVars;
             visit(lhs, [&](const ast::Variable& v) { otherVars.insert(v.getName()); });
             varToOtherVars[var->getName()] = otherVars;
             continue;
@@ -250,27 +261,24 @@ analysis::StratumUniqueKeys UniqueKeysAnalysis::computeRuleVersionStatements(
         }
     }
 
-    std::unordered_map<std::size_t, std::set<std::string>> atomIdxToGroundedVars;
-    for (std::size_t i = 0; i < atoms.size(); ++i) {
-        std::set<std::string> groundedVars;
+    std::unordered_map<AtomIdx, VarSet> atomIdxToGroundedVars;
+    for (AtomIdx i = 0; i < atoms.size(); ++i) {
+        VarSet groundedVars;
         visit(*atoms[i], [&](const ast::Variable& v) { groundedVars.insert(v.getName()); });
         atomIdxToGroundedVars[i] = groundedVars;
     }
 
-    // #atoms -> variables to join
-    std::map<std::size_t, std::set<std::set<std::size_t>>> cache;
-
-    std::unordered_map<std::size_t, std::map<std::size_t, const ram::Expression*>> atomToIdxConstants;
+    std::unordered_map<AtomIdx, std::map<ArgIdx, const ram::Expression*>> atomToIdxConstants;
 
     VecOwn<const ram::Expression> constants;
 
-    std::size_t atomIdx = 0;
+    AtomIdx atomIdx = 0;
     for (auto* atom : atoms) {
         bool isRecursive = recursiveInCurrentStratum.count(atomIdx) > 0;
         std::string name = getClauseAtomName(clause, atom, isRecursive, mode);
-        std::map<std::size_t, const ram::Expression*> idxConstant;
+        std::map<ArgIdx, const ram::Expression*> idxConstant;
 
-        std::size_t i = 0;
+        ArgIdx varIdx = 0;
         for (auto* argument : atom->getArguments()) {
             // if we have a variable and a constraint of the form x = 2 then treat x as 2
             if (auto* var = as<ast::Variable>(argument)) {
@@ -281,31 +289,28 @@ analysis::StratumUniqueKeys UniqueKeysAnalysis::computeRuleVersionStatements(
 
             if (auto* constant = as<ast::Constant>(argument)) {
                 auto ramConstant = translateConstant(*constant);
-                idxConstant[i] = ramConstant.get();
+                idxConstant[varIdx] = ramConstant.get();
                 constants.push_back(std::move(ramConstant));
             }
-            ++i;
+            ++varIdx;
         }
 
         atomToIdxConstants[atomIdx] = std::move(idxConstant);
-
-        // store the sets of size 1
-        cache[1].insert({atomIdx});
         ++atomIdx;
     }
 
     // for each element in the atom
-    for (std::size_t i = 0; i < atoms.size(); ++i) {
+    for (AtomIdx i = 0; i < atoms.size(); ++i) {
         // construct the set S \ S[i] and S[i]
-        std::unordered_set<std::size_t> otherAtoms;
-        for (std::size_t j = 0; j < atoms.size(); ++j) {
+        AtomSet otherAtoms;
+        for (AtomIdx j = 0; j < atoms.size(); ++j) {
             if (i != j) {
                 otherAtoms.insert(j);
             }
         }
 
         // construct the set of variables that can be used for an indexed scan on this atom
-        std::unordered_set<std::string> varDependencies;
+        VarSet varDependencies;
         for (const auto& arg : atoms[i]->getArguments()) {
             if (const auto* var = as<const ast::Variable>(arg)) {
                 varDependencies.insert(var->getName());
@@ -315,8 +320,8 @@ analysis::StratumUniqueKeys UniqueKeysAnalysis::computeRuleVersionStatements(
         }
 
         // remove atoms which don't ground any variables in the current atom
-        std::unordered_set<std::size_t> toRemove;
-        for (std::size_t atomIdx : otherAtoms) {
+        AtomSet toRemove;
+        for (AtomIdx atomIdx : otherAtoms) {
             auto& varsGroundedByAtom = atomIdxToGroundedVars[atomIdx];
             bool requiredAtom = std::any_of(varsGroundedByAtom.begin(), varsGroundedByAtom.end(),
                     [&varDependencies](const std::string& var) { return varDependencies.count(var) > 0; });
@@ -331,12 +336,12 @@ analysis::StratumUniqueKeys UniqueKeysAnalysis::computeRuleVersionStatements(
 
         // Next step is to remove atoms which ground the same set of variables in the current atom
         toRemove.clear();
-        std::set<std::set<std::string>> relevantGroundedVars;
-        std::unordered_map<std::size_t, std::set<std::string>> atomIdxToRelevantGroundedVars;
-        for (std::size_t atomIdx : otherAtoms) {
-            std::set<std::string> groundedVars;
+        std::set<VarSet> relevantGroundedVars;
+        std::unordered_map<AtomIdx, VarSet> atomIdxToRelevantGroundedVars;
+        for (AtomIdx atomIdx : otherAtoms) {
+            VarSet groundedVars;
             auto& varsGroundedByAtom = atomIdxToGroundedVars[atomIdx];
-            for (const std::string& var : varsGroundedByAtom) {
+            for (const auto& var : varsGroundedByAtom) {
                 if (varDependencies.count(var) > 0) {
                     groundedVars.insert(var);
                 }
@@ -352,14 +357,15 @@ analysis::StratumUniqueKeys UniqueKeysAnalysis::computeRuleVersionStatements(
         for (auto idx : toRemove) {
             otherAtoms.erase(idx);
         }
-        std::size_t N = otherAtoms.size();
-        for (std::size_t K = 0; K <= N; ++K) {
+
+        auto N = otherAtoms.size();
+        for (AtomIdx K = 0; K <= N; ++K) {
             for (auto& subset : getSubsets(N, K)) {
                 auto* atom = atoms[i];
                 // do set union of the atoms
 
-                std::set<std::string> providedVars;
-                for (std::size_t x : subset) {
+                VarSet providedVars;
+                for (auto x : subset) {
                     auto it = otherAtoms.begin();
                     std::advance(it, x);
                     auto atomIdx = *it;
@@ -368,10 +374,10 @@ analysis::StratumUniqueKeys UniqueKeysAnalysis::computeRuleVersionStatements(
                 }
 
                 // construct the node
-                std::vector<std::size_t> joinColumns;
+                std::vector<ArgIdx> joinColumns;
                 const auto& args = atom->getArguments();
                 std::size_t numBound = 0;
-                for (std::size_t argIdx = 0; argIdx < args.size(); ++argIdx) {
+                for (ArgIdx argIdx = 0; argIdx < args.size(); ++argIdx) {
                     auto* arg = args[argIdx];
                     // if we have a constant or var = constant then we ignore
                     if (atomToIdxConstants.at(i).count(argIdx) > 0) {

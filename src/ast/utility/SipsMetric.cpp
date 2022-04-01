@@ -132,24 +132,33 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
         return prof->getNonRecursiveUniqueKeys(rel.toString(), attributes, constants);
     };
 
-    std::unordered_set<std::size_t> recursiveInCurrentStratum;
+    using AtomIdx = std::size_t;
+    using AtomSet = std::set<std::size_t>;
+
+    AtomSet recursiveInCurrentStratum;
 
     for (auto* a : sccAtoms) {
-        for (std::size_t i = 0; i < atoms.size(); ++i) {
+        for (AtomIdx i = 0; i < atoms.size(); ++i) {
             if (*atoms[i] == *a) {
                 recursiveInCurrentStratum.insert(i);
             }
         }
     }
 
+    using VarName = std::string;
+    using VarSet = std::set<VarName>;
+    using ArgIdx = std::size_t;
+
     // map variable name to constants if possible
-    std::unordered_map<std::string, ast::Constant*> varToConstant;
+    std::unordered_map<VarName, ast::Constant*> varToConstant;
 
     // map variables to necessary variables on other side of the equality
     // i.e. x = y + z we should map x -> { y, z }
-    std::unordered_map<std::string, std::set<std::string>> varToOtherVars;
+    std::unordered_map<VarName, VarSet> varToOtherVars;
 
-    std::unordered_map<std::string, std::pair<std::set<std::string>, std::set<std::string>>> ineqToUpperLower;
+    // map variable name to the lower and upper bounds of the inequality
+    // i.e. EA < Addr < EA + Size we should map Addr -> { { EA }, { EA, Size } }
+    std::unordered_map<VarName, std::pair<VarSet, VarSet>> ineqToUpperLower;
 
     for (auto* constraint : constraints) {
         auto* lhs = constraint->getLHS();
@@ -157,7 +166,7 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
 
         if (isIneqConstraint(constraint->getBaseOperator())) {
             if (auto* var = as<ast::Variable>(lhs)) {
-                std::set<std::string> otherVars;
+                VarSet otherVars;
                 visit(rhs, [&](const ast::Variable& v) { otherVars.insert(v.getName()); });
                 if (isLessThan(constraint->getBaseOperator()) || isLessEqual(constraint->getBaseOperator())) {
                     ineqToUpperLower[var->getName()].second = otherVars;
@@ -169,7 +178,7 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
             }
 
             if (auto* var = as<ast::Variable>(rhs)) {
-                std::set<std::string> otherVars;
+                VarSet otherVars;
                 visit(lhs, [&](const ast::Variable& v) { otherVars.insert(v.getName()); });
                 if (isLessThan(constraint->getBaseOperator()) || isLessEqual(constraint->getBaseOperator())) {
                     ineqToUpperLower[var->getName()].first = otherVars;
@@ -197,14 +206,14 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
         }
 
         if (auto* var = as<ast::Variable>(lhs)) {
-            std::set<std::string> otherVars;
+            VarSet otherVars;
             visit(rhs, [&](const ast::Variable& v) { otherVars.insert(v.getName()); });
             varToOtherVars[var->getName()] = otherVars;
             continue;
         }
 
         if (auto* var = as<ast::Variable>(rhs)) {
-            std::set<std::string> otherVars;
+            VarSet otherVars;
             visit(lhs, [&](const ast::Variable& v) { otherVars.insert(v.getName()); });
             varToOtherVars[var->getName()] = otherVars;
             continue;
@@ -221,24 +230,24 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
         }
     }
 
-    std::unordered_map<std::size_t, std::set<std::string>> atomIdxToGroundedVars;
-    for (std::size_t i = 0; i < atoms.size(); ++i) {
-        std::set<std::string> groundedVars;
+    std::unordered_map<AtomIdx, VarSet> atomIdxToGroundedVars;
+    for (AtomIdx i = 0; i < atoms.size(); ++i) {
+        VarSet groundedVars;
         visit(*atoms[i], [&](const ast::Variable& v) { groundedVars.insert(v.getName()); });
         atomIdxToGroundedVars[i] = groundedVars;
     }
 
     // #atoms -> variables to join -> plan, cost
-    std::map<std::size_t, std::map<std::set<std::size_t>, PlanTuplesCost>> cache;
+    std::map<std::size_t, std::map<AtomSet, PlanTuplesCost>> cache;
 
-    std::unordered_map<std::size_t, std::map<std::size_t, std::string>> atomToIdxConstants;
+    std::unordered_map<AtomIdx, std::map<ArgIdx, std::string>> atomToIdxConstants;
 
-    std::size_t atomIdx = 0;
+    AtomIdx atomIdx = 0;
     for (auto* atom : atoms) {
         std::string name = getClauseAtomName(*clause, atom, sccAtoms, version, mode);
-        std::map<std::size_t, std::string> idxConstant;
+        std::map<ArgIdx, std::string> idxConstant;
 
-        std::size_t i = 0;
+        ArgIdx varIdx = 0;
         for (auto* argument : atom->getArguments()) {
             // if we have a variable and a constraint of the form x = 2 then treat x as 2
             if (auto* var = as<ast::Variable>(argument)) {
@@ -251,34 +260,34 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
                 std::stringstream ss;
                 ss << *translateConstant(*constant);
                 std::string constantValue = ss.str();
-                idxConstant[i] = constantValue;
+                idxConstant[varIdx] = constantValue;
             }
-            ++i;
+            ++varIdx;
         }
 
         atomToIdxConstants[atomIdx] = idxConstant;
 
         // start by storing the access cost for each individual relation
-        std::vector<std::size_t> empty;
+        std::vector<AtomIdx> empty;
         bool isRecursive = recursiveInCurrentStratum.count(atomIdx) > 0;
         std::size_t tuples = getRelationSize(isRecursive, name, empty, idxConstant);
         double cost = static_cast<double>(tuples * atom->getArity());
-        std::set<std::size_t> singleton = {atomIdx};
-        std::vector<std::size_t> plan = {atomIdx};
+        AtomSet singleton = {atomIdx};
+        std::vector<AtomIdx> plan = {atomIdx};
         cache[1].insert(std::make_pair(singleton, PlanTuplesCost(plan, tuples, cost)));
         ++atomIdx;
     }
 
     // do selinger's algorithm
-    std::size_t N = atoms.size();
+    auto N = atoms.size();
     for (std::size_t K = 2; K <= N; ++K) {
         // for each K sized subset
         for (auto& subset : getSubsets(N, K)) {
             // remove an entry from the subset
-            for (std::size_t i = 0; i < subset.size(); ++i) {
+            for (AtomIdx i = 0; i < subset.size(); ++i) {
                 // construct the set S \ S[i]
-                std::set<std::size_t> smallerSubset;
-                for (std::size_t j = 0; j < subset.size(); ++j) {
+                AtomSet smallerSubset;
+                for (AtomIdx j = 0; j < subset.size(); ++j) {
                     if (i == j) {
                         continue;
                     }
@@ -292,19 +301,19 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
                 auto oldCost = planTuplesCost.cost;
 
                 // compute the grounded variables from the subset
-                std::set<std::string> groundedVariablesFromSubset;
+                VarSet groundedVariablesFromSubset;
                 for (auto idx : smallerSubset) {
                     auto& varsGroundedByAtom = atomIdxToGroundedVars[idx];
                     groundedVariablesFromSubset.insert(varsGroundedByAtom.begin(), varsGroundedByAtom.end());
                 }
 
                 // compute new cost
-                std::size_t atomIdx = subset[i];
+                AtomIdx atomIdx = subset[i];
                 auto* atom = atoms[atomIdx];
-                std::vector<std::size_t> joinColumns;
+                std::vector<ArgIdx> joinColumns;
                 const auto& args = atom->getArguments();
                 std::size_t numBound = 0;
-                for (std::size_t argIdx = 0; argIdx < args.size(); ++argIdx) {
+                for (ArgIdx argIdx = 0; argIdx < args.size(); ++argIdx) {
                     auto* arg = args[argIdx];
                     // if we have a constant or var = constant then we ignore
                     if (atomToIdxConstants[atomIdx].count(argIdx) > 0) {
@@ -341,7 +350,7 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
                 }
 
                 bool isRecursive = recursiveInCurrentStratum.count(atomIdx) > 0;
-                std::vector<std::size_t> empty;
+                std::vector<ArgIdx> empty;
                 double expectedTuples = 0;
 
                 if (numBound == atom->getArity()) {
@@ -361,11 +370,6 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
                         bool normalize = (uniqueKeys > 0);
                         expectedTuples =
                                 static_cast<double>(relSizeWithConstants) / (normalize ? uniqueKeys : 1);
-
-                        std::vector<std::size_t> dummy;
-                        for (auto x : oldPlan) {
-                            dummy.push_back(x);
-                        }
                     }
                 }
 
@@ -376,11 +380,11 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
                 double newCost = oldCost + newTuples * atom->getArity();
 
                 // calculate new plan
-                std::vector<std::size_t> newPlan(oldPlan.begin(), oldPlan.end());
+                std::vector<AtomIdx> newPlan(oldPlan.begin(), oldPlan.end());
                 newPlan.push_back(atomIdx);
 
                 // if no plan then insert it
-                std::set<std::size_t> currentSet(subset.begin(), subset.end());
+                AtomSet currentSet(subset.begin(), subset.end());
                 if (cache[K].count(currentSet) == 0) {
                     cache[K].insert(std::make_pair(currentSet, PlanTuplesCost(newPlan, newTuples, newCost)));
                 }
@@ -393,11 +397,11 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
         }
     }
 
-    std::vector<std::size_t> newOrder;
+    std::vector<AtomIdx> newOrder;
     assert(cache[N].size() == 1);
     auto& bestPlanTuplesCost = cache[N].begin()->second;
     auto& bestPlan = bestPlanTuplesCost.plan;
-    for (std::size_t elem : bestPlan) {
+    for (AtomIdx elem : bestPlan) {
         newOrder.push_back(elem);
     }
 
@@ -481,10 +485,10 @@ const ast::PowerSet& SelingerProfileSipsMetric::getSubsets(std::size_t N, std::s
     if (cache.count({N, K})) {
         return cache.at({N, K});
     }
-    // result of all combinations
+    // this powerset represents all possible subsets of cardinality K of the set {1,...,N}
     ast::PowerSet res;
 
-    // specific combination
+    // generate the next permutation of the bitmask
     std::vector<std::size_t> cur;
     cur.reserve(K);
 
@@ -495,6 +499,8 @@ const ast::PowerSet& SelingerProfileSipsMetric::getSubsets(std::size_t N, std::s
     // generate the combination while there are combinations to go
     do {
         cur.clear();
+
+        // construct the subset using the set bits in the bitmask
         for (std::size_t i = 0; i < N; ++i)  // [0..N-1] integers
         {
             if (bitmask[i]) {
