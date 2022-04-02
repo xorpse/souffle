@@ -53,6 +53,7 @@ std::vector<std::size_t> StaticSipsMetric::getReordering(
     while (numAdded < atoms.size()) {
         // grab the index of the next atom, based on the SIPS function
         const auto& costs = evaluateCosts(atoms, bindingStore);
+        assert(atoms.size() == costs.size() && "each atom should have exactly one cost");
         std::size_t minIdx = static_cast<std::size_t>(
                 std::distance(costs.begin(), std::min_element(costs.begin(), costs.end())));
         const auto* nextAtom = atoms[minIdx];

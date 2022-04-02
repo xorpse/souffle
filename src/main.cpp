@@ -532,7 +532,8 @@ int main(int argc, char** argv) {
                     mk<ast::transform::RemoveRedundantRelationsTransformer>());
 
     // Magic-Set pipeline
-    auto magicPipeline = mk<ast::transform::PipelineTransformer>(mk<ast::transform::MagicSetTransformer>(),
+    auto magicPipeline = mk<ast::transform::PipelineTransformer>(
+            mk<ast::transform::ExpandEqrelsTransformer>(), mk<ast::transform::MagicSetTransformer>(),
             mk<ast::transform::ResolveAliasesTransformer>(),
             mk<ast::transform::RemoveRelationCopiesTransformer>(),
             mk<ast::transform::RemoveEmptyRelationsTransformer>(),
