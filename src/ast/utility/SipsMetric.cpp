@@ -533,8 +533,6 @@ std::unique_ptr<SipsMetric> SipsMetric::create(const std::string& heuristic, con
         return mk<LeastFreeSips>();
     else if (heuristic == "least-free-vars")
         return mk<LeastFreeVarsSips>();
-    else if (heuristic == "profile-use")
-        return mk<ProfileUseSips>(tu.getAnalysis<analysis::ProfileUseAnalysis>());
     else if (heuristic == "input")
         return mk<InputSips>(tu.getProgram(), tu.getAnalysis<analysis::IOTypeAnalysis>());
 
@@ -682,35 +680,6 @@ std::vector<double> LeastFreeVarsSips::evaluateCosts(
             }
         });
         cost.push_back((double)freeVars.size());
-    }
-    return cost;
-}
-
-std::vector<double> ProfileUseSips::evaluateCosts(
-        const std::vector<Atom*> atoms, const BindingStore& bindingStore) const {
-    // Goal: reorder based on the given profiling information
-    // Metric: cost(atom_R) = log(|atom_R|) * #free/#args
-    //         - exception: propositions are prioritised
-    std::vector<double> cost;
-    for (const auto* atom : atoms) {
-        if (atom == nullptr) {
-            cost.push_back(std::numeric_limits<double>::max());
-            continue;
-        }
-
-        // prioritise propositions
-        std::size_t arity = atom->getArity();
-        if (arity == 0) {
-            cost.push_back(-1);  // cheaper than any non-proposition
-            continue;
-        }
-
-        // calculate log(|R|) * #free/#args
-        std::size_t numBound = bindingStore.numBoundArguments(atom);
-        std::size_t numFree = arity - numBound;
-        double value = log(profileUse.getRelationSize(atom->getQualifiedName()));
-        value *= (numFree * 1.0) / arity;
-        cost.push_back(value);
     }
     return cost;
 }

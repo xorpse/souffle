@@ -271,8 +271,6 @@ int main(int argc, char** argv) {
                 {"index-stats", '\x9', "", "", false, "Enable collection of index statistics"},
                 {"live-profile", '\1', "", "", false, "Enable live profiling."},
                 {"profile", 'p', "FILE", "", false, "Enable profiling, and write profile data to <FILE>."},
-                {"profile-use", 'u', "FILE", "", false,
-                        "Use profile log-file <FILE> for profile-guided optimization."},
                 {"profile-frequency", '\2', "", "", false, "Enable the frequency counter in the profiler."},
                 {"debug-report", 'r', "FILE", "", false, "Write HTML debug report to <FILE>."},
                 {"pragma", 'P', "OPTIONS", "", true, "Set pragma options."},
