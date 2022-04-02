@@ -31,9 +31,7 @@ namespace souffle::ast::analysis {
  */
 void ProfileUseAnalysis::run(const TranslationUnit&) {
     std::string filename;
-    if (Global::config().has("profile-use")) {
-        filename = Global::config().get("profile-use");
-    } else if (Global::config().has("auto-schedule")) {
+    if (Global::config().has("auto-schedule")) {
         filename = Global::config().get("auto-schedule");
     }
     reader = mk<profile::Reader>(filename, programRun);
