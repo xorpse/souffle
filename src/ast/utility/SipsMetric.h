@@ -180,23 +180,6 @@ protected:
             const std::vector<Atom*> atoms, const BindingStore& bindingStore) const override;
 };
 
-/**
- * Goal: reorder based on the given profiling information
- * Metric: cost(atom_R) = log(|atom_R|) * #free/#args
- *         - exception: propositions are prioritised
- */
-class ProfileUseSips : public StaticSipsMetric {
-public:
-    ProfileUseSips(const analysis::ProfileUseAnalysis& profileUse) : profileUse(profileUse) {}
-
-protected:
-    std::vector<double> evaluateCosts(
-            const std::vector<Atom*> atoms, const BindingStore& bindingStore) const override;
-
-private:
-    const analysis::ProfileUseAnalysis& profileUse;
-};
-
 /** Goal: prioritise (1) all-bound, then (2) input, and then (3) left-most */
 class InputSips : public StaticSipsMetric {
 public:
