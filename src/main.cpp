@@ -210,6 +210,8 @@ int main(int argc, char** argv) {
     /* Time taking for overall runtime */
     auto souffle_start = std::chrono::high_resolution_clock::now();
 
+    std::string versionFooter;
+
     /* have all to do with command line arguments in its own scope, as these are accessible through the global
      * configuration only */
     try {
@@ -224,10 +226,12 @@ int main(int argc, char** argv) {
         footer << "----------------------------------------------------------------------------" << std::endl;
         footer << "Version: " << PACKAGE_VERSION << "" << std::endl;
         footer << "----------------------------------------------------------------------------" << std::endl;
-        footer << "Copyright (c) 2016-21 The Souffle Developers." << std::endl;
+        footer << "Copyright (c) 2016-22 The Souffle Developers." << std::endl;
         footer << "Copyright (c) 2013-16 Oracle and/or its affiliates." << std::endl;
         footer << "All rights reserved." << std::endl;
         footer << "============================================================================" << std::endl;
+
+        versionFooter = footer.str();
 
         // command line options, the environment will be filled with the arguments passed to them, or
         // the empty string if they take none
@@ -295,7 +299,7 @@ int main(int argc, char** argv) {
                 {"help", 'h', "", "", false, "Display this help message."},
                 {"legacy", '\6', "", "", false, "Enable legacy support."},
                 {"preprocessor", '\7', "CMD", "", false, "C preprocessor to use."}};
-        Global::config().processArgs(argc, argv, header.str(), footer.str(), options);
+        Global::config().processArgs(argc, argv, header.str(), versionFooter, options);
 
         // ------ command line arguments -------------
 
@@ -318,11 +322,7 @@ int main(int argc, char** argv) {
 
         /* for the version option, if given print the version text then exit */
         if (Global::config().has("version")) {
-            std::cout << "Souffle: " << PACKAGE_VERSION;
-            std::cout << "(" << RAM_DOMAIN_SIZE << "bit Domains)";
-            std::cout << std::endl;
-            std::cout << "Copyright (c) 2016-19 The Souffle Developers." << std::endl;
-            std::cout << "Copyright (c) 2013-16 Oracle and/or its affiliates." << std::endl;
+            std::cout << versionFooter << std::endl;
             return 0;
         }
         Global::config().set("version", PACKAGE_VERSION);
