@@ -59,8 +59,10 @@ public:
     std::size_t getNonRecursiveUniqueKeys(
             const std::string& rel, const std::string& attributes, const std::string& constants) const;
 
-    std::size_t getRecursiveUniqueKeys(
-            const std::string& rel, const std::string& attributes, const std::string& constants) const;
+    std::size_t getRecursiveUniqueKeys(const std::string& rel, const std::string& attributes,
+            const std::string& constants, const std::string& iteration) const;
+
+    std::size_t getIterations(const std::string& rel) const;
 
 private:
     /** performance model of profile run */

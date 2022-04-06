@@ -70,9 +70,12 @@ std::size_t ProfileUseAnalysis::getNonRecursiveUniqueKeys(
     return reader->getNonRecursiveCountUniqueKeys(rel, attributes, constants);
 }
 
-std::size_t ProfileUseAnalysis::getRecursiveUniqueKeys(
-        const std::string& rel, const std::string& attributes, const std::string& constants) const {
-    return reader->getRecursiveCountUniqueKeys(rel, attributes, constants);
+std::size_t ProfileUseAnalysis::getRecursiveUniqueKeys(const std::string& rel, const std::string& attributes,
+        const std::string& constants, const std::string& iteration) const {
+    return reader->getRecursiveCountUniqueKeys(rel, attributes, constants, iteration);
 }
 
+std::size_t ProfileUseAnalysis::getIterations(const std::string& rel) const {
+    return reader->getIterations(rel);
+}
 }  // namespace souffle::ast::analysis

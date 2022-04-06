@@ -74,12 +74,9 @@ public:
 private:
     /* helper struct for Selinger */
     struct PlanTuplesCost {
-        PlanTuplesCost(const std::vector<std::size_t>& givenPlan, std::size_t givenTuples, double givenCost)
-                : plan(givenPlan), tuples(givenTuples), cost(givenCost) {}
-
         std::vector<std::size_t> plan;
-        std::size_t tuples;
-        double cost;
+        std::vector<std::size_t> tuplesPerIteration;
+        std::vector<double> costsPerIteration;
     };
 
     const PowerSet& getSubsets(std::size_t N, std::size_t K) const;
