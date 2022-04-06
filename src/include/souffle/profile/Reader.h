@@ -428,16 +428,22 @@ public:
         return countNonRecursiveUniqueKeysMap.at(key);
     }
 
-    std::size_t getRecursiveCountUniqueKeys(
-            const std::string& rel, const std::string& attributes, const std::string& constants) {
+    std::size_t getIterations(const std::string& rel) {
+        for (auto& [key, m] : countRecursiveUniqueKeysMap) {
+            std::string token = key.substr(0, key.find(" "));
+            if (token == rel) {
+                return m.size();
+            }
+        }
+        assert(false);
+        return 0;
+    }
+
+    std::size_t getRecursiveCountUniqueKeys(const std::string& rel, const std::string& attributes,
+            const std::string& constants, const std::string& iteration) {
         auto key = rel + " " + attributes + " " + constants;
         auto& m = countRecursiveUniqueKeysMap.at(key);
-        double total = 0.0;
-        for (auto [_, count] : m) {
-            total += count;
-        }
-        double average = ceil(total / m.size());
-        return static_cast<std::size_t>(average);
+        return static_cast<std::size_t>(m.at(iteration));
     }
 
     void addRelation(const DirectoryEntry& relation) {

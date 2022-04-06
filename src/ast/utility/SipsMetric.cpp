@@ -104,7 +104,8 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
     auto* prof = profileUseAnalysis;
     auto getRelationSize = [&prof](bool isRecursive, const ast::QualifiedName& rel,
                                    const std::vector<std::size_t>& joinColumns,
-                                   const std::map<std::size_t, std::string>& constantsMap) {
+                                   const std::map<std::size_t, std::string>& constantsMap,
+                                   const std::string& iteration) {
         std::set<std::size_t> joinKeys(joinColumns.begin(), joinColumns.end());
         for (auto& [k, _] : constantsMap) {
             joinKeys.insert(k);
@@ -127,7 +128,7 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
         constants[constants.size() - 1] = ']';
 
         if (isRecursive) {
-            return prof->getRecursiveUniqueKeys(rel.toString(), attributes, constants);
+            return prof->getRecursiveUniqueKeys(rel.toString(), attributes, constants, iteration);
         }
 
         return prof->getNonRecursiveUniqueKeys(rel.toString(), attributes, constants);
@@ -243,6 +244,17 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
 
     std::unordered_map<AtomIdx, std::map<ArgIdx, std::string>> atomToIdxConstants;
 
+    std::size_t iterations = 1;
+    for (std::size_t i = 0; i < atoms.size(); ++i) {
+        auto* atom = atoms[i];
+        std::string name = getClauseAtomName(*clause, atom, sccAtoms, version, mode);
+        bool isRecursive = recursiveInCurrentStratum.count(i) > 0;
+        if (isRecursive) {
+            iterations = prof->getIterations(name);
+            break;
+        }
+    }
+
     AtomIdx atomIdx = 0;
     for (auto* atom : atoms) {
         std::string name = getClauseAtomName(*clause, atom, sccAtoms, version, mode);
@@ -271,11 +283,17 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
         // start by storing the access cost for each individual relation
         std::vector<AtomIdx> empty;
         bool isRecursive = recursiveInCurrentStratum.count(atomIdx) > 0;
-        std::size_t tuples = getRelationSize(isRecursive, name, empty, idxConstant);
-        double cost = static_cast<double>(tuples * atom->getArity());
         AtomSet singleton = {atomIdx};
         std::vector<AtomIdx> plan = {atomIdx};
-        cache[1].insert(std::make_pair(singleton, PlanTuplesCost(plan, tuples, cost)));
+        PlanTuplesCost p;
+        p.plan = plan;
+        for (std::size_t iter = 0; iter < iterations; ++iter) {
+            std::size_t tuples = getRelationSize(isRecursive, name, empty, idxConstant, std::to_string(iter));
+            double cost = static_cast<double>(tuples * atom->getArity());
+            p.tuplesPerIteration.push_back(tuples);
+            p.costsPerIteration.push_back(cost);
+        }
+        cache[1].insert(std::make_pair(singleton, p));
         ++atomIdx;
     }
 
@@ -294,12 +312,6 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
                     }
                     smallerSubset.insert(subset[j]);
                 }
-
-                // lookup the cost in the cache
-                auto& planTuplesCost = cache[K - 1].at(smallerSubset);
-                auto& oldPlan = planTuplesCost.plan;
-                auto oldTuples = planTuplesCost.tuples;
-                auto oldCost = planTuplesCost.cost;
 
                 // compute the grounded variables from the subset
                 VarSet groundedVariablesFromSubset;
@@ -350,49 +362,67 @@ std::vector<std::size_t> SelingerProfileSipsMetric::getReordering(
                     }
                 }
 
+                // lookup the cost in the cache
+                auto& planTuplesCost = cache[K - 1].at(smallerSubset);
+                auto& oldPlan = planTuplesCost.plan;
+                auto oldTuples = planTuplesCost.tuplesPerIteration;
+                auto oldCost = planTuplesCost.costsPerIteration;
+
+                PlanTuplesCost p;
                 bool isRecursive = recursiveInCurrentStratum.count(atomIdx) > 0;
                 std::vector<ArgIdx> empty;
                 double expectedTuples = 0;
-
-                if (numBound == atom->getArity()) {
-                    expectedTuples = 1;
-                } else {
-                    auto relSizeWithConstants = getRelationSize(isRecursive,
-                            getClauseAtomName(*clause, atom, sccAtoms, version, mode), empty,
-                            atomToIdxConstants[atomIdx]);
-
-                    if (joinColumns.empty()) {
-                        expectedTuples = static_cast<double>(relSizeWithConstants);
+                double newTotalCost = 0.0;
+                for (std::size_t iter = 0; iter < iterations; ++iter) {
+                    if (numBound == atom->getArity()) {
+                        expectedTuples = 1;
                     } else {
-                        auto uniqueKeys = getRelationSize(isRecursive,
-                                getClauseAtomName(*clause, atom, sccAtoms, version, mode), joinColumns,
-                                atomToIdxConstants[atomIdx]);
+                        auto relSizeWithConstants = getRelationSize(isRecursive,
+                                getClauseAtomName(*clause, atom, sccAtoms, version, mode), empty,
+                                atomToIdxConstants[atomIdx], std::to_string(iter));
 
-                        bool normalize = (uniqueKeys > 0);
-                        expectedTuples =
-                                static_cast<double>(relSizeWithConstants) / (normalize ? uniqueKeys : 1);
+                        if (joinColumns.empty()) {
+                            expectedTuples = static_cast<double>(relSizeWithConstants);
+                        } else {
+                            auto uniqueKeys = getRelationSize(isRecursive,
+                                    getClauseAtomName(*clause, atom, sccAtoms, version, mode), joinColumns,
+                                    atomToIdxConstants[atomIdx], std::to_string(iter));
+
+                            bool normalize = (uniqueKeys > 0);
+                            expectedTuples =
+                                    static_cast<double>(relSizeWithConstants) / (normalize ? uniqueKeys : 1);
+                        }
                     }
+
+                    // calculate new number of tuples
+                    std::size_t newTuples = static_cast<std::size_t>(oldTuples[iter] * expectedTuples);
+
+                    // calculate new cost
+                    double newCost = oldCost[iter] + newTuples * atom->getArity();
+
+                    // add to vector of costs/tuples
+                    p.tuplesPerIteration.push_back(newTuples);
+                    p.costsPerIteration.push_back(newCost);
+                    newTotalCost += newCost;
                 }
-
-                // calculate new number of tuples
-                std::size_t newTuples = static_cast<std::size_t>(oldTuples * expectedTuples);
-
-                // calculate new cost
-                double newCost = oldCost + newTuples * atom->getArity();
 
                 // calculate new plan
                 std::vector<AtomIdx> newPlan(oldPlan.begin(), oldPlan.end());
                 newPlan.push_back(atomIdx);
+                p.plan = newPlan;
 
                 // if no plan then insert it
                 AtomSet currentSet(subset.begin(), subset.end());
                 if (cache[K].count(currentSet) == 0) {
-                    cache[K].insert(std::make_pair(currentSet, PlanTuplesCost(newPlan, newTuples, newCost)));
-                }
-                // if we have a lower cost
-                else if (cache[K].at(currentSet).cost >= newCost) {
-                    cache[K].erase(currentSet);
-                    cache[K].insert(std::make_pair(currentSet, PlanTuplesCost(newPlan, newTuples, newCost)));
+                    cache[K].insert(std::make_pair(currentSet, p));
+                } else {
+                    // if we have a lower cost
+                    auto& costVector = cache[K].at(currentSet).costsPerIteration;
+                    double oldTotalCost = std::accumulate(costVector.begin(), costVector.end(), 0.0);
+                    if (oldTotalCost >= newTotalCost) {
+                        cache[K].erase(currentSet);
+                        cache[K].insert(std::make_pair(currentSet, p));
+                    }
                 }
             }
         }
