@@ -33,9 +33,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Packagecloud CLI
-        run: sudo apt-get -y install ruby-full && sudo gem install package_cloud
-
       - name: Build Container
         run: docker build . -f ./.github/images/${{ matrix.release }}/Dockerfile  -t package_builder
 
@@ -58,11 +55,6 @@ jobs:
         with:
           name: ${{ steps.extract_pkg.outputs.artifact_name }}
           path: build/${{ steps.extract_pkg.outputs.artifact_name }}
-      
-      - name: Packaging
-        run: |-
-          cd build && 
-          PACKAGECLOUD_TOKEN=${{ secrets.PACKAGECLOUD_TOKEN }} package_cloud push souffle-lang/souffle/${{ matrix.OS-name }} ${{ steps.extract_pkg.outputs.pkg_name }}
       
   Arch-Package-Build:
     runs-on: ubuntu-latest
