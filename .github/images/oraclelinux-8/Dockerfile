@@ -1,4 +1,4 @@
-FROM centos:8
+FROM oraclelinux:8
 
 WORKDIR /souffle
 
