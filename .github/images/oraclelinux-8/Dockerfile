@@ -4,7 +4,7 @@ WORKDIR /souffle
 
 # https://pagure.io/epel/issue/89
 RUN yum -y install dnf-plugins-core
-RUN dnf config-manager --set-enabled powertools
+RUN dnf config-manager --set-enabled ol8_codeready_builder
 # Install souffle build dependencies
 RUN dnf -y install \
     autoconf \
