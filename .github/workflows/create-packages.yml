@@ -134,3 +134,31 @@ jobs:
         with:
           files: |
             result/*
+
+  Upload-Repo-Files:
+    needs: CPack-Package-Build
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          clean: false
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: ./downloads
+
+      - name: Configure GPG Key
+        run: |-
+          .github/scripts/config_gpg.sh
+        env:
+          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+
+      - name: Upload Repo Files
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+        run : |-
+          .github/scripts/updatePPA.sh
