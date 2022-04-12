@@ -12,9 +12,6 @@ jobs:
           - release: ubuntu-2004
             extension: ".deb"
             OS-name: "ubuntu/focal"
-          - release: ubuntu-2104
-            extension: ".deb"
-            OS-name: "ubuntu/hirsute"
           - release: oraclelinux-8
             extension: ".rpm"
             OS-name: "el/8"
