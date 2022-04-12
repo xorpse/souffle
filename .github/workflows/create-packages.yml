@@ -107,6 +107,7 @@ jobs:
 
   Upload-Release-Assests:
     needs: CPack-Package-Build
+    if: ${{ always() }}
 
     runs-on: ubuntu-latest
     steps:
@@ -130,6 +131,7 @@ jobs:
 
   Upload-Repo-Files:
     needs: CPack-Package-Build
+    if: ${{ always() }}
 
     runs-on: ubuntu-latest
     steps:
