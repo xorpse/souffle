@@ -75,7 +75,8 @@ jobs:
       - name: Packaging
         run: >
           docker run 
-          -e RELEASE_TAG=${{ steps.prepare.outputs.release_tag }} 
+          -e RELEASE_TAG=${{ steps.prepare.outputs.release_tag }}
+          -e REPO_OWNER=${{ github.repository_owner }}
           --name container
           -t package_builder
 
