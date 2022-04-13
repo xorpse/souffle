@@ -65,6 +65,11 @@ git commit -m "Added fedora rpm files for $SOUFFLE_TAG"
 mkdir -p $TMPDIR/ppa/ol/8/x86_64
 cd $TMPDIR/ppa/ol
 
+for i in $DEBPATH/*oracle*8*/*rpm
+do
+    rpm --addsign $i
+done
+
 cp $DEBPATH/*oracle*8*/*rpm 8/x86_64/
 
 createrepo 8/x86_64
