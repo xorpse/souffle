@@ -267,6 +267,9 @@ public:
     void printAll(std::string) override {}
 
     /** Dump inputs: not implemented */
+    std::vector<std::map<std::string, std::string>> relationInfo() override { return {}; }
+
+    /** Dump inputs: not implemented */
     void dumpInputs() override {}
 
     /** Dump outputs: not implemented */

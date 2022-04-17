@@ -810,6 +810,11 @@ public:
     virtual void printAll(std::string outputDirectory = "") = 0;
 
     /**
+     * Meta information pertaining to input and output relations in stdout.
+     */
+    virtual std::vector<std::map<std::string, std::string>> relationInfo() = 0;
+
+    /**
      * Output all the input relations in stdout, without generating any files. (for debug purposes).
      */
     virtual void dumpInputs() = 0;

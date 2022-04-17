@@ -2965,8 +2965,8 @@ void runFunction(std::string  inputDirectoryArg,
     }
     os << "}\n";  // end of printAll() method
 
-    // issue loadAll method
     os << "public:\n";
+    // issue loadAll method
     os << "void loadAll(std::string inputDirectoryArg = \"\") override {\n";
 
     for (auto load : loadIOs) {
@@ -2987,6 +2987,34 @@ void runFunction(std::string  inputDirectoryArg,
     }
 
     os << "}\n";  // end of loadAll() method
+
+    // issue relationInfo method
+    os << "std::vector<std::map<std::string, std::string>> relationInfo() override {\n";
+    os << "std::vector<std::map<std::string, std::string>> info;\n";
+
+    for (auto load : loadIOs) {
+        os << "{\n";
+        os << "std::map<std::string, std::string> directiveMap(";
+        auto const& directive = load->getDirectives();
+        printDirectives(directive);
+        os << ");\n";
+        os << "info.push_back(std::move(directiveMap));\n";
+        os << "}\n";
+    }
+
+    for (auto store : storeIOs) {
+        os << "{\n";
+        os << "std::map<std::string, std::string> directiveMap(";
+        auto const& directive = store->getDirectives();
+        printDirectives(directive);
+        os << ");\n";
+        os << "info.push_back(std::move(directiveMap));\n";
+        os << "}\n";
+    }
+
+    os << "return info;\n";
+    os << "}\n"; // end of relationInfo()
+
     // issue dump methods
     auto dumpRelation = [&](const ram::Relation& ramRelation) {
         const auto& relName = getRelationName(ramRelation);
